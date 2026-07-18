@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated dashboards / galleries (regenerate from deck lists + collection)
+*-dashboard.html
+*-visual.html
+dashboard.html
+
+# The player's live collection export is theirs — keep the private full CSV out of
+# git by default. The name-only snapshot (data/collection/collection_snapshot.txt)
+# IS committed as a fallback. Uncomment the next line if you'd rather commit the CSV.
+data/collection/collection.csv
+data/collection/*.private.csv
+
+# Scratch
+scratch/
+*.tmp
