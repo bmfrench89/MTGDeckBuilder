@@ -125,3 +125,39 @@ Ranked by actual support depth, not vibes:
 - If continuing Cloud: apply the buy-list swaps once cards are acquired; regenerate dashboard + chart as v2.
 - If starting a new deck: **first re-request the collection CSV, then COUNT the relevant pool before recommending anything.**
 - One unresolved card from the Y'shtola audit: **Mysterio's Mirage** text was never verified (search failed). Excluded rather than guessed. Revisit only if the player asks.
+
+---
+
+## SESSION NOTE — 2026-07-18 (program build + Kaervek v1)
+
+**What changed:** This repo now IS the end-to-end program (skill + scripts + data),
+not just notes. See README.md and `.claude/skills/mtg-deckbuilder/`.
+
+**Collection:** Imported from the Google Drive doc `collection_list` →
+`data/collection/collection_snapshot.txt` (1,805 unique cards, name-only). The full
+Archidekt CSV is still the goal — drop it at `data/collection/collection.csv` to unlock
+color/type/tribe/pip analysis and card images.
+
+**Grounding catches this session (verify on CSV load):**
+- The "complete" Y'shtola list references 4 cards NOT in the current collection export:
+  **The Kingpin of Crime, Vito Thorn of the Dusk Rose, Force of Will, Extinction Event.**
+  Either the export predates them or they're tracked elsewhere.
+- Handoff claimed **Fiery Emancipation** owned for Kaervek — NOT in the current export.
+- Kaervek oracle re-verified: **{5}{B}{R} 5/4**, "Whenever an opponent casts a spell,
+  Kaervek deals damage equal to that spell's mana value to any target." (Earlier memory
+  of a cheaper 3/3 was wrong.)
+
+**New deck:** `data/decks/kaervek-punisher.txt` — Kaervek Rakdos punisher **v1 draft**,
+100% owned cards, ratios ok (37 land / 10 ramp / 10 removal / 3 wipe / ~9 draw). Plays as
+group-slug midrange; buy-list to sharpen into a true punisher lives in
+`data/staples/kaervek-the-merciless.txt` (owned 39/68; ~29 missing).
+Off-color cards excluded during build: **Vindicate (WB), Crush Contraband (W)**.
+
+**New tool:** `scripts/staples_crossref.py` — diff a curated staples list against the
+collection → owned vs. missing (buy-list). NOTE: EDHREC/Scryfall direct fetch is
+403-blocked here; staples lists are curated from knowledge + web-search summaries, not
+live scrapes. Web *search* works; page *fetch* of those sites does not.
+
+**Next steps:** (1) load the CSV and re-run deck_stats on Kaervek to confirm 0 off-color
+and get real curve/pips; (2) acquire ~10 punisher engines from the buy-list; (3) explore
+the Spider-Man typal idea (needs per-card oracle verification — all post-2025).

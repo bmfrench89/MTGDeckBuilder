@@ -261,7 +261,9 @@ _LAND_HINTS = (
     "market", "barrens", "bog", "temple of", "shrine", "prairie", "retreat",
     "grove", "crag", "trail", "village", "vista", "glade", "peaks", "wilds",
     "landscape", "refuge", "guildgate", "tower", "field", "cave", "sanctuary",
-    "svyelunite temple", "temple of the false god",
+    "svyelunite temple", "temple of the false god", "slagheap", "volcano",
+    "bloodhall", "springs", "needle", "karst", "woodlot", "bog", "ruins",
+    "storage", "citadel of", "academy", "coast", "summit",
 )
 
 

@@ -1,0 +1,89 @@
+# Staples: Kaervek the Merciless — Rakdos (B/R) punisher / group-slug
+# SOURCE: curated by the assistant from MTG knowledge + web-search summaries of
+#   EDHREC/TappedOut (EDHREC direct-fetch is 403-blocked in this environment).
+#   Every card here is Rakdos (B/R) color-identity legal for Kaervek. Treat play
+#   emphasis as approximate, not scraped percentages.
+# Use: python3 scripts/staples_crossref.py --staples data/staples/kaervek-the-merciless.txt \
+#        --collection data/collection/collection_snapshot.txt
+
+# --- Ramp / fixing ---
+Sol Ring
+Arcane Signet
+Rakdos Signet
+Talisman of Indulgence
+Fellwar Stone
+Mind Stone
+Commander's Sphere
+Worn Powerstone
+Wayfarer's Bauble
+Burnished Hart
+
+# --- Punisher / symmetric-pain engines (the archetype's heart) ---
+Manabarbs
+Citadel of Pain
+Painful Quandary
+Sulfuric Vortex
+Rampaging Ferocidon
+Vicious Shadows
+Dictate of the Twin Gods
+Fiery Emancipation
+Spiteful Visions
+Wound Reflection
+Havoc Festival
+Pyrohemia
+Pestilence
+War's Toll
+Price of Glory
+Blood Reckoning
+Curse of Bloodletting
+Underworld Dreams
+Zo-Zu the Punisher
+
+# --- Card advantage (B/R) ---
+Read the Bones
+Night's Whisper
+Sign in Blood
+Phyrexian Arena
+Theater of Horrors
+Faithless Looting
+Syphon Mind
+Damnable Pact
+
+# --- Removal / interaction ---
+Terminate
+Bedevil
+Dreadbore
+Rakdos Charm
+Unlicensed Disintegration
+Chaos Warp
+Vandalblast
+Blasphemous Act
+Toxic Deluge
+Feed the Swarm
+Infernal Grasp
+Fiery Confluence
+Bituminous Blast
+
+# --- Finishers ---
+Torment of Hailfire
+Exsanguinate
+Bond of Agony
+Star of Extinction
+Jaya's Immolating Inferno
+
+# --- Protection / utility ---
+Lightning Greaves
+Swiftfoot Boots
+
+# --- Lands ---
+Command Tower
+Bojuka Bog
+High Market
+Blood Crypt
+Smoldering Marsh
+Foreboding Ruins
+Temple of Malice
+Bloodfell Caves
+Canyon Slough
+Exotic Orchard
+Path of Ancestry
