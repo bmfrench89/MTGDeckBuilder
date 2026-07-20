@@ -303,3 +303,20 @@ Player preferred surfacing over blocking. Reframed rule #8 from "hard block" to 
   (~$80.69 / 40 copies), cards not owned (now 0), and buy-list upgrades (~$173, all from Cosmic).
 - Vito + Force of Will confirmed owned via `owned_additions.txt` (merged by load_collection).
 Skill/grounding updated to "surface, don't deny." Deck files still unedited.
+
+---
+
+## SESSION NOTE — 2026-07-18i (one-command refresh + buy-lists for all decks)
+
+- **`scripts/refresh.py`**: one command regenerates every deck's dashboard (+ visual gallery,
+  themed) and the wishlist. Decks are auto-discovered; title/theme/commander read from
+  `# Title:` / `# Theme:` / `# Commander:` headers in each deck .txt. New decks are picked up
+  automatically. HTML lands in `build/` (gitignored).
+  `python3 scripts/refresh.py --collection data/collection/collection.csv`
+- **Buy-lists for all four decks** (`<deck>.buylist.csv`): Cosmic 13, Kaervek 10, Y'shtola 8,
+  Cloud 7 = 38 upgrade items (~$402). Wishlist upgrade section now spans all four. Cloud pulls
+  the handoff's sword package (SoFF, SoFI, Buster Sword, Sram, Sigarda's Aid); Y'shtola gets
+  Cyclonic Rift / Esper Sentinel / Smothering Tithe (noting the Game-Changer bracket bump);
+  Kaervek gets the punisher engines (Torment of Hailfire, Fiery Emancipation, Sulfuric Vortex…).
+- Added a **rakdos** dashboard theme (Kaervek). Themes now: default / yshtola / cloud / rakdos /
+  spider.
