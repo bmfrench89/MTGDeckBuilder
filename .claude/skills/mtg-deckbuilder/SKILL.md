@@ -115,4 +115,11 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   against target ratios.
 - `card_image.py` — turns a Scryfall ID into a hotlinkable card-image URL.
 - `build_dashboard.py` — turns a decklist + collection into a self-contained, themeable HTML
-  dashboard (mana curve, category breakdown, pip demand) and an optional visual card gallery.
+  dashboard: stat tiles (incl. deck value, bracket, power), game-plan notes, mana curve, card
+  images in the decklist, an interactive buy/replace panel with price toggles, and a cross-deck
+  conflict panel. Auto-detects `<deck>.notes.md`, `<deck>.buylist.csv`, `<deck>.attrs.csv`.
+- `staples_crossref.py` — diff a curated staples list against the collection → owned vs. missing.
+- `power.py` — Commander Bracket (1–5) + a 0–100 power score for a deck; `--rank` ranks all decks.
+  Grounded in WotC's bracket system; card lists in `data/reference/*.txt`. See `docs/power-and-brackets.md`.
+- `deck_conflicts.py` — flags cards committed to more decks than you own copies of (basics exempt).
+  **Use this whenever building a new deck so you don't silently reuse a single-copy card.**

@@ -1,0 +1,27 @@
+# Fast mana (net-positive / free) — power signal. Sol Ring is EXCLUDED (bracket-legal
+# everywhere and near-ubiquitous). Mana Crypt / Jeweled Lotus are banned — omitted.
+Mana Vault
+Grim Monolith
+Chrome Mox
+Mox Diamond
+Mox Opal
+Lotus Petal
+Ancient Tomb
+Lion's Eye Diamond
+Jeweled Amulet
+Dark Ritual
+Cabal Ritual
+Simian Spirit Guide
+Mox Amber
+Mox Emerald
+Mox Sapphire
+Mox Ruby
+Mox Pearl
+Mox Jet
+Lotus Bloom
+Rite of Flame
+Pyretic Ritual
+Desperate Ritual
+Seething Song
+Jeska's Will
+Elvish Spirit Guide

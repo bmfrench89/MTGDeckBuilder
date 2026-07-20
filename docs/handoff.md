@@ -249,3 +249,27 @@ dashboard curve now "covers all 63 nonland cards" (peaks at MV2 with 22).
 Note **Spider-Suit** makes its equipped creature a Spider Hero, so it can turn a non-Spider
 into a buff target. v2 idea: swap the 3 non-Spiders for owned/bought Spiders (Superior
 Spider-Man, Gwenom) to raise Cosmic's hit rate.
+
+---
+
+## SESSION NOTE — 2026-07-18f (bracket, power ranking, conflicts, card images)
+
+Four features added (a research workflow verified the bracket rules + Game Changers list):
+
+- **Card images in the decklist** — `build_dashboard.py` "Decklist by Section" now renders
+  Scryfall image-by-name thumbnails (browser-only, as always).
+- **Cross-deck conflict checker** — `deck_conflicts.py`: sums each card's usage across all
+  `data/decks/*.txt` and flags cards committed to more decks than owned copies (basics exempt).
+  Surfaced as a "Cross-Deck Conflicts" dashboard section. NOTE: with 4 decks there are ~37 real
+  conflicts (e.g. Solemn Simulacrum owned 1, used in 3 decks). **Run this when building new decks.**
+- **Bracket + power ranking** — `power.py`: WotC Commander Bracket (1–5) from Game-Changers count
+  + guardrails (tutors are NOT a bracket factor post-Oct-2025), plus a 0–100 power score.
+  `--rank` ranks all decks. Reference lists in `data/reference/*.txt`; rubric in
+  `docs/power-and-brackets.md`. Current ranking: Y'shtola B3/67, Cosmic B3/57, Kaervek B2/55,
+  Cloud B2/51. Y'shtola is AT the 3-Game-Changer ceiling (Mystical Tutor, Force of Will,
+  Rhystic Study) — a 4th would make it Bracket 4.
+- Game Changers list is the verified 53-card set (2026-02-09; added Farewell + Biorhythm).
+  Mana Crypt / Jeweled Lotus are banned, not on it.
+
+Note: `data/collection/collection.csv` (pricing export) has no per-card MV, so only Cosmic
+(which has a `.attrs.csv`) gets curve-based power components; others renormalize those out.

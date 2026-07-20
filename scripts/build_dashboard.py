@@ -28,6 +28,7 @@ import mtglib
 import deck_stats
 import card_image
 import deck_conflicts
+import power
 
 THEMES = {
     "default": {
@@ -407,8 +408,34 @@ price source reachable) — sanity-check before buying.</p>
 </script>"""
 
 
+def power_html(a):
+    reasons = "".join(f"<li>{esc(r)}</li>" for r in a["bracket_reasons"])
+    bars = []
+    for c in a["components"]:
+        if c["score"] is None:
+            bars.append(f"<tr><td>{esc(c['name'])}</td><td class='muted' "
+                        f"colspan='2'>{esc(c['detail'])}</td></tr>")
+            continue
+        pct = 100 * c["score"] / c["weight"] if c["weight"] else 0
+        bars.append(
+            f"<tr><td>{esc(c['name'])}</td>"
+            f"<td class='pwrbar'><span style='width:{pct:.0f}%'></span></td>"
+            f"<td class='pwrnum'>{c['score']:g}/{c['weight']} "
+            f"<span class='muted'>· {esc(c['detail'])}</span></td></tr>")
+    return (
+        f"<div class='bracketline'><span class='bnum'>Bracket {a['bracket']}</span>"
+        f"<span class='bname'>{esc(a['bracket_name'])}</span>"
+        f"<span class='pscore'>{a['power']}<span class='muted'>/100 · "
+        f"{esc(a['tier'])}</span></span></div>"
+        f"<ul class='notes'>{reasons}</ul>"
+        "<table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table>"
+        "<p class='muted'>Bracket follows WotC's Commander Bracket system; the "
+        "0-100 score is a countable-signal estimate — a guide, not a verdict.</p>")
+
+
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
-                     sections, notes=None, buylist=None, conflicts=None):
+                     sections, notes=None, buylist=None, conflicts=None,
+                     assessment=None):
     t = THEMES.get(theme, THEMES["default"])
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
@@ -419,10 +446,18 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                        deck_stats._flag("lands", rep["lands"]).strip("()"))]
     if rep.get("deck_value") is not None:
         tiles.append(stat_tile("Value", f"${rep['deck_value']:,.0f}", "market est"))
+    if assessment:
+        tiles.append(stat_tile("Bracket", assessment["bracket"],
+                               assessment["bracket_name"]))
+        tiles.append(stat_tile("Power", f"{assessment['power']}",
+                               f"/100 · {assessment['tier']}"))
     tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
               stat_tile("Removal", cats.get("removal", 0)),
               stat_tile("Draw", cats.get("draw", 0))]
     tiles = "".join(tiles)
+
+    power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
+                 "</section>" if assessment else "")
 
     notes_sec = (f"<section><h2>Game Plan &amp; Player Notes</h2>"
                  f"{notes_html(notes)}</section>" if notes else "")
@@ -509,6 +544,19 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .repl {{ color:var(--warn); }}
 .tier {{ color:var(--muted); font-size:.68rem; border:1px solid rgba(255,255,255,.15);
   border-radius:8px; padding:0 6px; margin-left:6px; }}
+.bracketline {{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  margin-bottom:8px; }}
+.bnum {{ font-family:{t['display']}; font-size:1.9rem; color:var(--accent2); }}
+.bname {{ color:var(--gold); font-family:{t['head']}; text-transform:uppercase;
+  letter-spacing:1.5px; font-size:.85rem; }}
+.pscore {{ margin-left:auto; font-family:{t['display']}; font-size:1.9rem;
+  color:var(--accent); }}
+.pwrtable td {{ border:none; padding:3px 8px 3px 0; vertical-align:middle; }}
+.pwrtable td:first-child {{ width:150px; color:var(--muted); }}
+.pwrbar {{ width:40%; }}
+.pwrbar span {{ display:block; height:9px; border-radius:5px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent)); }}
+.pwrnum {{ font-size:.78rem; white-space:nowrap; }}
 .imgnote {{ font-size:.75rem; margin:0 0 10px; }}
 .cardgrid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
   gap:10px; margin:6px 0 14px; }}
@@ -533,6 +581,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
 </header>
 <div class="tiles">{tiles}</div>
+{power_sec}
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
@@ -654,9 +703,15 @@ def main():
             extra = f" ({n_attr} cards matched)" if label == "attrs" else ""
             print(f"  + {label}: {p}{extra}")
 
+    try:
+        assessment = power.assess(enriched, rep, power.load_refs())
+    except Exception as e:
+        assessment = None
+        print(f"  (power assessment skipped: {e})", file=sys.stderr)
+
     html_doc = render_dashboard(args.title, args.commander, args.subtitle,
                                 rep, enriched, args.theme, sections, notes, buylist,
-                                conflicts)
+                                conflicts, assessment)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html_doc)
     print(f"wrote dashboard: {args.out}")

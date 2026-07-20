@@ -29,6 +29,9 @@ scripts/                          The engine (stdlib-only Python 3)
   card_image.py                   Scryfall ID -> hotlinkable card-image URL
   build_dashboard.py              Deck -> rich HTML dashboard (+ visual gallery)
   staples_crossref.py             Staples list vs collection -> owned/missing buy-list
+  power.py                        Bracket (1-5) + 0-100 power score; rank all decks
+  deck_conflicts.py               Flag cards double-committed across decks vs. owned
+data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
 data/
   collection/                     Your collection (snapshot committed; full CSV you provide)
   decks/                          Saved deck lists (two completed decks preserved here)
@@ -102,6 +105,28 @@ python3 scripts/build_dashboard.py --deck data/decks/cosmic-spider-man.txt \
   --collection data/collection/collection.csv --theme spider \
   --title "Cosmic Spider-Man" --out cosmic.html   # notes/buylist/attrs auto-detected
 ```
+
+The dashboard also shows, for every deck: **card images** in the decklist, a
+**Commander Bracket (1–5)** and **0–100 power score** (see `docs/power-and-brackets.md`),
+and a **Cross-Deck Conflicts** panel warning when a card is committed to more decks
+than you own copies of.
+
+## Power ranking & cross-deck conflicts
+
+```bash
+# Rank every deck by power, with its bracket
+python3 scripts/power.py --rank --collection data/collection/collection.csv
+
+# Bracket + power breakdown for one deck
+python3 scripts/power.py --deck data/decks/yshtola-nights-blessed.txt \
+  --collection data/collection/collection.csv
+
+# Which cards are double-committed across decks beyond the copies you own?
+python3 scripts/deck_conflicts.py --collection data/collection/collection.csv
+```
+
+Bracket rules and the 53-card Game Changers list are grounded in WotC's official
+Commander Bracket system and live in editable `data/reference/*.txt` files.
 
 ## The two completed decks (preserved)
 
