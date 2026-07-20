@@ -232,3 +232,20 @@ decks now report correct land counts.
 All three companion files auto-detect next to `<deck>.txt`. Cosmic Spider-Man has all
 three authored (notes + 13-card buylist + 52-card attrs → curve peaks at MV2).
 Other decks render fine without companions (those sections just omit).
+
+---
+
+## SESSION NOTE — 2026-07-18e (Cosmic Spider-Man MV curve completed)
+
+Verified all 31 remaining Spider/equipment mana values from Scryfall (one card per web
+search; EDHREC/Scryfall/Draftsim page fetches are 403-blocked, but web SEARCH returns the
+Scryfall data snippet reliably). Filled `cosmic-spider-man.attrs.csv` to 83/83 cards →
+dashboard curve now "covers all 63 nonland cards" (peaks at MV2 with 22).
+
+**Type findings — 3 included cards are NOT Spiders (won't get Cosmic's combat buff):**
+- **Madame Web, Clairvoyant** — Mutant Advisor (still great: casts Spiders off the top).
+- **Agent Venom** — Symbiote Soldier Hero (death-draw value, but not a Spider).
+- **Flash Thompson, Spider-Fan** — Human Citizen (tap/untap utility, not a Spider).
+Note **Spider-Suit** makes its equipped creature a Spider Hero, so it can turn a non-Spider
+into a buff target. v2 idea: swap the 3 non-Spiders for owned/bought Spiders (Superior
+Spider-Man, Gwenom) to raise Cosmic's hit rate.

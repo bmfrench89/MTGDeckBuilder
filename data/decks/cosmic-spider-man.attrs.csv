@@ -51,3 +51,34 @@ Plains,Land,0,
 Island,Land,0,
 Swamp,Land,0,
 Mountain,Land,0,
+"Silk, Web Weaver",Creature,4,G W
+"Spiders-Man, Heroic Horde",Creature,2,G
+"Ezekiel Sims, Spider-Totem",Creature,5,G
+"Sun-Spider, Nimble Webber",Creature,4,W U
+Spider-UK,Creature,4,W
+"SP//dr, Piloted by Peni",Creature,5,W U
+"Madame Web, Clairvoyant",Creature,6,U
+"Spider-Gwen, Free Spirit",Creature,3,R
+"Spider-Woman, Secret Agent",Creature,4,W U
+"Scarlet Spider, Ben Reilly",Creature,3,R G
+"Scarlet Spider, Kaine",Creature,2,B R
+"Araña, Heart of the Spider",Creature,3,R W
+"Spider-Girl, Legacy Hero",Creature,2,G W
+"Spider-Byte, Web Warden",Creature,3,U
+"Spider-Rex, Daring Dino",Creature,6,G
+Spinneret and Spiderling,Creature,1,R
+Symbiote Spider-Man,Creature,3,U B
+Spectacular Spider-Man,Creature,2,W
+Spider-Man India,Creature,5,G W
+Spider-Man Noir,Creature,5,B
+"Spider-Man, Brooklyn Visionary",Creature,5,G
+"Spider-Man, To the Rescue",Creature,3,G W
+"Spider-Man, Web-Slinger",Creature,3,W
+Agent Venom,Creature,3,B
+"Flash Thompson, Spider-Fan",Creature,2,W
+"Arachne, Psionic Weaver",Creature,3,W
+Spider-Islanders,Creature,4,R
+Web-Warriors,Creature,5,G W
+Spider-Bot,Creature,2,
+Web-Shooters,Artifact,2,W
+Spider-Suit,Artifact,1,
