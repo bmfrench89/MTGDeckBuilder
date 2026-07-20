@@ -44,7 +44,14 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 ## Cards in a deck you don't own yet
 - _none_ 
 
-## Upgrades from deck buy-lists  ~$173.00
+## Upgrades from deck buy-lists  ~$402.00
+- [ ] **Sword of Feast and Famine** (~$25.00, cloud-ex-soldier) — replaces Bitterthorn\: Nissa's Animus
+- [ ] **Sword of Fire and Ice** (~$18.00, cloud-ex-soldier) — replaces Hero's Heirloom: Protection from two colors + 2 damage and a card on connect.
+- [ ] **Buster Sword** (~$8.00, cloud-ex-soldier) — replaces Hero's Blade: Cloud's own blade: +3/+2\
+- [ ] **Sigarda's Aid** (~$5.00, cloud-ex-soldier) — replaces Inspiring Statuary: Flash in equipment and attach it for free — huge tempo for Cloud.
+- [ ] **Open the Armory** (~$3.00, cloud-ex-soldier) — replaces Bronze Guardian: Cheap tutor to find Colossus Hammer or the right sword.
+- [ ] **Sram\** (price n/a, cloud-ex-soldier) — replaces Core: Tendershoot Dryad
+- [ ] **Ardenn\** (price n/a, cloud-ex-soldier) — replaces Value: Guardian Scalelord
 - [ ] **Cavern of Souls** (~$55.00, cosmic-spider-man) — replaces Jungle Shrine: Uncounterable Spiders plus fixing; premium but format-defining.
 - [ ] **Smothering Tithe** (~$25.00, cosmic-spider-man) — replaces Tome of Legends: Explosive ramp that snowballs a go-wide deck into its finishers.
 - [ ] **Teferi's Protection** (~$25.00, cosmic-spider-man) — replaces Void Rend: Phase out to survive any wipe or lethal swing and keep your board.
@@ -58,5 +65,23 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Superior Spider-Man** (~$3.00, cosmic-spider-man) — replaces Spider-Islanders: Top-played Spider payoff (~75% of decks); a real upgrade over a filler body.
 - [ ] **Kodama's Reach** (~$3.00, cosmic-spider-man) — replaces Mana Prism: Strictly better fixing than a filler rock in a 5c deck; grabs two basics.
 - [ ] **Icon of Ancestry** (~$3.00, cosmic-spider-man) — replaces Spider-Suit: Anthem plus card selection for Spiders; better than a marginal equipment.
+- [ ] **Torment of Hailfire** (~$12.00, kaervek-punisher) — replaces Searing Wind: Premier X-finisher; with Kaervek's pings and doublers it ends the table.
+- [ ] **Fiery Emancipation** (~$8.00, kaervek-punisher) — replaces Blaze: Triples ALL your damage — Kaervek triggers and burn become lethal fast.
+- [ ] **Sulfuric Vortex** (~$8.00, kaervek-punisher) — replaces Two-Headed Dragon: Relentless symmetric damage + shuts off opponents' lifegain; classic punisher.
+- [ ] **Underworld Dreams** (~$8.00, kaervek-punisher) — replaces Squee\: Goblin Nabob
+- [ ] **Manabarbs** (~$6.00, kaervek-punisher) — replaces Warren Torchmaster: Every land tapped for mana deals damage — punishes the whole table.
+- [ ] **Painful Quandary** (~$6.00, kaervek-punisher) — replaces Magmatic Force: Taxes every noncreature spell 5 life; brutal in a slow damage shell.
+- [ ] **Vicious Shadows** (~$4.00, kaervek-punisher) — replaces Fling: Turns every creature death into a fistful of damage to a player.
+- [ ] **Bedevil** (~$3.00, kaervek-punisher) — replaces Dark Banishing: Premium instant removal — hits creatures\
+- [ ] **Bond of Agony** (~$3.00, kaervek-punisher) — replaces Reckless Abandon: X-drain finisher that converts your life lead into a kill.
+- [ ] **Dreadbore** (~$1.00, kaervek-punisher) — replaces Nameless Inversion: Cheap\
+- [ ] **Cyclonic Rift** (~$35.00, yshtola-nights-blessed) — replaces Cleansing Nova: The premier one-sided reset in blue. NOTE: a Game Changer — raises your bracket.
+- [ ] **Esper Sentinel** (~$25.00, yshtola-nights-blessed) — replaces Baleful Strix: Best white card-advantage engine; taxes noncreature spells for cards.
+- [ ] **Smothering Tithe** (~$25.00, yshtola-nights-blessed) — replaces Commander's Sphere: Ramp + card advantage every opponent draw. NOTE: a Game Changer.
+- [ ] **Farewell** (~$8.00, yshtola-nights-blessed) — replaces Extinction Event: Modal exile wipe — pick exactly what you need. NOTE: a Game Changer.
+- [ ] **Archmage's Charm** (~$8.00, yshtola-nights-blessed) — replaces Sublime Epiphany: Flexible hard counter / removal / card draw for a control shell.
+- [ ] **Drown in the Loch** (~$4.00, yshtola-nights-blessed) — replaces Absorb: Scales into a counter-and-kill as graveyards fill — perfect for grind.
+- [ ] **Anguished Unmaking** (~$3.00, yshtola-nights-blessed) — replaces Soul Shatter: Answers literally any nonland permanent at instant speed.
+- [ ] **Sceptre of Eternal Glory** (~$3.00, yshtola-nights-blessed) — replaces Fellwar Stone: Ramp that scales with your basics-light Esper base; fixes and accelerates.
 
-**Rough total (shared + upgrades): ~$253.69** — prices are your export's MARKET / buy-list estimates.
+**Rough total (shared + upgrades): ~$482.69** — prices are your export's MARKET / buy-list estimates.

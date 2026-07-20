@@ -50,6 +50,17 @@ THEMES = {
                        "family=Barlow+Condensed:wght@500;600&"
                        "family=IBM+Plex+Mono&display=swap"),
     },
+    "rakdos": {  # Rakdos punisher — blood & ember
+        "void": "#120A0C", "panel": "#1e1214", "accent": "#E23B3B",
+        "accent2": "#E8843A", "warn": "#E8B84B", "text": "#f0e6e6",
+        "muted": "#a3888a", "gold": "#E8843A",
+        "display": "'Oswald', sans-serif", "head": "'Rajdhani', sans-serif",
+        "mono": "'JetBrains Mono', monospace",
+        "fonts_link": ("https://fonts.googleapis.com/css2?"
+                       "family=Oswald:wght@500;600;700&"
+                       "family=Rajdhani:wght@500;600;700&"
+                       "family=JetBrains+Mono&display=swap"),
+    },
     "spider": {  # 5-color web / Spider-Verse aesthetic
         "void": "#0A0A12", "panel": "#15121f", "accent": "#E23B4E",
         "accent2": "#3AA0FF", "warn": "#E8B84B", "text": "#eef0f7",

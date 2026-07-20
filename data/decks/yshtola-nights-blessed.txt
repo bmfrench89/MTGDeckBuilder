@@ -1,4 +1,6 @@
 # Deck: Y'shtola, Night's Blessed — Esper (WUB) control/drain — COMPLETE
+# Title: Y'shtola, Night's Blessed
+# Theme: yshtola
 # Commander: Y'shtola, Night's Blessed
 # Source: reconstructed from docs/handoff.md (last session's yshtola-deck-v19-FINAL).
 # Regenerate a dashboard once the Archidekt CSV is loaded:
