@@ -296,7 +296,9 @@ _LAND_HINTS = (
     "landscape", "refuge", "guildgate", "tower", "field", "cave", "sanctuary",
     "svyelunite temple", "temple of the false god", "slagheap", "volcano",
     "bloodhall", "springs", "needle", "karst", "woodlot", "bog", "ruins",
-    "storage", "citadel of", "academy", "coast", "summit",
+    "storage", "citadel of", "academy", "coast", "summit", "monastery",
+    "courtyard", "territory", "plaza", "shrine", "peaks", "outpost",
+    "bivouac", "orchard", "sanctum", "panorama", "bloodfell",
 )
 
 

@@ -45,6 +45,17 @@ THEMES = {
                        "family=Barlow+Condensed:wght@500;600&"
                        "family=IBM+Plex+Mono&display=swap"),
     },
+    "spider": {  # 5-color web / Spider-Verse aesthetic
+        "void": "#0A0A12", "panel": "#15121f", "accent": "#E23B4E",
+        "accent2": "#3AA0FF", "warn": "#E8B84B", "text": "#eef0f7",
+        "muted": "#8a86a0", "gold": "#E23B4E",
+        "display": "'Oswald', sans-serif", "head": "'Rajdhani', sans-serif",
+        "mono": "'JetBrains Mono', monospace",
+        "fonts_link": ("https://fonts.googleapis.com/css2?"
+                       "family=Oswald:wght@500;600;700&"
+                       "family=Rajdhani:wght@500;600;700&"
+                       "family=JetBrains+Mono&display=swap"),
+    },
     "cloud": {  # Mako Naya aesthetic
         "void": "#0E1214", "panel": "#171e20", "accent": "#39E0B0",
         "accent2": "#E8B84B", "warn": "#E86A3A", "text": "#eaf2ef",

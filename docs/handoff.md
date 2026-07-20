@@ -186,3 +186,31 @@ one per printing, Excel `sep=,` preamble). Installed at `data/collection/collect
 - **Discrepancy update:** vs this fresher export, Y'shtola "missing" dropped 4 -> 2.
   **The Kingpin of Crime** and **Extinction Event** now show owned; still missing
   **Vito, Thorn of the Dusk Rose** and **Force of Will**.
+
+---
+
+## SESSION NOTE — 2026-07-18c (Cosmic Spider-Man built)
+
+Player picked **Cosmic Spider-Man** (5-color Spider typal) after a collection-wide
+"what commanders should I buy" review.
+
+**Key review finding:** for the deepest themes the player ALREADY OWNS the ideal
+commander — Cosmic Spider-Man (Spiders, 57 copies owned), Captain America Team Leader +
+Director Nick Fury (Hero typal), Doctor Doom (Grixis villains). Best *buys* are cheap
+singles that unlock owned pools: **Teysa Karlov** (~$6, aristocrats — 11/11 sac outlets
+owned) and **Alesha** (~$3, Mardu reanimator — 22 recursion pieces owned). Precon buy:
+**Doom Prevails** for the villain slice.
+
+**New deck:** `data/decks/cosmic-spider-man.txt` — v1 draft, 100% owned, ~$265 deck value,
+37 lands. Verified Spider engine (Scryfall/EDHREC): Silk Web Weaver, Spiders-Man Heroic
+Horde (web-slinging → Spider tokens), Ezekiel Sims (+2/+2 a Spider each combat), Sun-Spider,
+Spider-UK, SP//dr, Madame Web. Owned typal support: Roaming Throne (doubles a type's
+triggers), Kindred Discovery, Door of Destinies, Patchwork Banner, Metallic Mimic, plus
+Path of Ancestry / Secluded Courtyard / Unclaimed Territory fixing.
+**Caveat:** SPM creature type-lines are reasoned/spot-verified, not fully confirmed — load
+the card-attribute CSV to confirm every included card is actually a Spider.
+**Buy-list (top Spiders not owned):** Gwenom, Remorseless; Superior Spider-Man.
+
+**Tool tweaks:** added a `spider` dashboard theme; broadened the name-only land heuristic
+again (monastery/courtyard/territory/plaza/shrine/peaks/orchard/sanctum...). All four saved
+decks now report correct land counts.
