@@ -1,0 +1,117 @@
+# Deck: Cosmic Spider-Man — 5-color (WUBRG) Spider typal aggro — v1 DRAFT
+# Title: Cosmic Spider-Man
+# Theme: spider
+# Commander: Cosmic Spider-Man  ({W}{U}{B}{R}{G}, 5/5)
+#   Grants your OTHER Spiders flying, first strike, trample, lifelink & haste
+#   during combat on your turn. Go wide with Spiders, then alpha-strike.
+#
+# BUILD NOTES / HONESTY:
+# - 100% owned cards. The evergreen shell (ramp, fixing, removal, draw, anthems)
+#   is verified staples I know cold. The Spider CREATURES are from Marvel's
+#   Spider-Man (SPM/PSPM/MSC/MSH) — post-2025 — so their exact type lines are
+#   REASONED + spot-verified, not fully confirmed. Load the card-attribute CSV
+#   (with Type/Subtype columns) to confirm every one is a Spider and refine.
+# - Excluded despite "Spider" in the name (not Spider creatures): Web-Shooters &
+#   Spider-Suit are Equipment (kept as gear), Spider-Mobile is a Vehicle,
+#   Origin/Pictures/No More/Superior Foes of Spider-Man are enchantments, Web Up
+#   / Silk Net are instants. Morlun (anti-Spider Villain) left out on purpose.
+# - Green is thin in the collection, so the base leans on rainbow fixing + green
+#   ramp to support the many green Spiders/tokens.
+# - Top-played Spiders you DON'T own (buy-list): Gwenom, Remorseless; Superior
+#   Spider-Man. Both are cheap upgrades.
+
+1 Cosmic Spider-Man
+
+# --- Spiders & Spider-matters creatures (30) ---
+1 Silk, Web Weaver
+1 Spiders-Man, Heroic Horde
+1 Ezekiel Sims, Spider-Totem
+1 Sun-Spider, Nimble Webber
+1 Spider-UK
+1 SP//dr, Piloted by Peni
+1 Madame Web, Clairvoyant
+1 Spider-Gwen, Free Spirit
+1 Spider-Woman, Secret Agent
+1 Scarlet Spider, Ben Reilly
+1 Scarlet Spider, Kaine
+1 Araña, Heart of the Spider
+1 Spider-Girl, Legacy Hero
+1 Spider-Byte, Web Warden
+1 Spider-Rex, Daring Dino
+1 Spinneret and Spiderling
+1 Symbiote Spider-Man
+1 Spectacular Spider-Man
+1 Spider-Man India
+1 Spider-Man Noir
+1 Spider-Man, Brooklyn Visionary
+1 Spider-Man, To the Rescue
+1 Spider-Man, Web-Slinger
+1 Agent Venom
+1 Flash Thompson, Spider-Fan
+1 Arachne, Psionic Weaver
+1 Spider-Islanders
+1 Web-Warriors
+1 Spider-Bot
+1 Metallic Mimic
+
+# --- Typal anthems / gear (5) ---
+1 Roaming Throne
+1 Patchwork Banner
+1 Door of Destinies
+1 Web-Shooters
+1 Spider-Suit
+
+# --- Ramp / fixing (12) ---
+1 Sol Ring
+1 Arcane Signet
+1 Commander's Sphere
+1 Relic of Legends
+1 Talisman of Progress
+1 Talisman of Creativity
+1 Talisman of Conviction
+1 Cultivate
+1 Farseek
+1 Nature's Lore
+1 Sakura-Tribe Elder
+1 Solemn Simulacrum
+
+# --- Removal / interaction (8) ---
+1 Swords to Plowshares
+1 Path to Exile
+1 Generous Gift
+1 Beast Within
+1 Chaos Warp
+1 Assassin's Trophy
+1 Terminate
+1 Void Rend
+
+# --- Card advantage / protection (7) ---
+1 Rhystic Study
+1 Kindred Discovery
+1 Night's Whisper
+1 Skullclamp
+1 Tome of Legends
+1 Heroic Intervention
+1 Lightning Greaves
+
+# --- Lands (37) ---
+1 Command Tower
+1 Exotic Orchard
+1 Plaza of Heroes
+1 Mystic Monastery
+1 Arcane Sanctum
+1 Jungle Shrine
+1 Sacred Peaks
+1 Path of Ancestry
+1 Secluded Courtyard
+1 Unclaimed Territory
+1 Terramorphic Expanse
+1 Evolving Wilds
+1 Fabled Passage
+1 Ash Barrens
+1 Myriad Landscape
+5 Forest
+5 Plains
+4 Island
+4 Swamp
+4 Mountain

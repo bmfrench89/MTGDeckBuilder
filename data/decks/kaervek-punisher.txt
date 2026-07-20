@@ -1,0 +1,120 @@
+# Deck: Kaervek the Merciless — Rakdos (B/R) punisher / group-slug — v1 DRAFT
+# Title: Kaervek the Merciless
+# Theme: rakdos
+# Commander: Kaervek the Merciless  ({5}{B}{R}, 5/4 Human Shaman)
+#   "Whenever an opponent casts a spell, Kaervek deals damage equal to that
+#    spell's mana value to any target." (verified: Scryfall/Gatherer, 2026-07)
+#
+# BUILD NOTES / HONESTY:
+# - Built 100% from cards in your collection snapshot (name-only), so every card
+#   here is OWNED. Color identity was checked from knowledge, not the CSV — load
+#   data/collection/collection.csv and run deck_stats.py to confirm 0 off-color.
+#   (Already excluded as off-color: Vindicate [WB], Crush Contraband [W].)
+# - This plays as Rakdos midrange/group-slug more than a full "lock" punisher,
+#   because most dedicated pain engines (Manabarbs, Sulfuric Vortex, Painful
+#   Quandary, Fiery Emancipation, Torment of Hailfire...) are on the buy-list in
+#   data/staples/kaervek-the-merciless.txt. Add ~10 of those to sharpen it.
+# - Bracket ~2-3 (casual/upgraded). Punisher is socially spicy — read the pod.
+
+1 Kaervek the Merciless
+
+# --- Ramp (10) ---
+1 Sol Ring
+1 Arcane Signet
+1 Rakdos Signet
+1 Talisman of Indulgence
+1 Fellwar Stone
+1 Mind Stone
+1 Commander's Sphere
+1 Worn Powerstone
+1 Wayfarer's Bauble
+1 Burnished Hart
+
+# --- Card advantage (7) ---
+1 Read the Bones
+1 Night's Whisper
+1 Sign in Blood
+1 Ambition's Cost
+1 Faithless Looting
+1 Syphon Mind
+1 Theater of Horrors
+
+# --- Punisher / pinger engines owned (5) ---
+1 Dictate of the Twin Gods
+1 Spiteful Visions
+1 Magmatic Force
+1 Guttersnipe
+1 Thermo-Alchemist
+
+# --- Targeted removal (11) ---
+1 Terminate
+1 Rakdos Charm
+1 Unlicensed Disintegration
+1 Infernal Grasp
+1 Chaos Warp
+1 Abrade
+1 Befoul
+1 Soul Shatter
+1 Nameless Inversion
+1 Dark Banishing
+1 Feed the Swarm
+
+# --- Board wipes (4) ---
+1 Blasphemous Act
+1 Toxic Deluge
+1 Pyroclasm
+1 Fiery Confluence
+
+# --- Burn / reach (7) ---
+1 Shock
+1 Lightning Blast
+1 Lightning Strike
+1 Blaze
+1 Searing Wind
+1 Flame Rift
+1 Fling
+
+# --- Threats / creatures (16) ---
+1 Vampire Nighthawk
+1 Scythe Specter
+1 Archfiend of Depravity
+1 Bloodgift Demon
+1 Indulgent Tormentor
+1 Brash Taunter
+1 Tectonic Giant
+1 Combustible Gearhulk
+1 Hellkite Tyrant
+1 Kardur, Doomscourge
+1 Warren Torchmaster
+1 Ob Nixilis Reignited
+1 Two-Headed Dragon
+1 Morbid Opportunist
+1 Sangromancer
+1 Squee, Goblin Nabob
+
+# --- Finisher + protection (2) ---
+1 Exsanguinate
+1 Lightning Greaves
+
+# --- Lands (37) ---
+1 Command Tower
+1 Path of Ancestry
+1 Exotic Orchard
+1 Bloodfell Caves
+1 Smoldering Marsh
+1 Foreboding Ruins
+1 Temple of Malice
+1 Bojuka Bog
+1 High Market
+1 Sulfurous Springs
+1 Urborg Volcano
+1 Stensia Bloodhall
+1 Cinder Barrens
+1 Barbed Field
+1 Molten Slagheap
+1 Ash Barrens
+1 Terramorphic Expanse
+1 Fabled Passage
+1 Evolving Wilds
+9 Mountain
+9 Swamp

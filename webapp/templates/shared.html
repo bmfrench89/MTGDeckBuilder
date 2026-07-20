@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Shared Cards · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Shared Across Decks</h1>
+<div class="sub">Cards you use in more decks than you own copies of. Nothing's blocked — buy the extra
+copies (they're on your wishlist) or just don't sleeve those decks at the same time.</div>
+
+{% if conf %}
+<div class="card" style="margin-bottom:16px">
+  <b class="warn">{{ conf|length }} shared cards need more copies</b> —
+  ~<span class="gold">${{ '%.2f'|format(total) }}</span> to cover them all.
+</div>
+<div class="card tablewrap">
+<table><thead><tr><th>Card</th><th>Own / Need</th><th>Buy</th><th>Used in</th></tr></thead><tbody>
+{% for c in conf %}
+<tr><td><b>{{ c.card }}</b></td>
+  <td>own {{ c.owned }} / need {{ c.committed }} <span class="warn">(short {{ c.short }})</span></td>
+  <td class="good">{% if c.buy_cost %}${{ '%.2f'|format(c.buy_cost) }}{% else %}—{% endif %}</td>
+  <td class="muted">{% for d,q in c.decks.items() %}{{ d }} (×{{ q }}){% if not loop.last %}, {% endif %}{% endfor %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}
+<div class="card good">✅ No shared-card shortfalls — every deck can be assembled at once.</div>
+{% endif %}
+{% endblock %}

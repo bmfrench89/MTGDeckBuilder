@@ -1,0 +1,119 @@
+# Deck: Cloud, Ex-SOLDIER — Naya (RGW) equipment/Voltron — COMPLETE
+# Title: Cloud, Ex-SOLDIER
+# Theme: cloud
+# Commander: Cloud, Ex-SOLDIER
+# Source: reconstructed from docs/handoff.md (last session's cloud-deck).
+# Note: built to NOT cannibalize single copies from the Y'shtola deck — shared staples
+#   are covered by the player's 2nd copies. Confirm quantities before sleeving both.
+# Regenerate a dashboard once the Archidekt CSV is loaded:
+#   python3 scripts/build_dashboard.py --deck data/decks/cloud-ex-soldier.txt \
+#     --collection data/collection/collection.csv --title "Cloud, Ex-SOLDIER" \
+#     --commander "Cloud, Ex-SOLDIER" --theme cloud --out cloud-dashboard.html --visual
+
+1 Cloud, Ex-SOLDIER
+
+# --- Equipment (14) ---
+1 Colossus Hammer
+1 Hard-Won Jitte
+1 Sword of the Animist
+1 Behemoth Sledge
+1 Conqueror's Flail
+1 Champion's Helm
+1 Darksteel Plate
+1 Mask of Memory
+1 Lightning Greaves
+1 Trailblazer's Boots
+1 Mjölnir, Hammer of Thor
+1 Hero's Blade
+1 Bitterthorn, Nissa's Animus
+1 Hero's Heirloom
+
+# --- Equipment support ---
+1 Puresteel Paladin
+1 Armory Automaton
+1 Inspiring Statuary
+1 Steelshaper's Gift
+
+# --- Creatures ---
+1 Llanowar Elves
+1 Elvish Mystic
+1 Gilded Goose
+1 Sakura-Tribe Elder
+1 Priest of Titania
+1 Selfless Spirit
+1 Skyclave Apparition
+1 Solemn Simulacrum
+1 Sun Titan
+1 Emeria Angel
+1 Tectonic Giant
+1 Combustible Gearhulk
+1 Bronze Guardian
+1 Karmic Guide
+1 Ohran Frostfang
+1 Thor, Asgard's Avenger
+1 Hercules, Olympian Hero
+1 Tendershoot Dryad
+1 Hellkite Tyrant
+1 Guardian Scalelord
+
+# --- Ramp ---
+1 Sol Ring
+1 Arcane Signet
+1 Commander's Sphere
+1 Fellwar Stone
+1 Cultivate
+1 Farseek
+1 Rampant Growth
+1 Nature's Lore
+1 Relic of Legends
+
+# --- Removal & wraths ---
+1 Swords to Plowshares
+1 Path to Exile
+1 Generous Gift
+1 Beast Within
+1 Chaos Warp
+1 Blasphemous Act
+1 Vandalblast
+1 Cleansing Nova
+1 Austere Command
+1 Vanquish the Horde
+
+# --- Card draw ---
+1 Skullclamp
+1 Tome of Legends
+1 Staff of the Storyteller
+
+# --- Anthems & finish ---
+1 Rancor
+1 True Conviction
+
+# --- Lands (36) ---
+1 Command Tower
+1 Path of Ancestry
+1 Exotic Orchard
+1 Sacred Peaks
+1 Jungle Shrine
+1 Rugged Prairie
+1 Battlefield Forge
+1 Clifftop Retreat
+1 Sunpetal Grove
+1 Rootbound Crag
+1 Game Trail
+1 Fortified Village
+1 Furycalm Snarl
+1 Frostboil Snarl
+1 Sungrass Prairie
+1 Canopy Vista
+1 Cinder Glade
+1 Prairie Stream
+1 Fabled Passage
+1 Terramorphic Expanse
+1 Evolving Wilds
+1 Ash Barrens
+1 Myriad Landscape
+1 Radiant Grove
+1 Wooded Ridgeline
+6 Forest
+2 Mountain
+3 Plains

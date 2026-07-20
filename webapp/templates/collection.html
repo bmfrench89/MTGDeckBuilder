@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Collection · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Collection</h1>
+<div class="sub">{{ unique }} unique cards · {{ copies }} copies
+{% if has_price %}· <span class="gold">~${{ '%.2f'|format(total) }}</span> MARKET value{% endif %}</div>
+
+<div class="grid" style="margin-bottom:22px">
+  <div class="card">
+    <h2 style="margin-top:0">Upload a new export</h2>
+    <p class="muted">Replace <code>collection.csv</code> with a fresh Archidekt/ManaBox export.
+      Stays on this machine.</p>
+    <form method="post" action="{{ url_for('collection_upload') }}" enctype="multipart/form-data">
+      <div class="row"><input type="file" name="csv" accept=".csv" required>
+        <button class="btn" type="submit">Upload</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Own something the export missed?</h2>
+    <p class="muted">Add it here (your word beats the export). Saved to
+      <code>owned_additions.txt</code> and merged everywhere.</p>
+    <form method="post" action="{{ url_for('collection_add') }}">
+      <div class="row"><input type="number" name="qty" value="1" min="1" style="width:60px">
+        <input type="text" name="name" placeholder="Card name" style="flex:1" required>
+        <button class="btn" type="submit">Add</button></div>
+    </form>
+    {% if additions %}<div class="muted" style="margin-top:10px;font-size:.8rem">
+      Added: {{ additions|join(' · ') }}</div>{% endif %}
+  </div>
+</div>
+
+{% if top %}
+<h2>Most valuable cards</h2>
+<div class="card tablewrap">
+<table><thead><tr><th>~$</th><th>Qty</th><th>Card</th><th>Set</th></tr></thead><tbody>
+{% for c in top %}<tr><td class="good">${{ '%.2f'|format(c.price) }}</td>
+  <td>{{ c.quantity }}×</td><td>{{ c.name }}</td><td class="muted">{{ c.set_code }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted" style="margin-top:10px">Some obscure rows are mispriced in the export — treat as rough.</p>
+{% else %}
+<div class="card muted">No price data in this collection format — load a pricing export to see value.</div>
+{% endif %}
+{% endblock %}

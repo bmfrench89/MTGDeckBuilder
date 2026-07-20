@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ meta.title }} · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Edit — {{ meta.title }}</h1>
+<div class="sub">Edit the decklist, save, and the dashboard (curve, bracket, power, shared cards)
+re-analyzes instantly. Keep the <code># Title / # Theme / # Commander</code> headers.</div>
+<form method="post" action="{{ url_for('deck_edit', stem=meta.stem) }}">
+  <textarea name="content" spellcheck="false">{{ content }}</textarea>
+  <div class="row" style="margin-top:12px">
+    <button class="btn" type="submit">Save &amp; view dashboard</button>
+    <a class="btn ghost" href="{{ url_for('deck', stem=meta.stem) }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

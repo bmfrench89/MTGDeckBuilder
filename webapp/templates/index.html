@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Decks · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Your Decks</h1>
+<div class="sub">Power leaderboard — tap a deck for its full dashboard.</div>
+
+<style>
+.decklist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.deckrow{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;
+  padding:14px 16px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center}
+.deckrow .rank{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--muted)}
+.deckrow .name{font-weight:700;font-size:1.05rem}
+.deckrow .cmd{color:var(--muted);font-size:.8rem;font-family:'JetBrains Mono',monospace}
+.deckrow .stat{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.deckrow .pw{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--accent)}
+.deckrow .acts{grid-column:2/4;display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.deckrow .acts a{font-size:.85rem}
+@media(max-width:600px){
+  .deckrow{grid-template-columns:28px 1fr}
+  .deckrow .stat{grid-column:2/3}
+  .deckrow .acts{grid-column:1/3}
+}
+</style>
+
+<div class="decklist">
+{% for d in decks %}
+<div class="deckrow">
+  <div class="rank">{{ loop.index }}</div>
+  <div>
+    <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
+    <div class="cmd">{{ d.commander }}</div>
+  </div>
+  <div class="stat">
+    {% if d.assess %}
+    <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
+    <div class="meter" style="width:90px"><span style="width:{{ d.assess.power }}%"></span></div>
+    <span class="pw">{{ d.assess.power }}</span>
+    <span class="muted" style="font-size:.75rem">{{ d.assess.tier }}</span>
+    {% else %}<span class="muted">—</span>{% endif %}
+  </div>
+  <div class="acts">
+    <a href="{{ url_for('deck', stem=d.stem) }}">▸ Dashboard</a>
+    <a href="{{ url_for('deck_visual', stem=d.stem) }}">🖼 Images</a>
+    <a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">✎ Edit</a>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+<form method="post" action="{{ url_for('refresh') }}">
+  <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
+</form>
+<p class="muted" style="margin-top:8px;font-size:.85rem">Everything is live — this also writes the
+static <code>build/</code> + <code>wishlist.md</code>.</p>
+{% endblock %}

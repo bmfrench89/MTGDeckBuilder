@@ -1,0 +1,37 @@
+# Well-known 2-card infinite / instant-win pieces. Presence is a flag (an EARLY,
+# cheap two-card combo pushes a deck to Bracket 4). Detection is heuristic.
+Thassa's Oracle
+Demonic Consultation
+Tainted Pact
+Underworld Breach
+Isochron Scepter
+Dramatic Reversal
+Kiki-Jiki, Mirror Breaker
+Food Chain
+Dockside Extortionist
+Aetherflux Reservoir
+Helm of the Host
+Godo, Bandit Warlord
+Mikaeus, the Unhallowed
+Walking Ballista
+Laboratory Maniac
+Jace, Wielder of Mysteries
+Brain Freeze
+Splinter Twin
+Pestermite
+Deceiver Exarch
+Zealous Conscripts
+Restoration Angel
+Eternal Scourge
+Misthollow Griffin
+Heliod, Sun-Crowned
+Triskelion
+Devoted Druid
+Vizier of Remedies
+Exquisite Blood
+Sanguine Bond
+Protean Hulk
+Basalt Monolith
+Rings of Brighthearth
+Power Artifact
+Angel's Grace
