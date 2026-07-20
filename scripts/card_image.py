@@ -62,8 +62,7 @@ def main():
         return 0
 
     if args.deck and args.collection:
-        with open(args.collection, encoding="utf-8") as f:
-            coll = mtglib.parse_collection(f.read())
+        coll = mtglib.load_collection(args.collection)
         with open(args.deck, encoding="utf-8") as f:
             deck = mtglib.parse_deck(f.read())
         idx = mtglib.index_by_name(coll)

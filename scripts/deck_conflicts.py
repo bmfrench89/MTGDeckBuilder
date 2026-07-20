@@ -145,8 +145,8 @@ def main():
 
     decks_dir = args.decks_dir or (os.path.dirname(args.deck) if args.deck else "data/decks")
     try:
-        with open(args.collection, encoding="utf-8") as f:
-            coll = mtglib.parse_collection(f.read())
+        with open(args.collection, encoding="utf-8"):
+            coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

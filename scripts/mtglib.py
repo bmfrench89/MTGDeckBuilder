@@ -225,6 +225,39 @@ def parse_deck(text: str) -> list:
     return _parse_namelist(text)
 
 
+def merge_collection(cards: list, extra: list) -> list:
+    """Merge player-confirmed extra ownership into a parsed collection (in place).
+    Adds quantities for cards already present; appends new ones."""
+    idx = {_norm(c.name): c for c in cards}
+    for e in extra:
+        k = _norm(e.name)
+        if k in idx:
+            idx[k].quantity += e.quantity
+            if e.price is not None and idx[k].price is None:
+                idx[k].price = e.price
+        else:
+            cards.append(e)
+            idx[k] = e
+    return cards
+
+
+def load_collection(path: str) -> list:
+    """Parse a collection file, then auto-merge a sibling `owned_additions.txt`
+    or `owned_additions.csv` if present. Those hold cards the player has confirmed
+    they own but that aren't in the export yet (new/post-cutoff pickups). Player
+    info outranks the export (grounding rule #6)."""
+    import os
+    with open(path, encoding="utf-8") as f:
+        cards = parse_collection(f.read())
+    d = os.path.dirname(path) or "."
+    for extra in ("owned_additions.txt", "owned_additions.csv"):
+        ep = os.path.join(d, extra)
+        if os.path.exists(ep):
+            with open(ep, encoding="utf-8") as f:
+                merge_collection(cards, parse_collection(f.read()))
+    return cards
+
+
 def index_by_name(cards: list) -> dict:
     """Case-insensitive name -> Card. Handles 'Front // Back' by also indexing
     the front face."""

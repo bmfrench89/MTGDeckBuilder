@@ -233,8 +233,8 @@ def main():
     args = ap.parse_args()
 
     try:
-        with open(args.collection, encoding="utf-8") as f:
-            coll = mtglib.parse_collection(f.read())
+        with open(args.collection, encoding="utf-8"):
+            coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

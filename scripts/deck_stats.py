@@ -221,7 +221,7 @@ def main():
 
     try:
         deck_cards = mtglib.parse_deck(read(args.deck))
-        coll = mtglib.parse_collection(read(args.collection))
+        coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

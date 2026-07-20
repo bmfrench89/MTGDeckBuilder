@@ -28,7 +28,7 @@ def load(path):
     with open(path, encoding="utf-8") as f:
         text = f.read()
     fmt = mtglib.detect_format(text)
-    return mtglib.parse_collection(text), fmt
+    return mtglib.load_collection(path), fmt  # merges owned_additions.* if present
 
 
 def total_copies(cards):

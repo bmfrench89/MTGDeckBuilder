@@ -57,8 +57,8 @@ def main():
     try:
         with open(args.staples, encoding="utf-8") as f:
             staples = parse_staples(f.read())
-        with open(args.collection, encoding="utf-8") as f:
-            coll = mtglib.parse_collection(f.read())
+        with open(args.collection, encoding="utf-8"):
+            coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

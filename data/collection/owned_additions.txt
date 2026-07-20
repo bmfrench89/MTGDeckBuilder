@@ -1,0 +1,6 @@
+# Player-confirmed ownership NOT in the Archidekt/pricing export yet.
+# Format: "<qty> <card name>" per line. The tools auto-merge this on top of
+# collection.csv (see mtglib.load_collection). Player's word > export (rule #6).
+# Add new/post-cutoff pickups here instead of editing the raw export.
+1 Vito, Thorn of the Dusk Rose
+1 Force of Will

@@ -29,6 +29,12 @@ ownership claim (Grounding Rule #1).
   from Archidekt, export with the card-data columns enabled (Mana Value, Color Identity,
   Type Line, Scryfall ID), not just the pricing columns.
 
+- **`owned_additions.txt`** *(committed)* — cards you own that aren't in the export yet
+  (new pickups, post-cutoff cards the exporter missed). One `<qty> <card name>` per line.
+  Every script auto-merges this on top of `collection.csv` via `mtglib.load_collection`,
+  because your word outranks the export (grounding rule #6). Add here instead of editing the
+  raw export — a re-export won't wipe your corrections.
+
 ## How to export from Archidekt
 
 Archidekt → your Collection → Export → CSV (include all columns). Save it here as

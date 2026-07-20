@@ -665,8 +665,7 @@ def main():
     try:
         with open(args.deck, encoding="utf-8") as f:
             deck = mtglib.parse_deck(f.read())
-        with open(args.collection, encoding="utf-8") as f:
-            coll = mtglib.parse_collection(f.read())
+        coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
