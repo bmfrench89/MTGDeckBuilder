@@ -1,0 +1,13 @@
+{
+  "name": "MTG Commander Deckbuilder",
+  "short_name": "Deckbuilder",
+  "description": "Your Commander decks: power, brackets, wishlist, and collection.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0d13",
+  "theme_color": "#0b0d13",
+  "icons": [
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

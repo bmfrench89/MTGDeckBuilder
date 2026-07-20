@@ -2,35 +2,54 @@
 {% block title %}Decks · MTG Deckbuilder{% endblock %}
 {% block content %}
 <h1>Your Decks</h1>
-<div class="sub">Power leaderboard — click a deck for its full dashboard.</div>
+<div class="sub">Power leaderboard — tap a deck for its full dashboard.</div>
 
-<div class="card tablewrap" style="margin-bottom:22px">
-<table>
-<thead><tr><th>#</th><th>Deck</th><th>Bracket</th><th>Power</th><th></th><th></th></tr></thead>
-<tbody>
+<style>
+.decklist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.deckrow{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;
+  padding:14px 16px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center}
+.deckrow .rank{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--muted)}
+.deckrow .name{font-weight:700;font-size:1.05rem}
+.deckrow .cmd{color:var(--muted);font-size:.8rem;font-family:'JetBrains Mono',monospace}
+.deckrow .stat{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.deckrow .pw{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--accent)}
+.deckrow .acts{grid-column:2/4;display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.deckrow .acts a{font-size:.85rem}
+@media(max-width:600px){
+  .deckrow{grid-template-columns:28px 1fr}
+  .deckrow .stat{grid-column:2/3}
+  .deckrow .acts{grid-column:1/3}
+}
+</style>
+
+<div class="decklist">
 {% for d in decks %}
-<tr>
-  <td class="muted">{{ loop.index }}</td>
-  <td><a href="{{ url_for('deck', stem=d.stem) }}"><b>{{ d.title }}</b></a>
-      <div class="muted" style="font-size:.78rem">{{ d.commander }}</div></td>
-  {% if d.assess %}
-  <td><span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span></td>
-  <td style="width:150px"><div class="row"><div class="meter" style="flex:1">
-      <span style="width:{{ d.assess.power }}%"></span></div>
-      <span class="muted">{{ d.assess.power }}</span></div>
-      <div class="muted" style="font-size:.72rem">{{ d.assess.tier }}</div></td>
-  {% else %}<td class="muted">—</td><td class="muted">—</td>{% endif %}
-  <td><a href="{{ url_for('deck_visual', stem=d.stem) }}">images ↗</a></td>
-  <td><a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">edit</a></td>
-</tr>
+<div class="deckrow">
+  <div class="rank">{{ loop.index }}</div>
+  <div>
+    <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
+    <div class="cmd">{{ d.commander }}</div>
+  </div>
+  <div class="stat">
+    {% if d.assess %}
+    <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
+    <div class="meter" style="width:90px"><span style="width:{{ d.assess.power }}%"></span></div>
+    <span class="pw">{{ d.assess.power }}</span>
+    <span class="muted" style="font-size:.75rem">{{ d.assess.tier }}</span>
+    {% else %}<span class="muted">—</span>{% endif %}
+  </div>
+  <div class="acts">
+    <a href="{{ url_for('deck', stem=d.stem) }}">▸ Dashboard</a>
+    <a href="{{ url_for('deck_visual', stem=d.stem) }}">🖼 Images</a>
+    <a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">✎ Edit</a>
+  </div>
+</div>
 {% endfor %}
-</tbody></table>
 </div>
 
-<div class="row">
-  <form method="post" action="{{ url_for('refresh') }}">
-    <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
-  </form>
-  <span class="muted">Everything here is live — this just also writes the static <code>build/</code> + <code>wishlist.md</code>.</span>
-</div>
+<form method="post" action="{{ url_for('refresh') }}">
+  <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
+</form>
+<p class="muted" style="margin-top:8px;font-size:.85rem">Everything is live — this also writes the
+static <code>build/</code> + <code>wishlist.md</code>.</p>
 {% endblock %}

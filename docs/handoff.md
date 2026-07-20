@@ -336,3 +336,18 @@ Built a Flask web app in `webapp/` over the existing scripts (imported, not dupl
   mangled card names — rewrote with proper double-quote quoting.
 Flask note: this container's Debian blinker blocks a plain `pip install flask`; a venv (as in
 webapp/README) avoids it.
+
+---
+
+## SESSION NOTE — 2026-07-18k (phone access)
+
+Made the web app phone-ready:
+- `MTG_HOST` env (default 127.0.0.1); set 0.0.0.0 to allow LAN devices. App prints the
+  phone URL (LAN IP) on startup.
+- `webapp/run.sh`: one-command venv bootstrap + bind 0.0.0.0 + serve.
+- PWA: manifest + spider SVG icon + apple-mobile meta + safe-area insets → installable
+  "Add to Home Screen", full-screen.
+- Rebuilt the Decks leaderboard as responsive cards (the table clipped action links at
+  phone width). Verified at 390px with Chromium screenshots.
+- webapp/README documents 3 phone paths: same-Wi-Fi LAN (recommended), tunnel
+  (cloudflared/ngrok), deploy (gunicorn+auth+HTTPS; keep collection.csv private).

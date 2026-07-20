@@ -12,6 +12,7 @@ Config via env: MTG_COLLECTION, MTG_DECKS_DIR, MTG_PORT.
 """
 import os
 import re
+import socket
 import subprocess
 import sys
 
@@ -198,9 +199,27 @@ def health():
     return {"ok": True, "collection": COLLECTION, "decks": len(list_decks())}
 
 
+def lan_ip():
+    """Best-effort local network IP so we can print a phone-reachable URL."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("MTG_PORT", "5000"))
-    print(f"MTG Deckbuilder web app → http://127.0.0.1:{port}")
-    print(f"  collection: {COLLECTION}")
-    print(f"  decks dir : {DECKS_DIR}")
-    app.run(host="127.0.0.1", port=port, debug=False)
+    # Default to localhost-only (private). Set MTG_HOST=0.0.0.0 (or use run.sh) to
+    # allow other devices on your Wi-Fi — e.g. your phone — to reach it.
+    host = os.environ.get("MTG_HOST", "127.0.0.1")
+    print("MTG Deckbuilder web app")
+    print(f"  this computer : http://127.0.0.1:{port}")
+    if host == "0.0.0.0":
+        print(f"  on your phone : http://{lan_ip()}:{port}   (same Wi-Fi)")
+        print("  (anyone on your network can reach it — see webapp/README 'Phone access')")
+    print(f"  collection    : {COLLECTION}")
+    app.run(host=host, port=port, debug=False)
