@@ -273,13 +273,27 @@ def notes_html(text):
     return "".join(out)
 
 
-def sections_html(sections, enriched, images=True, size="small"):
+def _share_badge(k, shared):
+    """A ⇄ badge for cards used in more than one deck."""
+    if not shared or k not in shared:
+        return ""
+    v = shared[k]
+    cls = "sb" if v["covered"] else "sb need"
+    others = [d for d in v["decks"]]
+    title = ("also in: " + ", ".join(others) +
+             ("" if v["covered"] else f" — own {v['owned']}, need more"))
+    return f"<span class='{cls}' title='{esc(title)}'>⇄{len(v['decks'])}</span>"
+
+
+def sections_html(sections, enriched, shared=None, images=True, size="small"):
     mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
     pr = {mtglib._norm(c.name): c.price for c in enriched}
     out = []
     if images:
         out.append("<p class='muted imgnote'>Card images load live from Scryfall "
-                   "when opened in a browser (they stay blank in the chat preview).</p>")
+                   "when opened in a browser. <span class='sb'>⇄</span> marks a card "
+                   "shared with another deck (<span class='sb need'>⇄</span> = you'd "
+                   "need more copies).</p>")
     for label, cards in sections:
         n = sum(q for q, _ in cards)
         out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>")
@@ -295,8 +309,8 @@ def sections_html(sections, enriched, images=True, size="small"):
                 url = card_image.image_url_by_name(name, size)
                 out.append(
                     f"<figure class='mc'><img loading='lazy' src='{esc(url)}' "
-                    f"alt='{esc(name)}'>{qty}<figcaption>{mvb}{esc(name)}{price}"
-                    "</figcaption></figure>")
+                    f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}"
+                    f"<figcaption>{mvb}{esc(name)}{price}</figcaption></figure>")
             out.append("</div>")
         else:
             out.append("<ul class='cards'>")
@@ -308,29 +322,37 @@ def sections_html(sections, enriched, images=True, size="small"):
                 p = pr.get(k)
                 price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
                 qty = f"{q}× " if q > 1 else ""
-                out.append(f"<li>{mvb}{qty}{esc(name)}{price}</li>")
+                out.append(f"<li>{mvb}{qty}{esc(name)}"
+                           f"{_share_badge(k, shared)}{price}</li>")
             out.append("</ul>")
     return "".join(out)
 
 
-def conflicts_html(conf):
-    if conf is None:
+def shared_html(shared):
+    if shared is None:
         return ""
-    if not conf:
-        return ("<div class='ok'>✅ No cross-deck conflicts — every shared card is "
-                "covered by the copies you own (basic lands exempt).</div>")
+    if not shared:
+        return ("<div class='ok'>No cards in this deck are used in any other deck — "
+                "it's fully self-contained.</div>")
+    items = sorted(shared.items(), key=lambda kv: (kv[1]["covered"], kv[0]))
+    short = [1 for _, v in items if not v["covered"]]
     rows = []
-    for c in conf:
-        where = ", ".join(f"{esc(d)} (×{q})" for d, q in c["decks"].items())
+    for _, v in items:
+        others = [d for d in v["decks"]]
+        mark = ("<span class='ok'>✓ own enough</span>" if v["covered"]
+                else "<span class='need'>⚠ need more copies</span>")
         rows.append(
-            f"<tr><td class='bc'>{esc(c['card'])}</td>"
-            f"<td class='bp'>own {c['owned']} / need {c['committed']}</td>"
-            f"<td class='br'>{where}</td></tr>")
-    return (f"<div class='warnbox'>⚠ {len(conf)} card(s) in this deck are also "
-            "committed to your other decks beyond the copies you own — you can't "
-            "assemble all these decks at once without buying more:</div>"
-            "<div class='tablewrap'><table class='data'><thead><tr><th>Card</th>"
-            "<th>Own / Need</th><th>Shared with</th></tr></thead><tbody>"
+            f"<tr><td class='bc'>{esc(v['name'])}</td>"
+            f"<td>{mark}</td>"
+            f"<td class='br'>own {v['owned']} · in {len(v['decks'])} decks: "
+            f"{esc(', '.join(others))}</td></tr>")
+    note = (f"<div class='muted'>{len(shared)} card(s) here are shared with your other "
+            "decks. <b>✓</b> = you own enough copies to sleeve them all at once; "
+            f"<b class='need'>⚠</b> = {sum(short)} card(s) would need extra copies "
+            "(they're on your <code>wishlist.md</code>). Nothing's blocked — this is "
+            "just so you can see the overlap.</div>")
+    return (note + "<div class='tablewrap'><table class='data'><thead><tr>"
+            "<th>Card</th><th>Status</th><th>Shared with</th></tr></thead><tbody>"
             + "".join(rows) + "</tbody></table>")
 
 
@@ -434,7 +456,7 @@ def power_html(a):
 
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
-                     sections, notes=None, buylist=None, conflicts=None,
+                     sections, notes=None, buylist=None, shared=None,
                      assessment=None):
     t = THEMES.get(theme, THEMES["default"])
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
@@ -465,8 +487,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                if rep.get("pip_demand") else "")
     buy_sec = (f"<section><h2>Buy &amp; Replace</h2>{buylist_html(buylist)}</section>"
                if buylist else "")
-    conf_sec = (f"<section><h2>Cross-Deck Conflicts</h2>{conflicts_html(conflicts)}"
-                "</section>" if conflicts is not None else "")
+    shared_sec = (f"<section><h2>Shared Across Decks</h2>{shared_html(shared)}"
+                  "</section>" if shared is not None else "")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -566,6 +588,12 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .mc .qty {{ position:absolute; top:4px; right:4px; background:var(--accent);
   color:#000; font-family:{t['mono']}; font-size:.64rem; font-weight:700;
   padding:0 5px; border-radius:8px; }}
+.sb {{ display:inline-block; font-family:{t['mono']}; font-size:.62rem;
+  font-weight:700; padding:0 5px; border-radius:8px; background:var(--accent2);
+  color:#000; }}
+.mc .sb {{ position:absolute; top:4px; left:4px; }}
+.sb.need {{ background:var(--warn); color:#000; }}
+.need {{ color:var(--warn); font-weight:700; }}
 .mc figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
   margin-top:3px; line-height:1.25; }}
 .mc figcaption .mv {{ min-width:0; margin-right:3px; }}
@@ -586,9 +614,9 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
 <section><h2>Ownership</h2>{ownership_block(rep)}</section>
-{conf_sec}
+{shared_sec}
 {buy_sec}
-<section><h2>Decklist by Section</h2>{sections_html(sections, enriched)}</section>
+<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared)}</section>
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
 </div></body></html>"""
@@ -687,14 +715,14 @@ def main():
     notes = load_notes(notes_path)
     buylist = load_buylist(buylist_path)
 
-    # Cross-deck conflict check (against sibling decks in the same folder).
-    conflicts = None
+    # Which cards are shared with sibling decks (for badges + the shared panel).
+    shared = None
     decks_dir = args.decks_dir if args.decks_dir is not None else os.path.dirname(args.deck)
     if decks_dir:
         try:
-            conflicts = deck_conflicts.conflicts_for_deck(args.deck, idx, decks_dir)
-        except Exception as e:  # never let the conflict check break the dashboard
-            print(f"  (conflict check skipped: {e})", file=sys.stderr)
+            shared = deck_conflicts.shared_for_deck(args.deck, idx, decks_dir)
+        except Exception as e:  # never let this break the dashboard
+            print(f"  (shared-card check skipped: {e})", file=sys.stderr)
     for label, p, obj in [("notes", notes_path, notes),
                           ("buylist", buylist_path, buylist),
                           ("attrs", attrs_path, attrs)]:
@@ -710,7 +738,7 @@ def main():
 
     html_doc = render_dashboard(args.title, args.commander, args.subtitle,
                                 rep, enriched, args.theme, sections, notes, buylist,
-                                conflicts, assessment)
+                                shared, assessment)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html_doc)
     print(f"wrote dashboard: {args.out}")

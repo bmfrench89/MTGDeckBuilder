@@ -30,8 +30,10 @@ scripts/                          The engine (stdlib-only Python 3)
   build_dashboard.py              Deck -> rich HTML dashboard (+ visual gallery)
   staples_crossref.py             Staples list vs collection -> owned/missing buy-list
   power.py                        Bracket (1-5) + 0-100 power score; rank all decks
-  deck_conflicts.py               Flag cards double-committed across decks vs. owned
+  deck_conflicts.py               Show cards shared across decks vs. owned (+ buy-doubles)
+  wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
 data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
+data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
   collection/                     Your collection (snapshot committed; full CSV you provide)
   decks/                          Saved deck lists (two completed decks preserved here)

@@ -290,3 +290,16 @@ Decision left to the player: BUY the ~$81 of doubles (recommended — no deck de
 SWAP shared cards out of the two draft decks (Kaervek/Cosmic) for owned bench cards (would
 downgrade those drafts; the collection bench is deep but mostly weaker). Deck files NOT edited
 yet — awaiting the player's choice.
+
+---
+
+## SESSION NOTE — 2026-07-18h (surface shared cards + wishlist, not block)
+
+Player preferred surfacing over blocking. Reframed rule #8 from "hard block" to "mark & wishlist":
+- **Dashboard**: every card shared with another deck gets a `⇄N` badge in the decklist
+  (accent = own enough, warn = need more), and the old "Cross-Deck Conflicts" section is now an
+  informational **"Shared Across Decks"** panel (✓ covered / ⚠ need copies). Nothing is blocked.
+- **`wishlist.py`** → `data/wishlist.md`: consolidated, priced checklist — shared copies to buy
+  (~$80.69 / 40 copies), cards not owned (now 0), and buy-list upgrades (~$173, all from Cosmic).
+- Vito + Force of Will confirmed owned via `owned_additions.txt` (merged by load_collection).
+Skill/grounding updated to "surface, don't deny." Deck files still unedited.

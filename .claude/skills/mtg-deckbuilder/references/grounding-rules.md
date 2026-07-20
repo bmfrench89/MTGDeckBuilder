@@ -48,18 +48,18 @@ See `tooling-and-data.md`. Bulk card APIs and price sites are blocked / login-wa
 environment. Never invent a live price or a card you couldn't verify. Give labeled *estimate
 ranges* for prices. If you couldn't verify a card, exclude it and say why (don't guess it in).
 
-## 8. Never share a card across decks unless the player owns enough copies (HARD RULE)
-Physical decks can't share the same card. **A card may appear in N decks only if the player
-owns ≥ N copies.** The player owns multiples of many precon staples (7× Sol Ring, 7× Command
-Tower, 7× Arcane Signet, 5× Counterspell), but single copies of most nonbasics and spells.
+## 8. Surface shared cards — don't block deck creation
+Physical decks can't share the same card unless the player owns enough copies (a card in N
+decks needs ≥ N owned copies). But **do not refuse to build a deck over this** — the player
+wants to see the overlap, not be denied. Track it, mark it, and let them decide.
 
-Enforce this mechanically:
-- When building a new/edited deck, draw only from the **available pool**:
-  `python3 scripts/deck_conflicts.py --collection <csv> --available [--deck <thisdeck>]`
-  (owned copies minus what other decks already commit; basics are unlimited/exempt).
-- Before finishing, run `python3 scripts/deck_conflicts.py --collection <csv>` and resolve
-  every conflict. The dashboard also shows a Cross-Deck Conflicts panel.
-- To fix existing conflicts, offer BOTH: `--buy-doubles` (a priced list to buy the extra
-  copies — usually cheap staples, and it keeps every deck optimal) OR swapping the shared
-  card out of the lower-priority deck for an owned, on-color, uncommitted replacement.
-  Recommend buying doubles when the cards are cheap; don't gut a tuned deck without asking.
+- **Mark, don't block.** Build the deck the player wants. The dashboard badges every shared
+  card (`⇄N`) in the decklist and lists them in a "Shared Across Decks" panel (✓ = enough
+  copies owned; ⚠ = would need more to sleeve all decks at once). It's informational.
+- **Wishlist the shortfall.** Cards needing extra copies go on the wishlist, not into a wall:
+  `python3 scripts/wishlist.py --collection <csv>` writes `data/wishlist.md` (shared copies to
+  buy + not-owned cards + buy-list upgrades, priced). Point the player there.
+- Optional helpers: `deck_conflicts.py` (see all shared cards), `--buy-doubles` (priced list),
+  `--available` (owned minus committed elsewhere) for when the player *wants* disjoint decks.
+- If the player says they own something missing from the export, add it to
+  `data/collection/owned_additions.txt` — their word outranks the export (rule #6).

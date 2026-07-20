@@ -128,6 +128,26 @@ def conflicts_for_deck(deck_path, collection_index, decks_dir=None):
     return conflicts(usage, focus_deck=deck_label(deck_path))
 
 
+def shared_for_deck(deck_path, collection_index, decks_dir=None):
+    """For badging: every card in this deck that also appears in another deck.
+    Returns {normalized_name: {'decks':[...], 'owned':n, 'covered':bool}} where
+    covered = you own enough copies for all decks using it."""
+    decks_dir = decks_dir or os.path.dirname(deck_path) or "."
+    me = deck_label(deck_path)
+    usage = scan(decks_dir, collection_index)
+    out = {}
+    for name, u in usage.items():
+        if me not in u["decks"] or len(u["decks"]) < 2:
+            continue
+        out[mtglib._norm(name)] = {
+            "name": name,
+            "decks": sorted(u["decks"]),
+            "owned": u["owned"],
+            "covered": u["total"] <= u["owned"],
+        }
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description="Cross-deck card conflict checker.")
     ap.add_argument("--collection", required=True)
