@@ -681,6 +681,45 @@ search couldn't match.</div>
 </div></body></html>"""
 
 
+def generate(deck_path, collection_path, title="Commander Deck", commander="",
+             subtitle="Commander (EDH) deck dashboard", theme="default",
+             decks_dir=None, size="normal", want_visual=False):
+    """Load a deck + collection and return rendered HTML. Shared by the CLI and
+    the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
+    'report': dict}."""
+    with open(deck_path, encoding="utf-8") as f:
+        deck = mtglib.parse_deck(f.read())
+    coll = mtglib.load_collection(collection_path)
+
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    idx = mtglib.index_by_name(coll)
+    enriched, missing = deck_stats.analyze(deck, idx)
+    apply_attrs(enriched, load_attrs(f"{stem}.attrs.csv"))
+    rep = deck_stats.build_report(deck, enriched, missing, idx)
+
+    sections = load_deck_sections(deck_path)
+    notes = load_notes(f"{stem}.notes.md")
+    buylist = load_buylist(f"{stem}.buylist.csv")
+
+    shared = None
+    dd = decks_dir if decks_dir is not None else os.path.dirname(deck_path)
+    if dd:
+        try:
+            shared = deck_conflicts.shared_for_deck(deck_path, idx, dd)
+        except Exception:
+            shared = None
+    try:
+        assessment = power.assess(enriched, rep, power.load_refs())
+    except Exception:
+        assessment = None
+
+    dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
+                                 sections, notes, buylist, shared, assessment)
+    visual = render_visual(title, deck, idx, theme, size) if want_visual else None
+    return {"dashboard": dashboard, "visual": visual,
+            "assessment": assessment, "report": rep}
+
+
 def main():
     ap = argparse.ArgumentParser(description="Build a deck dashboard.")
     ap.add_argument("--deck", required=True)
@@ -701,63 +740,22 @@ def main():
                     "conflict check (default: the deck's folder); '' to disable")
     args = ap.parse_args()
 
+    decks_dir = args.decks_dir if args.decks_dir is not None else os.path.dirname(args.deck)
     try:
-        with open(args.deck, encoding="utf-8") as f:
-            deck = mtglib.parse_deck(f.read())
-        coll = mtglib.load_collection(args.collection)
+        res = generate(args.deck, args.collection, args.title, args.commander,
+                       args.subtitle, args.theme, decks_dir, args.size, args.visual)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
 
-    # Auto-detect companion files next to the deck (<stem>.notes.md, etc.)
-    stem = args.deck[:-4] if args.deck.endswith(".txt") else args.deck
-    notes_path = args.notes or f"{stem}.notes.md"
-    buylist_path = args.buylist or f"{stem}.buylist.csv"
-    attrs_path = args.attrs or f"{stem}.attrs.csv"
-
-    idx = mtglib.index_by_name(coll)
-    enriched, missing = deck_stats.analyze(deck, idx)
-
-    attrs = load_attrs(attrs_path)
-    n_attr = apply_attrs(enriched, attrs)
-    rep = deck_stats.build_report(deck, enriched, missing, idx)
-
-    sections = load_deck_sections(args.deck)
-    notes = load_notes(notes_path)
-    buylist = load_buylist(buylist_path)
-
-    # Which cards are shared with sibling decks (for badges + the shared panel).
-    shared = None
-    decks_dir = args.decks_dir if args.decks_dir is not None else os.path.dirname(args.deck)
-    if decks_dir:
-        try:
-            shared = deck_conflicts.shared_for_deck(args.deck, idx, decks_dir)
-        except Exception as e:  # never let this break the dashboard
-            print(f"  (shared-card check skipped: {e})", file=sys.stderr)
-    for label, p, obj in [("notes", notes_path, notes),
-                          ("buylist", buylist_path, buylist),
-                          ("attrs", attrs_path, attrs)]:
-        if obj:
-            extra = f" ({n_attr} cards matched)" if label == "attrs" else ""
-            print(f"  + {label}: {p}{extra}")
-
-    try:
-        assessment = power.assess(enriched, rep, power.load_refs())
-    except Exception as e:
-        assessment = None
-        print(f"  (power assessment skipped: {e})", file=sys.stderr)
-
-    html_doc = render_dashboard(args.title, args.commander, args.subtitle,
-                                rep, enriched, args.theme, sections, notes, buylist,
-                                shared, assessment)
     with open(args.out, "w", encoding="utf-8") as f:
-        f.write(html_doc)
+        f.write(res["dashboard"])
     print(f"wrote dashboard: {args.out}")
 
-    if args.visual:
+    if args.visual and res["visual"]:
         vpath = (args.out[:-5] if args.out.endswith(".html") else args.out) + "-visual.html"
         with open(vpath, "w", encoding="utf-8") as f:
-            f.write(render_visual(args.title, deck, idx, args.theme, args.size))
+            f.write(res["visual"])
         print(f"wrote visual gallery: {vpath}  (open in a real browser)")
 
     return 0

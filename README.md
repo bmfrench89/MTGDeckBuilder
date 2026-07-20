@@ -130,6 +130,23 @@ python3 scripts/deck_conflicts.py --collection data/collection/collection.csv
 Bracket rules and the 53-card Game Changers list are grounded in WotC's official
 Commander Bracket system and live in editable `data/reference/*.txt` files.
 
+## Web app (local front end)
+
+A Flask app in `webapp/` puts a front end over the same scripts (imported, not
+duplicated) — a power leaderboard, live deck dashboards, the wishlist, a shared-cards
+view, and a collection page where you can upload a new export or add owned-but-missing
+cards. It runs locally so your collection + prices stay on your machine.
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r webapp/requirements.txt
+python3 webapp/app.py            # -> http://127.0.0.1:5000
+```
+
+Editing a decklist in the UI re-analyzes it instantly (curve, bracket, power, shared
+cards). See `webapp/README.md`. The CLI and the app share `build_dashboard.generate()`,
+so both render identical dashboards.
+
 ## The two completed decks (preserved)
 
 - **`data/decks/yshtola-nights-blessed.txt`** — Esper (WUB) control/drain.

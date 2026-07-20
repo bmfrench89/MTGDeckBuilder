@@ -320,3 +320,19 @@ Skill/grounding updated to "surface, don't deny." Deck files still unedited.
   Kaervek gets the punisher engines (Torment of Hailfire, Fiery Emancipation, Sulfuric Vortex…).
 - Added a **rakdos** dashboard theme (Kaervek). Themes now: default / yshtola / cloud / rakdos /
   spider.
+
+---
+
+## SESSION NOTE — 2026-07-18j (local web front end)
+
+Built a Flask web app in `webapp/` over the existing scripts (imported, not duplicated).
+- `build_dashboard.generate()` extracted so CLI + app render identical dashboards.
+- Pages: Decks (power leaderboard), live per-deck dashboard + visual + inline editor,
+  Wishlist, Shared, Collection (value/top cards, upload export, add owned_additions).
+- Run: `pip install -r webapp/requirements.txt && python3 webapp/app.py` -> localhost:5000.
+  Local-only by design (collection/prices stay on the machine). Verified all routes 200 and
+  screenshotted with the pre-installed Chromium.
+- Fixed a data bug: kaervek/cloud buy-lists used `\,` to escape commas (invalid CSV) which
+  mangled card names — rewrote with proper double-quote quoting.
+Flask note: this container's Debian blinker blocks a plain `pip install flask`; a venv (as in
+webapp/README) avoids it.
