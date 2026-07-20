@@ -214,3 +214,21 @@ the card-attribute CSV to confirm every included card is actually a Spider.
 **Tool tweaks:** added a `spider` dashboard theme; broadened the name-only land heuristic
 again (monastery/courtyard/territory/plaza/shrine/peaks/orchard/sanctum...). All four saved
 decks now report correct land counts.
+
+---
+
+## SESSION NOTE — 2026-07-18d (dashboards evolved)
+
+`build_dashboard.py` upgraded from a flat page to a sectioned tool:
+- Stat tiles now include **deck value**.
+- **Game Plan / Player Notes** section (from `<deck>.notes.md`, markdown-lite).
+- **Mana Curve (MV spread)** driven by an optional `<deck>.attrs.csv`
+  (Name,Type,MV,Colors) — so curve works without the full attribute collection CSV;
+  cards lacking MV are honestly noted, not hidden.
+- **Buy & Replace** panel with interactive **price-threshold toggle buttons**
+  (All / <=$5 / <=$10 / <=$20 / <=$50), running total, from `<deck>.buylist.csv`
+  (Card,Price,Tier,Replaces,Reason).
+- **Decklist grouped by the deck file's own `# --- Section ---` headers.**
+All three companion files auto-detect next to `<deck>.txt`. Cosmic Spider-Man has all
+three authored (notes + 13-card buylist + 52-card attrs → curve peaks at MV2).
+Other decks render fine without companions (those sections just omit).

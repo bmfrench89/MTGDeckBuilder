@@ -27,7 +27,8 @@ scripts/                          The engine (stdlib-only Python 3)
   analyze_collection.py           Pool stats & tribal/type/color counts ("what can I build?")
   deck_stats.py                   Curve, pip demand, category counts, ownership check
   card_image.py                   Scryfall ID -> hotlinkable card-image URL
-  build_dashboard.py              Deck -> self-contained HTML dashboard (+ visual gallery)
+  build_dashboard.py              Deck -> rich HTML dashboard (+ visual gallery)
+  staples_crossref.py             Staples list vs collection -> owned/missing buy-list
 data/
   collection/                     Your collection (snapshot committed; full CSV you provide)
   decks/                          Saved deck lists (two completed decks preserved here)
@@ -79,6 +80,28 @@ cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`), drop it at
 - real tribal/type counts (`analyze_collection.py --subtype Dragon`, `--tribes`),
 - mana curve + colored **pip demand vs. sources** in `deck_stats.py`,
 - Scryfall card images in the visual gallery.
+
+## Rich dashboards + companion files
+
+`build_dashboard.py` produces a sectioned dashboard: stat tiles (incl. deck value),
+a **Game Plan / player notes** section, a **mana-curve (MV spread)**, ownership, an
+interactive **Buy & Replace** panel with **price-threshold toggles** (All / ≤$5 / ≤$10 /
+…), and a **decklist grouped by the deck file's own sections**. It auto-detects three
+optional companion files next to `<deck>.txt`:
+
+- `<deck>.notes.md` — player notes / game plan (markdown-lite: `#` headings, `-` bullets,
+  `**bold**`). Rendered as the Game Plan section.
+- `<deck>.buylist.csv` — columns `Card,Price,Tier,Replaces,Reason`. Drives the interactive
+  Buy & Replace panel; the toggles filter by price and show a running total.
+- `<deck>.attrs.csv` — columns `Name,Type,MV,Colors`. Powers the MV spread without the full
+  collection CSV (cards without an entry are noted, not hidden). See
+  `data/decks/cosmic-spider-man.attrs.csv` for the pattern.
+
+```bash
+python3 scripts/build_dashboard.py --deck data/decks/cosmic-spider-man.txt \
+  --collection data/collection/collection.csv --theme spider \
+  --title "Cosmic Spider-Man" --out cosmic.html   # notes/buylist/attrs auto-detected
+```
 
 ## The two completed decks (preserved)
 

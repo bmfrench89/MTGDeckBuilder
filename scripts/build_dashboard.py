@@ -17,7 +17,10 @@ Themes: yshtola (Esper), cloud (Naya/Mako), default (neutral dark). Any theme
 name not listed falls back to default.
 """
 import argparse
+import csv
 import html
+import os
+import re
 import sys
 from collections import Counter
 
@@ -144,42 +147,248 @@ def ownership_block(rep):
             f"({len(prob)}):</b><ul>{items}</ul></div>")
 
 
-def card_rows(enriched):
-    order = ["Land", "Creature", "Planeswalker", "Artifact", "Enchantment",
-             "Instant", "Sorcery", "Battle", "Unknown"]
-    groups = {}
+# --------------------------------------------------------------------------- #
+# Optional companion files (auto-detected next to the deck: <stem>.notes.md,
+# <stem>.buylist.csv, <stem>.attrs.csv)
+# --------------------------------------------------------------------------- #
+def load_deck_sections(path):
+    """Group the deck by the `# --- Label ---` headers in the deck file itself,
+    so each build sections its own way ("Spiders", "Ramp", ...)."""
+    sections, cur = [], None
+    with open(path, encoding="utf-8") as f:
+        for raw in f:
+            s = raw.strip()
+            if not s:
+                continue
+            if s.startswith("#"):
+                m = re.search(r"---\s*(.*?)\s*---", s)
+                if m:
+                    label = re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip()
+                    cur = (label, [])
+                    sections.append(cur)
+                continue
+            m = re.match(r"^(\d+)\s*[xX]?\s+(.*\S)$", s)
+            qty, name = (int(m.group(1)), m.group(2).strip()) if m else (1, s)
+            if cur is None:
+                cur = ("Cards", [])
+                sections.append(cur)
+            cur[1].append((qty, name))
+    return sections
+
+
+def load_notes(path):
+    return open(path, encoding="utf-8").read() if path and os.path.exists(path) else None
+
+
+def load_buylist(path):
+    if not (path and os.path.exists(path)):
+        return None
+    rows = []
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            rows.append({
+                "card": (r.get("Card") or "").strip(),
+                "price": _to_float_price(r.get("Price")),
+                "tier": (r.get("Tier") or "").strip(),
+                "replaces": (r.get("Replaces") or "").strip(),
+                "reason": (r.get("Reason") or "").strip(),
+            })
+    return [r for r in rows if r["card"]]
+
+
+def load_attrs(path):
+    """Optional name -> {type, mv} map to power the MV spread without the full CSV."""
+    if not (path and os.path.exists(path)):
+        return None
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            name = (r.get("Name") or r.get("Card") or "").strip()
+            if not name:
+                continue
+            mv = _to_float_price(r.get("MV"))
+            out[mtglib._norm(name)] = {
+                "type": (r.get("Type") or "").strip(),
+                "mv": mv,
+                "colors": (r.get("Colors") or "").strip(),
+            }
+    return out
+
+
+def _to_float_price(s):
+    try:
+        return float(str(s).replace("$", "").replace(",", "").strip())
+    except (ValueError, AttributeError):
+        return None
+
+
+def apply_attrs(enriched, attrs):
+    """Overlay type/MV/colors from an attrs map onto enriched deck cards."""
+    if not attrs:
+        return 0
+    n = 0
     for c in enriched:
-        pt = c.primary_type if c.types else "Unknown"
-        groups.setdefault(pt, []).append(c)
-    out = []
-    for pt in order:
-        if pt not in groups:
+        a = attrs.get(mtglib._norm(c.name))
+        if not a:
             continue
-        cards = sorted(groups[pt], key=lambda x: (x.mana_value or 0, x.name))
-        n = sum(c.quantity for c in cards)
-        out.append(f"<h3>{esc(pt)} <span class='count'>{n}</span></h3><ul class='cards'>")
-        for c in cards:
-            mv = f"<span class='mv'>{c.mana_value:g}</span>" if c.mana_value is not None else ""
-            qty = f"{c.quantity}× " if c.quantity > 1 else ""
-            out.append(f"<li>{mv}{qty}{esc(c.name)}</li>")
+        n += 1
+        if a["type"]:
+            c.types = [a["type"]]
+        if a["mv"] is not None:
+            c.mana_value = a["mv"]
+        if a["colors"]:
+            c.identity = mtglib._parse_colorish(a["colors"])
+    return n
+
+
+# --------------------------------------------------------------------------- #
+# Section renderers
+# --------------------------------------------------------------------------- #
+def notes_html(text):
+    def bold(s):
+        return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", esc(s))
+    out, inlist = [], False
+    for raw in text.splitlines():
+        s = raw.rstrip()
+        if not s.strip():
+            if inlist:
+                out.append("</ul>"); inlist = False
+            continue
+        if s.startswith("## ") or s.startswith("# "):
+            if inlist:
+                out.append("</ul>"); inlist = False
+            out.append(f"<h3>{bold(s.lstrip('# '))}</h3>")
+        elif s.lstrip().startswith(("- ", "* ")):
+            if not inlist:
+                out.append("<ul class='notes'>"); inlist = True
+            out.append(f"<li>{bold(s.lstrip()[2:])}</li>")
+        else:
+            if inlist:
+                out.append("</ul>"); inlist = False
+            out.append(f"<p>{bold(s)}</p>")
+    if inlist:
         out.append("</ul>")
     return "".join(out)
 
 
-def render_dashboard(title, commander, subtitle, rep, enriched, theme):
+def sections_html(sections, enriched):
+    mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
+    pr = {mtglib._norm(c.name): c.price for c in enriched}
+    out = []
+    for label, cards in sections:
+        n = sum(q for q, _ in cards)
+        out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>"
+                   "<ul class='cards'>")
+        for q, name in cards:
+            k = mtglib._norm(name)
+            m = mv.get(k)
+            mvb = (f"<span class='mv'>{m:g}</span>" if m is not None
+                   else "<span class='mv dim'>·</span>")
+            p = pr.get(k)
+            price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
+            qty = f"{q}× " if q > 1 else ""
+            out.append(f"<li>{mvb}{qty}{esc(name)}{price}</li>")
+        out.append("</ul>")
+    return "".join(out)
+
+
+def curve_note(enriched):
+    nonland = [c for c in enriched if not c.is_land]
+    known = [c for c in nonland if c.mana_value is not None]
+    if not nonland:
+        return ""
+    if len(known) < len(nonland):
+        miss = len(nonland) - len(known)
+        return (f"<p class='muted'>Curve covers {len(known)} of {len(nonland)} "
+                f"nonland cards. {miss} still need mana-value data — add them to "
+                "<code>&lt;deck&gt;.attrs.csv</code> or load the attribute CSV.</p>")
+    return f"<p class='muted'>Curve covers all {len(known)} nonland cards.</p>"
+
+
+def buylist_html(rows):
+    if not rows:
+        return ""
+    thresholds = [5, 10, 20, 50]
+    btns = "".join(
+        f"<button type='button' class='thbtn' data-max='{v}'>&le;${v}</button>"
+        for v in thresholds)
+    body = []
+    for r in rows:
+        p = r["price"]
+        dp = p if p is not None else 999999
+        pstr = f"${p:,.2f}" if p is not None else "—"
+        repl = (f"<span class='repl'>replace:</span> {esc(r['replaces'])}"
+                if r["replaces"] else "<span class='muted'>new add</span>")
+        tier = f"<span class='tier'>{esc(r['tier'])}</span>" if r["tier"] else ""
+        body.append(
+            f"<tr class='buyrow' data-price='{dp:.2f}'>"
+            f"<td class='bc'>{esc(r['card'])} {tier}</td>"
+            f"<td class='bp'>{pstr}</td>"
+            f"<td>{repl}</td>"
+            f"<td class='br'>{esc(r['reason'])}</td></tr>")
+    total = sum(r["price"] for r in rows if r["price"] is not None)
+    return f"""
+<div class="buytoggle">
+  <span class="muted">Price filter:</span>
+  {btns}
+  <button type="button" class="thbtn active" data-max="999999">All</button>
+  <span class="buysum" id="buysum"></span>
+</div>
+<div class="tablewrap"><table class="data buytable">
+<thead><tr><th>Buy</th><th>~Price</th><th>Swap</th><th>Why</th></tr></thead>
+<tbody id="buybody">{''.join(body)}</tbody></table></div>
+<p class='muted' data-total='{total:.2f}'>Prices are rough estimates (no live
+price source reachable) — sanity-check before buying.</p>
+<script>
+(function(){{
+  var body=document.getElementById('buybody');
+  var sum=document.getElementById('buysum');
+  var btns=document.querySelectorAll('.thbtn');
+  function apply(max){{
+    var rows=body.querySelectorAll('.buyrow'), shown=0, tot=0;
+    rows.forEach(function(r){{
+      var p=parseFloat(r.getAttribute('data-price'));
+      var vis=p<=max;
+      r.style.display=vis?'':'none';
+      if(vis){{shown++; if(p<900000) tot+=p;}}
+    }});
+    sum.textContent=shown+' cards · ~$'+tot.toFixed(2);
+  }}
+  btns.forEach(function(b){{
+    b.addEventListener('click',function(){{
+      btns.forEach(function(x){{x.classList.remove('active');}});
+      b.classList.add('active');
+      apply(parseFloat(b.getAttribute('data-max')));
+    }});
+  }});
+  apply(999999);
+}})();
+</script>"""
+
+
+def render_dashboard(title, commander, subtitle, rep, enriched, theme,
+                     sections, notes=None, buylist=None):
     t = THEMES.get(theme, THEMES["default"])
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
              if t["fonts_link"] else "")
     cats = rep["categories"]
-    tiles = "".join([
-        stat_tile("Total", rep["total_cards"], "incl. commander"),
-        stat_tile("Lands", rep["lands"], deck_stats._flag("lands", rep["lands"]).strip("()")),
-        stat_tile("Ramp", cats.get("ramp", 0)),
-        stat_tile("Draw", cats.get("draw", 0)),
-        stat_tile("Removal", cats.get("removal", 0)),
-        stat_tile("Wipes", cats.get("wipe", 0)),
-    ])
+    tiles = [stat_tile("Total", rep["total_cards"], "incl. commander"),
+             stat_tile("Lands", rep["lands"],
+                       deck_stats._flag("lands", rep["lands"]).strip("()"))]
+    if rep.get("deck_value") is not None:
+        tiles.append(stat_tile("Value", f"${rep['deck_value']:,.0f}", "market est"))
+    tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
+              stat_tile("Removal", cats.get("removal", 0)),
+              stat_tile("Draw", cats.get("draw", 0))]
+    tiles = "".join(tiles)
+
+    notes_sec = (f"<section><h2>Game Plan &amp; Player Notes</h2>"
+                 f"{notes_html(notes)}</section>" if notes else "")
+    pip_sec = (f"<section><h2>Color / Pip Demand</h2>{pip_table(rep)}</section>"
+               if rep.get("pip_demand") else "")
+    buy_sec = (f"<section><h2>Buy &amp; Replace</h2>{buylist_html(buylist)}</section>"
+               if buylist else "")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -233,9 +442,34 @@ ul.cards {{ list-style:none; padding:0; margin:0; columns:2; column-gap:24px;
 ul.cards li {{ break-inside:avoid; padding:2px 0; }}
 .mv {{ display:inline-block; min-width:20px; color:var(--accent);
   font-size:.75rem; }}
+.mv.dim {{ color:var(--muted); }}
+.pr {{ color:var(--muted); font-size:.72rem; margin-left:6px; }}
+ul.notes {{ margin:6px 0 10px; padding-left:20px; }}
+ul.notes li {{ margin:3px 0; }}
+section p {{ margin:8px 0; }}
+code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
+  padding:1px 5px; border-radius:5px; font-size:.85em; }}
+.tablewrap {{ overflow-x:auto; }}
+.buytoggle {{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  margin-bottom:14px; }}
+.thbtn {{ background:transparent; color:var(--text); cursor:pointer;
+  border:1px solid rgba(255,255,255,.18); border-radius:20px;
+  padding:5px 13px; font-family:{t['mono']}; font-size:.8rem; }}
+.thbtn:hover {{ border-color:var(--accent); }}
+.thbtn.active {{ background:var(--accent); color:#000; border-color:var(--accent);
+  font-weight:700; }}
+.buysum {{ color:var(--muted); font-family:{t['mono']}; font-size:.8rem;
+  margin-left:auto; }}
+.buytable td.bc {{ color:var(--text); }}
+.buytable td.bp {{ color:var(--accent2); white-space:nowrap; }}
+.buytable td.br {{ color:var(--muted); font-size:.82rem; }}
+.repl {{ color:var(--warn); }}
+.tier {{ color:var(--muted); font-size:.68rem; border:1px solid rgba(255,255,255,.15);
+  border-radius:8px; padding:0 6px; margin-left:6px; }}
 footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
   text-align:center; }}
-@media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:2rem; }} }}
+@media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:2rem; }}
+  .buysum {{ margin-left:0; width:100%; }} }}
 </style></head><body><div class="wrap">
 <header>
   <h1>{esc(title)}</h1>
@@ -243,12 +477,14 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
 </header>
 <div class="tiles">{tiles}</div>
-<section><h2>Mana Curve</h2>{curve_svg(rep['curve'], t)}</section>
-<section><h2>Color / Pip Demand</h2>{pip_table(rep)}</section>
+{notes_sec}
+<section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
+{pip_sec}
 <section><h2>Ownership</h2>{ownership_block(rep)}</section>
-<section><h2>Decklist</h2>{card_rows(enriched)}</section>
-<footer>Generated by the MTG Commander Deckbuilder. Category counts are
-heuristic — verify uncertain cards. Prices, if any, are estimates.</footer>
+{buy_sec}
+<section><h2>Decklist by Section</h2>{sections_html(sections, enriched)}</section>
+<footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
+prices are heuristic/estimates — verify uncertain cards.</footer>
 </div></body></html>"""
 
 
@@ -313,6 +549,9 @@ def main():
     ap.add_argument("--visual", action="store_true",
                     help="also write <out>-visual.html with card images")
     ap.add_argument("--size", default="normal", help="image size for --visual")
+    ap.add_argument("--notes", help="player notes markdown (default: <deck>.notes.md)")
+    ap.add_argument("--buylist", help="buy/replace CSV (default: <deck>.buylist.csv)")
+    ap.add_argument("--attrs", help="type/MV CSV (default: <deck>.attrs.csv)")
     args = ap.parse_args()
 
     try:
@@ -324,12 +563,31 @@ def main():
         print(f"error: {e}", file=sys.stderr)
         return 2
 
+    # Auto-detect companion files next to the deck (<stem>.notes.md, etc.)
+    stem = args.deck[:-4] if args.deck.endswith(".txt") else args.deck
+    notes_path = args.notes or f"{stem}.notes.md"
+    buylist_path = args.buylist or f"{stem}.buylist.csv"
+    attrs_path = args.attrs or f"{stem}.attrs.csv"
+
     idx = mtglib.index_by_name(coll)
     enriched, missing = deck_stats.analyze(deck, idx)
+
+    attrs = load_attrs(attrs_path)
+    n_attr = apply_attrs(enriched, attrs)
     rep = deck_stats.build_report(deck, enriched, missing, idx)
 
+    sections = load_deck_sections(args.deck)
+    notes = load_notes(notes_path)
+    buylist = load_buylist(buylist_path)
+    for label, p, obj in [("notes", notes_path, notes),
+                          ("buylist", buylist_path, buylist),
+                          ("attrs", attrs_path, attrs)]:
+        if obj:
+            extra = f" ({n_attr} cards matched)" if label == "attrs" else ""
+            print(f"  + {label}: {p}{extra}")
+
     html_doc = render_dashboard(args.title, args.commander, args.subtitle,
-                                rep, enriched, args.theme)
+                                rep, enriched, args.theme, sections, notes, buylist)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html_doc)
     print(f"wrote dashboard: {args.out}")
