@@ -10,7 +10,9 @@ Usage:
       # prints "Card Name<TAB>url" for every deck card that has a Scryfall ID
 """
 import argparse
+import re
 import sys
+import urllib.parse
 
 import mtglib
 
@@ -18,12 +20,28 @@ SIZES = {"small", "normal", "large", "png", "art_crop", "border_crop"}
 
 
 def image_url(scryfall_id: str, size: str = "normal", face: str = "front") -> str:
+    """Direct CDN URL — needs the Scryfall UUID (from the attribute CSV)."""
     sid = scryfall_id.strip().lower()
     if len(sid) < 2:
         raise ValueError(f"invalid scryfall id: {scryfall_id!r}")
     ext = "png" if size == "png" else "jpg"
     return (f"https://cards.scryfall.io/{size}/{face}/"
             f"{sid[0]}/{sid[1]}/{sid}.{ext}")
+
+
+def image_url_by_name(name: str, size: str = "normal") -> str:
+    """Scryfall API image-by-name — works from any card NAME (no UUID needed).
+    Resolves live in a browser (the API 302-redirects to the image CDN). This is
+    how we show images when the collection export has no Scryfall IDs."""
+    q = re.sub(r"\s+", " ", name.replace("//", " ")).strip()
+    return ("https://api.scryfall.com/cards/named?fuzzy="
+            f"{urllib.parse.quote(q)}&format=image&version={size}")
+
+
+def image_url_by_set(set_code: str, number: str, size: str = "normal") -> str:
+    """Scryfall API image by set + collector number (exact printing)."""
+    return (f"https://api.scryfall.com/cards/{urllib.parse.quote(set_code.lower())}/"
+            f"{urllib.parse.quote(number)}?format=image&version={size}")
 
 
 def main():

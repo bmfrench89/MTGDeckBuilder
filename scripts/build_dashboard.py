@@ -255,22 +255,17 @@ heuristic — verify uncertain cards. Prices, if any, are estimates.</footer>
 def render_visual(title, deck, idx, theme, size="normal"):
     t = THEMES.get(theme, THEMES["default"])
     tiles = []
-    missing = 0
     for d in deck:
         ref = mtglib.lookup(idx, d.name)
-        if ref and ref.scryfall_id:
+        if ref and ref.scryfall_id:            # exact printing via CDN (best)
             url = card_image.image_url(ref.scryfall_id, size)
-            tiles.append(
-                f"<figure><img loading='lazy' src='{esc(url)}' "
-                f"alt='{esc(d.name)}'><figcaption>{esc(d.name)}</figcaption></figure>")
-        else:
-            missing += 1
-            tiles.append(
-                f"<figure class='noimg'><div class='ph'>{esc(d.name)}</div>"
-                f"<figcaption>no Scryfall ID</figcaption></figure>")
-    warn = ("" if not missing else
-            f"<p class='warn'>{missing} card(s) had no Scryfall ID "
-            "(need the CSV export).</p>")
+        else:                                   # reliable: Scryfall image-by-name
+            url = card_image.image_url_by_name(d.name, size)
+        qty = f"<span class='qty'>{d.quantity}x</span>" if d.quantity > 1 else ""
+        tiles.append(
+            f"<figure><img loading='lazy' src='{esc(url)}' alt='{esc(d.name)}'>"
+            f"{qty}<figcaption>{esc(d.name)}</figcaption></figure>")
+    warn = ""
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -284,19 +279,22 @@ h1 {{ font-family:{t['display']}; color:{t['accent']}; }}
   color:{t['text']}; padding:12px 16px; border-radius:10px; margin:12px 0 24px; }}
 .grid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:16px; }}
-figure {{ margin:0; }}
-figure img {{ width:100%; border-radius:4.75% / 3.5%; display:block; }}
+figure {{ margin:0; position:relative; }}
+figure img {{ width:100%; aspect-ratio:5/7; object-fit:cover;
+  border-radius:4.75% / 3.5%; display:block; background:{t['panel']}; }}
+.qty {{ position:absolute; top:6px; right:6px; background:{t['accent']};
+  color:#000; font-family:{t['mono']}; font-size:.72rem; font-weight:700;
+  padding:1px 6px; border-radius:10px; }}
 figcaption {{ font-family:{t['mono']}; font-size:.72rem; color:{t['muted']};
   margin-top:5px; text-align:center; }}
-.noimg .ph {{ aspect-ratio:5/7; background:{t['panel']}; border-radius:8px;
-  display:flex; align-items:center; justify-content:center; padding:10px;
-  text-align:center; font-family:{t['mono']}; font-size:.8rem; }}
 .warn {{ color:{t['warn']}; }}
 </style></head><body><div class="wrap">
 <h1>{esc(title)}</h1>
-<div class="banner"><b>Heads up:</b> this gallery hotlinks Scryfall card images.
-It will <b>not</b> render in the chat preview — open it in a real browser
-(Chrome / Safari / Edge).</div>
+<div class="banner"><b>Heads up:</b> card images load <b>live from Scryfall by
+name</b> when you open this file. They will <b>not</b> appear in the chat preview
+(external images are blocked there) — open it in a real browser with internet
+(Chrome / Safari / Edge). A blank card usually means a name Scryfall's fuzzy
+search couldn't match.</div>
 {warn}
 <div class="grid">{''.join(tiles)}</div>
 </div></body></html>"""
