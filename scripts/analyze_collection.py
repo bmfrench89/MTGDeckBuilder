@@ -35,6 +35,30 @@ def total_copies(cards):
     return sum(c.quantity for c in cards)
 
 
+def total_value(cards):
+    return sum(c.value for c in cards)
+
+
+def value_report(cards, top):
+    priced = [c for c in cards if c.price]
+    if not priced:
+        print("[!] No price data in this collection format. Load the pricing CSV "
+              "(with a MARKET/price column) to see collection value.")
+        return
+    print(f"Total collection value (MARKET): ${total_value(cards):,.2f}")
+    print(f"Priced cards: {len(priced)} / {len(cards)} unique\n")
+    print(f"Top {top} by unit price:")
+    for c in sorted(priced, key=lambda x: -x.price)[:top]:
+        st = f" [{c.set_code}]" if c.set_code else ""
+        print(f"  ${c.price:>8,.2f}  x{c.quantity:<2} {c.name}{st}")
+    print(f"\nTop {top} by total value held (price x quantity):")
+    for c in sorted(priced, key=lambda x: -x.value)[:top]:
+        st = f" [{c.set_code}]" if c.set_code else ""
+        print(f"  ${c.value:>8,.2f}  x{c.quantity:<2} {c.name}{st}")
+    print("\n[note] Prices are as-exported; some obscure rows are clearly "
+          "mispriced. Treat as rough, not appraisal-grade.")
+
+
 def summary(cards, fmt):
     have_types = any(c.types for c in cards)
     have_mv = any(c.mana_value is not None for c in cards)
@@ -79,6 +103,10 @@ def summary(cards, fmt):
     lands = [c for c in cards if c.is_land]
     print(f"\nLands (by {'type' if have_types else 'name heuristic'}): "
           f"{len(lands)} unique / {total_copies(lands)} copies")
+
+    if any(c.price for c in cards):
+        print(f"\nCollection value (MARKET): ${total_value(cards):,.2f}"
+              "   (run --value for the breakdown)")
 
 
 def show_tribes(cards, top):
@@ -136,7 +164,8 @@ def main():
     ap = argparse.ArgumentParser(description="Analyze an MTG collection.")
     ap.add_argument("collection", help="path to collection CSV or name-only list")
     ap.add_argument("--tribes", action="store_true", help="top creature subtypes")
-    ap.add_argument("--top", type=int, default=25, help="how many tribes to show")
+    ap.add_argument("--value", action="store_true", help="collection value report")
+    ap.add_argument("--top", type=int, default=25, help="how many rows to show")
     ap.add_argument("--subtype", help="count cards of a creature subtype, e.g. Dragon")
     ap.add_argument("--type", dest="type", help="count cards of a type, e.g. Equipment")
     ap.add_argument("--color", help="filter by exact color identity, e.g. BR or 'B,R'")
@@ -156,6 +185,10 @@ def main():
 
     if args.tribes:
         show_tribes(cards, args.top)
+        return 0
+
+    if args.value:
+        value_report(cards, args.top)
         return 0
 
     if any([args.subtype, args.type, args.color is not None, args.name]):

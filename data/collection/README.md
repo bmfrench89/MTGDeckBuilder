@@ -10,11 +10,24 @@ ownership claim (Grounding Rule #1).
   `collection_list`. Good for **ownership counts**. It can't answer color / type /
   tribe / mana-value / pip questions on its own — those need the full CSV.
 
-- **`collection.csv`** *(gitignored by default — you provide it)* — the **full
-  Archidekt export**. This is the gold standard. Columns:
-  `Quantity, Name, Mana Value, Colors, Identities, Mana cost, Types, Sub-types,
-  Super-types, Rarity, Scryfall ID`. It unlocks curve, pip demand, tribal counts,
-  and Scryfall image hotlinks (via the Scryfall ID column).
+- **`collection.csv`** *(gitignored — you provide it; may contain purchase prices)* —
+  a CSV export. The parser auto-detects two useful flavors:
+
+  1. **Collection + pricing export** (e.g. Archidekt collection / ManaBox): columns like
+     `Folder Name, Quantity, Card Name, Set Code, Set Name, Card Number, Condition,
+     Printing, Price Bought, Date Bought, LOW, MID, MARKET` (an Excel `sep=,` preamble
+     line is handled automatically). **Unlocks: ownership by exact printing, real
+     collection value, and per-deck pricing.** Does NOT carry color/type/mana value.
+
+  2. **Card-attribute export** (the gold standard): columns
+     `Quantity, Name, Mana Value, Colors, Identities, Mana cost, Types, Sub-types,
+     Super-types, Rarity, Scryfall ID`. **Unlocks: color-identity checks, mana curve,
+     colored-pip demand, tribal/type counts, and Scryfall image hotlinks.**
+
+  You can keep both (e.g. `collection.csv` for pricing + `collection_attrs.csv` for
+  attributes) and point `--collection` at whichever a given task needs. To get flavor 2
+  from Archidekt, export with the card-data columns enabled (Mana Value, Color Identity,
+  Type Line, Scryfall ID), not just the pricing columns.
 
 ## How to export from Archidekt
 

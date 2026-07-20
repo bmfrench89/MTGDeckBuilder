@@ -53,7 +53,8 @@ def analyze(deck_cards, coll_index):
                 identity=ref.identity, mana_cost=ref.mana_cost,
                 types=ref.types, subtypes=ref.subtypes,
                 supertypes=ref.supertypes, rarity=ref.rarity,
-                scryfall_id=ref.scryfall_id)
+                scryfall_id=ref.scryfall_id, set_code=ref.set_code,
+                collector_number=ref.collector_number, price=ref.price)
             enriched.append(merged)
     return enriched, missing
 
@@ -110,6 +111,10 @@ def build_report(deck_cards, enriched, missing, coll_index):
         for color in prod:
             sources[color] += c.quantity
 
+    # deck market value (sum of one copy's representative price per deck card)
+    deck_value = sum((c.price or 0) * c.quantity for c in enriched)
+    priced_n = sum(1 for c in enriched if c.price)
+
     return {
         "total_cards": total,
         "lands": sum(c.quantity for c in lands),
@@ -123,6 +128,8 @@ def build_report(deck_cards, enriched, missing, coll_index):
         "quantity_problems": owned_enough(deck_cards, coll_index),
         "have_mv": have_mv,
         "have_cost": have_cost,
+        "deck_value": round(deck_value, 2) if priced_n else None,
+        "priced_cards": priced_n,
     }
 
 
@@ -175,6 +182,10 @@ def print_report(rep):
     if not rep["have_cost"]:
         print("\n[!] No mana-cost data (name-only collection). Curve and pip "
               "demand unavailable — load the Archidekt CSV for full mana math.")
+
+    if rep["deck_value"] is not None:
+        print(f"\nDeck value (MARKET, {rep['priced_cards']} priced cards): "
+              f"${rep['deck_value']:,.2f}")
 
     prob = rep["quantity_problems"]
     print("\nOwnership check:")

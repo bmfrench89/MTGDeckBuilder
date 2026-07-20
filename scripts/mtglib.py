@@ -35,6 +35,10 @@ class Card:
     supertypes: list = field(default_factory=list)   # e.g. ["Legendary"]
     rarity: str = ""
     scryfall_id: str = ""
+    set_code: str = ""
+    collector_number: str = ""
+    price: Optional[float] = None   # representative (max) MARKET unit price
+    value: float = 0.0              # total value across printings: sum(qty*market)
 
     @property
     def is_land(self) -> bool:
@@ -85,9 +89,17 @@ def _parse_colorish(value: str) -> set:
     return out
 
 
+def _strip_sep_preamble(text: str) -> str:
+    """Excel-style exports prepend a `sep=,` line. Drop it if present."""
+    lines = text.splitlines()
+    if lines and lines[0].strip().strip('"').lower().startswith("sep="):
+        return "\n".join(lines[1:])
+    return text
+
+
 def detect_format(text: str) -> str:
     """Return 'csv' or 'namelist'."""
-    head = text.lstrip()
+    head = _strip_sep_preamble(text).lstrip()
     first_line = head.splitlines()[0] if head.splitlines() else ""
     low = first_line.lower()
     if ("," in first_line and "name" in low
@@ -116,7 +128,15 @@ def parse_collection(text: str) -> list:
     return _parse_namelist(text)
 
 
+def _to_float(s):
+    try:
+        return float(str(s).replace("$", "").replace(",", "").strip())
+    except (ValueError, AttributeError):
+        return None
+
+
 def _parse_csv(text: str) -> list:
+    text = _strip_sep_preamble(text)
     reader = csv.DictReader(io.StringIO(text))
     fn = reader.fieldnames or []
     c_qty = _header_index(fn, "quantity", "count", "qty")
@@ -130,8 +150,14 @@ def _parse_csv(text: str) -> list:
     c_super = _header_index(fn, "super-types", "supertypes", "super types")
     c_rarity = _header_index(fn, "rarity")
     c_sid = _header_index(fn, "scryfall id", "scryfall_id", "scryfallid", "id")
+    c_set = _header_index(fn, "set code", "set", "edition")
+    c_num = _header_index(fn, "card number", "collector number", "number")
+    c_price = _header_index(fn, "market", "price", "mid", "low", "purchase price")
 
-    cards = []
+    # One physical printing per row. Aggregate by card name: sum quantity, sum
+    # value (qty*market), keep the max unit price as representative, keep the
+    # richest attribute data seen.
+    agg = {}
     for row in reader:
         name = (row.get(c_name) or "").strip() if c_name else ""
         if not name:
@@ -140,26 +166,33 @@ def _parse_csv(text: str) -> list:
             qty = int(float((row.get(c_qty) or "1").strip())) if c_qty else 1
         except ValueError:
             qty = 1
-        mv = None
-        if c_mv and (row.get(c_mv) or "").strip():
-            try:
-                mv = float(row[c_mv])
-            except ValueError:
-                mv = None
-        cards.append(Card(
-            name=name,
-            quantity=qty,
-            mana_value=mv,
-            colors=_parse_colorish(row.get(c_colors, "") if c_colors else ""),
-            identity=_parse_colorish(row.get(c_ident, "") if c_ident else ""),
-            mana_cost=(row.get(c_cost) or "").strip() if c_cost else "",
-            types=_split_multi(row.get(c_types, "")) if c_types else [],
-            subtypes=_split_multi(row.get(c_sub, "")) if c_sub else [],
-            supertypes=_split_multi(row.get(c_super, "")) if c_super else [],
-            rarity=(row.get(c_rarity) or "").strip() if c_rarity else "",
-            scryfall_id=(row.get(c_sid) or "").strip() if c_sid else "",
-        ))
-    return cards
+        mv = _to_float(row.get(c_mv)) if c_mv else None
+        price = _to_float(row.get(c_price)) if c_price else None
+        key = _norm(name)
+        if key not in agg:
+            agg[key] = Card(
+                name=name, quantity=0,
+                mana_value=mv,
+                colors=_parse_colorish(row.get(c_colors, "") if c_colors else ""),
+                identity=_parse_colorish(row.get(c_ident, "") if c_ident else ""),
+                mana_cost=(row.get(c_cost) or "").strip() if c_cost else "",
+                types=_split_multi(row.get(c_types, "")) if c_types else [],
+                subtypes=_split_multi(row.get(c_sub, "")) if c_sub else [],
+                supertypes=_split_multi(row.get(c_super, "")) if c_super else [],
+                rarity=(row.get(c_rarity) or "").strip() if c_rarity else "",
+                scryfall_id=(row.get(c_sid) or "").strip() if c_sid else "",
+                set_code=(row.get(c_set) or "").strip() if c_set else "",
+                collector_number=(row.get(c_num) or "").strip() if c_num else "",
+            )
+        c = agg[key]
+        c.quantity += qty
+        if price is not None:
+            c.value += qty * price
+            if c.price is None or price > c.price:
+                c.price = price
+        if c.mana_value is None and mv is not None:
+            c.mana_value = mv
+    return list(agg.values())
 
 
 _QTY_RE = re.compile(r"^\s*(\d+)\s*[xX]?\s+(.*\S)\s*$")

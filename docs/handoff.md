@@ -161,3 +161,28 @@ live scrapes. Web *search* works; page *fetch* of those sites does not.
 **Next steps:** (1) load the CSV and re-run deck_stats on Kaervek to confirm 0 off-color
 and get real curve/pips; (2) acquire ~10 punisher engines from the buy-list; (3) explore
 the Spider-Man typal idea (needs per-card oracle verification — all post-2025).
+
+---
+
+## SESSION NOTE — 2026-07-18b (pricing CSV wired in)
+
+Player uploaded a **collection + pricing CSV** (`all_my_cards_2.csv`, 2,763 rows,
+one per printing, Excel `sep=,` preamble). Installed at `data/collection/collection.csv`
+(gitignored — contains purchase prices).
+
+- **Format:** `Folder Name, Quantity, Card Name, Set Code, Set Name, Card Number,
+  Condition, Printing, Price Bought, Date Bought, LOW, MID, MARKET`. Has ownership +
+  set + prices; **no color/type/mana-value/Scryfall-ID** columns. So it unlocks value
+  and per-deck pricing, NOT color/curve/tribe math. For that, still need the
+  card-attribute export (Mana Value/Colors/Types/Scryfall ID).
+- **Tools upgraded:** mtglib aggregates printings by name and reads prices;
+  `analyze_collection.py --value` gives collection value + top cards;
+  `deck_stats.py` prints deck MARKET value.
+- **Collection value (MARKET):** ~$2,985.74 across 1,916 unique / 2,607 copies.
+  Note: some obscure rows are clearly mispriced (e.g. Vine Trellis ~$30) — treat prices
+  as rough. Priciest: Rhystic Study (MB1) ~$72, The Mind Stone (MSH) ~$68, Scorched
+  Ruins (WTH) ~$66.
+- **Deck values:** Y'shtola ~$307, Kaervek v1 ~$94.
+- **Discrepancy update:** vs this fresher export, Y'shtola "missing" dropped 4 -> 2.
+  **The Kingpin of Crime** and **Extinction Event** now show owned; still missing
+  **Vito, Thorn of the Dusk Rose** and **Force of Will**.
