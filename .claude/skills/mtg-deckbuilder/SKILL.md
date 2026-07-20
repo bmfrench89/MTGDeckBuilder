@@ -65,6 +65,9 @@ Assemble the 99 (+ commander) from owned cards. As you go:
   (ramp / removal / draw / lands). Tune against the ratios in `references/deckbuilding-principles.md`.
 - Flag any card **not in the collection** explicitly — it belongs on a buy list, not silently
   in the 99.
+- **Never share a card across decks beyond owned copies** (grounding rule #8). Build from the
+  available pool (`deck_conflicts.py --available`) and run `deck_conflicts.py` before finishing;
+  offer `--buy-doubles` (buy cheap extra copies) or an owned swap to resolve any conflict.
 - Watch for the rules traps in `references/rules-reference.md` (X-spell MV, cast triggers,
   exile-vs-destroy wraths with graveyard synergy, MDFC/flashback mana value).
 

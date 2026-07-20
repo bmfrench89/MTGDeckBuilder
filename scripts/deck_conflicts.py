@@ -52,6 +52,7 @@ def scan(decks_dir, collection_index):
     for name, u in usage.items():
         ref = mtglib.lookup(collection_index, name)
         u["owned"] = ref.quantity if ref else 0
+        u["price"] = ref.price if (ref and ref.price) else None
     return usage
 
 
@@ -64,15 +65,60 @@ def conflicts(usage, focus_deck=None):
             continue
         if focus_deck and focus_deck not in u["decks"]:
             continue
+        short = u["total"] - u["owned"]
         out.append({
             "card": name,
             "owned": u["owned"],
             "committed": u["total"],
-            "short": u["total"] - u["owned"],
+            "short": short,
+            "price": u.get("price"),
+            "buy_cost": round(short * u["price"], 2) if u.get("price") else None,
             "decks": dict(sorted(u["decks"].items())),
         })
     out.sort(key=lambda c: (-c["short"], -c["committed"], c["card"]))
     return out
+
+
+def available_pool(usage, collection, exclude_deck=None):
+    """Cards still free to put in a NEW deck without creating a conflict:
+    free = owned - copies already committed to OTHER decks. Excludes basics."""
+    committed_elsewhere = {}
+    for name, u in usage.items():
+        n = sum(q for d, q in u["decks"].items() if d != exclude_deck)
+        committed_elsewhere[mtglib._norm(name)] = n
+    rows = []
+    for c in collection:
+        k = mtglib._norm(c.name)
+        if k in BASICS:
+            continue
+        free = c.quantity - committed_elsewhere.get(k, 0)
+        if free > 0:
+            rows.append((c.name, c.quantity, committed_elsewhere.get(k, 0), free))
+    rows.sort(key=lambda r: (-r[3], r[0]))
+    return rows
+
+
+def buy_doubles_report(conf):
+    """Shopping list: extra copies to buy so all decks can be assembled at once."""
+    priced = [c for c in conf if c["buy_cost"] is not None]
+    unpriced = [c for c in conf if c["buy_cost"] is None]
+    total = round(sum(c["buy_cost"] for c in priced), 2)
+    print("BUY-DOUBLES SHOPPING LIST")
+    print("Buy these extra copies and every deck can be sleeved at the same time —"
+          "\nno swaps, no deck loses a card.\n")
+    print(f"  {'Qty':<5}{'Card':<28}{'~each':>8}{'~total':>9}   also in")
+    print("  " + "-" * 72)
+    for c in sorted(conf, key=lambda x: -(x["buy_cost"] or 0)):
+        each = f"${c['price']:.2f}" if c["price"] is not None else "—"
+        tot = f"${c['buy_cost']:.2f}" if c["buy_cost"] is not None else "—"
+        where = ", ".join(c["decks"])
+        print(f"  {c['short']:<5}{c['card']:<28}{each:>8}{tot:>9}   {where}")
+    print("  " + "-" * 72)
+    n = sum(c["short"] for c in conf)
+    print(f"  {n} extra copies · estimated total ~${total:.2f}"
+          + (f" (+{len(unpriced)} unpriced)" if unpriced else ""))
+    print("\nPrices are your export's MARKET values (rough). Most conflicts are cheap "
+          "staples — usually far easier than swapping cards out of a tuned deck.")
 
 
 def conflicts_for_deck(deck_path, collection_index, decks_dir=None):
@@ -88,6 +134,12 @@ def main():
     ap.add_argument("--decks-dir", default=None,
                     help="folder of deck .txt files (default: dir of --deck, else data/decks)")
     ap.add_argument("--deck", help="only show conflicts involving this deck file")
+    ap.add_argument("--buy-doubles", action="store_true",
+                    help="print a priced shopping list to buy the extra copies instead")
+    ap.add_argument("--available", action="store_true",
+                    help="list cards still free to add to a NEW deck (owned minus "
+                         "copies committed to other decks); pair with --deck to free "
+                         "up that deck's own cards")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -102,10 +154,30 @@ def main():
     idx = mtglib.index_by_name(coll)
     usage = scan(decks_dir, idx)
     focus = deck_label(args.deck) if args.deck else None
+
+    if args.available:
+        rows = available_pool(usage, coll, exclude_deck=focus)
+        tag = f" (freeing '{focus}')" if focus else ""
+        print(f"AVAILABLE POOL{tag} — owned copies not committed to other decks.\n"
+              "Build a new deck only from cards with free ≥ the copies you want.\n")
+        print(f"  {'Free':<6}{'Owned':<7}{'Elsewhere':<11}Card")
+        print("  " + "-" * 60)
+        for name, own, elsew, free in rows[:400]:
+            print(f"  {free:<6}{own:<7}{elsew:<11}{name}")
+        print(f"\n  {len(rows)} distinct cards have at least one free copy.")
+        return 0
+
     conf = conflicts(usage, focus)
 
     if args.json:
         print(json.dumps(conf, indent=2))
+        return 0
+
+    if args.buy_doubles:
+        if not conf:
+            print("No conflicts — nothing to buy. ✅")
+        else:
+            buy_doubles_report(conf)
         return 0
 
     decks = sorted({d for u in usage.values() for d in u["decks"]})

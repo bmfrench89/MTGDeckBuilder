@@ -48,8 +48,18 @@ See `tooling-and-data.md`. Bulk card APIs and price sites are blocked / login-wa
 environment. Never invent a live price or a card you couldn't verify. Give labeled *estimate
 ranges* for prices. If you couldn't verify a card, exclude it and say why (don't guess it in).
 
-## 8. Keep decks separate unless told otherwise
-The player owns multiples of most precon staples (e.g. 7× Sol Ring, 7× Command Tower, 7×
-Arcane Signet, 5× Counterspell). When building a second deck, don't silently "borrow" a
-single copy already committed to another deck — check quantities. If a staple is needed in
-two decks, confirm there are enough physical copies.
+## 8. Never share a card across decks unless the player owns enough copies (HARD RULE)
+Physical decks can't share the same card. **A card may appear in N decks only if the player
+owns ≥ N copies.** The player owns multiples of many precon staples (7× Sol Ring, 7× Command
+Tower, 7× Arcane Signet, 5× Counterspell), but single copies of most nonbasics and spells.
+
+Enforce this mechanically:
+- When building a new/edited deck, draw only from the **available pool**:
+  `python3 scripts/deck_conflicts.py --collection <csv> --available [--deck <thisdeck>]`
+  (owned copies minus what other decks already commit; basics are unlimited/exempt).
+- Before finishing, run `python3 scripts/deck_conflicts.py --collection <csv>` and resolve
+  every conflict. The dashboard also shows a Cross-Deck Conflicts panel.
+- To fix existing conflicts, offer BOTH: `--buy-doubles` (a priced list to buy the extra
+  copies — usually cheap staples, and it keeps every deck optimal) OR swapping the shared
+  card out of the lower-priority deck for an owned, on-color, uncommitted replacement.
+  Recommend buying doubles when the cards are cheap; don't gut a tuned deck without asking.

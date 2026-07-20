@@ -273,3 +273,20 @@ Four features added (a research workflow verified the bracket rules + Game Chang
 
 Note: `data/collection/collection.csv` (pricing export) has no per-card MV, so only Cosmic
 (which has a `.attrs.csv`) gets curve-based power components; others renormalize those out.
+
+---
+
+## SESSION NOTE — 2026-07-18g (no-share rule + buy-doubles / available pool)
+
+HARD RULE added (grounding-rules #8): a card may appear in N decks only if the player owns
+≥ N copies. Enforced via `deck_conflicts.py`:
+- `--buy-doubles`: priced shopping list to buy the extra copies (keeps all decks optimal).
+  Current 4 decks: **42 extra copies, ~$81 total** (mostly <$1 staples; priciest Lightning
+  Greaves ~$9.16/2, Plaza of Heroes ~$8.80). Force of Will + Vito are unowned (separate buy).
+- `--available [--deck X]`: the buildable pool (owned minus committed elsewhere) — use this
+  when building a NEW deck so it never reuses a committed single.
+
+Decision left to the player: BUY the ~$81 of doubles (recommended — no deck degraded) vs.
+SWAP shared cards out of the two draft decks (Kaervek/Cosmic) for owned bench cards (would
+downgrade those drafts; the collection bench is deep but mostly weaker). Deck files NOT edited
+yet — awaiting the player's choice.
