@@ -27,6 +27,7 @@ from collections import Counter
 import mtglib
 import deck_stats
 import card_image
+import deck_conflicts
 
 THEMES = {
     "default": {
@@ -271,25 +272,65 @@ def notes_html(text):
     return "".join(out)
 
 
-def sections_html(sections, enriched):
+def sections_html(sections, enriched, images=True, size="small"):
     mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
     pr = {mtglib._norm(c.name): c.price for c in enriched}
     out = []
+    if images:
+        out.append("<p class='muted imgnote'>Card images load live from Scryfall "
+                   "when opened in a browser (they stay blank in the chat preview).</p>")
     for label, cards in sections:
         n = sum(q for q, _ in cards)
-        out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>"
-                   "<ul class='cards'>")
-        for q, name in cards:
-            k = mtglib._norm(name)
-            m = mv.get(k)
-            mvb = (f"<span class='mv'>{m:g}</span>" if m is not None
-                   else "<span class='mv dim'>·</span>")
-            p = pr.get(k)
-            price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
-            qty = f"{q}× " if q > 1 else ""
-            out.append(f"<li>{mvb}{qty}{esc(name)}{price}</li>")
-        out.append("</ul>")
+        out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>")
+        if images:
+            out.append("<div class='cardgrid'>")
+            for q, name in cards:
+                k = mtglib._norm(name)
+                m = mv.get(k)
+                mvb = (f"<span class='mv'>{m:g}</span>" if m is not None else "")
+                p = pr.get(k)
+                price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
+                qty = f"<span class='qty'>{q}×</span>" if q > 1 else ""
+                url = card_image.image_url_by_name(name, size)
+                out.append(
+                    f"<figure class='mc'><img loading='lazy' src='{esc(url)}' "
+                    f"alt='{esc(name)}'>{qty}<figcaption>{mvb}{esc(name)}{price}"
+                    "</figcaption></figure>")
+            out.append("</div>")
+        else:
+            out.append("<ul class='cards'>")
+            for q, name in cards:
+                k = mtglib._norm(name)
+                m = mv.get(k)
+                mvb = (f"<span class='mv'>{m:g}</span>" if m is not None
+                       else "<span class='mv dim'>·</span>")
+                p = pr.get(k)
+                price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
+                qty = f"{q}× " if q > 1 else ""
+                out.append(f"<li>{mvb}{qty}{esc(name)}{price}</li>")
+            out.append("</ul>")
     return "".join(out)
+
+
+def conflicts_html(conf):
+    if conf is None:
+        return ""
+    if not conf:
+        return ("<div class='ok'>✅ No cross-deck conflicts — every shared card is "
+                "covered by the copies you own (basic lands exempt).</div>")
+    rows = []
+    for c in conf:
+        where = ", ".join(f"{esc(d)} (×{q})" for d, q in c["decks"].items())
+        rows.append(
+            f"<tr><td class='bc'>{esc(c['card'])}</td>"
+            f"<td class='bp'>own {c['owned']} / need {c['committed']}</td>"
+            f"<td class='br'>{where}</td></tr>")
+    return (f"<div class='warnbox'>⚠ {len(conf)} card(s) in this deck are also "
+            "committed to your other decks beyond the copies you own — you can't "
+            "assemble all these decks at once without buying more:</div>"
+            "<div class='tablewrap'><table class='data'><thead><tr><th>Card</th>"
+            "<th>Own / Need</th><th>Shared with</th></tr></thead><tbody>"
+            + "".join(rows) + "</tbody></table>")
 
 
 def curve_note(enriched):
@@ -367,7 +408,7 @@ price source reachable) — sanity-check before buying.</p>
 
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
-                     sections, notes=None, buylist=None):
+                     sections, notes=None, buylist=None, conflicts=None):
     t = THEMES.get(theme, THEMES["default"])
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
@@ -389,6 +430,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                if rep.get("pip_demand") else "")
     buy_sec = (f"<section><h2>Buy &amp; Replace</h2>{buylist_html(buylist)}</section>"
                if buylist else "")
+    conf_sec = (f"<section><h2>Cross-Deck Conflicts</h2>{conflicts_html(conflicts)}"
+                "</section>" if conflicts is not None else "")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -466,6 +509,19 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .repl {{ color:var(--warn); }}
 .tier {{ color:var(--muted); font-size:.68rem; border:1px solid rgba(255,255,255,.15);
   border-radius:8px; padding:0 6px; margin-left:6px; }}
+.imgnote {{ font-size:.75rem; margin:0 0 10px; }}
+.cardgrid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
+  gap:10px; margin:6px 0 14px; }}
+.mc {{ margin:0; position:relative; }}
+.mc img {{ width:100%; aspect-ratio:5/7; object-fit:cover; display:block;
+  border-radius:5% / 3.6%; background:rgba(255,255,255,.05); }}
+.mc .qty {{ position:absolute; top:4px; right:4px; background:var(--accent);
+  color:#000; font-family:{t['mono']}; font-size:.64rem; font-weight:700;
+  padding:0 5px; border-radius:8px; }}
+.mc figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
+  margin-top:3px; line-height:1.25; }}
+.mc figcaption .mv {{ min-width:0; margin-right:3px; }}
+.mc figcaption .pr {{ display:block; margin:0; }}
 footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
   text-align:center; }}
 @media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:2rem; }}
@@ -481,6 +537,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
 <section><h2>Ownership</h2>{ownership_block(rep)}</section>
+{conf_sec}
 {buy_sec}
 <section><h2>Decklist by Section</h2>{sections_html(sections, enriched)}</section>
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
@@ -552,6 +609,8 @@ def main():
     ap.add_argument("--notes", help="player notes markdown (default: <deck>.notes.md)")
     ap.add_argument("--buylist", help="buy/replace CSV (default: <deck>.buylist.csv)")
     ap.add_argument("--attrs", help="type/MV CSV (default: <deck>.attrs.csv)")
+    ap.add_argument("--decks-dir", help="folder of sibling decks for the cross-deck "
+                    "conflict check (default: the deck's folder); '' to disable")
     args = ap.parse_args()
 
     try:
@@ -579,6 +638,15 @@ def main():
     sections = load_deck_sections(args.deck)
     notes = load_notes(notes_path)
     buylist = load_buylist(buylist_path)
+
+    # Cross-deck conflict check (against sibling decks in the same folder).
+    conflicts = None
+    decks_dir = args.decks_dir if args.decks_dir is not None else os.path.dirname(args.deck)
+    if decks_dir:
+        try:
+            conflicts = deck_conflicts.conflicts_for_deck(args.deck, idx, decks_dir)
+        except Exception as e:  # never let the conflict check break the dashboard
+            print(f"  (conflict check skipped: {e})", file=sys.stderr)
     for label, p, obj in [("notes", notes_path, notes),
                           ("buylist", buylist_path, buylist),
                           ("attrs", attrs_path, attrs)]:
@@ -587,7 +655,8 @@ def main():
             print(f"  + {label}: {p}{extra}")
 
     html_doc = render_dashboard(args.title, args.commander, args.subtitle,
-                                rep, enriched, args.theme, sections, notes, buylist)
+                                rep, enriched, args.theme, sections, notes, buylist,
+                                conflicts)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html_doc)
     print(f"wrote dashboard: {args.out}")
