@@ -6,6 +6,9 @@ duplicated); this is just Flask routing + templates.
 
 ## Run
 
+**Windows:** double-click `webapp\run.bat` (or see `docs/SETUP-windows.md` for the full
+clone-and-run guide). **macOS/Linux:**
+
 ```bash
 python3 -m venv .venv && source .venv/bin/activate    # recommended
 pip install -r webapp/requirements.txt
