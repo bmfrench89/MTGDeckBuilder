@@ -5,6 +5,21 @@
 <div class="sub">{{ unique }} unique cards · {{ copies }} copies
 {% if has_price %}· <span class="gold">~${{ '%.2f'|format(total) }}</span> MARKET value{% endif %}</div>
 
+<div class="card" style="margin:14px 0;border-left:3px solid {{ '#3fb950' if carddb.on and carddb.pct >= 60 else '#d29922' }}">
+  {% if carddb.on %}
+    <b class="good">Card DB: enriched</b> — {{ carddb.covered }}/{{ carddb.total }}
+    cards ({{ carddb.pct }}%) have real colors / types / mana value / image ids.
+    Curves, color scores, and card-fit scores use them across every deck.
+    {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
+    new cards — run <code>enrich.bat</code> again after a Scryfall update.</span>{% endif %}
+  {% else %}
+    <b class="warn">Card DB: not enriched</b> — tools are running on the name-only list, so
+    curves and fit scores are limited. Run <code>enrich.bat</code> (or
+    <code>python scripts/carddb.py --collection &lt;your.csv&gt;</code>) once to pull real
+    colors / types / mana value from Scryfall for your whole collection.
+  {% endif %}
+</div>
+
 <div class="grid" style="margin-bottom:22px">
   <div class="card">
     <h2 style="margin-top:0">Upload a new export</h2>

@@ -217,10 +217,18 @@ def collection_view():
             s = ln.strip()
             if s and not s.startswith("#"):
                 additions.append(s)
+    attrs_path = os.path.join(ROOT, "data/collection/collection_attrs.csv")
+    enriched_n = sum(1 for c in coll if c.types)
+    carddb = {
+        "on": os.path.exists(attrs_path),
+        "covered": enriched_n,
+        "total": len(coll),
+        "pct": round(100 * enriched_n / len(coll)) if coll else 0,
+    }
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
-                           page="collection")
+                           carddb=carddb, page="collection")
 
 
 @app.route("/collection/add", methods=["POST"])
