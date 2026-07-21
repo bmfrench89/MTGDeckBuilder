@@ -1,0 +1,32 @@
+# Curated commander database for the "This commander would also work" matcher.
+# Colors = color identity (space-separated WUBRG). Archetypes = space-separated tags.
+# Ownership is checked live against the collection, so it's not stored here.
+# Grow this list freely. Tags in use: equipment voltron artifacts vehicles aristocrats
+# tokens go-wide spellslinger reanimator counters lifegain control group-slug burn
+# tribal-spiders tribal-hero superfriends ramp.
+Name,Colors,Archetypes,Notes
+"Cloud, Ex-SOLDIER",R G W,equipment voltron artifacts,Attach on the cheap; big single-swing payoffs.
+"The Invincible Iron Man",U R,equipment artifacts voltron,"Tony Stark flips to Iron Man; cheats an artifact/equipment in and auto-attaches each combat. Izzet — shares only red with Naya equipment."
+"Iron Man, Armored Avenger",U,artifacts counters equipment,"Mono-blue artifact creature; draw = +1/+1 counters, team flying. Great for a draw-and-counters artifact build."
+"Halvar, God of Battle",W,equipment voltron,Move equipment for free and reanimate equipped creatures; mono-white voltron.
+"Wyleth, Soul of Steel",R W,voltron equipment auras,Draw on combat damage for each aura/equipment — Boros voltron card advantage.
+"Akiri, Fearless Voyager",R W,equipment aggro tokens,Draw when an equipped creature attacks; protect the team. Boros go-wide equipment.
+"Nazahn, Revered Bladesmith",G W,equipment,Tutors an equipment on ETB and auto-attaches; Selesnya equipment value.
+"Syr Gwyn, Hero of Ashvale",R W B,equipment voltron aristocrats,Mardu knights + equipment; cast/equip discounts and card draw.
+"Kotori, Pilot Prodigy",W U,vehicles equipment artifacts,Azorius vehicles/artifacts; free crew and evasion.
+"Osgir, the Reconstructor",R W,artifacts tokens,Recur and double artifacts (equipment included) — Boros artifact value.
+"Urza, Lord High Artificer",U,artifacts spellslinger,Mono-blue artifact engine + mana + a big finisher.
+"Breya, Etherium Shaper",W U B R,artifacts aristocrats tokens,Four-color artifact toolbox with sac payoffs.
+"Jhoira, Weatherlight Captain",U R,artifacts spellslinger,Draw off every historic (artifact/legendary) spell — Izzet artifact storm-lite.
+"Shorikai, Genesis Engine",W U,vehicles artifacts control,Azorius draw-and-filter vehicle engine.
+"Sram, Senior Edificer",W,equipment auras vehicles,Mono-white cantrip engine for a lean equipment/aura deck.
+"Teysa Karlov",W B,aristocrats tokens,Doubles death triggers — the premier Orzhov aristocrats payoff.
+"Judith, the Scourge Diva",B R,aristocrats spellslinger burn,Anthem + ping on nontoken deaths; Rakdos sacrifice.
+"Alesha, Who Smiles at Death",R W B,aristocrats reanimator,Recurs small creatures on attack; Mardu value engine.
+"Yahenni, Undying Partisan",B,aristocrats,Free sac outlet that grows and dodges wipes; mono-black aristocrats.
+"Mazirek, Kraul Death Priest",B G,aristocrats counters tokens,Every sacrifice grows the whole board; Golgari sac.
+"Kaervek the Merciless",B R,group-slug burn control,Punishes opponents' spells with damage; Rakdos control/slug.
+"Y'shtola, Night's Blessed",W U B,control lifegain aristocrats,Esper lifeloss/drain payoff with a control shell.
+"Cosmic Spider-Man",W U B R G,tribal-spiders go-wide tokens,Five-color Spider lord — swing wide with evasion and lifelink.
+"Captain America, Team Leader",W U R,tribal-hero counters equipment,Jeskai Hero typal with +1/+1 counters and combat tricks.
+"Doctor Doom, Rules All",U B R,control artifacts superfriends,Grixis villains/control; punishing value engine.

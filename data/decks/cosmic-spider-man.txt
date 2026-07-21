@@ -1,6 +1,8 @@
 # Deck: Cosmic Spider-Man — 5-color (WUBRG) Spider typal aggro — v1 DRAFT
 # Title: Cosmic Spider-Man
 # Theme: spider
+# Archetype: tribal-spiders go-wide tokens
+# Colors: W U B R G
 # Commander: Cosmic Spider-Man  ({W}{U}{B}{R}{G}, 5/5)
 #   Grants your OTHER Spiders flying, first strike, trample, lifelink & haste
 #   during combat on your turn. Go wide with Spiders, then alpha-strike.

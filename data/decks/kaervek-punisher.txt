@@ -1,6 +1,8 @@
 # Deck: Kaervek the Merciless — Rakdos (B/R) punisher / group-slug — v1 DRAFT
 # Title: Kaervek the Merciless
 # Theme: rakdos
+# Archetype: group-slug burn control
+# Colors: B R
 # Commander: Kaervek the Merciless  ({5}{B}{R}, 5/4 Human Shaman)
 #   "Whenever an opponent casts a spell, Kaervek deals damage equal to that
 #    spell's mana value to any target." (verified: Scryfall/Gatherer, 2026-07)

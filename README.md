@@ -32,6 +32,7 @@ scripts/                          The engine (stdlib-only Python 3)
   power.py                        Bracket (1-5) + 0-100 power score; rank all decks
   deck_conflicts.py               Show cards shared across decks vs. owned (+ buy-doubles)
   wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
+  similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
 data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
 data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
