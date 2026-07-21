@@ -32,6 +32,7 @@ import deck_conflicts
 import power
 import deck_fit
 import similar_commanders as simc
+import combo_detector
 
 THEMES = {
     "default": {
@@ -614,6 +615,44 @@ def similar_html(similar):
             + "".join(rows) + "</tbody></table></div>")
 
 
+def combos_html(combos):
+    """Render the Combo Watch section from combo_detector output:
+    {'complete':[...], 'near':[...]}. `None` (detector failed) renders nothing."""
+    if combos is None:
+        return ""
+    comp, near = combos.get("complete", []), combos.get("near", [])
+    if not comp and not near:
+        return ("<div class='ok'>No known infinite / two-card combos detected in "
+                "this deck, complete or one-away. <span class='muted'>(Checked "
+                "against <code>data/reference/combos.csv</code> — a curated list, "
+                "not exhaustive.)</span></div>")
+    out = []
+    if comp:
+        out.append("<h3>Complete combos in this deck <span class='count'>"
+                   f"{len(comp)}</span></h3><ul class='notes'>")
+        for c in comp:
+            flag = (" <span class='need'>EARLY 2-CARD → BRACKET 4</span>"
+                    if c["early"] else "")
+            out.append(f"<li><b>{esc(c['name'])}</b> → {esc(c['result'])}{flag}"
+                       f"<br><span class='muted'>{esc(c['notes'])}</span></li>")
+        out.append("</ul>")
+    if near:
+        out.append("<h3>One piece away <span class='count'>"
+                   f"{len(near)}</span></h3><ul class='notes'>")
+        for c in near:
+            owned = c.get("missing_owned")
+            tag = ("<span class='ok'>you own it</span>" if owned
+                   else "<span class='muted'>not owned</span>")
+            out.append(f"<li>add <b>{esc(c['missing'])}</b> ({tag}) → "
+                       f"<b>{esc(c['name'])}</b>: {esc(c['result'])}</li>")
+        out.append("</ul>")
+    if comp:
+        out.append("<p class='muted'>A complete <b>early two-card</b> combo is the "
+                   "WotC red flag that puts a deck in Bracket 4 — verify the "
+                   "interaction and read the pod before playing it.</p>")
+    return "".join(out)
+
+
 def card_modal_css(t):
     return f"""
 .mc {{ cursor:pointer; }}
@@ -787,7 +826,7 @@ def card_modal_block(details):
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
-                     assessment=None, similar=None, details=None):
+                     assessment=None, similar=None, details=None, combos=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {})
@@ -812,6 +851,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
 
     power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
                  "</section>" if assessment else "")
+    combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
+                 if combos is not None else "")
 
     notes_sec = (f"<section><h2>Game Plan &amp; Player Notes</h2>"
                  f"{notes_html(notes)}</section>" if notes else "")
@@ -945,6 +986,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 </header>
 <div class="tiles">{tiles}</div>
 {power_sec}
+{combo_sec}
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
@@ -1042,6 +1084,10 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         _, _, similar = simc.find(deck_path, idx, simc.load_commanders(), attrs)
     except Exception:
         similar = None
+    try:
+        combos = combo_detector.for_deck(deck_path, idx)
+    except Exception:
+        combos = None
 
     try:
         refs = power.load_refs()
@@ -1054,7 +1100,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
 
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
-                                 similar, details)
+                                 similar, details, combos)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

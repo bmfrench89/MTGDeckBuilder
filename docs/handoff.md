@@ -30,6 +30,7 @@ that branch → open PR → merge to `main`. Keep doing that.
 ### Repo map (the important bits)
 - `scripts/` — `mtglib.py` (shared parsing/pip-math/heuristics + `load_collection`),
   `analyze_collection.py`, `deck_stats.py`, `power.py` (bracket 1–5 + 0–100 score),
+  `combo_detector.py` (infinite / 2-card combo detection → feeds the bracket + a dashboard panel),
   `deck_conflicts.py` (shared cards / buy-doubles / available pool),
   `wishlist.py`, `staples_crossref.py`, `similar_commanders.py` ("would also work"),
   `commander_finder.py` ("build next"), `carddb.py` (DuckDB collection enrichment),
@@ -42,7 +43,10 @@ that branch → open PR → merge to `main`. Keep doing that.
   Force of Will), and `collection.csv` + `collection_attrs.csv` (BOTH gitignored; you provide
   the CSV, carddb generates the attrs).
 - `data/reference/` — `game_changers.txt` (verified 53-card list) + tutors/fast-mana/extra-turns/
-  mass-land-denial/combo-pieces; `commanders.csv` (curated commander DB) + `archetype_support.csv`.
+  mass-land-denial/combo-pieces; `combos.csv` (curated 2–3 card combo *definitions* — pieces,
+  result, color identity, early/Bracket-4 flag); `card_notes.csv` (curated "why it works" +
+  alternatives behind the click-a-card panel); `commanders.csv` (curated commander DB) +
+  `archetype_support.csv`.
 - `data/wishlist.md` (generated). `docs/power-and-brackets.md` (rubric). `build/` (gitignored).
 - `webapp/` — `app.py`, `templates/`, `static/` (manifest+icon), `run.sh`, README.
 
@@ -485,3 +489,52 @@ the real fix for the name-only limitation.
 - collection_attrs.csv is gitignored (derived + personal). Scryfall bulk is firewalled in this
   env; verified end-to-end with a 32-card sample (Kaervek curve + pip demand + Cloud compat %
   all populated). SQLite noted as the future choice only if we add write-heavy user state.
+
+---
+
+## SESSION NOTE — 2026-07-21 (combo detector + card_notes growth)
+
+**Two deliverables built.**
+
+**1. Curated combo engine.**
+- `data/reference/combos.csv` — 22 verified 2- and 3-card combo *definitions*
+  (`Name,Pieces,Result,ColorIdentity,Early,Category,Notes`). `Pieces` is
+  `;`-separated because card names contain commas (e.g. "Kiki-Jiki, Mirror Breaker");
+  every text field is double-quoted (the same CSV-escaping care as the buy-lists).
+  The `Early` flag = a cheap two-card infinite, the WotC Bracket-4 red line.
+- `scripts/combo_detector.py` — detects **complete** combos in a deck, **one-piece-away**
+  combos (tagged owned/buy vs. the collection), and a **collection-wide** "what can I
+  assemble" scan. Stdlib-only, `mtglib` helpers, argparse, `--json`. Modes: `--deck`,
+  `--all`, `--collection-combos`.
+- `scripts/power.py` — real detection now supersedes the old loose "N combo pieces
+  present, verify" heuristic: a **complete + Early** combo forces Bracket 4; the
+  piece-count note survives only as a fallback when no full combo is assembled. New
+  `signals.combos_complete` / `combos_near`.
+- `scripts/build_dashboard.py` — a **Combo Watch** section on every dashboard (renders
+  via `refresh.py`; threaded through `render_dashboard(..., combos=)`).
+
+**Grounding finding (verified against the deck files + snapshot):** NONE of the four
+decks contains a complete infinite combo — a correct, useful result (confirms they're
+not accidentally Bracket 4). **Y'shtola is one card — Exquisite Blood — away** from an
+infinite-drain win via the Vito it already runs (Exquisite Blood shows *not owned* in the
+snapshot). Power ranking unchanged: Y'shtola B3/67, Cosmic B3/57, Kaervek B2/55, Cloud
+B2/51. The combo list is CURATED (Scryfall / Commander Spellbook are firewalled here),
+so it is a starting point, not exhaustive.
+
+**2. Grew `data/reference/card_notes.csv`** 20 → 51 entries (+31): high-impact
+**pre-2025** staples actually in the four decks (Blood Artist, Vito, Exsanguinate, Toxic
+Deluge, Colossus Hammer, Puresteel Paladin, Night's Whisper, Terminate, Chaos Warp,
+Skullclamp, …), each with a grounded blurb + real alternatives. Deliberately **skipped the
+post-2025 Marvel/FF cards** (Spiders, Emet-Selch, Mjölnir…) — oracle text isn't verifiable
+offline (grounding rule #3).
+
+**Notes.**
+- Added a UTF-8 console guard in `combo_detector.py`: the other scripts were written on
+  Linux and crash on Windows `cp1252` when printing `→`/`⚠` (pre-existing; not fixed
+  repo-wide this session).
+- **Grounding/honesty:** the request cited an "Open threads → Agreed next" section that
+  spells out both tasks. No such section exists (the actual heading is "Open threads /
+  next steps (where we stopped)", and it lists neither). Built from the direct
+  instruction; did not treat the doc as pre-agreeing a spec it doesn't contain.
+- README + this handoff's repo map / reference list updated to include the new tool and
+  the two reference CSVs.

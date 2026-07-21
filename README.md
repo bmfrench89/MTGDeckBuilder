@@ -30,12 +30,13 @@ scripts/                          The engine (stdlib-only Python 3)
   build_dashboard.py              Deck -> rich HTML dashboard (+ visual gallery)
   staples_crossref.py             Staples list vs collection -> owned/missing buy-list
   power.py                        Bracket (1-5) + 0-100 power score; rank all decks
+  combo_detector.py               Detect infinite / 2-card combos in a deck or collection (feeds the bracket)
   deck_conflicts.py               Show cards shared across decks vs. owned (+ buy-doubles)
   wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
   similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
   commander_finder.py             "What should I build next?" — commanders ranked by owned support
   carddb.py                       Enrich the whole collection (colors/types/MV) from a Scryfall card DB (DuckDB)
-data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
+data/reference/                   Game Changers, tutor/fast-mana/combo lists + card_notes (all editable)
 data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
   collection/                     Your collection (snapshot committed; full CSV you provide)
@@ -113,8 +114,10 @@ python3 scripts/build_dashboard.py --deck data/decks/cosmic-spider-man.txt \
 
 The dashboard also shows, for every deck: **card images** in the decklist, a
 **Commander Bracket (1–5)** and **0–100 power score** (see `docs/power-and-brackets.md`),
-and a **Cross-Deck Conflicts** panel warning when a card is committed to more decks
-than you own copies of.
+a **Combo Watch** panel (complete or one-piece-away infinite combos), and a
+**Cross-Deck Conflicts** panel warning when a card is committed to more decks
+than you own copies of. Clicking a card opens a panel with a curated "why it works"
+blurb and alternatives (from `data/reference/card_notes.csv`).
 
 ## Power ranking & cross-deck conflicts
 
@@ -128,10 +131,20 @@ python3 scripts/power.py --deck data/decks/yshtola-nights-blessed.txt \
 
 # Which cards are double-committed across decks beyond the copies you own?
 python3 scripts/deck_conflicts.py --collection data/collection/collection.csv
+
+# Which infinite / 2-card combos are complete — or one piece away — in a deck?
+python3 scripts/combo_detector.py --deck data/decks/yshtola-nights-blessed.txt \
+  --collection data/collection/collection.csv
+python3 scripts/combo_detector.py --all --collection data/collection/collection.csv
+python3 scripts/combo_detector.py --collection data/collection/collection.csv \
+  --collection-combos          # everything your whole pool can already assemble
 ```
 
 Bracket rules and the 53-card Game Changers list are grounded in WotC's official
-Commander Bracket system and live in editable `data/reference/*.txt` files.
+Commander Bracket system and live in editable `data/reference/*.txt` files. The combo
+definitions are curated in `data/reference/combos.csv` (`Pieces` are `;`-separated so
+card-name commas stay intact); a **complete, cheap two-card** combo is the signal that
+pushes a deck to Bracket 4.
 
 ## Card database (optional) — do we need a backend DB?
 
