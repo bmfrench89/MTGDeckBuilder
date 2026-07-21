@@ -12,7 +12,7 @@
 
 ---
 
-## 🧭 START HERE — CURRENT STATE (updated 2026-07-21)
+## 🧭 START HERE — CURRENT STATE (updated 2026-07-21, through PR #14)
 
 ### What this project is now
 A complete, grounded MTG Commander (EDH) deckbuilding system in this repo
@@ -23,9 +23,12 @@ A complete, grounded MTG Commander (EDH) deckbuilding system in this repo
 3. **A local Flask web app** — `webapp/` (front end over the scripts; phone-ready, PWA).
 
 ### Git state
-Everything is merged to **`main`** (HEAD `d7f66f6`; PRs #1–#4 merged). Active dev branch:
-**`claude/mtg-commander-deck-builder-ncuswp`**. Workflow used all session: commit → push to
-that branch → open PR → merge to `main`. Keep doing that.
+Everything is merged to **`main`** (HEAD `3061573`; PRs #1–#14 merged). Active dev branch:
+**`claude/mtg-commander-deck-builder-ncuswp`** (kept synced to `main` after each merge via
+`git reset --hard origin/main` + force-with-lease). Workflow used all session: commit → push to
+that branch → open PR → **squash-merge** to `main` → re-sync the branch. Keep doing that.
+NOTE: squash-merging means the branch's pre-merge commits differ from `main`'s squashed commit —
+always re-sync the branch to `origin/main` before starting new work, or the next PR conflicts.
 
 ### Repo map (the important bits)
 - `scripts/` — `mtglib.py` (shared parsing/pip-math/heuristics + `load_collection`),
@@ -62,15 +65,41 @@ that branch → open PR → merge to `main`. Keep doing that.
   to drop it in. `load_collection` auto-merges `owned_additions.txt` and (if present)
   `collection_attrs.csv`.
 
-### The key data limitation & its fix
-The pricing export is effectively **name-only** (no colors/types/MV), so by default curves/
-pips/tribal/color-compat only work where a per-deck `attrs.csv` exists (only Cosmic has one).
-**The fix is `carddb.py`:** the player downloads a Scryfall bulk JSON locally
-(scryfall.com/docs/api/bulk-data → "Oracle Cards") and runs
-`python3 scripts/carddb.py --bulk oracle-cards.json --collection data/collection/collection.csv`.
-That writes `collection_attrs.csv` (gitignored) which `load_collection` overlays → every tool
-then works collection-wide. Scryfall is FIREWALLED in the build env, so this runs on the
-player's machine. Verified end-to-end with a 32-card sample this session.
+### Card-detail panel & fit engine (PRs #8–#14, this session)
+Big additions since the base repo (all merged). New/changed code lives in `build_dashboard.py`,
+`deck_fit.py`, `export_manapool.py`, `carddb.py`, plus data files:
+- **Click-a-card bottom sheet** (`build_dashboard.py` → `card_modal_css` / `card_modal_block`).
+  Click any card in a dashboard → a bottom sheet slides up with: enlarged image; **live Scryfall
+  data fetched in the browser** (type line, mana cost, oracle text, keywords, MV, color identity,
+  EDHREC rank, ~price — degrades gracefully offline); a **deck-fit score** (see below); a curated
+  "why it's good"; and **alternatives / stronger options** tagged owned/buy + `upgrade`.
+- **Deck-fit score** (`deck_fit.py`, `assess_card`) — 0–100 heuristic + band (Core/Strong/Solid/
+  Filler/Off-plan) from countable signals: color-identity vs commander, role-need vs the deck's
+  ramp/removal/draw/counter ratios, curve, staple/Game-Changer status, tribal/theme. Uses the
+  deck's own `# --- Section ---` headers as a role hint on name-only lists. Sets `nameonly` so the
+  UI shows an honest "limited data" banner. It's a GUIDE — labeled as such, never invented facts.
+- **Curated data files:** `data/reference/card_notes.csv` (Name,Why,Alternatives — the "why it's
+  good" + hand-picked alternatives; ~20 staples seeded) and `data/reference/role_staples.csv`
+  (role→staples w/ required colors — the fallback alternative pool when a card has no note).
+- **ManaPool export** (`export_manapool.py`) — plain `<qty> <name>` text for ManaPool's importer;
+  `--deck` (full 100) or `--wishlist` (buy list). Web routes `/export/wishlist.txt` +
+  `/export/deck/<stem>.txt`; Copy/Download buttons on Wishlist; per-deck link on the decks list;
+  `refresh.py` also writes static `data/manapool-wishlist.txt`.
+- **Image throttle** — dashboards load card images via a throttled `data-src` queue (Scryfall
+  /named is ~10 req/s) so the tail no longer 429s; enriched decks use the non-rate-limited CDN.
+- **Windows:** `update.bat` now offers to relaunch the app; new **`enrich.bat`** (below).
+
+### The key data limitation & its fix  (fix now one-click — DONE this session)
+The pricing export is effectively **name-only** (no colors/types/MV), so curves/pips/tribal/
+color-compat/fit-score are limited unless the collection is enriched (only Cosmic has a per-deck
+`attrs.csv`). **The fix is `carddb.py`, now auto-download:**
+`python3 scripts/carddb.py --collection data/collection/collection.csv` (no `--bulk` needed — it
+downloads Scryfall "Oracle Cards" itself, ~40 MB, cached & gitignored). Or double-click
+**`enrich.bat`** (download → enrich → rebuild). Writes `collection_attrs.csv` (gitignored) which
+`load_collection` overlays (colors/types/MV **and** `scryfall_id`) → every tool works
+collection-wide. The **Collection page shows a "Card DB: enriched / not" banner** with coverage %.
+Scryfall is FIREWALLED in the build env, so the download only runs on the player's machine — the
+enrich→overlay chain is verified here against a fixture, but the player must run it for real once.
 
 ### Environment constraints (still true)
 - Scryfall API, Scryfall/EDHREC/Draftsim page fetch, and Archidekt API are 403-blocked at the
@@ -81,15 +110,27 @@ player's machine. Verified end-to-end with a 32-card sample this session.
 - SendUserFile rejects very large full-page screenshots (~>1MB) with a 400.
 
 ### Open threads / next steps (where we stopped)
-- **Run `carddb.py` against the real Scryfall bulk** and `refresh.py` → upgrades every deck's
-  curve/power/compat from partial to exact, and lets `commander_finder`/`similar_commanders`
-  use real types instead of curated lists. (Highest leverage.)
-- A **"Card DB status" indicator** on the web Collection page (enriched vs. name-only + the one
-  command to enrich) — was the immediately-next item when we paused.
+**Agreed next (requested by player, not yet started):**
+- **Combo detector** — flag 2-/3-card win/infinite/lock combos present in a deck, grounded in
+  `data/reference/combo_pieces.txt` (grow it into pairs/lines). Surface in the dashboard + feed
+  the power/bracket signal. Keep it honest: only flag combos whose pieces are actually in the list.
+- **Grow `data/reference/card_notes.csv`** — richer "why it's good" blurbs + hand-picked
+  alternatives for more cards across the 4 decks (only ~20 staples seeded so far). Now worth doing
+  because the fit engine + panel surface these.
+
+**Player action item (blocks best fit-score quality):** run `enrich.bat` / `carddb.py` once on the
+real collection so name-only decks (Y'shtola, Kaervek, Cloud) score as sharply as Cosmic.
+
+**Backlog:**
 - **In-app deck editor** with collection autocomplete + live "available pool" warnings.
-- Fill `attrs.csv` for Cloud/Kaervek/Y'shtola (or just enrich via carddb) so all four are exact.
 - Grow `commanders.csv` / `archetype_support.csv` (more owned legends → richer Build-Next/similar).
+- Recompute the fit score client-side from the live Scryfall data (would make name-only decks
+  accurate even without enriching) — bigger job; enrichment is the simpler path for now.
 - Always-on deploy (gunicorn + auth + HTTPS + PNG icon) so the phone app doesn't need the PC on.
+
+**Session log:** PRs #8 (image throttle), #9 (click panel), #10 (ManaPool export), #11 (update.bat
+relaunch), #12 (deck-fit score + alternatives), #13 (bottom sheet + live Scryfall + clearer roles),
+#14 (carddb auto-download + status banner). All squash-merged to `main`.
 
 ---
 
