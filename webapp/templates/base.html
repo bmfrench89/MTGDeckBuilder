@@ -59,6 +59,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:40px}
 <nav>
   <span class="brand">🕸 MTG Deckbuilder</span>
   <a class="tab {{ 'on' if page=='home' }}" href="{{ url_for('index') }}">Decks</a>
+  <a class="tab {{ 'on' if page=='build' }}" href="{{ url_for('build_next') }}">Build Next</a>
   <a class="tab {{ 'on' if page=='wishlist' }}" href="{{ url_for('wishlist_view') }}">Wishlist</a>
   <a class="tab {{ 'on' if page=='shared' }}" href="{{ url_for('shared_view') }}">Shared</a>
   <a class="tab {{ 'on' if page=='collection' }}" href="{{ url_for('collection_view') }}">Collection</a>

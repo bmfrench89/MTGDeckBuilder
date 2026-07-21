@@ -33,6 +33,7 @@ scripts/                          The engine (stdlib-only Python 3)
   deck_conflicts.py               Show cards shared across decks vs. owned (+ buy-doubles)
   wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
   similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
+  commander_finder.py             "What should I build next?" — commanders ranked by owned support
 data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
 data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
