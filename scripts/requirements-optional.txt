@@ -1,0 +1,3 @@
+# Optional: enables scripts/carddb.py to stream a large Scryfall bulk JSON fast.
+# Core scripts are stdlib-only and work without this.
+duckdb>=1.0

@@ -379,3 +379,22 @@ commanders. Webapp page **/build-next** ("Build Next" nav tab) with archetype fi
 support bars. Current top: Breya (41, buy), Judith (39, buy), Syr Gwyn (38, buy), then owned
 Y'shtola / Iron Man Armored Avenger / Mazirek (34). Grow the two reference CSVs to sharpen.
 Merged similar-commanders as PR #2 → main (aedc375).
+
+---
+
+## SESSION NOTE — 2026-07-18n (card DB enrichment; the "do we need a DB" answer)
+
+Decision: NO database for the app's own data (tiny, read-mostly, files stay source of truth).
+DuckDB introduced ONLY as an optional ingestion/analytics layer over a Scryfall card DB —
+the real fix for the name-only limitation.
+
+- `scripts/carddb.py`: streams a Scryfall bulk JSON (via DuckDB; stdlib-json fallback), joins
+  the collection, writes `data/collection/collection_attrs.csv` (Name,Type,MV,Colors,Cost).
+- `mtglib.load_collection` now overlays `collection_attrs.csv` onto the whole collection, so
+  every tool gets colors/types/MV/mana-cost collection-wide (curves, pip demand, tribal counts,
+  power color-scores, similar-commander color-fit %) with NO per-deck attrs.csv.
+- `similar_commanders.find` now derives per-card identities from the collection overlay (falls
+  back to deck attrs), so the color-compat % benefits automatically.
+- collection_attrs.csv is gitignored (derived + personal). Scryfall bulk is firewalled in this
+  env; verified end-to-end with a 32-card sample (Kaervek curve + pip demand + Cloud compat %
+  all populated). SQLite noted as the future choice only if we add write-heavy user state.

@@ -21,3 +21,6 @@ scratch/
 
 # Generated dashboards (regenerate with scripts/refresh.py)
 build/
+
+# Derived card-attribute enrichment (regenerate with carddb.py from a Scryfall bulk file)
+data/collection/collection_attrs.csv

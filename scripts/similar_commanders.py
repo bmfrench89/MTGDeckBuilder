@@ -84,13 +84,22 @@ RANK = {"drop-in": 0, "tighter": 1, "partial": 2, "reskin": 3, "unknown": 4}
 
 def find(deck_path, collection_index, commanders, attrs=None):
     commander, arch, colors, _ = deck_profile(deck_path, commanders)
-    # per-card color identities (exact compat) if attrs are available
-    card_ids = None
-    if attrs:
-        card_ids = []
-        for name, a in attrs.items():
-            ci = mtglib._parse_colorish(a.get("colors", ""))
-            card_ids.append(ci)
+    # Per-card color identities for exact compat %. Prefer the collection overlay
+    # (carddb enrichment covers the whole collection); fall back to a deck attrs file.
+    attr_idx = {mtglib._norm(k): v for k, v in (attrs or {}).items()}
+    card_ids = []
+    with open(deck_path, encoding="utf-8") as f:
+        for d in mtglib.parse_deck(f.read()):
+            ref = mtglib.lookup(collection_index, d.name)
+            ci = ref.identity if (ref and ref.identity) else None
+            if ci is None:
+                a = attr_idx.get(mtglib._norm(d.name))
+                if a and a.get("colors"):
+                    ci = mtglib._parse_colorish(a["colors"])
+            if ci is not None:
+                card_ids.append(ci)
+    if not card_ids:
+        card_ids = None
     results = []
     for c in commanders:
         if mtglib._norm(c["name"]) == mtglib._norm(commander):
