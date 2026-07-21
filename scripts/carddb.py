@@ -38,11 +38,11 @@ def primary_type(type_line):
 def _rows_duckdb(bulk_path):
     import duckdb
     con = duckdb.connect()
-    q = ("SELECT name, color_identity, type_line, cmc, mana_cost "
+    q = ("SELECT name, color_identity, type_line, cmc, mana_cost, id "
          f"FROM read_json_auto('{bulk_path}', maximum_object_size=100000000) "
          "WHERE name IS NOT NULL")
-    for name, ci, type_line, cmc, cost in con.execute(q).fetchall():
-        yield name, (ci or []), type_line, cmc, cost
+    for name, ci, type_line, cmc, cost, sid in con.execute(q).fetchall():
+        yield name, (ci or []), type_line, cmc, cost, sid
     con.close()
 
 
@@ -52,11 +52,11 @@ def _rows_json(bulk_path):
     for c in data:
         if c.get("name"):
             yield (c["name"], c.get("color_identity", []), c.get("type_line"),
-                   c.get("cmc"), c.get("mana_cost"))
+                   c.get("cmc"), c.get("mana_cost"), c.get("id"))
 
 
 def build_index(bulk_path, use_duckdb=True):
-    """name(normalized) -> {colors, type, mv, cost}. First printing per name wins."""
+    """name(normalized) -> {colors, type, mv, cost, id}. First printing per name wins."""
     idx = {}
     rows = None
     if use_duckdb:
@@ -67,12 +67,13 @@ def build_index(bulk_path, use_duckdb=True):
                   file=sys.stderr)
     if rows is None:
         rows = _rows_json(bulk_path)
-    for name, ci, type_line, cmc, cost in rows:
+    for name, ci, type_line, cmc, cost, sid in rows:
         k = mtglib._norm(name)
         if k in idx:
             continue
         idx[k] = {"colors": " ".join(ci), "type": primary_type(type_line),
-                  "mv": cmc if cmc is not None else None, "cost": cost or ""}
+                  "mv": cmc if cmc is not None else None, "cost": cost or "",
+                  "id": sid or ""}
     return idx
 
 
@@ -82,14 +83,15 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     matched = 0
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Name", "Type", "MV", "Colors", "Cost"])
+        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Scryfall"])
         for card in sorted(coll, key=lambda c: c.name):
             a = index.get(mtglib._norm(card.name))
             if not a:
                 continue
             matched += 1
             mv = "" if a["mv"] is None else (f"{a['mv']:g}")
-            w.writerow([card.name, a["type"], mv, a["colors"], a["cost"]])
+            w.writerow([card.name, a["type"], mv, a["colors"], a["cost"],
+                        a.get("id", "")])
     return matched, len(coll), len(index)
 
 
