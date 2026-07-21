@@ -2,25 +2,69 @@
 """Enrich the whole collection with card attributes (colors / type / mana value)
 from a Scryfall card database — the fix for the "name-only export" limitation.
 
-Point it at a Scryfall bulk-data file (download once, locally, from
-https://scryfall.com/docs/api/bulk-data — the "Oracle Cards" JSON is ideal), and
-it writes data/collection/collection_attrs.csv. mtglib.load_collection auto-merges
-that file, so EVERY tool (curves, power color-scores, tribal counts, similar-commander
-color-fit %) then works across the entire collection — no per-deck attrs needed.
+With no --bulk it auto-downloads the "Oracle Cards" bulk file from Scryfall
+(~40 MB, cached locally). It then writes data/collection/collection_attrs.csv.
+mtglib.load_collection auto-merges that file, so EVERY tool (curves, power
+color-scores, tribal counts, similar-commander color-fit %, the click-a-card fit
+score) works across the entire collection — no per-deck attrs needed.
 
-Uses DuckDB to stream the (large) JSON if installed; falls back to stdlib json.
+Uses DuckDB to stream the JSON if installed; falls back to stdlib json.
 
 Usage:
-  python3 carddb.py --bulk oracle-cards.json --collection data/collection/collection.csv
-  python3 carddb.py --bulk oracle-cards.json --collection coll.csv --stats
+  python3 carddb.py --collection data/collection/collection.csv          # auto-download
+  python3 carddb.py --collection coll.csv --refresh --stats              # re-download
+  python3 carddb.py --bulk oracle-cards.json --collection coll.csv       # use a local file
 """
 import argparse
 import csv
 import json
 import os
 import sys
+import urllib.request
 
 import mtglib
+
+BULK_LIST_URL = "https://api.scryfall.com/bulk-data"
+# Scryfall asks API clients to send a descriptive User-Agent and an Accept header.
+_HEADERS = {"User-Agent": "MTGDeckBuilder/1.0 (personal collection tool)",
+            "Accept": "application/json"}
+
+
+def _get(url):
+    req = urllib.request.Request(url, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return r.read()
+
+
+def download_bulk(kind="oracle_cards", dest=None, force=False):
+    """Download a Scryfall bulk-data file (default 'oracle_cards' — one entry per
+    card, ~40 MB, exactly what we need for colors/types/MV/ids). Returns the path.
+    Skips the download if a cached copy already exists unless force=True."""
+    dest = dest or os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "..", "data", "collection", f"scryfall-{kind}.json")
+    dest = os.path.abspath(dest)
+    if os.path.exists(dest) and not force:
+        print(f"using cached bulk file: {dest} (pass --refresh to re-download)")
+        return dest
+    print("finding the latest Scryfall bulk file…")
+    catalog = json.loads(_get(BULK_LIST_URL))
+    entry = next((b for b in catalog.get("data", []) if b.get("type") == kind), None)
+    if not entry:
+        raise RuntimeError(f"Scryfall has no bulk type '{kind}'")
+    uri, size = entry["download_uri"], entry.get("size", 0)
+    print(f"downloading {entry.get('name', kind)} (~{size // (1024*1024)} MB) …")
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    req = urllib.request.Request(uri, headers=_HEADERS)
+    tmp = dest + ".part"
+    with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
+        while True:
+            chunk = r.read(1 << 20)
+            if not chunk:
+                break
+            f.write(chunk)
+    os.replace(tmp, dest)
+    print(f"saved {dest}")
+    return dest
 
 MAIN_TYPES = ["Land", "Creature", "Planeswalker", "Battle", "Artifact",
               "Enchantment", "Instant", "Sorcery"]
@@ -96,18 +140,33 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Enrich the collection from a card DB.")
-    ap.add_argument("--bulk", required=True, help="Scryfall bulk JSON (oracle/default cards)")
+    ap = argparse.ArgumentParser(
+        description="Enrich the collection with colors/types/mana value/Scryfall ids "
+                    "from a Scryfall bulk file. With no --bulk it auto-downloads one.")
+    ap.add_argument("--bulk", help="path to a Scryfall bulk JSON. Omit to auto-download.")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--out", default=None, help="default: <collection dir>/collection_attrs.csv")
+    ap.add_argument("--refresh", action="store_true",
+                    help="re-download the bulk file even if a cached copy exists")
     ap.add_argument("--no-duckdb", action="store_true")
     ap.add_argument("--stats", action="store_true", help="print a color/type breakdown after")
     args = ap.parse_args()
 
+    bulk = args.bulk
+    if not bulk:
+        try:
+            bulk = download_bulk(force=args.refresh)
+        except Exception as e:
+            print(f"error: could not download the Scryfall bulk file ({e}).\n"
+                  "If you're offline or behind a proxy, download 'Oracle Cards' JSON from "
+                  "https://scryfall.com/docs/api/bulk-data and pass it with --bulk.",
+                  file=sys.stderr)
+            return 2
+
     out = args.out or os.path.join(os.path.dirname(args.collection) or ".",
                                    "collection_attrs.csv")
     try:
-        matched, total, dbn = enrich(args.collection, args.bulk, out, not args.no_duckdb)
+        matched, total, dbn = enrich(args.collection, bulk, out, not args.no_duckdb)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

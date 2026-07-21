@@ -24,3 +24,7 @@ build/
 
 # Derived card-attribute enrichment (regenerate with carddb.py from a Scryfall bulk file)
 data/collection/collection_attrs.csv
+
+# Scryfall bulk cache (large; auto-downloaded by carddb.py)
+data/collection/scryfall-*.json
+data/collection/scryfall-*.json.part

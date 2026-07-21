@@ -34,14 +34,20 @@ python webapp\app.py
 Open http://127.0.0.1:5000 . `run.bat` also prints a `http://192.168.x.x:5000` URL you can open
 on your phone (same Wi-Fi).
 
-## 5. (Optional) full card data
-Download "Oracle Cards" JSON from https://scryfall.com/docs/api/bulk-data, then:
+## 5. Full card data (recommended — do this once)
+**Double-click `enrich.bat`.** It downloads the Scryfall "Oracle Cards" bulk file (~40 MB, cached)
+and writes `data\collection\collection_attrs.csv`, giving your whole collection real
+colors / types / mana value / image ids. Every curve, power score, and click-a-card **fit score**
+then becomes accurate instead of running on the name-only list. Re-run it after adding new cards.
+
+The **Collection** page shows a "Card DB: enriched / not enriched" banner so you always know the state.
+
+Manual equivalent (if you'd rather):
 ```powershell
-pip install duckdb
-python scripts\carddb.py --bulk oracle-cards.json --collection data\collection\collection.csv --stats
+python scripts\carddb.py --collection data\collection\collection.csv --stats   # auto-downloads
+# or point it at a file you already have:
+python scripts\carddb.py --bulk oracle-cards.json --collection data\collection\collection.csv
 ```
-This enriches the whole collection (colors/types/mana values) so every curve/power/compat number
-becomes exact.
 
 ## Keeping it in sync
 Pull future updates with `git pull`. Your `collection.csv` and `build\` stay local (gitignored).
