@@ -41,6 +41,7 @@
   <div class="acts">
     <a href="{{ url_for('deck', stem=d.stem) }}">▸ Dashboard</a>
     <a href="{{ url_for('deck_visual', stem=d.stem) }}">🖼 Images</a>
+    <a href="{{ url_for('export_deck', stem=d.stem) }}">⬇ ManaPool</a>
     <a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">✎ Edit</a>
   </div>
 </div>

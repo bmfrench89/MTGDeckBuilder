@@ -4,6 +4,32 @@
 <h1>Wishlist</h1>
 <div class="sub">Nothing here is required — it's what you'd buy to run every deck at once, or to upgrade.</div>
 
+<div class="card" style="margin:14px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+  <b>Export for ManaPool</b>
+  <button type="button" class="btn" id="mpcopy">📋 Copy list</button>
+  <a class="btn ghost" href="{{ url_for('export_wishlist') }}">⬇ Download .txt</a>
+  <span class="muted" id="mpmsg">Paste into ManaPool's deck / bulk importer (qty + name per line).</span>
+</div>
+<script>
+document.getElementById('mpcopy').addEventListener('click',function(){
+  var msg=document.getElementById('mpmsg');
+  fetch('{{ url_for("export_wishlist") }}?raw=1').then(function(r){return r.text();})
+    .then(function(t){
+      function done(){msg.textContent='Copied! Paste into ManaPool.';}
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(t).then(done,function(){fallback(t,msg);});
+      } else { fallback(t,msg); }
+    });
+  function fallback(t,msg){
+    var ta=document.createElement('textarea'); ta.value=t;
+    ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta);
+    ta.select(); try{document.execCommand('copy');msg.textContent='Copied!';}
+    catch(e){msg.textContent='Press Ctrl/Cmd-C to copy.';}
+    document.body.removeChild(ta);
+  }
+});
+</script>
+
 <h2>Copies to buy so decks coexist <span class="gold">~${{ '%.2f'|format(share_cost) }}</span></h2>
 <div class="card tablewrap">
 <table><thead><tr><th></th><th>Qty</th><th>Card</th><th>~each</th><th>Shared with</th></tr></thead><tbody>

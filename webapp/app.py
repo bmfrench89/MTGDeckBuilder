@@ -16,7 +16,7 @@ import socket
 import subprocess
 import sys
 
-from flask import (Flask, abort, redirect, render_template, request,
+from flask import (Flask, Response, abort, redirect, render_template, request,
                    send_from_directory, url_for)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,6 +31,12 @@ import build_dashboard as bd
 import analyze_collection as ac
 import similar_commanders as simc
 import commander_finder as cf
+import export_manapool as ex
+
+
+def _txt(text, filename):
+    return Response(text + "\n", mimetype="text/plain",
+                    headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 def _default_collection():
     """Prefer the player's private CSV; fall back to the committed name-only
@@ -157,6 +163,25 @@ def wishlist_view():
     return render_template("wishlist.html", shared=shared, unowned=unowned,
                            upgrades=upgrades, share_cost=share_cost, up_cost=up_cost,
                            page="wishlist")
+
+
+@app.route("/export/wishlist.txt")
+def export_wishlist():
+    """The 'cards to buy' list as ManaPool-ready text (qty name per line)."""
+    inc = request.args.getlist("include") or ["shared", "unowned", "upgrades"]
+    text = ex.wishlist_text(COLLECTION, DECKS_DIR, include=tuple(inc))
+    raw = request.args.get("raw")
+    return text if raw else _txt(text, "manapool-wishlist.txt")
+
+
+@app.route("/export/deck/<stem>.txt")
+def export_deck(stem):
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    text = ex.deck_text(m["path"])
+    raw = request.args.get("raw")
+    return text if raw else _txt(text, f"{stem}.txt")
 
 
 @app.route("/shared")

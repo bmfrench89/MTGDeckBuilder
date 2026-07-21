@@ -22,7 +22,7 @@ Config via env vars:
 
 ## Pages
 - **Decks** — power leaderboard (bracket + score); click into any live dashboard, or its image gallery, or edit it.
-- **Wishlist** — copies-to-buy + not-owned + per-deck upgrades, with checkboxes.
+- **Wishlist** — copies-to-buy + not-owned + per-deck upgrades, with checkboxes. **Export for ManaPool**: copy the buy list or download it as plain `qty name` text to paste into ManaPool's deck/bulk importer. Each deck row also has a **⬇ ManaPool** link to export its full 100.
 - **Shared** — cards used across decks beyond owned copies, priced.
 - **Collection** — value + top cards, upload a new export, add owned-but-missing cards.
 
