@@ -24,6 +24,7 @@ import sys
 
 import mtglib
 import deck_stats
+import combo_detector
 
 try:
     import build_dashboard  # for load_attrs/apply_attrs (attrs power the curve)
@@ -118,6 +119,7 @@ def assess(enriched, rep, refs):
     extra = _match(enriched, refs["extra_turns"])
     mld = _match(enriched, refs["mass_land_denial"])
     combos = _match(enriched, refs["combo_pieces"])
+    detected = combo_detector.detect_for_cards(enriched)
 
     # ---- Bracket (WotC Commander Bracket system; tutors are NOT a determinant
     #      since the Oct-2025 update — Game Changers count + guardrails drive it). ----
@@ -141,10 +143,18 @@ def assess(enriched, rep, refs):
         reasons.append("0 Game Changers, no mass land denial, no extra-turn chaining "
                        "→ Core (Bracket 2). Bracket 1 is the same guardrails but "
                        "intentionally not built to win.")
-    if len(combos) >= 2:
+    # Real combo detection (combo_detector) supersedes the loose piece count: a
+    # COMPLETE, EARLY two-card combo forces Bracket 4; the piece-count note is
+    # kept only as a fallback when no complete combo is actually assembled.
+    b4_combo, combo_reasons = combo_detector.bracket_signal(detected)
+    if b4_combo and bracket < 4:
+        bracket, name = 4, "Optimized"
+    for r in combo_reasons:
+        reasons.append("⚠ " + r)
+    if not detected["complete"] and len(combos) >= 2:
         reasons.append(f"⚠ {len(combos)} known combo pieces present "
-                       f"({', '.join(combos)}) — if they form a cheap, early two-card "
-                       "combo, that makes this Bracket 4. Verify the interaction.")
+                       f"({', '.join(combos)}) — no complete combo from the curated "
+                       "list, but verify none of these pairs goes infinite.")
     if bracket == 4 and len(gc) >= 7 and (amv is not None and amv <= 2.6):
         name = "Optimized (cEDH-leaning)"
         reasons.append("very high Game Changer density + low curve — likely a "
@@ -191,6 +201,9 @@ def assess(enriched, rep, refs):
         "signals": {
             "game_changers": gc, "tutors": tutors, "fast_mana": fast,
             "extra_turns": extra, "mass_land_denial": mld, "combo_pieces": combos,
+            "combos_complete": [c["name"] for c in detected["complete"]],
+            "combos_near": [f"{c['name']} (add {c['missing']})"
+                            for c in detected["near"]],
             "interaction": interaction, "ramp": ramp, "draw": draw,
             "lands": lands, "avg_mv": amv,
         },

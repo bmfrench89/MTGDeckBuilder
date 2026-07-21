@@ -32,6 +32,7 @@ import deck_conflicts
 import power
 import deck_fit
 import similar_commanders as simc
+import combo_detector
 
 THEMES = {
     "default": {
@@ -97,20 +98,31 @@ def esc(s):
     return html.escape(str(s))
 
 
-# Card images come from Scryfall's /cards/named API, which is rate-limited to
-# ~10 req/s. Firing ~80 <img> loads at once gets the later ones 429'd (blank).
-# This loads them from a throttled queue (~9/s) with a one-time retry, so they
-# all appear. Images use data-src; this script assigns src on a timer.
+# Card images fall back to Scryfall's /cards/named API when the collection has no
+# Scryfall IDs (a name-only snapshot), and that endpoint is rate-limited to
+# ~10 req/s — firing ~100 <img> loads at once gets the later ones 429'd (blank).
+# We throttle initial loads AND, crucially, re-queue any that error back THROUGH
+# the same throttle with exponential backoff (up to MAX tries) — so a wave of
+# retries never re-bursts the rate limit (the old one-shot retry fired every
+# failure at once, re-triggering it). Permanent fix: give the collection Scryfall
+# IDs so images use the un-throttled CDN (image_url) — load the full Archidekt CSV
+# or run carddb.py. Images use data-src; this script assigns src on a timer.
 IMG_LOADER = """<script>
 (function(){
-  var q=[].slice.call(document.querySelectorAll('img[data-src]'));
-  var t=setInterval(function(){
-    var img=q.shift();
-    if(!img){clearInterval(t);return;}
-    img.onerror=function(){var s=img.getAttribute('data-src');img.onerror=null;
-      setTimeout(function(){img.src=s;},1500);};
+  var items=[].slice.call(document.querySelectorAll('img[data-src]'))
+    .map(function(img){return {img:img,tries:0};});
+  if(!items.length) return;
+  var queue=items.slice(), pending=items.length, GAP=125, MAX=4, timer;
+  function done(){ if(--pending<=0) clearInterval(timer); }
+  function start(it){
+    var img=it.img;
+    img.onload=function(){ img.onerror=null; done(); };
+    img.onerror=function(){ img.onerror=null;
+      if(it.tries++<MAX){ setTimeout(function(){queue.push(it);}, 700*Math.pow(2,it.tries-1)); }
+      else { done(); } };
     img.src=img.getAttribute('data-src');
-  },110);
+  }
+  timer=setInterval(function(){ if(queue.length) start(queue.shift()); }, GAP);
 })();
 </script>"""
 
@@ -622,6 +634,44 @@ def similar_html(similar):
             + "".join(rows) + "</tbody></table></div>")
 
 
+def combos_html(combos):
+    """Render the Combo Watch section from combo_detector output:
+    {'complete':[...], 'near':[...]}. `None` (detector failed) renders nothing."""
+    if combos is None:
+        return ""
+    comp, near = combos.get("complete", []), combos.get("near", [])
+    if not comp and not near:
+        return ("<div class='ok'>No known infinite / two-card combos detected in "
+                "this deck, complete or one-away. <span class='muted'>(Checked "
+                "against <code>data/reference/combos.csv</code> — a curated list, "
+                "not exhaustive.)</span></div>")
+    out = []
+    if comp:
+        out.append("<h3>Complete combos in this deck <span class='count'>"
+                   f"{len(comp)}</span></h3><ul class='notes'>")
+        for c in comp:
+            flag = (" <span class='need'>EARLY 2-CARD → BRACKET 4</span>"
+                    if c["early"] else "")
+            out.append(f"<li><b>{esc(c['name'])}</b> → {esc(c['result'])}{flag}"
+                       f"<br><span class='muted'>{esc(c['notes'])}</span></li>")
+        out.append("</ul>")
+    if near:
+        out.append("<h3>One piece away <span class='count'>"
+                   f"{len(near)}</span></h3><ul class='notes'>")
+        for c in near:
+            owned = c.get("missing_owned")
+            tag = ("<span class='ok'>you own it</span>" if owned
+                   else "<span class='muted'>not owned</span>")
+            out.append(f"<li>add <b>{esc(c['missing'])}</b> ({tag}) → "
+                       f"<b>{esc(c['name'])}</b>: {esc(c['result'])}</li>")
+        out.append("</ul>")
+    if comp:
+        out.append("<p class='muted'>A complete <b>early two-card</b> combo is the "
+                   "WotC red flag that puts a deck in Bracket 4 — verify the "
+                   "interaction and read the pod before playing it.</p>")
+    return "".join(out)
+
+
 def card_modal_css(t):
     return f"""
 .mc {{ cursor:pointer; }}
@@ -906,7 +956,7 @@ def card_modal_block(details):
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
-                     assessment=None, similar=None, details=None):
+                     assessment=None, similar=None, details=None, combos=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {})
@@ -931,6 +981,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
 
     power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
                  "</section>" if assessment else "")
+    combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
+                 if combos is not None else "")
 
     notes_sec = (f"<section><h2>Game Plan &amp; Player Notes</h2>"
                  f"{notes_html(notes)}</section>" if notes else "")
@@ -1064,6 +1116,8 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 </header>
 <div class="tiles">{tiles}</div>
 {power_sec}
+<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared)}</section>
+{combo_sec}
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
@@ -1071,7 +1125,6 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 {shared_sec}
 {sim_sec}
 {buy_sec}
-<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared)}</section>
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
 </div>{modal_block}{IMG_LOADER}</body></html>"""
@@ -1161,6 +1214,10 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         _, _, similar = simc.find(deck_path, idx, simc.load_commanders(), attrs)
     except Exception:
         similar = None
+    try:
+        combos = combo_detector.for_deck(deck_path, idx)
+    except Exception:
+        combos = None
 
     try:
         refs = power.load_refs()
@@ -1173,7 +1230,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
 
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
-                                 similar, details)
+                                 similar, details, combos)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}
