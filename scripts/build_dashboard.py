@@ -620,7 +620,9 @@ def similar_html(similar):
         rel = r["relation"]
         cls = "good" if rel == "drop-in" else "warn" if rel == "reskin" else ""
         rows.append(
-            f"<tr><td><b>{esc(r['name'])}</b> <span class='mv'>[{esc(r['colors'])}]</span> {own}</td>"
+            f"<tr><td><a class='cardlink' data-key='{esc(mtglib._norm(r['name']))}' "
+            f"tabindex='0' role='button'>{esc(r['name'])}</a> "
+            f"<span class='mv'>[{esc(r['colors'])}]</span> {own}</td>"
             f"<td class='{cls}'>{SIM_LABEL.get(rel, rel)}</td>"
             f"<td class='br'>{esc(r['why'])}{pct}<br><span class='muted'>"
             f"shares {esc(', '.join(r['shared']))} · {esc(r['notes'])}</span></td></tr>")
@@ -632,6 +634,28 @@ def similar_html(similar):
             "<div class='tablewrap'><table class='data'><thead><tr><th>Commander</th>"
             "<th>Fit</th><th>Why / what changes</th></tr></thead><tbody>"
             + "".join(rows) + "</tbody></table></div>")
+
+
+def add_commander_details(details, similar, idx, size="normal"):
+    """Make the 'Commanders That Also Fit' names open the same bottom-sheet card
+    panel: give each alternate commander a payload (image + a why blurb) keyed by
+    its normalized name, matching the .cardlink in similar_html. Skips names
+    already present (e.g. a commander that is also a deck card). Returns details."""
+    if details is None:
+        details = {}
+    if not similar:
+        return details
+    for r in similar:
+        k = mtglib._norm(r["name"])
+        if k in details:
+            continue
+        ref = mtglib.lookup(idx, r["name"])
+        sid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
+        full = (card_image.image_url(sid, size) if sid
+                else card_image.image_url_by_name(r["name"], size))
+        why = " ".join(p for p in (r.get("why"), r.get("notes")) if p).strip()
+        details[k] = {"name": r["name"], "full": full, "why": why or None}
+    return details
 
 
 def combos_html(combos):
@@ -940,8 +964,8 @@ def card_modal_block(details):
     ov.classList.remove('show'); document.body.style.overflow='';
     setTimeout(function(){ ov.hidden=true; }, 260);
   }
-  document.querySelectorAll('figure.mc[data-key]').forEach(function(f){
-    f.addEventListener('click',function(){ open(f.getAttribute('data-key')); });
+  document.querySelectorAll('figure.mc[data-key], .cardlink[data-key]').forEach(function(f){
+    f.addEventListener('click',function(e){ e.preventDefault(); open(f.getAttribute('data-key')); });
     f.addEventListener('keydown',function(e){
       if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(f.getAttribute('data-key')); }
     });
@@ -1032,6 +1056,10 @@ table.data th, table.data td {{ text-align:left; padding:7px 10px;
   border-bottom:1px solid rgba(255,255,255,.07); }}
 table.data th {{ color:var(--muted); font-weight:600; }}
 tr.warn td {{ color:var(--warn); }}
+.cardlink {{ color:var(--accent); cursor:pointer; text-decoration:none;
+  border-bottom:1px dotted rgba(255,255,255,.35); }}
+.cardlink:hover {{ color:var(--accent2); border-bottom-color:var(--accent2); }}
+.cardlink:focus {{ outline:2px solid var(--accent); outline-offset:2px; border-radius:2px; }}
 .pip {{ display:inline-block; width:12px; height:12px; border-radius:50%;
   margin-right:8px; vertical-align:middle;
   box-shadow:0 0 0 1px rgba(0,0,0,.4) inset; }}
@@ -1227,6 +1255,11 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
                                      rep=rep, ctx=ctx, refs=refs, staples=staples)
     except Exception:
         details = None
+    if similar:
+        try:
+            details = add_commander_details(details, similar, idx)
+        except Exception:
+            pass
 
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
