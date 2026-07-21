@@ -24,6 +24,27 @@ FIT_TARGETS = {
 }
 _ROLE_PRIORITY = ["ramp", "draw", "removal", "wipe", "counter", "land"]
 
+# The player already grouped the deck by function via `# --- Label ---` headers.
+# When we can't read a card's type (name-only list), that grouping is the best
+# signal for what job the card is doing.
+SECTION_ROLE_HINTS = [
+    ("board wipe", "wipe"), ("sweeper", "wipe"), ("wrath", "wipe"), ("wipe", "wipe"),
+    ("ramp", "ramp"), ("rock", "ramp"), ("accel", "ramp"), ("mana base", "land"),
+    ("manabase", "land"), ("removal", "removal"), ("interaction", "removal"),
+    ("spot", "removal"), ("card advantage", "draw"), ("card draw", "draw"),
+    ("draw", "draw"), ("counter", "counter"), ("land", "land"),
+    ("creature", "creature"), ("engine", "creature"), ("threat", "creature"),
+    ("beater", "creature"), ("finisher", "creature"),
+]
+
+
+def section_role(label):
+    low = (label or "").lower()
+    for key, role in SECTION_ROLE_HINTS:
+        if key in low:
+            return role
+    return None
+
 
 def load_role_staples(path=None):
     """role -> list of {name, colors(set of WUBRG letters the card needs)}."""
@@ -103,20 +124,25 @@ def _color_component(card, ident):
     return 2, f"needs {outside} — outside this deck's identity"
 
 
-def _role_component(card, rep):
+def _role_component(card, rep, section_label=None):
     role = primary_role(card)
+    hint = section_role(section_label)
+    used_section = False
+    if role in ("creature", "other") and hint and hint != "creature":
+        role, used_section = hint, True  # trust the player's own grouping
     cats = rep.get("categories", {})
+    src = f" (from your '{section_label.strip()}' section)" if used_section else ""
     if role in FIT_TARGETS:
         lo, hi = FIT_TARGETS[role]
         cur = cats.get(role, 0)
         if cur < lo:
-            return 30, role, f"deck runs {cur} {role}; wants {lo}-{hi} — fills a gap"
+            return 30, role, f"a {role} card{src}; deck targets {lo}-{hi} — helps fill that"
         if cur <= hi:
-            return 22, role, f"deck runs {cur} {role} (healthy {lo}-{hi} range)"
-        return 12, role, f"deck already runs {cur} {role} (>{hi}) — more redundancy than need"
-    if role == "creature":
-        return 18, role, "a creature / body for the board"
-    return 16, role, "utility / other"
+            return 22, role, f"a {role} card{src}; deck has a healthy {cur} ({lo}-{hi} target)"
+        return 12, role, f"a {role} card{src}; deck already runs {cur} (>{hi}) — this is depth"
+    if role == "creature" or (hint == "creature"):
+        return 18, "creature", "a creature the deck plays for its body or ability"
+    return 16, "support", "a support piece — exact role not auto-detected from this list"
 
 
 def _curve_component(card, refs):
@@ -165,9 +191,9 @@ def band_for(score):
     return BANDS[-1][1]
 
 
-def assess_card(card, rep, ctx, refs):
+def assess_card(card, rep, ctx, refs, section_label=None):
     color_pts, color_det = _color_component(card, ctx["identity"])
-    role_pts, role, role_det = _role_component(card, rep)
+    role_pts, role, role_det = _role_component(card, rep, section_label)
     curve_pts, curve_det = _curve_component(card, refs)
     stap_pts, stap_det = _staple_component(card, refs)
     theme_pts, theme_det = _theme_component(card, ctx)
@@ -183,8 +209,9 @@ def assess_card(card, rep, ctx, refs):
     if color_pts <= 2:
         score = min(score, 25)
     context = _context_line(color_det, role, role_det, stap_pts, theme_pts, theme_det)
-    return {"score": score, "band": band_for(score),
-            "reasons": reasons, "context": context, "role": role}
+    nameonly = not (card.types or card.mana_value is not None or card.mana_cost)
+    return {"score": score, "band": band_for(score), "reasons": reasons,
+            "context": context, "role": role, "nameonly": nameonly}
 
 
 def _context_line(color_det, role, role_det, stap_pts, theme_pts, theme_det):

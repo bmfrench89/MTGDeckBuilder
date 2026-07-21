@@ -298,6 +298,10 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
     alternatives / stronger options tagged owned/buy."""
     en = {mtglib._norm(c.name): c for c in enriched}
     in_deck = set(en.keys())
+    section_of = {}
+    for label, cards in sections:
+        for _q, name in cards:
+            section_of.setdefault(mtglib._norm(name), label)
     details = {}
     for _, cards in sections:
         for _q, name in cards:
@@ -311,11 +315,14 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
             roles = mtglib.classify(c) if c else set()
             role = " · ".join(_ROLE_LABEL.get(r, r.title()) for r in sorted(roles))
             note = notes.get(k)
+            section = section_of.get(k, "")
+            known_type = "/".join(c.types) if (c and c.types) else ""
+            known_mv = (f"{c.mana_value:g}" if (c and c.mana_value is not None) else "")
 
             fit = None
             if c is not None and rep is not None and ctx is not None and refs is not None:
                 try:
-                    fit = deck_fit.assess_card(c, rep, ctx, refs)
+                    fit = deck_fit.assess_card(c, rep, ctx, refs, section)
                 except Exception:
                     fit = None
 
@@ -341,6 +348,7 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
                              "upgrade": a.get("upgrade", False), "why": a.get("why", "")})
 
             details[k] = {"name": name, "full": full, "role": role,
+                          "section": section, "type": known_type, "mv": known_mv,
                           "why": note["why"] if note else "", "fit": fit, "alts": alts}
     return details
 
@@ -619,65 +627,99 @@ def card_modal_css(t):
 .mc {{ cursor:pointer; }}
 .mc:focus {{ outline:2px solid var(--accent); outline-offset:2px; }}
 .mc:hover img {{ filter:brightness(1.08); }}
-.cm-overlay {{ position:fixed; inset:0; background:rgba(0,0,0,.8);
-  display:flex; align-items:center; justify-content:center; padding:20px; z-index:60;
+.cm-overlay {{ position:fixed; inset:0; background:rgba(0,0,0,.55);
+  display:flex; align-items:flex-end; justify-content:center; z-index:60;
+  opacity:0; transition:opacity .22s ease;
   -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }}
+.cm-overlay.show {{ opacity:1; }}
 .cm-overlay[hidden] {{ display:none; }}
-.cm-box {{ background:var(--panel); border:1px solid rgba(255,255,255,.12);
-  border-radius:16px; max-width:760px; width:100%; max-height:92vh; overflow:auto;
-  position:relative; padding:24px; }}
-.cm-close {{ position:absolute; top:8px; right:14px; background:none; border:none;
-  color:var(--muted); font-size:2rem; line-height:1; cursor:pointer; }}
+.cm-sheet {{ background:var(--panel); border:1px solid rgba(255,255,255,.12);
+  border-bottom:none; border-radius:20px 20px 0 0; width:100%; max-width:940px;
+  height:92vh; display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:0 -18px 50px rgba(0,0,0,.5);
+  transform:translateY(100%); transition:transform .28s cubic-bezier(.2,.8,.2,1); }}
+.cm-overlay.show .cm-sheet {{ transform:translateY(0); }}
+.cm-bar {{ position:relative; flex:0 0 auto; padding:9px 0 6px; text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.07); }}
+.cm-grab {{ display:inline-block; width:44px; height:5px; border-radius:3px;
+  background:rgba(255,255,255,.22); }}
+.cm-close {{ position:absolute; top:4px; right:12px; background:none; border:none;
+  color:var(--muted); font-size:2rem; line-height:1; cursor:pointer; padding:2px 8px; }}
 .cm-close:hover {{ color:var(--text); }}
-.cm-grid {{ display:grid; grid-template-columns:280px 1fr; gap:24px; }}
+.cm-scroll {{ flex:1 1 auto; overflow-y:auto; padding:20px 26px 40px;
+  -webkit-overflow-scrolling:touch; }}
+.cm-grid {{ display:grid; grid-template-columns:300px 1fr; gap:28px;
+  align-items:start; }}
+.cm-imgcol {{ position:sticky; top:0; }}
 .cm-img {{ width:100%; border-radius:4.75% / 3.5%; display:block; aspect-ratio:5/7;
   object-fit:cover; background:rgba(255,255,255,.05); }}
-.cm-info h3 {{ font-family:{t['display']}; color:var(--accent); margin:0 0 6px;
-  font-size:1.6rem; }}
-.cm-role {{ color:var(--gold); font-family:{t['mono']}; font-size:.74rem;
-  text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }}
-.cm-fit {{ margin:0 0 14px; }}
+.cm-imgmeta {{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px;
+  font-family:{t['mono']}; font-size:.72rem; color:var(--muted); }}
+.cm-imgmeta b {{ color:var(--accent2); font-weight:600; }}
+.cm-info h3 {{ font-family:{t['display']}; color:var(--accent); margin:0;
+  font-size:2rem; line-height:1.1; }}
+.cm-cost {{ font-family:{t['mono']}; color:var(--gold); font-size:1rem;
+  margin-left:8px; white-space:nowrap; }}
+.cm-chips {{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 16px; }}
+.cm-chip {{ font-family:{t['mono']}; font-size:.72rem; padding:3px 10px;
+  border-radius:20px; border:1px solid rgba(255,255,255,.16); color:var(--text); }}
+.cm-chip.tl {{ color:var(--gold); border-color:rgba(217,178,106,.4); }}
+.cm-chip.sec {{ color:var(--accent2); }}
+.cm-banner {{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  border-left:3px solid var(--warn); border-radius:8px; padding:9px 12px;
+  font-size:.8rem; color:var(--muted); margin:0 0 16px; line-height:1.5; }}
+.cm-sec {{ margin:0 0 18px; }}
+.cm-h {{ color:var(--muted); text-transform:uppercase; font-size:.72rem;
+  letter-spacing:1.5px; margin:0 0 8px; font-family:{t['head']}; }}
 .cm-fithead {{ display:flex; align-items:baseline; justify-content:space-between;
   gap:10px; margin-bottom:5px; }}
 .cm-fitband {{ font-family:{t['head']}; font-weight:700; text-transform:uppercase;
-  letter-spacing:1px; font-size:.82rem; color:var(--accent2); }}
-.cm-fitscore {{ font-family:{t['display']}; font-size:1.5rem; color:var(--accent); }}
+  letter-spacing:1px; font-size:.9rem; color:var(--accent2); }}
+.cm-fitscore {{ font-family:{t['display']}; font-size:1.7rem; color:var(--accent); }}
 .cm-fitscore small {{ color:var(--muted); font-size:.8rem; }}
-.cm-meter {{ height:9px; border-radius:6px; background:rgba(255,255,255,.09);
+.cm-meter {{ height:10px; border-radius:6px; background:rgba(255,255,255,.09);
   overflow:hidden; }}
 .cm-meter span {{ display:block; height:100%; border-radius:6px;
-  background:linear-gradient(90deg,var(--accent2),var(--accent)); }}
-.cm-fitctx {{ line-height:1.55; margin:10px 0 0; }}
-.cm-reasons {{ margin-top:8px; }}
-.cm-reasons summary {{ color:var(--muted); cursor:pointer; font-size:.8rem;
+  background:linear-gradient(90deg,var(--accent2),var(--accent)); transition:width .4s ease; }}
+.cm-fitctx {{ line-height:1.55; margin:11px 0 0; font-size:1.02rem; }}
+.cm-reasons {{ margin-top:10px; }}
+.cm-reasons summary {{ color:var(--muted); cursor:pointer; font-size:.82rem;
   font-family:{t['mono']}; }}
-.cm-reasons ul {{ list-style:none; padding:0; margin:8px 0 0; font-family:{t['mono']};
-  font-size:.76rem; }}
-.cm-reasons li {{ display:flex; justify-content:space-between; gap:12px; padding:3px 0;
-  border-bottom:1px solid rgba(255,255,255,.06); }}
-.cm-reasons li b {{ color:var(--text); font-weight:600; white-space:nowrap; }}
-.cm-reasons li span {{ color:var(--muted); text-align:right; }}
-.cm-reasons li em {{ color:var(--accent); font-style:normal; white-space:nowrap; }}
-.cm-whyhead, .cm-altwrap h4 {{ color:var(--muted); text-transform:uppercase;
-  font-size:.72rem; letter-spacing:1.5px; margin:16px 0 7px; }}
+.cm-reasons ul {{ list-style:none; padding:0; margin:9px 0 0; font-family:{t['mono']};
+  font-size:.78rem; }}
+.cm-reasons li {{ display:grid; grid-template-columns:88px 1fr auto; gap:12px;
+  align-items:baseline; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.06); }}
+.cm-reasons li b {{ color:var(--text); font-weight:600; }}
+.cm-reasons li span {{ color:var(--muted); }}
+.cm-reasons li em {{ color:var(--accent); font-style:normal; white-space:nowrap;
+  text-align:right; }}
+.cm-legend {{ color:var(--muted); font-size:.72rem; margin:9px 0 0; line-height:1.5; }}
+.cm-oracle {{ line-height:1.6; margin:0; white-space:pre-wrap; }}
+.cm-kw {{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }}
+.cm-kw span {{ font-family:{t['mono']}; font-size:.66rem; background:rgba(255,255,255,.07);
+  padding:2px 8px; border-radius:10px; color:var(--text); }}
 .cm-why {{ line-height:1.6; margin:0; }}
-.cm-altwrap h4 {{ color:var(--muted); text-transform:uppercase; font-size:.72rem;
-  letter-spacing:1.5px; margin:20px 0 9px; }}
-.cm-alts {{ display:grid; grid-template-columns:repeat(3,1fr); gap:11px; }}
+.cm-alts {{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }}
 .cm-alt {{ margin:0; }}
 .cm-alt img {{ width:100%; border-radius:5% / 3.6%; display:block; aspect-ratio:5/7;
   object-fit:cover; background:rgba(255,255,255,.05); }}
-.cm-alt figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
+.cm-alt figcaption {{ font-family:{t['mono']}; font-size:.66rem; color:var(--muted);
   margin-top:3px; line-height:1.3; }}
 .cm-alt .own {{ color:var(--accent2); font-weight:700; }}
 .cm-alt .buy {{ color:var(--warn); font-weight:700; }}
 .cm-alt .up {{ display:inline-block; background:var(--accent); color:#000;
   font-weight:700; font-size:.58rem; padding:0 4px; border-radius:6px;
   margin-left:4px; text-transform:uppercase; letter-spacing:.5px; }}
-.cm-alt .altwhy {{ display:block; color:var(--muted); font-size:.6rem; margin-top:1px; }}
-@media (max-width:560px) {{ .cm-grid {{ grid-template-columns:1fr; }}
-  .cm-img {{ max-width:210px; margin:0 auto; }}
-  .cm-alts {{ grid-template-columns:repeat(3,1fr); }} }}
+.cm-alt .altwhy {{ display:block; color:var(--muted); font-size:.62rem; margin-top:1px; }}
+.cm-loading {{ color:var(--muted); font-size:.85rem; font-style:italic; }}
+@media (max-width:640px) {{
+  .cm-sheet {{ height:94vh; }}
+  .cm-scroll {{ padding:16px 16px 36px; }}
+  .cm-grid {{ grid-template-columns:1fr; gap:16px; }}
+  .cm-imgcol {{ position:static; max-width:230px; margin:0 auto; }}
+  .cm-info h3 {{ font-size:1.6rem; }}
+  .cm-alts {{ grid-template-columns:repeat(3,1fr); }}
+}}
 """
 
 
@@ -687,26 +729,48 @@ def card_modal_block(details):
                .replace("&", "\\u0026"))
     return """
 <div id="cardmodal" class="cm-overlay" hidden>
-  <div class="cm-box" role="dialog" aria-modal="true" aria-label="Card details">
-    <button class="cm-close" type="button" aria-label="Close">&times;</button>
-    <div class="cm-grid">
-      <img id="cm-img" class="cm-img" alt="">
-      <div class="cm-info">
-        <h3 id="cm-name"></h3>
-        <div id="cm-role" class="cm-role"></div>
-        <div id="cm-fit" class="cm-fit" hidden>
-          <div class="cm-fithead"><span id="cm-fitband" class="cm-fitband"></span>
-            <span id="cm-fitscore" class="cm-fitscore"></span></div>
-          <div class="cm-meter"><span id="cm-meterbar"></span></div>
-          <p id="cm-fitctx" class="cm-fitctx"></p>
-          <details class="cm-reasons"><summary>How this score breaks down</summary>
-            <ul id="cm-reasons"></ul></details>
+  <div class="cm-sheet" role="dialog" aria-modal="true" aria-label="Card details">
+    <div class="cm-bar"><span class="cm-grab"></span>
+      <button class="cm-close" type="button" aria-label="Close">&times;</button></div>
+    <div class="cm-scroll">
+      <div class="cm-grid">
+        <div class="cm-imgcol">
+          <img id="cm-img" class="cm-img" alt="">
+          <div id="cm-imgmeta" class="cm-imgmeta"></div>
         </div>
-        <div id="cm-whyhead" class="cm-whyhead" hidden>Why the card is good</div>
-        <p id="cm-why" class="cm-why"></p>
-        <div id="cm-altwrap" class="cm-altwrap" hidden>
-          <h4 id="cm-althead">Alternatives that could slot here</h4>
-          <div id="cm-alts" class="cm-alts"></div>
+        <div class="cm-info">
+          <h3><span id="cm-name"></span><span id="cm-cost" class="cm-cost"></span></h3>
+          <div class="cm-chips"><span id="cm-tl" class="cm-chip tl" hidden></span>
+            <span id="cm-secchip" class="cm-chip sec" hidden></span></div>
+          <div id="cm-banner" class="cm-banner" hidden></div>
+          <div id="cm-fit" class="cm-sec" hidden>
+            <div class="cm-h">Fit for this deck</div>
+            <div class="cm-fithead"><span id="cm-fitband" class="cm-fitband"></span>
+              <span id="cm-fitscore" class="cm-fitscore"></span></div>
+            <div class="cm-meter"><span id="cm-meterbar"></span></div>
+            <p id="cm-fitctx" class="cm-fitctx"></p>
+            <details class="cm-reasons"><summary>How this score breaks down</summary>
+              <ul id="cm-reasons"></ul>
+              <p class="cm-legend"><b>Color fit</b> = matches your commander's colors ·
+                <b>Role need</b> = how much the deck wants this job ·
+                <b>Curve</b> = how easy it is to cast ·
+                <b>Power</b> = staple / Game-Changer status ·
+                <b>Theme</b> = tribal or archetype tie. It's a heuristic guide, not a verdict.</p>
+            </details>
+          </div>
+          <div id="cm-oraclewrap" class="cm-sec" hidden>
+            <div class="cm-h">What it does</div>
+            <p id="cm-oracle" class="cm-oracle"></p>
+            <div id="cm-kw" class="cm-kw"></div>
+          </div>
+          <div id="cm-whywrap" class="cm-sec" hidden>
+            <div class="cm-h">Why it's good</div>
+            <p id="cm-why" class="cm-why"></p>
+          </div>
+          <div id="cm-altwrap" class="cm-sec" hidden>
+            <div id="cm-althead" class="cm-h">Alternatives that could slot here</div>
+            <div id="cm-alts" class="cm-alts"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -714,21 +778,59 @@ def card_modal_block(details):
 </div>
 <script>
 (function(){
-  var DATA=__PAYLOAD__;
-  var ov=document.getElementById('cardmodal');
+  var DATA=__PAYLOAD__, cache={}, curKey=null;
+  var ov=document.getElementById('cardmodal'), sc=ov.querySelector('.cm-scroll');
   var img=document.getElementById('cm-img'), nm=document.getElementById('cm-name');
-  var rl=document.getElementById('cm-role'), wy=document.getElementById('cm-why');
-  var wh=document.getElementById('cm-whyhead');
+  var cost=document.getElementById('cm-cost'), tl=document.getElementById('cm-tl');
+  var secchip=document.getElementById('cm-secchip'), banner=document.getElementById('cm-banner');
+  var meta=document.getElementById('cm-imgmeta');
+  var wy=document.getElementById('cm-why'), ww=document.getElementById('cm-whywrap');
   var aw=document.getElementById('cm-altwrap'), al=document.getElementById('cm-alts');
   var ah=document.getElementById('cm-althead');
   var fit=document.getElementById('cm-fit'), fb=document.getElementById('cm-fitband');
   var fs=document.getElementById('cm-fitscore'), mb=document.getElementById('cm-meterbar');
   var fc=document.getElementById('cm-fitctx'), fr=document.getElementById('cm-reasons');
-  function open(key){
-    var d=DATA[key]; if(!d) return;
-    nm.textContent=d.name;
-    rl.textContent=d.role||''; rl.style.display=d.role?'':'none';
-    // fit score
+  var ow=document.getElementById('cm-oraclewrap'), orc=document.getElementById('cm-oracle');
+  var kw=document.getElementById('cm-kw');
+
+  function scry(name){
+    if(cache[name]!==undefined) return Promise.resolve(cache[name]);
+    var u='https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(name);
+    return fetch(u).then(function(r){return r.ok?r.json():null;})
+      .then(function(j){cache[name]=j; return j;}).catch(function(){cache[name]=null; return null;});
+  }
+  function oracleOf(j){
+    if(j.oracle_text) return j.oracle_text;
+    if(j.card_faces) return j.card_faces.map(function(f){
+      return (f.name?f.name+'\\n':'')+(f.oracle_text||''); }).join('\\n\\n// \\n\\n');
+    return '';
+  }
+  function setChip(el,txt){ if(txt){el.textContent=txt; el.hidden=false;} else {el.hidden=true;} }
+
+  function enrich(d){
+    orc.textContent='Loading card text from Scryfall…'; orc.className='cm-oracle cm-loading';
+    ow.hidden=false;
+    scry(d.name).then(function(j){
+      if(curKey!==keyOf(d)) return;              // user moved on
+      if(!j){ orc.textContent='(Card text unavailable — open with an internet connection to load it from Scryfall.)';
+        orc.className='cm-oracle cm-loading'; kw.innerHTML=''; return; }
+      cost.textContent=j.mana_cost||'';
+      setChip(tl, j.type_line||d.type||'');
+      var ot=oracleOf(j); orc.textContent=ot||'(no rules text)'; orc.className='cm-oracle';
+      kw.innerHTML='';
+      (j.keywords||[]).forEach(function(k){var s=document.createElement('span');s.textContent=k;kw.appendChild(s);});
+      var bits=[];
+      if(j.cmc!==undefined) bits.push('<b>MV</b> '+j.cmc);
+      if(j.color_identity&&j.color_identity.length) bits.push('<b>ID</b> '+j.color_identity.join(''));
+      else bits.push('<b>ID</b> colorless');
+      if(j.edhrec_rank) bits.push('<b>EDHREC</b> #'+j.edhrec_rank);
+      if(j.prices&&j.prices.usd) bits.push('<b>~$</b>'+j.prices.usd);
+      meta.innerHTML=bits.join(' &nbsp; ');
+    });
+  }
+  function keyOf(d){ return d.name; }
+
+  function fillFit(d){
     if(d.fit){
       fb.textContent=d.fit.band;
       fs.innerHTML=d.fit.score+'<small>/100 fit</small>';
@@ -738,16 +840,19 @@ def card_modal_block(details):
       (d.fit.reasons||[]).forEach(function(r){
         var li=document.createElement('li');
         var b=document.createElement('b'); b.textContent=r.label;
-        var em=document.createElement('em'); em.textContent=r.pts+'/'+r.max;
         var sp=document.createElement('span'); sp.textContent=r.detail;
+        var em=document.createElement('em'); em.textContent=r.pts+'/'+r.max;
         li.appendChild(b); li.appendChild(sp); li.appendChild(em); fr.appendChild(li);
       });
       fit.hidden=false;
-    } else { fit.hidden=true; }
-    // generic why
-    if(d.why){ wy.textContent=d.why; wy.className='cm-why'; wh.hidden=false; }
-    else { wy.textContent=''; wh.hidden=true; }
-    img.removeAttribute('src'); img.alt=d.name; img.src=d.full;
+      banner.hidden = !d.fit.nameonly;
+      if(d.fit.nameonly) banner.textContent='This deck list is name-only, so the color / '
+        +'role / curve signals below are limited. The card text and stats above are pulled '
+        +'live from Scryfall. Enrich the collection to sharpen the score.';
+    } else { fit.hidden=true; banner.hidden=true; }
+  }
+
+  function fillAlts(d){
     al.innerHTML='';
     if(d.alts&&d.alts.length){
       var anyUp=d.alts.some(function(a){return a.upgrade;});
@@ -755,22 +860,36 @@ def card_modal_block(details):
       d.alts.forEach(function(a){
         var fig=document.createElement('figure'); fig.className='cm-alt';
         var im=document.createElement('img'); im.alt=a.n; im.loading='lazy'; im.src=a.img;
-        var cap=document.createElement('figcaption');
-        cap.textContent=a.n+' ';
-        var tag=document.createElement('span');
-        tag.className=a.owned?'own':'buy'; tag.textContent=a.owned?'✓ owned':'buy';
-        cap.appendChild(tag);
-        if(a.upgrade){ var up=document.createElement('span'); up.className='up';
-          up.textContent='upgrade'; cap.appendChild(up); }
-        if(a.why){ var w=document.createElement('span'); w.className='altwhy';
-          w.textContent=a.why; cap.appendChild(w); }
+        var cap=document.createElement('figcaption'); cap.textContent=a.n+' ';
+        var tag=document.createElement('span'); tag.className=a.owned?'own':'buy';
+        tag.textContent=a.owned?'\\u2713 owned':'buy'; cap.appendChild(tag);
+        if(a.upgrade){var up=document.createElement('span');up.className='up';up.textContent='upgrade';cap.appendChild(up);}
+        if(a.why){var w=document.createElement('span');w.className='altwhy';w.textContent=a.why;cap.appendChild(w);}
         fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
       });
       aw.hidden=false;
     } else { aw.hidden=true; }
-    ov.hidden=false; document.body.style.overflow='hidden';
   }
-  function close(){ ov.hidden=true; document.body.style.overflow=''; }
+
+  function open(key){
+    var d=DATA[key]; if(!d) return;
+    curKey=keyOf(d);
+    nm.textContent=d.name; cost.textContent='';
+    setChip(tl, d.type||''); setChip(secchip, d.section?('in: '+d.section):'');
+    meta.innerHTML='';
+    img.removeAttribute('src'); img.alt=d.name; img.src=d.full;
+    fillFit(d);
+    if(d.why){ wy.textContent=d.why; ww.hidden=false; } else { ww.hidden=true; }
+    fillAlts(d);
+    enrich(d);
+    sc.scrollTop=0;
+    ov.hidden=false; document.body.style.overflow='hidden';
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+  }
+  function close(){
+    ov.classList.remove('show'); document.body.style.overflow='';
+    setTimeout(function(){ ov.hidden=true; }, 260);
+  }
   document.querySelectorAll('figure.mc[data-key]').forEach(function(f){
     f.addEventListener('click',function(){ open(f.getAttribute('data-key')); });
     f.addEventListener('keydown',function(e){
