@@ -2,7 +2,94 @@
 
 **Purpose:** This file lets a new Claude session continue building/tuning these Commander decks *without repeating the mistakes made along the way*. Read the "Rules for staying grounded" section first — it is the most important part.
 
-**Player context:** Building EDH decks primarily from an existing collection (minimal buying unless asked). Two decks are complete. The player values honesty about limitations over confident guessing.
+**Player context:** Building EDH decks primarily from an existing collection (minimal buying unless asked). The player values honesty about limitations over confident guessing.
+
+> **NOTE (2026-07-21):** The sections immediately below (original grounding rules, deck
+> summaries, "file inventory") are the ORIGINAL pre-repo handoff, kept for history. This
+> project is now a full **GitHub repo + Claude skill + local web app**. Read the
+> **"🧭 START HERE — CURRENT STATE"** section next for the accurate, up-to-date picture.
+> The grounding rules are now canonical in `.claude/skills/mtg-deckbuilder/references/`.
+
+---
+
+## 🧭 START HERE — CURRENT STATE (updated 2026-07-21)
+
+### What this project is now
+A complete, grounded MTG Commander (EDH) deckbuilding system in this repo
+(`bmfrench89/MTGDeckBuilder`). It has three layers, all sharing one code path:
+1. **A Claude skill** — `.claude/skills/mtg-deckbuilder/` (40-yr-veteran/World-Champion
+   persona + grounding rules + EDH principles + bracket rubric). Triggers on deckbuilding asks.
+2. **A stdlib-only Python toolkit** — `scripts/` (parsing, analysis, dashboards, rankings).
+3. **A local Flask web app** — `webapp/` (front end over the scripts; phone-ready, PWA).
+
+### Git state
+Everything is merged to **`main`** (HEAD `d7f66f6`; PRs #1–#4 merged). Active dev branch:
+**`claude/mtg-commander-deck-builder-ncuswp`**. Workflow used all session: commit → push to
+that branch → open PR → merge to `main`. Keep doing that.
+
+### Repo map (the important bits)
+- `scripts/` — `mtglib.py` (shared parsing/pip-math/heuristics + `load_collection`),
+  `analyze_collection.py`, `deck_stats.py`, `power.py` (bracket 1–5 + 0–100 score),
+  `deck_conflicts.py` (shared cards / buy-doubles / available pool),
+  `wishlist.py`, `staples_crossref.py`, `similar_commanders.py` ("would also work"),
+  `commander_finder.py` ("build next"), `carddb.py` (DuckDB collection enrichment),
+  `build_dashboard.py` (`generate()` is the shared renderer), `refresh.py` (rebuild everything),
+  `card_image.py`.
+- `data/decks/` — 4 decks as `<stem>.txt` with `# Title/# Theme/# Archetype/# Colors/# Commander`
+  headers, plus optional companions `<stem>.notes.md` / `.buylist.csv` / `.attrs.csv`.
+- `data/collection/` — `collection_snapshot.txt` (committed, name-only, 1,805 cards),
+  `owned_additions.txt` (committed; player-confirmed cards the export missed — currently Vito +
+  Force of Will), and `collection.csv` + `collection_attrs.csv` (BOTH gitignored; you provide
+  the CSV, carddb generates the attrs).
+- `data/reference/` — `game_changers.txt` (verified 53-card list) + tutors/fast-mana/extra-turns/
+  mass-land-denial/combo-pieces; `commanders.csv` (curated commander DB) + `archetype_support.csv`.
+- `data/wishlist.md` (generated). `docs/power-and-brackets.md` (rubric). `build/` (gitignored).
+- `webapp/` — `app.py`, `templates/`, `static/` (manifest+icon), `run.sh`, README.
+
+### The 4 decks (all owned unless noted; power ranking)
+1. **Y'shtola, Night's Blessed** — Esper WUB control/drain — COMPLETE — Bracket 3, power 67.
+   (3 Game Changers: Mystical Tutor, Force of Will, Rhystic Study — at the B3 ceiling.)
+2. **Cosmic Spider-Man** — 5c Spider typal — v1, has full `attrs.csv` (exact curve) — B3, 57.
+3. **Kaervek the Merciless** — Rakdos B/R group-slug — v1 draft — B2, 55.
+4. **Cloud, Ex-SOLDIER** — Naya RGW equipment/Voltron — COMPLETE — B2, 51.
+
+### How to run
+- Analyze/rank: `python3 scripts/power.py --rank --collection data/collection/collection.csv`
+- Rebuild all dashboards + wishlist: `python3 scripts/refresh.py --collection data/collection/collection.csv`
+- Web app: `python3 webapp/app.py` → localhost:5000 (or `webapp/run.sh` to reach it from a phone).
+- **Load the collection:** the tools want `data/collection/collection.csv` (the player's pricing
+  export — has quantity/name/set/prices but NO colors/types/MV). It's gitignored; ask the player
+  to drop it in. `load_collection` auto-merges `owned_additions.txt` and (if present)
+  `collection_attrs.csv`.
+
+### The key data limitation & its fix
+The pricing export is effectively **name-only** (no colors/types/MV), so by default curves/
+pips/tribal/color-compat only work where a per-deck `attrs.csv` exists (only Cosmic has one).
+**The fix is `carddb.py`:** the player downloads a Scryfall bulk JSON locally
+(scryfall.com/docs/api/bulk-data → "Oracle Cards") and runs
+`python3 scripts/carddb.py --bulk oracle-cards.json --collection data/collection/collection.csv`.
+That writes `collection_attrs.csv` (gitignored) which `load_collection` overlays → every tool
+then works collection-wide. Scryfall is FIREWALLED in the build env, so this runs on the
+player's machine. Verified end-to-end with a 32-card sample this session.
+
+### Environment constraints (still true)
+- Scryfall API, Scryfall/EDHREC/Draftsim page fetch, and Archidekt API are 403-blocked at the
+  proxy. Web **search** works (returns Scryfall data snippets) — verify recent cards one at a time.
+- Card images render only in a real browser (Scryfall hotlinks via `card_image.image_url_by_name`);
+  they stay blank in the chat preview and in claude.ai's panel.
+- "Prices" are the player's export MARKET values (some obscure rows are mispriced). No live pricing.
+- SendUserFile rejects very large full-page screenshots (~>1MB) with a 400.
+
+### Open threads / next steps (where we stopped)
+- **Run `carddb.py` against the real Scryfall bulk** and `refresh.py` → upgrades every deck's
+  curve/power/compat from partial to exact, and lets `commander_finder`/`similar_commanders`
+  use real types instead of curated lists. (Highest leverage.)
+- A **"Card DB status" indicator** on the web Collection page (enriched vs. name-only + the one
+  command to enrich) — was the immediately-next item when we paused.
+- **In-app deck editor** with collection autocomplete + live "available pool" warnings.
+- Fill `attrs.csv` for Cloud/Kaervek/Y'shtola (or just enrich via carddb) so all four are exact.
+- Grow `commanders.csv` / `archetype_support.csv` (more owned legends → richer Build-Next/similar).
+- Always-on deploy (gunicorn + auth + HTTPS + PNG icon) so the phone app doesn't need the PC on.
 
 ---
 
