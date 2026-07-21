@@ -19,6 +19,7 @@ name not listed falls back to default.
 import argparse
 import csv
 import html
+import json
 import os
 import re
 import sys
@@ -254,6 +255,70 @@ def _to_float_price(s):
         return None
 
 
+def _default_notes_path():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "data", "reference", "card_notes.csv")
+
+
+def load_card_notes(path=None):
+    """name(normalized) -> {"why": str, "alts": [names]}. The curated, editable
+    knowledge base behind the click-a-card panel. First row per name wins."""
+    path = path or _default_notes_path()
+    out = {}
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            name = (r.get("Name") or r.get("Card") or "").strip()
+            if not name:
+                continue
+            k = mtglib._norm(name)
+            if k in out:
+                continue
+            alts = [a.strip() for a in re.split(r"[;|]", r.get("Alternatives") or "")
+                    if a.strip()]
+            out[k] = {"why": (r.get("Why") or "").strip(), "alts": alts}
+    return out
+
+
+_ROLE_LABEL = {
+    "ramp": "Ramp / mana acceleration", "draw": "Card advantage",
+    "removal": "Targeted removal", "wipe": "Board wipe", "counter": "Counterspell",
+    "land": "Land", "creature": "Creature", "spell": "Instant / sorcery",
+    "artifact": "Artifact", "enchantment": "Enchantment",
+    "planeswalker": "Planeswalker", "other": "Deck card",
+}
+
+
+def build_card_details(sections, enriched, idx, notes, size="normal"):
+    """Per-card payload for the click-to-enlarge panel: enlarged image, a grounded
+    'why it works' blurb, its functional role, and alternatives tagged owned/buy."""
+    en = {mtglib._norm(c.name): c for c in enriched}
+    details = {}
+    for _, cards in sections:
+        for _q, name in cards:
+            k = mtglib._norm(name)
+            if k in details:
+                continue
+            c = en.get(k)
+            sid = c.scryfall_id if (c and c.scryfall_id) else ""
+            full = (card_image.image_url(sid, size) if sid
+                    else card_image.image_url_by_name(name, size))
+            roles = mtglib.classify(c) if c else set()
+            role = " · ".join(_ROLE_LABEL.get(r, r.title()) for r in sorted(roles))
+            note = notes.get(k)
+            alts = []
+            for a in (note["alts"] if note else []):
+                ref = mtglib.lookup(idx, a)
+                asid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
+                aimg = (card_image.image_url(asid, "small") if asid
+                        else card_image.image_url_by_name(a, "small"))
+                alts.append({"n": a, "img": aimg, "owned": ref is not None})
+            details[k] = {"name": name, "full": full, "role": role,
+                          "why": note["why"] if note else "", "alts": alts}
+    return details
+
+
 def apply_attrs(enriched, attrs):
     """Overlay type/MV/colors from an attrs map onto enriched deck cards."""
     if not attrs:
@@ -322,9 +387,10 @@ def sections_html(sections, enriched, shared=None, images=True, size="small"):
     out = []
     if images:
         out.append("<p class='muted imgnote'>Card images load live from Scryfall "
-                   "when opened in a browser. <span class='sb'>⇄</span> marks a card "
-                   "shared with another deck (<span class='sb need'>⇄</span> = you'd "
-                   "need more copies).</p>")
+                   "when opened in a browser. <b>Click any card</b> to enlarge it and "
+                   "see why it's here plus alternatives. <span class='sb'>⇄</span> marks "
+                   "a card shared with another deck (<span class='sb need'>⇄</span> = "
+                   "you'd need more copies).</p>")
     for label, cards in sections:
         n = sum(q for q, _ in cards)
         out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>")
@@ -341,7 +407,9 @@ def sections_html(sections, enriched, shared=None, images=True, size="small"):
                 url = (card_image.image_url(cid, size) if cid
                        else card_image.image_url_by_name(name, size))
                 out.append(
-                    f"<figure class='mc'><img loading='lazy' data-src='{esc(url)}' "
+                    f"<figure class='mc' data-key='{esc(k)}' tabindex='0' "
+                    f"role='button' aria-label='{esc(name)} — details'>"
+                    f"<img loading='lazy' data-src='{esc(url)}' "
                     f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}"
                     f"<figcaption>{mvb}{esc(name)}{price}</figcaption></figure>")
             out.append("</div>")
@@ -520,10 +588,119 @@ def similar_html(similar):
             + "".join(rows) + "</tbody></table></div>")
 
 
+def card_modal_css(t):
+    return f"""
+.mc {{ cursor:pointer; }}
+.mc:focus {{ outline:2px solid var(--accent); outline-offset:2px; }}
+.mc:hover img {{ filter:brightness(1.08); }}
+.cm-overlay {{ position:fixed; inset:0; background:rgba(0,0,0,.8);
+  display:flex; align-items:center; justify-content:center; padding:20px; z-index:60;
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }}
+.cm-overlay[hidden] {{ display:none; }}
+.cm-box {{ background:var(--panel); border:1px solid rgba(255,255,255,.12);
+  border-radius:16px; max-width:760px; width:100%; max-height:92vh; overflow:auto;
+  position:relative; padding:24px; }}
+.cm-close {{ position:absolute; top:8px; right:14px; background:none; border:none;
+  color:var(--muted); font-size:2rem; line-height:1; cursor:pointer; }}
+.cm-close:hover {{ color:var(--text); }}
+.cm-grid {{ display:grid; grid-template-columns:280px 1fr; gap:24px; }}
+.cm-img {{ width:100%; border-radius:4.75% / 3.5%; display:block; aspect-ratio:5/7;
+  object-fit:cover; background:rgba(255,255,255,.05); }}
+.cm-info h3 {{ font-family:{t['display']}; color:var(--accent); margin:0 0 6px;
+  font-size:1.6rem; }}
+.cm-role {{ color:var(--gold); font-family:{t['mono']}; font-size:.74rem;
+  text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }}
+.cm-why {{ line-height:1.6; margin:0; }}
+.cm-altwrap h4 {{ color:var(--muted); text-transform:uppercase; font-size:.72rem;
+  letter-spacing:1.5px; margin:20px 0 9px; }}
+.cm-alts {{ display:grid; grid-template-columns:repeat(3,1fr); gap:11px; }}
+.cm-alt {{ margin:0; }}
+.cm-alt img {{ width:100%; border-radius:5% / 3.6%; display:block; aspect-ratio:5/7;
+  object-fit:cover; background:rgba(255,255,255,.05); }}
+.cm-alt figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
+  margin-top:3px; line-height:1.3; }}
+.cm-alt .own {{ color:var(--accent2); font-weight:700; }}
+.cm-alt .buy {{ color:var(--warn); font-weight:700; }}
+@media (max-width:560px) {{ .cm-grid {{ grid-template-columns:1fr; }}
+  .cm-img {{ max-width:210px; margin:0 auto; }}
+  .cm-alts {{ grid-template-columns:repeat(3,1fr); }} }}
+"""
+
+
+def card_modal_block(details):
+    payload = (json.dumps(details, ensure_ascii=True)
+               .replace("<", "\\u003c").replace(">", "\\u003e")
+               .replace("&", "\\u0026"))
+    return """
+<div id="cardmodal" class="cm-overlay" hidden>
+  <div class="cm-box" role="dialog" aria-modal="true" aria-label="Card details">
+    <button class="cm-close" type="button" aria-label="Close">&times;</button>
+    <div class="cm-grid">
+      <img id="cm-img" class="cm-img" alt="">
+      <div class="cm-info">
+        <h3 id="cm-name"></h3>
+        <div id="cm-role" class="cm-role"></div>
+        <p id="cm-why" class="cm-why"></p>
+        <div id="cm-altwrap" class="cm-altwrap" hidden>
+          <h4>Alternatives that could slot here</h4>
+          <div id="cm-alts" class="cm-alts"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var DATA=__PAYLOAD__;
+  var ov=document.getElementById('cardmodal');
+  var img=document.getElementById('cm-img'), nm=document.getElementById('cm-name');
+  var rl=document.getElementById('cm-role'), wy=document.getElementById('cm-why');
+  var aw=document.getElementById('cm-altwrap'), al=document.getElementById('cm-alts');
+  function open(key){
+    var d=DATA[key]; if(!d) return;
+    nm.textContent=d.name;
+    rl.textContent=d.role||''; rl.style.display=d.role?'':'none';
+    wy.textContent=d.why||('No curated note for this card yet — add one in '
+      +'data/reference/card_notes.csv and it shows up here.');
+    wy.className=d.why?'cm-why':'cm-why muted';
+    img.removeAttribute('src'); img.alt=d.name; img.src=d.full;
+    al.innerHTML='';
+    if(d.alts&&d.alts.length){
+      d.alts.forEach(function(a){
+        var fig=document.createElement('figure'); fig.className='cm-alt';
+        var im=document.createElement('img'); im.alt=a.n; im.loading='lazy'; im.src=a.img;
+        var cap=document.createElement('figcaption');
+        cap.textContent=a.n+' ';
+        var tag=document.createElement('span');
+        tag.className=a.owned?'own':'buy'; tag.textContent=a.owned?'✓ owned':'buy';
+        cap.appendChild(tag);
+        fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
+      });
+      aw.hidden=false;
+    } else { aw.hidden=true; }
+    ov.hidden=false; document.body.style.overflow='hidden';
+  }
+  function close(){ ov.hidden=true; document.body.style.overflow=''; }
+  document.querySelectorAll('figure.mc[data-key]').forEach(function(f){
+    f.addEventListener('click',function(){ open(f.getAttribute('data-key')); });
+    f.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(f.getAttribute('data-key')); }
+    });
+  });
+  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+  document.querySelector('#cardmodal .cm-close').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!ov.hidden) close(); });
+})();
+</script>
+""".replace("__PAYLOAD__", payload)
+
+
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
-                     assessment=None, similar=None):
+                     assessment=None, similar=None, details=None):
     t = THEMES.get(theme, THEMES["default"])
+    modal_css = card_modal_css(t)
+    modal_block = card_modal_block(details or {})
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
              if t["fonts_link"] else "")
@@ -669,6 +846,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
   text-align:center; }}
 @media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:2rem; }}
   .buysum {{ margin-left:0; width:100%; }} }}
+{modal_css}
 </style></head><body><div class="wrap">
 <header>
   <h1>{esc(title)}</h1>
@@ -687,7 +865,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 <section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared)}</section>
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
-</div>{IMG_LOADER}</body></html>"""
+</div>{modal_block}{IMG_LOADER}</body></html>"""
 
 
 def render_visual(title, deck, idx, theme, size="normal"):
@@ -775,8 +953,14 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     except Exception:
         similar = None
 
+    try:
+        details = build_card_details(sections, enriched, idx, load_card_notes())
+    except Exception:
+        details = None
+
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
-                                 sections, notes, buylist, shared, assessment, similar)
+                                 sections, notes, buylist, shared, assessment,
+                                 similar, details)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}
