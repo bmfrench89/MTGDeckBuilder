@@ -24,5 +24,12 @@ echo == Rebuilding dashboards + wishlist from %COLL% ==
 python scripts\refresh.py --collection "%COLL%"
 
 echo.
-echo == Up to date. Run webapp\run.bat to launch the app. ==
+echo == Up to date. ==
+echo NOTE: if the web app is already running in another window, close it first —
+echo a running server keeps the OLD code until you relaunch it.
+echo.
+choice /m "Launch the web app now"
+if errorlevel 2 goto :done
+call webapp\run.bat
+:done
 pause
