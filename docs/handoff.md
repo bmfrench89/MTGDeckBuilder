@@ -351,3 +351,19 @@ Made the web app phone-ready:
   phone width). Verified at 390px with Chromium screenshots.
 - webapp/README documents 3 phone paths: same-Wi-Fi LAN (recommended), tunnel
   (cloudflared/ngrok), deploy (gunicorn+auth+HTTPS; keep collection.csv private).
+
+---
+
+## SESSION NOTE — 2026-07-18l ("this commander would also work")
+
+New feature: `scripts/similar_commanders.py` + `data/reference/commanders.csv` (curated
+commander DB: colors + archetype tags). For a deck it ranks alternate commanders that share
+the archetype and classifies the COLOR fit honestly:
+  drop-in (your 99 stay legal) · tighter (trim off-color) · partial (keep overlap+colorless,
+  rebuild rest) · reskin (same idea, new shell). Owned candidates are flagged from the
+  collection; where a deck has attrs it shows exact "% of cards stay in color".
+Decks tagged with `# Archetype:` / `# Colors:` headers. Surfaced as a "Commanders That Also
+Fit This Shell" dashboard section (build_dashboard.generate now returns it; visible in the
+web app deck pages too).
+Flagship: Cloud (Naya equipment) → The Invincible Iron Man (Izzet) = PARTIAL (shares R);
+also surfaces owned Iron Man Armored Avenger + Captain America. Grow commanders.csv over time.

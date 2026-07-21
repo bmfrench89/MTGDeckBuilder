@@ -1,6 +1,8 @@
 # Deck: Cloud, Ex-SOLDIER — Naya (RGW) equipment/Voltron — COMPLETE
 # Title: Cloud, Ex-SOLDIER
 # Theme: cloud
+# Archetype: equipment voltron artifacts
+# Colors: R G W
 # Commander: Cloud, Ex-SOLDIER
 # Source: reconstructed from docs/handoff.md (last session's cloud-deck).
 # Note: built to NOT cannibalize single copies from the Y'shtola deck — shared staples
