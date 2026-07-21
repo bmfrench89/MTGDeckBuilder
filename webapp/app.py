@@ -32,11 +32,31 @@ import analyze_collection as ac
 import similar_commanders as simc
 import commander_finder as cf
 
-COLLECTION = os.environ.get("MTG_COLLECTION", os.path.join(ROOT, "data/collection/collection.csv"))
+def _default_collection():
+    """Prefer the player's private CSV; fall back to the committed name-only
+    snapshot so a fresh clone (which has no collection.csv — it's gitignored)
+    still works out of the box."""
+    csv_path = os.path.join(ROOT, "data/collection/collection.csv")
+    snap = os.path.join(ROOT, "data/collection/collection_snapshot.txt")
+    env = os.environ.get("MTG_COLLECTION")
+    if env:
+        return env
+    return csv_path if os.path.exists(csv_path) else snap
+
+
+COLLECTION = _default_collection()
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
 app = Flask(__name__)
+
+
+@app.errorhandler(500)
+def _err(e):  # friendly message instead of a bare stack trace
+    return ("<h2>Something went wrong</h2><p>Most often this means the collection "
+            "file wasn't found. The app uses <code>data/collection/collection.csv</code> "
+            "if present, otherwise the committed snapshot. Add your Archidekt export at "
+            "that path (see docs/SETUP-windows.md) and reload.</p>"), 500
 
 
 # --------------------------------------------------------------------------- #
