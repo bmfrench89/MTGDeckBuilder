@@ -34,6 +34,7 @@ scripts/                          The engine (stdlib-only Python 3)
   wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
   similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
   commander_finder.py             "What should I build next?" — commanders ranked by owned support
+  carddb.py                       Enrich the whole collection (colors/types/MV) from a Scryfall card DB (DuckDB)
 data/reference/                   Game Changers + tutor/fast-mana/etc. lists (editable)
 data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
@@ -131,6 +132,31 @@ python3 scripts/deck_conflicts.py --collection data/collection/collection.csv
 
 Bracket rules and the 53-card Game Changers list are grounded in WotC's official
 Commander Bracket system and live in editable `data/reference/*.txt` files.
+
+## Card database (optional) — do we need a backend DB?
+
+**Short answer: no database for the app's own data.** The collection (~2,800 rows), decks,
+and reference tables are tiny and read-mostly; parsing CSV/txt into memory is instant, and
+keeping the files as the source of truth means everything is diffable in git and portable.
+
+**Where a DB earns its place: ingesting a real card database.** The pricing export has no
+card attributes (colors/types/mana value), which is why analysis is name-only by default.
+`carddb.py` uses **DuckDB** (optional, `pip install duckdb`) to stream a Scryfall bulk-data
+file and enrich your *entire* collection at once:
+
+```bash
+# one-time: download "Oracle Cards" JSON from https://scryfall.com/docs/api/bulk-data
+python3 scripts/carddb.py --bulk oracle-cards.json \
+  --collection data/collection/collection.csv --stats
+```
+
+That writes `data/collection/collection_attrs.csv` (gitignored — it's derived + personal),
+which `mtglib.load_collection` auto-merges. From then on **every tool** works collection-wide —
+real mana curves, colored pip demand, tribal/type counts, power color-scores, and exact
+similar-commander color-fit % — with no per-deck `attrs.csv` needed. DuckDB is the right fit
+because it queries the big JSON in place (no import step) and is a single embedded file.
+(SQLite would only be warranted if we add write-heavy app state — user accounts, saved deck
+versions, edit history.)
 
 ## Web app (local front end)
 

@@ -241,11 +241,44 @@ def merge_collection(cards: list, extra: list) -> list:
     return cards
 
 
+def overlay_attrs(cards: list, attrs_text: str) -> int:
+    """Overlay card attributes (Type, MV, Colors) from a CSV onto a collection by
+    name. Powers collection-wide color/type/curve analysis. Returns #matched."""
+    reader = csv.DictReader(io.StringIO(attrs_text))
+    fn = reader.fieldnames or []
+    c_name = _header_index(fn, "name", "card", "card name")
+    c_type = _header_index(fn, "type", "types")
+    c_mv = _header_index(fn, "mv", "mana value", "cmc")
+    c_colors = _header_index(fn, "colors", "color identity", "identity")
+    c_cost = _header_index(fn, "cost", "mana cost")
+    idx = index_by_name(cards)
+    n = 0
+    for row in reader:
+        name = (row.get(c_name) or "").strip() if c_name else ""
+        card = lookup(idx, name) if name else None
+        if not card:
+            continue
+        n += 1
+        if c_type and (row.get(c_type) or "").strip():
+            card.types = _split_multi(row[c_type])
+        mv = _to_float(row.get(c_mv)) if c_mv else None
+        if mv is not None:
+            card.mana_value = mv
+        if c_colors and (row.get(c_colors) or "").strip():
+            card.identity = _parse_colorish(row[c_colors])
+            card.colors = card.colors or card.identity
+        if c_cost and (row.get(c_cost) or "").strip():
+            card.mana_cost = row[c_cost].strip()
+    return n
+
+
 def load_collection(path: str) -> list:
-    """Parse a collection file, then auto-merge a sibling `owned_additions.txt`
-    or `owned_additions.csv` if present. Those hold cards the player has confirmed
-    they own but that aren't in the export yet (new/post-cutoff pickups). Player
-    info outranks the export (grounding rule #6)."""
+    """Parse a collection file, then auto-merge sibling overlays if present:
+      - `owned_additions.txt/.csv` — cards you confirmed you own but the export
+        missed (player info outranks the export, grounding rule #6).
+      - `collection_attrs.csv` — card attributes (Type/MV/Colors) for the whole
+        collection, e.g. built by carddb.py from a Scryfall card database. This is
+        what turns on color/type/curve analysis across every deck."""
     import os
     with open(path, encoding="utf-8") as f:
         cards = parse_collection(f.read())
@@ -255,6 +288,10 @@ def load_collection(path: str) -> list:
         if os.path.exists(ep):
             with open(ep, encoding="utf-8") as f:
                 merge_collection(cards, parse_collection(f.read()))
+    ap = os.path.join(d, "collection_attrs.csv")
+    if os.path.exists(ap):
+        with open(ap, encoding="utf-8") as f:
+            overlay_attrs(cards, f.read())
     return cards
 
 
