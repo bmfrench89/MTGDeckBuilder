@@ -73,7 +73,16 @@ def main():
         capture_output=True, text=True)
     print(r.stdout.strip() if r.returncode == 0 else f"  ✗ wishlist: {r.stderr.strip()}")
 
-    print(f"\nRefreshed {ok}/{len(decks)} dashboards -> {args.out_dir}/  +  {wl}")
+    # ManaPool-ready buy list (plain text: qty + name per line)
+    mp = os.path.join("data", "manapool-wishlist.txt")
+    r = subprocess.run(
+        [sys.executable, os.path.join(HERE, "export_manapool.py"),
+         "--wishlist", "--collection", args.collection,
+         "--decks-dir", args.decks_dir, "--out", mp],
+        capture_output=True, text=True)
+    print(r.stdout.strip() if r.returncode == 0 else f"  ✗ manapool export: {r.stderr.strip()}")
+
+    print(f"\nRefreshed {ok}/{len(decks)} dashboards -> {args.out_dir}/  +  {wl}  +  {mp}")
     return 0
 
 
