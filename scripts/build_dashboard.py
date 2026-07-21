@@ -30,6 +30,7 @@ import deck_stats
 import card_image
 import deck_conflicts
 import power
+import deck_fit
 import similar_commanders as simc
 
 THEMES = {
@@ -290,10 +291,13 @@ _ROLE_LABEL = {
 }
 
 
-def build_card_details(sections, enriched, idx, notes, size="normal"):
+def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
+                       refs=None, staples=None, size="normal"):
     """Per-card payload for the click-to-enlarge panel: enlarged image, a grounded
-    'why it works' blurb, its functional role, and alternatives tagged owned/buy."""
+    generic 'why it works' blurb, a deck-specific fit score + how-it-fits line, and
+    alternatives / stronger options tagged owned/buy."""
     en = {mtglib._norm(c.name): c for c in enriched}
+    in_deck = set(en.keys())
     details = {}
     for _, cards in sections:
         for _q, name in cards:
@@ -307,15 +311,37 @@ def build_card_details(sections, enriched, idx, notes, size="normal"):
             roles = mtglib.classify(c) if c else set()
             role = " · ".join(_ROLE_LABEL.get(r, r.title()) for r in sorted(roles))
             note = notes.get(k)
+
+            fit = None
+            if c is not None and rep is not None and ctx is not None and refs is not None:
+                try:
+                    fit = deck_fit.assess_card(c, rep, ctx, refs)
+                except Exception:
+                    fit = None
+
+            curated = note["alts"] if note else []
+            if c is not None and ctx is not None and refs is not None:
+                try:
+                    alt_src = deck_fit.better_alternatives(
+                        c, ctx, idx, refs, curated, in_deck, staples or {})
+                except Exception:
+                    alt_src = [{"n": a, "owned": mtglib.lookup(idx, a) is not None,
+                                "upgrade": False, "why": ""} for a in curated]
+            else:
+                alt_src = [{"n": a, "owned": mtglib.lookup(idx, a) is not None,
+                            "upgrade": False, "why": ""} for a in curated]
+
             alts = []
-            for a in (note["alts"] if note else []):
-                ref = mtglib.lookup(idx, a)
+            for a in alt_src:
+                ref = mtglib.lookup(idx, a["n"])
                 asid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
                 aimg = (card_image.image_url(asid, "small") if asid
-                        else card_image.image_url_by_name(a, "small"))
-                alts.append({"n": a, "img": aimg, "owned": ref is not None})
+                        else card_image.image_url_by_name(a["n"], "small"))
+                alts.append({"n": a["n"], "img": aimg, "owned": a["owned"],
+                             "upgrade": a.get("upgrade", False), "why": a.get("why", "")})
+
             details[k] = {"name": name, "full": full, "role": role,
-                          "why": note["why"] if note else "", "alts": alts}
+                          "why": note["why"] if note else "", "fit": fit, "alts": alts}
     return details
 
 
@@ -610,6 +636,30 @@ def card_modal_css(t):
   font-size:1.6rem; }}
 .cm-role {{ color:var(--gold); font-family:{t['mono']}; font-size:.74rem;
   text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }}
+.cm-fit {{ margin:0 0 14px; }}
+.cm-fithead {{ display:flex; align-items:baseline; justify-content:space-between;
+  gap:10px; margin-bottom:5px; }}
+.cm-fitband {{ font-family:{t['head']}; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; font-size:.82rem; color:var(--accent2); }}
+.cm-fitscore {{ font-family:{t['display']}; font-size:1.5rem; color:var(--accent); }}
+.cm-fitscore small {{ color:var(--muted); font-size:.8rem; }}
+.cm-meter {{ height:9px; border-radius:6px; background:rgba(255,255,255,.09);
+  overflow:hidden; }}
+.cm-meter span {{ display:block; height:100%; border-radius:6px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent)); }}
+.cm-fitctx {{ line-height:1.55; margin:10px 0 0; }}
+.cm-reasons {{ margin-top:8px; }}
+.cm-reasons summary {{ color:var(--muted); cursor:pointer; font-size:.8rem;
+  font-family:{t['mono']}; }}
+.cm-reasons ul {{ list-style:none; padding:0; margin:8px 0 0; font-family:{t['mono']};
+  font-size:.76rem; }}
+.cm-reasons li {{ display:flex; justify-content:space-between; gap:12px; padding:3px 0;
+  border-bottom:1px solid rgba(255,255,255,.06); }}
+.cm-reasons li b {{ color:var(--text); font-weight:600; white-space:nowrap; }}
+.cm-reasons li span {{ color:var(--muted); text-align:right; }}
+.cm-reasons li em {{ color:var(--accent); font-style:normal; white-space:nowrap; }}
+.cm-whyhead, .cm-altwrap h4 {{ color:var(--muted); text-transform:uppercase;
+  font-size:.72rem; letter-spacing:1.5px; margin:16px 0 7px; }}
 .cm-why {{ line-height:1.6; margin:0; }}
 .cm-altwrap h4 {{ color:var(--muted); text-transform:uppercase; font-size:.72rem;
   letter-spacing:1.5px; margin:20px 0 9px; }}
@@ -621,6 +671,10 @@ def card_modal_css(t):
   margin-top:3px; line-height:1.3; }}
 .cm-alt .own {{ color:var(--accent2); font-weight:700; }}
 .cm-alt .buy {{ color:var(--warn); font-weight:700; }}
+.cm-alt .up {{ display:inline-block; background:var(--accent); color:#000;
+  font-weight:700; font-size:.58rem; padding:0 4px; border-radius:6px;
+  margin-left:4px; text-transform:uppercase; letter-spacing:.5px; }}
+.cm-alt .altwhy {{ display:block; color:var(--muted); font-size:.6rem; margin-top:1px; }}
 @media (max-width:560px) {{ .cm-grid {{ grid-template-columns:1fr; }}
   .cm-img {{ max-width:210px; margin:0 auto; }}
   .cm-alts {{ grid-template-columns:repeat(3,1fr); }} }}
@@ -640,9 +694,18 @@ def card_modal_block(details):
       <div class="cm-info">
         <h3 id="cm-name"></h3>
         <div id="cm-role" class="cm-role"></div>
+        <div id="cm-fit" class="cm-fit" hidden>
+          <div class="cm-fithead"><span id="cm-fitband" class="cm-fitband"></span>
+            <span id="cm-fitscore" class="cm-fitscore"></span></div>
+          <div class="cm-meter"><span id="cm-meterbar"></span></div>
+          <p id="cm-fitctx" class="cm-fitctx"></p>
+          <details class="cm-reasons"><summary>How this score breaks down</summary>
+            <ul id="cm-reasons"></ul></details>
+        </div>
+        <div id="cm-whyhead" class="cm-whyhead" hidden>Why the card is good</div>
         <p id="cm-why" class="cm-why"></p>
         <div id="cm-altwrap" class="cm-altwrap" hidden>
-          <h4>Alternatives that could slot here</h4>
+          <h4 id="cm-althead">Alternatives that could slot here</h4>
           <div id="cm-alts" class="cm-alts"></div>
         </div>
       </div>
@@ -655,17 +718,40 @@ def card_modal_block(details):
   var ov=document.getElementById('cardmodal');
   var img=document.getElementById('cm-img'), nm=document.getElementById('cm-name');
   var rl=document.getElementById('cm-role'), wy=document.getElementById('cm-why');
+  var wh=document.getElementById('cm-whyhead');
   var aw=document.getElementById('cm-altwrap'), al=document.getElementById('cm-alts');
+  var ah=document.getElementById('cm-althead');
+  var fit=document.getElementById('cm-fit'), fb=document.getElementById('cm-fitband');
+  var fs=document.getElementById('cm-fitscore'), mb=document.getElementById('cm-meterbar');
+  var fc=document.getElementById('cm-fitctx'), fr=document.getElementById('cm-reasons');
   function open(key){
     var d=DATA[key]; if(!d) return;
     nm.textContent=d.name;
     rl.textContent=d.role||''; rl.style.display=d.role?'':'none';
-    wy.textContent=d.why||('No curated note for this card yet — add one in '
-      +'data/reference/card_notes.csv and it shows up here.');
-    wy.className=d.why?'cm-why':'cm-why muted';
+    // fit score
+    if(d.fit){
+      fb.textContent=d.fit.band;
+      fs.innerHTML=d.fit.score+'<small>/100 fit</small>';
+      mb.style.width=Math.max(3,d.fit.score)+'%';
+      fc.textContent=d.fit.context||'';
+      fr.innerHTML='';
+      (d.fit.reasons||[]).forEach(function(r){
+        var li=document.createElement('li');
+        var b=document.createElement('b'); b.textContent=r.label;
+        var em=document.createElement('em'); em.textContent=r.pts+'/'+r.max;
+        var sp=document.createElement('span'); sp.textContent=r.detail;
+        li.appendChild(b); li.appendChild(sp); li.appendChild(em); fr.appendChild(li);
+      });
+      fit.hidden=false;
+    } else { fit.hidden=true; }
+    // generic why
+    if(d.why){ wy.textContent=d.why; wy.className='cm-why'; wh.hidden=false; }
+    else { wy.textContent=''; wh.hidden=true; }
     img.removeAttribute('src'); img.alt=d.name; img.src=d.full;
     al.innerHTML='';
     if(d.alts&&d.alts.length){
+      var anyUp=d.alts.some(function(a){return a.upgrade;});
+      ah.textContent=anyUp?'Stronger options for this slot':'Alternatives that could slot here';
       d.alts.forEach(function(a){
         var fig=document.createElement('figure'); fig.className='cm-alt';
         var im=document.createElement('img'); im.alt=a.n; im.loading='lazy'; im.src=a.img;
@@ -674,6 +760,10 @@ def card_modal_block(details):
         var tag=document.createElement('span');
         tag.className=a.owned?'own':'buy'; tag.textContent=a.owned?'✓ owned':'buy';
         cap.appendChild(tag);
+        if(a.upgrade){ var up=document.createElement('span'); up.className='up';
+          up.textContent='upgrade'; cap.appendChild(up); }
+        if(a.why){ var w=document.createElement('span'); w.className='altwhy';
+          w.textContent=a.why; cap.appendChild(w); }
         fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
       });
       aw.hidden=false;
@@ -954,7 +1044,11 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         similar = None
 
     try:
-        details = build_card_details(sections, enriched, idx, load_card_notes())
+        refs = power.load_refs()
+        ctx = deck_fit.deck_context(deck_path, enriched, commander)
+        staples = deck_fit.load_role_staples()
+        details = build_card_details(sections, enriched, idx, load_card_notes(),
+                                     rep=rep, ctx=ctx, refs=refs, staples=staples)
     except Exception:
         details = None
 

@@ -1,0 +1,59 @@
+# Grounded fallback pool for the click-a-card "stronger options" list, keyed by
+# functional role. Colors = the colored mana the card actually requires (for
+# color-identity filtering); blank = colorless/castable anywhere. Used when a card
+# has no curated Alternatives row in card_notes.csv. Add freely.
+Role,Colors,Card
+ramp,,Sol Ring
+ramp,,Arcane Signet
+ramp,,Mind Stone
+ramp,,Fellwar Stone
+ramp,,Mana Vault
+ramp,,Thought Vessel
+ramp,G,Nature's Lore
+ramp,G,Three Visits
+ramp,G,Cultivate
+ramp,G,Farseek
+ramp,W,Smothering Tithe
+ramp,R,Dockside Extortionist
+draw,U,Rhystic Study
+draw,U,Mystic Remora
+draw,U,Fact or Fiction
+draw,W,Esper Sentinel
+draw,G,Sylvan Library
+draw,G,Beast Whisperer
+draw,B,Phyrexian Arena
+draw,B,Night's Whisper
+draw,,The One Ring
+removal,W,Swords to Plowshares
+removal,W,Path to Exile
+removal,W,Generous Gift
+removal,U,Pongify
+removal,U,Rapid Hybridization
+removal,B,Go for the Throat
+removal,B,Fatal Push
+removal,R,Chaos Warp
+removal,G,Beast Within
+removal,BG,Assassin's Trophy
+removal,WB,Anguished Unmaking
+removal,WB,Vindicate
+wipe,W,Wrath of God
+wipe,W,Farewell
+wipe,W,Austere Command
+wipe,B,Damnation
+wipe,B,Toxic Deluge
+wipe,R,Blasphemous Act
+wipe,U,Cyclonic Rift
+wipe,WU,Supreme Verdict
+counter,U,Counterspell
+counter,U,Swan Song
+counter,U,An Offer You Can't Refuse
+counter,U,Negate
+counter,U,Mana Drain
+counter,U,Fierce Guardianship
+counter,WU,Dovin's Veto
+tutor,B,Demonic Tutor
+tutor,B,Vampiric Tutor
+tutor,W,Enlightened Tutor
+tutor,U,Mystical Tutor
+tutor,B,Diabolic Intent
+tutor,G,Green Sun's Zenith
