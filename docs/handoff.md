@@ -367,3 +367,15 @@ Fit This Shell" dashboard section (build_dashboard.generate now returns it; visi
 web app deck pages too).
 Flagship: Cloud (Naya equipment) → The Invincible Iron Man (Izzet) = PARTIAL (shares R);
 also surfaces owned Iron Man Armored Avenger + Captain America. Grow commanders.csv over time.
+
+---
+
+## SESSION NOTE — 2026-07-18m ("what should I build next?" reverse matcher)
+
+`scripts/commander_finder.py` + `data/reference/archetype_support.csv`: ranks every commander
+in commanders.csv by how many of its archetype's SUPPORT cards the collection owns (universal
+staples like Sol Ring excluded), with a light color-depth (basics) tiebreak. Flags owned
+commanders. Webapp page **/build-next** ("Build Next" nav tab) with archetype filter chips +
+support bars. Current top: Breya (41, buy), Judith (39, buy), Syr Gwyn (38, buy), then owned
+Y'shtola / Iron Man Armored Avenger / Mazirek (34). Grow the two reference CSVs to sharpen.
+Merged similar-commanders as PR #2 → main (aedc375).

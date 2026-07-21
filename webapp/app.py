@@ -29,6 +29,8 @@ import deck_conflicts
 import wishlist as wl
 import build_dashboard as bd
 import analyze_collection as ac
+import similar_commanders as simc
+import commander_finder as cf
 
 COLLECTION = os.environ.get("MTG_COLLECTION", os.path.join(ROOT, "data/collection/collection.csv"))
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
@@ -144,6 +146,18 @@ def shared_view():
     conf = deck_conflicts.conflicts(usage)
     total = round(sum(c["buy_cost"] or 0 for c in conf), 2)
     return render_template("shared.html", conf=conf, total=total, page="shared")
+
+
+@app.route("/build-next")
+def build_next():
+    _, idx = collection_index()
+    rows = cf.score(idx, simc.load_commanders(), cf.load_support())
+    arch = request.args.get("archetype", "")
+    if arch:
+        rows = [r for r in rows if arch in r["archetypes"]]
+    archetypes = sorted({a for r in rows for a in r["archetypes"]})
+    return render_template("build_next.html", rows=rows[:30], archetypes=archetypes,
+                           arch=arch, page="build")
 
 
 @app.route("/collection", methods=["GET"])

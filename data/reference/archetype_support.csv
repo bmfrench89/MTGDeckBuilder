@@ -1,0 +1,22 @@
+# Support cards per archetype — used by commander_finder.py to score how much of your
+# collection already backs each commander. `cards` is a ;-separated list of high-signal
+# payoffs/enablers. The finder counts how many you OWN. Grow these lists freely.
+archetype,cards
+equipment,"Colossus Hammer;Hard-Won Jitte;Sword of the Animist;Behemoth Sledge;Conqueror's Flail;Champion's Helm;Darksteel Plate;Mask of Memory;Lightning Greaves;Trailblazer's Boots;Mjölnir, Hammer of Thor;Hero's Blade;Hero's Heirloom;Puresteel Paladin;Armory Automaton;Inspiring Statuary;Steelshaper's Gift;Skullclamp;Sword of Feast and Famine;Sword of Fire and Ice;Sram, Senior Edificer;Sigarda's Aid;Open the Armory"
+voltron,"Colossus Hammer;Champion's Helm;Darksteel Plate;Lightning Greaves;Trailblazer's Boots;Rancor;Heroic Intervention;Swiftfoot Boots;Puresteel Paladin;Sword of Feast and Famine;Sword of Fire and Ice;True Conviction"
+artifacts,"Coveted Jewel;Hedron Archive;Worn Powerstone;Mana Prism;Relic of Legends;Inspiring Statuary;Armory Automaton;Skullclamp;Roaming Throne;Patchwork Banner;Combustible Gearhulk;Hellkite Tyrant;Vandalblast"
+aristocrats,"Viscera Seer;Priest of Forgotten Gods;Woe Strider;Yahenni, Undying Partisan;Smothering Abomination;Defiling Daemogoth;High Market;Blight Mound;Fallen Angel;Mazirek, Kraul Death Priest;Blood Artist;Zulaport Cutthroat;Bastion of Remembrance;Sangromancer;Morbid Opportunist;Dina, Soul Steeper;Viscera Seer;Priest of Titania"
+tokens,"Emeria Angel;Storm Herd;Tendershoot Dryad;Moonshaker Cavalry;Ophiomancer;Awakening Zone;Pest Infestation;Saproling Cluster;Door of Destinies;Patchwork Banner;Metallic Mimic;Roaming Throne;Kindred Discovery;Skullclamp"
+go-wide,"Emeria Angel;Storm Herd;Moonshaker Cavalry;Tendershoot Dryad;True Conviction;Door of Destinies;Patchwork Banner;Coat of Arms;Shared Animosity"
+reanimator,"Unearth;Raise Dead;Gravedigger;Breath of Life;Karmic Guide;Sun Titan;Sepulchral Primordial;Diluvian Primordial;Serra Paragon;Sevinne's Reclamation;Teshar, Ancestor's Apostle;Hofri Ghostforge;Wight of the Reliquary;Haunted Crossroads;Strands of Night"
+spellslinger,"Guttersnipe;Thermo-Alchemist;Archmage Emeritus;Niv-Mizzet, Visionary;Metallic Mimic;Quintorius, Loremaster;Expressive Firedancer;Deluge Virtuoso;Brainstorm;Frantic Search;Faithless Looting"
+control,"Counterspell;Force of Will;Misdirection;Arcane Denial;Negate;Essence Scatter;Swords to Plowshares;Cyclonic Rift;Rhystic Study;Mystic Remora;Propaganda;Baleful Strix;Torrential Gearhulk"
+lifegain,"Ajani's Pridemate;Vito, Thorn of the Dusk Rose;True Conviction;Authority of the Consuls;Sacred Nectar;Well of Lost Dreams;Archangel of Thune;Bastion of Remembrance"
+group-slug,"Kaervek the Merciless;Dictate of the Twin Gods;Spiteful Visions;Theater of Horrors;Magmatic Force;Warmonger;Flame Rift;Manabarbs;Sulfuric Vortex;Underworld Dreams"
+burn,"Shock;Lightning Blast;Lightning Strike;Blaze;Flame Rift;Fiery Confluence;Pyroclasm;Searing Wind;Chaos Warp;Blasphemous Act;Fling"
+counters,"Metallic Mimic;Roaming Throne;Ohran Frostfang;Mazirek, Kraul Death Priest;Kindred Discovery;Ezekiel Sims, Spider-Totem;Araña, Heart of the Spider"
+tribal-spiders,"Silk, Web Weaver;Spiders-Man, Heroic Horde;Ezekiel Sims, Spider-Totem;Sun-Spider, Nimble Webber;Spider-UK;SP//dr, Piloted by Peni;Madame Web, Clairvoyant;Spider-Woman, Secret Agent;Web-Warriors;Roaming Throne;Kindred Discovery;Door of Destinies"
+tribal-hero,"Captain America, Team Leader;Director Nick Fury;Iron Man, Armored Avenger;Thor, Asgard's Avenger;Hercules, Olympian Hero;Agent of Atlas;Roaming Throne;Patchwork Banner;Door of Destinies"
+superfriends,"Chandra, Flameshaper;Gideon Jura;Ob Nixilis Reignited;Kang, Temporal Tyrant;The Scarlet Witch;Loki, God of Mischief"
+ramp,"Cultivate;Farseek;Nature's Lore;Rampant Growth;Sakura-Tribe Elder;Solemn Simulacrum;Wayfarer's Bauble;Burnished Hart;Springbloom Druid;Kodama's Reach"
+vehicles,"Spider-Mobile;Avengers Quinjet;Predator, Flagship;Skysovereign, Consul Flagship;Smuggler's Copter"
