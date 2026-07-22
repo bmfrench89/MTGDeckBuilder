@@ -31,14 +31,14 @@ you can mostly build today.</div>
 <div class="cmdcard">
   <div class="top">
     <span class="num">{{ r.support_n }}</span>
-    <span class="nm">{{ r.name }}</span>
+    <span class="nm cardlink" data-card="{{ r.name }}" tabindex="0" role="button">{{ r.name }}</span>
     <span class="mv">[{{ r.colors }}]</span>
     {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted">buy the commander</span>{% endif %}
     <span class="muted" style="margin-left:auto;font-size:.8rem">{{ r.archetypes|join(' · ') }}</span>
   </div>
   <div class="supbar"><span style="width:{{ (100 * r.support_n / maxn)|round }}%"></span></div>
   <div class="muted" style="font-size:.82rem"><b>You own {{ r.support_n }} support cards:</b>
-    {{ r.support_cards[:10]|join(', ') }}{% if r.support_cards|length > 10 %} … (+{{ r.support_cards|length - 10 }}){% endif %}</div>
+    {% for sc in r.support_cards[:10] %}<span class="cardlink" data-card="{{ sc }}">{{ sc }}</span>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.support_cards|length > 10 %} … (+{{ r.support_cards|length - 10 }}){% endif %}</div>
   {% if r.notes %}<div class="muted" style="font-size:.78rem;margin-top:4px">{{ r.notes }}</div>{% endif %}
 </div>
 {% else %}

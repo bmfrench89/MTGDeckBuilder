@@ -35,7 +35,7 @@ document.getElementById('mpcopy').addEventListener('click',function(){
 <table><thead><tr><th></th><th>Qty</th><th>Card</th><th>~each</th><th>Shared with</th></tr></thead><tbody>
 {% for c in shared %}
 <tr><td><input class="chk" type="checkbox"></td><td>{{ c.short }}×</td>
-  <td><b>{{ c.card }}</b></td>
+  <td><b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td>
   <td class="good">{% if c.price %}${{ '%.2f'|format(c.price) }}{% else %}—{% endif %}</td>
   <td class="muted">{{ c.decks|join(', ') }}</td></tr>
 {% else %}<tr><td colspan="5" class="muted">none</td></tr>{% endfor %}
@@ -45,7 +45,7 @@ document.getElementById('mpcopy').addEventListener('click',function(){
 <h2>Cards in a deck you don't own yet</h2>
 <div class="card tablewrap"><table><tbody>
 {% for c in unowned %}<tr><td><input class="chk" type="checkbox"></td>
-  <td><b>{{ c.short }}× {{ c.card }}</b></td><td class="muted">{{ c.decks|join(', ') }}</td></tr>{% endfor %}
+  <td>{{ c.short }}× <b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td><td class="muted">{{ c.decks|join(', ') }}</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
 
@@ -53,7 +53,7 @@ document.getElementById('mpcopy').addEventListener('click',function(){
 <div class="card tablewrap">
 <table><thead><tr><th></th><th>Card</th><th>~$</th><th>Deck</th><th>Swap / why</th></tr></thead><tbody>
 {% for u in upgrades %}
-<tr><td><input class="chk" type="checkbox"></td><td><b>{{ u.card }}</b></td>
+<tr><td><input class="chk" type="checkbox"></td><td><b class="cardlink" data-card="{{ u.card }}">{{ u.card }}</b></td>
   <td class="good">{% if u.price %}${{ '%.0f'|format(u.price) }}{% else %}—{% endif %}</td>
   <td class="muted">{{ u.deck }}</td>
   <td class="muted">{% if u.replaces %}<span class="warn">→{{ u.replaces }}</span> · {% endif %}{{ u.reason }}</td></tr>

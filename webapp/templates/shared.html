@@ -13,7 +13,7 @@ copies (they're on your wishlist) or just don't sleeve those decks at the same t
 <div class="card tablewrap">
 <table><thead><tr><th>Card</th><th>Own / Need</th><th>Buy</th><th>Used in</th></tr></thead><tbody>
 {% for c in conf %}
-<tr><td><b>{{ c.card }}</b></td>
+<tr><td><b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td>
   <td>own {{ c.owned }} / need {{ c.committed }} <span class="warn">(short {{ c.short }})</span></td>
   <td class="good">{% if c.buy_cost %}${{ '%.2f'|format(c.buy_cost) }}{% else %}—{% endif %}</td>
   <td class="muted">{% for d,q in c.decks.items() %}{{ d }} (×{{ q }}){% if not loop.last %}, {% endif %}{% endfor %}</td></tr>

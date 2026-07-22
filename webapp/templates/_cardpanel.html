@@ -1,0 +1,32 @@
+{# Site-wide card detail panel. Included once by base.html; opened by any
+   element with data-card="<name>" via /static/cardpanel.js. #}
+<div id="cardpanel" class="cp-overlay" hidden>
+  <div class="cp-sheet" role="dialog" aria-modal="true" aria-label="Card details">
+    <div class="cp-bar"><span class="cp-grab"></span>
+      <button class="cp-close" type="button" aria-label="Close">&times;</button></div>
+    <div class="cp-scroll">
+      <div class="cp-grid">
+        <div>
+          <img id="cp-img" class="cp-img" alt="">
+          <div id="cp-imgmeta" class="cp-imgmeta"></div>
+          <div id="cp-buy" class="cp-buy"></div>
+        </div>
+        <div>
+          <div id="cp-name" class="cp-name"></div>
+          <div id="cp-tags" class="cp-tags"></div>
+          <div id="cp-oraclewrap" hidden><div class="cp-h">What it does</div>
+            <p id="cp-oracle" class="cp-oracle"></p></div>
+          <div id="cp-rulewrap" hidden><div class="cp-h">Rulings</div>
+            <ul id="cp-rulings" class="cp-rulings"></ul></div>
+          <div id="cp-whywrap" hidden><div class="cp-h">Why it works</div>
+            <p id="cp-why"></p><p id="cp-alts" class="cp-imgmeta"></p></div>
+          <div id="cp-combowrap" hidden><div class="cp-h">Combos</div>
+            <div id="cp-combos"></div></div>
+          <div id="cp-deckwrap" hidden><div class="cp-h">In your decks</div>
+            <div id="cp-decks" class="cp-imgmeta"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/cardpanel.js" defer></script>

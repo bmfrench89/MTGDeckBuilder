@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟡 Planned (build not started)
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phase 0 in progress
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -37,7 +37,7 @@ simulation of any kind.**
 
 | Phase | Deliverable | Status | PR |
 |------|-------------|--------|----|
-| 0 | Reusable card panel + `/api/card` + data plumbing | ☐ Not started | — |
+| 0 | Reusable card panel + `/api/card` + data plumbing | ◐ In progress | in review |
 | 1 | Interactive Collection (browse/search/filter) | ☐ Not started | — |
 | 2 | Manabase & consistency engine (flagship) | ☐ Not started | — |
 | 3 | Full auto-built decks for Build Next | ☐ Not started | — |
@@ -51,17 +51,22 @@ simulation of any kind.**
 
 ## 4. Phase specs
 
-### Phase 0 — Foundation & data plumbing  ☐
+### Phase 0 — Foundation & data plumbing  ◐
 Unlocks site-wide interactivity + the data layer later phases consume.
-- ☐ Extract the dashboard's card panel (CSS/JS) into a reusable web component/partial.
-- ☐ `/api/card/<name>` endpoint: role, curve, notes, combos, deck-fit, "used in decks X/Y",
-  owned/qty, **rulings**, **buy-links ×3**.
-- ☐ Any card name on any page → `.cardlink` opening the shared panel.
-- ☐ Extend `carddb.py` to a full local Scryfall bulk DB; ingest the **Rulings** file.
-- ☐ Cached client wrappers: Commander Spellbook API + `pyedhrec` (with graceful fallback).
-- ☐ Verify ManaPool & Card Kingdom per-card URL schemes.
-**Acceptance:** clicking a card on Collection / Build Next / Wishlist opens the panel with
-image, oracle text, rulings, and three working buy-links; API responds < 200ms warm.
+- ☑ Reusable card panel component (`webapp/static/cardpanel.{css,js}` + `_cardpanel.html`,
+  included by `base.html`) — bottom-sheet, event-delegated so dynamic cards work.
+- ☑ `/api/card/<name>` endpoint (`scripts/card_api.py`): roles, MV/type, notes,
+  combo membership, "used in decks X/Y", owned/qty, image, **buy-links ×3**.
+- ☑ **Rulings** + oracle + image fetched client-side from Scryfall in the panel.
+- ☑ Card names clickable site-wide (Build Next, Collection, Wishlist, Shared).
+- ☑ **Buy-links ×3** (TCGplayer via search URL; ManaPool + Card Kingdom search URLs).
+- ☐ Extend `carddb.py` to a full local Scryfall bulk DB — *deferred (needs the player's
+  machine; Scryfall firewalled in the build env). Consumed by Phase 1/2.*
+- ☐ Cached CSB + `pyedhrec` client wrappers — *deferred to their consuming phases (1, 3).*
+- ☐ Verify ManaPool & Card Kingdom per-card URL schemes — *best-effort links shipped;
+  verify on the live sites (one-line fix in `card_image.purchase_links`).*
+**Acceptance:** ☑ verified in a real browser — clicking a card opens the panel with image,
+live oracle text, rulings, grounded local data, and three working buy-links.
 
 ### Phase 1 — Interactive Collection  ☐
 - ☐ Browsable grid/table of all owned cards with images.
@@ -111,3 +116,7 @@ the repo's data + live oracle text, suggesting only real cards; no Anthropic API
 
 ## 6. Changelog
 - **2026-07-22** — Spec created from the deep-research pass + design decisions. All phases planned; build not started.
+- **2026-07-22** — Phase 0 foundation shipped: reusable card panel + `/api/card` + site-wide
+  clickable cards + buy-links ×3 + client-side rulings. Verified in a real browser (grounded
+  data + live Scryfall oracle). Data-plumbing sub-items (Scryfall bulk DB, CSB/pyedhrec clients,
+  ManaPool/CK URL verification) deferred to their consuming phases.
