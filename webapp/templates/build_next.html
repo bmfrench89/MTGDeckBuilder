@@ -40,6 +40,8 @@ you can mostly build today.</div>
   <div class="muted" style="font-size:.82rem"><b>You own {{ r.support_n }} support cards:</b>
     {% for sc in r.support_cards[:10] %}<span class="cardlink" data-card="{{ sc }}">{{ sc }}</span>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.support_cards|length > 10 %} … (+{{ r.support_cards|length - 10 }}){% endif %}</div>
   {% if r.notes %}<div class="muted" style="font-size:.78rem;margin-top:4px">{{ r.notes }}</div>{% endif %}
+  <div style="margin-top:10px"><a class="btn" href="{{ url_for('build_deck', commander=r.name) }}"
+    style="font-size:.82rem;padding:5px 13px">Build this deck from your collection →</a></div>
 </div>
 {% else %}
 <div class="card muted">No commanders matched. Add candidates to

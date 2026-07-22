@@ -33,6 +33,7 @@ import similar_commanders as simc
 import commander_finder as cf
 import export_manapool as ex
 import card_api
+import auto_build
 
 
 def _txt(text, filename):
@@ -204,6 +205,36 @@ def build_next():
     archetypes = sorted({a for r in rows for a in r["archetypes"]})
     return render_template("build_next.html", rows=rows[:30], archetypes=archetypes,
                            arch=arch, page="build")
+
+
+def _deck_slug(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "deck"
+
+
+@app.route("/build-next/<path:commander>/deck")
+def build_deck(commander):
+    """Full deck auto-built from the owned pool for this commander (Phase 3 v1)."""
+    coll, idx = collection_index()
+    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    return render_template("build_deck.html", d=d, page="build")
+
+
+@app.route("/build-next/<path:commander>/deck.txt")
+def build_deck_export(commander):
+    coll, idx = collection_index()
+    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    return _txt(auto_build.deck_text(d), f"{_deck_slug(commander)}.txt")
+
+
+@app.route("/build-next/<path:commander>/save", methods=["POST"])
+def build_deck_save(commander):
+    """Write the auto-built draft to data/decks/ so it joins the leaderboard."""
+    coll, idx = collection_index()
+    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    stem = _deck_slug(commander)
+    with open(os.path.join(DECKS_DIR, f"{stem}.txt"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(auto_build.deck_text(d))
+    return redirect(url_for("deck", stem=stem))
 
 
 @app.route("/collection", methods=["GET"])

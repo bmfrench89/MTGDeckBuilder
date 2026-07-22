@@ -84,6 +84,7 @@ live oracle text, rulings, grounded local data, and three working buy-links.
 land-count / color-source odds — verified against Karsten's published numbers.
 
 ### Phase 3 — Full auto-built decks for Build Next  ☐
+**Detailed spec:** [spec-build-next-full-deck.md](spec-build-next-full-deck.md).
 - ☐ `scripts/auto_build.py`: assemble a legal 99 from the owned pool (deck_fit scoring +
   role targets + archetype support + `deck_conflicts.available_pool`, color-identity-legal).
 - ☐ Build Next: commander → "Build this deck" → interactive decklist (curve, roles, the 99).
