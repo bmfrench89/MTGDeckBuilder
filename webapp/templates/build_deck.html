@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Build: {{ d.commander }} · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>{{ d.commander }} <span class="mv" style="color:var(--muted);font-size:1rem">[{{ d.identity }}]</span></h1>
+<div class="sub">Auto-built from your owned cards — {{ d.total }} cards{% if d.archetypes %} · {{ d.archetypes|join(' · ') }}{% endif %}.
+A heuristic <b>draft</b>, not a tuned list.
+{% if d.nameonly %}<br><span class="warn">Name-only collection: card roles and the manabase are rough —
+enrich the collection (Card DB) for a sharper build.</span>{% endif %}
+{% if d.short %}<br><span class="warn">Your available pool was {{ d.short }} card(s) short of a full 99.</span>{% endif %}</div>
+
+<div class="row" style="gap:8px;margin:14px 0">
+  <a class="btn ghost" href="{{ url_for('build_next') }}">← Build Next</a>
+  <a class="btn" href="{{ url_for('build_deck_export', commander=d.commander) }}">⬇ Export .txt</a>
+  <form method="post" action="{{ url_for('build_deck_save', commander=d.commander) }}" style="display:inline"
+    onsubmit="return confirm('Save this draft to data/decks/ so it joins your leaderboard?');">
+    <button class="btn" type="submit">💾 Save to my decks</button></form>
+</div>
+
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr));margin-bottom:8px">
+  {% for role,label in [('land','Lands'),('ramp','Ramp'),('draw','Draw'),('removal','Removal'),('wipe','Wipes'),('counter','Counters')] %}
+  <div class="card" style="text-align:center;padding:12px 8px">
+    <div style="font-size:1.5rem;font-family:'Oswald',sans-serif;color:var(--accent2)">{{ d.counts.get(role,0) }}<span class="muted" style="font-size:.85rem">/{{ d.targets[role] }}</span></div>
+    <div class="muted" style="font-size:.68rem;text-transform:uppercase;letter-spacing:1px">{{ label }}{% if role in d.gaps %} <span class="warn">−{{ d.gaps[role] }}</span>{% endif %}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if d.gaps %}
+<div class="card" style="border-left:3px solid var(--warn);margin:14px 0">
+  <b class="warn">Gaps to buy</b> — your pool couldn't fill:
+  {% for r,n in d.gaps.items() %}{{ n }} {{ r }}{% if not loop.last %}, {% endif %}{% endfor %}.
+  <span class="muted">Buy-to-complete suggestions arrive with the EDHREC data client (Phase 1).</span>
+</div>
+{% endif %}
+
+{% if d.combos.complete or d.combos.near %}
+<div class="card" style="margin:14px 0">
+  {% if d.combos.complete %}<div><b class="warn">Combo present:</b> {{ d.combos.complete|join('; ') }}</div>{% endif %}
+  {% if d.combos.near %}<div class="muted" style="margin-top:4px">One piece away: {{ d.combos.near|join('; ') }}</div>{% endif %}
+</div>
+{% endif %}
+
+{% for title, cards in d.sections %}
+<h2>{{ title }} <span class="muted" style="font-size:.82rem;font-weight:400">{{ cards|length }}</span></h2>
+<div class="card" style="line-height:2">
+  {% for c in cards %}<span class="cardlink" data-card="{{ c.name }}">{% if c.qty > 1 %}{{ c.qty }}× {% endif %}{{ c.name }}</span>{% if not loop.last %} · {% endif %}{% endfor %}
+</div>
+{% endfor %}
+
+<p class="muted" style="margin-top:18px;font-size:.82rem">Built by ranking your owned, in-color, uncommitted cards with the
+deck-fit engine and filling the Command Zone / 8x8 role template. Click any card for details + buy links.
+Off-color cards skipped: {{ d.off_color_skipped }}.</p>
+{% endblock %}

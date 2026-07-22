@@ -1,6 +1,6 @@
 # Spec — "Build Next" Full Auto-Built Deck View
 
-**Type:** feature spec + tracker (living). **Created:** 2026-07-22 · **Status:** 🟡 Planned
+**Type:** feature spec + tracker (living). **Created:** 2026-07-22 · **Status:** 🟢 v1 shipped (EDHREC benchmark deferred)
 **Parent:** this is the detailed spec for **Phase 3** of
 [spec-interactive-analytics-ai.md](spec-interactive-analytics-ai.md); rationale/constraints in
 [research-roadmap.md](research-roadmap.md).
@@ -106,14 +106,15 @@ Build Next card. The page shows:
 - **CSB `/find-my-combos`** upgrade-combo surfacing: Phase-3 data client.
 
 ## 7. Tasks
-- ☐ `scripts/auto_build.py` — build() + slot-filler + gap detection (core, offline).
-- ☐ Manabase v1 (proportional) → v2 (Karsten, when Phase 2 lands).
-- ☐ Route `/build-next/<commander>/deck` + "Build this deck" action on Build Next cards.
-- ☐ `webapp/templates/build_deck.html` — full-deck view (reuses the Phase-0 panel + curve).
-- ☐ Export + **Save to my decks** (write `data/decks/<stem>.txt`).
-- ☐ EDHREC average-deck overlap + buy-to-complete (pyedhrec; local fallback).
-- ☐ Combo watch on the built list.
-- ☐ Honesty/enrichment banners + tests (legal, in-color, ~100 cards, no committed-single reuse).
+- ☑ `scripts/auto_build.py` — build() + slot-filler + gap detection (core, offline).
+- ☑ Manabase v1 (proportional basics + owned in-color nonbasics) — ☐ v2 (Karsten, Phase 2).
+- ☑ Route `/build-next/<commander>/deck` (+ `/deck.txt`, `/save`) + "Build this deck" action.
+- ☑ `webapp/templates/build_deck.html` — full-deck view (reuses the Phase-0 panel + stat tiles).
+- ☑ Export (.txt) + **Save to my decks** (writes `data/decks/<stem>.txt`, joins the leaderboard).
+- ☐ EDHREC average-deck overlap + buy-to-complete (pyedhrec; local fallback) — *deferred to Phase 1 data client.*
+- ☑ Combo watch on the built list (local `combo_detector`).
+- ☑ Honesty/enrichment banners + tests (verified: legal-in-color skip, exactly 100 cards,
+  role quotas hit, no committed-single reuse, export/save round-trip).
 
 ## 8. Open questions
 - Save target: a subfolder (`data/decks/generated/`) vs top-level, and how to mark a deck as
@@ -133,3 +134,9 @@ Build Next card. The page shows:
 ## 10. Changelog
 - **2026-07-22** — Spec created from focused research on EDH deckbuilding templates + EDHREC
   average-deck methodology. Planned; not started.
+- **2026-07-22** — **v1 shipped.** `scripts/auto_build.py` + `/build-next/<commander>/deck`
+  view + export + Save-to-decks. Fills the Command Zone / 8x8 role quotas from the owned,
+  in-color, uncommitted pool; proportional manabase; local combo watch; gap detection. Verified
+  end-to-end (100 cards, quotas hit, export/save round-trip). Deferred: Karsten manabase (Phase 2),
+  EDHREC overlap + buy-to-complete (Phase 1 data client). Rough on a name-only collection (types
+  needed for clean roles/lands) — honestly flagged in the UI.
