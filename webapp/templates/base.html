@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="/static/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/cardpanel.css">
 <style>
 :root{--void:#0b0d13;--panel:#151924;--panel2:#1c2130;--accent:#5BE0D4;--accent2:#8aa0ff;
   --warn:#E86A6A;--gold:#E8B84B;--text:#e8ecf5;--muted:#8a93a8;}
@@ -67,4 +68,6 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:40px}
 <div class="wrap">
 {% block content %}{% endblock %}
 <footer>Local app · your collection stays on your machine · grounded by the MTG deckbuilder toolkit</footer>
-</div></body></html>
+</div>
+{% include "_cardpanel.html" %}
+</body></html>

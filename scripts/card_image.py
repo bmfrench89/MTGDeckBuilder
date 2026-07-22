@@ -44,6 +44,20 @@ def image_url_by_set(set_code: str, number: str, size: str = "normal") -> str:
             f"{urllib.parse.quote(number)}?format=image&version={size}")
 
 
+def purchase_links(name: str) -> dict:
+    """'Buy this card' links by NAME for the card panel (no price feed — we link
+    out instead). TCGplayer's product-search URL is stable. ManaPool and Card
+    Kingdom are best-effort name-search links; their exact per-card URL schemes
+    are a Phase-0 verification task (see docs/spec-interactive-analytics-ai.md).
+    All three live in this one function so a corrected scheme is a one-line fix."""
+    q = urllib.parse.quote(name)
+    return {
+        "tcgplayer": f"https://www.tcgplayer.com/search/magic/product?productLineName=magic&q={q}",
+        "manapool": f"https://manapool.com/search?q={q}",
+        "cardkingdom": f"https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D={q}",
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description="Scryfall image hotlink URLs.")
     ap.add_argument("scryfall_id", nargs="?", help="a single Scryfall ID")

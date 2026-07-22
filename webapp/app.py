@@ -16,8 +16,8 @@ import socket
 import subprocess
 import sys
 
-from flask import (Flask, Response, abort, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (Flask, Response, abort, jsonify, redirect, render_template,
+                   request, send_from_directory, url_for)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -32,6 +32,7 @@ import analyze_collection as ac
 import similar_commanders as simc
 import commander_finder as cf
 import export_manapool as ex
+import card_api
 
 
 def _txt(text, filename):
@@ -259,6 +260,14 @@ def refresh():
                     "--collection", COLLECTION, "--decks-dir", DECKS_DIR],
                    cwd=ROOT, capture_output=True, text=True)
     return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/api/card/<path:name>")
+def api_card(name):
+    """Grounded, deck-agnostic payload for the site-wide card panel (Phase 0).
+    Local data only; the panel fetches image/oracle/rulings live from Scryfall."""
+    _, idx = collection_index()
+    return jsonify(card_api.card_payload(name, idx, DECKS_DIR))
 
 
 @app.route("/health")

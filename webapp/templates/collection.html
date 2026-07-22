@@ -49,7 +49,8 @@
 <div class="card tablewrap">
 <table><thead><tr><th>~$</th><th>Qty</th><th>Card</th><th>Set</th></tr></thead><tbody>
 {% for c in top %}<tr><td class="good">${{ '%.2f'|format(c.price) }}</td>
-  <td>{{ c.quantity }}×</td><td>{{ c.name }}</td><td class="muted">{{ c.set_code }}</td></tr>{% endfor %}
+  <td>{{ c.quantity }}×</td><td><span class="cardlink" data-card="{{ c.name }}">{{ c.name }}</span></td>
+  <td class="muted">{{ c.set_code }}</td></tr>{% endfor %}
 </tbody></table></div>
 <p class="muted" style="margin-top:10px">Some obscure rows are mispriced in the export — treat as rough.</p>
 {% else %}
