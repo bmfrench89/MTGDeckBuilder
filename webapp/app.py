@@ -239,12 +239,48 @@ def build_deck_save(commander):
     return redirect(url_for("deck", stem=stem))
 
 
+_FILTER_ROLES = {"ramp", "draw", "removal", "wipe", "counter"}
+
+
+def _collection_cards(coll, decks_dir):
+    """Every owned card + the metadata the browse grid filters on (name, qty,
+    price, type, MV, color identity, roles, which decks use it)."""
+    import glob
+    decks_of = {}
+    for p in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
+        try:
+            txt = open(p, encoding="utf-8").read()
+        except OSError:
+            continue
+        label = os.path.splitext(os.path.basename(p))[0]
+        for card in mtglib.parse_deck(txt):
+            decks_of.setdefault(mtglib._norm(card.name), set()).add(label)
+    rows = []
+    for c in coll:
+        mv = c.mana_value
+        if mv is not None and mv == int(mv):
+            mv = int(mv)
+        rows.append({
+            "name": c.name, "qty": c.quantity,
+            "price": round(c.price, 2) if c.price else None,
+            "type": c.primary_type if c.types else "",
+            "mv": mv,
+            "colors": ("".join(sorted(c.identity)) if c.identity else ("C" if c.types else "")),
+            "roles": sorted(_FILTER_ROLES & mtglib.classify(c)),
+            "decks": sorted(decks_of.get(mtglib._norm(c.name), [])),
+        })
+    rows.sort(key=lambda r: r["name"].lower())
+    return rows
+
+
 @app.route("/collection", methods=["GET"])
 def collection_view():
-    coll, _ = collection_index()
+    coll, idx = collection_index()
     priced = [c for c in coll if c.price]
     total = round(sum(c.value for c in coll), 2)
     top = sorted(priced, key=lambda c: -c.price)[:20]
+    cards = _collection_cards(coll, DECKS_DIR)
+    types = sorted({r["type"] for r in cards if r["type"]})
     additions = []
     if os.path.exists(ADDITIONS):
         for ln in open(ADDITIONS, encoding="utf-8"):
@@ -262,7 +298,7 @@ def collection_view():
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
-                           carddb=carddb, page="collection")
+                           carddb=carddb, cards=cards, types=types, page="collection")
 
 
 @app.route("/collection/add", methods=["POST"])
