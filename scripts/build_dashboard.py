@@ -33,6 +33,7 @@ import power
 import deck_fit
 import similar_commanders as simc
 import combo_detector
+import manabase
 
 THEMES = {
     "default": {
@@ -658,6 +659,47 @@ def add_commander_details(details, similar, idx, size="normal"):
     return details
 
 
+def manabase_html(mana):
+    """Consistency & Manabase section from manabase.analyze(). Reuses existing
+    dashboard classes (stat tiles / data table / notes) — no new CSS."""
+    if mana is None:
+        return ""
+    if not mana.get("have_colors"):
+        return ("<p class='muted'>Colored-source analysis needs card colors + mana costs — "
+                "enrich the collection (Card DB) or add a deck <code>.attrs.csv</code> with a "
+                "Cost column. Then you get opening-hand odds, per-color source adequacy vs "
+                "Karsten's targets, and which cards are risky to cast on curve.</p>")
+    out = []
+    lo = mana.get("land_odds")
+    if lo:
+        out.append("<div class='tiles'>"
+                   + stat_tile("Keepable hand", f"{lo['keepable']*100:.0f}%", "2–5 lands")
+                   + stat_tile("3+ lands", f"{lo['ge3_open']*100:.0f}%", "opening 7")
+                   + stat_tile("4th land by T4", f"{lo['ge4_by_t4']*100:.0f}%", "on the play")
+                   + "</div>")
+    rows = []
+    for c in mana["colors"]:
+        dbl = f" · P(2 by T3) {c['p_two_t3']*100:.0f}%" if c["double_pips"] else ""
+        flag = ("<span class='warnbox'>⚠ under target</span>" if c["status"] == "low"
+                else "<span class='ok'>✓</span>")
+        rows.append(f"<tr class='{'warn' if c['status']=='low' else ''}'><td>{c['color']}</td>"
+                    f"<td>{c['sources']}</td><td>~{c['karsten_target']}</td>"
+                    f"<td>{c['demand']}{' · dbl ' + str(c['double_pips']) if c['double_pips'] else ''}</td>"
+                    f"<td>{c['p_open']*100:.0f}%{dbl}</td><td>{flag}</td></tr>")
+    out.append("<div class='tablewrap'><table class='data'><thead><tr><th>Color</th>"
+               "<th>Sources</th><th>Karsten</th><th>Pip demand</th><th>P(&ge;1 opener)</th>"
+               "<th></th></tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>")
+    if mana["risky"]:
+        items = "".join(f"<li><b>{esc(r['name'])}</b> (MV {r['mv']:g}, {r['pips']}×{r['color']}) — "
+                        f"{r['p']*100:.0f}% to have the color on curve</li>" for r in mana["risky"])
+        out.append(f"<h3>Risky to cast on curve <span class='count'>{mana['risky_total']}</span></h3>"
+                   f"<ul class='notes'>{items}</ul>")
+    out.append("<p class='muted'>Exact hypergeometric odds (unconditional — a relative guide, not "
+               "Karsten's mulligan-adjusted %). Sources approximate a permanent's output from its "
+               "color identity.</p>")
+    return "".join(out)
+
+
 def combos_html(combos):
     """Render the Combo Watch section from combo_detector output:
     {'complete':[...], 'near':[...]}. `None` (detector failed) renders nothing."""
@@ -980,7 +1022,7 @@ def card_modal_block(details):
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
-                     assessment=None, similar=None, details=None, combos=None):
+                     assessment=None, similar=None, details=None, combos=None, mana=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {})
@@ -1012,6 +1054,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                  f"{notes_html(notes)}</section>" if notes else "")
     pip_sec = (f"<section><h2>Color / Pip Demand</h2>{pip_table(rep)}</section>"
                if rep.get("pip_demand") else "")
+    mana_sec = (f"<section><h2>Consistency &amp; Manabase</h2>{manabase_html(mana)}</section>"
+                if mana is not None else "")
     buy_sec = (f"<section><h2>Buy &amp; Replace</h2>{buylist_html(buylist)}</section>"
                if buylist else "")
     sim_sec = (f"<section><h2>Commanders That Also Fit This Shell</h2>"
@@ -1149,6 +1193,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
 {pip_sec}
+{mana_sec}
 <section><h2>Ownership</h2>{ownership_block(rep)}</section>
 {shared_sec}
 {sim_sec}
@@ -1246,6 +1291,10 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         combos = combo_detector.for_deck(deck_path, idx)
     except Exception:
         combos = None
+    try:
+        mana = manabase.analyze(rep, enriched)
+    except Exception:
+        mana = None
 
     try:
         refs = power.load_refs()
@@ -1263,7 +1312,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
 
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
-                                 similar, details, combos)
+                                 similar, details, combos, mana)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

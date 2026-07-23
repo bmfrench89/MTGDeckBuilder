@@ -39,7 +39,7 @@ simulation of any kind.**
 |------|-------------|--------|----|
 | 0 | Reusable card panel + `/api/card` + data plumbing | ◐ In progress | in review |
 | 1 | Interactive Collection (browse/search/filter) | ☐ Not started | — |
-| 2 | Manabase & consistency engine (flagship) | ☐ Not started | — |
+| 2 | Manabase & consistency engine (flagship) | ◐ engine + dashboard shipped | in review |
 | 3 | Full auto-built decks for Build Next | ☐ Not started | — |
 | 4 | Full card strategies | ☐ Not started | — |
 | 5 | AI coaching skill + export bridge | ☐ Not started | — |
@@ -75,13 +75,18 @@ live oracle text, rulings, grounded local data, and three working buy-links.
 - ☐ EDHREC inclusion / Lift "how staple is this" chip (degrade if enrichment off).
 **Acceptance:** can find any owned card in < 2s of typing; filters compose; honest name-only fallback.
 
-### Phase 2 — Manabase & consistency engine (FLAGSHIP)  ☐
-- ☐ `scripts/manabase.py`: colored-source counting per card (handle duals/fetches/MDFCs).
-- ☐ Hypergeometric engine (opening-hand + by-turn-N odds; keepable-hand %; color-screw %).
-- ☐ Karsten targets per pip/CMC (19/26/30 …) with the (89+M)% castability check per card.
-- ☐ Deck "Consistency & Manabase" dashboard tab.
-**Acceptance:** per deck, flags each spell as consistently-castable-on-curve or not, and reports
-land-count / color-source odds — verified against Karsten's published numbers.
+### Phase 2 — Manabase & consistency engine (FLAGSHIP)  ◐
+- ☑ `scripts/manabase.py` — exact hypergeometric engine (`math.comb`), verified against a known
+  value (P(≥1 ace in 5) = 0.3412).
+- ☑ Opening-hand + by-turn-N odds: keepable-hand %, ≥3 lands in opener, 4th land by T4, per-color
+  P(≥1 source) / P(≥2 by T3).
+- ☑ Per-card **risky-to-cast-on-curve** check (P of having the colored pips by the card's CMC turn).
+- ☑ Per-color source adequacy vs **Karsten** guidelines (~19 single-pip / ~23 double-pip).
+- ☑ **"Consistency & Manabase"** dashboard section (degrades to an "enrich to unlock" note on
+  a name-only collection; sources come from the enriched collection's `Cost`/colors).
+- ☐ Wire into `auto_build` so generated manabases hit colored-source targets — *next step.*
+**Honest simplifications:** probabilities are UNCONDITIONAL (not Karsten's mulligan-adjusted %),
+and sources approximate a permanent's output from its color identity (rough for fetches/oddballs).
 
 ### Phase 3 — Full auto-built decks for Build Next  ☐
 **Detailed spec:** [spec-build-next-full-deck.md](spec-build-next-full-deck.md).
@@ -121,3 +126,7 @@ the repo's data + live oracle text, suggesting only real cards; no Anthropic API
   clickable cards + buy-links ×3 + client-side rulings. Verified in a real browser (grounded
   data + live Scryfall oracle). Data-plumbing sub-items (Scryfall bulk DB, CSB/pyedhrec clients,
   ManaPool/CK URL verification) deferred to their consuming phases.
+- **2026-07-22** — Phase 3 v1 shipped (auto-build; see spec-build-next-full-deck.md).
+- **2026-07-22** — Phase 2 v1 shipped: `scripts/manabase.py` hypergeometric engine + a
+  "Consistency & Manabase" dashboard section. Math verified; analyze() validated. Remaining:
+  wire it into `auto_build`'s manabase.
