@@ -4,24 +4,6 @@
 <h1>Your Decks</h1>
 <div class="sub">Power leaderboard — tap a deck for its full dashboard.</div>
 
-<style>
-.decklist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
-.deckrow{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;
-  padding:14px 16px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center}
-.deckrow .rank{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--muted)}
-.deckrow .name{font-weight:700;font-size:1.05rem}
-.deckrow .cmd{color:var(--muted);font-size:.8rem;font-family:'JetBrains Mono',monospace}
-.deckrow .stat{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.deckrow .pw{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--accent)}
-.deckrow .acts{grid-column:2/4;display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
-.deckrow .acts a{font-size:.85rem}
-@media(max-width:600px){
-  .deckrow{grid-template-columns:28px 1fr}
-  .deckrow .stat{grid-column:2/3}
-  .deckrow .acts{grid-column:1/3}
-}
-</style>
-
 <div class="decklist">
 {% for d in decks %}
 <div class="deckrow">

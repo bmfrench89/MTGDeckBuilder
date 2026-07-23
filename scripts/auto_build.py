@@ -72,11 +72,26 @@ def _basics_split(n, identity):
     return {k: v for k, v in out.items() if v}
 
 
-def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True):
+def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
+          identity=None):
+    """Build a deck for `commander_name`. If the commander is in the curated
+    commanders.csv we use its colors + archetype tags. Otherwise (any commander
+    typed by the player) pass `identity` (WUBRG letters, e.g. from Scryfall's
+    color_identity) so we can still filter to in-color cards; archetype is then
+    unknown, so synergy/theme scoring is lighter."""
     commanders = simc.load_commanders()
     cmd = _commander(commander_name, commanders)
-    identity = set(cmd["colors"]) if cmd else set()
-    archetype = sorted(cmd["archetypes"]) if cmd else []
+    known = cmd is not None
+    if known:
+        identity = set(cmd["colors"])
+        archetype = sorted(cmd["archetypes"])
+    else:
+        archetype = []
+        if identity:
+            identity = {ch for ch in str(identity).upper() if ch in "WUBRG"}
+        else:
+            ref = mtglib.lookup(idx, commander_name)
+            identity = set(ref.identity) if (ref and ref.identity) else set()
     refs = refs or power.load_refs()
     ctx = {"identity": identity, "archetype": archetype, "theme": "",
            "tribal": None, "commander": commander_name}
@@ -198,6 +213,7 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "short": max(0, short),
         "off_color_skipped": off_color,
         "nameonly": nameonly,
+        "known_commander": known,
         "combos": {"complete": [c["name"] for c in detected["complete"]],
                    "near": [f"{c['name']} (add {c['missing']})" for c in detected["near"]]},
         "notes": cmd["notes"] if cmd else "",

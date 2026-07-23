@@ -4,15 +4,20 @@
 <h1>{{ d.commander }} <span class="mv" style="color:var(--muted);font-size:1rem">[{{ d.identity }}]</span></h1>
 <div class="sub">Auto-built from your owned cards — {{ d.total }} cards{% if d.archetypes %} · {{ d.archetypes|join(' · ') }}{% endif %}.
 A heuristic <b>draft</b>, not a tuned list.
+{% if not d.known_commander %}<br><span class="muted">Not in the curated archetype DB — built on
+<b>color identity only</b>, so synergy/theme picks are lighter. Add it to
+<code>data/reference/commanders.csv</code> with archetype tags to sharpen it.</span>{% endif %}
 {% if d.nameonly %}<br><span class="warn">Name-only collection: card roles and the manabase are rough —
 enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 {% if d.short %}<br><span class="warn">Your available pool was {{ d.short }} card(s) short of a full 99.</span>{% endif %}</div>
 
 <div class="row" style="gap:8px;margin:14px 0">
+  {% set ci = d.identity if d.identity != 'C' else '' %}
   <a class="btn ghost" href="{{ url_for('build_next') }}">← Build Next</a>
-  <a class="btn" href="{{ url_for('build_deck_export', commander=d.commander) }}">⬇ Export .txt</a>
+  <a class="btn" href="{{ url_for('build_deck_export', commander=d.commander, ci=ci) }}">⬇ Export .txt</a>
   <form method="post" action="{{ url_for('build_deck_save', commander=d.commander) }}" style="display:inline"
     onsubmit="return confirm('Save this draft to data/decks/ so it joins your leaderboard?');">
+    <input type="hidden" name="ci" value="{{ ci }}">
     <button class="btn" type="submit">💾 Save to my decks</button></form>
 </div>
 

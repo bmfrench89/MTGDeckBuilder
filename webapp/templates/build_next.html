@@ -6,6 +6,15 @@
 <span class="sb">OWN</span> = you have the commander; others are a cheap buy to unlock a deck
 you can mostly build today.</div>
 
+<div class="card" style="margin:0 0 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+  <b>Build any commander:</b>
+  <input id="cmdname" placeholder="Type a commander name…" autocomplete="off"
+    style="flex:1;min-width:180px">
+  <button class="btn" id="cmdgo" type="button">Build the deck →</button>
+  <span class="muted" id="cmdmsg" style="width:100%;font-size:.82rem">We look the card up on
+    Scryfall to get its color identity, then build a deck from your collection in those colors.</span>
+</div>
+
 <div class="row" style="margin-bottom:16px;gap:8px;flex-wrap:wrap">
   <a class="thchip {{ 'on' if not arch }}" href="{{ url_for('build_next') }}">all</a>
   {% for a in archetypes %}
@@ -17,38 +26,63 @@ you can mostly build today.</div>
   border:1px solid rgba(255,255,255,.16);color:var(--muted);font-family:'JetBrains Mono',monospace}
 .thchip.on{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 .thchip:hover{color:var(--text);text-decoration:none}
-.cmdcard{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;
-  padding:14px 16px;margin-bottom:12px}
-.cmdcard .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.cmdcard .num{font-family:'Oswald',sans-serif;font-size:1.5rem;color:var(--accent);min-width:40px}
-.cmdcard .nm{font-weight:700;font-size:1.05rem}
-.supbar{height:8px;border-radius:5px;background:rgba(255,255,255,.08);margin:8px 0;overflow:hidden}
-.supbar>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.deckrow .support{font-family:'Oswald',sans-serif;font-size:.9rem;color:var(--accent2)}
 </style>
 
+<div class="decklist">
 {% set maxn = rows[0].support_n if rows else 1 %}
 {% for r in rows %}
-<div class="cmdcard">
-  <div class="top">
-    <span class="num">{{ r.support_n }}</span>
-    <span class="nm cardlink" data-card="{{ r.name }}" tabindex="0" role="button">{{ r.name }}</span>
-    <span class="mv">[{{ r.colors }}]</span>
-    {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted">buy the commander</span>{% endif %}
-    <span class="muted" style="margin-left:auto;font-size:.8rem">{{ r.archetypes|join(' · ') }}</span>
+<div class="deckrow">
+  <div class="rank">{{ loop.index }}</div>
+  <div>
+    <div class="name"><span class="cardlink" data-card="{{ r.name }}">{{ r.name }}</span>
+      <span class="muted" style="font-size:.78rem;font-family:'JetBrains Mono',monospace">[{{ r.colors }}]</span>
+      {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted" style="font-size:.75rem">· buy the commander</span>{% endif %}</div>
+    <div class="cmd">{{ r.archetypes|join(' · ') }}</div>
   </div>
-  <div class="supbar"><span style="width:{{ (100 * r.support_n / maxn)|round }}%"></span></div>
-  <div class="muted" style="font-size:.82rem"><b>You own {{ r.support_n }} support cards:</b>
-    {% for sc in r.support_cards[:10] %}<span class="cardlink" data-card="{{ sc }}">{{ sc }}</span>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.support_cards|length > 10 %} … (+{{ r.support_cards|length - 10 }}){% endif %}</div>
-  {% if r.notes %}<div class="muted" style="font-size:.78rem;margin-top:4px">{{ r.notes }}</div>{% endif %}
-  <div style="margin-top:10px"><a class="btn" href="{{ url_for('build_deck', commander=r.name) }}"
-    style="font-size:.82rem;padding:5px 13px">Build this deck from your collection →</a></div>
+  <div class="stat">
+    <div class="meter" style="width:84px"><span style="width:{{ (100 * r.support_n / maxn)|round }}%"></span></div>
+    <span class="support">{{ r.support_n }}</span><span class="muted" style="font-size:.72rem">support</span>
+    <a class="btn" href="{{ url_for('build_deck', commander=r.name) }}"
+      style="font-size:.8rem;padding:5px 12px">Build →</a>
+  </div>
+  <div class="acts" style="font-size:.8rem;color:var(--muted)">
+    <span>You own:</span>
+    {% for sc in r.support_cards[:10] %}<span class="cardlink" data-card="{{ sc }}">{{ sc }}</span>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.support_cards|length > 10 %} (+{{ r.support_cards|length - 10 }}){% endif %}
+    {% if r.notes %}<span style="width:100%">{{ r.notes }}</span>{% endif %}
+  </div>
 </div>
 {% else %}
 <div class="card muted">No commanders matched. Add candidates to
-<code>data/reference/commanders.csv</code>.</div>
+<code>data/reference/commanders.csv</code> — or use the "Build any commander" box above.</div>
 {% endfor %}
+</div>
 
 <p class="muted" style="font-size:.8rem">"Support" counts owned archetype payoffs/enablers from
-<code>data/reference/archetype_support.csv</code> (universal staples like Sol Ring are excluded).
+<code>data/reference/archetype_support.csv</code> (universal staples like Sol Ring excluded).
 It's a starting signal — grow both reference files to sharpen it.</p>
+
+<script>
+(function(){
+  var input=document.getElementById('cmdname'), msg=document.getElementById('cmdmsg');
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+  async function go(){
+    var name=(input.value||'').trim();
+    if(!name){ input.focus(); return; }
+    msg.textContent='Looking up "'+name+'" on Scryfall…';
+    var j=await fetch('https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(name))
+      .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+    if(!j){ msg.innerHTML='Couldn’t find a card matching <b>'+esc(name)+'</b>. Check the spelling.'; return; }
+    var tl=j.type_line||'', faces=j.card_faces||[];
+    var oracle=(j.oracle_text||'')+' '+faces.map(function(f){return f.oracle_text||'';}).join(' ');
+    var legal=(/Legendary/.test(tl)&&/Creature/.test(tl))||/can be your commander/i.test(oracle);
+    if(!legal){ msg.innerHTML='<b>'+esc(j.name)+'</b> isn’t a legal commander (needs to be a legendary creature, or say “can be your commander”).'; return; }
+    var ci=(j.color_identity||[]).join('');
+    msg.innerHTML='Building <b>'+esc(j.name)+'</b> ['+(ci||'C')+'] from your collection…';
+    location.href='/build-next/'+encodeURIComponent(j.name)+'/deck?ci='+encodeURIComponent(ci);
+  }
+  document.getElementById('cmdgo').addEventListener('click', go);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); go(); } });
+})();
+</script>
 {% endblock %}
