@@ -1,14 +1,17 @@
 ---
 name: mtg-deckbuilder
 description: >-
-  Build, tune, analyze, and visualize Magic: The Gathering Commander (EDH) decks
-  grounded in the player's actual collection. Use whenever the user wants to build
-  a Commander deck, pick a commander, evaluate whether their collection supports an
-  archetype, tune a manabase or curve, get card recommendations or a buy list, check
-  a card's oracle text/rulings, or generate a deck dashboard / visual card gallery.
-  Triggers on: "build me a deck", "commander", "EDH", "my collection", "what can I
-  build", "deck dashboard", "manabase", "should I run X", "buy list", card names +
-  "deck".
+  Build, tune, analyze, coach, and visualize Magic: The Gathering Commander (EDH)
+  decks grounded in the player's actual collection. Use whenever the user wants to
+  build or auto-generate a Commander deck, pick a commander, evaluate whether their
+  collection supports an archetype, tune a manabase or curve, get card
+  recommendations or a buy list, check a card's oracle text/rulings, generate a deck
+  dashboard, or COACH a deck — critique/rate it, get cut/add suggestions, learn how
+  to pilot or mulligan it, explain a card's role, compare two decks, or upgrade it to
+  a target bracket. Triggers on: "build me a deck", "commander", "EDH", "my
+  collection", "what can I build", "critique/rate my deck", "what should I cut/add",
+  "how do I pilot", "manabase", "should I run X", "buy list", "explain this card",
+  card names + "deck".
 ---
 
 # MTG Commander Deckbuilder
@@ -84,6 +87,28 @@ external images are blocked in the chat preview. Save deck lists under `data/dec
 If the session produced or changed a deck, update `docs/handoff.md` so the next session
 starts grounded instead of re-deriving.
 
+## Coaching & assessment
+
+When the player wants you to **critique, rate, tune, or advise on an existing deck** (not
+build a new one) — "critique my Kaervek deck", "what should I cut/add", "how do I pilot
+this", "explain this card's role", "compare these two decks", "get this to Bracket 3" —
+follow **`references/coaching.md`**. In short:
+
+1. **Gather the numbers first** — run `power.py --json`, `deck_stats.py`, `manabase.py`, and
+   `combo_detector.py` on the deck; read `card_notes.csv`; web-search oracle text for anything
+   uncertain. Don't opine before you've computed.
+2. **Score the rubric** — mana/consistency, ramp, draw, interaction, win-cons, curve,
+   synergy/anti-synergy, bracket fit, combos — each with the counted finding + a fix.
+3. **Cut/add by SELECTION, never invention** — every card you name comes from the collection,
+   a saved deck, the curated references, `auto_build.py`'s candidate pool, or a verified
+   Scryfall lookup. Owned cards first; buy-list only for real gaps.
+4. **Deliver in the champion voice** — verdict first, then findings, then the cut/add list,
+   then a pilot / mulligan guide. Label estimates; flag name-only limits.
+
+The web app's **"Export assessment packet"** (`/deck/<stem>/assess.txt`, linked on each deck
+page) dumps the decklist + all computed analytics + notes in one paste-able block, so the
+player can hand a deck straight to a coaching session.
+
 ## Collection access
 
 Grounding requires the collection in a file. In priority order:
@@ -124,5 +149,22 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
 - `staples_crossref.py` — diff a curated staples list against the collection → owned vs. missing.
 - `power.py` — Commander Bracket (1–5) + a 0–100 power score for a deck; `--rank` ranks all decks.
   Grounded in WotC's bracket system; card lists in `data/reference/*.txt`. See `docs/power-and-brackets.md`.
-- `deck_conflicts.py` — flags cards committed to more decks than you own copies of (basics exempt).
-  **Use this whenever building a new deck so you don't silently reuse a single-copy card.**
+- `deck_conflicts.py` — flags cards committed to more decks than you own copies of (basics exempt);
+  `--available` prints the buildable pool (owned minus committed elsewhere). **Use this whenever
+  building/coaching so you don't silently reuse a single-copy card, and to source owned adds.**
+- `manabase.py` — hypergeometric consistency: keepable-hand %, by-turn-N land/color odds, per-color
+  source adequacy vs Karsten targets, and which cards are **risky to cast on curve**.
+- `combo_detector.py` — detects known infinite / 2-card combos **present** in a deck or **one card
+  away**, and combos the whole collection can assemble (`data/reference/combos.csv`).
+- `auto_build.py` — auto-assembles a full 99 for a commander from the owned, in-color, uncommitted
+  pool (deck_fit scoring + role template). Its ranked pool is the **candidate source for adds**; also
+  takes `identity=` (WUBRG) for any commander not in `commanders.csv`.
+- `commander_finder.py` — ranks commanders by how much of the collection supports their archetype
+  ("what should I build next?"). `similar_commanders.py` — alternate commanders that fit a deck's shell.
+- `card_api.py` — grounded per-card payload (role, note, combo membership, which decks use it, buy links).
+- `wishlist.py` — consolidated priced buy list (shared copies + upgrades) → `data/wishlist.md`.
+- `carddb.py` — enrich the WHOLE collection (colors / types / mana value / Scryfall ids) from a Scryfall
+  bulk file → `collection_attrs.csv`, which every tool auto-merges. Run `enrich.bat` on Windows.
+- `deck_fit.py` — library behind per-card fit scoring (used by `build_dashboard`/`auto_build`, not a CLI).
+- `refresh.py` — regenerate every dashboard + the wishlist in one command. `export_manapool.py` — deck /
+  wishlist as ManaPool-importable text.
