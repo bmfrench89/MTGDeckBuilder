@@ -16,7 +16,7 @@ import os
 import mtglib
 import card_image
 import combo_detector
-import build_dashboard as bd   # reuse load_card_notes + role labels (no duplication)
+import deckcore   # shared hub: load_card_notes + role labels (no heavy renderer import)
 
 
 def _decks_using(name, decks_dir):
@@ -51,7 +51,7 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
     """Return the JSON-able payload for one card. `notes`/`combos` may be passed
     in pre-loaded (to avoid re-reading the reference files per request)."""
     ref = mtglib.lookup(coll_index, name)
-    notes = notes if notes is not None else bd.load_card_notes()
+    notes = notes if notes is not None else deckcore.load_card_notes()
     combos = combos if combos is not None else combo_detector.load_combos()
     key = mtglib._norm(name)
 
@@ -67,7 +67,7 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
         "qty": ref.quantity if ref else 0,
         "mv": ref.mana_value if ref else None,
         "type": ref.primary_type if (ref and ref.types) else None,
-        "roles": [bd._ROLE_LABEL.get(r, r.title()) for r in roles],
+        "roles": [deckcore._ROLE_LABEL.get(r, r.title()) for r in roles],
         "note": {"why": note["why"], "alts": note["alts"]} if note else None,
         "combos": _combos_with(name, combos),
         "decks": _decks_using(name, decks_dir),

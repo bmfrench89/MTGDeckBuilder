@@ -132,7 +132,7 @@ if __name__ == "__main__":
     import os
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import deck_stats
-    import build_dashboard as bd
+    import deckcore
     ap = argparse.ArgumentParser(description="Deck manabase / consistency analysis.")
     ap.add_argument("--deck", required=True)
     ap.add_argument("--collection", required=True)
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         deck = mtglib.parse_deck(f.read())
     enriched, missing = deck_stats.analyze(deck, idx)
     stem = args.deck[:-4] if args.deck.endswith(".txt") else args.deck
-    bd.apply_attrs(enriched, bd.load_attrs(f"{stem}.attrs.csv"))
+    deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = deck_stats.build_report(deck, enriched, missing, idx)
     a = analyze(rep, enriched)
     if not a["have_colors"]:

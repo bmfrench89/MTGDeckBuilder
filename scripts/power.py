@@ -25,11 +25,7 @@ import sys
 import mtglib
 import deck_stats
 import combo_detector
-
-try:
-    import build_dashboard  # for load_attrs/apply_attrs (attrs power the curve)
-except Exception:
-    build_dashboard = None
+import deckcore   # load_attrs/apply_attrs (attrs power the curve) — no circular import now
 
 REF_DIR_DEFAULT = os.path.join(os.path.dirname(__file__), "..", "data", "reference")
 
@@ -218,10 +214,8 @@ def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT):
     with open(deck_path, encoding="utf-8") as f:
         deck = mtglib.parse_deck(f.read())
     enriched, missing = deck_stats.analyze(deck, coll_index)
-    if build_dashboard is not None:
-        stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
-        attrs = build_dashboard.load_attrs(f"{stem}.attrs.csv")
-        build_dashboard.apply_attrs(enriched, attrs)
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = deck_stats.build_report(deck, enriched, missing, coll_index)
     return assess(enriched, rep, load_refs(ref_dir))
 
