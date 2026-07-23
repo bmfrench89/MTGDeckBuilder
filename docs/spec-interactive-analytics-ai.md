@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phase 0 in progress
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phases 0, 2, 3 shipped; sharpening
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -37,12 +37,17 @@ simulation of any kind.**
 
 | Phase | Deliverable | Status | PR |
 |------|-------------|--------|----|
-| 0 | Reusable card panel + `/api/card` + data plumbing | ◐ In progress | in review |
+| 0 | Reusable card panel + `/api/card` + clickable cards | ☑ Done (deferred: bulk DB, CSB/EDHREC clients) | #18 |
 | 1 | Interactive Collection (browse/search/filter) | ☐ Not started | — |
-| 2 | Manabase & consistency engine (flagship) | ◐ engine + dashboard shipped | in review |
-| 3 | Full auto-built decks for Build Next | ☐ Not started | — |
+| 2 | Manabase & consistency engine (flagship) | ☑ Engine + dashboard + wired into auto_build | #20, #23 |
+| 3 | Full auto-built decks for Build Next | ☑ v1 + images + on-view analysis (deferred: EDHREC/CSB) | #19, #21, #22, #23 |
 | 4 | Full card strategies | ☐ Not started | — |
 | 5 | AI coaching skill + export bridge | ☐ Not started | — |
+
+**Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
+"build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool
+buy-link fixed to the direct card page + Card Kingdom verified (#23); `power.py` bracket
+wording hedged to match the one confirmed WotC rule (#23).
 
 **Seed already shipped:** the bottom-sheet card panel + clickable commander links
 (PR #17) are the prototype Phase 0 generalizes into a reusable, site-wide component.
@@ -84,7 +89,8 @@ live oracle text, rulings, grounded local data, and three working buy-links.
 - ☑ Per-color source adequacy vs **Karsten** guidelines (~19 single-pip / ~23 double-pip).
 - ☑ **"Consistency & Manabase"** dashboard section (degrades to an "enrich to unlock" note on
   a name-only collection; sources come from the enriched collection's `Cost`/colors).
-- ☐ Wire into `auto_build` so generated manabases hit colored-source targets — *next step.*
+- ☑ Wired into `auto_build`: **pip-demand-weighted basics** + full **power/bracket + Consistency/Manabase**
+  analysis shown on the "Build this deck" view (#23).
 **Honest simplifications:** probabilities are UNCONDITIONAL (not Karsten's mulligan-adjusted %),
 and sources approximate a permanent's output from its color identity (rough for fetches/oddballs).
 
@@ -130,3 +136,7 @@ the repo's data + live oracle text, suggesting only real cards; no Anthropic API
 - **2026-07-22** — Phase 2 v1 shipped: `scripts/manabase.py` hypergeometric engine + a
   "Consistency & Manabase" dashboard section. Math verified; analyze() validated. Remaining:
   wire it into `auto_build`'s manabase.
+- **2026-07-23** — Sharpened the auto-builder: pip-demand-weighted basics; power/bracket +
+  Consistency/Manabase now shown on the "Build this deck" view. Bundled: ManaPool buy-link →
+  direct card page (verified); `power.py` bracket wording hedged (only "B3 ≤ 3 Game Changers"
+  is officially confirmed). Verified end-to-end.

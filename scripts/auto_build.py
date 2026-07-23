@@ -20,6 +20,8 @@ import similar_commanders as simc
 import power
 import combo_detector
 import card_image
+import deck_stats
+import manabase
 
 DECK_SIZE = 100                 # incl. the commander
 LAND_TARGET = 37
@@ -70,6 +72,39 @@ def _basics_split(n, identity):
     for i, col in enumerate(colors):
         out[_BASIC[col]] = base + (1 if i < extra else 0)
     return {k: v for k, v in out.items() if v}
+
+
+_BASIC_COLOR = {v: k for k, v in _BASIC.items()}   # "Plains" -> "W", ...
+
+
+def _basics_by_demand(n, identity, cards):
+    """Split n basics across the identity's colors weighted by the colored-pip
+    demand of the chosen nonland cards — so a blue-heavy deck gets more Islands.
+    Falls back to an even split when card mana costs aren't known (name-only)."""
+    colors = sorted(identity) if identity else []
+    if not colors or n <= 0:
+        return {}
+    demand = {c: 0.0 for c in colors}
+    for card in cards:
+        if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
+            continue
+        for col, pips in mtglib.pip_counts(card.mana_cost).items():
+            if col in demand:
+                demand[col] += pips
+    tot = sum(demand.values())
+    if tot <= 0:
+        return _basics_split(n, identity)
+    raw = {c: n * demand[c] / tot for c in colors}
+    alloc = {c: int(raw[c]) for c in colors}
+    for c in sorted(colors, key=lambda c: -(raw[c] - int(raw[c])))[:n - sum(alloc.values())]:
+        alloc[c] += 1
+    for c in colors:                     # every demanded color gets >=1 source
+        if demand[c] > 0 and alloc[c] == 0:
+            donor = max(colors, key=lambda x: alloc[x])
+            if alloc[donor] > 1:
+                alloc[donor] -= 1
+                alloc[c] = 1
+    return {_BASIC[c]: v for c, v in alloc.items() if v > 0}
 
 
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
@@ -136,8 +171,6 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
             break
         take(c)
     n_nonbasic_land = sum(1 for x in chosen if x["is_land"])
-    basics = _basics_split(LAND_TARGET - n_nonbasic_land, identity)
-    n_basic = sum(basics.values())
 
     # 2) Nonland spells — fill role quotas, then synergy/flex to hit the spell budget.
     spell_budget = (DECK_SIZE - 1) - LAND_TARGET            # 62 with 37 lands
@@ -174,6 +207,11 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
 
     short = spell_budget - n_spells()         # pool too shallow to reach 99
 
+    # 3) Manabase basics — weighted by the chosen deck's colored-pip demand.
+    basics = _basics_by_demand(LAND_TARGET - n_nonbasic_land, identity,
+                               [c["card"] for c in chosen])
+    n_basic = sum(basics.values())
+
     # ---- assemble output ----
     role_of, counts = {}, {}
     for c in chosen:
@@ -200,6 +238,25 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     all_names = [commander_name] + [c["name"] for c in chosen]
     detected = combo_detector.detect(all_names, combo_detector.load_combos())
 
+    # deck-level analysis (power/bracket + manabase) on the built cards
+    assessment = mana = None
+    try:
+        analysis = []
+        cc = mtglib.lookup(idx, commander_name)
+        if cc:
+            analysis.append(cc)
+        analysis += [c["card"] for c in chosen]
+        for bn, q in basics.items():
+            col = _BASIC_COLOR.get(bn)
+            analysis.append(mtglib.Card(name=bn, quantity=q, types=["Land"],
+                                        identity=({col} if col else set()),
+                                        colors=({col} if col else set()), mana_value=0.0))
+        rep = deck_stats.build_report(analysis, analysis, [], idx)
+        assessment = power.assess(analysis, rep, refs)
+        mana = manabase.analyze(rep, analysis)
+    except Exception:
+        assessment = mana = None
+
     targets = {"land": LAND_TARGET, "ramp": 11, "draw": 10, "removal": 9,
                "wipe": 3, "counter": 4}
     return {
@@ -214,6 +271,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "off_color_skipped": off_color,
         "nameonly": nameonly,
         "known_commander": known,
+        "assessment": assessment,
+        "mana": mana,
         "combos": {"complete": [c["name"] for c in detected["complete"]],
                    "near": [f"{c['name']} (add {c['missing']})" for c in detected["near"]]},
         "notes": cmd["notes"] if cmd else "",
