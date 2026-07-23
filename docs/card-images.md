@@ -72,12 +72,15 @@ All of these read the card **name** off `<img alt>` (or `data-card`) and batch-r
 ## Gotchas
 
 - **Adventure / double-faced names.** A deck lists the front-face name ("Murderous
-  Rider") but Scryfall's exact name is "Murderous Rider // Swift End", so
-  `/cards/collection {name}` misses it → it falls back to the fuzzy by-name path.
-  That's fine (one request); just don't be surprised by a 1-card fallback.
-- **Server-side is firewalled.** Scryfall is **blocked from the Python build/sandbox
-  env** (403 at the proxy), but reachable from the **user's browser**. So image
-  loading is **always client-side JS** — never fetch images server-side in the scripts.
+  Rider") but Scryfall returns the full name ("Murderous Rider // Swift End").
+  `/cards/collection {name}` **does** resolve the front-only name — you just have to map
+  the response back to your `<img alt>` by **also matching on the front face** (split the
+  returned name on `//`), or the card looks unresolved even though it came back.
+- **Load images client-side, by design.** The browser resolves images (its own cache, no
+  server proxy, works in any deploy env) — the Flask server never fetches images. Note that
+  server *reachability* to Scryfall varies by environment (the old CI sandbox was proxy-
+  blocked; a normal machine reaches it — that's how `scripts/carddb.py` enrichment pulls
+  attributes server-side), but keep **image** loading in the browser regardless.
 - **Chat/preview pane won't render external images.** Card galleries only display in
   a real browser (Chrome/Edge/Safari). Self-contained dashboards render anywhere; the
   images inside them still need a real browser.

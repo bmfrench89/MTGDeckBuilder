@@ -78,7 +78,7 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 | **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
-| carddb | enrich the collection (colors/types/MV/id) → `collection_attrs.csv` | mtglib |
+| carddb | enrich the collection (colors/types/MV/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
 ## Web app (`webapp/`)
@@ -114,12 +114,17 @@ commanders, archetype_support).
   splitting its section renderers is polish, not needed for the hub-and-spoke. Revisit only if
   it grows.
 
+## Shipped from the backlog
+
+- ✅ **Enrichment via Scryfall `/cards/collection` API** — now `carddb.py`'s **default**
+  (no ~40 MB download). Resolves each owned card by exact printing (`set`+`collector_number`,
+  or a Scryfall id) with a name fallback; ~1 request per 75 cards, stdlib-only; bulk kept as
+  the `--bulk`/`--download-bulk` offline path. Verified 2040/2040 on the real collection.
+
 ## Parked ideas / backlog
 
-- **Enrichment via Scryfall `/cards/collection` API** (instead of `carddb.py`'s ~40 MB bulk
-  download): resolve exact printings by the export's `set`+`collector_number` → correct
-  attributes *and* the right-art Scryfall ID; ~24 requests, stdlib-only. Two packagings —
-  **A.** `carddb --api` (keep bulk as offline fallback), **B.** auto-enrich on collection
-  upload (zero manual step). Empirically validated (set+number returns full attrs). *Deferred.*
+- **Auto-enrich on collection upload** (zero manual step) — call `carddb.enrich_api` from the
+  webapp upload route so `collection_attrs.csv` regenerates automatically. Small follow-on now
+  that the API path exists.
 - EDHREC (`pyedhrec`) staple/inclusion chip + buy-to-complete · Commander Spellbook combos ·
   Phase 4 generated card strategies. See the feature tracker.

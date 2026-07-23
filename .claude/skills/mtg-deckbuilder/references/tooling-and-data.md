@@ -2,19 +2,23 @@
 
 Know these limits so you neither waste time on blocked calls nor fabricate around them.
 
-## Network reality in this environment
-- **Scryfall API, Scryfall bulk data, and Archidekt API are BLOCKED** at the outbound proxy
-  (403 policy denial on CONNECT). You cannot script bulk card lookups or deck imports.
-- **Direct `curl`/`fetch` to card CDNs is blocked** from the sandbox too. Do not try to download
-  card images server-side to embed them — it will fail.
-- **What works:**
+## Network reality — depends where Claude Code is running (test, don't assume)
+Reachability to Scryfall/Archidekt **varies by environment.** A quick probe beats guessing.
+- On a **normal machine** (the player's own — the common case): outbound HTTPS to Scryfall
+  works. `python scripts/carddb.py --collection <file>` enriches the WHOLE collection via the
+  **`/cards/collection` API** (no ~40 MB download), resolving each card by exact printing →
+  real colors / types / mana value / correct-art Scryfall id. Verified 2040/2040 live.
+- In a **locked-down sandbox** (some CI): the Scryfall/Archidekt API + bulk data may be
+  **proxy-blocked** (403 on CONNECT). Then fall back to `carddb.py --bulk oracle-cards.json`
+  (a local file), `WebSearch`/`WebFetch` for one-off oracle text, and the committed snapshot.
+- **What works everywhere:**
   - The **collection file** (CSV or name-only list) — always available locally / via Drive.
   - **`WebSearch` / `WebFetch`** for oracle text and rulings — one card at a time. `WebFetch`
     generally only accepts URLs that appeared in a prior search result; don't hand-build URLs
     from memory and expect them to fetch.
   - **Google Drive tools** — the player's `collection_list` doc lives here.
   - **Scryfall image *hotlinking*** in generated HTML — the URL renders in the player's real
-    browser even though the sandbox can't fetch it. Build the URL from the card's Scryfall ID
+    browser even if the current env can't fetch it. Build the URL from the card's Scryfall ID
     (see below) and put it in an `<img>` tag.
 
 ## Scryfall image hotlink URL (from a Scryfall ID)
