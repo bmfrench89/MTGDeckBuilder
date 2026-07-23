@@ -121,28 +121,32 @@ def assess(enriched, rep, refs):
     combos = _match(enriched, refs["combo_pieces"])
     detected = combo_detector.detect_for_cards(enriched)
 
-    # ---- Bracket (WotC Commander Bracket system; tutors are NOT a determinant
-    #      since the Oct-2025 update — Game Changers count + guardrails drive it). ----
+    # ---- Bracket ESTIMATE (WotC Commander Bracket system). Only the "Bracket 3
+    #      allows UP TO 3 Game Changers" threshold is officially confirmed; the
+    #      broader count→bracket mapping below is our heuristic. Tutors are NOT a
+    #      determinant since the Oct-2025 update. The official system also weighs
+    #      self-assessed deck intent, which we can't detect. ----
     reasons = []
     if len(gc) >= 4 or mld or len(extra) >= 2:
         bracket, name = 4, "Optimized"
         if len(gc) >= 4:
-            reasons.append(f"{len(gc)} Game Changers (4+ → Bracket 4): "
-                           f"{', '.join(gc[:5])}{'…' if len(gc) > 5 else ''}")
+            reasons.append(f"{len(gc)} Game Changers — over Bracket 3's cap of 3, so "
+                           f"Bracket 4+: {', '.join(gc[:5])}{'…' if len(gc) > 5 else ''}")
         if mld:
             reasons.append(f"mass land denial ({', '.join(mld)}) — not allowed below B4")
         if len(extra) >= 2:
             reasons.append(f"{len(extra)} extra-turn spells (chaining risk)")
     elif 1 <= len(gc) <= 3:
         bracket, name = 3, "Upgraded"
-        reasons.append(f"{len(gc)} Game Changer(s) (1–3 → Bracket 3): {', '.join(gc)}")
+        reasons.append(f"{len(gc)} Game Changer(s) — within Bracket 3's cap of 3 "
+                       f"(estimated B3): {', '.join(gc)}")
         if extra:
             reasons.append("one extra-turn spell (fine if not chained)")
     else:
         bracket, name = 2, "Core"
-        reasons.append("0 Game Changers, no mass land denial, no extra-turn chaining "
-                       "→ Core (Bracket 2). Bracket 1 is the same guardrails but "
-                       "intentionally not built to win.")
+        reasons.append("no Game Changers / mass land denial / extra-turn chaining — "
+                       "estimated Core (Bracket 2). The official bracket also weighs "
+                       "your deck's intent; Bracket 1 is the same guardrails, not built to win.")
     # Real combo detection (combo_detector) supersedes the loose piece count: a
     # COMPLETE, EARLY two-card combo forces Bracket 4; the piece-count note is
     # kept only as a fallback when no complete combo is actually assembled.

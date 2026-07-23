@@ -46,14 +46,15 @@ def image_url_by_set(set_code: str, number: str, size: str = "normal") -> str:
 
 def purchase_links(name: str) -> dict:
     """'Buy this card' links by NAME for the card panel (no price feed — we link
-    out instead). TCGplayer's product-search URL is stable. ManaPool and Card
-    Kingdom are best-effort name-search links; their exact per-card URL schemes
-    are a Phase-0 verification task (see docs/spec-interactive-analytics-ai.md).
-    All three live in this one function so a corrected scheme is a one-line fix."""
+    out instead). ManaPool has a direct per-card page (verified:
+    manapool.com/card/<slug>); TCGplayer and Card Kingdom use their by-name
+    search. All three live here so a corrected scheme is a one-line fix."""
     q = urllib.parse.quote(name)
+    slug = re.sub(r"[^a-z0-9]+", "-",
+                  name.lower().replace("'", "").replace("’", "")).strip("-")
     return {
         "tcgplayer": f"https://www.tcgplayer.com/search/magic/product?productLineName=magic&q={q}",
-        "manapool": f"https://manapool.com/search?q={q}",
+        "manapool": f"https://manapool.com/card/{slug}",
         "cardkingdom": f"https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D={q}",
     }
 
