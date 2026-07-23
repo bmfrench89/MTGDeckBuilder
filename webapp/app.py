@@ -213,16 +213,18 @@ def _deck_slug(name):
 
 @app.route("/build-next/<path:commander>/deck")
 def build_deck(commander):
-    """Full deck auto-built from the owned pool for this commander (Phase 3 v1)."""
+    """Full deck auto-built from the owned pool for this commander (Phase 3 v1).
+    `?ci=` (color identity, e.g. from Scryfall) lets any typed commander build even
+    if it isn't in the curated commanders.csv."""
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
     return render_template("build_deck.html", d=d, page="build")
 
 
 @app.route("/build-next/<path:commander>/deck.txt")
 def build_deck_export(commander):
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
     return _txt(auto_build.deck_text(d), f"{_deck_slug(commander)}.txt")
 
 
@@ -230,7 +232,7 @@ def build_deck_export(commander):
 def build_deck_save(commander):
     """Write the auto-built draft to data/decks/ so it joins the leaderboard."""
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR)
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None))
     stem = _deck_slug(commander)
     with open(os.path.join(DECKS_DIR, f"{stem}.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
