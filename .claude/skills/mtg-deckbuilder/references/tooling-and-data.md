@@ -30,6 +30,11 @@ Sizes: `small`, `normal`, `large`, `png`, `art_crop`. Backs use `/back/`.
   (external images are blocked there). **Always warn the player** that the visual deck file only
   displays in a real browser (Chrome/Safari/Edge). Self-contained dashboards with no external
   images render anywhere.
+- **Loading MANY images at once (a grid / decklist): batch-resolve, never fire one request
+  per card.** Scryfall's by-name endpoint is rate-limited (~2/s), so ~100 `<img>` loads get
+  429'd and drop out (blank / just the card name). Resolve names → CDN URLs in batches via
+  `POST /cards/collection` (≤75/request); a single image (a panel) can use one by-name fetch.
+  The dashboards + web app already do this. **Full rules + why: `docs/card-images.md` (repo root).**
 
 ## Prices
 - **TCGplayer / Card Kingdom / MTGGoldfish are login-walled / blocked.** You cannot pull live
