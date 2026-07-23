@@ -34,7 +34,7 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 <div class="card" style="border-left:3px solid var(--warn);margin:14px 0">
   <b class="warn">Gaps to buy</b> — your pool couldn't fill:
   {% for r,n in d.gaps.items() %}{{ n }} {{ r }}{% if not loop.last %}, {% endif %}{% endfor %}.
-  <span class="muted">Buy-to-complete suggestions arrive with the EDHREC data client (Phase 1).</span>
+  <span class="muted">See <b>EDHREC staples</b> below for buy-to-complete targets.</span>
 </div>
 {% endif %}
 
@@ -44,6 +44,11 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
   {% if d.combos.near %}<div class="muted" style="margin-top:4px">One piece away: {{ d.combos.near|join('; ') }}</div>{% endif %}
 </div>
 {% endif %}
+
+<section id="edhrec" data-commander="{{ d.commander }}" style="margin:14px 0">
+  <h2>EDHREC staples <span class="muted" style="font-size:.82rem;font-weight:400">· vs your collection</span></h2>
+  <div id="edhrec-body" class="card"><span class="muted">Loading community staples from EDHREC…</span></div>
+</section>
 
 {% if d.assessment %}{% set a = d.assessment %}
 <h2>Power &amp; Bracket</h2>
@@ -109,4 +114,32 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 <p class="muted" style="margin-top:18px;font-size:.82rem">Built by ranking your owned, in-color, uncommitted cards with the
 deck-fit engine and filling the Command Zone / 8x8 role template. Click any card for details + buy links.
 Off-color cards skipped: {{ d.off_color_skipped }}.</p>
+
+<script>
+(function () {
+  var sec = document.getElementById('edhrec');
+  if (!sec) return;
+  var body = document.getElementById('edhrec-body');
+  var cmd = sec.getAttribute('data-commander');
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function chip(c) {
+    var inc = c.inclusion != null ? ' <span class="muted" style="font-size:.72rem">' + c.inclusion + '%</span>' : '';
+    var q = c.qty > 1 ? ' <span class="muted" style="font-size:.72rem">' + c.qty + '×</span>' : '';
+    return '<button class="cp-tag" data-card="' + esc(c.name) + '" style="cursor:pointer;margin:2px" title="' + esc(c.name) + '">' + esc(c.name) + inc + q + '</button>';
+  }
+  function list(title, arr, empty) {
+    if (!arr || !arr.length) return '<div style="margin-bottom:6px"><b>' + title + '</b> <span class="muted">' + empty + '</span></div>';
+    return '<div style="margin-bottom:10px"><b>' + title + '</b><div style="margin-top:6px">' + arr.slice(0, 24).map(chip).join('') + '</div></div>';
+  }
+  fetch('/api/edhrec/' + encodeURIComponent(cmd)).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d) { body.innerHTML = '<span class="muted">EDHREC data unavailable.</span>'; return; }
+    if (d.error) { body.innerHTML = '<span class="muted">No EDHREC page for this commander yet (' + esc(d.slug) + ').</span>'; return; }
+    var head = '<div class="muted" style="font-size:.8rem;margin-bottom:10px">From ' + (d.sample_decks || '?') +
+      ' decks on <a href="' + esc(d.url) + '" target="_blank" rel="noopener">EDHREC</a>. Click a card for details + buy links.</div>';
+    body.innerHTML = head +
+      list('✓ Staples you own — add these', d.owned, 'none of the top staples yet.') +
+      list('✗ Missing staples — buy targets', d.missing, 'you own them all!');
+  }).catch(function () { body.innerHTML = '<span class="muted">EDHREC data unavailable.</span>'; });
+})();
+</script>
 {% endblock %}
