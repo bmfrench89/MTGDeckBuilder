@@ -100,31 +100,43 @@ def esc(s):
     return html.escape(str(s))
 
 
-# Card images fall back to Scryfall's /cards/named API when the collection has no
-# Scryfall IDs (a name-only snapshot), and that endpoint is rate-limited to
-# ~10 req/s — firing ~100 <img> loads at once gets the later ones 429'd (blank).
-# We throttle initial loads AND, crucially, re-queue any that error back THROUGH
-# the same throttle with exponential backoff (up to MAX tries) — so a wave of
-# retries never re-bursts the rate limit (the old one-shot retry fired every
-# failure at once, re-triggering it). Permanent fix: give the collection Scryfall
-# IDs so images use the un-throttled CDN (image_url) — load the full Archidekt CSV
-# or run carddb.py. Images use data-src; this script assigns src on a timer.
+# Card images: resolve every card NAME (from each <img alt>) to its Scryfall CDN
+# image in batches via POST /cards/collection (<=75 ids/request). A ~100-card page
+# is ~2 requests to the un-rate-limited CDN instead of 100 hits on the 2/s
+# /cards/named endpoint — so images don't get 429'd and drop out. Cards the batch
+# can't resolve fall back to their data-src (the by-name URL), gently throttled.
+# Same approach as the web app's cardgrid.js.
 IMG_LOADER = """<script>
 (function(){
-  var items=[].slice.call(document.querySelectorAll('img[data-src]'))
-    .map(function(img){return {img:img,tries:0};});
-  if(!items.length) return;
-  var queue=items.slice(), pending=items.length, GAP=125, MAX=4, timer;
-  function done(){ if(--pending<=0) clearInterval(timer); }
-  function start(it){
-    var img=it.img;
-    img.onload=function(){ img.onerror=null; done(); };
-    img.onerror=function(){ img.onerror=null;
-      if(it.tries++<MAX){ setTimeout(function(){queue.push(it);}, 700*Math.pow(2,it.tries-1)); }
-      else { done(); } };
-    img.src=img.getAttribute('data-src');
+  var imgs=[].slice.call(document.querySelectorAll('img[data-src]'));
+  if(!imgs.length) return;
+  var byName={};
+  imgs.forEach(function(img){
+    var name=img.getAttribute('alt'); if(!name) return;
+    var k=name.toLowerCase();
+    if(!byName[k]) byName[k]={name:name,imgs:[],done:false};
+    byName[k].imgs.push(img);
+  });
+  var keys=Object.keys(byName);
+  function chunk(a,n){var r=[];for(var i=0;i<a.length;i+=n)r.push(a.slice(i,i+n));return r;}
+  function cdn(c){var iu=c.image_uris||(c.card_faces&&c.card_faces[0]&&c.card_faces[0].image_uris);return iu&&iu.normal;}
+  var batches=chunk(keys,75), pending=batches.length;
+  batches.forEach(function(batch){
+    fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({identifiers:batch.map(function(k){return {name:byName[k].name};})})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(j){
+        if(j&&j.data) j.data.forEach(function(c){
+          var url=cdn(c), k=(c.name||'').toLowerCase();
+          if(url&&byName[k]){ byName[k].imgs.forEach(function(i){i.src=url;}); byName[k].done=true; }
+        });
+      }).catch(function(){}).finally(function(){ if(--pending===0) fallback(); });
+  });
+  function fallback(){
+    var rest=[];
+    keys.forEach(function(k){ if(!byName[k].done) byName[k].imgs.forEach(function(i){ if(!i.getAttribute('src')) rest.push(i); }); });
+    if(!rest.length) return;
+    var q=rest.slice(), timer=setInterval(function(){ var i=q.shift(); if(!i){clearInterval(timer);return;} if(!i.getAttribute('src')) i.src=i.getAttribute('data-src'); },400);
   }
-  timer=setInterval(function(){ if(queue.length) start(queue.shift()); }, GAP);
 })();
 </script>"""
 
