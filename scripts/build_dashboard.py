@@ -34,6 +34,7 @@ import deck_fit
 import similar_commanders as simc
 import combo_detector
 import manabase
+import deckcore
 
 THEMES = {
     "default": {
@@ -195,113 +196,12 @@ def ownership_block(rep):
 
 
 # --------------------------------------------------------------------------- #
-# Optional companion files (auto-detected next to the deck: <stem>.notes.md,
-# <stem>.buylist.csv, <stem>.attrs.csv)
+# Companion-file loaders, the card-notes knowledge base, the attrs overlay and
+# role labels now live in `deckcore` (the shared analysis hub) so this renderer
+# isn't imported just to reach them. Imported here for unqualified use below.
 # --------------------------------------------------------------------------- #
-def load_deck_sections(path):
-    """Group the deck by the `# --- Label ---` headers in the deck file itself,
-    so each build sections its own way ("Spiders", "Ramp", ...)."""
-    sections, cur = [], None
-    with open(path, encoding="utf-8") as f:
-        for raw in f:
-            s = raw.strip()
-            if not s:
-                continue
-            if s.startswith("#"):
-                m = re.search(r"---\s*(.*?)\s*---", s)
-                if m:
-                    label = re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip()
-                    cur = (label, [])
-                    sections.append(cur)
-                continue
-            m = re.match(r"^(\d+)\s*[xX]?\s+(.*\S)$", s)
-            qty, name = (int(m.group(1)), m.group(2).strip()) if m else (1, s)
-            if cur is None:
-                cur = ("Cards", [])
-                sections.append(cur)
-            cur[1].append((qty, name))
-    return sections
-
-
-def load_notes(path):
-    return open(path, encoding="utf-8").read() if path and os.path.exists(path) else None
-
-
-def load_buylist(path):
-    if not (path and os.path.exists(path)):
-        return None
-    rows = []
-    with open(path, encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            rows.append({
-                "card": (r.get("Card") or "").strip(),
-                "price": _to_float_price(r.get("Price")),
-                "tier": (r.get("Tier") or "").strip(),
-                "replaces": (r.get("Replaces") or "").strip(),
-                "reason": (r.get("Reason") or "").strip(),
-            })
-    return [r for r in rows if r["card"]]
-
-
-def load_attrs(path):
-    """Optional name -> {type, mv} map to power the MV spread without the full CSV."""
-    if not (path and os.path.exists(path)):
-        return None
-    out = {}
-    with open(path, encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            name = (r.get("Name") or r.get("Card") or "").strip()
-            if not name:
-                continue
-            mv = _to_float_price(r.get("MV"))
-            out[mtglib._norm(name)] = {
-                "type": (r.get("Type") or "").strip(),
-                "mv": mv,
-                "colors": (r.get("Colors") or "").strip(),
-            }
-    return out
-
-
-def _to_float_price(s):
-    try:
-        return float(str(s).replace("$", "").replace(",", "").strip())
-    except (ValueError, AttributeError):
-        return None
-
-
-def _default_notes_path():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        "..", "data", "reference", "card_notes.csv")
-
-
-def load_card_notes(path=None):
-    """name(normalized) -> {"why": str, "alts": [names]}. The curated, editable
-    knowledge base behind the click-a-card panel. First row per name wins."""
-    path = path or _default_notes_path()
-    out = {}
-    if not os.path.exists(path):
-        return out
-    with open(path, encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            name = (r.get("Name") or r.get("Card") or "").strip()
-            if not name:
-                continue
-            k = mtglib._norm(name)
-            if k in out:
-                continue
-            alts = [a.strip() for a in re.split(r"[;|]", r.get("Alternatives") or "")
-                    if a.strip()]
-            out[k] = {"why": (r.get("Why") or "").strip(), "alts": alts}
-    return out
-
-
-_ROLE_LABEL = {
-    "ramp": "Ramp / mana acceleration", "draw": "Card advantage",
-    "removal": "Targeted removal", "wipe": "Board wipe", "counter": "Counterspell",
-    "land": "Land", "creature": "Creature", "spell": "Instant / sorcery",
-    "artifact": "Artifact", "enchantment": "Enchantment",
-    "planeswalker": "Planeswalker", "other": "Deck card",
-}
+from deckcore import (load_deck_sections, load_notes, load_buylist, load_attrs,  # noqa: E402
+                      load_card_notes, apply_attrs, _to_float_price, _ROLE_LABEL)
 
 
 def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
@@ -364,25 +264,6 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
                           "section": section, "type": known_type, "mv": known_mv,
                           "why": note["why"] if note else "", "fit": fit, "alts": alts}
     return details
-
-
-def apply_attrs(enriched, attrs):
-    """Overlay type/MV/colors from an attrs map onto enriched deck cards."""
-    if not attrs:
-        return 0
-    n = 0
-    for c in enriched:
-        a = attrs.get(mtglib._norm(c.name))
-        if not a:
-            continue
-        n += 1
-        if a["type"]:
-            c.types = [a["type"]]
-        if a["mv"] is not None:
-            c.mana_value = a["mv"]
-        if a["colors"]:
-            c.identity = mtglib._parse_colorish(a["colors"])
-    return n
 
 
 # --------------------------------------------------------------------------- #
@@ -1257,16 +1138,13 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     """Load a deck + collection and return rendered HTML. Shared by the CLI and
     the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
     'report': dict}."""
-    with open(deck_path, encoding="utf-8") as f:
-        deck = mtglib.parse_deck(f.read())
-    coll = mtglib.load_collection(collection_path)
-
+    # One pass through the shared analysis hub (load + enrich + report + power +
+    # manabase + combos) — the same pipeline the assess packet + auto-builder use.
+    a = deckcore.analyze_deck(deck_path, collection_path)
+    coll, idx, deck = a["coll"], a["idx"], a["deck"]
+    enriched, missing, rep = a["enriched"], a["missing"], a["report"]
+    assessment, mana, combos, attrs = a["assessment"], a["mana"], a["combos"], a["attrs"]
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
-    idx = mtglib.index_by_name(coll)
-    enriched, missing = deck_stats.analyze(deck, idx)
-    attrs = load_attrs(f"{stem}.attrs.csv")
-    apply_attrs(enriched, attrs)
-    rep = deck_stats.build_report(deck, enriched, missing, idx)
 
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
@@ -1280,21 +1158,9 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         except Exception:
             shared = None
     try:
-        assessment = power.assess(enriched, rep, power.load_refs())
-    except Exception:
-        assessment = None
-    try:
         _, _, similar = simc.find(deck_path, idx, simc.load_commanders(), attrs)
     except Exception:
         similar = None
-    try:
-        combos = combo_detector.for_deck(deck_path, idx)
-    except Exception:
-        combos = None
-    try:
-        mana = manabase.analyze(rep, enriched)
-    except Exception:
-        mana = None
 
     try:
         refs = power.load_refs()

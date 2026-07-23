@@ -20,8 +20,7 @@ import similar_commanders as simc
 import power
 import combo_detector
 import card_image
-import deck_stats
-import manabase
+import deckcore
 
 DECK_SIZE = 100                 # incl. the commander
 LAND_TARGET = 37
@@ -251,9 +250,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
             analysis.append(mtglib.Card(name=bn, quantity=q, types=["Land"],
                                         identity=({col} if col else set()),
                                         colors=({col} if col else set()), mana_value=0.0))
-        rep = deck_stats.build_report(analysis, analysis, [], idx)
-        assessment = power.assess(analysis, rep, refs)
-        mana = manabase.analyze(rep, analysis)
+        _a = deckcore.analyze_cards(analysis, idx, refs)
+        assessment, mana = _a["assessment"], _a["mana"]
     except Exception:
         assessment = mana = None
 

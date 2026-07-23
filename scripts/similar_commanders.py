@@ -25,7 +25,7 @@ import re
 import sys
 
 import mtglib
-import build_dashboard as bd  # for load_attrs
+import deckcore  # for load_attrs (shared hub, not the heavy renderer)
 
 REF = os.path.join(os.path.dirname(__file__), "..", "data", "reference", "commanders.csv")
 
@@ -135,7 +135,7 @@ def main():
         return 2
     idx = mtglib.index_by_name(coll)
     stem = args.deck[:-4] if args.deck.endswith(".txt") else args.deck
-    attrs = bd.load_attrs(f"{stem}.attrs.csv")
+    attrs = deckcore.load_attrs(f"{stem}.attrs.csv")
     commander, arch, results = find(args.deck, idx, load_commanders(), attrs)
 
     print(f"Deck commander: {commander}   [{' '.join(arch)}]")
