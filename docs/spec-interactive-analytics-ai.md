@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–3 + 5 shipped · remaining: Phase 4 + data integrations (EDHREC / Commander Spellbook)
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–3 + 5 shipped + whole-collection enrichment (Scryfall API) · remaining: Phase 4 + data integrations (EDHREC / Commander Spellbook — **now unblocked**, Scryfall is reachable on the player's machine)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -65,8 +65,11 @@ Unlocks site-wide interactivity + the data layer later phases consume.
 - ☑ **Rulings** + oracle + image fetched client-side from Scryfall in the panel.
 - ☑ Card names clickable site-wide (Build Next, Collection, Wishlist, Shared).
 - ☑ **Buy-links ×3** (TCGplayer via search URL; ManaPool + Card Kingdom search URLs).
-- ☐ Extend `carddb.py` to a full local Scryfall bulk DB — *deferred (needs the player's
-  machine; Scryfall firewalled in the build env). Consumed by Phase 1/2.*
+- ☑ **Whole-collection enrichment** — `carddb.py` enriches via Scryfall's `/cards/collection`
+  API by default (exact printing → colors / types / mana value / correct-art ids; bulk kept as
+  the offline path). Verified 2040/2040; auto-runs on collection upload. *(Scryfall turned out
+  to be reachable on the player's machine — the "firewalled" note applied only to the CI sandbox,
+  which also unblocks the EDHREC/CSB clients below.)*
 - ☐ Cached CSB + `pyedhrec` client wrappers — *deferred to their consuming phases (1, 3).*
 - ☐ Verify ManaPool & Card Kingdom per-card URL schemes — *best-effort links shipped;
   verify on the live sites (one-line fix in `card_image.purchase_links`).*
@@ -158,3 +161,12 @@ Code on the subscription; no Anthropic API in the app.
   (`references/coaching.md` + SKILL.md workflow/triggers) + the web-app "Export assessment
   packet" bridge (`/deck/<stem>/assess.txt`, 📋 Assess on Decks). Grounded critique / cut-add by
   candidate selection / rules Q&A / pilot guide, on the Claude subscription (no API cost).
+- **2026-07-23** — Whole-collection enrichment shipped: `carddb.py` defaults to Scryfall's
+  `/cards/collection` API (no ~40 MB download), resolving each card by exact printing →
+  colors / types / mana value / correct-art id. Verified **2040/2040** on the real collection;
+  `load_collection` auto-merges it so every analytic works collection-wide (#29).
+- **2026-07-23** — `/collection/upload` now saves to the gitignored `collection.csv` (never the
+  tracked snapshot — closes a purchase-price leak into the public repo) and **auto-enriches**
+  inline; regenerated the name-only public snapshot (2040 cards). Discovery: Scryfall is reachable
+  server-side on the player's machine, **unblocking the deferred EDHREC / Commander Spellbook**
+  data clients (#30).
