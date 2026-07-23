@@ -19,6 +19,7 @@ import deck_conflicts
 import similar_commanders as simc
 import power
 import combo_detector
+import card_image
 
 DECK_SIZE = 100                 # incl. the commander
 LAND_TARGET = 37
@@ -33,6 +34,15 @@ ROLE_LABEL = {"ramp": "Ramp", "draw": "Card advantage", "removal": "Removal",
               "other": "Synergy / threats", "land": "Lands"}
 SECTION_ORDER = ["ramp", "draw", "removal", "wipe", "counter", "creature", "spell",
                  "artifact", "enchantment", "planeswalker", "other"]
+
+
+def _img(name, idx):
+    """Scryfall image URL for a card — CDN via the collection's Scryfall id when
+    available, else the image-by-name endpoint."""
+    ref = mtglib.lookup(idx, name)
+    sid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
+    return (card_image.image_url(sid, "normal") if sid
+            else card_image.image_url_by_name(name, "normal"))
 
 
 def _commander(name, commanders):
@@ -167,6 +177,10 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
                   for c in sorted(role_of.get("land", []), key=lambda x: -x["score"])]
     land_cards += [{"name": n, "qty": q} for n, q in sorted(basics.items())]
     sections.append((f"Lands ({counts['land']})", land_cards))
+
+    for _title, cs in sections:      # attach a card image URL to every entry
+        for c in cs:
+            c["img"] = _img(c["name"], idx)
 
     all_names = [commander_name] + [c["name"] for c in chosen]
     detected = combo_detector.detect(all_names, combo_detector.load_combos())
