@@ -42,8 +42,14 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 
 {% for title, cards in d.sections %}
 <h2>{{ title }} <span class="muted" style="font-size:.82rem;font-weight:400">{{ cards|length }}</span></h2>
-<div class="card" style="line-height:2">
-  {% for c in cards %}<span class="cardlink" data-card="{{ c.name }}">{% if c.qty > 1 %}{{ c.qty }}× {% endif %}{{ c.name }}</span>{% if not loop.last %} · {% endif %}{% endfor %}
+<div class="cardgrid">
+  {% for c in cards %}
+  <figure class="mc" data-card="{{ c.name }}" tabindex="0" role="button" title="{{ c.name }}">
+    <img loading="lazy" data-src="{{ c.img }}" alt="{{ c.name }}">
+    {% if c.qty > 1 %}<span class="qty">{{ c.qty }}×</span>{% endif %}
+    <figcaption>{{ c.name }}</figcaption>
+  </figure>
+  {% endfor %}
 </div>
 {% endfor %}
 
