@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phases 0, 2, 3 shipped; sharpening
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phases 0–3 shipped (4, 5 + data next)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -38,7 +38,7 @@ simulation of any kind.**
 | Phase | Deliverable | Status | PR |
 |------|-------------|--------|----|
 | 0 | Reusable card panel + `/api/card` + clickable cards | ☑ Done (deferred: bulk DB, CSB/EDHREC clients) | #18 |
-| 1 | Interactive Collection (browse/search/filter) | ☐ Not started | — |
+| 1 | Interactive Collection (browse/search/filter) | ☑ Done (EDHREC staple chip deferred) | #24 |
 | 2 | Manabase & consistency engine (flagship) | ☑ Engine + dashboard + wired into auto_build | #20, #23 |
 | 3 | Full auto-built decks for Build Next | ☑ v1 + images + on-view analysis (deferred: EDHREC/CSB) | #19, #21, #22, #23 |
 | 4 | Full card strategies | ☐ Not started | — |
@@ -73,12 +73,16 @@ Unlocks site-wide interactivity + the data layer later phases consume.
 **Acceptance:** ☑ verified in a real browser — clicking a card opens the panel with image,
 live oracle text, rulings, grounded local data, and three working buy-links.
 
-### Phase 1 — Interactive Collection  ☐
-- ☐ Browsable grid/table of all owned cards with images.
-- ☐ Live search + filters (color, type, MV, role, owned-count, price, "in a deck?").
-- ☐ Each card clickable → panel; shows which of your decks use it.
-- ☐ EDHREC inclusion / Lift "how staple is this" chip (degrade if enrichment off).
-**Acceptance:** can find any owned card in < 2s of typing; filters compose; honest name-only fallback.
+### Phase 1 — Interactive Collection  ☑
+- ☑ Browsable grid of all owned cards with images (`webapp/static/collection.js`) — lazy,
+  IntersectionObserver → batch-resolve CDN images (75/req) so a 1,800-card grid only fetches
+  what you scroll to.
+- ☑ Live search + filters: name, colors (subset), type, role, "in a deck", "priced", + sort
+  (name / value / MV). Client-side, instant.
+- ☑ Each card clickable → the shared panel (reuses Phase 0 `data-card`).
+- ☐ EDHREC inclusion / Lift "how staple is this" chip — *deferred (needs the pyedhrec data client).*
+**Acceptance:** ☑ verified — search "sol" → 12, "in a deck" → 266, role "ramp" → 40; clicking a
+card opens the panel; honest name-only note when filters need enrichment.
 
 ### Phase 2 — Manabase & consistency engine (FLAGSHIP)  ◐
 - ☑ `scripts/manabase.py` — exact hypergeometric engine (`math.comb`), verified against a known
@@ -140,3 +144,6 @@ the repo's data + live oracle text, suggesting only real cards; no Anthropic API
   Consistency/Manabase now shown on the "Build this deck" view. Bundled: ManaPool buy-link →
   direct card page (verified); `power.py` bracket wording hedged (only "B3 ≤ 3 Game Changers"
   is officially confirmed). Verified end-to-end.
+- **2026-07-23** — Phase 1 shipped: interactive Collection — searchable/filterable/sortable
+  grid of the whole collection with lazy batch-loaded images, each card clickable → panel.
+  Verified (search/filter/sort + panel). EDHREC staple chip deferred to the data client.
