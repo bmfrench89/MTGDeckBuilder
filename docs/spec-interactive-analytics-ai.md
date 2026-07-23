@@ -170,3 +170,8 @@ Code on the subscription; no Anthropic API in the app.
   inline; regenerated the name-only public snapshot (2040 cards). Discovery: Scryfall is reachable
   server-side on the player's machine, **unblocking the deferred EDHREC / Commander Spellbook**
   data clients (#30).
+- **2026-07-23** — EDHREC integration shipped: `scripts/edhrec.py` (stdlib, disk-cached) pulls a
+  commander's community staples from json.edhrec.com, computes inclusion % and cross-references
+  the collection into **owned (add) vs missing (buy)**. Surfaced on the Build Next deck view via
+  `/api/edhrec/<commander>` (async, graceful). Verified live: Y'shtola 47,640 decks → 113 owned /
+  181 missing; Atraxa 42,910 → 37 / 236. Fills the Phase 1/3 "EDHREC data client" deferral.

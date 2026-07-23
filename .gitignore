@@ -28,3 +28,6 @@ data/collection/collection_attrs.csv
 # Scryfall bulk cache (large; auto-downloaded by carddb.py)
 data/collection/scryfall-*.json
 data/collection/scryfall-*.json.part
+
+# Cached third-party data (EDHREC / CSB) — derived, regenerate on demand
+data/cache/

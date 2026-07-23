@@ -79,6 +79,7 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
 | carddb | enrich the collection (colors/types/MV/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline | mtglib |
+| edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy); disk-cached, degrades gracefully | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
 ## Web app (`webapp/`)
@@ -124,6 +125,10 @@ commanders, archetype_support).
   gitignored `collection.csv` (never the tracked snapshot) and runs `carddb.enrich_api` inline,
   so a fresh export lights up colors/types/curve/manabase with zero manual step. This also
   closed a privacy bug: uploads used to overwrite the committed name-only snapshot.
+- ✅ **EDHREC staples on the build view** — `scripts/edhrec.py` fetches a commander's community
+  staples (json.edhrec.com), computes inclusion % (num_decks/potential_decks) and splits them
+  into owned (add) vs missing (buy) against your collection. Shown on the Build Next deck page
+  (`/api/edhrec/<commander>`), cards clickable → panel. Disk-cached (`data/cache/`), stdlib-only.
 
 ## Parked ideas / backlog
 

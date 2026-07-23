@@ -37,6 +37,7 @@ import auto_build
 import manabase
 import combo_detector
 import deckcore
+import edhrec
 
 
 def _txt(text, filename):
@@ -425,6 +426,14 @@ def api_card(name):
     Local data only; the panel fetches image/oracle/rulings live from Scryfall."""
     _, idx = collection_index()
     return jsonify(card_api.card_payload(name, idx, DECKS_DIR))
+
+
+@app.route("/api/edhrec/<path:commander>")
+def api_edhrec(commander):
+    """EDHREC community staples for a commander, cross-referenced with the collection:
+    owned (add) vs missing (buy). Cached to disk; degrades to an error payload."""
+    _, idx = collection_index()
+    return jsonify(edhrec.recommendations(commander, idx))
 
 
 @app.route("/health")
