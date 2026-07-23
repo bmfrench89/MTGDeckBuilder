@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Building — Phases 0–3 shipped (4, 5 + data next)
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–3 + 5 shipped · remaining: Phase 4 + data integrations (EDHREC / Commander Spellbook)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -42,7 +42,7 @@ simulation of any kind.**
 | 2 | Manabase & consistency engine (flagship) | ☑ Engine + dashboard + wired into auto_build | #20, #23 |
 | 3 | Full auto-built decks for Build Next | ☑ v1 + images + on-view analysis (deferred: EDHREC/CSB) | #19, #21, #22, #23 |
 | 4 | Full card strategies | ☐ Not started | — |
-| 5 | AI coaching skill + export bridge | ☐ Not started | — |
+| 5 | AI coaching skill + export bridge | ☑ Done | #25 |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
 "build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool
@@ -115,13 +115,20 @@ gaps-to-buy listed; honest that it's a heuristic draft.
 - ☐ Grow `card_notes.csv` opportunistically.
 **Acceptance:** every card the user clicks yields a grounded strategy blurb (never a blank).
 
-### Phase 5 — AI coaching skill + export bridge  ☐
-- ☐ Author grounded `mtg-coach` skill: deck critique (rubric), explain-card-role,
-  rules/interaction Q&A (RAG), add/cut by candidate-pool selection, upgrade-to-bracket,
-  win-condition + pilot/mulligan write-ups, deck-vs-deck.
-- ☐ Web app "Export assessment packet" (deck + analytics + oracle text → file the skill reads).
-**Acceptance:** in a Claude Code session, the skill critiques a saved deck grounded entirely in
-the repo's data + live oracle text, suggesting only real cards; no Anthropic API cost incurred.
+### Phase 5 — AI coaching skill + export bridge  ☑
+Chose to **extend the existing `mtg-deckbuilder` skill** rather than fork a separate `mtg-coach`
+(same persona / grounding / scripts / collection — coaching is deckbuilding). Runs in Claude
+Code on the subscription; no Anthropic API in the app.
+- ☑ `references/coaching.md` — the grounded method: rubric critique, cut/add **by candidate
+  selection** (never invent cards), rules/interaction Q&A over oracle text + rulings, pilot /
+  mulligan guide, deck-vs-deck, upgrade-to-bracket.
+- ☑ SKILL.md — coaching triggers in the description, a "Coaching & assessment" workflow, and a
+  refreshed script list (manabase / combo_detector / auto_build / card_api / carddb / …).
+- ☑ Web app **"Export assessment packet"** (`/deck/<stem>/assess.txt` + "📋 Assess" on the Decks
+  leaderboard): decklist + power/bracket + consistency + combos + role/curve/pip numbers in one
+  paste-able block to hand a deck to a coaching session.
+**Acceptance:** ☑ the skill triggers on coaching asks; the assess packet renders grounded numbers
+(Bracket 3 / Power 67 / role counts / combos) for a saved deck; scripts it references all run.
 
 ---
 
@@ -147,3 +154,7 @@ the repo's data + live oracle text, suggesting only real cards; no Anthropic API
 - **2026-07-23** — Phase 1 shipped: interactive Collection — searchable/filterable/sortable
   grid of the whole collection with lazy batch-loaded images, each card clickable → panel.
   Verified (search/filter/sort + panel). EDHREC staple chip deferred to the data client.
+- **2026-07-23** — Phase 5 shipped: coaching added to the `mtg-deckbuilder` skill
+  (`references/coaching.md` + SKILL.md workflow/triggers) + the web-app "Export assessment
+  packet" bridge (`/deck/<stem>/assess.txt`, 📋 Assess on Decks). Grounded critique / cut-add by
+  candidate selection / rules Q&A / pilot guide, on the Claude subscription (no API cost).

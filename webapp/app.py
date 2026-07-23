@@ -34,6 +34,8 @@ import commander_finder as cf
 import export_manapool as ex
 import card_api
 import auto_build
+import manabase
+import combo_detector
 
 
 def _txt(text, filename):
@@ -184,6 +186,94 @@ def export_deck(stem):
     text = ex.deck_text(m["path"])
     raw = request.args.get("raw")
     return text if raw else _txt(text, f"{stem}.txt")
+
+
+def _assess_packet(m):
+    """Paste-able text block: decklist + all computed analytics, for handing a saved
+    deck to an mtg-deckbuilder COACHING session (Phase 5 bridge). All grounded numbers,
+    no opinions — the coaching happens in Claude Code on the player's subscription."""
+    coll = mtglib.load_collection(COLLECTION)
+    idx = mtglib.index_by_name(coll)
+    with open(m["path"], encoding="utf-8") as f:
+        deck = mtglib.parse_deck(f.read())
+    enriched, missing = deck_stats.analyze(deck, idx)
+    stem_path = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
+    bd.apply_attrs(enriched, bd.load_attrs(f"{stem_path}.attrs.csv"))
+    rep = deck_stats.build_report(deck, enriched, missing, idx)
+    try:
+        assessment = power.assess(enriched, rep, power.load_refs())
+    except Exception:
+        assessment = None
+    try:
+        mana = manabase.analyze(rep, enriched)
+    except Exception:
+        mana = None
+    try:
+        combos = combo_detector.for_deck(m["path"], idx)
+    except Exception:
+        combos = None
+
+    L = [f"=== ASSESSMENT PACKET — {m['title']} ===",
+         f"Commander: {m['commander']}",
+         "For grounding an mtg-deckbuilder coaching session (see the skill's references/coaching.md).",
+         "Paste this whole block and say: \"coach this deck\".", ""]
+    if assessment:
+        sig = assessment["signals"]
+        L.append("-- POWER & BRACKET --")
+        L.append(f"Bracket {assessment['bracket']} ({assessment['bracket_name']}) · "
+                 f"Power {assessment['power']}/100 ({assessment['tier']})")
+        for r in assessment["bracket_reasons"]:
+            L.append(f"  · {r}")
+        L.append(f"  interaction {sig['interaction']} · ramp {sig['ramp']} · draw {sig['draw']} · "
+                 f"lands {sig['lands']} · avg MV {sig['avg_mv']}")
+        if sig.get("game_changers"):
+            L.append(f"  Game Changers: {', '.join(sig['game_changers'])}")
+        L.append("")
+    L.append("-- ROLE COUNTS / CURVE / PIPS --")
+    L.append("  " + " · ".join(f"{k} {v}" for k, v in sorted(rep.get("categories", {}).items())))
+    if rep.get("curve"):
+        L.append(f"  curve (MV→count): {rep['curve']}")
+    if rep.get("pip_demand"):
+        L.append(f"  pip demand: {rep['pip_demand']}  ·  sources: {rep.get('color_sources')}")
+    L.append("")
+    if mana and mana.get("have_colors"):
+        L.append("-- CONSISTENCY (hypergeometric) --")
+        lo = mana.get("land_odds")
+        if lo:
+            L.append(f"  keepable hand {lo['keepable']*100:.0f}% · ≥3 lands opener "
+                     f"{lo['ge3_open']*100:.0f}% · 4th land by T4 {lo['ge4_by_t4']*100:.0f}%")
+        for c in mana["colors"]:
+            L.append(f"  {c['color']}: {c['sources']} sources (Karsten ~{c['karsten_target']}) · "
+                     f"P(≥1 opener) {c['p_open']*100:.0f}% · {c['status']}")
+        if mana["risky"]:
+            L.append("  risky to cast on curve: " +
+                     ", ".join(f"{r['name']} {r['p']*100:.0f}%" for r in mana["risky"]))
+        L.append("")
+    elif mana is not None:
+        L.append("-- CONSISTENCY -- (name-only collection: enrich for colored-source math)\n")
+    if combos and (combos.get("complete") or combos.get("near")):
+        L.append("-- COMBOS --")
+        for c in combos.get("complete", []):
+            L.append(f"  present: {c['name']} → {c['result']}")
+        for c in combos.get("near", []):
+            L.append(f"  one card away: add {c['missing']} → {c['name']}")
+        L.append("")
+    if missing:
+        L.append("-- NOT IN COLLECTION (buy-list candidates) --")
+        L.append("  " + ", ".join(x.name for x in missing))
+        L.append("")
+    L.append("-- DECKLIST --")
+    L.append(ex.deck_text(m["path"]).strip())
+    return "\n".join(L) + "\n"
+
+
+@app.route("/deck/<stem>/assess.txt")
+def deck_assess(stem):
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    text = _assess_packet(m)
+    return text if request.args.get("raw") else _txt(text, f"{stem}-assessment.txt")
 
 
 @app.route("/shared")
