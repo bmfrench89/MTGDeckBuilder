@@ -1,13 +1,14 @@
-# MTG Collection snapshot (name-only) — exported from Google Drive doc 'collection_list'
-# Date captured: 2026-07-18. Format: '<quantity> <card name>' per line.
-# This is a FALLBACK. For color/type/tribe/pip analysis, load the full Archidekt CSV export.
+# MTG Collection snapshot (name-only) — public fallback.
+# Date captured: 2026-07-23. Format: '<quantity> <card name>' per line.
+# Regenerated from the private collection.csv (ManaPool export). Ownership counts only;
+# for color/type/tribe/mana-value analysis the app uses collection.csv + enrichment.
 # Grounding: this is the source of truth for OWNERSHIP counts (Rule #1).
 1 A.I.M. Synthoids
 1 Aang's Iceberg
 1 Aang, Swift Savior
 1 Aberrant Manawurm
 1 Abolish
-2 Abomination, Terrifying Titan
+3 Abomination, Terrifying Titan
 1 About Face
 2 Abrade
 1 Absolute Grace
@@ -16,6 +17,7 @@
 1 Abyssal Specter
 1 Accumulated Knowledge
 1 Action News Crew
+2 Adrenaline Jockey
 1 Advanced Reconstruction
 1 Advancing the Spirit
 1 Adventuring Gear
@@ -23,24 +25,29 @@
 1 Aerial Doombot
 1 Aerith, Last Ancient
 1 Aetherize
+2 Aetherjacket
 2 Afterlife
 1 Agent 13, Sharon Carter
 2 Agent Maria Hill
-2 Agent Venom
 3 Agent of Atlas
+2 Agent Venom
+1 Agents of HYDRA
 1 Agents of S.H.I.E.L.D.
 1 Aggression
 1 Agna Qel'a
 1 Agonizing Memories
 1 Air Bladder
-1 Air Nomad Legacy
+2 Air Nomad Legacy
 1 Airbending Lesson
 1 Ajani's Pridemate
+1 Ajani's Response
 1 Akoum Refuge
 2 Alabaster Wall
+1 Alacrian Armory
+1 Alacrian Jaguar
 1 Aladdin's Ring
 1 Alarum
-1 Alien Invasion
+2 Alien Invasion
 1 Alien Symbiosis
 1 Alisaie Leveilleur
 1 Alley Grifters
@@ -59,16 +66,19 @@
 1 Angry Mob
 1 Angry Rabble
 1 Annul
-1 Ant-Man's Army
-1 Ant-Man, Colony Commander
+2 Ant-Man's Air Force
+2 Ant-Man's Army
+3 Ant-Man, Colony Commander
 1 Ant-Man, Elusive Avenger
 1 Ao, the Dawn Sky
 1 Apathy
+1 Apocalypse Runner
 1 Appa, Loyal Sky Bison
 1 Aquitect's Defenses
-1 Arachne, Psionic Weaver
+2 Arachne, Psionic Weaver
 1 Araña, Heart of the Spider
 1 Arc Mage
+1 Arc Reactor
 1 Arcane Denial
 1 Arcane Laboratory
 1 Arcane Sanctum
@@ -83,7 +93,9 @@
 1 Ark of Hunger
 1 Armored Pegasus
 1 Armory Automaton
+1 Arnim Zola, Bio-Fanatic
 1 Arnyn, Deathbloom Botanist
+1 Asgardian Citadel
 2 Ash Barrens
 1 Assassin's Trophy
 1 Assert Perfection
@@ -101,8 +113,8 @@
 1 Aurochs
 2 Austere Command
 1 Authority of the Consuls
-1 Avalanche Riders
 1 Avalanche of Sector 7
+1 Avalanche Riders
 1 Avatar Enthusiasts
 1 Avatar of Hope
 1 Avatar of Will
@@ -116,6 +128,7 @@
 1 Azimaet Drake
 1 Azorius Signet
 1 Azula, On the Hunt
+1 Back on Track
 1 Bagel and Schmear
 2 Balduvian Barbarians
 1 Balduvian Bears
@@ -128,18 +141,21 @@
 1 Barbarian Guides
 1 Barbed Field
 1 Baron Helmut Zemo
+1 Baron Strucker, HYDRA Overlord
 1 Barrels of Blasting Jelly
 1 Barret Wallace
 1 Barret, Avalanche Leader
 1 Barrin's Codex
-2 Bastion Protector
 1 Bastion of Remembrance
+2 Bastion Protector
 2 Battle Rampart
 2 Battlefield Forge
 2 Battlefield Percher
 1 Baxter Building
-1 Beast Within
+1 Beast Mode
 1 Beast of Burden
+2 Beast Within
+1 Beastrider Vanguard
 2 Beetle, Legacy Criminal
 1 Befoul
 1 Behemoth Sledge
@@ -149,12 +165,16 @@
 1 Beledros Witherbloom
 1 Benalish Knight
 1 Benalish Missionary
+1 Bestow Greatness
 1 Betrothed of Fire
 1 Biblioplex Tomekeeper
 1 Bident of Thassa
+1 Big Bertha
+1 Big Score
 1 Binding Grasp
+1 Bionic Blow
 1 Bitterthorn, Nissa's Animus
-1 Black Panther, Vanguard
+3 Black Panther, Vanguard
 1 Black Tom Cassidy
 1 Black Widow, Agile Avenger
 1 Black Widow, Double Agent
@@ -173,57 +193,73 @@
 1 Bloodghast
 1 Bloodgift Demon
 1 Blossoming Bogbeast
+1 Blossoming Sands
 1 Blue Mage's Cane
 1 Bog Wraith
+2 Bogwater Lumaret
 1 Bojuka Bog
 3 Bola Warrior
-1 Bold Biochemist
+2 Bold Biochemist
 1 Bonders' Enclave
 1 Bone Shredder
 2 Boomerang
+1 Boosted Sloop
 1 Borough Backup
+2 Borrowed Knowledge
 1 Bot Bashing Time
+1 Bounce Off
 1 Bouncing Beebles
 1 Brainstorm
 1 Brambleback Brute
 1 Branded Brawlers
 1 Brash Taunter
-2 Brave Brawler
+3 Brave Brawler
 1 Brazen Scourge
 1 Breach
+1 Breaching Dragonstorm
 2 Breath of Life
-1 Breath of Malfegor
+2 Breath of Malfegor
 1 Bribery
+1 Brightfield Glider
+2 Bring to Light
 1 Brink of Madness
 1 Broken Wings
 1 Bronze Guardian
+1 Brush Off
 1 Brushland
 1 Bugenhagen, Wise Elder
-3 Bullseye, Death Dealer
+1 Bulk Up
+5 Bullseye, Death Dealer
 2 Buoyancy
 1 Burning Curiosity
 1 Burnished Hart
-1 Burrog Banemaker
+2 Burrog Banemaker
+2 Burrog Barrage
 1 Burrowing
 3 Burst of Energy
 2 Cackling Witch
 1 Cait Sith, Fortune Teller
 1 Call Damage Control
 1 Calming Verse
+1 Camera Launcher
 1 Campus Composer // Aqueous Aria
 1 Cannibalize
 1 Canopy Vista
+1 Canyon Vaulter
 1 Capsize
 1 Captain America's Motorcycle
+1 Captain America's Shield
 2 Captain America, Living Legend
 1 Captain America, Team Leader
 1 Captain America, Wings of Freedom
-2 Captain Mar-Vell, Space-Born
+1 Captain Howler, Sea Scourge
+3 Captain Mar-Vell, Space-Born
 1 Captain Marvel, Apex Avenger
 1 Carrion Wall
 1 Cartographer's Hawk
 1 Castle
-1 Casualties of War
+1 Castle Doom
+2 Casualties of War
 1 Cat-Gator
 1 Cateran Enforcer
 1 Cateran Kidnappers
@@ -244,14 +280,17 @@
 1 Champion's Helm
 1 Champions from Beyond
 1 Chandra, Flameshaper
+2 Chandra, Spark Hunter
 1 Change of Heart
-4 Chaos Warp
+5 Chaos Warp
 1 Charging Strifeknight
 1 Charm Peddler
 1 Chase Inspiration
+1 Cheerful Osteomancer // Raise Dead
 1 Chieftain en-Dal
 1 Chill
 1 Chilling Apparition
+1 Chitin Gravestalker
 2 Cho-Arrim Bruiser
 1 Cho-Arrim Legate
 1 Cho-Manno's Blessing
@@ -270,25 +309,31 @@
 1 City Pigeon
 1 Claim Jumper
 1 Claim the Kingdom
+1 Clamorous Ironclad
 2 Cleansing Nova
 1 Clear
 1 Clear the Land
 1 Clever Concealment
 3 Clifftop Retreat
 1 Clot Sliver
-5 Cloud Sprite
 1 Cloud of Faeries
+5 Cloud Sprite
 2 Cloud's Limit Break
 1 Cloud, Ex-SOLDIER
 1 Cloudblazer
 1 Cloudskate
+1 Cloudspire Coordinator
+1 Cloudspire Skycycle
 1 Coastal Peak
 1 Coastal Piracy
 1 Coastal Tower
 1 Coercion
 1 Coiling Woodworm
+1 Collective Effort
 1 Colleen Wing, Street Samurai
+1 Collision Course
 1 Colossus Hammer
+2 Colossus of the Blood Age
 1 Combustible Gearhulk
 1 Combustion Man
 7 Command Tower
@@ -298,30 +343,34 @@
 1 Conqueror's Flail
 1 Conspiracy Theorist
 1 Constant Mists
-1 Construct a Cosmic Cube
+3 Construct a Cosmic Cube
 1 Containment Construct
 1 Contaminated Aquifer
 1 Contempt
+1 Contract Hero
 1 Coral Merfolk
 1 Cosmic Cube
 1 Cosmic Spider-Man
 1 Costume Closet
 5 Counterspell
+1 Country Roads
 1 Courier of Comestibles
 2 Coveted Jewel
 2 Crash
+1 Crash and Burn
 1 Crashing Wave
 1 Craven Giant
 1 Creakwood Liege
 1 Credit Voucher
 1 Crenellated Wall
-1 Crimson Operative
+2 Crimson Operative
 1 Crooked Scales
 3 Crop Rotation
 1 Crossbones, Malicious Mercenary
 1 Crossbow Ambush
 1 Crossbow Infantry
-2 Crowd of True Believers
+3 Crowd of True Believers
+1 Cruel Alliance
 1 Crush Contraband
 1 Crux of Fate
 1 Crypt Rats
@@ -332,6 +381,7 @@
 2 Cultivate
 1 Cunning Maneuver
 1 Currency Converter
+1 Cursecloth Wrappings
 2 Cursed Totem
 2 Customs Depot
 1 Cut a Deal
@@ -344,7 +394,7 @@
 1 Dark Banishing
 1 Dark Deed
 1 Dark Depths
-1 Dark Fortress
+2 Dark Fortress
 3 Dark Ritual
 1 Dark Triumph
 1 Darksteel Plate
@@ -354,13 +404,17 @@
 1 Day of Black Sun
 1 Daze
 1 Deadly Brew
+1 Deadly Dispute
 1 Deadly Tempest
+1 Death Cloud
 2 Death Pit Offering
 1 Death Speakers
 1 Death to Our Enemies
 1 Deathgazer
+1 Deathless Pilot
 1 Deceit
 1 Decimate
+1 Deduce
 1 Deepwood Drummer
 1 Deepwood Tantiv
 1 Deepwood Wolverine
@@ -396,18 +450,23 @@
 1 Disease Carriers
 5 Disenchant
 1 Dismantling Wave
+1 Dismissive Denial
 1 Dispatch
-1 Divergent Equation
+1 District Mascot
+2 Divergent Equation
+1 Diversion Unit
 1 Divine Transformation
 2 Diving Griffin
-2 Doc Ock's Henchmen
+3 Doc Ock's Henchmen
 1 Doc Ock's Tentacles
-3 Doc Ock, Sinister Scientist
+4 Doc Ock, Sinister Scientist
+2 Doc Samson, Super Psychiatrist
 1 Doctor Doom
 2 Dominate
+1 Don't Move
 1 Donatello, Way with Machines
 1 Door of Destinies
-1 Doorman
+2 Doorman
 1 Dose of Dawnglow
 1 Downhill Charge
 1 Drake Hatchling
@@ -421,47 +480,55 @@
 1 Drudge Skeletons
 1 Drumbellower
 1 Dungeon Shade
+2 Duty Beyond Death
 1 Dwarven Berserker
 1 Dwarven Ruins
+1 Eager Glyphmage
 1 Earth Kingdom Jailer
 1 Earth Kingdom Protectors
 1 Earth Rumble
 1 Earth's Mightiest Heroes
+1 Earthrumbler
 1 Eccentric Pestfinder // Turn Stones
 1 Echo, Perceptive Prodigy
 1 Eclipsed Boggart
 1 Eclipsed Flamekin
 1 Eclipsed Kithkin
 1 Eclipsed Merrow
-1 Eerie Gravestone
-1 Efflorescence
+2 Eerie Gravestone
+3 Efflorescence
 1 Ekundu Griffin
 1 Elder Auntie
 1 Electro's Bolt
 2 Electro, Assaulting Battery
 1 Electroduplicate
 1 Elektra, Daughter of the Hand
+1 Elektra, Femme Fatale
+2 Elemental Mascot
 1 Elena, Turk Recruit
 1 Elephant Grass
-1 Elite Interceptor // Rejoinder
+2 Elite Interceptor // Rejoinder
 1 Elven Cache
 1 Elven Riders
 1 Elvish Lyrist
 1 Elvish Mystic
+1 Embalmed Ascendant
 1 Emeria Angel
 1 Emeria, the Sky Ruin
 1 Emet-Selch of the Third Seat
-1 Empyrean Eagle
+2 Emil, Vastlands Roamer
+2 Empyrean Eagle
 1 Endbringer's Revel
 2 Energy Flux
 1 Enfeeblement
 1 Engineered Plague
 1 Enraged Flamecaster
+2 Environmental Scientist
 2 Epic Fight
 1 Erase
 1 Errantry
 1 Essence Filter
-2 Essence Scatter
+4 Essence Scatter
 1 Essenceknit Scholar
 1 Estinien Varlineau
 1 Eternal Student
@@ -474,14 +541,18 @@
 1 Excava, the Risen Past
 2 Excavation
 1 Excise
+1 Exhibition Tidecaller
 5 Exotic Orchard
 1 Expendable Troops
 1 Explorer's Scope
 1 Explosion of Riches
 1 Expressive Firedancer
 1 Exsanguinate
-1 Eye Spy
+1 Extinction Event
+1 Extract Power
+1 Extremis Elite
 1 Eye of Nidhogg
+1 Eye Spy
 2 Ezekiel Sims, Spider-Totem
 2 Fabled Passage
 1 Faerie Conclave
@@ -490,13 +561,14 @@
 1 Faithless Looting
 1 Falcon and Redwing
 1 Falcon's Wing Harness
-1 Falcon, Winged Wonder
+2 Falcon, Winged Wonder
 1 Fallen Angel
 2 False Demise
 1 False Prophet
 2 Familiar Ground
 2 Fanatical Devotion
 1 Fandaniel, Telophoroi Ascian
+1 Fang-Druid Summoner
 1 Farseek
 1 Fatal Fissure
 1 Fateful Tempest
@@ -516,10 +588,12 @@
 2 Fields of Strife
 1 Fiendish Panda
 1 Fiery Confluence
-1 Fin Fang Foom
+1 Fiery Emancipation
+2 Fin Fang Foom
 1 Final Act
 1 Final Fortune
 1 Final Judgment
+1 Fire Lord Azula
 1 Fire Nation Cadets
 1 Fire Nation Palace
 2 Fire Nation Raider
@@ -539,10 +613,12 @@
 1 Flaming Sword
 2 Flash Thompson, Spider-Fan
 1 Flashfires
+1 Flatman
 1 Fledgling Djinn
 2 Fling
 1 Flint Golem
 2 Flock Impostor
+2 Flood the Engine
 1 Flowstone Armor
 1 Flowstone Hellion
 1 Flowstone Shambler
@@ -550,16 +626,19 @@
 1 Flowstone Surge
 1 Flowstone Wall
 1 Flying Drone
+2 Flying Octobot
 1 Fog
 1 Fog Bank
 3 Fog Elemental
-1 Fog Patch
 1 Fog of Gnats
+1 Fog Patch
 1 Foggy Swamp Spirit Keeper
 1 Foggy Swamp Vinebender
 1 Folk Hero
+1 Foolish Fate
 1 Foraging Wickermaw
 1 Forbidding Watchtower
+2 Force of Will
 1 Foreboding Ruins
 11 Forest
 1 Fortified Village
@@ -567,10 +646,10 @@
 1 Forum of Amity
 1 Foul Familiar
 1 Foul Imp
-2 Fountain Watch
 1 Fountain of Cho
+2 Fountain Watch
 1 Foxfire
-1 Fractal Anomaly
+2 Fractal Anomaly
 1 Frantic Search
 1 Frostboil Snarl
 1 Frozen in Ice
@@ -581,14 +660,17 @@
 3 Furycalm Snarl
 1 Futurist Forge
 1 Fyndhorn Brownie
-2 G'raha Tia, Scion Reborn
+3 G'raha Tia, Scion Reborn
 1 Gallant Fowlknight
 1 Game Trail
 1 Gangrenous Zombies
+1 Gas Guzzler
 1 Gaseous Form
 1 Gaze of Pain
+1 Gearseeker Serpent
 1 Generous Gift
 1 Geode Rager
+1 Germination Practicum
 1 Gerrard's Irregulars
 2 Geyser Leaper
 1 Ghitu Encampment
@@ -598,25 +680,28 @@
 1 Ghost, Spectral Saboteur
 2 Giant Caterpillar
 2 Giant Growth
-2 Giant-Sized Flying Ant
+3 Giant-Sized Flying Ant
 1 Gideon Jura
-1 Gift of Immortality
+2 Gift of Immortality
+1 Gilded Ghoda
 1 Gilded Goose
 2 Glacial Fortress
 1 Glacial Wall
 1 Glamermite
 1 Glasses of Urza
 1 Gleaming Barrier
+1 Gleaming Bastion
 4 Glider Kids
+1 Glitch Ghost Surveyor
 2 Glittering Lynx
 2 Glittering Massif
-1 Glorious Decay
-1 Go Nuts!
+3 Glorious Decay
+2 Go Nuts!
 1 Goblin Boarders
 1 Goblin Cadets
 2 Goblin Digging Team
 1 Goblin Elite Infantry
-1 Goblin Glasswright // Craft with Pride
+3 Goblin Glasswright // Craft with Pride
 1 Goblin Hero
 1 Goblin Lackey
 2 Goblin Medics
@@ -624,6 +709,7 @@
 3 Goblin Recruiter
 1 Goblin Snowman
 2 Goblin Spelunkers
+1 Goblin Surveyor
 1 Goblin Welder
 1 Goldmeadow Nomad
 2 Gorilla Chieftain
@@ -635,38 +721,42 @@
 1 Gravedigger
 1 Gravelgill Scoundrel
 1 Gravitational Shift
+1 Graviton, Fundamental Force
 3 Green Goblin, Revenant
 1 Grim Backwoods
+1 Grim Javelineer
 1 Grim Reaper, Lethal Legionnaire
 1 Grizzly Bears
 1 Group Project
 1 Grow Extra Arms
 1 Grow from the Ashes
-1 Guardian Scalelord
 1 Guardian of Faith
-1 Guerrilla Gorilla
+1 Guardian Scalelord
+2 Guerrilla Gorilla
 1 Guided Strike
+1 Guidelight Optimizer
 1 Guru Pathik
 1 Gush
 1 Guttersnipe
 1 Guy in the Chair
-1 Gyome, Master Chef
-1 H.E.R.B.I.E. Scout Unit
-1 HULK SMASH!
-2 HYDRA Assault Robot
+2 Gyome, Master Chef
+2 H.E.R.B.I.E. Scout Unit
 1 Hama, the Bloodbender
 1 Hammer Mage
 1 Hammerhead Shark
 1 Hanged Executioner
 1 Hanna's Custody
 1 Hard-Won Jitte
+1 Hardened Academic
 1 Harmattan Efreet
 1 Harmonize
 1 Harmonized Crescendo
 1 Harsh Annotation
 1 Harvest Mage
 1 Hate Mirage
+1 Haunt the Network
 1 Haunted Crossroads
+1 Haunted Hellride
 1 Haunted Mire
 1 Havenwood Battleground
 1 Hawkeater Moth
@@ -675,6 +765,7 @@
 1 Hawkeye, Master Marksman
 1 Hawkeye, Young Avenger
 1 Haywire Mite
+1 Hazard of the Dunes
 1 Headlong Rush
 2 Healing Salve
 1 Hearth Charm
@@ -686,20 +777,23 @@
 2 Helicarrier Strike
 1 Helitrooper
 1 Hellcat, Undying Vigilante
+1 Hellish Sideswipe
 1 Hellkite Tyrant
 1 Henge of Ramos
 1 Herald of Serra
 1 Hercules, Olympian Hero
-1 Hercules, Prince of Power
+3 Hercules, Prince of Power
 1 Hermes, Overseer of Elpis
 2 Hero in Training
-2 Hero's Blade
+3 Hero's Blade
 1 Hero's Heirloom
+1 Heroes for Hire
 1 Heroes' Hangout
 1 Heroic Feast
-1 Heroic Intervention
+2 Heroic Intervention
 1 Heroic Return
 1 Heroic Sacrifice
+1 Heroic Teamwork
 1 Hibernation Sliver
 1 Hickory Woodlot
 1 Hidden Horror
@@ -710,32 +804,40 @@
 1 Hire a Crew
 1 Hired Giant
 2 Hobgoblin, Mantled Marauder
-1 Hofri Ghostforge
+2 Hofri Ghostforge
 1 Homesickness
 1 Honest Work
 1 Honorbound Page // Forum's Favor
 2 Hoodwink
 2 Hope and Glory
+1 Horizon of Progress
 1 Horn of Greed
 1 Horned Troll
 3 Horned Turtle
 2 Hot Dog Cart
+1 Hour of Defeat
 1 How to Start a Riot
 1 Howl from Beyond
 1 Howling Wolf
 1 Hraesvelgr of the First Brood
+2 HULK SMASH!
 1 Hulk, Brutal Brawler
 1 Hulk, Gamma Goliath
 1 Hulkbuster Armor
 1 Hulking Cyclops
 1 Hulkling, Burgeoning Bruiser
-1 Human Torch, Johnny Storm
+1 Hulkling, Young Avenger
+1 Hulldrifter
+2 Human Torch, Johnny Storm
 2 Humble
-1 Hydraulic Helper
+2 Hungry Graffalon
+2 HYDRA Assault Robot
+1 HYDRA Infiltration
+2 Hydraulic Helper
 1 Hydro-Man, Fluid Felon
 1 Hydroblast
 1 Hypnotic Sprite // Mesmeric Glare
-1 I Am Iron Man
+2 I Am Iron Man
 1 Icy Manipulator
 1 Idyllic Beachfront
 1 Iguana Parrot
@@ -746,6 +848,7 @@
 3 Infiltrate
 1 Inflame
 1 Insight
+1 Inspired Fire
 1 Inspired Sphinx
 1 Inspiring Statuary
 1 Instigator
@@ -758,7 +861,8 @@
 1 Invigorate
 1 Inviolability
 1 Invisible Woman, Sue Storm
-1 Iron Fist, Living Weapon
+1 Iron Fist, Hero for Hire
+2 Iron Fist, Living Weapon
 1 Iron Lad, Diverging Destiny
 1 Iron Lance
 2 Iron Maiden
@@ -767,34 +871,36 @@
 1 Iron Spider, Stark Upgrade
 2 Iron Will
 1 Ironheart, Clever Champion
-1 Irrigated Farmland
+2 Irrigated Farmland
 23 Island
 1 Isolated Chapel
 1 Isperia, Supreme Judge
 1 It'll Quench Ya!
 1 It's Clobberin' Time!
 1 Ivory Mask
+1 Jack of Hearts, Volatile Hero
 1 Jadar, Ghoulcaller of Nephalia
 1 Jadzi, Steward of Fate // Oracle's Gift
 1 Jalum Tome
 1 Jamuraan Lion
 1 Jarvis, Earth's Mightiest Butler
 1 Jasmine Dragon Tea Shop
-1 Jessica Jones, Private Eye
+2 Jessica Jones, Private Eye
 1 Jeweled Torque
 1 Jhoira's Toolbox
 1 Jhovall Rider
+1 Jibbirik Omnivore
 2 Jinxed Ring
 1 Jocasta, Automaton Avenger
 1 Johtull Wurm
 1 Jolrael's Favor
-1 Jubilant Skybonder
+2 Jubilant Skybonder
 1 June, Bounty Hunter
 1 Jungle Shrine
 1 Juxtapose
 1 K'un-Lun Warrior
 1 Ka-Zar of the Savage Land
-1 Kaervek the Merciless
+2 Kaervek the Merciless
 1 Kami of Ancient Law
 1 Kang Prime
 1 Kang, Temporal Tyrant
@@ -805,23 +911,27 @@
 1 Karmic Guide
 1 Kazuul, Tyrant of the Cliffs
 1 Keldon Berserker
+1 Kickoff Celebrations
+1 Kid Loki
 1 Killmonger, Scourge of Wakanda
 1 Kindred Discovery
 1 King Crab
+1 Kingpin's Enforcers
 2 Kirol, History Buff // Pack a Punch
 1 Kismet
 1 Kithkin Armor
 1 Kjeldoran Dead
 1 Kjeldoran Guard
 1 Klaw, Sonic Subjugator
-1 Knight of Wundagore
+2 Knight of Wundagore
 2 Knighthood
 1 Knockout Maneuver
 2 Knowledge Seeker
+1 Kolodin, Triumph Caster
 2 Kraven's Cats
 2 Kree Commandos
 1 Kree Sentinel
-1 Krile Baldesion
+2 Krile Baldesion
 1 Kris Mage
 1 Krovikan Sorcerer
 1 Kyren Glider
@@ -849,9 +959,10 @@
 1 Lawbringer
 1 Lay Waste
 1 Lead Golem
-1 Leader, Super-Genius
+2 Leader, Super-Genius
 2 Leap
 1 Leech Collector // Bloodletting
+2 Leonin Surveyor
 1 Lethal Scheme
 1 Levitation
 1 Ley Line
@@ -863,59 +974,75 @@
 2 Lightning Blast
 2 Lightning Greaves
 1 Lightning Hounds
-1 Lightning Strike
+2 Lightning Strike
+1 Lightshield Parry
+2 Lightwheel Enhancements
 1 Liminal Hold
 1 Lingering Souls
 1 Living Brain, Mechanical Marvel
+2 Living History
 1 Living Lands
 1 Lizard, Connors's Curse
 1 Llanowar Elves
 1 Llanowar Wastes
+1 Locust Spray
 1 Loki Laufeyson
-1 Loki, God of Mischief
+2 Loki, God of Mischief
 1 Lone Wolf
 1 Longbow Archer
 1 Looming Shade
-1 Lorehold Archivist // Restore Relic
+2 Lorehold Archivist // Restore Relic
 1 Lorehold Campus
 2 Lorehold Charm
 1 Lotus Field
+1 Lotusguard Disciple
 1 Love on the Battlefield
-1 Luke Cage, Power Man
+2 Loxodon Surveyor
+1 Lucky the Pizza Dog
+1 Luke Cage, Hero for Hire
+2 Luke Cage, Power Man
+1 Lumbering Worldwagon
 1 Lunge
 1 Lurking Lizards
 1 Lurking Skirge
 1 Lys Alana Informant
-1 Lyse Hext
-1 Machinesmith Automaton
-2 Madame Hydra
+2 Lyse Hext
+1 MACH-1, Swooping Scoundrel
+2 Machinesmith Automaton
+6 Madame Hydra
 1 Madame Masque
 2 Madame Web, Clairvoyant
-1 Mage Tower Referee
+2 Mage Tower Referee
 1 Mageta the Lion
 1 Mageta's Boon
 1 Magistrate's Veto
 1 Magma Mine
+1 Magmakin Artillerist
 1 Magmatic Force
-2 Make Your Move
+3 Make Your Move
 1 Mana Geyser
 1 Mana Prism
 1 Mana Short
 1 Mana Vapors
 1 Manta Ray
 1 Marsh Boa
+1 Marshals' Pathcruiser
 1 Martyr's Cause
+2 Marvel Boy, Noh-Varr
+1 Marvelous Melee
 1 Mask of Law and Grace
 1 Mask of Memory
 3 Masked Meower
-1 Master Pakku
 1 Master of Arms
+1 Master Pakku
 1 Masterful Flourish
 1 Matt Murdock, Justice Seeker
-1 Mazirek, Kraul Death Priest
+1 Maximum Overdrive
+2 Mazirek, Kraul Death Priest
 1 Meandering River
 1 Meanders Guide
 1 Megrim
+1 Melancholic Poet
 2 Memory Lapse
 1 Merchant of Venom
 5 Merfolk of the Pearl Trident
@@ -925,7 +1052,7 @@
 1 Methods of the Mighty
 1 Michelangelo's Technique
 1 Midnight Tilling
-1 Migratory Route
+2 Migratory Route
 1 Miles Morales
 1 Millikin
 1 Millstone
@@ -934,12 +1061,14 @@
 1 Mischievous Poltergeist
 1 Misdirection
 1 Misstep
-1 Mister Fantastic, Reed Richards
+1 Mister Fantastic
+2 Mister Fantastic, Reed Richards
 1 Mister Hyde, Monster Within
+1 Mister Immortal
 1 Mistmeadow Council
 1 Mistmoon Griffin
 1 Mistveil Plains
-2 Misty Knight, Hero for Hire
+3 Misty Knight, Hero for Hire
 1 Mjölnir, Hammer of Thor
 2 Mob Justice
 2 Mockingbird, Ace Agent
@@ -948,10 +1077,12 @@
 1 Mogg Salvage
 1 Mogg Toady
 1 Moldervine Reclamation
-1 Mole Man, Moloid Master
+2 Mole Man, Moloid Master
+2 Molly Hayes, Runaway
 1 Molten Slagheap
 1 Molting Harpy
 1 Moment of Silence
+1 Momentum Breaker
 3 Momo, Friendly Flier
 2 Monk Idealist
 2 Monk Realist
@@ -961,7 +1092,7 @@
 1 Moon Sprite
 1 Moonlit Wake
 1 Moonshaker Cavalry
-1 Moonstone, Harsh Mistress
+2 Moonstone, Harsh Mistress
 1 Moorland Haunt
 1 Morbid Opportunist
 1 Morbius the Living Vampire
@@ -978,13 +1109,16 @@
 1 Mulch
 1 Multani's Acolyte
 2 Multani's Presence
+1 Muraganda Raceway
 1 Murderous Rider // Swift End
 1 Murdock's Crusade
 1 Muse's Encouragement
+1 Mutant Surveyor
 1 Mutant Town Musicians
 1 Muzzle
 1 Mycoloth
 1 Myriad Landscape
+1 Mysterio's Mirage
 1 Mysterio's Phantasm
 1 Mystic Compass
 1 Mystic Monastery
@@ -994,6 +1128,7 @@
 1 Naktamun Lorespinner // Wheel of Fortune
 1 Nameless Inversion
 1 Namor the Sub-Mariner
+1 Namora, the Sea Queen
 1 Nature's Lore
 1 Nature's Resurgence
 1 Necroblossom Snarl
@@ -1001,10 +1136,12 @@
 1 Nether Traitor
 3 News Helicopter
 1 Nick Fury, Agent of S.H.I.E.L.D.
-1 Night Nurse, Healer of Heroes
+2 Night Nurse, Healer of Heroes
 1 Night's Whisper
 1 Nightwind Glider
 1 Nihil Spellbomb
+3 Nimble Thopterist
+3 Nita, Forum Conciliator
 1 Niv-Mizzet, Visionary
 2 Noble Purpose
 1 Noggle the Mind
@@ -1020,13 +1157,16 @@
 1 Off Balance
 1 Ogre Warrior
 1 Ohran Frostfang
-1 Okoye, Dora Milaje Leader
+2 Okoye, Dora Milaje Leader
+2 Old-Growth Educator
 2 Omashu City
 1 Ominous Harvest
+1 Ooze Patrol
 2 Opal Caryatid
 1 Opal Champion
 1 Opal Gargoyle
 1 Opal Titan
+1 Open the Way
 1 Ophidian
 1 Ophiomancer
 1 Opportunity
@@ -1036,7 +1176,9 @@
 1 Order of Yawgmoth
 1 Origin of Metalbending
 1 Origin of Spider-Man
-1 Origin of the Avengers
+2 Origin of the Avengers
+2 Origin of the Hulk
+1 Origin of Thor
 1 Orim's Cure
 2 Oscorp Research Team
 1 Ostrich-Horse
@@ -1053,6 +1195,7 @@
 1 Panther Warriors
 1 Papalymo Totolymo
 1 Paradox Gardens
+2 Paradox Surveyor
 2 Parch
 1 Parker Luck
 2 Passenger Ferry
@@ -1061,17 +1204,19 @@
 4 Path of Ancestry
 1 Path of Peace
 1 Path to Exile
-2 Patriot, Shield Wielder
+3 Patriot, Shield Wielder
 1 Pawn of Ulamog
 2 Peace and Quiet
 1 Peat Bog
+1 Pedal to the Metal
 1 Pegasus Charger
 1 Pensive Professor
 1 Perpetual Timepiece
 1 Pest Infestation
+2 Pest Mascot
 1 Pest Rescuer
 1 Pestbrood Sloth
-1 Pet Avengers
+2 Pet Avengers
 1 Peter Parker's Camera
 1 Phantasmal Terrain
 1 Phantom Warrior
@@ -1084,23 +1229,27 @@
 1 Pilgrim's Eye
 1 Pillage
 2 Pious Warrior
+1 Pit Automaton
 39 Plains
 1 Planar Collapse
 1 Planar Engineering
 1 Plaza of Heroes
+1 Plow Through
 1 Plumb the Forbidden
 1 Political Triumph
 1 Polymorph
 1 Port Inspector
 3 Port Town
+1 Pothole Mole
 2 Power Sink
-2 Powerful Broker
+4 Powerful Broker
 1 Pradesh Gypsies
 3 Prairie Stream
 1 Predator, Flagship
+1 Pride of the Road
 1 Priest of Forgotten Gods
 2 Priest of Titania
-1 Primary Research
+2 Primary Research
 1 Prismabasher
 1 Prismatic Circle
 1 Prismatic Ward
@@ -1120,6 +1269,8 @@
 1 Psychic Transfer
 1 Psychic Venom
 1 Puffer Extract
+1 Pull from the Grave
+1 Pumpkin Bombardment
 1 Punishing Punch
 1 Puppet's Verdict
 1 Puresteel Paladin
@@ -1130,11 +1281,14 @@
 1 Pyroclasm
 1 Pyrotechnics
 1 Quagmire Lamprey
-1 Quandrix Charm
+3 Quandrix Charm
+1 Quantum Reduction
+1 Quicksilver, Brash Blur
 1 Quicksilver, Speedster
-1 Quintorius, Field Historian
+1 Quinjet Technician
+3 Quintorius, Field Historian
 1 Quintorius, History Chaser
-1 Quintorius, Loremaster
+2 Quintorius, Loremaster
 1 Rabaroo Troop
 1 Radiant Grove
 2 Radiant Summit
@@ -1147,7 +1301,7 @@
 1 Rain of Tears
 1 Raise Dead
 1 Raise the Palisade
-1 Rakdos Charm
+2 Rakdos Charm
 1 Rakdos Signet
 1 Rakshasa Debaser
 1 Rally of Wings
@@ -1157,10 +1311,12 @@
 1 Ramosian Sergeant
 1 Ramosian Sky Marshal
 3 Rampant Growth
-1 Rancor
+2 Rancor
+1 Rancorous Archaic
+1 Rangers' Refueler
 1 Ransack
 1 Raphael, Most Attitude
-2 Rapid Rescue
+3 Rapid Rescue
 1 Rapier Wit
 1 Rappelling Scouts
 1 Rathi Fiend
@@ -1177,29 +1333,32 @@
 1 Rebound
 2 Rebuild
 2 Reckless Abandon
-1 Reconnaissance Mission
+1 Reckless Velocitaur
+2 Reconnaissance Mission
 1 Red Guardian, Super-Soldier
-2 Red Hulk
+3 Red Hulk
+1 Red Room Recruit
 1 Red XIII, Proud Warrior
-1 Rehearsed Debater
+2 Rehearsed Debater
 1 Reign of the Pit
-1 Relic Retriever
 2 Relic of Legends
+1 Relic Retriever
 1 Reliquary Monk
 1 Reluctant Dounguard
 1 Remedy
 2 Remorseful Cleric
 1 Remote Farm
 1 Remove Soul
+2 Render Speechless
 1 Rending Volley
 1 Renounce
 1 Rent Is Due
 1 Repopulate
-1 Reptil, Dinomorpher
+2 Reptil, Dinomorpher
 2 Repulsor Blast
 1 Requisition Raid
 1 Rescind
-2 Rescue, Pepper Potts
+3 Rescue, Pepper Potts
 1 Resistance Fighter
 2 Restorative Technique
 1 Rethink
@@ -1223,29 +1382,39 @@
 1 Ribtruss Roaster
 1 Rick Jones, Destined Sidekick
 2 Righteous Aura
+1 Righteous Fury
 1 Righteous Indignation
 1 Rimefire Torque
 1 Ring of Gix
 2 Rip Apart
 2 Rishadan Airship
 1 Rishadan Brigand
+1 Risky Shortcut
 1 Rite of Replication
+1 Riverpyre Verge
+1 Roadside Assistance
 1 Roaming Throne
 1 Robotics Mastery
 1 Rockalanche
 1 Rocket-Powered Goblin Glider
+1 Rocketeer Boostbuggy
+1 Rocky Roads
 1 Rogue Elephant
 2 Romantic Rendezvous
 1 Ronin, Shadow Stalker
 1 Rootbound Crag
 3 Rootwater Commando
 1 Rough Rhino Cavalry
+1 Rover Blades
 1 Rowdy Snowballers
-2 Rubble Rouser
+4 Rubble Rouser
+1 Rugged Highlands
 2 Rugged Prairie
 1 Ruination
 1 Rumble Arena
 2 Run Away Together
+1 Run Behind
+1 Run Over
 1 Rune of Protection: Black
 2 Rune of Protection: Blue
 1 Rune of Protection: Green
@@ -1253,10 +1422,9 @@
 1 Rushwood Dryad
 3 Rushwood Herbalist
 1 S.H.I.E.L.D. Deployment Drone
+1 S.H.I.E.L.D. Flying Car
 1 S.H.I.E.L.D. Helicarrier
-3 S.H.I.E.L.D. Spy Kit
-1 SOLDIER Military Program
-1 SP//dr, Piloted by Peni
+4 S.H.I.E.L.D. Spy Kit
 1 Saber-Tooth Moose-Lion
 1 Sacred Nectar
 2 Sacred Peaks
@@ -1284,15 +1452,19 @@
 1 Scarlet Spider, Ben Reilly
 1 Scarlet Spider, Kaine
 1 Scarlet Witch, Chaotic Avenger
+1 Scathing Shadelock // Venomous Words
 3 Scavenger Grounds
 1 Scent of Jasmine
 1 Scent of Nightshade
+1 Scheming Silvertongue // Sign in Blood
 1 School Daze
 1 Scientist Supreme of A.I.M.
 1 Scorched Geyser
 1 Scorched Ruins
 2 Scorpion, Seething Striker
+1 Scoured Barrens
 1 Scout the City
+1 Scrap Compactor
 5 Scrapheap
 1 Scythe Specter
 2 Sea Eagle
@@ -1307,12 +1479,13 @@
 1 Seasoned Marshal
 1 Secluded Courtyard
 1 Secret Identity
+1 Secret Invasion
 2 Secret Rendezvous
 1 Secret Tunnel
 1 Segovian Leviathan
-1 Seize the Spoils
+3 Seize the Spoils
 1 Sejiri Refuge
-2 Selfless Police Captain
+3 Selfless Police Captain
 1 Selfless Safewright
 1 Selfless Spirit
 1 Send in the Pest
@@ -1325,14 +1498,15 @@
 1 Serra's Embrace
 1 Sever Soul
 1 Sevinne's Reclamation
-1 Shadow Rift
 2 Shadow of the Goblin
+1 Shadow Rift
 1 Shang-Chi and the Ten Rings
+1 Shang-Chi, Master of Kung Fu
 1 Shanodin Dryads
 1 Sharding Sphinx
 1 Shared Roots
 1 Shatter
-1 Shattered Acolyte
+2 Shattered Acolyte
 1 She-Hulk, Jade Defender
 1 She-Hulk, Wallbreaker
 2 Shield Dancer
@@ -1351,26 +1525,31 @@
 1 Sign in Blood
 1 Silk Net
 3 Silk, Web Weaver
+1 Silken Strength
 1 Silkenfist Fighter
 1 Silkenfist Order
 1 Silt Crawler
+1 Silumgar, the Drifting Death
 1 Silver Sable, Mercenary Leader
 1 Silverglade Pathfinder
 2 Silverquill Charm
 1 Simian Grunts
+1 Simulacrum Synthesizer
 1 Sizzling Changeling
 1 Skullclamp
 1 Sky Diamond
-1 Skycat Sovereign
+2 Skycat Sovereign
 1 Skyclave Apparition
 1 Skycloud Expanse
 1 Skycoach Conductor // All Aboard
 1 Skyscanner
+1 Skyserpent Seeker
 1 Skyshroud Archer
 1 Skyshroud Cutter
 2 Skyshroud Poacher
 1 Skyshroud Ridgeback
 2 Skyshroud Sentinel
+1 Skystreak Engineer
 1 Slayers' Stronghold
 1 Slippery Karst
 4 Sluggishness
@@ -1380,15 +1559,18 @@
 1 Snag
 1 Snap
 2 Sneaky Homunculus
-1 Sneering Shadewriter
+3 Sneering Shadewriter
+1 Snooping Page
 1 Snorting Gahr
 1 Snow Devil
 1 Snowfall
 1 Snuff Out
 1 Soar
-1 Social Snub
+3 Social Snub
 1 Sokka, Lateral Strategist
+1 Sokka, Tenacious Tactician
 7 Sol Ring
+1 SOLDIER Military Program
 1 Solemn Simulacrum
 1 Solstice Revelations
 1 Soltari Lancer
@@ -1404,18 +1586,21 @@
 1 Sourbread Auntie
 1 South Pole Voyager
 1 Southern Air Temple
+1 SP//dr, Piloted by Peni
 1 Spawning Pool
-1 Spectacle Summit
+2 Spectacle Summit
 1 Spectacular Skywhale
 1 Spectacular Spider-Man
 4 Spectacular Tactics
 1 Spectator Seating
 1 Specter's Wail
 1 Spectral Guardian
-2 Speed, Young Avenger
+3 Speed, Young Avenger
+2 Speedball, New Warrior
 1 Spell Blast
+1 Spell Pierce
 1 Spell Snare
-1 Spellbook Seeker // Careful Study
+2 Spellbook Seeker // Careful Study
 1 Sphinx of Enlightenment
 1 Sphinx's Revelation
 2 Spider-Bot
@@ -1434,9 +1619,11 @@
 1 Spider-Slayer, Hatred Honed
 2 Spider-Suit
 4 Spider-UK
-3 Spider-Woman, Secret Agent
+5 Spider-Woman, Secret Agent
 1 Spiders-Man, Heroic Horde
 1 Spike Worker
+1 Spikeshell Harrier
+1 Spin Out
 1 Spined Sliver
 1 Spinneret and Spiderling
 1 Spire of Industry
@@ -1446,6 +1633,7 @@
 1 Spiteful Visions
 1 Spitting Drake
 1 Spitting Spider
+1 Spotcycle Scouter
 1 Springbloom Druid
 1 Spur Grappler
 1 Squall
@@ -1455,34 +1643,43 @@
 1 Staff of the Storyteller
 1 Staggering Insight
 1 Stalactite Dagger
+1 Stall Out
 1 Stamina
 3 Stampede Driver
 2 Standing Troops
 1 Stargaze
-1 Stark Industries Executive
+1 Stark Industries
+2 Stark Industries Executive
 6 Starling, Aerial Ally
+2 Startled Relic Sloth
 1 Stature, Size Shifter
 1 Staunch Defenders
 1 Steadfast Guard
 1 Steal Strength
 2 Steel Wrecking Ball
 1 Steel-Plume Marshal
-1 Steelshaper's Gift
+2 Steelshaper's Gift
+1 Steely Resolve
 3 Stegron the Dinosaur Man
 1 Stensia Bloodhall
 1 Stensian Sanguinist // Exsanguinate
 1 Stern Proctor
 1 Stinging Barrier
+2 Stirring Honormancer
+1 Stirring Hopesinger
+1 Stolen Stark Tech
 2 Stone Docent
 2 Stone Rain
 1 Storm Crow
 1 Storm Herd
+3 Storm, Windrider
 1 Stormcarved Coast
-1 Stormfist Crusader
+2 Stormfist Crusader
 2 Story Circle
 1 Strands of Night
+1 Streaking Oilgorger
 1 Stream of Life
-1 Stress Dream
+3 Stress Dream
 1 Strife Scholar // Awaken the Ages
 1 Strix Lookout
 1 Strixhaven Skycoach
@@ -1494,6 +1691,7 @@
 1 Stunning Shot
 1 Sublime Epiphany
 2 Submerge
+1 Subterranean Cavern
 1 Subterranean Hangar
 1 Suburban Sanctuary
 1 Subway Train
@@ -1502,12 +1700,12 @@
 1 Sulfur Falls
 1 Sulfurous Springs
 1 Summon: Good King Mog XII
-1 Summon: Kujata
-1 Summoned Dromedary
+2 Summoned Dromedary
 1 Summoning Materia
 1 Sun Titan
 1 Sun-Blessed Healer
-1 Sun-Spider, Nimble Webber
+3 Sun-Spider, Nimble Webber
+1 Sunbillow Verge
 1 Sunbird's Invocation
 1 Sungrass Prairie
 2 Sunken Field
@@ -1516,10 +1714,11 @@
 1 Sunlit Marsh
 1 Sunpetal Grove
 2 Sunscorched Divide
+1 Super Intelligence
 1 Super Speed
 1 Super Strength
 1 Super Suit
-1 Super Villain Lockup
+2 Super Villain Lockup
 1 Super-Skrull
 4 Superior Foes of Spider-Man
 1 Supportive Parents
@@ -1528,15 +1727,16 @@
 1 Sustenance
 1 Svyelunite Temple
 27 Swamp
+1 Swiftwing Assailant
 2 Sword of the Animist
 4 Swords to Plowshares
 1 Swordsman, Sharp Scoundrel
 1 Symbiote Spider-Man
+1 Syphon Fuel
 2 Syphon Mind
 2 Syphon Soul
-1 TCRI Building
 1 Tablet of Discovery
-3 Take Up the Shield
+5 Take Up the Shield
 1 Talisman of Conviction
 1 Talisman of Creativity
 1 Talisman of Dominance
@@ -1546,9 +1746,10 @@
 1 Talruum Minotaur
 1 Tarpan
 1 Task Force
-1 Taskmaster, Mercenary Mimic
+2 Taskmaster, Mercenary Mimic
 1 Tataru Taru
 2 Taxi Driver
+1 TCRI Building
 1 Teacher's Pest
 1 Team Tactics
 1 Tectonic Break
@@ -1557,14 +1758,14 @@
 1 Temple of Enlightenment
 1 Temple of Malady
 1 Temple of Malice
-1 Temple of Triumph
 1 Temple of the False God
+1 Temple of Triumph
 1 Tendershoot Dryad
 1 Tendrils of Despair
 1 Teo, Spirited Glider
 1 Terminate
 1 Terrain Generator
-3 Terramorphic Expanse
+4 Terramorphic Expanse
 1 Terrific Team-Up
 1 Terror
 1 Teshar, Ancestor's Apostle
@@ -1575,54 +1776,67 @@
 1 The Boulder, Ready to Rumble
 1 The Cave of Two Lovers
 2 The Clone Saga
+1 The Coming of Galactus
 2 The Death of Gwen Stacy
+2 The Kingpin of Crime
 1 The Masters of Evil
 1 The Mechanist, Aerial Artisan
-1 The Mighty Thor, Jane Foster
+3 The Mighty Thor, Jane Foster
 1 The Mind Stone
 1 The Scarlet Witch
-1 The Super Hero Civil War
+2 The Serpent Society
+5 The Super Hero Civil War
 1 The Thing, Ben Grimm
-1 The Unbeatable Squirrel Girl
+2 The Unbeatable Squirrel Girl
 1 The Ur-Dragon
 2 The Vision
 1 The Wasp, Winsome Avenger
+1 The Whizzer, Classic Speedster
 1 The Wondrous Wasp
-1 Theater of Horrors
+2 Theater of Horrors
 1 Thermal Glider
 1 Thermo-Alchemist
 1 Thicket Basilisk
-1 Think Twice
+2 Think Twice
 1 Thirst for Knowledge
-1 Thor Odinson
-1 Thor, Asgard's Avenger
+2 Thor Odinson
+2 Thor, Asgard's Avenger
 5 Thornwind Faeries
+1 Thornwood Falls
 3 Thought Vessel
 1 Thoughtweft Charge
 1 Thran Lens
 1 Thran Weaponry
 1 Thresher Beast
+2 Thriving Bluff
+1 Thriving Grove
+1 Thriving Isle
 1 Throne of Bone
 1 Thunderbolts Conspiracy
 2 Thunderclap
 1 Thunderclap Wyvern
+1 Thunderhead Gunner
 2 Thwart
 2 Thwip!
+1 Ticket Tortoise
 4 Tidal Bore
 1 Tide Skimmer
 1 Tifa, Martial Artist
+1 Tiger Shark, Abyssal Hunter
 1 Tigra, Feline Fury
 1 Time Ebb
 1 Time Wipe
 1 Timid Drake
 1 Tinker
+1 Tippy-Toe, Terrific Partner
 1 Titan Hunter
 1 Titan's Grave
-1 Titania, Rugged Rumbler
+2 Titania, Rugged Rumbler
 1 Tocasia's Welcome
 1 Tolarian Drake
 1 Tolarian Winds
 1 Tombstone, Career Criminal
+2 Tome Blast
 2 Tome of Legends
 1 Tonic Peddler
 1 Too Evil to Stay Dead
@@ -1635,8 +1849,10 @@
 1 Trailblazer's Boots
 1 Trained Orgg
 1 Training Compound
-1 Tranquil Cove
+1 Training Regimen
+2 Tranquil Cove
 1 Tranquility
+1 Transit Mage
 1 Transpose
 1 Trap Runner
 1 Treefolk Mystic
@@ -1647,8 +1863,9 @@
 4 Tremor
 1 Trenching Steed
 2 Trickster Mage
-1 Trickster's Stratagem
-1 Truck Toss
+3 Trickster's Stratagem
+2 Trip Up
+2 Truck Toss
 1 Trudge Garden
 1 True Conviction
 1 Trystan, Callous Cultivator
@@ -1665,31 +1882,36 @@
 1 Ultimate Green Goblin
 1 Ultimate Magic: Holy
 1 Ultimate Magic: Meteor
-1 Ultron Drone
+2 Ultron Drone
+1 Ultron, Artificial Malevolence
 1 Umbral Collar Zealot
 1 Unclaimed Territory
-1 Undercover Skrull
+2 Undercover Skrull
 1 Underground River
 1 Undo
 7 Unearth
 1 Unexpected Assistance
 1 Unfinished Business
 1 University Campus
-1 Unlicensed Disintegration
+2 Unlicensed Disintegration
+1 Unlucky Witness
 2 Unstable Experiment
+1 Unstoppable Plan
+1 Unsubtle Mockery
 1 Unsummon
 3 Uphill Battle
 1 Urborg Volcano
-1 Urianger Augurelt
+2 Urianger Augurelt
 1 Urza's Blueprints
 1 Vampire Gourmand
 1 Vampire Nighthawk
 1 Vandalblast
-1 Vanguard Seraph
 1 Vanguard of the Restless
+1 Vanguard Seraph
 1 Vanquish the Horde
 1 Veiled Apparition
 1 Veinwitch Coven
+1 Veloheart Bike
 1 Vendetta
 1 Venerable Monk
 1 Venerable Warsinger
@@ -1702,19 +1924,22 @@
 1 Viashino Runner
 1 Viashino Sandscout
 1 Vibranium Energy Daggers
-1 Villainous Hideout
+2 Vibrant Outburst
+2 Villainous Hideout
 1 Vincent, Vengeful Atoner
 1 Vindicate
 2 Vine Trellis
 1 Vintara Elephant
 1 Viridescent Bog
+1 Virtuous Variant
 1 Virulent Emissary
 1 Viscera Seer
-1 Vision of Love
+2 Vision of Love
 1 Vision, Synthezoid Avenger
 1 Visions of Beyond
 1 Vitalize
-1 Viv Vision, Teen Synthezoid
+1 Vito, Thorn of the Dusk Rose
+2 Viv Vision, Teen Synthezoid
 1 Vizzerdrix
 1 Voice of Grace
 2 Voice of Truth
@@ -1722,9 +1947,12 @@
 1 Volcanic Villain
 1 Volcanic Wind
 1 Vow of Duty
+1 Voyage Home
+1 Voyager Quickwelder
 1 Vulture, Scheming Scavenger
+1 Wakanda Forever!
 1 Wakandan Drone Flock
-1 Wakandan Royal Guard
+2 Wakandan Royal Guard
 1 Walking Sponge
 1 Wall Crawl
 1 Wall of Essence
@@ -1754,7 +1982,7 @@
 2 Weatherseed Faeries
 1 Web Up
 5 Web-Shooters
-2 Web-Warriors
+4 Web-Warriors
 1 West Coast Expansion
 1 Whiplash, Vengeful Engineer
 1 White Auracite
@@ -1763,30 +1991,36 @@
 2 White Widow, Free Agent
 1 Whoosh!
 1 Wiccan, Rising Magician
+1 Widow's Bite
 1 Wight of the Reliquary
 1 Wild Griffin
 2 Wild Growth
-1 Wild Hypothesis
+3 Wild Hypothesis
 1 Wild Jhovall
 1 Wild Might
-3 Wild Pack Squad
+4 Wild Pack Squad
 1 Wild Ricochet
 1 Wildfire Devils
+2 Wildgrowth Archaic
+1 Willowrush Verge
+2 Wilt in the Heat
 1 Wind Spirit
 1 Windreader Sphinx
 1 Windscouter
 1 Winged Sliver
 1 Winged Words
-1 Winter Soldier, Reborn Avenger
-1 Wisdom of Ages
+2 Winter Soldier, Reborn Avenger
+2 Wisdom of Ages
 2 Wisecrack
 1 Wishmonger
 1 Witch of the Moors
 1 Witherbloom Campus
-1 Witherbloom Charm
+2 Witherbloom Charm
 1 Witherbloom Command
+1 Witherbloom, the Balancer
 1 Woe Strider
 1 Wolfbat
+1 Wonder Man, Hollywood Hero
 1 Wooded Ridgeline
 1 Woodland Cemetery
 1 Woodripper
@@ -1794,7 +2028,9 @@
 1 World War Hulk
 2 Worlds Within Worlds
 1 Worn Powerstone
-1 Wraith, Vicious Vigilante
+2 Wraith, Vicious Vigilante
+2 Wreck Remover
+1 Wreckage Wickerfolk
 1 Wrecking Ball Arm
 1 Y'shtola, Night's Blessed
 1 Yahenni, Undying Partisan

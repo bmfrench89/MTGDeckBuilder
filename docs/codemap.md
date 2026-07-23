@@ -120,11 +120,12 @@ commanders, archetype_support).
   (no ~40 MB download). Resolves each owned card by exact printing (`set`+`collector_number`,
   or a Scryfall id) with a name fallback; ~1 request per 75 cards, stdlib-only; bulk kept as
   the `--bulk`/`--download-bulk` offline path. Verified 2040/2040 on the real collection.
+- ✅ **Auto-enrich on collection upload** — `/collection/upload` saves to the private,
+  gitignored `collection.csv` (never the tracked snapshot) and runs `carddb.enrich_api` inline,
+  so a fresh export lights up colors/types/curve/manabase with zero manual step. This also
+  closed a privacy bug: uploads used to overwrite the committed name-only snapshot.
 
 ## Parked ideas / backlog
 
-- **Auto-enrich on collection upload** (zero manual step) — call `carddb.enrich_api` from the
-  webapp upload route so `collection_attrs.csv` regenerates automatically. Small follow-on now
-  that the API path exists.
 - EDHREC (`pyedhrec`) staple/inclusion chip + buy-to-complete · Commander Spellbook combos ·
   Phase 4 generated card strategies. See the feature tracker.

@@ -56,6 +56,10 @@ def _default_collection():
 
 
 COLLECTION = _default_collection()
+# Uploads ALWAYS write here — the private, gitignored CSV — never the tracked
+# name-only snapshot, so a priced export can't leak into a public repo.
+COLLECTION_CSV = os.path.join(ROOT, "data/collection/collection.csv")
+COLLECTION_ATTRS = os.path.join(ROOT, "data/collection/collection_attrs.csv")
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
@@ -392,7 +396,17 @@ def collection_add():
 def collection_upload():
     f = request.files.get("csv")
     if f and f.filename:
-        f.save(COLLECTION)
+        # Save to the private, gitignored CSV — never the tracked snapshot (a priced
+        # export must not land in a public repo). Then enrich the whole collection so
+        # colors / types / mana value / image ids are ready and the analytics light up.
+        global COLLECTION
+        f.save(COLLECTION_CSV)
+        COLLECTION = COLLECTION_CSV
+        try:
+            import carddb
+            carddb.enrich_api(COLLECTION_CSV, COLLECTION_ATTRS)
+        except Exception:
+            pass  # best-effort — the raw collection still loads without attributes
     return redirect(url_for("collection_view"))
 
 
