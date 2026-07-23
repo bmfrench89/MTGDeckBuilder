@@ -16,7 +16,7 @@ engines**, which feed **presentation spokes** (`build_dashboard`, `card_api`,
 flowchart TB
   subgraph HUBS["🎯 Hubs — foundation (stdlib + each other only)"]
     mtglib["<b>mtglib</b><br/>Card model · deck/collection parsing<br/>classify (roles) · pip math · load_collection"]
-    deckcore["<b>deckcore</b><br/>shared helpers: attrs / notes / sections / buylist<br/>card-notes KB · role labels<br/><i>(R2) analyze_deck() → one DeckAnalysis</i>"]
+    deckcore["<b>deckcore</b><br/>shared helpers: attrs / notes / sections / buylist<br/>card-notes KB · role labels<br/>analyze_deck() → one pipeline for every consumer"]
   end
 
   subgraph ENGINES["⚙️ Analysis engines (stdlib + mtglib)"]
@@ -107,10 +107,12 @@ commanders, archetype_support).
 
 - **R1 ✅ done** — extract shared helpers into `deckcore`; break the `build_dashboard`
   circular imports. Behavior-identical (UAT harness byte-for-byte).
-- **R2 (next)** — add `deckcore.analyze_deck() → DeckAnalysis` so the ~5 places that
-  re-assemble the deck pipeline (build_dashboard.generate, auto_build, power.build_for_deck,
-  manabase CLI, webapp `_assess_packet`) call one function.
-- **R3 (optional)** — split `build_dashboard`'s section renderers if still unwieldy after R2.
+- **R2 ✅ done** — `deckcore.analyze_deck()` / `analyze_cards()`; `build_dashboard.generate`,
+  the webapp assess packet, and `auto_build` now call one pipeline (`power.build_for_deck` +
+  the `manabase` CLI stay as the low-level primitives). Behavior-identical (UAT byte-for-byte).
+- **R3 — deferred (optional).** `build_dashboard` is now cohesive (pure rendering + card panel);
+  splitting its section renderers is polish, not needed for the hub-and-spoke. Revisit only if
+  it grows.
 
 ## Parked ideas / backlog
 
