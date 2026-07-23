@@ -34,6 +34,7 @@ import deck_fit
 import similar_commanders as simc
 import combo_detector
 import manabase
+import deckcore
 
 THEMES = {
     "default": {
@@ -1137,16 +1138,13 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     """Load a deck + collection and return rendered HTML. Shared by the CLI and
     the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
     'report': dict}."""
-    with open(deck_path, encoding="utf-8") as f:
-        deck = mtglib.parse_deck(f.read())
-    coll = mtglib.load_collection(collection_path)
-
+    # One pass through the shared analysis hub (load + enrich + report + power +
+    # manabase + combos) — the same pipeline the assess packet + auto-builder use.
+    a = deckcore.analyze_deck(deck_path, collection_path)
+    coll, idx, deck = a["coll"], a["idx"], a["deck"]
+    enriched, missing, rep = a["enriched"], a["missing"], a["report"]
+    assessment, mana, combos, attrs = a["assessment"], a["mana"], a["combos"], a["attrs"]
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
-    idx = mtglib.index_by_name(coll)
-    enriched, missing = deck_stats.analyze(deck, idx)
-    attrs = load_attrs(f"{stem}.attrs.csv")
-    apply_attrs(enriched, attrs)
-    rep = deck_stats.build_report(deck, enriched, missing, idx)
 
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
@@ -1160,21 +1158,9 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         except Exception:
             shared = None
     try:
-        assessment = power.assess(enriched, rep, power.load_refs())
-    except Exception:
-        assessment = None
-    try:
         _, _, similar = simc.find(deck_path, idx, simc.load_commanders(), attrs)
     except Exception:
         similar = None
-    try:
-        combos = combo_detector.for_deck(deck_path, idx)
-    except Exception:
-        combos = None
-    try:
-        mana = manabase.analyze(rep, enriched)
-    except Exception:
-        mana = None
 
     try:
         refs = power.load_refs()

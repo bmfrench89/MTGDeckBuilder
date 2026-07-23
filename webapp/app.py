@@ -36,6 +36,7 @@ import card_api
 import auto_build
 import manabase
 import combo_detector
+import deckcore
 
 
 def _txt(text, filename):
@@ -192,26 +193,9 @@ def _assess_packet(m):
     """Paste-able text block: decklist + all computed analytics, for handing a saved
     deck to an mtg-deckbuilder COACHING session (Phase 5 bridge). All grounded numbers,
     no opinions — the coaching happens in Claude Code on the player's subscription."""
-    coll = mtglib.load_collection(COLLECTION)
-    idx = mtglib.index_by_name(coll)
-    with open(m["path"], encoding="utf-8") as f:
-        deck = mtglib.parse_deck(f.read())
-    enriched, missing = deck_stats.analyze(deck, idx)
-    stem_path = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
-    bd.apply_attrs(enriched, bd.load_attrs(f"{stem_path}.attrs.csv"))
-    rep = deck_stats.build_report(deck, enriched, missing, idx)
-    try:
-        assessment = power.assess(enriched, rep, power.load_refs())
-    except Exception:
-        assessment = None
-    try:
-        mana = manabase.analyze(rep, enriched)
-    except Exception:
-        mana = None
-    try:
-        combos = combo_detector.for_deck(m["path"], idx)
-    except Exception:
-        combos = None
+    a = deckcore.analyze_deck(m["path"], COLLECTION)
+    rep, missing = a["report"], a["missing"]
+    assessment, mana, combos = a["assessment"], a["mana"], a["combos"]
 
     L = [f"=== ASSESSMENT PACKET — {m['title']} ===",
          f"Commander: {m['commander']}",

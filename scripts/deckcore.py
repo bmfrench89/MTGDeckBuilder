@@ -142,3 +142,54 @@ _ROLE_LABEL = {
     "artifact": "Artifact", "enchantment": "Enchantment",
     "planeswalker": "Planeswalker", "other": "Deck card",
 }
+
+
+# --------------------------------------------------------------------------- #
+# Deck analysis — the single pipeline entry point. Engines are imported LOCALLY
+# (inside the functions) so this hub keeps only `mtglib` as a top-level import
+# and stays free of circular dependencies.
+# --------------------------------------------------------------------------- #
+def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None):
+    """Run report + power/bracket + manabase on an already-enriched card list
+    (e.g. an auto-built 99). Returns {report, assessment, mana}; assessment/mana
+    are None if the underlying engine can't run (e.g. name-only)."""
+    import deck_stats
+    import power
+    import manabase
+    rep = deck_stats.build_report(deck_cards if deck_cards is not None else enriched,
+                                  enriched, missing or [], idx)
+    refs = refs or power.load_refs()
+    try:
+        assessment = power.assess(enriched, rep, refs)
+    except Exception:
+        assessment = None
+    try:
+        mana = manabase.analyze(rep, enriched)
+    except Exception:
+        mana = None
+    return {"report": rep, "assessment": assessment, "mana": mana}
+
+
+def analyze_deck(deck_path, collection, refs=None):
+    """Load + enrich a saved deck and run the whole analysis pipeline once — the
+    single source of truth for the dashboard, the assessment packet, etc.
+    `collection` may be a file path or an already-loaded list[Card]. Returns
+    {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}."""
+    import deck_stats
+    import combo_detector
+    coll = collection if isinstance(collection, list) else mtglib.load_collection(collection)
+    idx = mtglib.index_by_name(coll)
+    with open(deck_path, encoding="utf-8") as f:
+        deck = mtglib.parse_deck(f.read())
+    enriched, missing = deck_stats.analyze(deck, idx)
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    attrs = load_attrs(f"{stem}.attrs.csv")
+    apply_attrs(enriched, attrs)
+    core = analyze_cards(enriched, idx, refs, deck_cards=deck, missing=missing)
+    try:
+        combos = combo_detector.for_deck(deck_path, idx)
+    except Exception:
+        combos = None
+    return {"coll": coll, "idx": idx, "deck": deck, "enriched": enriched,
+            "missing": missing, "attrs": attrs, "report": core["report"],
+            "assessment": core["assessment"], "mana": core["mana"], "combos": combos}
