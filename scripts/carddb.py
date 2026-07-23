@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
-"""Enrich the whole collection with card attributes (colors / type / mana value)
-from a Scryfall card database — the fix for the "name-only export" limitation.
+"""Enrich the whole collection with card attributes (colors / type / mana value /
+Scryfall id) — the fix for the "name-only export" limitation.
 
-With no --bulk it auto-downloads the "Oracle Cards" bulk file from Scryfall
-(~40 MB, cached locally). It then writes data/collection/collection_attrs.csv.
-mtglib.load_collection auto-merges that file, so EVERY tool (curves, power
-color-scores, tribal counts, similar-commander color-fit %, the click-a-card fit
-score) works across the entire collection — no per-deck attrs needed.
+Default: Scryfall's /cards/collection API — ~1 request per 75 cards, no download.
+It resolves each owned card by its exact printing (set + collector number, or a
+Scryfall id when the export has one) and falls back to the card name. It writes
+data/collection/collection_attrs.csv, which mtglib.load_collection auto-merges, so
+EVERY tool (curves, power color-scores, tribal counts, similar-commander color-fit
+%, the click-a-card fit score) works across the whole collection.
 
-Uses DuckDB to stream the JSON if installed; falls back to stdlib json.
+Offline / bulk path: --download-bulk grabs Scryfall's ~40 MB "Oracle Cards" file
+(cached), or --bulk points at one you already have. Uses DuckDB to stream it if
+installed, else stdlib json.
 
 Usage:
-  python3 carddb.py --collection data/collection/collection.csv          # auto-download
-  python3 carddb.py --collection coll.csv --refresh --stats              # re-download
-  python3 carddb.py --bulk oracle-cards.json --collection coll.csv       # use a local file
+  python3 carddb.py --collection data/collection/collection.csv          # API (default)
+  python3 carddb.py --collection coll.csv --stats                        # + breakdown
+  python3 carddb.py --collection coll.csv --download-bulk                # offline bulk
+  python3 carddb.py --bulk oracle-cards.json --collection coll.csv       # local bulk file
 """
 import argparse
 import csv
 import json
 import os
 import sys
+import time
 import urllib.request
 
 import mtglib
@@ -139,43 +144,148 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     return matched, len(coll), len(index)
 
 
+# ── Scryfall /cards/collection API enrichment (no bulk download) ─────────────
+COLLECTION_URL = "https://api.scryfall.com/cards/collection"
+_BATCH = 75  # Scryfall's max identifiers per /cards/collection request
+
+
+def _post_collection(identifiers):
+    """POST up to 75 identifiers; return (found cards, not_found identifiers)."""
+    body = json.dumps({"identifiers": identifiers}).encode()
+    req = urllib.request.Request(COLLECTION_URL, data=body,
+                                 headers={**_HEADERS, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        j = json.loads(r.read())
+    return j.get("data", []), j.get("not_found", [])
+
+
+def _best_identifier(card):
+    """Best Scryfall identifier for a collection Card + a key to match the response
+    back. Prefer the exact printing (id, then set+number) for the correct art/id;
+    fall back to name (resolves attributes fine, incl. DFC/adventure front names)."""
+    sid = (getattr(card, "scryfall_id", "") or "").strip()
+    if sid:
+        return {"id": sid}, ("id", sid)
+    setc = (getattr(card, "set_code", "") or "").strip().lower()
+    num = str(getattr(card, "collector_number", "") or "").strip()
+    if setc and num:
+        return {"set": setc, "collector_number": num}, ("sn", setc, num)
+    return {"name": card.name}, ("name", mtglib._norm(card.name))
+
+
+def _response_keys(c):
+    """Every key a returned Scryfall card could be matched back on."""
+    keys = []
+    if c.get("id"):
+        keys.append(("id", c["id"]))
+    if c.get("set") and c.get("collector_number") is not None:
+        keys.append(("sn", str(c["set"]).lower(), str(c["collector_number"])))
+    name = c.get("name") or ""
+    if name:
+        keys.append(("name", mtglib._norm(name)))
+        front = name.split("//")[0].strip()   # DFC / adventure front face
+        if front:
+            keys.append(("name", mtglib._norm(front)))
+    return keys
+
+
+def _attrs_from_scryfall(c):
+    ci = c.get("color_identity", []) or []
+    cost = c.get("mana_cost") or ""
+    if not cost and c.get("card_faces"):
+        cost = " // ".join(f.get("mana_cost", "") for f in c["card_faces"]
+                           if f.get("mana_cost"))
+    cmc = c.get("cmc")
+    mv = "" if cmc is None else f"{cmc:g}"
+    return {"type": primary_type(c.get("type_line", "")), "mv": mv,
+            "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or ""}
+
+
+def enrich_api(collection_path, out_path, delay=0.1, log=None):
+    """Enrich via Scryfall's /cards/collection API — no ~40 MB bulk download.
+    ~1 request per 75 cards. Returns (matched, total, sorted unmatched names)."""
+    log = log or (lambda *_a: None)
+    coll = mtglib.load_collection(collection_path)
+    resolved = {}  # card.name -> attrs
+
+    def run(cards, ident_fn):
+        submit, keymap = [], {}
+        for card in cards:
+            ident, key = ident_fn(card)
+            if ident is None:
+                continue
+            submit.append(ident)
+            keymap.setdefault(key, card)
+        for i in range(0, len(submit), _BATCH):
+            data, _nf = _post_collection(submit[i:i + _BATCH])
+            for c in data:
+                card = next((keymap[k] for k in _response_keys(c) if k in keymap), None)
+                if card is not None:
+                    resolved[card.name] = _attrs_from_scryfall(c)
+            log(f"  …resolved {len(resolved)}/{len(coll)}")
+            time.sleep(delay)
+
+    run(coll, _best_identifier)  # round 1: exact printing where the export has it
+    missing = [c for c in coll if c.name not in resolved]
+    if missing:  # round 2: name fallback (e.g. ManaPool set code != Scryfall's)
+        run(missing, lambda c: ({"name": c.name}, ("name", mtglib._norm(c.name))))
+
+    with open(out_path, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Scryfall"])
+        for card in sorted(coll, key=lambda c: c.name):
+            a = resolved.get(card.name)
+            if a:
+                w.writerow([card.name, a["type"], a["mv"], a["colors"], a["cost"], a["id"]])
+    unmatched = sorted(c.name for c in coll if c.name not in resolved)
+    return len(resolved), len(coll), unmatched
+
+
 def main():
     ap = argparse.ArgumentParser(
-        description="Enrich the collection with colors/types/mana value/Scryfall ids "
-                    "from a Scryfall bulk file. With no --bulk it auto-downloads one.")
-    ap.add_argument("--bulk", help="path to a Scryfall bulk JSON. Omit to auto-download.")
+        description="Enrich the collection with colors/types/mana value/Scryfall ids. "
+                    "Default: Scryfall's /cards/collection API (no download). Use "
+                    "--bulk / --download-bulk for the offline bulk-file path.")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--out", default=None, help="default: <collection dir>/collection_attrs.csv")
+    ap.add_argument("--bulk", help="use a local Scryfall bulk JSON (offline).")
+    ap.add_argument("--download-bulk", action="store_true",
+                    help="download Scryfall's ~40 MB Oracle Cards file, then enrich from it.")
     ap.add_argument("--refresh", action="store_true",
-                    help="re-download the bulk file even if a cached copy exists")
-    ap.add_argument("--no-duckdb", action="store_true")
+                    help="with --download-bulk, re-download even if a cached copy exists.")
+    ap.add_argument("--no-duckdb", action="store_true", help="bulk path only.")
     ap.add_argument("--stats", action="store_true", help="print a color/type breakdown after")
     args = ap.parse_args()
-
-    bulk = args.bulk
-    if not bulk:
-        try:
-            bulk = download_bulk(force=args.refresh)
-        except Exception as e:
-            print(f"error: could not download the Scryfall bulk file ({e}).\n"
-                  "If you're offline or behind a proxy, download 'Oracle Cards' JSON from "
-                  "https://scryfall.com/docs/api/bulk-data and pass it with --bulk.",
-                  file=sys.stderr)
-            return 2
 
     out = args.out or os.path.join(os.path.dirname(args.collection) or ".",
                                    "collection_attrs.csv")
     try:
-        matched, total, dbn = enrich(args.collection, bulk, out, not args.no_duckdb)
+        if args.bulk or args.download_bulk:
+            bulk = args.bulk or download_bulk(force=args.refresh)
+            matched, total, dbn = enrich(args.collection, bulk, out, not args.no_duckdb)
+            print(f"card DB: {dbn} cards. Matched {matched}/{total} owned cards "
+                  f"({round(100 * matched / total) if total else 0}%).")
+            unmatched_n = total - matched
+        else:
+            print("enriching via Scryfall /cards/collection API (no bulk download)…")
+            matched, total, unmatched = enrich_api(args.collection, out, log=print)
+            print(f"Matched {matched}/{total} owned cards "
+                  f"({round(100 * matched / total) if total else 0}%).")
+            unmatched_n = len(unmatched)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
-    pct = round(100 * matched / total) if total else 0
-    print(f"card DB: {dbn} cards. Matched {matched}/{total} owned cards ({pct}%).")
+    except Exception as e:
+        print(f"error: enrichment failed ({e}).\n"
+              "If Scryfall is unreachable, use the offline path: download 'Oracle Cards' "
+              "JSON from https://scryfall.com/docs/api/bulk-data and pass it with --bulk.",
+              file=sys.stderr)
+        return 2
+
     print(f"wrote {out} — load_collection now merges it automatically.")
-    if matched < total:
-        print(f"  ({total - matched} unmatched — usually tokens or very new cards; "
-              "add them to owned_additions or a fresher bulk file.)")
+    if unmatched_n:
+        print(f"  ({unmatched_n} unmatched — usually tokens, non-English, or very new; "
+              "add them to owned_additions or try --download-bulk for a fresh snapshot.)")
 
     if args.stats:
         coll = mtglib.load_collection(args.collection)  # now includes attrs
