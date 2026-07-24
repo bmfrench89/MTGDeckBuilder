@@ -367,14 +367,16 @@ def build_deck(commander):
     `?ci=` (color identity, e.g. from Scryfall) lets any typed commander build even
     if it isn't in the curated commanders.csv."""
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None),
+                         skip_deck=_deck_slug(commander))
     return render_template("build_deck.html", d=d, page="build")
 
 
 @app.route("/build-next/<path:commander>/deck.txt")
 def build_deck_export(commander):
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None),
+                         skip_deck=_deck_slug(commander))
     return _txt(auto_build.deck_text(d), f"{_deck_slug(commander)}.txt")
 
 
@@ -382,7 +384,8 @@ def build_deck_export(commander):
 def build_deck_save(commander):
     """Write the auto-built draft to data/decks/ so it joins the leaderboard."""
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None))
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None),
+                         skip_deck=_deck_slug(commander))
     stem = _deck_slug(commander)
     with open(os.path.join(DECKS_DIR, f"{stem}.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
@@ -512,7 +515,8 @@ def api_combos_build(commander):
     """Commander Spellbook combos present / one-away in the auto-built deck for this
     commander (full CSB DB, beyond the curated combos.csv). Cached; degrades gracefully."""
     coll, idx = collection_index()
-    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None),
+                         skip_deck=_deck_slug(commander))
     deck = mtglib.parse_deck(auto_build.deck_text(d))
     names = {mtglib._norm(x.name) for x in deck} | {mtglib._norm(commander)}
     r = spellbook.find_my_combos([commander], [(x.name, x.quantity) for x in deck])

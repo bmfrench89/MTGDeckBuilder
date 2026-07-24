@@ -42,9 +42,9 @@
 1 Theater of Horrors
 
 # --- Punisher / pinger engines owned (5) ---
-1 Dictate of the Twin Gods
+1 Fiery Emancipation
 1 Spiteful Visions
-1 Magmatic Force
+1 Tome of Legends
 1 Guttersnipe
 1 Thermo-Alchemist
 
@@ -72,7 +72,7 @@
 1 Lightning Blast
 1 Lightning Strike
 1 Blaze
-1 Searing Wind
+1 Skullclamp
 1 Flame Rift
 1 Fling
 

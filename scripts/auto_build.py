@@ -128,7 +128,7 @@ def _tribe_and_support(commander_name, idx, archetype, coll, identity):
 
 
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
-          identity=None):
+          identity=None, skip_deck=None):
     """Build a deck for `commander_name`. If the commander is in the curated
     commanders.csv we use its colors + archetype tags. Otherwise (any commander
     typed by the player) pass `identity` (WUBRG letters, e.g. from Scryfall's
@@ -163,7 +163,7 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
 
     # Candidate pool: owned minus copies committed to your other decks (basics exempt).
     if respect_commitments:
-        usage = deck_conflicts.scan(decks_dir, idx)
+        usage = deck_conflicts.scan(decks_dir, idx, skip=skip_deck)
         pool_names = [row[0] for row in deck_conflicts.available_pool(usage, coll)]
     else:
         pool_names = [c.name for c in coll]
@@ -217,6 +217,16 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
                 picked += 1
         if picked < target:
             gaps[role] = target - picked
+    # 2b) Tribal seeding — after the role quotas, run your on-tribe creatures FIRST so a
+    # shallow tribe (e.g. 13 Dragons, many pricey) actually shows up instead of losing the
+    # synergy slots to cheaper off-tribe cards. Deep tribes were already fine; this fixes thin ones.
+    tribe = ctx.get("tribal")
+    if tribe:
+        for c in nonland:
+            if sum(1 for x in chosen if not x["is_land"]) >= spell_budget:
+                break
+            if tribe in {s.lower() for s in (c["card"].subtypes or [])}:
+                take(c)
     # synergy / threats / flex — NON-quota roles first (real synergy / creatures /
     # threats), then any remaining by fit for depth, up to the spell budget. This
     # keeps ramp/draw/removal/wipe/counter at their quotas instead of overfilling.

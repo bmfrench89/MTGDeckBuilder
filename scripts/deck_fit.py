@@ -170,9 +170,9 @@ def _staple_component(card, refs):
 
 
 def _theme_component(card, ctx):
-    if ctx.get("tribal") and card.subtypes:
-        if ctx["tribal"] in {s.lower() for s in card.subtypes}:
-            return 15, f"on-tribe ({ctx['tribal'].title()})"
+    tribal = ctx.get("tribal")
+    if tribal and card.subtypes and tribal in {s.lower() for s in card.subtypes}:
+        return 15, f"on-tribe ({tribal.title()})"
     name = card.name.lower()
     for kw in ctx.get("archetype", []):
         if len(kw) >= 4 and kw in name:
