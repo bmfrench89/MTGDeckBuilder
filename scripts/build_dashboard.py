@@ -216,8 +216,41 @@ from deckcore import (load_deck_sections, load_notes, load_buylist, load_attrs, 
                       load_card_notes, apply_attrs, _to_float_price, _ROLE_LABEL)
 
 
+# Only NARROW categories, where "same EDHREC category" ≈ "same job" and any peer is a
+# fair swap (other mana rocks, other utility lands, other stax enchantments…). Broad
+# categories (Creatures / Instants / Sorceries) would surface on-theme-but-not-functional
+# cards, so alternatives there come from curated notes + role_staples instead.
+_EDHREC_NARROW = {"Mana Artifacts", "Utility Artifacts", "Enchantments",
+                  "Utility Lands", "Planeswalkers"}
+
+
+def _edhrec_alts(commander, idx):
+    """name(normalized) -> {peers: [names], label: str}: same-slot EDHREC options for
+    generic categories. Cached + graceful; {} when EDHREC is unreachable or the commander
+    is unknown, so alternatives fall back to curated notes + role staples."""
+    if not commander:
+        return {}
+    try:
+        import edhrec
+        rec = edhrec.recommendations(commander, idx)
+    except Exception:
+        return {}
+    if rec.get("error"):
+        return {}
+    out = {}
+    for sec in rec.get("sections", []):
+        if sec.get("header") not in _EDHREC_NARROW:
+            continue
+        names = [c["name"] for c in sec.get("cards", [])]
+        for n in names:
+            k = mtglib._norm(n)
+            out.setdefault(k, {"peers": [p for p in names if mtglib._norm(p) != k],
+                               "label": "a popular pick for this slot on EDHREC"})
+    return out
+
+
 def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
-                       refs=None, staples=None, size="normal"):
+                       refs=None, staples=None, size="normal", edhrec_alts=None):
     """Per-card payload for the click-to-enlarge panel: enlarged image, a grounded
     generic 'why it works' blurb, a deck-specific fit score + how-it-fits line, and
     alternatives / stronger options tagged owned/buy."""
@@ -262,6 +295,21 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
             else:
                 alt_src = [{"n": a, "owned": mtglib.lookup(idx, a) is not None,
                             "upgrade": False, "why": ""} for a in curated]
+
+            # broaden with EDHREC same-category peers so every listed card has options
+            ea = (edhrec_alts or {}).get(k)
+            if len(alt_src) < 4 and ea:
+                have = {mtglib._norm(a["n"]) for a in alt_src}
+                for peer in ea["peers"]:
+                    if len(alt_src) >= 4:
+                        break
+                    pk = mtglib._norm(peer)
+                    if pk in have or pk in in_deck:
+                        continue
+                    have.add(pk)
+                    alt_src.append({"n": peer,
+                                    "owned": mtglib.lookup(idx, peer) is not None,
+                                    "upgrade": False, "why": ea["label"]})
 
             alts = []
             for a in alt_src:
@@ -816,6 +864,33 @@ def card_modal_block(details):
   }
   function setChip(el,txt){ if(txt){el.textContent=txt; el.hidden=false;} else {el.hidden=true;} }
 
+  // Grounded "Why it's good" for cards without a curated note: read what the card DOES
+  // off its oracle text, frame it by role/section, add the EDHREC staple signal.
+  var WHYMECH=[
+    [/counter target/,'answers spells on the stack'],
+    [/destroy target|exile target/,'removes a problem permanent on demand'],
+    [/destroy all|exile all|each creature|each opponent/,'swings the board with a sweeping effect'],
+    [/search your library/,'tutors up exactly what the moment needs — consistency'],
+    [/draw [^.]*card/,'refills your hand for raw card advantage'],
+    [/add \\{|add one mana|mana of any|improvise|convoke|affinity/,'accelerates or discounts your mana'],
+    [/return [^.]*graveyard/,'buys your best cards back from the graveyard'],
+    [/create [^.]*token/,'builds a board of tokens for value or pressure'],
+    [/hexproof|indestructible|protection from|ward /,'protects your key pieces'],
+    [/whenever [^.]*dies|sacrifice/,'turns creatures dying into value'],
+    [/extra turn/,'takes extra turns — a big tempo swing'],
+    [/copy target|for each|double /,'scales or doubles your effects']
+  ];
+  function genWhy(d,j,ot){
+    var t=(ot||'').toLowerCase(), verb=null;
+    for(var i=0;i<WHYMECH.length;i++){ if(WHYMECH[i][0].test(t)){ verb=WHYMECH[i][1]; break; } }
+    var parts=[];
+    if(verb) parts.push('It '+verb+(d.section?(', pulling weight in your '+d.section+' plan'):'')+'.');
+    else if(d.role) parts.push('A '+d.role.toLowerCase()+' piece'+(d.section?(' in your '+d.section+' plan'):'')+'.');
+    else parts.push('Earns its slot in your '+(d.section||'deck')+'.');
+    if(j&&j.edhrec_rank) parts.push('An established pick the field runs (EDHREC #'+j.edhrec_rank+').');
+    return parts.join(' ');
+  }
+
   function enrich(d){
     orc.textContent='Loading card text from Scryfall…'; orc.className='cm-oracle cm-loading';
     ow.hidden=false;
@@ -835,6 +910,7 @@ def card_modal_block(details):
       if(j.edhrec_rank) bits.push('<b>EDHREC</b> #'+j.edhrec_rank);
       if(j.prices&&j.prices.usd) bits.push('<b>~$</b>'+j.prices.usd);
       meta.innerHTML=bits.join(' &nbsp; ');
+      if(!d.why){ wy.textContent=genWhy(d,j,ot); ww.hidden=false; }   // generated fallback
     });
   }
   function keyOf(d){ return d.name; }
@@ -1179,7 +1255,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         ctx = deck_fit.deck_context(deck_path, enriched, commander)
         staples = deck_fit.load_role_staples()
         details = build_card_details(sections, enriched, idx, load_card_notes(),
-                                     rep=rep, ctx=ctx, refs=refs, staples=staples)
+                                     rep=rep, ctx=ctx, refs=refs, staples=staples,
+                                     edhrec_alts=_edhrec_alts(commander, idx))
     except Exception:
         details = None
     if similar:
