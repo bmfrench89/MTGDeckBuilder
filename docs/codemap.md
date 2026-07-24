@@ -88,7 +88,11 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 `app.py` (Flask) is the primary spoke consumer: routes call the engines/spokes and render
 Jinja templates. Shared front-end: `static/cardpanel.{css,js}` (the bottom-sheet card panel,
 site-wide via `data-card`), `static/cardgrid.js` + `static/collection.js` (batch CDN image
-loading — see **[card-images.md](card-images.md)** for the retrieval rules). Key routes: `/` decks leaderboard · `/deck/<stem>` dashboard · `/build-next` (+
+loading — see **[card-images.md](card-images.md)** for the retrieval rules). The **saved-deck dashboard is editable** (`generate(..., editable=True)`): the card panel
+gets Remove / Replace (from the alternatives or an owned-card search), `POST /deck/<stem>/card`
+rewrites the deck `.txt` in place, and shared-across-decks status shows in the panel. CLI-rendered
+dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<stem>` dashboard
+· `/deck/<stem>/card` (remove/replace) · `/api/collection/search` (owned autocomplete) · `/build-next` (+
 `/…/deck` auto-build, "build any commander") · `/collection` (searchable grid) · `/wishlist`
 · `/shared` · `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet).
 

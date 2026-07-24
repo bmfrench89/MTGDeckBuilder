@@ -136,7 +136,8 @@ def deck(stem):
     if not m:
         abort(404)
     res = bd.generate(m["path"], COLLECTION, title=m["title"],
-                      commander=m["commander"], theme=m["theme"], decks_dir=DECKS_DIR)
+                      commander=m["commander"], theme=m["theme"], decks_dir=DECKS_DIR,
+                      editable=True)
     return res["dashboard"]
 
 
@@ -162,6 +163,66 @@ def deck_edit(stem):
         return redirect(url_for("deck", stem=stem))
     content = open(m["path"], encoding="utf-8").read()
     return render_template("edit.html", meta=m, content=content, page="decks")
+
+
+def _edit_deck_card(path, action, name, replacement=None):
+    """Line-based edit of a deck .txt: remove or replace a single card, preserving its
+    quantity, section, and everything else. Returns True if a line changed."""
+    key = mtglib._norm(name)
+    lines = open(path, encoding="utf-8").read().split("\n")
+    out, changed = [], False
+    for ln in lines:
+        s = ln.strip()
+        if not changed and s and not s.startswith("#"):
+            m = re.match(r"^(\d+)\s+(.*)$", s)
+            cardname = m.group(2) if m else s
+            qty = m.group(1) if m else "1"
+            if mtglib._norm(cardname) == key:
+                if action == "remove":
+                    changed = True
+                    continue
+                if action == "replace" and replacement:
+                    out.append(f"{qty} {replacement}")
+                    changed = True
+                    continue
+        out.append(ln)
+    if changed:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write("\n".join(out))
+    return changed
+
+
+@app.route("/deck/<stem>/card", methods=["POST"])
+def deck_card(stem):
+    """Remove a card from a deck, or replace it with another — in place, from the panel."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    action = request.form.get("action", "")
+    name = request.form.get("name", "").strip()
+    replacement = request.form.get("replacement", "").strip() or None
+    if action in ("remove", "replace") and name:
+        _edit_deck_card(m["path"], action, name, replacement)
+    return redirect(url_for("deck", stem=stem))
+
+
+@app.route("/api/collection/search")
+def api_collection_search():
+    """Owned-card autocomplete for the 'add anything from my collection' picker. `ci`
+    (e.g. WUR) sorts in-color-legal cards first (but still returns off-color ones)."""
+    q = request.args.get("q", "").strip().lower()
+    ci = set(request.args.get("ci", "") or "")
+    if len(q) < 2:
+        return jsonify([])
+    coll, _ = collection_index()
+    out = []
+    for c in coll:
+        nl = c.name.lower()
+        if q in nl:
+            legal = ((not c.identity) or c.identity <= ci) if ci else True
+            out.append((0 if nl.startswith(q) else 1, not legal, c.name, c.quantity, legal))
+    out.sort()
+    return jsonify([{"name": n, "qty": qn, "legal": lg} for _p, _l, n, qn, lg in out[:20]])
 
 
 @app.route("/wishlist", methods=["GET"])
