@@ -35,7 +35,7 @@ Open http://127.0.0.1:5000 . `run.bat` also prints a `http://192.168.x.x:5000` U
 on your phone (same Wi-Fi).
 
 ## 5. Full card data (recommended — do this once)
-**Double-click `enrich.bat`.** It downloads the Scryfall "Oracle Cards" bulk file (~40 MB, cached)
+**Double-click `enrich.bat`.** It queries Scryfall's `/cards/collection` API (no download)
 and writes `data\collection\collection_attrs.csv`, giving your whole collection real
 colors / types / mana value / image ids. Every curve, power score, and click-a-card **fit score**
 then becomes accurate instead of running on the name-only list. Re-run it after adding new cards.
@@ -44,8 +44,8 @@ The **Collection** page shows a "Card DB: enriched / not enriched" banner so you
 
 Manual equivalent (if you'd rather):
 ```powershell
-python scripts\carddb.py --collection data\collection\collection.csv --stats   # auto-downloads
-# or point it at a file you already have:
+python scripts\carddb.py --collection data\collection\collection.csv --stats   # Scryfall API, no download
+# offline instead? download once, then point at the file:
 python scripts\carddb.py --bulk oracle-cards.json --collection data\collection\collection.csv
 ```
 

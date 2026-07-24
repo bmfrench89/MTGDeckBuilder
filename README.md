@@ -35,7 +35,7 @@ scripts/                          The engine (stdlib-only Python 3)
   wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
   similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
   commander_finder.py             "What should I build next?" — commanders ranked by owned support
-  carddb.py                       Enrich the whole collection (colors/types/MV) from a Scryfall card DB (DuckDB)
+  carddb.py                       Enrich the whole collection (colors/types/MV/ids) via Scryfall's /cards/collection API
 data/reference/                   Game Changers, tutor/fast-mana/combo lists + card_notes (all editable)
 data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
 data/
@@ -152,24 +152,23 @@ pushes a deck to Bracket 4.
 and reference tables are tiny and read-mostly; parsing CSV/txt into memory is instant, and
 keeping the files as the source of truth means everything is diffable in git and portable.
 
-**Where a DB earns its place: ingesting a real card database.** The pricing export has no
-card attributes (colors/types/mana value), which is why analysis is name-only by default.
-`carddb.py` uses **DuckDB** (optional, `pip install duckdb`) to stream a Scryfall bulk-data
-file and enrich your *entire* collection at once:
+**Where a DB earns its place: ingesting real card attributes.** The pricing export has no
+card attributes (colors/types/mana value). `carddb.py` fixes that — **by default it queries
+Scryfall's `/cards/collection` API** (no download, ~1 request per 75 cards), resolving each
+owned card by its exact printing:
 
 ```bash
-# one-time: download "Oracle Cards" JSON from https://scryfall.com/docs/api/bulk-data
-python3 scripts/carddb.py --bulk oracle-cards.json \
-  --collection data/collection/collection.csv --stats
+python3 scripts/carddb.py --collection data/collection/collection.csv --stats
+# offline instead? --download-bulk grabs the ~40 MB Oracle Cards file (DuckDB streams it if installed)
+python3 scripts/carddb.py --collection data/collection/collection.csv --download-bulk
 ```
 
 That writes `data/collection/collection_attrs.csv` (gitignored — it's derived + personal),
 which `mtglib.load_collection` auto-merges. From then on **every tool** works collection-wide —
 real mana curves, colored pip demand, tribal/type counts, power color-scores, and exact
-similar-commander color-fit % — with no per-deck `attrs.csv` needed. DuckDB is the right fit
-because it queries the big JSON in place (no import step) and is a single embedded file.
-(SQLite would only be warranted if we add write-heavy app state — user accounts, saved deck
-versions, edit history.)
+similar-commander color-fit %. Uploading a fresh export in the web app auto-enriches it.
+(No SQL database for the app's own data — the files stay the diffable source of truth; SQLite
+would only be warranted if we add write-heavy app state like saved deck versions / edit history.)
 
 ## Web app (local front end)
 
@@ -209,9 +208,10 @@ and card-image galleries only render in a real browser. Full detail lives in
 
 ## Known limitations
 
-- **Network:** Scryfall API, Scryfall bulk data, and Archidekt API are firewalled in this
-  environment. Card verification is via one-at-a-time web search; card images work only as
-  browser hotlinks, not server-side fetches.
+- **Network:** Scryfall reachability depends on where the app runs. On a normal machine
+  `carddb.py` enriches via Scryfall's `/cards/collection` API and the EDHREC / Commander
+  Spellbook clients work; in a locked-down sandbox those may be proxy-blocked (fall back to
+  `carddb.py --download-bulk`). Card images always load as browser hotlinks, not server fetches.
 - **Category counts are heuristic.** `deck_stats.py` classifies ramp/draw/removal/wipe from
   curated name lists + card types. Treat the numbers as a strong first pass, then eyeball.
 - **Prices are estimates.** No live pricing source is reachable.
