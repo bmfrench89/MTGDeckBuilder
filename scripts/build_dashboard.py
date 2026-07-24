@@ -780,11 +780,27 @@ def card_modal_css(t):
 """
 
 
-def card_modal_block(details):
+def card_modal_block(details, editable=False, stem=""):
     payload = (json.dumps(details, ensure_ascii=True)
                .replace("<", "\\u003c").replace(">", "\\u003e")
                .replace("&", "\\u0026"))
     return """
+<style>
+  .cm-editrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .cm-editbtn{font:inherit;font-size:.86rem;padding:7px 14px;border-radius:8px;cursor:pointer;
+    background:var(--cm-accent,#5BE0D4);color:#08131a;border:none;font-weight:700}
+  .cm-editbtn.danger{background:transparent;color:var(--cm-warn,#e0667a);
+    border:1px solid var(--cm-warn,#e0667a)}
+  .cm-shared{font-size:.84rem;margin:2px 0 8px;padding:8px 10px;border-radius:8px;
+    background:rgba(255,255,255,.05);border-left:3px solid var(--cm-warn,#e0667a)}
+  .cm-hint{font-size:.8rem;opacity:.75;margin:4px 0}
+  .cm-search{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;font:inherit;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:inherit}
+  .cm-searchres{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .cm-searchitem{font:inherit;font-size:.82rem;padding:5px 10px;border-radius:14px;cursor:pointer;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:inherit}
+  .cm-searchitem:hover{background:var(--cm-accent,#5BE0D4);color:#08131a}
+</style>
 <div id="cardmodal" class="cm-overlay" hidden>
   <div class="cm-sheet" role="dialog" aria-modal="true" aria-label="Card details">
     <div class="cm-bar"><span class="cm-grab"></span>
@@ -828,6 +844,19 @@ def card_modal_block(details):
             <div id="cm-althead" class="cm-h">Alternatives that could slot here</div>
             <div id="cm-alts" class="cm-alts"></div>
           </div>
+          <div id="cm-editwrap" class="cm-sec" hidden>
+            <div class="cm-h">Edit this deck</div>
+            <div id="cm-shared" class="cm-shared" hidden></div>
+            <div class="cm-editrow">
+              <button id="cm-remove" type="button" class="cm-editbtn danger">Remove from deck</button>
+              <button id="cm-replace" type="button" class="cm-editbtn">Replace\\u2026</button>
+            </div>
+            <div id="cm-replacebox" hidden>
+              <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection:</p>
+              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection\\u2026" autocomplete="off">
+              <div id="cm-searchres" class="cm-searchres"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -836,6 +865,7 @@ def card_modal_block(details):
 <script>
 (function(){
   var DATA=__PAYLOAD__, cache={}, curKey=null;
+  var EDITABLE=__EDITABLE__, STEM=__STEM__;
   var ov=document.getElementById('cardmodal'), sc=ov.querySelector('.cm-scroll');
   var img=document.getElementById('cm-img'), nm=document.getElementById('cm-name');
   var cost=document.getElementById('cm-cost'), tl=document.getElementById('cm-tl');
@@ -950,6 +980,8 @@ def card_modal_block(details):
         tag.textContent=a.owned?'\\u2713 owned':'buy'; cap.appendChild(tag);
         if(a.upgrade){var up=document.createElement('span');up.className='up';up.textContent='upgrade';cap.appendChild(up);}
         if(a.why){var w=document.createElement('span');w.className='altwhy';w.textContent=a.why;cap.appendChild(w);}
+        if(EDITABLE){ fig.style.cursor='pointer'; fig.title='Swap '+a.n+' into this deck';
+          (function(name){ fig.addEventListener('click',function(){ editCard('replace', name); }); })(a.n); }
         fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
       });
       aw.hidden=false;
@@ -966,6 +998,7 @@ def card_modal_block(details):
     fillFit(d);
     if(d.why){ wy.textContent=d.why; ww.hidden=false; } else { ww.hidden=true; }
     fillAlts(d);
+    setupEdit(d);
     enrich(d);
     sc.scrollTop=0;
     ov.hidden=false; document.body.style.overflow='hidden';
@@ -974,6 +1007,52 @@ def card_modal_block(details):
   function close(){
     ov.classList.remove('show'); document.body.style.overflow='';
     setTimeout(function(){ ov.hidden=true; }, 260);
+  }
+
+  var ew=document.getElementById('cm-editwrap'), rb=document.getElementById('cm-replacebox'),
+      shd=document.getElementById('cm-shared'), sr=document.getElementById('cm-searchres'),
+      si=document.getElementById('cm-search');
+  function editCard(action, replacement){
+    if(!EDITABLE || !curKey) return;
+    if(action==='remove' && !confirm('Remove '+curKey+' from this deck?')) return;
+    var f=new FormData(); f.append('action', action); f.append('name', curKey);
+    if(replacement) f.append('replacement', replacement);
+    fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f})
+      .then(function(r){ if(r.ok||r.redirected) location.reload(); else alert('Edit failed.'); })
+      .catch(function(){ alert('Edit failed \\u2014 is the app still running?'); });
+  }
+  function setupEdit(d){
+    if(!ew) return;
+    if(!EDITABLE){ ew.hidden=true; return; }
+    ew.hidden=false; if(rb) rb.hidden=true; if(sr) sr.innerHTML=''; if(si) si.value='';
+    if(d.shared && shd){
+      shd.hidden=false;
+      shd.innerHTML='\\u21c4 Shared across '+d.shared.count+' of your decks \\u2014 you own '+d.shared.owned+
+        (d.shared.covered?' (\\u2713 enough for all)':' (\\u26a0 not enough to sleeve them all)')+
+        '. Removing or swapping it here frees a copy.';
+    } else if(shd){ shd.hidden=true; }
+  }
+  if(EDITABLE && ew){
+    var rm=document.getElementById('cm-remove'), rp=document.getElementById('cm-replace'), stimer=null;
+    if(rm) rm.addEventListener('click',function(){ editCard('remove'); });
+    if(rp) rp.addEventListener('click',function(){ if(rb){ rb.hidden=!rb.hidden; if(!rb.hidden&&si) si.focus(); } });
+    if(si) si.addEventListener('input', function(){
+      var q=si.value.trim(); clearTimeout(stimer);
+      if(q.length<2){ sr.innerHTML=''; return; }
+      stimer=setTimeout(function(){
+        fetch('/api/collection/search?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():[];})
+          .then(function(list){
+            sr.innerHTML='';
+            (list||[]).forEach(function(it){
+              var b=document.createElement('button'); b.type='button'; b.className='cm-searchitem';
+              b.textContent=it.name+(it.qty>1?(' \\u00d7'+it.qty):'');
+              (function(nm){ b.addEventListener('click',function(){ editCard('replace', nm); }); })(it.name);
+              sr.appendChild(b);
+            });
+            if(!list || !list.length) sr.innerHTML='<span class="cm-hint">No owned card matches.</span>';
+          }).catch(function(){});
+      }, 220);
+    });
   }
   document.querySelectorAll('figure.mc[data-key], .cardlink[data-key]').forEach(function(f){
     f.addEventListener('click',function(e){ e.preventDefault(); open(f.getAttribute('data-key')); });
@@ -986,15 +1065,16 @@ def card_modal_block(details):
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!ov.hidden) close(); });
 })();
 </script>
-""".replace("__PAYLOAD__", payload)
+""".replace("__PAYLOAD__", payload).replace("__EDITABLE__", "true" if editable else "false").replace("__STEM__", json.dumps(stem))
 
 
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
-                     assessment=None, similar=None, details=None, combos=None, mana=None):
+                     assessment=None, similar=None, details=None, combos=None, mana=None,
+                     editable=False, stem=""):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
-    modal_block = card_modal_block(details or {})
+    modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
              if t["fonts_link"] else "")
@@ -1222,7 +1302,7 @@ search couldn't match.</div>
 
 def generate(deck_path, collection_path, title="Commander Deck", commander="",
              subtitle="Commander (EDH) deck dashboard", theme="default",
-             decks_dir=None, size="normal", want_visual=False):
+             decks_dir=None, size="normal", want_visual=False, editable=False):
     """Load a deck + collection and return rendered HTML. Shared by the CLI and
     the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
     'report': dict}."""
@@ -1265,9 +1345,22 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         except Exception:
             pass
 
+    # merge shared-across-decks status into the panel payload (drives the edit view's badge)
+    if details and shared:
+        try:
+            for v in shared.values():
+                d = details.get(mtglib._norm(v["name"]))
+                if d is not None:
+                    d["shared"] = {"covered": v["covered"], "owned": v["owned"],
+                                   "count": len(v["decks"])}
+        except Exception:
+            pass
+
+    url_stem = os.path.splitext(os.path.basename(deck_path))[0]
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
-                                 similar, details, combos, mana)
+                                 similar, details, combos, mana,
+                                 editable=editable, stem=url_stem)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}
