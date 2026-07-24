@@ -26,9 +26,23 @@
     <p class="muted">Replace <code>collection.csv</code> with a fresh Archidekt/ManaBox export.
       Stays on this machine.</p>
     <form method="post" action="{{ url_for('collection_upload') }}" enctype="multipart/form-data">
-      <div class="row"><input type="file" name="csv" accept=".csv" required>
-        <button class="btn" type="submit">Upload</button></div>
+      <div class="row filepick" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <input type="file" name="csv" id="csvfile" accept=".csv" required>
+        <label for="csvfile" class="btn ghost">Choose file…</label>
+        <span id="csvname" class="muted" style="font-size:.85rem">No file chosen</span>
+        <button class="btn" type="submit">Upload</button>
+      </div>
     </form>
+    <style>
+      .filepick input[type=file]{position:absolute;width:1px;height:1px;padding:0;
+        margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      .filepick label.btn{cursor:pointer}
+    </style>
+    <script>
+      (function(){var f=document.getElementById('csvfile'),n=document.getElementById('csvname');
+        if(f)f.addEventListener('change',function(){
+          n.textContent=(f.files&&f.files[0])?f.files[0].name:'No file chosen';});})();
+    </script>
   </div>
   <div class="card">
     <h2 style="margin-top:0">Own something the export missed?</h2>
