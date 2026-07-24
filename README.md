@@ -116,8 +116,10 @@ The dashboard also shows, for every deck: **card images** in the decklist, a
 **Commander Bracket (1–5)** and **0–100 power score** (see `docs/power-and-brackets.md`),
 a **Combo Watch** panel (complete or one-piece-away infinite combos), and a
 **Cross-Deck Conflicts** panel warning when a card is committed to more decks
-than you own copies of. Clicking a card opens a panel with a curated "why it works"
-blurb and alternatives (from `data/reference/card_notes.csv`).
+than you own copies of. Clicking a card opens a panel with a deck-fit score, a grounded
+"why it's good" blurb (curated from `card_notes.csv` where present, else generated from
+role + oracle + EDHREC), alternatives, and — in the web app on a saved deck — in-place
+**Remove / Replace** controls.
 
 ## Power ranking & cross-deck conflicts
 
@@ -173,9 +175,13 @@ would only be warranted if we add write-heavy app state like saved deck versions
 ## Web app (local front end)
 
 A Flask app in `webapp/` puts a front end over the same scripts (imported, not
-duplicated) — a power leaderboard, live deck dashboards, the wishlist, a shared-cards
-view, and a collection page where you can upload a new export or add owned-but-missing
-cards. It runs locally so your collection + prices stay on your machine.
+duplicated): a power leaderboard, live deck dashboards, the wishlist, a shared-cards view,
+an interactive/searchable **Collection**, and **Build Next** — which auto-builds a full 99
+for any commander from your owned pool (with a commander typeahead). Every card opens a
+panel with a grounded **Strategy** blurb, **alternatives**, the commander's **EDHREC**
+staples (own→add / missing→buy), **Commander Spellbook** combos, and **buy links**; on a
+saved deck you can **Remove/Replace cards in place** right from that panel. It runs locally
+so your collection + prices stay on your machine.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -187,13 +193,15 @@ Editing a decklist in the UI re-analyzes it instantly (curve, bracket, power, sh
 cards). See `webapp/README.md`. The CLI and the app share `build_dashboard.generate()`,
 so both render identical dashboards.
 
-## The two completed decks (preserved)
+## The decks (in `data/decks/`)
 
-- **`data/decks/yshtola-nights-blessed.txt`** — Esper (WUB) control/drain.
-- **`data/decks/cloud-ex-soldier.txt`** — Naya (RGW) equipment/Voltron.
+Six saved decks, power-ranked in the app's leaderboard:
+- **Captain America, Team Leader** (WUR) · **The Ur-Dragon** (5-color) · **Y'shtola, Night's
+  Blessed** (Esper control/drain) · **Cosmic Spider-Man** (5-color Spider typal) ·
+  **Cloud, Ex-SOLDIER** (Naya equipment/Voltron) · **Kaervek the Merciless** (Rakdos punisher).
 
-Both are reconstructed from `docs/handoff.md`. Regenerate their dashboards anytime with
-`build_dashboard.py` (themes `yshtola` and `cloud` match the original aesthetics).
+Regenerate any dashboard with `build_dashboard.py` (themes `yshtola` / `cloud` / `rakdos` /
+`spider` / `default`), or just open the deck in the web app.
 
 ## Grounding, in one paragraph
 
