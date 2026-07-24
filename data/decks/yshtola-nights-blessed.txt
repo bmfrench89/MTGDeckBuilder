@@ -25,11 +25,11 @@
 1 Defiling Daemogoth
 1 Serra Paragon
 1 Witch of the Moors
-1 Archfiend of Depravity
+1 Read the Bones
 1 Sun Titan
 1 Diluvian Primordial
 1 Sepulchral Primordial
-1 Torrential Gearhulk
+1 Night's Whisper
 
 # --- Interaction (spot removal / counters) ---
 1 Mystical Tutor

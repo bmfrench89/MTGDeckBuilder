@@ -17,8 +17,8 @@
 1 Talisman of Progress
 1 Thought Vessel
 1 Grow from the Ashes
-1 Skyscanner
-1 Springbloom Druid
+1 Mana Prism
+1 Pilgrim's Eye
 
 # --- Card advantage ---
 1 Think Twice
@@ -43,7 +43,7 @@
 # --- Board wipes ---
 1 Culling Ritual
 1 Casualties of War
-1 Austere Command
+1 Wave of Reckoning
 
 # --- Counters ---
 1 Counterspell
@@ -52,42 +52,48 @@
 1 Annul
 
 # --- Creatures ---
+1 Fin Fang Foom
+1 Pet Avengers
+1 Atsushi, the Blazing Sky
+1 Ao, the Dawn Sky
+1 Hraesvelgr of the First Brood
+1 Niv-Mizzet, Visionary
+1 Silumgar, the Drifting Death
 1 Cloud Sprite
 1 Merfolk of the Pearl Trident
-1 Stampede Driver
-1 Agent of Atlas
-1 Bogwater Lumaret
 1 Bola Warrior
-1 Brave Brawler
-1 Burrog Banemaker
-1 Cackling Witch
 1 Crowd of True Believers
-1 Cuboid Colony
-1 Doorman
-1 Environmental Scientist
-1 Goblin Digging Team
 1 Goblin Glasswright // Craft with Pride
 1 Goblin Recruiter
-1 Guerrilla Gorilla
-1 HYDRA Assault Robot
-1 Hobgoblin, Mantled Marauder
-1 Hydraulic Helper
-1 Kirol, History Buff // Pack a Punch
-1 Knight of Wundagore
-1 Knowledge Seeker
-1 Kraven's Cats
-1 Krile Baldesion
-1 Kyren Legate
+1 Momo, Friendly Flier
+1 Raging Goblin
+1 Selfless Police Captain
+1 Stampede Driver
+1 Agent of Atlas
+1 Angelic Curator
+1 Ant-Man's Air Force
+1 Bogwater Lumaret
+1 Bold Biochemist
+1 Brave Brawler
+1 Beledros Witherbloom
+1 Witherbloom, the Balancer
 
 # --- Instants / sorceries ---
 1 Crop Rotation
 1 Dark Ritual
+1 Steelshaper's Gift
 
 # --- Lands (37) ---
 1 Command Tower
 1 Dark Fortress
 1 Omashu City
 1 Scavenger Grounds
+1 Spectacle Summit
+1 Study Hall
+1 Sunscorched Divide
+1 Thriving Bluff
+1 Tranquil Cove
+1 Villainous Hideout
 1 Akoum Refuge
 1 Avengers Tower
 1 Blossoming Sands
@@ -115,9 +121,3 @@
 1 Lorehold Campus
 1 Lotus Field
 1 Meandering River
-1 Mistveil Plains
-1 Moorland Haunt
-1 Mossfire Valley
-1 Muraganda Raceway
-1 Necroblossom Snarl
-1 North Pole Gates

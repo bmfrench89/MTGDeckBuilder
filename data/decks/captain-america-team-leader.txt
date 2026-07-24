@@ -10,43 +10,42 @@
 # --- Ramp ---
 1 Arcane Signet
 1 Sol Ring
-1 Talisman of Progress
-1 Thought Vessel
 1 Azorius Signet
 1 Explorer's Scope
 1 Sky Diamond
+1 Talisman of Progress
+1 Thought Vessel
 1 Archaeomancer's Map
 1 Hedron Archive
-1 Mana Prism
-1 Pilgrim's Eye
+1 Coveted Jewel
 
 # --- Card advantage ---
-1 Think Twice
 1 Brainstorm
 1 Mystic Remora
 1 Prosperity
+1 Think Twice
 1 Visions of Beyond
-1 Reconnaissance Mission
 1 Coastal Piracy
 1 Frantic Search
 1 Horn of Greed
 1 Insight
+1 Reconnaissance Mission
 
 # --- Removal ---
 1 Disenchant
-1 Pacifism
-1 Rip Apart
-1 Seal of Cleansing
-1 Seal of Fire
 1 Abrade
 1 Condemn
 1 Dispatch
+1 Pacifism
 1 Rending Volley
+1 Rip Apart
+1 Seal of Cleansing
+1 Seal of Fire
 
 # --- Board wipes ---
 1 Planar Collapse
 1 Cave-In
-1 Wave of Reckoning
+1 Final Judgment
 
 # --- Counters ---
 1 Counterspell
@@ -55,60 +54,50 @@
 1 Memory Lapse
 
 # --- Creatures ---
-1 Cloud Sprite
-1 Merfolk of the Pearl Trident
-1 Agent of Atlas
-1 Bola Warrior
-1 Brave Brawler
-1 Crowd of True Believers
-1 Goblin Glasswright // Craft with Pride
-1 Goblin Recruiter
 1 Masked Meower
 1 Misty Knight, Hero for Hire
-1 Momo, Friendly Flier
 1 Patriot, Shield Wielder
-1 Raging Goblin
 1 Rescue, Pepper Potts
-1 Selfless Police Captain
 1 Speed, Young Avenger
 1 Agent Maria Hill
-1 Angelic Curator
-1 Ant-Man's Air Force
-1 Bold Biochemist
-1 Darting Merfolk
-1 Elite Interceptor // Rejoinder
-1 Flying Octobot
-1 Glittering Lynx
-
-# --- Instants / sorceries ---
-1 Steelshaper's Gift
+1 Agent of Atlas
+1 Brave Brawler
+1 Marvel Boy, Noh-Varr
+1 Night Nurse, Healer of Heroes
+1 Colleen Wing, Street Samurai
+1 Hawkeye, Master Marksman
+1 Iron Fist, Hero for Hire
+1 K'un-Lun Warrior
+1 Kid Loki
+1 Matt Murdock, Justice Seeker
+1 Quicksilver, Brash Blur
+1 Shuri, Wakandan Inventor
+1 Stature, Size Shifter
+1 The Wasp, Winsome Avenger
+1 The Wondrous Wasp
+1 Spider-Woman, Secret Agent
+1 Spider-Gwen, Free Spirit
+1 Spider-UK
+1 The Mighty Thor, Jane Foster
+1 Captain America, Living Legend
 
 # --- Lands (37) ---
 1 Command Tower
-1 Scavenger Grounds
-1 Avengers Tower
-1 Clifftop Retreat
-1 Crystal Vein
-1 Fields of Strife
-1 Furycalm Snarl
-1 Glittering Massif
 1 Port Town
 1 Radiant Summit
-1 Spectacle Summit
-1 Study Hall
-1 Sunscorched Divide
-1 Thriving Bluff
-1 Tranquil Cove
-1 Villainous Hideout
+1 Scavenger Grounds
 1 Agna Qel'a
 1 Asgardian Citadel
+1 Avengers Tower
 1 Battlefield Forge
 1 Baxter Building
 1 Bonders' Enclave
 1 Castle Doom
+1 Clifftop Retreat
 1 Coastal Peak
 1 Coastal Tower
 1 Country Roads
+1 Crystal Vein
 1 Daily Bugle Building
 1 Dark Depths
 1 Demolition Field
@@ -117,7 +106,16 @@
 1 Emeria, the Sky Ruin
 1 Exotic Orchard
 1 Faerie Conclave
+1 Fields of Strife
 1 Fire Nation Palace
 1 Forbidding Watchtower
 1 Fountain of Cho
+1 Furycalm Snarl
 1 Ghitu Encampment
+1 Glittering Massif
+1 Prairie Stream
+1 Remote Farm
+1 Rhystic Cave
+1 Riverpyre Verge
+1 Rocky Roads
+1 Rugged Prairie

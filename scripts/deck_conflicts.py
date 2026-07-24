@@ -35,11 +35,14 @@ def deck_label(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
-def scan(decks_dir, collection_index):
+def scan(decks_dir, collection_index, skip=None):
     """Return {card_name: {'owned':n, 'total':n, 'decks':{deck:qty}}} for cards
-    committed across decks, and the raw per-deck usage."""
+    committed across decks, and the raw per-deck usage. `skip` (a deck stem) omits that
+    deck — used when REBUILDING it, so its own current cards count as available again."""
     usage = defaultdict(lambda: {"decks": {}, "total": 0})
     for path in deck_files(decks_dir):
+        if skip and os.path.splitext(os.path.basename(path))[0] == skip:
+            continue
         label = deck_label(path)
         with open(path, encoding="utf-8") as f:
             for card in mtglib.parse_deck(f.read()):

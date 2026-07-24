@@ -31,7 +31,7 @@
 1 Sun-Spider, Nimble Webber
 1 Spider-UK
 1 SP//dr, Piloted by Peni
-1 Madame Web, Clairvoyant
+1 Coastal Piracy
 1 Spider-Gwen, Free Spirit
 1 Spider-Woman, Secret Agent
 1 Scarlet Spider, Ben Reilly
@@ -48,8 +48,8 @@
 1 Spider-Man, Brooklyn Visionary
 1 Spider-Man, To the Rescue
 1 Spider-Man, Web-Slinger
-1 Agent Venom
-1 Flash Thompson, Spider-Fan
+1 Mystic Remora
+1 Frantic Search
 1 Arachne, Psionic Weaver
 1 Spider-Islanders
 1 Web-Warriors

@@ -61,13 +61,13 @@
 # --- Ramp ---
 1 Sol Ring
 1 Arcane Signet
-1 Commander's Sphere
+1 Dispatch
 1 Fellwar Stone
-1 Cultivate
+1 Harmonize
 1 Farseek
-1 Rampant Growth
+1 Rip Apart
 1 Nature's Lore
-1 Relic of Legends
+1 Horn of Greed
 
 # --- Removal & wraths ---
 1 Swords to Plowshares
@@ -104,11 +104,11 @@
 1 Game Trail
 1 Fortified Village
 1 Furycalm Snarl
-1 Frostboil Snarl
+1 Brushland
 1 Sungrass Prairie
 1 Canopy Vista
 1 Cinder Glade
-1 Prairie Stream
+1 Spire of Industry
 1 Fabled Passage
 1 Terramorphic Expanse
 1 Evolving Wilds
@@ -116,6 +116,6 @@
 1 Myriad Landscape
 1 Radiant Grove
 1 Wooded Ridgeline
-6 Forest
+7 Forest
 2 Mountain
 3 Plains
