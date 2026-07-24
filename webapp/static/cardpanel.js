@@ -5,7 +5,7 @@
 (function () {
   var ov = document.getElementById('cardpanel');
   if (!ov) return;
-  var cur = null;
+  var cur = null, curData = null, curCard = null;
   function $(id) { return document.getElementById(id); }
   function wrap(id, on) { var e = $(id); if (e) e.hidden = !on; }
   function esc(s) { var d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
@@ -19,7 +19,50 @@
     setTimeout(function () { ov.hidden = true; }, 260);
   }
 
+  // Grounded "how it works": role scaffold (server) + mechanic tags read off the oracle.
+  var MECH = [
+    [/\bdraw\b[^.]*\bcards?\b/, 'draws cards'],
+    [/counter target/, 'counters spells'],
+    [/(destroy|exile) target/, 'spot removal'],
+    [/(destroy|exile) all|each (creature|player|opponent)/, 'symmetric / board-wide'],
+    [/search your library/, 'tutors from your library'],
+    [/add \{|add one mana|mana of any/, 'produces mana'],
+    [/return .*from (your |a )?graveyard/, 'graveyard recursion'],
+    [/create .*token/, 'makes tokens'],
+    [/hexproof|indestructible|protection from|\bward\b/, 'protection / resilience'],
+    [/sacrifice|whenever .*dies/, 'sacrifice synergy'],
+    [/extra turn/, 'takes an extra turn'],
+    [/can't (untap|attack|block|cast)|skip .*(untap|draw)/, 'stax / denial'],
+    [/double|copy target|for each/, 'doubling / scaling']
+  ];
+  function mechanics(oracle) {
+    var t = (oracle || '').toLowerCase(), out = [];
+    for (var i = 0; i < MECH.length && out.length < 3; i++) if (MECH[i][0].test(t)) out.push(MECH[i][1]);
+    return out;
+  }
+  function renderStrategy() {
+    var wrap = $('cp-stratwrap'), el = $('cp-strategy');
+    if (!wrap || !el) return;
+    if (curData && curData.note) { wrap.hidden = true; return; }  // curated "Why it works" wins
+    var lead = curData && curData.strategy && curData.strategy.role_line;
+    if (!lead && curCard && curCard.type_line) {                  // non-owned: fall back to Scryfall
+      var mv = curCard.cmc != null ? (curCard.cmc + '-mana ') : '';
+      lead = 'A ' + mv + curCard.type_line.split('//')[0].trim().toLowerCase() + '.';
+    }
+    var mech = curCard ? mechanics(oracleOf(curCard)) : [];
+    var notes = [];
+    if (curData && curData.strategy && curData.strategy.in_decks) notes.push('in ' + curData.strategy.in_decks + ' of your decks');
+    if (curData && curData.combos && curData.combos.length) notes.push('a piece of ' + curData.combos.length + ' combo' + (curData.combos.length > 1 ? 's' : '') + ' you can assemble');
+    var html = '';
+    if (lead) html += '<p style="margin:.2em 0">' + esc(lead) + '</p>';
+    if (mech.length) html += '<p style="margin:.4em 0">' + mech.map(function (m) { return '<span class="cp-tag">' + esc(m) + '</span>'; }).join(' ') + '</p>';
+    if (notes.length) html += '<p class="cp-imgmeta" style="margin:.2em 0">Plays as: ' + esc(notes.join(' · ')) + '</p>';
+    if (!html) { wrap.hidden = true; return; }
+    el.innerHTML = html; wrap.hidden = false;
+  }
+
   function render(d) {
+    curData = d;
     $('cp-name').textContent = d.name;
     var tags = [];
     if (d.owned) tags.push('<span class="cp-tag own">✓ ' + d.qty + '× owned</span>');
@@ -55,6 +98,8 @@
       wrap('cp-deckwrap', true);
       $('cp-decks').textContent = d.decks.join(' · ');
     } else wrap('cp-deckwrap', false);
+
+    renderStrategy();
   }
 
   function oracleOf(j) {
@@ -90,13 +135,14 @@
         if (j.edhrec_rank) bits.push('EDHREC #' + j.edhrec_rank);
         if (j.prices && j.prices.usd) bits.push('~$' + j.prices.usd);
         $('cp-imgmeta').innerHTML = bits.map(esc).join(' &nbsp; ');
+        curCard = j; renderStrategy();
         if (j.rulings_uri) loadRulings(j.rulings_uri, name);
       }).catch(function () { orc.textContent = '(Card text unavailable.)'; });
   }
 
   function open(name) {
-    cur = name; show();
-    ['cp-whywrap', 'cp-combowrap', 'cp-deckwrap', 'cp-rulewrap'].forEach(function (id) { wrap(id, false); });
+    cur = name; curData = curCard = null; show();
+    ['cp-stratwrap', 'cp-whywrap', 'cp-combowrap', 'cp-deckwrap', 'cp-rulewrap'].forEach(function (id) { wrap(id, false); });
     $('cp-name').textContent = name; $('cp-tags').innerHTML = '';
     $('cp-buy').innerHTML = ''; $('cp-imgmeta').innerHTML = '';
     $('cp-img').removeAttribute('src');

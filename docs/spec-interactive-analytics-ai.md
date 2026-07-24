@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–3 + 5 shipped + whole-collection enrichment (Scryfall API) · remaining: Phase 4 + data integrations (EDHREC / Commander Spellbook — **now unblocked**, Scryfall is reachable on the player's machine)
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + whole-collection enrichment (Scryfall API) + EDHREC staples · remaining: Commander Spellbook combos (deeper EDHREC/CSB optional)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -41,7 +41,7 @@ simulation of any kind.**
 | 1 | Interactive Collection (browse/search/filter) | ☑ Done (EDHREC staple chip deferred) | #24 |
 | 2 | Manabase & consistency engine (flagship) | ☑ Engine + dashboard + wired into auto_build | #20, #23 |
 | 3 | Full auto-built decks for Build Next | ☑ v1 + images + on-view analysis (deferred: EDHREC/CSB) | #19, #21, #22, #23 |
-| 4 | Full card strategies | ☐ Not started | — |
+| 4 | Full card strategies | ☑ Grounded "how it works" (role + oracle mechanic + combo + usage) | #33 |
 | 5 | AI coaching skill + export bridge | ☑ Done | #25 |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
@@ -111,12 +111,16 @@ and sources approximate a permanent's output from its color identity (rough for 
 **Acceptance:** produces a 100-card, in-color, role-balanced draft entirely from owned cards, with
 gaps-to-buy listed; honest that it's a heuristic draft.
 
-### Phase 4 — Full card strategies  ☐
-- ☐ Panel shows curated note when present, else a grounded generated "how it works"
-  (role + oracle + combo membership + synergy).
-- ☐ Rulings surfaced; "works well with" synergy hints.
-- ☐ Grow `card_notes.csv` opportunistically.
-**Acceptance:** every card the user clicks yields a grounded strategy blurb (never a blank).
+### Phase 4 — Full card strategies  ☑
+- ☑ Panel **"Strategy"** section: the curated note when present, else a grounded generated blurb —
+  a role/type/MV scaffold (server `card_api._strategy`) + **mechanic tags read off the oracle**
+  (client `cardpanel.js`: draws / spot-removal / tutor / ramp / recursion / tokens / protection /
+  sacrifice / stax / doubling …) + combo membership + "in N of your decks".
+- ☑ Falls back to the live **Scryfall type line** for non-owned cards (e.g. EDHREC buy targets),
+  so a clicked card is never blank; rulings already surfaced (Phase 0).
+- ◐ Grow `card_notes.csv` opportunistically — ongoing; the generated blurb covers the gap meanwhile.
+**Acceptance:** ☑ owned cards always yield a grounded line (Sol Ring → "…accelerates your mana";
+A.I.M. Synthoids → "A 2-mana creature"); non-owned fall back to the Scryfall type line + mechanics.
 
 ### Phase 5 — AI coaching skill + export bridge  ☑
 Chose to **extend the existing `mtg-deckbuilder` skill** rather than fork a separate `mtg-coach`
@@ -175,3 +179,8 @@ Code on the subscription; no Anthropic API in the app.
   the collection into **owned (add) vs missing (buy)**. Surfaced on the Build Next deck view via
   `/api/edhrec/<commander>` (async, graceful). Verified live: Y'shtola 47,640 decks → 113 owned /
   181 missing; Atraxa 42,910 → 37 / 236. Fills the Phase 1/3 "EDHREC data client" deferral.
+- **2026-07-23** — **Phase 4 shipped**: the card panel gained a grounded **"Strategy"** section —
+  server role/type/MV scaffold (`card_api._strategy`) + oracle-derived mechanic tags + combo/usage,
+  with a Scryfall type-line fallback for non-owned cards so no clicked card is blank. Verified via
+  the live `/api/card` payload + rendered panel markers (the in-app browser's per-origin gate blocks
+  localhost navigation, so UAT was server-side).

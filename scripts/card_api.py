@@ -47,6 +47,32 @@ def _combos_with(name, combos):
     return out
 
 
+_ROLE_PURPOSE = {
+    "ramp": "accelerates your mana",
+    "draw": "draws you cards",
+    "removal": "answers a threat (spot removal)",
+    "wipe": "sweeps the board",
+    "counter": "counters spells on the stack",
+    "land": "produces and fixes your mana",
+}
+
+
+def _strategy(ref, roles, decks):
+    """A grounded one-liner from LOCAL data — type/MV + role purpose + how many of your
+    decks run it. The panel augments this with oracle-derived mechanic tags client-side.
+    Returns None when we have no attribute data (a name-only card) so the client can fall
+    back to the Scryfall type line."""
+    if not ref or not ref.types or ref.mana_value is None:
+        return None
+    lead = f"A {ref.mana_value:g}-mana {(ref.primary_type or 'card').lower()}"
+    purposes = [_ROLE_PURPOSE[r] for r in sorted(roles) if r in _ROLE_PURPOSE]
+    if len(purposes) == 1:
+        lead += f" that {purposes[0]}"
+    elif purposes:
+        lead += " that " + ", ".join(purposes[:-1]) + ", and " + purposes[-1]
+    return {"role_line": lead + ".", "in_decks": len(decks)}
+
+
 def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
     """Return the JSON-able payload for one card. `notes`/`combos` may be passed
     in pre-loaded (to avoid re-reading the reference files per request)."""
@@ -57,6 +83,7 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
 
     roles = sorted(mtglib.classify(ref)) if ref else []
     note = notes.get(key)
+    decks = _decks_using(name, decks_dir)
     sid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
     image = (card_image.image_url(sid) if sid
              else card_image.image_url_by_name(name))
@@ -68,9 +95,10 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
         "mv": ref.mana_value if ref else None,
         "type": ref.primary_type if (ref and ref.types) else None,
         "roles": [deckcore._ROLE_LABEL.get(r, r.title()) for r in roles],
+        "strategy": _strategy(ref, roles, decks),
         "note": {"why": note["why"], "alts": note["alts"]} if note else None,
         "combos": _combos_with(name, combos),
-        "decks": _decks_using(name, decks_dir),
+        "decks": decks,
         "scryfall_id": sid,
         "image": image,
         "buy": card_image.purchase_links(ref.name if ref else name),
