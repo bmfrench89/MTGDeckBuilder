@@ -1,0 +1,123 @@
+# Title: Captain America, Team Leader
+# Commander: Captain America, Team Leader
+# Colors: R U W
+# Archetype: counters equipment tribal-hero
+# Source: auto-generated draft (scripts/auto_build.py) from owned cards.
+
+# --- Commander ---
+1 Captain America, Team Leader
+
+# --- Ramp ---
+1 Arcane Signet
+1 Sol Ring
+1 Talisman of Progress
+1 Thought Vessel
+1 Azorius Signet
+1 Explorer's Scope
+1 Sky Diamond
+1 Archaeomancer's Map
+1 Hedron Archive
+1 Mana Prism
+1 Pilgrim's Eye
+
+# --- Card advantage ---
+1 Think Twice
+1 Brainstorm
+1 Mystic Remora
+1 Prosperity
+1 Visions of Beyond
+1 Reconnaissance Mission
+1 Coastal Piracy
+1 Frantic Search
+1 Horn of Greed
+1 Insight
+
+# --- Removal ---
+1 Disenchant
+1 Pacifism
+1 Rip Apart
+1 Seal of Cleansing
+1 Seal of Fire
+1 Abrade
+1 Condemn
+1 Dispatch
+1 Rending Volley
+
+# --- Board wipes ---
+1 Planar Collapse
+1 Cave-In
+1 Wave of Reckoning
+
+# --- Counters ---
+1 Counterspell
+1 Force of Will
+1 Essence Scatter
+1 Memory Lapse
+
+# --- Creatures ---
+1 Cloud Sprite
+1 Merfolk of the Pearl Trident
+1 Agent of Atlas
+1 Bola Warrior
+1 Brave Brawler
+1 Crowd of True Believers
+1 Goblin Glasswright // Craft with Pride
+1 Goblin Recruiter
+1 Masked Meower
+1 Misty Knight, Hero for Hire
+1 Momo, Friendly Flier
+1 Patriot, Shield Wielder
+1 Raging Goblin
+1 Rescue, Pepper Potts
+1 Selfless Police Captain
+1 Speed, Young Avenger
+1 Agent Maria Hill
+1 Angelic Curator
+1 Ant-Man's Air Force
+1 Bold Biochemist
+1 Darting Merfolk
+1 Elite Interceptor // Rejoinder
+1 Flying Octobot
+1 Glittering Lynx
+
+# --- Instants / sorceries ---
+1 Steelshaper's Gift
+
+# --- Lands (37) ---
+1 Command Tower
+1 Scavenger Grounds
+1 Avengers Tower
+1 Clifftop Retreat
+1 Crystal Vein
+1 Fields of Strife
+1 Furycalm Snarl
+1 Glittering Massif
+1 Port Town
+1 Radiant Summit
+1 Spectacle Summit
+1 Study Hall
+1 Sunscorched Divide
+1 Thriving Bluff
+1 Tranquil Cove
+1 Villainous Hideout
+1 Agna Qel'a
+1 Asgardian Citadel
+1 Battlefield Forge
+1 Baxter Building
+1 Bonders' Enclave
+1 Castle Doom
+1 Coastal Peak
+1 Coastal Tower
+1 Country Roads
+1 Daily Bugle Building
+1 Dark Depths
+1 Demolition Field
+1 Drifting Meadow
+1 Dwarven Ruins
+1 Emeria, the Sky Ruin
+1 Exotic Orchard
+1 Faerie Conclave
+1 Fire Nation Palace
+1 Forbidding Watchtower
+1 Fountain of Cho
+1 Ghitu Encampment
