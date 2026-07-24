@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + whole-collection enrichment (Scryfall API) + EDHREC staples · remaining: Commander Spellbook combos (deeper EDHREC/CSB optional)
+**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 session history in [handoff.md](handoff.md).
 
@@ -106,7 +106,7 @@ and sources approximate a permanent's output from its color identity (rough for 
 - ☐ `scripts/auto_build.py`: assemble a legal 99 from the owned pool (deck_fit scoring +
   role targets + archetype support + `deck_conflicts.available_pool`, color-identity-legal).
 - ☐ Build Next: commander → "Build this deck" → interactive decklist (curve, roles, the 99).
-- ☐ CSB `/find-my-combos` "one card away" upgrade surfacing.
+- ☑ CSB `/find-my-combos` "one card away" upgrade surfacing (`scripts/spellbook.py` → assess packet + Build Next).
 - ☐ Export + optional "Save to my decks".
 **Acceptance:** produces a 100-card, in-color, role-balanced draft entirely from owned cards, with
 gaps-to-buy listed; honest that it's a heuristic draft.
@@ -184,3 +184,9 @@ Code on the subscription; no Anthropic API in the app.
   with a Scryfall type-line fallback for non-owned cards so no clicked card is blank. Verified via
   the live `/api/card` payload + rendered panel markers (the in-app browser's per-origin gate blocks
   localhost navigation, so UAT was server-side).
+- **2026-07-23** — **Commander Spellbook integration shipped**: `scripts/spellbook.py` (find-my-combos
+  API, stdlib, disk-cached) surfaces every combo **present** + **one card away** from CSB's full DB.
+  Wired into the coaching **assess packet** (`/deck/<stem>/assess.txt`) and an async section on the
+  Build Next view (`/api/combos/build/<commander>`). Verified live: cloud-ex-soldier → 19 one-away
+  (add Repercussion → Blasphemous Act → near-infinite damage); Atraxa draft → 8; Y'shtola → 2.
+  Fills the Phase 3 "CSB one-away" deferral.

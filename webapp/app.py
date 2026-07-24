@@ -38,6 +38,7 @@ import manabase
 import combo_detector
 import deckcore
 import edhrec
+import spellbook
 
 
 def _txt(text, filename):
@@ -241,11 +242,20 @@ def _assess_packet(m):
     elif mana is not None:
         L.append("-- CONSISTENCY -- (name-only collection: enrich for colored-source math)\n")
     if combos and (combos.get("complete") or combos.get("near")):
-        L.append("-- COMBOS --")
+        L.append("-- COMBOS (curated) --")
         for c in combos.get("complete", []):
             L.append(f"  present: {c['name']} → {c['result']}")
         for c in combos.get("near", []):
             L.append(f"  one card away: add {c['missing']} → {c['name']}")
+        L.append("")
+    sb = spellbook.combos_for_deck(m["path"])
+    if sb.get("present") or sb.get("almost"):
+        L.append("-- COMMANDER SPELLBOOK (full combo DB) --")
+        for c in sb.get("present", [])[:25]:
+            L.append(f"  present: {' + '.join(c['cards'])} → {', '.join(c['produces']) or '?'}")
+        for c in [x for x in sb.get("almost", []) if len(x.get("missing", [])) == 1][:25]:
+            L.append(f"  one card away: add {c['missing'][0]} → "
+                     f"{' + '.join(c['cards'])} ⇒ {', '.join(c['produces']) or '?'}")
         L.append("")
     if missing:
         L.append("-- NOT IN COLLECTION (buy-list candidates) --")
@@ -434,6 +444,22 @@ def api_edhrec(commander):
     owned (add) vs missing (buy). Cached to disk; degrades to an error payload."""
     _, idx = collection_index()
     return jsonify(edhrec.recommendations(commander, idx))
+
+
+@app.route("/api/combos/build/<path:commander>")
+def api_combos_build(commander):
+    """Commander Spellbook combos present / one-away in the auto-built deck for this
+    commander (full CSB DB, beyond the curated combos.csv). Cached; degrades gracefully."""
+    coll, idx = collection_index()
+    d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.args.get("ci") or None))
+    deck = mtglib.parse_deck(auto_build.deck_text(d))
+    names = {mtglib._norm(x.name) for x in deck} | {mtglib._norm(commander)}
+    r = spellbook.find_my_combos([commander], [(x.name, x.quantity) for x in deck])
+    for c in r.get("almost", []):
+        c["missing"] = [n for n in c["cards"] if mtglib._norm(n) not in names]
+    r["almost"] = sorted([c for c in r.get("almost", []) if c.get("missing")],
+                         key=lambda c: len(c["missing"]))
+    return jsonify(r)
 
 
 @app.route("/health")

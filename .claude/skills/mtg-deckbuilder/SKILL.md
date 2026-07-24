@@ -156,6 +156,8 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   source adequacy vs Karsten targets, and which cards are **risky to cast on curve**.
 - `combo_detector.py` — detects known infinite / 2-card combos **present** in a deck or **one card
   away**, and combos the whole collection can assemble (`data/reference/combos.csv`).
+- `spellbook.py` — Commander Spellbook's FULL combo DB via find-my-combos: every combo **present** or
+  **one card away** in a deck, far beyond the curated `combos.csv`. Feeds the web assess packet.
 - `auto_build.py` — auto-assembles a full 99 for a commander from the owned, in-color, uncommitted
   pool (deck_fit scoring + role template). Its ranked pool is the **candidate source for adds**; also
   takes `identity=` (WUBRG) for any commander not in `commanders.csv`.
@@ -163,8 +165,11 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   ("what should I build next?"). `similar_commanders.py` — alternate commanders that fit a deck's shell.
 - `card_api.py` — grounded per-card payload (role, note, combo membership, which decks use it, buy links).
 - `wishlist.py` — consolidated priced buy list (shared copies + upgrades) → `data/wishlist.md`.
-- `carddb.py` — enrich the WHOLE collection (colors / types / mana value / Scryfall ids) from a Scryfall
-  bulk file → `collection_attrs.csv`, which every tool auto-merges. Run `enrich.bat` on Windows.
+- `carddb.py` — enrich the WHOLE collection (colors / types / mana value / exact-printing ids) via
+  Scryfall's `/cards/collection` API by default (no download; `--bulk`/`--download-bulk` for offline) →
+  `collection_attrs.csv`, which every tool auto-merges. Run `enrich.bat` on Windows.
+- `edhrec.py` — EDHREC community staples for a commander vs your collection: high-inclusion cards you
+  OWN (add) vs. are MISSING (buy). Answers "what does the field run for this commander that I lack?".
 - `deck_fit.py` — library behind per-card fit scoring (used by `build_dashboard`/`auto_build`, not a CLI).
 - `refresh.py` — regenerate every dashboard + the wishlist in one command. `export_manapool.py` — deck /
   wishlist as ManaPool-importable text.
