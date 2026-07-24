@@ -50,6 +50,11 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
   <div id="edhrec-body" class="card"><span class="muted">Loading community staples from EDHREC…</span></div>
 </section>
 
+<section id="csb" data-commander="{{ d.commander }}" data-ci="{{ d.identity if d.identity != 'C' else '' }}" style="margin:14px 0">
+  <h2>Combos <span class="muted" style="font-size:.82rem;font-weight:400">· Commander Spellbook (present + one card away)</span></h2>
+  <div id="csb-body" class="card"><span class="muted">Checking Commander Spellbook…</span></div>
+</section>
+
 {% if d.assessment %}{% set a = d.assessment %}
 <h2>Power &amp; Bracket</h2>
 <div class="card">
@@ -140,6 +145,32 @@ Off-color cards skipped: {{ d.off_color_skipped }}.</p>
       list('✓ Staples you own — add these', d.owned, 'none of the top staples yet.') +
       list('✗ Missing staples — buy targets', d.missing, 'you own them all!');
   }).catch(function () { body.innerHTML = '<span class="muted">EDHREC data unavailable.</span>'; });
+})();
+</script>
+
+<script>
+(function () {
+  var sec = document.getElementById('csb');
+  if (!sec) return;
+  var body = document.getElementById('csb-body');
+  var cmd = sec.getAttribute('data-commander'), ci = sec.getAttribute('data-ci');
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function cards(arr) { return (arr || []).map(function (n) { return '<button class="cp-tag" data-card="' + esc(n) + '" style="cursor:pointer;margin:1px">' + esc(n) + '</button>'; }).join(' '); }
+  function combo(c, prefix) {
+    return '<div style="margin-top:4px">' + (prefix || '') + cards(prefix ? c.missing : c.cards) +
+      ' <span class="muted">→ ' + esc((c.produces || []).join(', ') || '?') + '</span></div>';
+  }
+  fetch('/api/combos/build/' + encodeURIComponent(cmd) + (ci ? ('?ci=' + encodeURIComponent(ci)) : ''))
+    .then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d || d.error) { body.innerHTML = '<span class="muted">Commander Spellbook unavailable.</span>'; return; }
+      var pres = d.present || [], alm = (d.almost || []).filter(function (c) { return (c.missing || []).length === 1; });
+      var html = '';
+      if (pres.length) html += '<div style="margin-bottom:10px"><b>✓ Combos present (' + pres.length + ')</b>' +
+        pres.slice(0, 12).map(function (c) { return combo(c, ''); }).join('') + '</div>';
+      if (alm.length) html += '<div><b>✗ One card away (' + alm.length + ')</b>' +
+        alm.slice(0, 15).map(function (c) { return combo(c, '<span class="muted">add </span>'); }).join('') + '</div>';
+      body.innerHTML = html || '<span class="muted">No Commander Spellbook combos in this draft.</span>';
+    }).catch(function () { body.innerHTML = '<span class="muted">Commander Spellbook unavailable.</span>'; });
 })();
 </script>
 {% endblock %}

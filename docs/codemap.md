@@ -80,6 +80,7 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
 | carddb | enrich the collection (colors/types/MV/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline | mtglib |
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy); disk-cached, degrades gracefully | mtglib |
+| spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
 ## Web app (`webapp/`)
@@ -129,6 +130,11 @@ commanders, archetype_support).
   staples (json.edhrec.com), computes inclusion % (num_decks/potential_decks) and splits them
   into owned (add) vs missing (buy) against your collection. Shown on the Build Next deck page
   (`/api/edhrec/<commander>`), cards clickable → panel. Disk-cached (`data/cache/`), stdlib-only.
+- ✅ **Card "Strategy" blurb (Phase 4)** — `card_api._strategy` role/type scaffold + oracle-derived
+  mechanic tags in `cardpanel.js`; never blank (Scryfall type-line fallback for non-owned cards).
+- ✅ **Commander Spellbook combos** — `scripts/spellbook.py` (find-my-combos API, disk-cached)
+  surfaces every combo present + one-card-away in a deck, beyond `combos.csv`. Wired into the
+  coaching **assess packet** and an async section on the Build Next view (`/api/combos/build/<cmd>`).
 
 ## Parked ideas / backlog
 
