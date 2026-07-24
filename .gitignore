@@ -31,3 +31,6 @@ data/collection/scryfall-*.json.part
 
 # Cached third-party data (EDHREC / CSB) — derived, regenerate on demand
 data/cache/
+
+# Windows crash dumps
+*.stackdump

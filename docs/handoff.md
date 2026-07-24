@@ -12,7 +12,29 @@
 
 ---
 
-## 🧭 START HERE — CURRENT STATE (updated 2026-07-21, through PR #14)
+## 🧭 START HERE — CURRENT STATE (updated 2026-07-24, through PR #39)
+
+> **2026-07-24 — the fast-moving facts (authoritative; the subsections below this block are
+> older and partly superseded — kept as history):**
+> - **6 decks now** (was 4). Power ranking: Captain America, Team Leader **B3/71** · The Ur-Dragon
+>   **B3/68** · Y'shtola **B3/68** · Cosmic Spider-Man **B3/57** · Cloud **B2/56** · Kaervek **B2/56**.
+>   (The Ur-Dragon is 5-color goodstuff under a dragon commander — the collection owns few dragons.)
+> - **Collection is enriched** — `data/collection/collection.csv` (~2,040 cards) + `collection_attrs.csv`,
+>   so curves / pips / roles / power color-scores / fit run on real colors/types/MV/ids collection-wide.
+> - **Scryfall is reachable on the player's machine** — the old "firewalled" notes applied to the CI
+>   sandbox only. `carddb.py` enriches via the **`/cards/collection` API by default** (no 40 MB download;
+>   `--download-bulk` is the offline path). The **EDHREC** and **Commander Spellbook** clients work too.
+> - **New since PR #14:** hypergeometric manabase/consistency engine; interactive Collection; full
+>   auto-built "Build Next" decks + "build any commander" (with Scryfall typeahead); a site-wide card
+>   panel with a generated **Strategy** blurb + **alternatives** for every card; **EDHREC staples**
+>   (own→add / missing→buy); **Commander Spellbook** combos (present + one-away) in the assess packet +
+>   build view; an **in-panel Remove/Replace deck editor**; auto-enrich on collection upload; the
+>   coaching skill + assess packet.
+> - **Authoritative current map:** [`docs/codemap.md`](codemap.md) + feature tracker
+>   [`docs/spec-interactive-analytics-ai.md`](spec-interactive-analytics-ai.md). Grounding rules are
+>   canonical in `.claude/skills/mtg-deckbuilder/references/`.
+> - **Player preference:** re-optimizing decks = **recommend, don't auto-rewrite** the curated
+>   `data/decks/*.txt`; the player applies swaps via the in-panel editor.
 
 ### What this project is now
 A complete, grounded MTG Commander (EDH) deckbuilding system in this repo
