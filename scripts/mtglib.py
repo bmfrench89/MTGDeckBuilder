@@ -251,6 +251,7 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
     c_mv = _header_index(fn, "mv", "mana value", "cmc")
     c_colors = _header_index(fn, "colors", "color identity", "identity")
     c_cost = _header_index(fn, "cost", "mana cost")
+    c_sub = _header_index(fn, "sub-types", "subtypes", "sub types", "subtype")
     c_sid = _header_index(fn, "scryfall", "scryfall id", "id")
     idx = index_by_name(cards)
     n = 0
@@ -270,6 +271,8 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
             card.colors = card.colors or card.identity
         if c_cost and (row.get(c_cost) or "").strip():
             card.mana_cost = row[c_cost].strip()
+        if c_sub and (row.get(c_sub) or "").strip():
+            card.subtypes = _split_multi(row[c_sub])
         if c_sid and (row.get(c_sid) or "").strip():
             card.scryfall_id = row[c_sid].strip()
     return n

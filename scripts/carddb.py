@@ -84,6 +84,15 @@ def primary_type(type_line):
     return left.strip().split()[-1] if left.strip() else ""
 
 
+def subtypes_of(type_line):
+    """Creature/etc. subtypes = the part after the em dash on the FRONT face, one per
+    entry. 'Legendary Creature — Human Soldier Hero' -> 'Human;Soldier;Hero' (semicolons
+    so mtglib._split_multi keeps them separate). These drive tribal detection
+    (deck_fit / auto_build); mtglib reads the 'Sub-types' column."""
+    left = (type_line or "").split("//")[0]
+    return ";".join(left.split("—", 1)[1].split()) if "—" in left else ""
+
+
 def _rows_duckdb(bulk_path):
     import duckdb
     con = duckdb.connect()
@@ -121,6 +130,7 @@ def build_index(bulk_path, use_duckdb=True):
         if k in idx:
             continue
         idx[k] = {"colors": " ".join(ci), "type": primary_type(type_line),
+                  "subtypes": subtypes_of(type_line),
                   "mv": cmc if cmc is not None else None, "cost": cost or "",
                   "id": sid or ""}
     return idx
@@ -132,7 +142,7 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     matched = 0
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Scryfall"])
+        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall"])
         for card in sorted(coll, key=lambda c: c.name):
             a = index.get(mtglib._norm(card.name))
             if not a:
@@ -140,7 +150,7 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
             matched += 1
             mv = "" if a["mv"] is None else (f"{a['mv']:g}")
             w.writerow([card.name, a["type"], mv, a["colors"], a["cost"],
-                        a.get("id", "")])
+                        a.get("subtypes", ""), a.get("id", "")])
     return matched, len(coll), len(index)
 
 
@@ -197,7 +207,8 @@ def _attrs_from_scryfall(c):
                            if f.get("mana_cost"))
     cmc = c.get("cmc")
     mv = "" if cmc is None else f"{cmc:g}"
-    return {"type": primary_type(c.get("type_line", "")), "mv": mv,
+    return {"type": primary_type(c.get("type_line", "")),
+            "subtypes": subtypes_of(c.get("type_line", "")), "mv": mv,
             "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or ""}
 
 
@@ -232,11 +243,12 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None):
 
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Scryfall"])
+        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall"])
         for card in sorted(coll, key=lambda c: c.name):
             a = resolved.get(card.name)
             if a:
-                w.writerow([card.name, a["type"], a["mv"], a["colors"], a["cost"], a["id"]])
+                w.writerow([card.name, a["type"], a["mv"], a["colors"], a["cost"],
+                            a.get("subtypes", ""), a["id"]])
     unmatched = sorted(c.name for c in coll if c.name not in resolved)
     return len(resolved), len(coll), unmatched
 
