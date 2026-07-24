@@ -106,6 +106,27 @@ def _basics_by_demand(n, identity, cards):
     return {_BASIC[c]: v for c, v in alloc.items() if v > 0}
 
 
+_TRIBAL_MIN = 12  # owned in-color members before a tribal build is honest (grounding rule #2)
+
+
+def _tribe_and_support(commander_name, idx, archetype, coll, identity):
+    """The tribe a commander is built around + how many in-color members you own.
+    Candidates: 'tribal-X' archetype tags + the commander's own non-'Human' subtypes;
+    pick whichever the collection best supports (so we never force a tribe you can't field)."""
+    cands = [a.split("-", 1)[1].lower() for a in archetype if a.startswith("tribal-")]
+    ref = mtglib.lookup(idx, commander_name)
+    if ref and ref.subtypes:
+        cands += [s.lower() for s in ref.subtypes if s.lower() != "human"]
+    best, best_n = None, 0
+    for tribe in dict.fromkeys(cands):
+        n = sum(1 for c in coll
+                if tribe in {s.lower() for s in (c.subtypes or [])}
+                and (not c.identity or c.identity <= identity))
+        if n > best_n:
+            best, best_n = tribe, n
+    return best, best_n
+
+
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
           identity=None):
     """Build a deck for `commander_name`. If the commander is in the curated
@@ -129,6 +150,15 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     refs = refs or power.load_refs()
     ctx = {"identity": identity, "archetype": archetype, "theme": "",
            "tribal": None, "commander": commander_name}
+    # tribal awareness: does the commander want a tribe, and does the collection support it?
+    tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity)
+    tribe_warning = None
+    if tribe and tribe_n >= _TRIBAL_MIN:
+        ctx["tribal"] = tribe
+    elif tribe:
+        tribe_warning = (f"{commander_name} wants {tribe.title()}s, but you own only {tribe_n} "
+                         f"in-color — too few for a tribal build (needs ~{_TRIBAL_MIN}+), so this "
+                         f"is a goodstuff draft, not a {tribe.title()} deck.")
     nameonly = not any(c.types for c in coll)
 
     # Candidate pool: owned minus copies committed to your other decks (basics exempt).
@@ -269,6 +299,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "off_color_skipped": off_color,
         "nameonly": nameonly,
         "known_commander": known,
+        "tribal": ctx.get("tribal"),
+        "tribe_warning": tribe_warning,
         "assessment": assessment,
         "mana": mana,
         "combos": {"complete": [c["name"] for c in detected["complete"]],

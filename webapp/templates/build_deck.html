@@ -9,7 +9,9 @@ A heuristic <b>draft</b>, not a tuned list.
 <code>data/reference/commanders.csv</code> with archetype tags to sharpen it.</span>{% endif %}
 {% if d.nameonly %}<br><span class="warn">Name-only collection: card roles and the manabase are rough —
 enrich the collection (Card DB) for a sharper build.</span>{% endif %}
-{% if d.short %}<br><span class="warn">Your available pool was {{ d.short }} card(s) short of a full 99.</span>{% endif %}</div>
+{% if d.short %}<br><span class="warn">Your available pool was {{ d.short }} card(s) short of a full 99.</span>{% endif %}
+{% if d.tribe_warning %}<br><span class="warn">⚠ {{ d.tribe_warning }}</span>{% endif %}
+{% if d.tribal %}<br><span class="muted">Tribal build — prioritizing your owned <b>{{ d.tribal|title }}s</b>.</span>{% endif %}</div>
 
 <div class="row" style="gap:8px;margin:14px 0">
   {% set ci = d.identity if d.identity != 'C' else '' %}
