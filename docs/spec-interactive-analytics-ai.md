@@ -101,13 +101,16 @@ card opens the panel; honest name-only note when filters need enrichment.
 **Honest simplifications:** probabilities are UNCONDITIONAL (not Karsten's mulligan-adjusted %),
 and sources approximate a permanent's output from its color identity (rough for fetches/oddballs).
 
-### Phase 3 — Full auto-built decks for Build Next  ☐
+### Phase 3 — Full auto-built decks for Build Next  ☑
 **Detailed spec:** [spec-build-next-full-deck.md](spec-build-next-full-deck.md).
-- ☐ `scripts/auto_build.py`: assemble a legal 99 from the owned pool (deck_fit scoring +
+- ☑ `scripts/auto_build.py`: assemble a legal 99 from the owned pool (deck_fit scoring +
   role targets + archetype support + `deck_conflicts.available_pool`, color-identity-legal).
-- ☐ Build Next: commander → "Build this deck" → interactive decklist (curve, roles, the 99).
+  Now **tribal-aware** (seeds on-tribe creatures) and takes `skip_deck` so a REBUILD can reuse
+  its own cards instead of counting the deck against itself.
+- ☑ Build Next: commander → "Build this deck" → interactive decklist (curve, roles, the 99),
+  plus a Scryfall-autocomplete "build any commander" box.
 - ☑ CSB `/find-my-combos` "one card away" upgrade surfacing (`scripts/spellbook.py` → assess packet + Build Next).
-- ☐ Export + optional "Save to my decks".
+- ☑ Export (.txt / ManaPool) + "Save to my decks".
 **Acceptance:** produces a 100-card, in-color, role-balanced draft entirely from owned cards, with
 gaps-to-buy listed; honest that it's a heuristic draft.
 
