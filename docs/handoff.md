@@ -58,15 +58,19 @@ always re-sync the branch to `origin/main` before starting new work, or the next
   `combo_detector.py` (infinite / 2-card combo detection → feeds the bracket + a dashboard panel),
   `deck_conflicts.py` (shared cards / buy-doubles / available pool),
   `wishlist.py`, `staples_crossref.py`, `similar_commanders.py` ("would also work"),
-  `commander_finder.py` ("build next"), `carddb.py` (DuckDB collection enrichment),
+  `commander_finder.py` ("build next"), `carddb.py` (collection enrichment via the Scryfall
+  `/cards/collection` API), `edhrec.py` (community staples vs your collection), `spellbook.py`
+  (Commander Spellbook combos), `deckcore.py` (analysis hub), `auto_build.py` (full 99),
+  `manabase.py` (hypergeometric), `card_api.py`, `deck_fit.py`,
   `build_dashboard.py` (`generate()` is the shared renderer), `refresh.py` (rebuild everything),
   `card_image.py`.
-- `data/decks/` — 4 decks as `<stem>.txt` with `# Title/# Theme/# Archetype/# Colors/# Commander`
+- `data/decks/` — **6 decks** as `<stem>.txt` with `# Title/# Theme/# Archetype/# Colors/# Commander`
   headers, plus optional companions `<stem>.notes.md` / `.buylist.csv` / `.attrs.csv`.
-- `data/collection/` — `collection_snapshot.txt` (committed, name-only, 1,805 cards),
+- `data/collection/` — `collection_snapshot.txt` (committed, name-only, **2,040 cards**),
   `owned_additions.txt` (committed; player-confirmed cards the export missed — currently Vito +
   Force of Will), and `collection.csv` + `collection_attrs.csv` (BOTH gitignored; you provide
-  the CSV, carddb generates the attrs).
+  the CSV, carddb generates the attrs — **now including subtypes**, which is what makes tribal
+  detection work).
 - `data/reference/` — `game_changers.txt` (verified 53-card list) + tutors/fast-mana/extra-turns/
   mass-land-denial/combo-pieces; `combos.csv` (curated 2–3 card combo *definitions* — pieces,
   result, color identity, early/Bracket-4 flag); `card_notes.csv` (curated "why it works" +
@@ -75,12 +79,17 @@ always re-sync the branch to `origin/main` before starting new work, or the next
 - `data/wishlist.md` (generated). `docs/power-and-brackets.md` (rubric). `build/` (gitignored).
 - `webapp/` — `app.py`, `templates/`, `static/` (manifest+icon), `run.sh`, README.
 
-### The 4 decks (all owned unless noted; power ranking)
-1. **Y'shtola, Night's Blessed** — Esper WUB control/drain — COMPLETE — Bracket 3, power 67.
+### The 6 decks (all 100 cards, built from owned cards; power ranking as of 2026-07-24)
+1. **The Ur-Dragon** — 5c dragons — auto-built, rebuilt as real tribal (10 dragons) — **B3, 73**.
+2. **Y'shtola, Night's Blessed** — Esper WUB control/drain — CURATED — **B3, 72**.
    (3 Game Changers: Mystical Tutor, Force of Will, Rhystic Study — at the B3 ceiling.)
-2. **Cosmic Spider-Man** — 5c Spider typal — v1, has full `attrs.csv` (exact curve) — B3, 57.
-3. **Kaervek the Merciless** — Rakdos B/R group-slug — v1 draft — B2, 55.
-4. **Cloud, Ex-SOLDIER** — Naya RGW equipment/Voltron — COMPLETE — B2, 51.
+3. **Captain America, Team Leader** — Jeskai WUR **Hero tribal** — auto-built — **B3, 70**.
+4. **Cosmic Spider-Man** — 5c Spider typal — CURATED, has `attrs.csv` + `notes.md` — **B3, 62**.
+5. **Cloud, Ex-SOLDIER** — Naya RGW equipment/Voltron — CURATED — **B2, 63**.
+6. **Kaervek the Merciless** — Rakdos B/R group-slug — CURATED — **B2, 60**.
+
+**Deck tiers matter for shared cards:** the four CURATED decks outrank the two AUTO-BUILT
+drafts (Ur-Dragon, Captain America) when a single copy is contested — the draft yields.
 
 ### How to run
 - Analyze/rank: `python3 scripts/power.py --rank --collection data/collection/collection.csv`
@@ -127,31 +136,35 @@ collection-wide. The **Collection page shows a "Card DB: enriched / not" banner*
 Scryfall is FIREWALLED in the build env, so the download only runs on the player's machine — the
 enrich→overlay chain is verified here against a fixture, but the player must run it for real once.
 
-### Environment constraints (still true)
-- Scryfall API, Scryfall/EDHREC/Draftsim page fetch, and Archidekt API are 403-blocked at the
-  proxy. Web **search** works (returns Scryfall data snippets) — verify recent cards one at a time.
-- Card images render only in a real browser (Scryfall hotlinks via `card_image.image_url_by_name`);
-  they stay blank in the chat preview and in claude.ai's panel.
+### Environment constraints (current)
+- **Scryfall is reachable** from the player's machine (enrichment, EDHREC + Commander Spellbook
+  clients all work server-side). In a locked-down CI sandbox they may be proxy-blocked — fall back
+  to `carddb.py --download-bulk`. Card **images** always load client-side in the browser.
+- Card images render only in a real browser; they stay blank in the chat preview / claude.ai panel.
 - "Prices" are the player's export MARKET values (some obscure rows are mispriced). No live pricing.
-- SendUserFile rejects very large full-page screenshots (~>1MB) with a 400.
+- The in-app browser blocks programmatic `localhost` navigation, so web UAT is server-side
+  (fetch the rendered HTML + check markers) rather than visual.
 
 ### Open threads / next steps (where we stopped)
-**Agreed next (requested by player, not yet started):**
-- **Combo detector** — flag 2-/3-card win/infinite/lock combos present in a deck, grounded in
-  `data/reference/combo_pieces.txt` (grow it into pairs/lines). Surface in the dashboard + feed
-  the power/bracket signal. Keep it honest: only flag combos whose pieces are actually in the list.
-- **Grow `data/reference/card_notes.csv`** — richer "why it's good" blurbs + hand-picked
-  alternatives for more cards across the 4 decks (only ~20 staples seeded so far). Now worth doing
-  because the fit engine + panel surface these.
+**THE live issue — shared cards (2026-07-24).** With 6 decks on a mostly single-copy collection,
+**50 card-copies are committed beyond what's owned**, so all six can't be sleeved at once. Split:
+- **36 cheap copies (~$29 total, all <$3)** — just buy them; that clears ~72% of the conflicts.
+- **14 pricier contested cards (~$148)** — deserve a per-card decision. Headliner: **Rhystic Study
+  (~$72, own 2, wanted by 3 decks)**. See "deck tiers" above: the auto-built drafts should yield.
+- Careful: a mechanical "highest fit keeps it" pass proposes cutting **Exsanguinate / Sun Titan /
+  High Market / Toxic Deluge out of Y'shtola** — those are that deck's engine. The fit score does
+  not know deck identity. Always sanity-check separation proposals against the deck's game plan.
 
-**Player action item (blocks best fit-score quality):** run `enrich.bat` / `carddb.py` once on the
-real collection so name-only decks (Y'shtola, Kaervek, Cloud) score as sharply as Cosmic.
+**Also open:**
+- **Dragons in the wrong decks:** Hellkite Tyrant (own 1) sits in BOTH Cloud and Kaervek;
+  Two-Headed Dragon + Guardian Scalelord are in non-dragon decks while The Ur-Dragon wants them.
+- Grow `data/reference/card_notes.csv` (51 entries) — the panel now generates a fallback blurb for
+  every card, so this is polish rather than a gap.
 
 **Backlog:**
-- **In-app deck editor** with collection autocomplete + live "available pool" warnings.
 - Grow `commanders.csv` / `archetype_support.csv` (more owned legends → richer Build-Next/similar).
-- Recompute the fit score client-side from the live Scryfall data (would make name-only decks
-  accurate even without enriching) — bigger job; enrichment is the simpler path for now.
+- EDHREC "Lift"/inclusion chip on the Collection grid (the EDHREC client exists — `scripts/edhrec.py`).
+- R3 (optional): split `build_dashboard.py` (~1,400 lines) renderers. It's cohesive, just big.
 - Always-on deploy (gunicorn + auth + HTTPS + PNG icon) so the phone app doesn't need the PC on.
 
 **Session log:** PRs #8 (image throttle), #9 (click panel), #10 (ManaPool export), #11 (update.bat
