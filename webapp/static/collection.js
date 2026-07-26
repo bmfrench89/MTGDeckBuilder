@@ -49,6 +49,12 @@
     figs.sort(function (a, b) {
       if (by === 'value') return (parseFloat(b.getAttribute('data-price')) || 0) - (parseFloat(a.getAttribute('data-price')) || 0);
       if (by === 'mv') return ((parseFloat(a.getAttribute('data-mv')) || 0) - (parseFloat(b.getAttribute('data-mv')) || 0)) || a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+      if (by === 'staple') {
+        // lower EDHREC rank = more played; cards not yet resolved sort last
+        var ra = parseInt(a.getAttribute('data-edhrec'), 10) || Infinity;
+        var rb = parseInt(b.getAttribute('data-edhrec'), 10) || Infinity;
+        return (ra - rb) || a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+      }
       return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
     });
     figs.forEach(function (f) { grid.appendChild(f); });
@@ -59,9 +65,26 @@
   figs.forEach(function (f) {
     var img = f.querySelector('img'); if (!img) return;
     var k = f.getAttribute('data-card').toLowerCase();
-    if (!byName[k]) byName[k] = { name: f.getAttribute('data-card'), imgs: [], done: false, queued: false };
+    if (!byName[k]) byName[k] = { name: f.getAttribute('data-card'), imgs: [], figs: [], done: false, queued: false };
     byName[k].imgs.push(img);
+    byName[k].figs.push(f);
   });
+
+  // "How staple is this?" — Scryfall ships an EDHREC rank on every card (1 = most played
+  // in Commander), and the batch call above already returns it, so the chip is free.
+  function stapleChip(fig, rank) {
+    if (!rank || fig.querySelector('.staple')) return;
+    var tier = rank <= 100 ? ['top100', 'TOP 100']
+             : rank <= 500 ? ['top500', 'TOP 500']
+             : rank <= 2000 ? ['top2k', 'TOP 2K'] : null;
+    if (!tier) return;                       // only badge genuinely-staple cards
+    var s = document.createElement('span');
+    s.className = 'staple ' + tier[0];
+    s.textContent = tier[1];
+    s.title = 'EDHREC rank #' + rank + ' — how widely this card is played in Commander';
+    fig.appendChild(s);
+    fig.setAttribute('data-edhrec', rank);   // lets us sort by staple-ness
+  }
   var io = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (!e.isIntersecting) return;
@@ -82,8 +105,12 @@
         j.data.forEach(function (card) {
           var iu = card.image_uris || (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris);
           var url = iu && iu.normal, k = (card.name || '').toLowerCase();
-          if (url && byName[k]) { byName[k].imgs.forEach(function (i) { i.src = url; }); byName[k].done = true; }
+          var rec = byName[k] || byName[(card.name || '').split('//')[0].trim().toLowerCase()];
+          if (!rec) return;
+          if (url) { rec.imgs.forEach(function (i) { i.src = url; }); rec.done = true; }
+          rec.figs.forEach(function (f) { stapleChip(f, card.edhrec_rank); });
         });
+        if (sortSel.value === 'staple') sortGrid();   // fold newly-ranked cards in
       }).catch(function () {});
     }
   }
@@ -96,6 +123,18 @@
   });
   search.addEventListener('input', apply);
   [typeSel, roleSel, indeck, priced].forEach(function (el) { el.addEventListener('change', apply); });
-  sortSel.addEventListener('change', sortGrid);
+  sortSel.addEventListener('change', function () {
+    // Ranks arrive lazily with the images, so sorting by "most played" would only order
+    // what you've scrolled past. Selecting it resolves the rest of the collection (in
+    // 75-card batches) and the grid re-sorts as each batch lands.
+    if (sortSel.value === 'staple') {
+      Object.keys(byName).forEach(function (k) {
+        var rec = byName[k];
+        if (!rec.queued) { rec.queued = true; queue.push(rec.name); }
+      });
+      schedule();
+    }
+    sortGrid();
+  });
   apply();
 })();

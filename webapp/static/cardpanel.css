@@ -59,3 +59,11 @@ figure.mc .qty{position:absolute;top:4px;right:4px;background:var(--accent);colo
   font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;padding:0 5px;border-radius:8px}
 figure.mc figcaption{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);
   margin-top:3px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* "how staple is this" — EDHREC rank badge (Collection grid). Bottom-left so it never
+   collides with the .qty badge in the top-right. */
+figure.mc .staple{position:absolute;left:4px;bottom:22px;font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;font-weight:700;letter-spacing:.5px;padding:1px 5px;border-radius:8px;
+  color:#000;background:rgba(255,255,255,.75);pointer-events:none}
+figure.mc .staple.top100{background:#f5c542}
+figure.mc .staple.top500{background:#9fd67a}
+figure.mc .staple.top2k{background:rgba(255,255,255,.55)}
