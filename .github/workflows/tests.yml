@@ -1,0 +1,33 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -r webapp/requirements.txt
+      - name: Run tests
+        run: pytest
+      # The analysis scripts are stdlib-only; this catches an accidental new dependency.
+      - name: Check scripts import with no extra packages
+        run: |
+          pip uninstall -y flask >/dev/null 2>&1 || true
+          for f in scripts/*.py; do
+            python -c "import sys; sys.path.insert(0,'scripts'); import importlib; importlib.import_module('$(basename ${f%.py})')"
+          done

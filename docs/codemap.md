@@ -109,6 +109,24 @@ derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional `.attrs/
 companions) · `reference/` (game_changers, tutors, combos, card_notes, role_staples,
 commanders, archetype_support).
 
+## Tests (`tests/`, pytest)
+
+```bash
+pip install -r requirements-dev.txt && pytest
+```
+
+Offline and hermetic — every deck/collection a test touches is written into pytest's
+`tmp_path`, so the suite never reads or writes the player's real `data/`. Coverage is aimed
+at the code that can *destroy data or lie*: `test_deck_edit.py` (the web app rewriting deck
+files in place — quantity/section preservation, no-op safety, comment lines, first-match-only),
+`test_mtglib.py` (parsing / `_norm` / classification), `test_manabase.py` (hypergeometric
+values + monotonicity), `test_auto_build.py` (exactly 100 cards, color legality, singleton,
+honest shortfall, the `scan(skip=)` self-exclusion regression), and `test_dashboard.py`
+(self-contained HTML, card panel present, editable-only-in-app, batch image loader) — which
+doubles as the safety net for refactoring `build_dashboard`. CI: `.github/workflows/tests.yml`
+runs pytest on 3.11/3.13 and re-checks that `scripts/` still imports with **no third-party
+packages installed**.
+
 ## Refactor status (hub-and-spoke)
 
 - **R1 ✅ done** — extract shared helpers into `deckcore`; break the `build_dashboard`

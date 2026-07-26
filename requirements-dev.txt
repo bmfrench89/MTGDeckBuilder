@@ -1,0 +1,4 @@
+# Dev/test dependencies. The analysis scripts themselves are stdlib-only; the web app
+# needs webapp/requirements.txt.
+#   pip install -r requirements-dev.txt && pytest
+pytest>=8.0

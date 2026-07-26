@@ -162,7 +162,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     nameonly = not any(c.types for c in coll)
 
     # Candidate pool: owned minus copies committed to your other decks (basics exempt).
-    if respect_commitments:
+    # No decks folder => nothing is committed anywhere, so the whole collection is free.
+    if respect_commitments and decks_dir:
         usage = deck_conflicts.scan(decks_dir, idx, skip=skip_deck)
         pool_names = [row[0] for row in deck_conflicts.available_pool(usage, coll)]
     else:
