@@ -59,20 +59,20 @@
 1 Hraesvelgr of the First Brood
 1 Niv-Mizzet, Visionary
 1 Silumgar, the Drifting Death
-1 Cloud Sprite
-1 Merfolk of the Pearl Trident
+1 Cultivate
+1 Banishing Light
 1 Bola Warrior
-1 Crowd of True Believers
+1 Unlicensed Disintegration
 1 Goblin Glasswright // Craft with Pride
 1 Goblin Recruiter
-1 Momo, Friendly Flier
-1 Raging Goblin
+1 Springbloom Druid
+1 Chaos Warp
 1 Selfless Police Captain
-1 Stampede Driver
+1 Skyscanner
 1 Agent of Atlas
-1 Angelic Curator
+1 Mortality Spear
 1 Ant-Man's Air Force
-1 Bogwater Lumaret
+1 Seal of Doom
 1 Bold Biochemist
 1 Brave Brawler
 1 Beledros Witherbloom
