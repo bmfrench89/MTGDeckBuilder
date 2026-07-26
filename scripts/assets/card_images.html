@@ -1,0 +1,33 @@
+<script>
+(function(){
+  var imgs=[].slice.call(document.querySelectorAll('img[data-src]'));
+  if(!imgs.length) return;
+  var byName={};
+  imgs.forEach(function(img){
+    var name=img.getAttribute('alt'); if(!name) return;
+    var k=name.toLowerCase();
+    if(!byName[k]) byName[k]={name:name,imgs:[],done:false};
+    byName[k].imgs.push(img);
+  });
+  var keys=Object.keys(byName);
+  function chunk(a,n){var r=[];for(var i=0;i<a.length;i+=n)r.push(a.slice(i,i+n));return r;}
+  function cdn(c){var iu=c.image_uris||(c.card_faces&&c.card_faces[0]&&c.card_faces[0].image_uris);return iu&&iu.normal;}
+  var batches=chunk(keys,75), pending=batches.length;
+  batches.forEach(function(batch){
+    fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({identifiers:batch.map(function(k){return {name:byName[k].name};})})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(j){
+        if(j&&j.data) j.data.forEach(function(c){
+          var url=cdn(c), k=(c.name||'').toLowerCase();
+          if(url&&byName[k]){ byName[k].imgs.forEach(function(i){i.src=url;}); byName[k].done=true; }
+        });
+      }).catch(function(){}).finally(function(){ if(--pending===0) fallback(); });
+  });
+  function fallback(){
+    var rest=[];
+    keys.forEach(function(k){ if(!byName[k].done) byName[k].imgs.forEach(function(i){ if(!i.getAttribute('src')) rest.push(i); }); });
+    if(!rest.length) return;
+    var q=rest.slice(), timer=setInterval(function(){ var i=q.shift(); if(!i){clearInterval(timer);return;} if(!i.getAttribute('src')) i.src=i.getAttribute('data-src'); },400);
+  }
+})();
+</script>

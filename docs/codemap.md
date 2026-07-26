@@ -134,9 +134,14 @@ packages installed**.
 - **R2 ✅ done** — `deckcore.analyze_deck()` / `analyze_cards()`; `build_dashboard.generate`,
   the webapp assess packet, and `auto_build` now call one pipeline (`power.build_for_deck` +
   the `manabase` CLI stay as the low-level primitives). Behavior-identical (UAT byte-for-byte).
-- **R3 — deferred (optional).** `build_dashboard` is now cohesive (pure rendering + card panel);
-  splitting its section renderers is polish, not needed for the hub-and-spoke. Revisit only if
-  it grows.
+- **R3 ✅ done** — the dashboard's front-end assets moved out of the Python into
+  **`scripts/assets/`**: `card_panel.html` (panel markup + its JS), `card_panel.css`
+  (real CSS; `__DISPLAY__/__HEAD__/__MONO__` are swapped for the theme's fonts), and
+  `card_images.html` (the batch image loader). `_asset()` reads + caches them and they're
+  **inlined at render time**, so a generated dashboard is still one self-contained file.
+  `build_dashboard.py` 1,411 → 1,018 lines; the 285-line `card_modal_block` string is gone,
+  and the panel's JS/CSS are now editable (and lintable) without Python string-escaping.
+  Verified **byte-identical** across all 6 decks × editable/non-editable (12/12).
 
 ## Shipped from the backlog
 
