@@ -77,7 +77,7 @@
     <select id="collRole"><option value="">Any role</option><option value="ramp">Ramp</option><option value="draw">Draw</option><option value="removal">Removal</option><option value="wipe">Wipe</option><option value="counter">Counter</option></select>
     <label class="muted" style="font-size:.82rem"><input type="checkbox" id="collIndeck" class="chk"> in a deck</label>
     <label class="muted" style="font-size:.82rem"><input type="checkbox" id="collPriced" class="chk"> priced</label>
-    <select id="collSort" style="margin-left:auto"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option></select>
+    <select id="collSort" style="margin-left:auto"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
   </div>
   <div class="muted" style="font-size:.8rem;margin-top:10px"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
   {% if not carddb.on %}<div class="warn" style="font-size:.78rem;margin-top:4px">Name-only collection — the color / type / mana-value filters need enrichment (run <code>enrich.bat</code>).</div>{% endif %}

@@ -83,9 +83,15 @@ live oracle text, rulings, grounded local data, and three working buy-links.
 - ☑ Live search + filters: name, colors (subset), type, role, "in a deck", "priced", + sort
   (name / value / MV). Client-side, instant.
 - ☑ Each card clickable → the shared panel (reuses Phase 0 `data-card`).
-- ☐ EDHREC inclusion / Lift "how staple is this" chip — *deferred (needs the pyedhrec data client).*
+- ☑ **"How staple is this" chip** — every card in the grid gets a TOP 100 / TOP 500 / TOP 2K badge
+  from Scryfall's `edhrec_rank`, plus a **"Sort: Most played (EDHREC)"** option. Free of extra
+  requests: the batch `/cards/collection` call the grid already makes for images returns the rank.
+  (Chose Scryfall's shipped rank over `pyedhrec` — it's per-card, collection-wide, and needs no
+  new dependency or scraping. `scripts/edhrec.py` still covers per-commander staples.)
 **Acceptance:** ☑ verified — search "sol" → 12, "in a deck" → 266, role "ramp" → 40; clicking a
-card opens the panel; honest name-only note when filters need enrichment.
+card opens the panel; honest name-only note when filters need enrichment. Staple chip verified
+against live data (Sol Ring #1 → TOP 100, Swords to Plowshares #11 → TOP 100, Raging Goblin
+#15,821 → no badge).
 
 ### Phase 2 — Manabase & consistency engine (FLAGSHIP)  ◐
 - ☑ `scripts/manabase.py` — exact hypergeometric engine (`math.comb`), verified against a known
