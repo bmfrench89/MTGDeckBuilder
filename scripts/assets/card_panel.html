@@ -1,0 +1,281 @@
+
+<style>
+  .cm-editrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .cm-editbtn{font:inherit;font-size:.86rem;padding:7px 14px;border-radius:8px;cursor:pointer;
+    background:var(--cm-accent,#5BE0D4);color:#08131a;border:none;font-weight:700}
+  .cm-editbtn.danger{background:transparent;color:var(--cm-warn,#e0667a);
+    border:1px solid var(--cm-warn,#e0667a)}
+  .cm-shared{font-size:.84rem;margin:2px 0 8px;padding:8px 10px;border-radius:8px;
+    background:rgba(255,255,255,.05);border-left:3px solid var(--cm-warn,#e0667a)}
+  .cm-hint{font-size:.8rem;opacity:.75;margin:4px 0}
+  .cm-search{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;font:inherit;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:inherit}
+  .cm-searchres{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .cm-searchitem{font:inherit;font-size:.82rem;padding:5px 10px;border-radius:14px;cursor:pointer;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:inherit}
+  .cm-searchitem:hover{background:var(--cm-accent,#5BE0D4);color:#08131a}
+</style>
+<div id="cardmodal" class="cm-overlay" hidden>
+  <div class="cm-sheet" role="dialog" aria-modal="true" aria-label="Card details">
+    <div class="cm-bar"><span class="cm-grab"></span>
+      <button class="cm-close" type="button" aria-label="Close">&times;</button></div>
+    <div class="cm-scroll">
+      <div class="cm-grid">
+        <div class="cm-imgcol">
+          <img id="cm-img" class="cm-img" alt="">
+          <div id="cm-imgmeta" class="cm-imgmeta"></div>
+        </div>
+        <div class="cm-info">
+          <h3><span id="cm-name"></span><span id="cm-cost" class="cm-cost"></span></h3>
+          <div class="cm-chips"><span id="cm-tl" class="cm-chip tl" hidden></span>
+            <span id="cm-secchip" class="cm-chip sec" hidden></span></div>
+          <div id="cm-banner" class="cm-banner" hidden></div>
+          <div id="cm-fit" class="cm-sec" hidden>
+            <div class="cm-h">Fit for this deck</div>
+            <div class="cm-fithead"><span id="cm-fitband" class="cm-fitband"></span>
+              <span id="cm-fitscore" class="cm-fitscore"></span></div>
+            <div class="cm-meter"><span id="cm-meterbar"></span></div>
+            <p id="cm-fitctx" class="cm-fitctx"></p>
+            <details class="cm-reasons"><summary>How this score breaks down</summary>
+              <ul id="cm-reasons"></ul>
+              <p class="cm-legend"><b>Color fit</b> = matches your commander's colors ·
+                <b>Role need</b> = how much the deck wants this job ·
+                <b>Curve</b> = how easy it is to cast ·
+                <b>Power</b> = staple / Game-Changer status ·
+                <b>Theme</b> = tribal or archetype tie. It's a heuristic guide, not a verdict.</p>
+            </details>
+          </div>
+          <div id="cm-oraclewrap" class="cm-sec" hidden>
+            <div class="cm-h">What it does</div>
+            <p id="cm-oracle" class="cm-oracle"></p>
+            <div id="cm-kw" class="cm-kw"></div>
+          </div>
+          <div id="cm-whywrap" class="cm-sec" hidden>
+            <div class="cm-h">Why it's good</div>
+            <p id="cm-why" class="cm-why"></p>
+          </div>
+          <div id="cm-altwrap" class="cm-sec" hidden>
+            <div id="cm-althead" class="cm-h">Alternatives that could slot here</div>
+            <div id="cm-alts" class="cm-alts"></div>
+          </div>
+          <div id="cm-editwrap" class="cm-sec" hidden>
+            <div class="cm-h">Edit this deck</div>
+            <div id="cm-shared" class="cm-shared" hidden></div>
+            <div class="cm-editrow">
+              <button id="cm-remove" type="button" class="cm-editbtn danger">Remove from deck</button>
+              <button id="cm-replace" type="button" class="cm-editbtn">Replace\u2026</button>
+            </div>
+            <div id="cm-replacebox" hidden>
+              <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection:</p>
+              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection\u2026" autocomplete="off">
+              <div id="cm-searchres" class="cm-searchres"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var DATA=__PAYLOAD__, cache={}, curKey=null;
+  var EDITABLE=__EDITABLE__, STEM=__STEM__;
+  var ov=document.getElementById('cardmodal'), sc=ov.querySelector('.cm-scroll');
+  var img=document.getElementById('cm-img'), nm=document.getElementById('cm-name');
+  var cost=document.getElementById('cm-cost'), tl=document.getElementById('cm-tl');
+  var secchip=document.getElementById('cm-secchip'), banner=document.getElementById('cm-banner');
+  var meta=document.getElementById('cm-imgmeta');
+  var wy=document.getElementById('cm-why'), ww=document.getElementById('cm-whywrap');
+  var aw=document.getElementById('cm-altwrap'), al=document.getElementById('cm-alts');
+  var ah=document.getElementById('cm-althead');
+  var fit=document.getElementById('cm-fit'), fb=document.getElementById('cm-fitband');
+  var fs=document.getElementById('cm-fitscore'), mb=document.getElementById('cm-meterbar');
+  var fc=document.getElementById('cm-fitctx'), fr=document.getElementById('cm-reasons');
+  var ow=document.getElementById('cm-oraclewrap'), orc=document.getElementById('cm-oracle');
+  var kw=document.getElementById('cm-kw');
+
+  function scry(name){
+    if(cache[name]!==undefined) return Promise.resolve(cache[name]);
+    var u='https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(name);
+    return fetch(u).then(function(r){return r.ok?r.json():null;})
+      .then(function(j){cache[name]=j; return j;}).catch(function(){cache[name]=null; return null;});
+  }
+  function oracleOf(j){
+    if(j.oracle_text) return j.oracle_text;
+    if(j.card_faces) return j.card_faces.map(function(f){
+      return (f.name?f.name+'\n':'')+(f.oracle_text||''); }).join('\n\n// \n\n');
+    return '';
+  }
+  function setChip(el,txt){ if(txt){el.textContent=txt; el.hidden=false;} else {el.hidden=true;} }
+
+  // Grounded "Why it's good" for cards without a curated note: read what the card DOES
+  // off its oracle text, frame it by role/section, add the EDHREC staple signal.
+  var WHYMECH=[
+    [/counter target/,'answers spells on the stack'],
+    [/destroy target|exile target/,'removes a problem permanent on demand'],
+    [/destroy all|exile all|each creature|each opponent/,'swings the board with a sweeping effect'],
+    [/search your library/,'tutors up exactly what the moment needs — consistency'],
+    [/draw [^.]*card/,'refills your hand for raw card advantage'],
+    [/add \{|add one mana|mana of any|improvise|convoke|affinity/,'accelerates or discounts your mana'],
+    [/return [^.]*graveyard/,'buys your best cards back from the graveyard'],
+    [/create [^.]*token/,'builds a board of tokens for value or pressure'],
+    [/hexproof|indestructible|protection from|ward /,'protects your key pieces'],
+    [/whenever [^.]*dies|sacrifice/,'turns creatures dying into value'],
+    [/extra turn/,'takes extra turns — a big tempo swing'],
+    [/copy target|for each|double /,'scales or doubles your effects']
+  ];
+  function genWhy(d,j,ot){
+    var t=(ot||'').toLowerCase(), verb=null;
+    for(var i=0;i<WHYMECH.length;i++){ if(WHYMECH[i][0].test(t)){ verb=WHYMECH[i][1]; break; } }
+    var parts=[];
+    if(verb) parts.push('It '+verb+(d.section?(', pulling weight in your '+d.section+' plan'):'')+'.');
+    else if(d.role) parts.push('A '+d.role.toLowerCase()+' piece'+(d.section?(' in your '+d.section+' plan'):'')+'.');
+    else parts.push('Earns its slot in your '+(d.section||'deck')+'.');
+    if(j&&j.edhrec_rank) parts.push('An established pick the field runs (EDHREC #'+j.edhrec_rank+').');
+    return parts.join(' ');
+  }
+
+  function enrich(d){
+    orc.textContent='Loading card text from Scryfall…'; orc.className='cm-oracle cm-loading';
+    ow.hidden=false;
+    scry(d.name).then(function(j){
+      if(curKey!==keyOf(d)) return;              // user moved on
+      if(!j){ orc.textContent='(Card text unavailable — open with an internet connection to load it from Scryfall.)';
+        orc.className='cm-oracle cm-loading'; kw.innerHTML=''; return; }
+      cost.textContent=j.mana_cost||'';
+      setChip(tl, j.type_line||d.type||'');
+      var ot=oracleOf(j); orc.textContent=ot||'(no rules text)'; orc.className='cm-oracle';
+      kw.innerHTML='';
+      (j.keywords||[]).forEach(function(k){var s=document.createElement('span');s.textContent=k;kw.appendChild(s);});
+      var bits=[];
+      if(j.cmc!==undefined) bits.push('<b>MV</b> '+j.cmc);
+      if(j.color_identity&&j.color_identity.length) bits.push('<b>ID</b> '+j.color_identity.join(''));
+      else bits.push('<b>ID</b> colorless');
+      if(j.edhrec_rank) bits.push('<b>EDHREC</b> #'+j.edhrec_rank);
+      if(j.prices&&j.prices.usd) bits.push('<b>~$</b>'+j.prices.usd);
+      meta.innerHTML=bits.join(' &nbsp; ');
+      if(!d.why){ wy.textContent=genWhy(d,j,ot); ww.hidden=false; }   // generated fallback
+    });
+  }
+  function keyOf(d){ return d.name; }
+
+  function fillFit(d){
+    if(d.fit){
+      fb.textContent=d.fit.band;
+      fs.innerHTML=d.fit.score+'<small>/100 fit</small>';
+      mb.style.width=Math.max(3,d.fit.score)+'%';
+      fc.textContent=d.fit.context||'';
+      fr.innerHTML='';
+      (d.fit.reasons||[]).forEach(function(r){
+        var li=document.createElement('li');
+        var b=document.createElement('b'); b.textContent=r.label;
+        var sp=document.createElement('span'); sp.textContent=r.detail;
+        var em=document.createElement('em'); em.textContent=r.pts+'/'+r.max;
+        li.appendChild(b); li.appendChild(sp); li.appendChild(em); fr.appendChild(li);
+      });
+      fit.hidden=false;
+      banner.hidden = !d.fit.nameonly;
+      if(d.fit.nameonly) banner.textContent='This deck list is name-only, so the color / '
+        +'role / curve signals below are limited. The card text and stats above are pulled '
+        +'live from Scryfall. Enrich the collection to sharpen the score.';
+    } else { fit.hidden=true; banner.hidden=true; }
+  }
+
+  function fillAlts(d){
+    al.innerHTML='';
+    if(d.alts&&d.alts.length){
+      var anyUp=d.alts.some(function(a){return a.upgrade;});
+      ah.textContent=anyUp?'Stronger options for this slot':'Alternatives that could slot here';
+      d.alts.forEach(function(a){
+        var fig=document.createElement('figure'); fig.className='cm-alt';
+        var im=document.createElement('img'); im.alt=a.n; im.loading='lazy'; im.src=a.img;
+        var cap=document.createElement('figcaption'); cap.textContent=a.n+' ';
+        var tag=document.createElement('span'); tag.className=a.owned?'own':'buy';
+        tag.textContent=a.owned?'\u2713 owned':'buy'; cap.appendChild(tag);
+        if(a.upgrade){var up=document.createElement('span');up.className='up';up.textContent='upgrade';cap.appendChild(up);}
+        if(a.why){var w=document.createElement('span');w.className='altwhy';w.textContent=a.why;cap.appendChild(w);}
+        if(EDITABLE){ fig.style.cursor='pointer'; fig.title='Swap '+a.n+' into this deck';
+          (function(name){ fig.addEventListener('click',function(){ editCard('replace', name); }); })(a.n); }
+        fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
+      });
+      aw.hidden=false;
+    } else { aw.hidden=true; }
+  }
+
+  function open(key){
+    var d=DATA[key]; if(!d) return;
+    curKey=keyOf(d);
+    nm.textContent=d.name; cost.textContent='';
+    setChip(tl, d.type||''); setChip(secchip, d.section?('in: '+d.section):'');
+    meta.innerHTML='';
+    img.removeAttribute('src'); img.alt=d.name; img.src=d.full;
+    fillFit(d);
+    if(d.why){ wy.textContent=d.why; ww.hidden=false; } else { ww.hidden=true; }
+    fillAlts(d);
+    setupEdit(d);
+    enrich(d);
+    sc.scrollTop=0;
+    ov.hidden=false; document.body.style.overflow='hidden';
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+  }
+  function close(){
+    ov.classList.remove('show'); document.body.style.overflow='';
+    setTimeout(function(){ ov.hidden=true; }, 260);
+  }
+
+  var ew=document.getElementById('cm-editwrap'), rb=document.getElementById('cm-replacebox'),
+      shd=document.getElementById('cm-shared'), sr=document.getElementById('cm-searchres'),
+      si=document.getElementById('cm-search');
+  function editCard(action, replacement){
+    if(!EDITABLE || !curKey) return;
+    if(action==='remove' && !confirm('Remove '+curKey+' from this deck?')) return;
+    var f=new FormData(); f.append('action', action); f.append('name', curKey);
+    if(replacement) f.append('replacement', replacement);
+    fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f})
+      .then(function(r){ if(r.ok||r.redirected) location.reload(); else alert('Edit failed.'); })
+      .catch(function(){ alert('Edit failed \u2014 is the app still running?'); });
+  }
+  function setupEdit(d){
+    if(!ew) return;
+    if(!EDITABLE){ ew.hidden=true; return; }
+    ew.hidden=false; if(rb) rb.hidden=true; if(sr) sr.innerHTML=''; if(si) si.value='';
+    if(d.shared && shd){
+      shd.hidden=false;
+      shd.innerHTML='\u21c4 Shared across '+d.shared.count+' of your decks \u2014 you own '+d.shared.owned+
+        (d.shared.covered?' (\u2713 enough for all)':' (\u26a0 not enough to sleeve them all)')+
+        '. Removing or swapping it here frees a copy.';
+    } else if(shd){ shd.hidden=true; }
+  }
+  if(EDITABLE && ew){
+    var rm=document.getElementById('cm-remove'), rp=document.getElementById('cm-replace'), stimer=null;
+    if(rm) rm.addEventListener('click',function(){ editCard('remove'); });
+    if(rp) rp.addEventListener('click',function(){ if(rb){ rb.hidden=!rb.hidden; if(!rb.hidden&&si) si.focus(); } });
+    if(si) si.addEventListener('input', function(){
+      var q=si.value.trim(); clearTimeout(stimer);
+      if(q.length<2){ sr.innerHTML=''; return; }
+      stimer=setTimeout(function(){
+        fetch('/api/collection/search?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():[];})
+          .then(function(list){
+            sr.innerHTML='';
+            (list||[]).forEach(function(it){
+              var b=document.createElement('button'); b.type='button'; b.className='cm-searchitem';
+              b.textContent=it.name+(it.qty>1?(' \u00d7'+it.qty):'');
+              (function(nm){ b.addEventListener('click',function(){ editCard('replace', nm); }); })(it.name);
+              sr.appendChild(b);
+            });
+            if(!list || !list.length) sr.innerHTML='<span class="cm-hint">No owned card matches.</span>';
+          }).catch(function(){});
+      }, 220);
+    });
+  }
+  document.querySelectorAll('figure.mc[data-key], .cardlink[data-key]').forEach(function(f){
+    f.addEventListener('click',function(e){ e.preventDefault(); open(f.getAttribute('data-key')); });
+    f.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(f.getAttribute('data-key')); }
+    });
+  });
+  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+  document.querySelector('#cardmodal .cm-close').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!ov.hidden) close(); });
+})();
+</script>
