@@ -39,6 +39,7 @@ import combo_detector
 import deckcore
 import edhrec
 import spellbook
+import optimize
 
 
 def _txt(text, filename):
@@ -382,13 +383,34 @@ def build_deck_export(commander):
 
 @app.route("/build-next/<path:commander>/save", methods=["POST"])
 def build_deck_save(commander):
-    """Write the auto-built draft to data/decks/ so it joins the leaderboard."""
+    """Write the auto-built draft to data/decks/, then tune it against what the field
+    actually plays so a NEW deck lands optimized. (Manual edits are deliberately left
+    alone — see /deck/<stem>/optimize.)"""
     coll, idx = collection_index()
     d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None),
                          skip_deck=_deck_slug(commander))
     stem = _deck_slug(commander)
-    with open(os.path.join(DECKS_DIR, f"{stem}.txt"), "w", encoding="utf-8", newline="\n") as f:
+    path = os.path.join(DECKS_DIR, f"{stem}.txt")
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
+    try:
+        optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
+    except Exception:
+        pass                      # offline / EDHREC down: keep the un-tuned draft
+    return redirect(url_for("deck", stem=stem))
+
+
+@app.route("/deck/<stem>/optimize", methods=["POST"])
+def deck_optimize(stem):
+    """Tune an existing deck toward the field on demand (the ⚡ Optimize button)."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    coll, idx = collection_index()
+    try:
+        optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
+    except Exception:
+        pass
     return redirect(url_for("deck", stem=stem))
 
 
