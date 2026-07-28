@@ -17,8 +17,8 @@
 1 Talisman of Progress
 1 Thought Vessel
 1 Grow from the Ashes
-1 Mana Prism
-1 Pilgrim's Eye
+1 Crux of Fate
+1 Heroic Intervention
 
 # --- Card advantage ---
 1 Think Twice
@@ -85,7 +85,7 @@
 
 # --- Lands (37) ---
 1 Command Tower
-1 Dark Fortress
+1 Forest
 1 Omashu City
 1 Scavenger Grounds
 1 Spectacle Summit
@@ -94,15 +94,15 @@
 1 Thriving Bluff
 1 Tranquil Cove
 1 Villainous Hideout
-1 Akoum Refuge
-1 Avengers Tower
-1 Blossoming Sands
-1 Brushland
-1 Clifftop Retreat
-1 Crystal Vein
-1 Festering Thicket
-1 Fields of Strife
-1 Fire-Lit Thicket
+1 Swamp
+1 Forest
+1 Mountain
+1 Island
+1 Plains
+1 Swamp
+1 Mountain
+1 Island
+1 Plains
 1 Forum of Amity
 1 Furycalm Snarl
 1 Glacial Fortress

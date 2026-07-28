@@ -85,11 +85,11 @@
 1 Brash Taunter
 1 Tectonic Giant
 1 Combustible Gearhulk
-1 Hellkite Tyrant
+1 Dark Ritual
 1 Kardur, Doomscourge
 1 Warren Torchmaster
 1 Ob Nixilis Reignited
-1 Two-Headed Dragon
+1 Dictate of the Twin Gods
 1 Morbid Opportunist
 1 Sangromancer
 1 Squee, Goblin Nabob
@@ -112,7 +112,7 @@
 1 Urborg Volcano
 1 Stensia Bloodhall
 1 Cinder Barrens
-1 Barbed Field
+1 Mana Geyser
 1 Molten Slagheap
 1 Ash Barrens
 1 Terramorphic Expanse

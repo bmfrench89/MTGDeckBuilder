@@ -79,7 +79,8 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
 | carddb | enrich the collection (colors/types/MV/**subtypes**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build). | mtglib |
-| edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy); disk-cached, degrades gracefully | mtglib |
+| edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`, the **field signal** behind `deck_fit`; disk-cached, degrades gracefully | mtglib |
+| **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply` | mtglib, deckcore, deck_fit, deck_conflicts, power |
 | spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
@@ -108,6 +109,26 @@ CLIs* to stay grounded; it doesn't reimplement them. Runs in Claude Code (no app
 derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional `.attrs/.notes/.buylist`
 companions) · `reference/` (game_changers, tutors, combos, card_notes, role_staples,
 commanders, archetype_support).
+
+## Keeping decks optimized (the standing workflow)
+
+```bash
+python3 scripts/optimize.py --all --collection data/collection/collection.csv          # dry run
+python3 scripts/optimize.py --all --collection data/collection/collection.csv --apply  # write
+```
+
+**The signal:** `deck_fit` scores cards partly by **EDHREC inclusion % for that specific
+commander** (`edhrec.inclusion_map`). Without it the scorer only saw generic quality, so a
+vanilla 1-drop outranked a 95%-played auto-include on curve alone — that's why the first
+auto-built decks scored 12–24% against the field while hand-built ones scored 56–80%.
+
+**Guardrails** (each exists because a naive pass got it wrong): a swap needs a ≥25-point
+inclusion gain; a card is valued at `max(field %, (fit−60)×2)` so premium-but-unpopular
+cards survive; the commander, basics, `card_notes.csv` entries and anything named in the
+deck's `.notes.md` are never cut; role counts must stay in template range; lands only swap
+for lands; only cards with a **free** copy (not committed to another deck) can come in; and
+with no field data the manabase is left alone entirely. Validate with EDHREC top-25 overlap
+before/after — see `docs/handoff.md`.
 
 ## Tests (`tests/`, pytest)
 
