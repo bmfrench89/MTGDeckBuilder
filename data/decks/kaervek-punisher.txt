@@ -98,7 +98,7 @@
 1 Exsanguinate
 1 Lightning Greaves
 
-# --- Lands (37) ---
+# --- Lands (36) ---
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
@@ -112,7 +112,6 @@
 1 Urborg Volcano
 1 Stensia Bloodhall
 1 Cinder Barrens
-1 Mana Geyser
 1 Molten Slagheap
 1 Ash Barrens
 1 Terramorphic Expanse
@@ -120,3 +119,6 @@
 1 Evolving Wilds
 9 Mountain
 9 Swamp
+
+# --- Instants & sorceries ---
+1 Mana Geyser

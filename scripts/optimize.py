@@ -220,12 +220,42 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     return result
 
 
-# role -> keywords that identify the right section header in a deck file
+# FUNCTION sections can hold any card type — Sol Ring belongs under "Ramp" even though
+# it's an artifact. Keyed by role -> header keywords.
 _SECTION_HINT = {
-    "land": ("land",), "ramp": ("ramp", "mana"), "draw": ("draw", "card advantage"),
-    "removal": ("removal", "interaction"), "wipe": ("wipe", "wrath", "board"),
-    "counter": ("counter",), "creature": ("creature", "threat"),
+    "ramp": ("ramp", "mana"), "draw": ("draw", "card advantage"),
+    "removal": ("removal", "interaction"), "wipe": ("wipe", "wrath"),
+    "counter": ("counter",),
 }
+
+# TYPE sections may ONLY hold cards of that type. A section counts as type-exclusive when
+# its header *starts with* the type word, so a curated header like "Spiders & Spider-matters
+# creatures" or "Equipment support" is left alone — only plain "Creatures", "Lands",
+# "Artifacts" … are policed. This is the rule the screenshot was violating: Door of
+# Destinies (Artifact) and Methods of the Mighty (Instant) were filed under "Creatures".
+_TYPE_SECTIONS = [
+    (("creature",), {"Creature"}),
+    (("land",), {"Land"}),
+    (("artifact",), {"Artifact"}),
+    (("enchantment",), {"Enchantment"}),
+    (("planeswalker",), {"Planeswalker"}),
+    (("instant", "sorcery", "sorceries", "spell"), {"Instant", "Sorcery"}),
+]
+# Where a card goes when no suitable section exists — created in this order, after the
+# existing ones. Type-based, which is the convention every decklist site uses.
+_FALLBACK_ORDER = [("Creature", "Creatures"), ("Planeswalker", "Planeswalkers"),
+                   ("Artifact", "Artifacts"), ("Enchantment", "Enchantments"),
+                   ("Instant", "Instants & sorceries"), ("Sorcery", "Instants & sorceries"),
+                   ("Land", "Lands")]
+
+
+def _type_allowed(section):
+    """The card types a section may hold, or None if it isn't type-exclusive."""
+    name = re.sub(r"\s*\(\d+\)\s*$", "", section).strip().lower()
+    for words, types in _TYPE_SECTIONS:
+        if any(name.startswith(w) for w in words):
+            return types
+    return None
 
 
 def _tidy(deck_path, idx):
@@ -251,33 +281,56 @@ def _tidy(deck_path, idx):
         qty, name = (int(m.group(1)), m.group(2)) if m else (1, s)
         sections.setdefault(cur or (order[0] if order else "Cards"), []).append(("card", qty, name))
 
-    def best_section(role):
+    def function_section(role):
+        """An existing function-named section for this role (any card type may live there)."""
         for kw in _SECTION_HINT.get(role, ()):
             for sec in order:
-                if kw in sec.lower():
+                if kw in sec.lower() and _type_allowed(sec) is None:
                     return sec
         return None
 
-    # move mis-filed cards
+    def type_section(ptype):
+        for sec in order:
+            allowed = _type_allowed(sec)
+            if allowed and ptype in allowed:
+                return sec
+        return None
+
+    # Re-file. Priority: a function section for the card's role (keeps Sol Ring under
+    # "Ramp"), else a section matching its TYPE, else create a type section. A card is only
+    # forced to move when its current section is type-exclusive and contradicts its type.
     moved = {sec: [] for sec in order}
     for sec in order:
-        keep_here = []
+        keep_here, allowed_here = [], _type_allowed(sec)
         for item in sections.get(sec, []):
             if item[0] != "card":
                 keep_here.append(item)
                 continue
             _t, qty, name = item
             ref = mtglib.lookup(idx, name)
-            role = "land" if (ref and ref.is_land) else (deck_fit.primary_role(ref) if ref else None)
-            target = best_section(role) if role else None
-            if target and target != sec and any(k in sec.lower() for k in
-                                                ("creature", "land", "ramp", "draw", "removal", "wipe", "counter")):
-                moved[target].append(item)
+            if not ref or not ref.types:
+                keep_here.append(item)            # unknown card: never shuffle it around
+                continue
+            ptype = "Land" if ref.is_land else ref.primary_type
+            role = "land" if ref.is_land else deck_fit.primary_role(ref)
+            misfiled = allowed_here is not None and ptype not in allowed_here
+            target = function_section(role) or type_section(ptype)
+            if target is None and misfiled:
+                for t, label in _FALLBACK_ORDER:   # create the right type section
+                    if t == ptype:
+                        if label not in sections:
+                            sections[label] = []
+                            order.append(label)
+                            moved.setdefault(label, [])
+                        target = label
+                        break
+            if target and target != sec and (misfiled or allowed_here is not None):
+                moved.setdefault(target, []).append(item)
             else:
                 keep_here.append(item)
         sections[sec] = keep_here
     for sec, items in moved.items():
-        sections[sec].extend(items)
+        sections.setdefault(sec, []).extend(items)
 
     out = list(l for _t, l in header) if header and header[0][0] == "raw" else []
     out = [ln for ln in lines[:0]]                      # rebuilt below
