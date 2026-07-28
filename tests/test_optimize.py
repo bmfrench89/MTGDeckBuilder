@@ -180,3 +180,33 @@ def test_optimize_is_a_no_op_without_field_data(tmp_path, collection_file):
     r = optimize.optimize(p, coll, idx, str(tmp_path), apply=True)
     assert r["swaps"] == []
     assert open(p, encoding="utf-8").read() == original
+
+
+def test_pool_report_classifies_every_top_card(tmp_path, collection_file):
+    """No EDHREC data in tests, but the shape must hold and never raise."""
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    r = optimize.pool_report(_deck(tmp_path), coll, idx, str(tmp_path))
+    for key in ("have", "free", "taken", "unowned"):
+        assert isinstance(r[key], list)
+    assert r["commander"] == "Test Commander"
+
+
+def test_write_buylist_never_clobbers_a_curated_file(tmp_path, collection_file):
+    """A hand-written buy-list must survive an --apply run."""
+    p = _deck(tmp_path)
+    existing = tmp_path / "d.buylist.csv"
+    existing.write_text("Card,Price,Tier,Replaces,Reason\nMy Pick,1,Core,,mine\n",
+                        encoding="utf-8")
+    report = {"commander": "X", "unowned": [(90, "some staple")]}
+    assert optimize.write_buylist(p, report) == 0
+    assert "My Pick" in existing.read_text(encoding="utf-8")
+    # explicit overwrite still works
+    assert optimize.write_buylist(p, report, overwrite=True) == 1
+    assert "Some Staple" in existing.read_text(encoding="utf-8")
+
+
+def test_write_buylist_skips_low_inclusion_cards(tmp_path):
+    p = _deck(tmp_path)
+    report = {"commander": "X", "unowned": [(10, "fringe card")]}
+    assert optimize.write_buylist(p, report) == 0

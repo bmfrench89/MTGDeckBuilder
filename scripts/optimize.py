@@ -68,6 +68,58 @@ def _basics_needed(identity, n_lands=LAND_TARGET):
     return max(0, min(n_lands, round(n_lands * (0.42 - 0.04 * (ncol - 1)))))
 
 
+def pool_report(deck_path, coll, idx, decks_dir, top_n=25):
+    """Why a deck can't get closer to the field: of the commander's top-N most-played
+    cards, how many are already in, FREE to add, locked in another deck, or unowned.
+
+    Without this a deck whose card pool is exhausted just looks 'badly built'. A 7th deck
+    sharing an archetype with an existing one (two equipment decks) will have every staple
+    committed elsewhere, and the honest answer is 'buy these' or 'don't run both'."""
+    stem = os.path.splitext(os.path.basename(deck_path))[0]
+    text = open(deck_path, encoding="utf-8").read()
+    commander = _commander_of(text)
+    field = deck_fit.load_field(commander, idx)
+    in_deck = {mtglib._norm(c.name) for c in mtglib.parse_deck(text)}
+    usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
+    committed = {mtglib._norm(n): v for n, v in usage.items()}
+
+    have, free, taken, unowned = [], [], [], []
+    for k, inc in sorted(field.items(), key=lambda kv: -kv[1])[:top_n]:
+        ref = mtglib.lookup(idx, k)
+        if k in in_deck:
+            have.append((inc, ref.name if ref else k))
+        elif not ref:
+            unowned.append((inc, k))
+        elif ref.quantity - committed.get(k, {}).get("total", 0) >= 1:
+            free.append((inc, ref.name))
+        else:
+            where = sorted(committed.get(k, {}).get("decks", {}))
+            taken.append((inc, ref.name, where))
+    return {"commander": commander, "top_n": top_n, "have": have, "free": free,
+            "taken": taken, "unowned": unowned, "field_size": len(field)}
+
+
+def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
+    """Turn the unowned field staples into a <deck>.buylist.csv the dashboard renders.
+    Never clobbers a hand-written buy-list unless explicitly told to."""
+    rows = [(inc, name) for inc, name in report["unowned"] if inc >= min_inclusion]
+    if not rows:
+        return 0
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    if os.path.exists(f"{stem}.buylist.csv") and not overwrite:
+        return 0
+    import csv
+    with open(f"{stem}.buylist.csv", "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Card", "Price", "Tier", "Replaces", "Reason"])
+        for inc, name in rows:
+            tier = "Core" if inc >= 65 else "Value"
+            w.writerow([name.title(), "", tier, "",
+                        f"{inc}% of {report['commander']} decks run this — "
+                        f"your pool can't fill this slot."])
+    return len(rows)
+
+
 def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
              max_swaps=40):
     """Return a report dict; writes the deck file when apply=True."""
@@ -418,6 +470,30 @@ def main():
             print(f"   {ic:>3}% {cut:32} ->  {ia:>3}% {add}")
         for old, new in r["land_swaps"]:
             print(f"   land  {old:32} ->  {new}")
+
+        # Why can't it get closer? A deck with no free staples isn't badly built —
+        # its pool is exhausted, and that needs saying out loud.
+        rep = pool_report(p, coll, idx, args.decks_dir)
+        n = rep["top_n"]
+        print(f"   pool vs the field's top {n}: {len(rep['have'])} in deck · "
+              f"{len(rep['free'])} free to add · {len(rep['taken'])} in another deck · "
+              f"{len(rep['unowned'])} not owned")
+        if rep["taken"]:
+            byd = {}
+            for _inc, _name, where in rep["taken"]:
+                for d in where:
+                    byd[d] = byd.get(d, 0) + 1
+            worst = sorted(byd.items(), key=lambda kv: -kv[1])[:2]
+            print("     locked in: " + ", ".join(f"{d} ({c})" for d, c in worst))
+        # Only shout when the deck is genuinely far from the field AND has nothing left to
+        # draw on — a deck at 21/25 with no free cards is finished, not starved.
+        if not rep["free"] and len(rep["have"]) < n * 0.6 and (rep["unowned"] or rep["taken"]):
+            print("     -> this deck can't improve from your collection: buy the gaps, "
+                  "or free copies from the deck(s) above.")
+        if args.apply:
+            n_buy = write_buylist(p, rep)
+            if n_buy:
+                print(f"     wrote {r['stem']}.buylist.csv ({n_buy} staples to buy)")
     if not args.apply:
         print("\n(dry run — pass --apply to write)")
     return 0
