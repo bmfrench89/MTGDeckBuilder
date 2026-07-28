@@ -21,15 +21,11 @@
 1 Emet-Selch of the Third Seat
 1 Fandaniel, Telophoroi Ascian
 1 Vito, Thorn of the Dusk Rose
-1 Solemn Simulacrum
 1 Alphinaud Leveilleur
 1 Serra Paragon
-1 Circle of Power
-1 Read the Bones
 1 Sun Titan
 1 Papalymo Totolymo
 1 Lyse Hext
-1 Night's Whisper
 
 # --- Interaction (spot removal / counters) ---
 1 Mystical Tutor
@@ -81,14 +77,15 @@
 1 Lightning Greaves
 1 Archaeomancer's Map
 1 Relic of Legends
+1 Solemn Simulacrum
 
 # --- Lands (37) ---
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
 1 Arcane Sanctum
-1 Island
-1 Plains
+5 Island
+3 Plains
 1 Choked Estuary
 1 Darkwater Catacombs
 1 Drowned Catacomb
@@ -107,11 +104,11 @@
 1 Sunlit Marsh
 1 Idyllic Beachfront
 1 Scavenger Grounds
-1 Swamp
+5 Swamp
 1 Ash Barrens
-1 Island
-1 Swamp
 1 Demolition Field
-3 Island
-3 Swamp
-2 Plains
+
+# --- Instants & sorceries ---
+1 Circle of Power
+1 Read the Bones
+1 Night's Whisper

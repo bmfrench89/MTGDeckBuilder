@@ -60,19 +60,13 @@
 1 Professor Hulk
 1 Jarvis, Earth's Mightiest Butler
 1 Shang-Chi and the Ten Rings
-1 West Coast Expansion
-1 Folk Hero
 1 Hawkeye, Master Marksman
 1 Photon, Mighty Marvel
 1 Falcon and Redwing
 1 Kid Loki
 1 Matt Murdock, Justice Seeker
-1 Door of Destinies
-1 Methods of the Mighty
-1 Heroic Sacrifice
 1 The Wasp, Winsome Avenger
 1 The Wondrous Wasp
-1 Raise the Palisade
 1 She-Hulk, Wallbreaker
 1 Scarlet Witch, Chaotic Avenger
 1 Ant-Man, Elusive Avenger
@@ -109,3 +103,15 @@
 1 Riverpyre Verge
 1 Rocky Roads
 1 Rugged Prairie
+
+# --- Instants & sorceries ---
+1 West Coast Expansion
+1 Methods of the Mighty
+1 Heroic Sacrifice
+1 Raise the Palisade
+
+# --- Enchantments ---
+1 Folk Hero
+
+# --- Artifacts ---
+1 Door of Destinies

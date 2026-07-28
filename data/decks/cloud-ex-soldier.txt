@@ -40,15 +40,11 @@
 1 Vincent, Vengeful Atoner
 1 Sephiroth, Fallen Hero
 1 Sun Titan
-1 Cloud's Limit Break
 1 Tifa, Martial Artist
 1 Bronze Guardian
 1 Bugenhagen, Wise Elder
-1 Wrecking Ball Arm
 1 Barret, Avalanche Leader
 1 Professor Hojo
-1 Clever Concealment
-1 Ultimate Magic: Holy
 1 Cid, Freeflier Pilot
 1 Zack Fair
 
@@ -118,3 +114,11 @@
 1 Fire-Lit Thicket
 2 Mountain
 3 Plains
+
+# --- Instants & sorceries ---
+1 Cloud's Limit Break
+1 Clever Concealment
+1 Ultimate Magic: Holy
+
+# --- Artifacts ---
+1 Wrecking Ball Arm
