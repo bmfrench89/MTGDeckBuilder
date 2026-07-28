@@ -74,16 +74,37 @@ Assemble the 99 (+ commander) from owned cards. As you go:
 - Watch for the rules traps in `references/rules-reference.md` (X-spell MV, cast triggers,
   exile-vs-destroy wraths with graveyard synergy, MDFC/flashback mana value).
 
-### 5. Verify the questionable cards
+### 5. Optimize against the field — ALWAYS, after any build or rebuild
+**Whenever you create or materially change a deck file, run the optimizer and report the
+before/after.** This is not optional polish; it is the step that separates a deck the field
+would recognise from a pile of on-curve filler.
+
+```bash
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>            # preview
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll> --apply    # write
+python3 scripts/optimize.py --all --collection <coll> --apply                           # every deck
+```
+
+It swaps low-value cards for owned, **free**, high-inclusion ones, upgrades weak lands and
+repairs basics, while protecting the commander, basics, curated notes and anything named in
+the deck's `.notes.md`. **Validate with EDHREC top-25 overlap** (`edhrec.inclusion_map`):
+below ~50% means something is wrong — say so rather than shipping it quietly.
+
+*Why this exists:* the auto-builder once scored **24%** against the field on Captain America
+while the player's hand-built decks scored 56–80%, because the fit engine rewarded low mana
+cost and had no idea Director Nick Fury is in 95% of that commander's decks. The scorer is
+fixed, but always verify — a shallow collection or a missing EDHREC page still shows up here.
+
+### 6. Verify the questionable cards
 For any card whose text you're not certain of, web-search Scryfall/Gatherer oracle text
 before you build around it. Correct yourself openly when a search changes the plan.
 
-### 6. Deliver
+### 7. Deliver
 Generate a dashboard with `build_dashboard.py` (and a visual card gallery if they want
 card images). **Warn the player** that card-image HTML only renders in a real browser —
 external images are blocked in the chat preview. Save deck lists under `data/decks/`.
 
-### 7. Hand off
+### 8. Hand off
 If the session produced or changed a deck, update `docs/handoff.md` so the next session
 starts grounded instead of re-deriving.
 
@@ -158,6 +179,9 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   away**, and combos the whole collection can assemble (`data/reference/combos.csv`).
 - `spellbook.py` — Commander Spellbook's FULL combo DB via find-my-combos: every combo **present** or
   **one card away** in a deck, far beyond the curated `combos.csv`. Feeds the web assess packet.
+- `optimize.py` — **run after every build/rebuild** (workflow step 5). Tunes an existing deck toward
+  what the field actually plays: swaps low-value cards for owned+free high-inclusion ones, upgrades
+  weak lands, repairs basics. `--all --apply` does every deck; protects engine pieces and roles.
 - `auto_build.py` — auto-assembles a full 99 for a commander from the owned, in-color, uncommitted
   pool (deck_fit scoring + role template). Its ranked pool is the **candidate source for adds**; also
   takes `identity=` (WUBRG) for any commander not in `commanders.csv`.

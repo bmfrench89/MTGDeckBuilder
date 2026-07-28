@@ -26,6 +26,10 @@
     <a href="{{ url_for('export_deck', stem=d.stem) }}">⬇ ManaPool</a>
     <a href="{{ url_for('deck_assess', stem=d.stem) }}" title="Deck + all analytics, to hand to a coaching session">📋 Assess</a>
     <a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">✎ Edit</a>
+    <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" style="display:inline"
+      onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">
+      <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
+    </form>
   </div>
 </div>
 {% endfor %}

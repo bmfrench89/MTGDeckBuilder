@@ -110,11 +110,23 @@ derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional `.attrs/
 companions) · `reference/` (game_changers, tutors, combos, card_notes, role_staples,
 commanders, archetype_support).
 
-## Keeping decks optimized (the standing workflow)
+## Keeping decks optimized (automated at four points)
+
+| When | What runs | Where |
+|---|---|---|
+| **A new deck is saved** ("Save to my decks") | optimize runs automatically | `webapp` `build_deck_save` |
+| **On demand** | ⚡ Optimize button per deck | `POST /deck/<stem>/optimize` |
+| **After buying cards** | `refresh.py --optimize` (then rebuilds dashboards) | CLI |
+| **Any Claude-driven build** | workflow step 5 in `SKILL.md` | the skill |
+
+**Deliberately NOT automatic: manual edits.** The card panel's Remove/Replace and the deck
+editor save your choice as-is — the optimizer never second-guesses a deliberate swap. Use
+the ⚡ button when you *want* a tune-up. It's idempotent: an already-tuned deck is untouched.
 
 ```bash
 python3 scripts/optimize.py --all --collection data/collection/collection.csv          # dry run
 python3 scripts/optimize.py --all --collection data/collection/collection.csv --apply  # write
+python3 scripts/refresh.py  --optimize --collection data/collection/collection.csv     # tune + rebuild
 ```
 
 **The signal:** `deck_fit` scores cards partly by **EDHREC inclusion % for that specific
