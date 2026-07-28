@@ -134,6 +134,18 @@ commander** (`edhrec.inclusion_map`). Without it the scorer only saw generic qua
 vanilla 1-drop outranked a 95%-played auto-include on curve alone — that's why the first
 auto-built decks scored 12–24% against the field while hand-built ones scored 56–80%.
 
+**Availability tiers.** Incoming cards rank **free** (you own a spare) > **shared** (owned
+but committed to another deck) > **buy** (not owned, ≥55% inclusion). Sharing and buying are
+**on by default** — two decks in one archetype legitimately want the same cards, and you
+decide which gets the physical copy when you sleeve. Unowned picks are badged **BUY** in the
+dashboard decklist (they're already `missing` to `deck_stats`). Use `--owned-only` for a list
+buildable from spare copies today, or `--no-buys` to stay fully owned.
+
+**Pool report.** Every run prints how the commander's top-25 splits into in-deck / free /
+committed-elsewhere / not-owned, naming the decks holding contested copies — so a deck that
+*can't* improve reads as "pool exhausted", not "badly built". `write_buylist()` turns the
+unowned gaps into `<deck>.buylist.csv` (never overwriting a hand-written one).
+
 **Guardrails** (each exists because a naive pass got it wrong): a swap needs a ≥25-point
 inclusion gain; a card is valued at `max(field %, (fit−60)×2)` so premium-but-unpopular
 cards survive; the commander, basics, `card_notes.csv` entries and anything named in the

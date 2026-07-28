@@ -16,7 +16,10 @@
 1 Talisman of Progress
 1 Thought Vessel
 1 Archaeomancer's Map
-1 Hedron Archive
+1 Talisman of Conviction
+1 Talisman of Creativity
+1 Relic of Legends
+1 Fellwar Stone
 
 # --- Card advantage ---
 1 Brainstorm
@@ -27,14 +30,14 @@
 1 Rhystic Study
 1 War Machine, Avenging Arsenal
 1 Black Widow, Agile Avenger
-1 Insight
+1 Kindred Discovery
 1 Reconnaissance Mission
 
 # --- Removal ---
 1 Abrade
 1 Condemn
 1 Dispatch
-1 Pacifism
+1 Swords to Plowshares
 1 Rending Volley
 1 Rip Apart
 1 Seal of Cleansing
@@ -54,19 +57,16 @@
 # --- Creatures ---
 1 Masked Meower
 1 Firebird, Blazing Ranger
-1 Patriot, Shield Wielder
+1 Agent Phil Coulson
 1 Rescue, Pepper Potts
-1 Speed, Young Avenger
 1 Professor Hulk
 1 Jarvis, Earth's Mightiest Butler
 1 Shang-Chi and the Ten Rings
-1 Hawkeye, Master Marksman
+1 Herald's Horn
 1 Photon, Mighty Marvel
 1 Falcon and Redwing
 1 Kid Loki
-1 Matt Murdock, Justice Seeker
 1 The Wasp, Winsome Avenger
-1 The Wondrous Wasp
 1 She-Hulk, Wallbreaker
 1 Scarlet Witch, Chaotic Avenger
 1 Ant-Man, Elusive Avenger
@@ -93,16 +93,16 @@
 4 Plains
 1 Exotic Orchard
 1 Irrigated Farmland
-1 Fountain of Cho
+1 Plaza of Heroes
 1 Furycalm Snarl
-1 Ghitu Encampment
+1 Glacial Fortress
 1 Glittering Massif
 1 Prairie Stream
-1 Remote Farm
-1 Rhystic Cave
+1 Path of Ancestry
+1 Secluded Courtyard
 1 Riverpyre Verge
-1 Rocky Roads
-1 Rugged Prairie
+1 Unclaimed Territory
+1 Mystic Monastery
 
 # --- Instants & sorceries ---
 1 West Coast Expansion

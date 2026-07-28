@@ -13,11 +13,16 @@ Design rules (learned from a pass that tried to cut Exsanguinate out of Y'shtola
     `.notes.md` game plan or in `card_notes.csv`, and anything the field itself plays.
   * Role counts (ramp / draw / removal / wipe / counter) must stay inside the template — a
     swap that would push a role out of range is rejected.
-  * Only cards with a FREE copy (owned minus committed to your other decks) can come in.
+  * Incoming cards are ranked free (a spare copy) > shared (owned but committed to another
+    deck) > buy (not owned). Sharing and buying are ON by default: two decks in the same
+    archetype legitimately want the same cards, and the player decides which one gets the
+    physical copy at sleeving time. Unowned picks are badged "BUY" on the dashboard.
+    `--owned-only` restricts to spare copies; `--no-buys` keeps the list fully owned.
 
 Usage:
   python3 optimize.py --deck data/decks/foo.txt --collection data/collection/collection.csv
   python3 optimize.py --all --collection <coll> --apply
+  python3 optimize.py --all --collection <coll> --apply --owned-only   # buildable today
 """
 import argparse
 import glob
@@ -121,7 +126,7 @@ def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
 
 
 def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
-             max_swaps=40):
+             max_swaps=40, owned_only=False, include_buys=True, buy_threshold=55):
     """Return a report dict; writes the deck file when apply=True."""
     refs = refs or power.load_refs()
     stem = os.path.splitext(os.path.basename(deck_path))[0]
@@ -131,6 +136,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     a = deckcore.analyze_deck(deck_path, coll)      # accepts a loaded collection
     rep = a["report"]
     field = deck_fit.load_field(commander, idx)
+    try:
+        import edhrec
+        proper = edhrec.field_names(commander, idx)   # real casing for unowned cards
+    except Exception:
+        proper = {}
     ctx = deck_fit.deck_context(deck_path, a["enriched"], commander, field=field)
     keep, notes = _protected(deck_path, commander)
 
@@ -148,22 +158,35 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         r = mtglib.lookup(idx, name)
         return deck_fit.primary_role(r) if r else None
 
-    # ---- candidates to bring IN: owned, free, in-colour, played here, not already in ----
-    # Lands are kept in their own bucket: a land must replace a LAND, or the deck's
+    # ---- candidates to bring IN ---------------------------------------------------------
+    # Ranked by how much the field plays them, then by availability:
+    #   free  = you own a spare copy            (always allowed)
+    #   share = owned but committed to another deck — allowed unless owned_only; the player
+    #           decides which deck gets the physical card at sleeving time
+    #   buy   = not owned at all — allowed when include_buys, so a deck can show its IDEAL
+    #           list. The dashboard badges these "BUY" (they're `missing` to deck_stats).
+    # Lands stay in their own bucket: a land must replace a LAND, or the deck's
     # 37-land / 62-spell split silently drifts.
     adds, land_adds = [], []
-    for c in coll:
-        k = mtglib._norm(c.name)
-        if k in in_deck or k in BASICS:
+    for k, inc in field.items():
+        if k in in_deck or k in BASICS or inc <= 0:
             continue
-        if c.identity and not (c.identity <= identity):
-            continue
-        if c.quantity - committed.get(k, 0) < 1:
-            continue
-        inc = field.get(k, 0)
-        if inc <= 0:
-            continue
-        (land_adds if c.is_land else adds).append((inc, c.name))
+        ref = mtglib.lookup(idx, k)
+        if ref is None:
+            # owned_only means "buildable from what I have today" — that rules out
+            # buying as well as borrowing from another deck.
+            if owned_only or not include_buys or inc < buy_threshold:
+                continue
+            name, is_land, avail = proper.get(k, k.title()), False, "buy"
+        else:
+            if ref.identity and not (ref.identity <= identity):
+                continue
+            free = ref.quantity - committed.get(k, 0) >= 1
+            if not free and owned_only:
+                continue
+            name, is_land, avail = ref.name, ref.is_land, ("free" if free else "share")
+        rank = {"free": 2, "share": 1, "buy": 0}[avail]
+        (land_adds if is_land else adds).append((inc, rank, name, avail))
     adds.sort(reverse=True)
     land_adds.sort(reverse=True)
 
@@ -192,7 +215,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cuts.sort()                           # least valuable first
 
     swaps, used_add, used_cut = [], set(), set()
-    for inc_add, add_name in adds:
+    for inc_add, _rank, add_name, avail in adds:
         if len(swaps) >= min(len(cuts), max_swaps):
             break
         add_role = role_of(add_name)
@@ -217,7 +240,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if not ok:
                 continue
             cats = trial
-            swaps.append((cut_name, val_cut, add_name, inc_add))
+            swaps.append((cut_name, val_cut, add_name, inc_add, avail))
             used_cut.add(ck)
             used_add.add(mtglib._norm(add_name))
             break
@@ -236,12 +259,12 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                         and mtglib._norm(c.name) not in keep
                         and c.name.lower() not in notes)
     used_land = set()
-    for inc_add, add_name in land_adds:
+    for inc_add, _rank, add_name, avail in land_adds:
         for inc_cut, cut_name in weak_lands:
             ck = mtglib._norm(cut_name)
             if ck in used_land or inc_add - inc_cut < margin:
                 continue
-            land_swaps.append((cut_name, add_name))
+            land_swaps.append((cut_name, add_name, avail))
             used_land.add(ck)
             break
 
@@ -419,8 +442,8 @@ def _tidy(deck_path, idx):
 
 def _write(deck_path, swaps, land_swaps):
     """Apply swaps line-by-line, preserving quantity, section and every other line."""
-    repl = {mtglib._norm(c): a for c, _ic, a, _ia in swaps}
-    for old, new in land_swaps:
+    repl = {mtglib._norm(c): a for c, _ic, a, _ia, *_ in swaps}
+    for old, new, *_ in land_swaps:
         repl.setdefault(mtglib._norm(old), new)
     lines = open(deck_path, encoding="utf-8").read().split("\n")
     out, done = [], set()
@@ -447,6 +470,12 @@ def main():
     ap.add_argument("--decks-dir", default="data/decks")
     ap.add_argument("--margin", type=int, default=25,
                     help="minimum inclusion-%% gain for a swap (higher = more conservative)")
+    ap.add_argument("--owned-only", action="store_true",
+                    help="only add cards with a FREE copy (never share or buy)")
+    ap.add_argument("--no-buys", action="store_true",
+                    help="don't add cards you don't own")
+    ap.add_argument("--buy-threshold", type=int, default=55,
+                    help="minimum inclusion %% for an unowned card to be added")
     ap.add_argument("--max-swaps", type=int, default=40,
                     help="safety cap on how many cards a single pass may change")
     ap.add_argument("--apply", action="store_true", help="write the changes")
@@ -462,14 +491,18 @@ def main():
 
     for p in paths:
         r = optimize(p, coll, idx, args.decks_dir, refs, margin=args.margin,
-                     apply=args.apply, max_swaps=args.max_swaps)
+                     apply=args.apply, max_swaps=args.max_swaps,
+                     owned_only=args.owned_only, include_buys=not args.no_buys,
+                     buy_threshold=args.buy_threshold)
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
         if not r["swaps"] and not r["land_swaps"]:
             print("   already aligned with the field — no changes")
-        for cut, ic, add, ia in r["swaps"]:
-            print(f"   {ic:>3}% {cut:32} ->  {ia:>3}% {add}")
-        for old, new in r["land_swaps"]:
-            print(f"   land  {old:32} ->  {new}")
+        for cut, ic, add, ia, avail in r["swaps"]:
+            tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
+            print(f"   {ic:>3}% {cut:32} ->  {ia:>3}% {add}{tag}")
+        for old, new, avail in r["land_swaps"]:
+            tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
+            print(f"   land  {old:32} ->  {new}{tag}")
 
         # Why can't it get closer? A deck with no free staples isn't badly built —
         # its pool is exhausted, and that needs saying out loud.
