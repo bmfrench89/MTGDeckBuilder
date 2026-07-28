@@ -111,6 +111,31 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
             "sections": sections, "owned": owned, "missing": missing}
 
 
+def inclusion_map(commander, coll_index=None, ttl=CACHE_TTL):
+    """{normalized card name: inclusion %} for a commander — "what share of this
+    commander's decks run this card". This is the signal the fit engine was missing: it
+    knows a card is on-tribe and cheap, but not that the field considers it an
+    auto-include. Returns {} on any failure so scoring silently falls back."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error"):
+        return {}
+    out = {}
+    for sec in rec.get("sections", []):
+        for c in sec.get("cards", []):
+            inc = c.get("inclusion")
+            if not inc:
+                continue
+            k = mtglib._norm(c["name"])
+            if inc > out.get(k, 0):
+                out[k] = inc
+            front = c["name"].split("//")[0].strip()   # DFC front face
+            if front:
+                fk = mtglib._norm(front)
+                if inc > out.get(fk, 0):
+                    out[fk] = inc
+    return out
+
+
 if __name__ == "__main__":
     import argparse
     import sys

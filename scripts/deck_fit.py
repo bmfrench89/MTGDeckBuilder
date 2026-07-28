@@ -65,9 +65,23 @@ def load_role_staples(path=None):
     return out
 
 
-def deck_context(deck_path, enriched, commander=""):
+def load_field(commander, coll_index=None):
+    """EDHREC inclusion map for a commander ({normalized name: %}) — the "what does the
+    field actually run here" signal for `_staple_component`. Network/EDHREC failures are
+    non-fatal: an empty map just means scoring falls back to the curated lists."""
+    if not commander:
+        return {}
+    try:
+        import edhrec
+        return edhrec.inclusion_map(commander, coll_index)
+    except Exception:
+        return {}
+
+
+def deck_context(deck_path, enriched, commander="", field=None):
     """Identity (set of WUBRG), archetype keywords, and dominant tribe (if the list
-    carries subtypes). Color identity comes from the deck's `# Colors:` header."""
+    carries subtypes). Color identity comes from the deck's `# Colors:` header.
+    `field` is an optional EDHREC inclusion map (see load_field)."""
     ident, archetype, theme = set(), [], ""
     try:
         with open(deck_path, encoding="utf-8") as f:
@@ -98,7 +112,7 @@ def deck_context(deck_path, enriched, commander=""):
         if n >= 5:
             tribal = name
     return {"identity": ident, "archetype": archetype, "theme": theme,
-            "tribal": tribal, "commander": commander}
+            "tribal": tribal, "commander": commander, "field": field or {}}
 
 
 def primary_role(card):
@@ -160,13 +174,36 @@ def _curve_component(card, refs):
     return 6, f"expensive (MV {mv:g}) — demands ramp"
 
 
-def _staple_component(card, refs):
+def _staple_component(card, refs, ctx=None):
+    """How much muscle this card brings. Two signals, best-of:
+    (a) the curated format lists (Game Changers / tutors / fast mana), and
+    (b) **how much the field actually plays it FOR THIS COMMANDER** (EDHREC inclusion %).
+
+    (b) is what stops the builder preferring a vanilla 1-drop over the archetype's
+    auto-include just because it costs less mana — a generic "is it a staple" list can't
+    know that Director Nick Fury is in 95% of Captain America decks."""
     n = mtglib._norm(card.name)
+    pts, detail = 7, "no special power flag"
     if n in refs.get("game_changers", set()):
-        return 15, "a recognized Game Changer / format staple"
-    if n in refs.get("tutors", set()) or n in refs.get("fast_mana", set()):
-        return 11, "an established staple"
-    return 7, "no special power flag"
+        pts, detail = 15, "a recognized Game Changer / format staple"
+    elif n in refs.get("tutors", set()) or n in refs.get("fast_mana", set()):
+        pts, detail = 11, "an established staple"
+
+    inc = (ctx or {}).get("field", {}).get(n)
+    if inc:
+        if inc >= 80:
+            fpts, fdet = 15, f"an auto-include here — {inc}% of this commander's decks run it"
+        elif inc >= 60:
+            fpts, fdet = 13, f"a core pick — {inc}% of this commander's decks run it"
+        elif inc >= 40:
+            fpts, fdet = 11, f"widely played here — {inc}% of decks run it"
+        elif inc >= 20:
+            fpts, fdet = 9, f"a common pick — {inc}% of decks run it"
+        else:
+            fpts, fdet = 8, f"seen in {inc}% of this commander's decks"
+        if fpts > pts:
+            pts, detail = fpts, fdet
+    return pts, detail
 
 
 def _theme_component(card, ctx):
@@ -195,7 +232,7 @@ def assess_card(card, rep, ctx, refs, section_label=None):
     color_pts, color_det = _color_component(card, ctx["identity"])
     role_pts, role, role_det = _role_component(card, rep, section_label)
     curve_pts, curve_det = _curve_component(card, refs)
-    stap_pts, stap_det = _staple_component(card, refs)
+    stap_pts, stap_det = _staple_component(card, refs, ctx)
     theme_pts, theme_det = _theme_component(card, ctx)
     reasons = [
         {"label": "Color fit", "pts": color_pts, "max": 25, "detail": color_det},
