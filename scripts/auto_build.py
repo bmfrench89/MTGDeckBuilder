@@ -148,8 +148,12 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
             ref = mtglib.lookup(idx, commander_name)
             identity = set(ref.identity) if (ref and ref.identity) else set()
     refs = refs or power.load_refs()
+    # "field" = EDHREC inclusion % for this commander. Without it the scorer can only see
+    # generic quality, so a vanilla 1-drop outranks the archetype's 95%-played auto-include
+    # purely on curve. Cached + graceful: {} offline, and scoring falls back to the lists.
     ctx = {"identity": identity, "archetype": archetype, "theme": "",
-           "tribal": None, "commander": commander_name}
+           "tribal": None, "commander": commander_name,
+           "field": deck_fit.load_field(commander_name, idx)}
     # tribal awareness: does the commander want a tribe, and does the collection support it?
     tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity)
     tribe_warning = None
