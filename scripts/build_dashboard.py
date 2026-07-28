@@ -349,7 +349,18 @@ def _share_badge(k, shared):
     return f"<span class='{cls}' title='{esc(title)}'>⇄{len(v['decks'])}</span>"
 
 
-def sections_html(sections, enriched, shared=None, images=True, size="small"):
+def _buy_badge(k, missing_keys):
+    """A $ badge for a card in the list that you don't own yet — the deck can carry an
+    aspirational pick, this just makes it obvious which ones you'd have to buy."""
+    if k not in missing_keys:
+        return ""
+    return ("<span class='bb' title='You don&#39;t own this yet — buy it to sleeve "
+            "this list'>BUY</span>")
+
+
+def sections_html(sections, enriched, shared=None, images=True, size="small",
+                  missing=None):
+    missing_keys = {mtglib._norm(getattr(c, "name", c)) for c in (missing or [])}
     mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
     pr = {mtglib._norm(c.name): c.price for c in enriched}
     sid = {mtglib._norm(c.name): c.scryfall_id for c in enriched if c.scryfall_id}
@@ -379,7 +390,7 @@ def sections_html(sections, enriched, shared=None, images=True, size="small"):
                     f"<figure class='mc' data-key='{esc(k)}' tabindex='0' "
                     f"role='button' aria-label='{esc(name)} — details'>"
                     f"<img loading='lazy' data-src='{esc(url)}' "
-                    f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}"
+                    f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
                     f"<figcaption>{mvb}{esc(name)}{price}</figcaption></figure>")
             out.append("</div>")
         else:
@@ -678,7 +689,7 @@ def card_modal_block(details, editable=False, stem=""):
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
-                     editable=False, stem=""):
+                     editable=False, stem="", missing=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -826,6 +837,10 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
   color:#000; }}
 .mc .sb {{ position:absolute; top:4px; left:4px; }}
 .sb.need {{ background:var(--warn); color:#000; }}
+.bb {{ display:inline-block; font-family:{t['mono']}; font-size:.58rem;
+  font-weight:700; letter-spacing:.5px; padding:0 4px; border-radius:8px;
+  background:var(--accent2); color:#000; }}
+.mc .bb {{ position:absolute; bottom:22px; left:4px; }}
 .need {{ color:var(--warn); font-weight:700; }}
 .mc figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
   margin-top:3px; line-height:1.25; }}
@@ -844,7 +859,7 @@ footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
 </header>
 <div class="tiles">{tiles}</div>
 {power_sec}
-<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared)}</section>
+<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared, missing=missing)}</section>
 {combo_sec}
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
@@ -968,7 +983,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
                                  similar, details, combos, mana,
-                                 editable=editable, stem=url_stem)
+                                 editable=editable, stem=url_stem, missing=missing)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

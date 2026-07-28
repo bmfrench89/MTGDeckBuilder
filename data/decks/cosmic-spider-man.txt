@@ -27,19 +27,19 @@
 # --- Spiders & Spider-matters creatures (30) ---
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
-1 Ezekiel Sims, Spider-Totem
+1 Peter Parker
 1 Sun-Spider, Nimble Webber
 1 Spider-UK
 1 SP//dr, Piloted by Peni
 1 Coastal Piracy
 1 Spider-Gwen, Free Spirit
-1 Spider-Woman, Secret Agent
+1 Gwenom, Remorseless
 1 Scarlet Spider, Ben Reilly
 1 Scarlet Spider, Kaine
 1 Araña, Heart of the Spider
 1 Spider-Girl, Legacy Hero
 1 Spider-Byte, Web Warden
-1 Spider-Rex, Daring Dino
+1 Superior Spider-Man
 1 Spinneret and Spiderling
 1 Symbiote Spider-Man
 1 Spectacular Spider-Man
@@ -51,14 +51,14 @@
 1 Mystic Remora
 1 Frantic Search
 1 Arachne, Psionic Weaver
-1 Spider-Islanders
+1 Mary Jane Watson
 1 Web-Warriors
 1 Spider-Bot
-1 Metallic Mimic
+1 Spider-Punk
 
 # --- Typal anthems / gear (5) ---
 1 Roaming Throne
-1 Patchwork Banner
+1 SP//dr, Piloted by Peni
 1 Radioactive Spider
 1 Miles Morales
 1 Aunt May
@@ -68,9 +68,9 @@
 1 Arcane Signet
 1 Commander's Sphere
 1 Relic of Legends
-1 Talisman of Progress
-1 Talisman of Creativity
-1 Talisman of Conviction
+1 Spider Manifestation
+1 Spider-Ham, Peter Porker
+1 Spider-Woman, Stunning Savior
 1 Cultivate
 1 Farseek
 1 Nature's Lore

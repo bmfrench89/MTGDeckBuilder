@@ -210,3 +210,41 @@ def test_write_buylist_skips_low_inclusion_cards(tmp_path):
     p = _deck(tmp_path)
     report = {"commander": "X", "unowned": [(10, "fringe card")]}
     assert optimize.write_buylist(p, report) == 0
+
+
+def test_owned_only_refuses_to_add_unowned_cards(tmp_path, collection_file, monkeypatch):
+    """--owned-only must never introduce a card the player doesn't have a spare of."""
+    import deck_fit
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    # pretend the field loves a card that isn't in the collection at all
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {mtglib._norm("Totally Unowned Card"): 99})
+    p = _deck(tmp_path)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), owned_only=True, apply=False)
+    assert all("Totally Unowned Card" not in s[2] for s in r["swaps"])
+
+
+def test_buys_are_added_and_flagged(tmp_path, collection_file, monkeypatch):
+    """By default an unowned, heavily-played card may be added and is marked 'buy'."""
+    import deck_fit
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {mtglib._norm("Totally Unowned Card"): 99})
+    p = _deck(tmp_path)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
+    buys = [s for s in r["swaps"] if s[4] == "buy"]
+    assert buys and "Totally Unowned Card" in buys[0][2]
+
+
+def test_buy_threshold_filters_fringe_cards(tmp_path, collection_file, monkeypatch):
+    import deck_fit
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {mtglib._norm("Fringe Unowned Card"): 30})
+    p = _deck(tmp_path)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True,
+                          buy_threshold=55, apply=False)
+    assert all(s[4] != "buy" for s in r["swaps"])

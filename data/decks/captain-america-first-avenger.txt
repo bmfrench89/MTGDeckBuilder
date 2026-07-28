@@ -33,42 +33,40 @@
 
 # --- Creatures ---
 1 Shuri, Wakandan Inventor
-1 Cloud Sprite
-1 Merfolk of the Pearl Trident
+1 Sigarda's Aid
+1 Akiri, Fearless Voyager
 1 Crowd of True Believers
 1 Misty Knight, Hero for Hire
-1 Momo, Friendly Flier
+1 Sacred Foundry
 1 Raging Goblin
 1 Agent Maria Hill
 1 Agent of Atlas
-1 Angelic Curator
+1 Puresteel Paladin
 1 Bola Warrior
 1 Brave Brawler
-1 Darting Merfolk
+1 Excalibur, Sword of Eden
 1 Elite Interceptor // Rejoinder
 1 Flash Thompson, Spider-Fan
-1 Flying Octobot
-1 Glittering Lynx
-1 Goblin Digging Team
-1 Goblin Glasswright // Craft with Pride
-1 Goblin Recruiter
-1 HYDRA Assault Robot
+1 Sram, Senior Edificer
+1 Swiftfoot Boots
+1 Sword of War and Peace
+1 Forge Anew
 1 Hobgoblin, Mantled Marauder
-1 Hydraulic Helper
-1 Kirol, History Buff // Pack a Punch
-1 Knowledge Seeker
-1 Krile Baldesion
-1 Kyren Legate
-1 Laccolith Whelp
-1 Leonin Surveyor
-1 Loki, God of Mischief
-1 Mage Tower Referee
-1 Marvel Boy, Noh-Varr
-1 Masked Meower
+1 Flawless Maneuver
+1 Basilisk Collar
+1 Stoneforge Mystic
+1 Kaldra Compleat
+1 Hammer of Nazahn
+1 Sword of Feast and Famine
+1 Codsworth, Handy Helper
+1 Masterwork of Ingenuity
+1 Dalakos, Crafter of Wonders
+1 Fighter Class
+1 Argentum Armor
 1 Monk Realist
 1 Night Nurse, Healer of Heroes
 1 Patriot, Shield Wielder
-1 Pygmy Pyrosaur
+1 Hallowed Fountain
 1 Remorseful Cleric
 1 Rescue, Pepper Potts
 1 Sage Owl
@@ -80,6 +78,7 @@
 # --- Artifacts ---
 1 Captain America's Shield
 1 Sword of the Animist
+1 Colossus Hammer
 
 # --- Lands (37) ---
 1 Command Tower
@@ -96,12 +95,12 @@
 1 Temple of the False God
 1 Crystal Vein
 1 Fields of Strife
-1 Agna Qel'a
-1 Asgardian Citadel
-1 Baxter Building
-1 Bonders' Enclave
-1 Castle Doom
-1 Coastal Tower
+1 Exotic Orchard
+1 Mystic Monastery
+1 Spectator Seating
+1 Glacial Fortress
+1 Sulfur Falls
+1 Battlefield Forge
 1 Country Roads
 1 Dark Depths
 1 Drifting Meadow
@@ -109,3 +108,6 @@
 3 Island
 4 Mountain
 6 Plains
+
+# --- Instants & sorceries ---
+1 Steelshaper's Gift

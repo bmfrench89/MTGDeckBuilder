@@ -111,6 +111,22 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
             "sections": sections, "owned": owned, "missing": missing}
 
 
+def field_names(commander, coll_index=None, ttl=CACHE_TTL):
+    """{normalized name: EDHREC's properly-cased card name}. Needed because a card the
+    player doesn't own has no collection entry to take a display name from — and
+    "Sigarda's Aid" title-cased from a normalized key comes out as "Sigarda'S Aid"."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error"):
+        return {}
+    out = {}
+    for sec in rec.get("sections", []):
+        for c in sec.get("cards", []):
+            name = c.get("name")
+            if name:
+                out.setdefault(mtglib._norm(name), name)
+    return out
+
+
 def inclusion_map(commander, coll_index=None, ttl=CACHE_TTL):
     """{normalized card name: inclusion %} for a commander — "what share of this
     commander's decks run this card". This is the signal the fit engine was missing: it

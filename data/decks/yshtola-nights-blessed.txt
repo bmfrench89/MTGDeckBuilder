@@ -38,7 +38,7 @@
 1 Soul Shatter
 1 Snuff Out
 1 Lethal Scheme
-1 Reverent Mantra
+1 Curiosity
 1 Force of Will
 1 Misdirection
 1 Sublime Epiphany
@@ -50,20 +50,20 @@
 1 Syphon Soul
 1 Toxic Deluge
 1 Vindicate
-1 Sevinne's Reclamation
+1 Godless Shrine
 1 Ambition's Cost
 1 Extinction Event
-1 Rite of Replication
+1 Frantic Search
 1 Time Wipe
 1 Transpose
 1 Cleansing Nova
-1 Construct a Cosmic Cube
+1 Talisman of Progress
 1 Authority of the Consuls
 1 Staggering Insight
 1 Rhystic Study
 1 Bastion of Remembrance
 1 Propaganda
-1 The Death of Gwen Stacy
+1 Watery Grave
 1 Alisaie Leveilleur
 
 # --- Ramp / rocks / utility ---
