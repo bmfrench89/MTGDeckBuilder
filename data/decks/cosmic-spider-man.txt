@@ -59,9 +59,9 @@
 # --- Typal anthems / gear (5) ---
 1 Roaming Throne
 1 Patchwork Banner
-1 Door of Destinies
-1 Web-Shooters
-1 Spider-Suit
+1 Radioactive Spider
+1 Miles Morales
+1 Aunt May
 
 # --- Ramp / fixing (12) ---
 1 Sol Ring
@@ -101,7 +101,7 @@
 1 Exotic Orchard
 1 Plaza of Heroes
 1 Mystic Monastery
-1 Arcane Sanctum
+1 Daily Bugle Building
 1 Jungle Shrine
 1 Sacred Peaks
 1 Path of Ancestry
@@ -109,8 +109,8 @@
 1 Unclaimed Territory
 1 Terramorphic Expanse
 1 Evolving Wilds
-1 Fabled Passage
-1 Ash Barrens
+1 University Campus
+1 Suburban Sanctuary
 1 Myriad Landscape
 5 Forest
 5 Plains

@@ -199,9 +199,16 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
             return False
         chosen.append(c); keys.add(mtglib._norm(c["name"])); return True
 
-    # 1) Lands — owned in-color nonbasics, best-fit first, up to LAND_TARGET.
+    # 1) Lands — owned in-color nonbasics, best-fit first, but RESERVE a basics quota.
+    # Filling all 37 slots from owned nonbasics produced decks with zero basics, which is
+    # both fragile (Blood Moon / Back to Basics, nothing to fetch) and wrong: basics are
+    # the most-played cards in every archetype (98-99% inclusion on EDHREC). More colors
+    # need more fixing, so the basics share shrinks as the identity widens.
+    ncol = max(1, len(identity))
+    basics_target = max(6, round(LAND_TARGET * (0.42 - 0.04 * (ncol - 1))))
+    nonbasic_cap = LAND_TARGET - basics_target
     for c in [x for x in cands if x["is_land"]]:
-        if sum(1 for x in chosen if x["is_land"]) >= LAND_TARGET:
+        if sum(1 for x in chosen if x["is_land"]) >= nonbasic_cap:
             break
         take(c)
     n_nonbasic_land = sum(1 for x in chosen if x["is_land"])

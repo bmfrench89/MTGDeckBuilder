@@ -32,42 +32,39 @@
 
 # --- Equipment support ---
 1 Puresteel Paladin
-1 Armory Automaton
+1 Conformer Shuriken
 1 Inspiring Statuary
 1 Steelshaper's Gift
 
 # --- Creatures ---
+1 Vincent, Vengeful Atoner
+1 Sephiroth, Fallen Hero
+1 Sun Titan
+1 Cloud's Limit Break
+1 Tifa, Martial Artist
+1 Bronze Guardian
+1 Bugenhagen, Wise Elder
+1 Wrecking Ball Arm
+1 Barret, Avalanche Leader
+1 Professor Hojo
+1 Clever Concealment
+1 Ultimate Magic: Holy
+1 Cid, Freeflier Pilot
+1 Zack Fair
+
+# --- Ramp ---
+1 Sol Ring
+1 Arcane Signet
+1 Fellwar Stone
+1 Farseek
+1 Nature's Lore
 1 Llanowar Elves
 1 Elvish Mystic
 1 Gilded Goose
 1 Sakura-Tribe Elder
 1 Priest of Titania
-1 Selfless Spirit
-1 Skyclave Apparition
 1 Solemn Simulacrum
-1 Sun Titan
-1 Emeria Angel
-1 Tectonic Giant
-1 Combustible Gearhulk
-1 Bronze Guardian
-1 Karmic Guide
-1 Ohran Frostfang
-1 Thor, Asgard's Avenger
-1 Hercules, Olympian Hero
-1 Tendershoot Dryad
-1 Hellkite Tyrant
-1 Guardian Scalelord
-
-# --- Ramp ---
-1 Sol Ring
-1 Arcane Signet
-1 Dispatch
-1 Fellwar Stone
-1 Harmonize
-1 Farseek
-1 Rip Apart
-1 Nature's Lore
-1 Horn of Greed
+1 Rampant Growth
 
 # --- Removal & wraths ---
 1 Swords to Plowshares
@@ -77,20 +74,23 @@
 1 Chaos Warp
 1 Blasphemous Act
 1 Vandalblast
-1 Cleansing Nova
 1 Austere Command
 1 Vanquish the Horde
+1 Dispatch
+1 Rip Apart
 
 # --- Card draw ---
 1 Skullclamp
 1 Tome of Legends
 1 Staff of the Storyteller
+1 Harmonize
+1 Horn of Greed
 
 # --- Anthems & finish ---
 1 Rancor
-1 True Conviction
+1 Red XIII, Proud Warrior
 
-# --- Lands (36) ---
+# --- Lands (37) ---
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
@@ -109,13 +109,12 @@
 1 Canopy Vista
 1 Cinder Glade
 1 Spire of Industry
-1 Fabled Passage
-1 Terramorphic Expanse
+1 Slayers' Stronghold
+1 Mossfire Valley
 1 Evolving Wilds
-1 Ash Barrens
-1 Myriad Landscape
+8 Forest
+1 Sunscorched Divide
 1 Radiant Grove
-1 Wooded Ridgeline
-7 Forest
+1 Fire-Lit Thicket
 2 Mountain
 3 Plains
