@@ -292,6 +292,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
               "land_swaps": land_swaps, "field_size": len(field)}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
+        record_changes(deck_path, swaps, land_swaps)
         _tidy(deck_path, idx)
     return result
 
@@ -439,6 +440,32 @@ def _tidy(deck_path, idx):
         out.append("")
     with open(deck_path, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(out).rstrip("\n") + "\n")
+
+
+def record_changes(deck_path, swaps, land_swaps):
+    """Append what this run changed to `<deck>.changes.csv`.
+
+    The optimizer already knows exactly which cards it brought in, so writing it down is
+    nearly free — and it's the only way the dashboard can tell a card that arrived this
+    morning from one that's been in the list for months. Appending (rather than
+    overwriting) keeps the deck's history."""
+    import csv
+    from datetime import date
+    rows = [(add, cut, avail) for cut, _v, add, _i, avail in swaps]
+    rows += [(add, cut, avail) for cut, add, avail in land_swaps]
+    if not rows:
+        return 0
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    path = f"{stem}.changes.csv"
+    exists = os.path.exists(path)
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        if not exists:
+            w.writerow(["Card", "Added", "Replaced", "Source"])
+        today = date.today().isoformat()
+        for add, cut, avail in rows:
+            w.writerow([add, today, cut, avail])
+    return len(rows)
 
 
 def _write(deck_path, swaps, land_swaps):
