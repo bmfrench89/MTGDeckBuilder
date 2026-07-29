@@ -734,36 +734,40 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>{fonts}
 <style>
+/* shared design tokens (scripts/assets/tokens.css) — inlined so this file stays
+   self-contained; identical to what the web app serves at /static/tokens.css */
+{_asset('tokens.css')}
 :root {{
   --void:{t['void']}; --panel:{t['panel']}; --accent:{t['accent']};
   --accent2:{t['accent2']}; --warn:{t['warn']}; --text:{t['text']};
   --muted:{t['muted']}; --gold:{t['gold']};
+  --font-display:{t['display']}; --font-body:{t['head']}; --font-mono:{t['mono']};
 }}
 * {{ box-sizing:border-box; }}
 body {{ margin:0; background:var(--void); color:var(--text);
   font-family:{t['head']}; line-height:1.5; }}
-.wrap {{ max-width:960px; margin:0 auto; padding:32px 20px 64px; }}
-header h1 {{ font-family:{t['display']}; font-size:2.6rem; margin:0 0 4px;
+.wrap {{ max-width:960px; margin:0 auto; padding:var(--sp-6) var(--sp-5) var(--sp-8); }}
+header h1 {{ font-family:{t['display']}; font-size:var(--fs-3xl); margin:0 0 var(--sp-1);
   color:var(--accent); letter-spacing:.5px; }}
-header .sub {{ color:var(--muted); font-size:1.05rem; }}
-header .cmd {{ color:var(--gold); font-family:{t['mono']}; font-size:.95rem;
+header .sub {{ color:var(--muted); font-size:var(--fs-md); }}
+header .cmd {{ color:var(--gold); font-family:{t['mono']}; font-size:var(--fs-sm);
   margin-top:6px; }}
 .tiles {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-  gap:12px; margin:28px 0; }}
+  gap:var(--sp-3); margin:var(--sp-6) 0; }}
 .tile {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
-  border-radius:12px; padding:16px; text-align:center; }}
-.tile-val {{ font-family:{t['display']}; font-size:2rem; color:var(--accent2);
+  border-radius:var(--r-md); padding:var(--sp-4); text-align:center; }}
+.tile-val {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2);
   line-height:1; }}
-.tile-label {{ color:var(--muted); text-transform:uppercase; font-size:.72rem;
+.tile-label {{ color:var(--muted); text-transform:uppercase; font-size:var(--fs-2xs);
   letter-spacing:1.5px; margin-top:6px; }}
-.tile-note {{ color:var(--muted); font-size:.68rem; margin-top:4px; }}
+.tile-note {{ color:var(--muted); font-size:var(--fs-2xs); margin-top:4px; }}
 section {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
-  border-radius:14px; padding:20px 22px; margin:18px 0; }}
-section h2 {{ font-family:{t['display']}; margin:0 0 12px; color:var(--accent);
-  font-size:1.4rem; }}
+  border-radius:var(--r-lg); padding:var(--sp-5); margin:var(--sp-4) 0; }}
+section h2 {{ font-family:{t['display']}; margin:0 0 var(--sp-3); color:var(--accent);
+  font-size:var(--fs-xl); }}
 table.data {{ width:100%; border-collapse:collapse; font-family:{t['mono']};
-  font-size:.9rem; }}
-table.data th, table.data td {{ text-align:left; padding:7px 10px;
+  font-size:var(--fs-sm); }}
+table.data th, table.data td {{ text-align:left; padding:var(--sp-2) var(--sp-3);
   border-bottom:1px solid rgba(255,255,255,.07); }}
 table.data th {{ color:var(--muted); font-weight:600; }}
 tr.warn td {{ color:var(--warn); }}
@@ -776,79 +780,79 @@ tr.warn td {{ color:var(--warn); }}
   box-shadow:0 0 0 1px rgba(0,0,0,.4) inset; }}
 .ok {{ color:var(--accent2); font-weight:600; }}
 .warnbox {{ color:var(--warn); }}
-.warnbox ul {{ margin:8px 0 0; padding-left:18px; }}
+.warnbox ul {{ margin:var(--sp-2) 0 0; padding-left:18px; }}
 .muted {{ color:var(--muted); }}
-h3 {{ font-family:{t['head']}; color:var(--gold); margin:18px 0 6px;
+h3 {{ font-family:{t['head']}; color:var(--gold); margin:var(--sp-4) 0 var(--sp-2);
   border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:4px; }}
-h3 .count {{ color:var(--muted); font-size:.85rem; float:right; }}
-ul.cards {{ list-style:none; padding:0; margin:0; columns:2; column-gap:24px;
-  font-family:{t['mono']}; font-size:.85rem; }}
-ul.cards li {{ break-inside:avoid; padding:2px 0; }}
+h3 .count {{ color:var(--muted); font-size:var(--fs-xs); float:right; }}
+ul.cards {{ list-style:none; padding:0; margin:0; columns:2; column-gap:var(--sp-5);
+  font-family:{t['mono']}; font-size:var(--fs-xs); }}
+ul.cards li {{ break-inside:avoid; padding:var(--sp-1) 0; }}
 .mv {{ display:inline-block; min-width:20px; color:var(--accent);
-  font-size:.75rem; }}
+  font-size:var(--fs-xs); }}
 .mv.dim {{ color:var(--muted); }}
-.pr {{ color:var(--muted); font-size:.72rem; margin-left:6px; }}
-ul.notes {{ margin:6px 0 10px; padding-left:20px; }}
-ul.notes li {{ margin:3px 0; }}
-section p {{ margin:8px 0; }}
+.pr {{ color:var(--muted); font-size:var(--fs-2xs); margin-left:6px; }}
+ul.notes {{ margin:var(--sp-2) 0 var(--sp-3); padding-left:20px; }}
+ul.notes li {{ margin:var(--sp-1) 0; }}
+section p {{ margin:var(--sp-2) 0; }}
 code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
-  padding:1px 5px; border-radius:5px; font-size:.85em; }}
+  padding:2px var(--sp-2); border-radius:5px; font-size:var(--fs-xs); }}
 .tablewrap {{ overflow-x:auto; }}
-.buytoggle {{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+.buytoggle {{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2);
   margin-bottom:14px; }}
 .thbtn {{ background:transparent; color:var(--text); cursor:pointer;
-  border:1px solid rgba(255,255,255,.18); border-radius:20px;
-  padding:5px 13px; font-family:{t['mono']}; font-size:.8rem; }}
+  border:1px solid rgba(255,255,255,.18); border-radius:var(--r-pill);
+  padding:var(--sp-1) var(--sp-3); font-family:{t['mono']}; font-size:var(--fs-xs); }}
 .thbtn:hover {{ border-color:var(--accent); }}
 .thbtn.active {{ background:var(--accent); color:#000; border-color:var(--accent);
   font-weight:700; }}
-.buysum {{ color:var(--muted); font-family:{t['mono']}; font-size:.8rem;
+.buysum {{ color:var(--muted); font-family:{t['mono']}; font-size:var(--fs-xs);
   margin-left:auto; }}
 .buytable td.bc {{ color:var(--text); }}
 .buytable td.bp {{ color:var(--accent2); white-space:nowrap; }}
-.buytable td.br {{ color:var(--muted); font-size:.82rem; }}
+.buytable td.br {{ color:var(--muted); font-size:var(--fs-xs); }}
 .repl {{ color:var(--warn); }}
-.tier {{ color:var(--muted); font-size:.68rem; border:1px solid rgba(255,255,255,.15);
-  border-radius:8px; padding:0 6px; margin-left:6px; }}
-.bracketline {{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+.tier {{ color:var(--muted); font-size:var(--fs-2xs); border:1px solid rgba(255,255,255,.15);
+  border-radius:var(--r-sm); padding:0 var(--sp-2); margin-left:6px; }}
+.bracketline {{ display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap;
   margin-bottom:8px; }}
-.bnum {{ font-family:{t['display']}; font-size:1.9rem; color:var(--accent2); }}
+.bnum {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2); }}
 .bname {{ color:var(--gold); font-family:{t['head']}; text-transform:uppercase;
-  letter-spacing:1.5px; font-size:.85rem; }}
-.pscore {{ margin-left:auto; font-family:{t['display']}; font-size:1.9rem;
+  letter-spacing:1.5px; font-size:var(--fs-xs); }}
+.pscore {{ margin-left:auto; font-family:{t['display']}; font-size:var(--fs-2xl);
   color:var(--accent); }}
-.pwrtable td {{ border:none; padding:3px 8px 3px 0; vertical-align:middle; }}
+.pwrtable td {{ border:none; padding:var(--sp-1) var(--sp-2) var(--sp-1) 0; vertical-align:middle; }}
 .pwrtable td:first-child {{ width:150px; color:var(--muted); }}
 .pwrbar {{ width:40%; }}
 .pwrbar span {{ display:block; height:9px; border-radius:5px;
   background:linear-gradient(90deg,var(--accent2),var(--accent)); }}
-.pwrnum {{ font-size:.78rem; white-space:nowrap; }}
-.imgnote {{ font-size:.75rem; margin:0 0 10px; }}
+.pwrnum {{ font-size:var(--fs-xs); white-space:nowrap; }}
+.imgnote {{ font-size:var(--fs-xs); margin:0 0 var(--sp-3); }}
 .cardgrid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
-  gap:10px; margin:6px 0 14px; }}
+  gap:var(--sp-3); margin:var(--sp-2) 0 var(--sp-3); }}
 .mc {{ margin:0; position:relative; }}
 .mc img {{ width:100%; aspect-ratio:5/7; object-fit:cover; display:block;
   border-radius:5% / 3.6%; background:rgba(255,255,255,.05); }}
 .mc .qty {{ position:absolute; top:4px; right:4px; background:var(--accent);
-  color:#000; font-family:{t['mono']}; font-size:.64rem; font-weight:700;
-  padding:0 5px; border-radius:8px; }}
-.sb {{ display:inline-block; font-family:{t['mono']}; font-size:.62rem;
-  font-weight:700; padding:0 5px; border-radius:8px; background:var(--accent2);
+  color:#000; font-family:{t['mono']}; font-size:var(--fs-2xs); font-weight:700;
+  padding:0 var(--sp-2); border-radius:var(--r-sm); }}
+.sb {{ display:inline-block; font-family:{t['mono']}; font-size:var(--fs-2xs);
+  font-weight:700; padding:0 var(--sp-2); border-radius:var(--r-sm); background:var(--accent2);
   color:#000; }}
 .mc .sb {{ position:absolute; top:4px; left:4px; }}
 .sb.need {{ background:var(--warn); color:#000; }}
-.bb {{ display:inline-block; font-family:{t['mono']}; font-size:.58rem;
-  font-weight:700; letter-spacing:.5px; padding:0 4px; border-radius:8px;
+.bb {{ display:inline-block; font-family:{t['mono']}; font-size:var(--fs-2xs);
+  font-weight:700; letter-spacing:.5px; padding:0 var(--sp-1); border-radius:var(--r-sm);
   background:var(--accent2); color:#000; }}
 .mc .bb {{ position:absolute; bottom:22px; left:4px; }}
 .need {{ color:var(--warn); font-weight:700; }}
-.mc figcaption {{ font-family:{t['mono']}; font-size:.64rem; color:var(--muted);
+.mc figcaption {{ font-family:{t['mono']}; font-size:var(--fs-2xs); color:var(--muted);
   margin-top:3px; line-height:1.25; }}
 .mc figcaption .mv {{ min-width:0; margin-right:3px; }}
 .mc figcaption .pr {{ display:block; margin:0; }}
-footer {{ color:var(--muted); font-size:.8rem; margin-top:30px;
+footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   text-align:center; }}
-@media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:2rem; }}
+@media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:var(--fs-2xl); }}
   .buysum {{ margin-left:0; width:100%; }} }}
 {modal_css}
 </style></head><body><div class="wrap">

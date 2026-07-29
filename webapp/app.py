@@ -570,6 +570,14 @@ def api_combos_build(commander):
     return jsonify(r)
 
 
+@app.route("/static/tokens.css")
+def shared_tokens():
+    """Serve the shared design tokens that live with the scripts (the dashboards inline
+    the same file), so the web app and generated dashboards can't drift apart."""
+    return send_from_directory(os.path.join(ROOT, "scripts", "assets"), "tokens.css",
+                               mimetype="text/css")
+
+
 @app.route("/health")
 def health():
     return {"ok": True, "collection": COLLECTION, "decks": len(list_decks())}

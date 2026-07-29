@@ -158,6 +158,23 @@ for lands; only cards with a **free** copy (not committed to another deck) can c
 with no field data the manabase is left alone entirely. Validate with EDHREC top-25 overlap
 before/after — see `docs/handoff.md`.
 
+## Design system (one visual language, two surfaces)
+
+`scripts/assets/tokens.css` is the **single source of truth** for the type scale (1.25
+modular), 4px spacing scale, radii and elevation. It deliberately contains **no colours and
+no fonts** — those are the only things a surface may legitimately differ on.
+
+| Surface | Gets tokens by | Supplies its own |
+|---|---|---|
+| Flask web app | `<link>` to `/static/tokens.css` (served from `scripts/assets/`) | `webapp/static/app.css` — one dark theme + app components |
+| Generated dashboard | **inlined** at render time, so the file stays self-contained/offline | one of five `THEMES` (default / yshtola / cloud / rakdos / spider) |
+
+Both surfaces previously drifted: the app had 14 ad-hoc font sizes and the dashboard 18
+more, plus 38 and 29 spacing values respectively. `tests/test_design_tokens.py` is the
+guard — it fails if `app.css` redefines a scale token, if `tokens.css` starts hardcoding a
+colour, if any theme stops inlining the tokens, or if the same token resolves to different
+values on the two surfaces.
+
 ## Tests (`tests/`, pytest)
 
 ```bash
