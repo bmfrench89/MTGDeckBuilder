@@ -75,3 +75,39 @@ def test_dashboard_css_uses_tokens_not_ad_hoc_sizes(deck_file, collection_file):
     style = re.search(r"<style>(.*?)</style>", html, re.S).group(1)
     ad_hoc = set(re.findall(r"font-size:\s*((?!var)[0-9.]+r?em)", style))
     assert not ad_hoc, f"ad-hoc font sizes left in the dashboard: {sorted(ad_hoc)}"
+
+
+def test_no_token_lands_in_a_multi_value_shorthand(deck_file, collection_file):
+    """Regression: a blanket `20px -> var(--r-pill)` substitution hit the FIRST value of
+    `border-radius:20px 20px 0 0`, giving the card panel a 999px corner — a giant white
+    swoop across the sheet. A radius token must never appear beside a raw px value."""
+    import glob
+    sources = glob.glob(os.path.join(ROOT, "scripts", "assets", "*.css"))
+    sources += glob.glob(os.path.join(ROOT, "webapp", "static", "*.css"))
+    html = bd.generate(deck_file, collection_file, title="T", commander="C")["dashboard"]
+    bad = []
+    for text, where in [(_read(f), os.path.basename(f)) for f in sources] + [(html, "dashboard")]:
+        for decl in re.findall(r"border-radius:[^;}]+", text):
+            if "var(--r-" in decl and re.search(r"\d+px", decl):
+                bad.append(f"{where}: {decl.strip()}")
+    assert not bad, "radius token mixed with raw px in a shorthand: " + "; ".join(bad)
+
+
+def test_no_absurd_radius_on_a_wide_surface(deck_file, collection_file):
+    """--r-pill is 999px; it belongs on chips and buttons, never on a panel or card."""
+    html = bd.generate(deck_file, collection_file, title="T", commander="C")["dashboard"]
+    style = re.search(r"<style>(.*?)</style>", html, re.S).group(1)
+    for sel in (".cm-sheet", ".tile", "section"):
+        m = re.search(re.escape(sel) + r"\s*\{[^}]*border-radius:\s*var\(--r-pill\)", style)
+        assert not m, f"{sel} must not use the pill radius"
+
+
+def test_every_data_table_can_scroll(deck_file, collection_file):
+    """Regression: two tables were emitted outside .tablewrap, so a wide table pushed the
+    whole page sideways on a phone instead of scrolling inside its own box."""
+    html = bd.generate(deck_file, collection_file, title="T", commander="C")["dashboard"]
+    # every <table class='data'...> must be immediately preceded by a tablewrap div
+    for m in re.finditer(r"<table class=['\"]data", html):
+        preceding = html[max(0, m.start() - 120):m.start()]
+        assert "tablewrap" in preceding, (
+            "a data table is not inside .tablewrap — it will overflow the page on mobile")
