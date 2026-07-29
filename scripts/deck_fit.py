@@ -78,7 +78,19 @@ def load_field(commander, coll_index=None):
         return {}
 
 
-def deck_context(deck_path, enriched, commander="", field=None):
+def load_synergy(commander, coll_index=None):
+    """EDHREC synergy map ({normalized name: synergy}) — "how much MORE this commander
+    plays it than the format". Same graceful-degradation contract as load_field."""
+    if not commander:
+        return {}
+    try:
+        import edhrec
+        return edhrec.synergy_map(commander, coll_index)
+    except Exception:
+        return {}
+
+
+def deck_context(deck_path, enriched, commander="", field=None, synergy=None):
     """Identity (set of WUBRG), archetype keywords, and dominant tribe (if the list
     carries subtypes). Color identity comes from the deck's `# Colors:` header.
     `field` is an optional EDHREC inclusion map (see load_field)."""
@@ -112,7 +124,8 @@ def deck_context(deck_path, enriched, commander="", field=None):
         if n >= 5:
             tribal = name
     return {"identity": ident, "archetype": archetype, "theme": theme,
-            "tribal": tribal, "commander": commander, "field": field or {}}
+            "tribal": tribal, "commander": commander, "field": field or {},
+            "synergy": synergy or {}}
 
 
 def primary_role(card):
@@ -203,6 +216,23 @@ def _staple_component(card, refs, ctx=None):
             fpts, fdet = 8, f"seen in {inc}% of this commander's decks"
         if fpts > pts:
             pts, detail = fpts, fdet
+
+    # SYNERGY: how much more THIS commander plays it than decks in general. Inclusion says
+    # "popular"; synergy says "specifically wanted here". Command Tower is 93% inclusion but
+    # ~5 synergy (generic); Dragon Tempest is 77%/69 (a Dragon payoff). Rewarding synergy
+    # promotes a commander's signature cards over cards that are merely widely played.
+    syn = (ctx or {}).get("synergy", {}).get(n)
+    if syn:
+        if syn >= 50:
+            spts, sdet = 15, f"a signature card for this commander (+{syn} synergy vs. the format)"
+        elif syn >= 30:
+            spts, sdet = 13, f"strongly tied to this commander (+{syn} synergy)"
+        elif syn >= 15:
+            spts, sdet = 11, f"more played here than elsewhere (+{syn} synergy)"
+        else:
+            spts, sdet = 0, ""
+        if spts > pts:
+            pts, detail = spts, sdet
     return pts, detail
 
 

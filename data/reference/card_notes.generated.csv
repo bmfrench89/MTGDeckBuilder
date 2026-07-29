@@ -1,0 +1,379 @@
+Name,Why,Alternatives
+Mana Prism,A 3-mana artifact that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+Pilgrim's Eye,A 3-mana artifact creature that tutors up exactly the piece you need — it accelerates your mana for the deck.,Sol Ring; Arcane Signet; Mind Stone
+Coveted Jewel,A 6-mana artifact that draws you cards — it accelerates your mana for the deck.,Sol Ring; Arcane Signet; Mind Stone
+Disenchant,A 2-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Banishing Light,A 3-mana enchantment that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Crush Contraband,A 4-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Leyline Axe,"A 4-mana artifact that scales or doubles your effects. A signature pick for Captain America, First Avenger — 46% of those decks run it, far above its rate elsewhere (+42 synergy).",
+Cleansing Nova,"A 5-mana sorcery that sweeps the board. Commonly played in Y'shtola, Night's Blessed decks (30%).",Wrath of God; Farewell; Austere Command
+Final Judgment,A 6-mana sorcery that sweeps the board.,Wrath of God; Farewell; Austere Command
+Negate,A 2-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Essence Scatter,A 2-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Daze,A 2-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Sigarda's Aid,"An enchantment. A signature pick for Captain America, First Avenger — 87% of those decks run it, far above its rate elsewhere (+82 synergy).",
+"Akiri, Fearless Voyager","A creature that draws you cards. A signature pick for Captain America, First Avenger — 56% of those decks run it, far above its rate elsewhere (+53 synergy).",
+"Misty Knight, Hero for Hire",A 2-mana creature that draws you cards.,
+Sacred Foundry,"A land that produces mana. Commonly played in Captain America, First Avenger decks (55%).",
+Raging Goblin,"A 1-mana creature that gives haste, so threats attack immediately.",
+Agent Maria Hill,A 1-mana creature that draws you cards.,
+"Excalibur, Sword of Eden","An artifact. A signature pick for Captain America, First Avenger — 86% of those decks run it, far above its rate elsewhere (+80 synergy).",
+"Sram, Senior Edificer","A creature that draws you cards. A signature pick for Captain America, First Avenger — 76% of those decks run it, far above its rate elsewhere (+70 synergy).",
+Sword of War and Peace,"An artifact that pays you off for attacking. A signature pick for Captain America, First Avenger — 71% of those decks run it, far above its rate elsewhere (+67 synergy).",
+Forge Anew,"An enchantment that rebuys cards from your graveyard. A signature pick for Captain America, First Avenger — 69% of those decks run it, far above its rate elsewhere (+65 synergy).",
+"Hobgoblin, Mantled Marauder","A 2-mana creature that gives haste, so threats attack immediately.",
+Flawless Maneuver,"An instant that protects your board. A signature pick for Captain America, First Avenger — 69% of those decks run it, far above its rate elsewhere (+57 synergy).",
+Basilisk Collar,"An artifact. A signature pick for Captain America, First Avenger — 69% of those decks run it, far above its rate elsewhere (+64 synergy).",
+Stoneforge Mystic,"A creature that tutors up exactly the piece you need. A signature pick for Captain America, First Avenger — 64% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Kaldra Compleat,"An artifact that pays you off for attacking. A signature pick for Captain America, First Avenger — 64% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Hammer of Nazahn,"An artifact that protects your board. A signature pick for Captain America, First Avenger — 61% of those decks run it, far above its rate elsewhere (+56 synergy).",
+Sword of Feast and Famine,"An artifact that pays you off for attacking. A signature pick for Captain America, First Avenger — 59% of those decks run it, far above its rate elsewhere (+54 synergy).",
+"Codsworth, Handy Helper","An artifact creature that produces mana. A signature pick for Captain America, First Avenger — 59% of those decks run it, far above its rate elsewhere (+56 synergy).",
+Masterwork of Ingenuity,"An artifact. A signature pick for Captain America, First Avenger — 58% of those decks run it, far above its rate elsewhere (+54 synergy).",
+"Dalakos, Crafter of Wonders","A creature that produces mana. A signature pick for Captain America, First Avenger — 58% of those decks run it, far above its rate elsewhere (+54 synergy).",
+Fighter Class,"An enchantment that tutors up exactly the piece you need. A signature pick for Captain America, First Avenger — 56% of those decks run it, far above its rate elsewhere (+52 synergy).",
+Argentum Armor,"An artifact that removes a problem permanent. A signature pick for Captain America, First Avenger — 56% of those decks run it, far above its rate elsewhere (+53 synergy).",
+Monk Realist,A 2-mana creature that removes a problem permanent.,
+"Patriot, Shield Wielder",A 2-mana creature that protects your board.,
+Hallowed Fountain,"A land that produces mana. Commonly played in Captain America, First Avenger decks (55%).",
+Remorseful Cleric,A 2-mana creature that removes a problem permanent.,
+"Rescue, Pepper Potts","A 2-mana artifact creature that pushes damage through. A signature pick for Captain America, Team Leader — 42% of those decks run it, far above its rate elsewhere (+38 synergy).",
+Sage Owl,A 2-mana creature that pushes damage through.,
+Sea Eagle,A 2-mana creature that pushes damage through.,
+Shattered Acolyte,A 2-mana creature that removes a problem permanent.,
+Captain America's Shield,"A 2-mana artifact that pays you off for attacking. A signature pick for Captain America, First Avenger — 43% of those decks run it, far above its rate elsewhere (+38 synergy).",
+Command Tower,"A 0-mana land that produces mana. A core inclusion for Captain America, Team Leader (98% of decks).",
+Clifftop Retreat,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 86% of those decks run it, far above its rate elsewhere (+33 synergy).",
+Prairie Stream,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 77% of those decks run it, far above its rate elsewhere (+38 synergy).",
+Stormcarved Coast,A 0-mana land that produces mana.,
+Terramorphic Expanse,A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck.,
+Avengers Tower,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 95% of those decks run it, far above its rate elsewhere (+87 synergy).",
+Fabled Passage,A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck.,
+Port Town,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 67% of those decks run it, far above its rate elsewhere (+49 synergy).",
+Sunbillow Verge,A 0-mana land that produces mana.,
+Temple of Enlightenment,A 0-mana land that produces mana.,
+Temple of Triumph,A 0-mana land that produces mana.,
+Temple of the False God,A 0-mana land that produces mana.,
+Crystal Vein,A 0-mana land that produces mana.,
+Fields of Strife,A 0-mana land that produces mana.,
+Exotic Orchard,"A 0-mana land that produces mana. A core inclusion for Captain America, Team Leader (84% of decks).",
+Mystic Monastery,"A 0-mana land that produces mana. A core inclusion for Captain America, Team Leader (77% of decks).",
+Spectator Seating,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 89% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Glacial Fortress,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 86% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Sulfur Falls,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 84% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Battlefield Forge,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 71% of those decks run it, far above its rate elsewhere (+47 synergy).",
+Country Roads,A 0-mana land that produces mana.,
+Dark Depths,A 0-mana snow land that makes tokens — it fixes your mana for the deck.,
+Drifting Meadow,A 0-mana land that draws you cards — it fixes your mana for the deck.,
+Dwarven Ruins,A 0-mana land that produces mana.,
+"Captain America, Team Leader","A 3-mana creature that gives haste, so threats attack immediately.",
+"Captain Marvel, Apex Avenger","A 7-mana creature that protects your board. A signature pick for Captain America, Team Leader — 65% of those decks run it, far above its rate elsewhere (+60 synergy).",
+"Captain America, Wings of Freedom","A 3-mana creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 65% of those decks run it, far above its rate elsewhere (+59 synergy).",
+"Captain America, Super-Soldier","A creature that protects your board. A signature pick for Captain America, Team Leader — 64% of those decks run it, far above its rate elsewhere (+62 synergy).",
+Talisman of Progress,"A 2-mana artifact that produces mana. A signature pick for Captain America, Team Leader — 77% of those decks run it, far above its rate elsewhere (+32 synergy).",Sol Ring; Arcane Signet; Mind Stone
+Talisman of Conviction,"A 2-mana artifact that produces mana. A signature pick for Captain America, Team Leader — 75% of those decks run it, far above its rate elsewhere (+32 synergy).",Sol Ring; Arcane Signet; Mind Stone
+Talisman of Creativity,"A 2-mana artifact that produces mana. A signature pick for Captain America, Team Leader — 73% of those decks run it, far above its rate elsewhere (+31 synergy).",Sol Ring; Arcane Signet; Mind Stone
+Brainstorm,A 1-mana instant that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Mystic Remora,A 1-mana enchantment that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Fact or Fiction
+Think Twice,A 2-mana instant that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Visions of Beyond,A 1-mana instant that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+"War Machine, Avenging Arsenal","A 5-mana artifact creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 91% of those decks run it, far above its rate elsewhere (+84 synergy).",
+"Black Widow, Agile Avenger","A 3-mana creature that draws you cards. A signature pick for Captain America, Team Leader — 90% of those decks run it, far above its rate elsewhere (+82 synergy).",
+Reconnaissance Mission,"A 4-mana enchantment that draws you cards — it keeps your hand full for the deck. A signature pick for Captain America, Team Leader — 64% of those decks run it, far above its rate elsewhere (+60 synergy).",Rhystic Study; Mystic Remora; Fact or Fiction
+Abrade,A 2-mana instant that removes a problem permanent. Commonly played in Kaervek the Merciless decks (27%).,Swords to Plowshares; Path to Exile; Generous Gift
+Dispatch,"A 1-mana instant that answers a problem permanent. A signature pick for Cloud, Ex-SOLDIER — 60% of those decks run it, far above its rate elsewhere (+53 synergy).",Swords to Plowshares; Path to Exile; Generous Gift
+Rending Volley,A 1-mana instant that makes your spells uncounterable — it answers a problem permanent for the deck.,Swords to Plowshares; Path to Exile; Generous Gift
+Rip Apart,"A 2-mana sorcery that removes a problem permanent. A signature pick for Captain America, Team Leader — 50% of those decks run it, far above its rate elsewhere (+48 synergy).",Swords to Plowshares; Path to Exile; Generous Gift
+Seal of Cleansing,A 2-mana enchantment that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Planar Collapse,A 2-mana enchantment that sweeps the board.,Wrath of God; Farewell; Austere Command
+Austere Command,"A 6-mana sorcery that sweeps the board. A signature pick for Captain America, Team Leader — 59% of those decks run it, far above its rate elsewhere (+48 synergy).",Wrath of God; Farewell
+Force of Will,A 5-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Memory Lapse,A 2-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Arcane Denial,"A 2-mana instant that counters a spell — it protects your turn on the stack for the deck. A signature pick for Captain America, Team Leader — 69% of those decks run it, far above its rate elsewhere (+52 synergy).",Counterspell; Swan Song; An Offer You Can't Refuse
+Masked Meower,A 1-mana creature that draws you cards.,
+"Firebird, Blazing Ranger","A 3-mana creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 70% of those decks run it, far above its rate elsewhere (+64 synergy).",
+Agent Phil Coulson,"A creature. A signature pick for Captain America, Team Leader — 70% of those decks run it, far above its rate elsewhere (+64 synergy).",
+Professor Hulk,"A 6-mana creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 85% of those decks run it, far above its rate elsewhere (+78 synergy).",
+"Jarvis, Earth's Mightiest Butler","A 3-mana creature that draws you cards. A signature pick for Captain America, Team Leader — 85% of those decks run it, far above its rate elsewhere (+78 synergy).",
+Shang-Chi and the Ten Rings,"A 3-mana creature that draws you cards. A signature pick for Captain America, Team Leader — 79% of those decks run it, far above its rate elsewhere (+73 synergy).",
+Herald's Horn,"An artifact. A signature pick for Captain America, Team Leader — 83% of those decks run it, far above its rate elsewhere (+76 synergy).",
+"Photon, Mighty Marvel","A 4-mana creature that produces mana. A signature pick for Captain America, Team Leader — 77% of those decks run it, far above its rate elsewhere (+71 synergy).",
+Falcon and Redwing,"A 3-mana creature that makes tokens. A signature pick for Captain America, Team Leader — 73% of those decks run it, far above its rate elsewhere (+67 synergy).",
+Kid Loki,A 1-mana creature that sweeps the board.,
+"The Wasp, Winsome Avenger","A 2-mana creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 78% of those decks run it, far above its rate elsewhere (+72 synergy).",
+"She-Hulk, Wallbreaker","A 6-mana creature that sweeps the board. A signature pick for Captain America, Team Leader — 88% of those decks run it, far above its rate elsewhere (+81 synergy).",
+"Scarlet Witch, Chaotic Avenger","A 4-mana creature that pays you off for attacking. A signature pick for Captain America, Team Leader — 88% of those decks run it, far above its rate elsewhere (+80 synergy).",
+"Ant-Man, Elusive Avenger","A 3-mana creature that makes tokens. A signature pick for Captain America, Team Leader — 86% of those decks run it, far above its rate elsewhere (+79 synergy).",
+"Captain America, Living Legend","A 3-mana creature. A signature pick for Captain America, Team Leader — 80% of those decks run it, far above its rate elsewhere (+71 synergy).",
+"Iron Man, Armored Avenger","A 4-mana artifact creature that draws you cards. A signature pick for Captain America, Team Leader — 93% of those decks run it, far above its rate elsewhere (+85 synergy).",
+"Winter Soldier, Reborn Avenger","A 5-mana creature that rebuys cards from your graveyard. A signature pick for Captain America, Team Leader — 88% of those decks run it, far above its rate elsewhere (+81 synergy).",
+Director Nick Fury,"A 3-mana creature. A signature pick for Captain America, Team Leader — 95% of those decks run it, far above its rate elsewhere (+89 synergy).",
+Radiant Summit,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 76% of those decks run it, far above its rate elsewhere (+63 synergy).",
+Scavenger Grounds,"A 0-mana land that sweeps the board — it fixes your mana for the deck. A signature pick for Captain America, Team Leader — 54% of those decks run it, far above its rate elsewhere (+51 synergy).",
+Scorched Geyser,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 73% of those decks run it, far above its rate elsewhere (+67 synergy).",
+Frostboil Snarl,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 64% of those decks run it, far above its rate elsewhere (+50 synergy).",
+Coastal Peak,"A 0-mana land that draws you cards — it fixes your mana for the deck. A signature pick for Captain America, Team Leader — 51% of those decks run it, far above its rate elsewhere (+47 synergy).",
+Irrigated Farmland,"A 0-mana land that draws you cards — it fixes your mana for the deck. A signature pick for Captain America, Team Leader — 51% of those decks run it, far above its rate elsewhere (+38 synergy).",
+Plaza of Heroes,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 89% of those decks run it, far above its rate elsewhere (+86 synergy).",
+Furycalm Snarl,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 66% of those decks run it, far above its rate elsewhere (+49 synergy).",
+Glittering Massif,"A 0-mana land that draws you cards — it fixes your mana for the deck. A signature pick for Captain America, Team Leader — 52% of those decks run it, far above its rate elsewhere (+44 synergy).",
+Path of Ancestry,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 83% of those decks run it, far above its rate elsewhere (+55 synergy).",
+Secluded Courtyard,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 80% of those decks run it, far above its rate elsewhere (+74 synergy).",
+Riverpyre Verge,A 0-mana land that produces mana.,
+Unclaimed Territory,"A 0-mana land that produces mana. A signature pick for Captain America, Team Leader — 77% of those decks run it, far above its rate elsewhere (+75 synergy).",
+West Coast Expansion,"A 2-mana sorcery that draws you cards. A signature pick for Captain America, Team Leader — 72% of those decks run it, far above its rate elsewhere (+66 synergy).",
+Methods of the Mighty,"A 4-mana instant that sweeps the board. A signature pick for Captain America, Team Leader — 67% of those decks run it, far above its rate elsewhere (+61 synergy).",
+Heroic Sacrifice,"A 2-mana instant that draws you cards. A signature pick for Captain America, Team Leader — 65% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Raise the Palisade,"A 5-mana sorcery that sweeps the board. A signature pick for Captain America, Team Leader — 87% of those decks run it, far above its rate elsewhere (+83 synergy).",
+Folk Hero,"A 2-mana enchantment that draws you cards. A signature pick for Captain America, Team Leader — 79% of those decks run it, far above its rate elsewhere (+77 synergy).",
+Door of Destinies,"A 4-mana artifact that scales or doubles your effects. A signature pick for Captain America, Team Leader — 67% of those decks run it, far above its rate elsewhere (+63 synergy).",
+"Cloud, Ex-SOLDIER",A 5-mana creature that draws you cards.,
+Hard-Won Jitte,A 2-mana artifact that scales or doubles your effects.,
+Behemoth Sledge,"A 3-mana artifact that pushes damage through. A signature pick for Cloud, Ex-SOLDIER — 58% of those decks run it, far above its rate elsewhere (+51 synergy).",
+Conqueror's Flail,"A 2-mana artifact that scales or doubles your effects. A signature pick for Cloud, Ex-SOLDIER — 82% of those decks run it, far above its rate elsewhere (+75 synergy).",
+Champion's Helm,"A 3-mana artifact that protects your board. A signature pick for Cloud, Ex-SOLDIER — 67% of those decks run it, far above its rate elsewhere (+59 synergy).",
+Darksteel Plate,"A 3-mana artifact that protects your board. A signature pick for Cloud, Ex-SOLDIER — 56% of those decks run it, far above its rate elsewhere (+50 synergy).",
+Mask of Memory,"A 2-mana artifact that draws you cards — it keeps your hand full for the deck. Commonly played in Cloud, Ex-SOLDIER decks (29%).",Rhystic Study; Mystic Remora; Fact or Fiction
+Trailblazer's Boots,"A 2-mana artifact that pushes damage through. A signature pick for Cloud, Ex-SOLDIER — 56% of those decks run it, far above its rate elsewhere (+51 synergy).",
+"Mjölnir, Hammer of Thor","A 4-mana artifact that sweeps the board. A signature pick for Captain America, First Avenger — 48% of those decks run it, far above its rate elsewhere (+43 synergy).",
+Hero's Blade,"A 2-mana artifact. A signature pick for Cloud, Ex-SOLDIER — 53% of those decks run it, far above its rate elsewhere (+48 synergy).",
+"Bitterthorn, Nissa's Animus",A 3-mana artifact that tutors up exactly the piece you need.,
+Hero's Heirloom,"A 2-mana artifact that gives haste, so threats attack immediately. A signature pick for Cloud, Ex-SOLDIER — 37% of those decks run it, far above its rate elsewhere (+34 synergy).",
+Conformer Shuriken,"A 2-mana artifact that pays you off for attacking. A signature pick for Cloud, Ex-SOLDIER — 52% of those decks run it, far above its rate elsewhere (+47 synergy).",
+Buster Sword,"An artifact that draws you cards. A signature pick for Cloud, Ex-SOLDIER — 68% of those decks run it, far above its rate elsewhere (+60 synergy).",
+"Vincent, Vengeful Atoner","A 3-mana creature that pays you off for attacking. A signature pick for Cloud, Ex-SOLDIER — 52% of those decks run it, far above its rate elsewhere (+46 synergy).",
+"Sephiroth, Fallen Hero","A 5-mana creature that rebuys cards from your graveyard. A signature pick for Cloud, Ex-SOLDIER — 57% of those decks run it, far above its rate elsewhere (+50 synergy).",
+"Tifa, Martial Artist","A 4-mana creature that sweeps the board. A signature pick for Cloud, Ex-SOLDIER — 82% of those decks run it, far above its rate elsewhere (+73 synergy).",
+"Cloud, Midgar Mercenary","A creature that tutors up exactly the piece you need. A signature pick for Cloud, Ex-SOLDIER — 68% of those decks run it, far above its rate elsewhere (+60 synergy).",
+"Bugenhagen, Wise Elder","A 2-mana creature that draws you cards. A signature pick for Cloud, Ex-SOLDIER — 69% of those decks run it, far above its rate elsewhere (+60 synergy).",
+"Barret, Avalanche Leader","A 4-mana creature that makes tokens. A signature pick for Cloud, Ex-SOLDIER — 54% of those decks run it, far above its rate elsewhere (+48 synergy).",
+Professor Hojo,"A 2-mana creature that draws you cards. A signature pick for Cloud, Ex-SOLDIER — 69% of those decks run it, far above its rate elsewhere (+61 synergy).",
+"Cid, Freeflier Pilot","A 2-mana creature that rebuys cards from your graveyard. A signature pick for Cloud, Ex-SOLDIER — 79% of those decks run it, far above its rate elsewhere (+71 synergy).",
+Zack Fair,"A 1-mana creature that protects your board. A signature pick for Cloud, Ex-SOLDIER — 53% of those decks run it, far above its rate elsewhere (+48 synergy).",
+Farseek,A 2-mana sorcery that tutors up exactly the piece you need — it accelerates your mana for the deck. A core inclusion for The Ur-Dragon (60% of decks).,Sol Ring; Arcane Signet; Mind Stone
+Nature's Lore,"A 2-mana sorcery that tutors up exactly the piece you need — it accelerates your mana for the deck. A signature pick for Cloud, Ex-SOLDIER — 70% of those decks run it, far above its rate elsewhere (+32 synergy).",Sol Ring; Arcane Signet; Mind Stone
+Priest of Titania,A 2-mana creature that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+Rampant Growth,"A 2-mana sorcery that tutors up exactly the piece you need — it accelerates your mana for the deck. Commonly played in Cloud, Ex-SOLDIER decks (59%).",Sol Ring; Arcane Signet; Mind Stone
+Vandalblast,"A 1-mana sorcery that removes a problem permanent. A signature pick for Cloud, Ex-SOLDIER — 56% of those decks run it, far above its rate elsewhere (+46 synergy).",
+Vanquish the Horde,"A 8-mana sorcery that sweeps the board. A signature pick for Cloud, Ex-SOLDIER — 45% of those decks run it, far above its rate elsewhere (+40 synergy).",Wrath of God; Farewell; Austere Command
+Tome of Legends,"A 2-mana artifact that draws you cards — it keeps your hand full for the deck. Commonly played in Captain America, Team Leader decks (27%).",Rhystic Study; Mystic Remora; Fact or Fiction
+Staff of the Storyteller,A 2-mana artifact that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Harmonize,"A 4-mana sorcery that draws you cards — it keeps your hand full for the deck. Commonly played in Cloud, Ex-SOLDIER decks (26%).",Rhystic Study; Mystic Remora; Fact or Fiction
+"Red XIII, Proud Warrior","A 3-mana creature that rebuys cards from your graveyard. A signature pick for Cloud, Ex-SOLDIER — 83% of those decks run it, far above its rate elsewhere (+73 synergy).",
+Sacred Peaks,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 37% of those decks run it, far above its rate elsewhere (+31 synergy).",
+Jungle Shrine,"A 0-mana land that produces mana. A core inclusion for Cloud, Ex-SOLDIER (69% of decks).",
+Rugged Prairie,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 64% of those decks run it, far above its rate elsewhere (+53 synergy).",
+Sunpetal Grove,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 78% of those decks run it, far above its rate elsewhere (+38 synergy).",
+Rootbound Crag,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 76% of those decks run it, far above its rate elsewhere (+36 synergy).",
+Game Trail,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 54% of those decks run it, far above its rate elsewhere (+34 synergy).",
+Fortified Village,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 56% of those decks run it, far above its rate elsewhere (+35 synergy).",
+Brushland,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 68% of those decks run it, far above its rate elsewhere (+46 synergy).",
+Sungrass Prairie,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 51% of those decks run it, far above its rate elsewhere (+35 synergy).",
+Canopy Vista,"A 0-mana land that produces mana. A core inclusion for Cloud, Ex-SOLDIER (71% of decks).",
+Cinder Glade,"A 0-mana land that produces mana. A core inclusion for Cloud, Ex-SOLDIER (69% of decks).",
+Spire of Industry,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 66% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Slayers' Stronghold,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 57% of those decks run it, far above its rate elsewhere (+50 synergy).",
+Mossfire Valley,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 49% of those decks run it, far above its rate elsewhere (+35 synergy).",
+Evolving Wilds,"A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck. Commonly played in Cloud, Ex-SOLDIER decks (42%).",
+Sunscorched Divide,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 49% of those decks run it, far above its rate elsewhere (+40 synergy).",
+Radiant Grove,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 38% of those decks run it, far above its rate elsewhere (+32 synergy).",
+Fire-Lit Thicket,"A 0-mana land that produces mana. A signature pick for Cloud, Ex-SOLDIER — 61% of those decks run it, far above its rate elsewhere (+53 synergy).",
+Cloud's Limit Break,"A 2-mana instant that sweeps the board. A signature pick for Cloud, Ex-SOLDIER — 54% of those decks run it, far above its rate elsewhere (+48 synergy).",
+Clever Concealment,"A 4-mana instant that sweeps the board. A signature pick for Cloud, Ex-SOLDIER — 66% of those decks run it, far above its rate elsewhere (+56 synergy).",
+Ultimate Magic: Holy,"A 3-mana instant that protects your board. A signature pick for Cloud, Ex-SOLDIER — 60% of those decks run it, far above its rate elsewhere (+53 synergy).",
+Wrecking Ball Arm,"A 2-mana artifact that pushes damage through. A signature pick for Cloud, Ex-SOLDIER — 68% of those decks run it, far above its rate elsewhere (+60 synergy).",
+Cosmic Spider-Man,"A 5-mana creature that gives haste, so threats attack immediately.",
+"Silk, Web Weaver","A 4-mana creature that makes tokens. A signature pick for Cosmic Spider-Man — 58% of those decks run it, far above its rate elsewhere (+56 synergy).",
+"Spiders-Man, Heroic Horde","A 2-mana creature that makes tokens. A signature pick for Cosmic Spider-Man — 45% of those decks run it, far above its rate elsewhere (+43 synergy).",
+Peter Parker,"A creature that makes tokens. A signature pick for Cosmic Spider-Man — 70% of those decks run it, far above its rate elsewhere (+68 synergy).",
+"SP//dr, Piloted by Peni","A 5-mana artifact creature that draws you cards. A signature pick for Cosmic Spider-Man — 75% of those decks run it, far above its rate elsewhere (+72 synergy).",
+Spider-UK,"A 4-mana creature that draws you cards. A signature pick for Cosmic Spider-Man — 46% of those decks run it, far above its rate elsewhere (+44 synergy).",
+Coastal Piracy,A 4-mana enchantment that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+"Spider-Gwen, Free Spirit","A 3-mana creature that draws you cards. A signature pick for Cosmic Spider-Man — 43% of those decks run it, far above its rate elsewhere (+41 synergy).",
+"Gwenom, Remorseless","A creature that pays you off for attacking. A signature pick for Cosmic Spider-Man — 65% of those decks run it, far above its rate elsewhere (+63 synergy).",
+"Scarlet Spider, Ben Reilly","A 3-mana creature that pushes damage through. A signature pick for Cosmic Spider-Man — 74% of those decks run it, far above its rate elsewhere (+72 synergy).",
+"Scarlet Spider, Kaine",A 2-mana creature that pushes damage through. Commonly played in Cosmic Spider-Man decks (29%).,
+"Araña, Heart of the Spider","A 3-mana creature that pays you off for attacking. A signature pick for Cosmic Spider-Man — 66% of those decks run it, far above its rate elsewhere (+64 synergy).",
+"Spider-Girl, Legacy Hero","A 2-mana creature that makes tokens. A signature pick for Cosmic Spider-Man — 31% of those decks run it, far above its rate elsewhere (+30 synergy).",
+"Spider-Byte, Web Warden","A 3-mana creature. A signature pick for Cosmic Spider-Man — 47% of those decks run it, far above its rate elsewhere (+45 synergy).",
+Superior Spider-Man,"A creature. A signature pick for Cosmic Spider-Man — 68% of those decks run it, far above its rate elsewhere (+65 synergy).",
+Spinneret and Spiderling,"A 1-mana creature. A signature pick for Cosmic Spider-Man — 58% of those decks run it, far above its rate elsewhere (+56 synergy).",
+Symbiote Spider-Man,"A 3-mana creature that pays you off for attacking. A signature pick for Cosmic Spider-Man — 56% of those decks run it, far above its rate elsewhere (+54 synergy).",
+Spectacular Spider-Man,"A 2-mana creature that protects your board. A signature pick for Cosmic Spider-Man — 74% of those decks run it, far above its rate elsewhere (+72 synergy).",
+Spider-Man India,"A 5-mana creature that pushes damage through. A signature pick for Cosmic Spider-Man — 68% of those decks run it, far above its rate elsewhere (+66 synergy).",
+Spider-Man Noir,"A 5-mana creature that pays you off for attacking. A signature pick for Cosmic Spider-Man — 47% of those decks run it, far above its rate elsewhere (+46 synergy).",
+"Spider-Man, Brooklyn Visionary","A 5-mana creature that tutors up exactly the piece you need. A signature pick for Cosmic Spider-Man — 64% of those decks run it, far above its rate elsewhere (+62 synergy).",
+"Spider-Man, To the Rescue",A 3-mana creature that protects your board. Commonly played in Cosmic Spider-Man decks (27%).,
+"Spider-Man, Web-Slinger","A 3-mana creature. A signature pick for Cosmic Spider-Man — 34% of those decks run it, far above its rate elsewhere (+33 synergy).",
+Frantic Search,"A 3-mana instant that draws you cards — it keeps your hand full for the deck. A signature pick for Y'shtola, Night's Blessed — 53% of those decks run it, far above its rate elsewhere (+34 synergy).",Rhystic Study; Mystic Remora; Fact or Fiction
+"Arachne, Psionic Weaver","A 3-mana creature. A signature pick for Cosmic Spider-Man — 31% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Mary Jane Watson,"A creature that draws you cards. A signature pick for Cosmic Spider-Man — 68% of those decks run it, far above its rate elsewhere (+66 synergy).",
+Web-Warriors,"A 5-mana creature. A signature pick for Cosmic Spider-Man — 57% of those decks run it, far above its rate elsewhere (+55 synergy).",
+Spider-Bot,"A 2-mana artifact creature that tutors up exactly the piece you need. A signature pick for Cosmic Spider-Man — 37% of those decks run it, far above its rate elsewhere (+36 synergy).",
+Spider-Punk,"A creature that makes your spells uncounterable. A signature pick for Cosmic Spider-Man — 83% of those decks run it, far above its rate elsewhere (+81 synergy).",
+Roaming Throne,A 4-mana artifact creature that protects your board. Commonly played in The Ur-Dragon decks (31%).,
+Radioactive Spider,"A 1-mana creature that tutors up exactly the piece you need. A signature pick for Cosmic Spider-Man — 82% of those decks run it, far above its rate elsewhere (+80 synergy).",
+Miles Morales,"A 2-mana creature that protects your board. A signature pick for Cosmic Spider-Man — 74% of those decks run it, far above its rate elsewhere (+71 synergy).",
+Aunt May,"A 1-mana creature. A signature pick for Cosmic Spider-Man — 74% of those decks run it, far above its rate elsewhere (+72 synergy).",
+Spider Manifestation,"A creature that produces mana. A signature pick for Cosmic Spider-Man — 72% of those decks run it, far above its rate elsewhere (+69 synergy).",
+"Spider-Ham, Peter Porker","A creature that makes tokens. A signature pick for Cosmic Spider-Man — 73% of those decks run it, far above its rate elsewhere (+71 synergy).",
+"Spider-Woman, Stunning Savior","A creature that pushes damage through. A signature pick for Cosmic Spider-Man — 73% of those decks run it, far above its rate elsewhere (+70 synergy).",
+Void Rend,"A 3-mana instant that removes a problem permanent. A signature pick for Y'shtola, Night's Blessed — 73% of those decks run it, far above its rate elsewhere (+38 synergy).",Swords to Plowshares; Path to Exile; Generous Gift
+Daily Bugle Building,"A 0-mana land that produces mana. A signature pick for Cosmic Spider-Man — 47% of those decks run it, far above its rate elsewhere (+45 synergy).",
+University Campus,A 0-mana land that produces mana. Commonly played in Cosmic Spider-Man decks (27%).,
+Suburban Sanctuary,A 0-mana land that produces mana. Commonly played in Cosmic Spider-Man decks (29%).,
+Myriad Landscape,A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck. Commonly played in Kaervek the Merciless decks (37%).,
+Rakdos Signet,A 2-mana artifact that produces mana. Commonly played in Kaervek the Merciless decks (59%).,Sol Ring; Arcane Signet; Mind Stone
+Talisman of Indulgence,A 2-mana artifact that produces mana. Commonly played in Kaervek the Merciless decks (50%).,Sol Ring; Arcane Signet; Mind Stone
+Worn Powerstone,"A 3-mana artifact that produces mana. A signature pick for Kaervek the Merciless — 34% of those decks run it, far above its rate elsewhere (+30 synergy).",Sol Ring; Arcane Signet; Mind Stone
+Wayfarer's Bauble,A 1-mana artifact that tutors up exactly the piece you need — it accelerates your mana for the deck. Commonly played in Kaervek the Merciless decks (34%).,Sol Ring; Arcane Signet; Mind Stone
+Burnished Hart,A 3-mana artifact creature that tutors up exactly the piece you need — it accelerates your mana for the deck. Commonly played in Kaervek the Merciless decks (33%).,Sol Ring; Arcane Signet; Mind Stone
+Ambition's Cost,A 4-mana sorcery that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Syphon Mind,"A 4-mana sorcery that draws you cards — it keeps your hand full for the deck. Commonly played in Y'shtola, Night's Blessed decks (32%).",Rhystic Study; Mystic Remora; Fact or Fiction
+Fiery Emancipation,A 6-mana enchantment. Commonly played in Kaervek the Merciless decks (32%).,
+Spiteful Visions,A 4-mana enchantment. Commonly played in Kaervek the Merciless decks (36%).,
+Rakdos Charm,A 2-mana instant that sweeps the board. Commonly played in Kaervek the Merciless decks (55%).,
+Befoul,A 4-mana sorcery that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Dark Banishing,A 3-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Feed the Swarm,A 2-mana sorcery that removes a problem permanent. Commonly played in Kaervek the Merciless decks (35%).,Swords to Plowshares; Path to Exile; Generous Gift
+Pyroclasm,A 2-mana sorcery that sweeps the board.,Wrath of God; Farewell; Austere Command
+Fiery Confluence,A 4-mana sorcery that sweeps the board.,
+Vampire Nighthawk,A 3-mana creature that pushes damage through.,
+Scythe Specter,A 6-mana creature that pays you off for attacking.,
+Archfiend of Depravity,A 5-mana creature that pushes damage through.,
+Bloodgift Demon,A 5-mana creature that pushes damage through.,
+Indulgent Tormentor,A 5-mana creature that draws you cards. Commonly played in Kaervek the Merciless decks (29%).,
+Brash Taunter,"A 5-mana creature that protects your board. A signature pick for Kaervek the Merciless — 50% of those decks run it, far above its rate elsewhere (+40 synergy).",
+Tectonic Giant,A 4-mana creature that pays you off for attacking.,
+Combustible Gearhulk,A 6-mana artifact creature that draws you cards.,
+Dark Ritual,A 1-mana instant that produces mana. Commonly played in Kaervek the Merciless decks (49%).,
+"Kardur, Doomscourge",A 4-mana creature that turns deaths into value. Commonly played in Kaervek the Merciless decks (36%).,
+Warren Torchmaster,"A 2-mana creature that gives haste, so threats attack immediately.",
+Ob Nixilis Reignited,A 5-mana planeswalker that removes a problem permanent.,
+Dictate of the Twin Gods,"A 5-mana enchantment that scales or doubles your effects. A signature pick for Kaervek the Merciless — 48% of those decks run it, far above its rate elsewhere (+45 synergy).",
+Morbid Opportunist,A 3-mana creature that draws you cards.,
+Sangromancer,A 4-mana creature that turns deaths into value.,
+"Squee, Goblin Nabob",A 3-mana creature that rebuys cards from your graveyard.,
+Bloodfell Caves,A 0-mana land that produces mana. Commonly played in Kaervek the Merciless decks (35%).,
+Smoldering Marsh,A 0-mana land that produces mana. A core inclusion for Kaervek the Merciless (66% of decks).,
+Foreboding Ruins,A 0-mana land that produces mana. Commonly played in Kaervek the Merciless decks (53%).,
+Temple of Malice,A 0-mana land that produces mana. Commonly played in Kaervek the Merciless decks (46%).,
+Bojuka Bog,A 0-mana land that removes a problem permanent — it fixes your mana for the deck. Commonly played in Kaervek the Merciless decks (37%).,
+High Market,A 0-mana land that produces mana.,
+Sulfurous Springs,A 0-mana land that produces mana. Commonly played in Kaervek the Merciless decks (32%).,
+Urborg Volcano,A 0-mana land that produces mana.,
+Stensia Bloodhall,A 0-mana land that produces mana.,
+Cinder Barrens,A 0-mana land that produces mana.,
+Molten Slagheap,A 0-mana land that produces mana.,
+Mana Geyser,A 5-mana sorcery that produces mana. Commonly played in Kaervek the Merciless decks (41%).,
+The Ur-Dragon,A 9-mana creature that pushes damage through.,
+Up the Beanstalk,A 2-mana enchantment that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Azorius Signet,A 2-mana artifact that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+Elvish Mystic,A 1-mana creature that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+Temur Ascendancy,"A 3-mana enchantment that draws you cards — it keeps your hand full for the deck. A signature pick for The Ur-Dragon — 58% of those decks run it, far above its rate elsewhere (+49 synergy).",Rhystic Study; Mystic Remora; Fact or Fiction
+Gilded Goose,A 1-mana creature that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+Llanowar Elves,A 1-mana creature that produces mana.,Sol Ring; Arcane Signet; Mind Stone
+"Sarkhan, Soul Aflame","A 3-mana creature. A signature pick for The Ur-Dragon — 50% of those decks run it, far above its rate elsewhere (+45 synergy).",
+Insight,A 3-mana enchantment that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+"Selvala, Heart of the Wilds",A 3-mana creature that draws you cards.,
+Winged Words,A 3-mana sorcery that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Call the Spirit Dragons,"A 5-mana enchantment that can just win the game outright. A signature pick for The Ur-Dragon — 49% of those decks run it, far above its rate elsewhere (+43 synergy).",
+Shatter,A 2-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Smite,A 1-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Vendetta,A 1-mana instant that removes a problem permanent.,Swords to Plowshares; Path to Exile; Generous Gift
+Crux of Fate,"A 5-mana sorcery that sweeps the board. A signature pick for The Ur-Dragon — 71% of those decks run it, far above its rate elsewhere (+63 synergy).",Wrath of God; Farewell; Austere Command
+Culling Ritual,A 4-mana sorcery that produces mana — it resets the board for the deck.,Wrath of God; Farewell; Austere Command
+Dragon Tempest,"A 2-mana enchantment that gives haste, so threats attack immediately. A signature pick for The Ur-Dragon — 77% of those decks run it, far above its rate elsewhere (+69 synergy).",
+"Dragonhawk, Fate's Tempest",A 5-mana creature that pays you off for attacking.,
+"Ureni, the Song Unending",A 8-mana creature that protects your board.,
+Rhythm of the Wild,"A 3-mana enchantment that makes your spells uncounterable. A signature pick for The Ur-Dragon — 42% of those decks run it, far above its rate elsewhere (+31 synergy).",
+Dragonlord Dromoka,"A 6-mana creature that makes your spells uncounterable. A signature pick for The Ur-Dragon — 61% of those decks run it, far above its rate elsewhere (+54 synergy).",
+"Lathliss, Dragon Queen","A 6-mana creature that makes tokens. A signature pick for The Ur-Dragon — 64% of those decks run it, far above its rate elsewhere (+57 synergy).",
+"Miirym, Sentinel Wyrm","A 6-mana creature that makes tokens. A signature pick for The Ur-Dragon — 79% of those decks run it, far above its rate elsewhere (+70 synergy).",
+"Rith, Liberated Primeval","A 5-mana creature that makes tokens. A signature pick for The Ur-Dragon — 42% of those decks run it, far above its rate elsewhere (+37 synergy).",
+Hellkite Courser,"A 6-mana creature that gives haste, so threats attack immediately. A signature pick for The Ur-Dragon — 54% of those decks run it, far above its rate elsewhere (+50 synergy).",
+Scourge of Valkas,"A 5-mana creature that pushes damage through. A signature pick for The Ur-Dragon — 50% of those decks run it, far above its rate elsewhere (+45 synergy).",
+Fin Fang Foom,A 4-mana creature that pushes damage through.,
+Pet Avengers,A 4-mana creature that makes tokens.,
+"Atarka, World Render","A 7-mana creature that pays you off for attacking. A signature pick for The Ur-Dragon — 65% of those decks run it, far above its rate elsewhere (+58 synergy).",
+"Atsushi, the Blazing Sky",A 4-mana creature that makes tokens.,
+Parapet Thrasher,A 4-mana creature that removes a problem permanent.,
+Hellkite Tyrant,A 6-mana creature that can just win the game outright.,
+"Ganax, Astral Hunter",A 5-mana creature that produces mana. Commonly played in The Ur-Dragon decks (27%).,
+Scalelord Reckoner,A 5-mana creature that removes a problem permanent. Commonly played in The Ur-Dragon decks (31%).,
+"Silumgar, the Drifting Death","A 6-mana creature that pays you off for attacking. A signature pick for The Ur-Dragon — 34% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Wrathful Red Dragon,A 5-mana creature that pushes damage through.,
+Dragonlord Ojutai,A 5-mana creature that pays you off for attacking.,
+Terror of the Peaks,"A creature that pushes damage through. A signature pick for The Ur-Dragon — 60% of those decks run it, far above its rate elsewhere (+53 synergy).",
+Dragonspeaker Shaman,"A creature. A signature pick for The Ur-Dragon — 58% of those decks run it, far above its rate elsewhere (+51 synergy).",
+Old Gnawbone,"A creature that makes tokens. A signature pick for The Ur-Dragon — 57% of those decks run it, far above its rate elsewhere (+50 synergy).",
+"Niv-Mizzet, Visionary",A 6-mana creature that pushes damage through.,
+Two-Headed Dragon,A 6-mana creature that pushes damage through.,
+"Vaevictis Asmadi, the Dire",A 6-mana creature that pays you off for attacking.,
+Tiamat,"A creature that tutors up exactly the piece you need. A signature pick for The Ur-Dragon — 68% of those decks run it, far above its rate elsewhere (+62 synergy).",
+"Ao, the Dawn Sky",A 5-mana creature that pushes damage through.,
+Haven of the Spirit Dragon,"A 0-mana land that produces mana. A signature pick for The Ur-Dragon — 66% of those decks run it, far above its rate elsewhere (+59 synergy).",
+Dark Fortress,A 0-mana land that produces mana.,
+Omashu City,A 0-mana land that draws you cards — it fixes your mana for the deck.,
+Spectacle Summit,A 0-mana land that produces mana.,
+Study Hall,A 0-mana land that produces mana.,
+Thriving Bluff,A 0-mana land that produces mana.,
+Tranquil Cove,A 0-mana land that produces mana.,
+Villainous Hideout,A 0-mana land that draws you cards — it fixes your mana for the deck.,
+Blossoming Sands,A 0-mana land that produces mana.,
+Bonders' Enclave,"A 0-mana land that draws you cards — it fixes your mana for the deck. A signature pick for Cloud, Ex-SOLDIER — 45% of those decks run it, far above its rate elsewhere (+40 synergy).",
+Castle Doom,A 0-mana land that produces mana.,
+Coastal Tower,A 0-mana land that produces mana.,
+"Emeria, the Sky Ruin",A 0-mana land that produces mana.,
+Faerie Conclave,A 0-mana land that produces mana.,
+Festering Thicket,A 0-mana land that draws you cards — it fixes your mana for the deck.,
+Fire Nation Palace,A 0-mana land that produces mana.,
+Forbidding Watchtower,A 0-mana land that produces mana.,
+Forum of Amity,A 0-mana land that produces mana.,
+Fountain of Cho,A 0-mana land that produces mana.,
+Chromatic Lantern,A 3-mana artifact that produces mana. Commonly played in The Ur-Dragon decks (53%).,
+"Y'shtola, Night's Blessed",A 4-mana creature that draws you cards.,
+Archmage Emeritus,"A 4-mana creature that draws you cards. A signature pick for Y'shtola, Night's Blessed — 43% of those decks run it, far above its rate elsewhere (+36 synergy).",
+Emet-Selch of the Third Seat,"A 4-mana creature. A signature pick for Y'shtola, Night's Blessed — 54% of those decks run it, far above its rate elsewhere (+45 synergy).",
+"Fandaniel, Telophoroi Ascian","A 5-mana creature that scales or doubles your effects. A signature pick for Y'shtola, Night's Blessed — 39% of those decks run it, far above its rate elsewhere (+33 synergy).",
+Alphinaud Leveilleur,"A 4-mana creature that draws you cards. A signature pick for Y'shtola, Night's Blessed — 41% of those decks run it, far above its rate elsewhere (+33 synergy).",
+Serra Paragon,A 4-mana creature that pushes damage through.,
+Papalymo Totolymo,"A 2-mana creature. A signature pick for Y'shtola, Night's Blessed — 60% of those decks run it, far above its rate elsewhere (+50 synergy).",
+Lyse Hext,"A 3-mana creature that scales or doubles your effects. A signature pick for Y'shtola, Night's Blessed — 53% of those decks run it, far above its rate elsewhere (+44 synergy).",
+Mystical Tutor,A 1-mana instant that tutors up exactly the piece you need.,
+Absorb,A 3-mana instant that counters a spell — it protects your turn on the stack for the deck.,Counterspell; Swan Song; An Offer You Can't Refuse
+Sphinx's Revelation,A 3-mana instant that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Snuff Out,"A 4-mana instant that removes a problem permanent. A signature pick for Y'shtola, Night's Blessed — 76% of those decks run it, far above its rate elsewhere (+66 synergy).",Swords to Plowshares; Path to Exile; Generous Gift
+Lethal Scheme,"A 4-mana instant that sweeps the board — it answers a problem permanent for the deck. Commonly played in Y'shtola, Night's Blessed decks (31%).",Swords to Plowshares; Path to Exile; Generous Gift
+Curiosity,"An enchantment that draws you cards. A signature pick for Y'shtola, Night's Blessed — 63% of those decks run it, far above its rate elsewhere (+54 synergy).",
+Sublime Epiphany,A 6-mana instant that counters a spell — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Dig Through Time,"A 8-mana instant that keeps your hand full. A signature pick for Y'shtola, Night's Blessed — 36% of those decks run it, far above its rate elsewhere (+30 synergy).",Rhystic Study; Mystic Remora; Fact or Fiction
+Profane Command,A 2-mana sorcery that rebuys cards from your graveyard.,
+Vindicate,"A 3-mana sorcery that removes a problem permanent. A signature pick for Y'shtola, Night's Blessed — 49% of those decks run it, far above its rate elsewhere (+38 synergy).",Swords to Plowshares; Path to Exile; Generous Gift
+Godless Shrine,"A land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (56%).",
+Extinction Event,A 4-mana sorcery that sweeps the board.,Wrath of God; Farewell; Austere Command
+Time Wipe,A 5-mana sorcery that sweeps the board.,Wrath of God; Farewell; Austere Command
+Transpose,"A 3-mana instant that draws you cards. A signature pick for Y'shtola, Night's Blessed — 47% of those decks run it, far above its rate elsewhere (+40 synergy).",
+Authority of the Consuls,"A 1-mana enchantment. A signature pick for Y'shtola, Night's Blessed — 44% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Staggering Insight,A 2-mana enchantment that draws you cards — it keeps your hand full for the deck.,Rhystic Study; Mystic Remora; Fact or Fiction
+Propaganda,"A 3-mana enchantment that sweeps the board. A signature pick for Y'shtola, Night's Blessed — 75% of those decks run it, far above its rate elsewhere (+46 synergy).",
+Watery Grave,"A land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (56%).",
+Alisaie Leveilleur,"A 3-mana creature. A signature pick for Y'shtola, Night's Blessed — 46% of those decks run it, far above its rate elsewhere (+37 synergy).",
+Arcane Sanctum,"A 0-mana land that produces mana. A core inclusion for Y'shtola, Night's Blessed (60% of decks).",
+Choked Estuary,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (39%).",
+Darkwater Catacombs,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (37%).",
+Drowned Catacomb,"A 0-mana land that produces mana. A core inclusion for Y'shtola, Night's Blessed (66% of decks).",
+Isolated Chapel,"A 0-mana land that produces mana. A core inclusion for Y'shtola, Night's Blessed (65% of decks).",
+Underground River,"A 0-mana land that produces mana. A signature pick for Y'shtola, Night's Blessed — 66% of those decks run it, far above its rate elsewhere (+30 synergy).",
+Sunken Hollow,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (53%).",
+Skycloud Expanse,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (37%).",
+Fetid Heath,"A 0-mana land that produces mana. A signature pick for Y'shtola, Night's Blessed — 46% of those decks run it, far above its rate elsewhere (+33 synergy).",
+Sunken Ruins,"A 0-mana land that produces mana. A signature pick for Y'shtola, Night's Blessed — 47% of those decks run it, far above its rate elsewhere (+37 synergy).",
+Desolate Mire,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (33%).",
+Shineshadow Snarl,"A 0-mana land that produces mana. Commonly played in Y'shtola, Night's Blessed decks (37%).",
+Contaminated Aquifer,A 0-mana land that produces mana.,
+Sunlit Marsh,A 0-mana land that produces mana.,
+Idyllic Beachfront,A 0-mana land that produces mana.,
+Ash Barrens,"A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck. Commonly played in Cloud, Ex-SOLDIER decks (30%).",
+Demolition Field,"A 0-mana land that tutors up exactly the piece you need — it fixes your mana for the deck. Commonly played in Y'shtola, Night's Blessed decks (27%).",
+Circle of Power,"A 4-mana sorcery that draws you cards. A signature pick for Y'shtola, Night's Blessed — 39% of those decks run it, far above its rate elsewhere (+33 synergy).",

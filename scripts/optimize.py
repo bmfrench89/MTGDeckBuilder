@@ -141,7 +141,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         proper = edhrec.field_names(commander, idx)   # real casing for unowned cards
     except Exception:
         proper = {}
-    ctx = deck_fit.deck_context(deck_path, a["enriched"], commander, field=field)
+    ctx = deck_fit.deck_context(deck_path, a["enriched"], commander, field=field,
+                                synergy=deck_fit.load_synergy(commander, idx))
     keep, notes = _protected(deck_path, commander)
 
     deck = mtglib.parse_deck(text)
