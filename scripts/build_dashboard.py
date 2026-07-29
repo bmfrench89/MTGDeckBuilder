@@ -955,7 +955,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     try:
         refs = power.load_refs()
         ctx = deck_fit.deck_context(deck_path, enriched, commander,
-                                    field=deck_fit.load_field(commander, idx))
+                                    field=deck_fit.load_field(commander, idx),
+                                    synergy=deck_fit.load_synergy(commander, idx))
         staples = deck_fit.load_role_staples()
         details = build_card_details(sections, enriched, idx, load_card_notes(),
                                      rep=rep, ctx=ctx, refs=refs, staples=staples,

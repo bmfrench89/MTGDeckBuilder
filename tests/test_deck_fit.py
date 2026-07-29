@@ -74,3 +74,52 @@ def test_missing_field_key_is_safe():
 
 def test_load_field_is_graceful_without_a_commander():
     assert deck_fit.load_field("") == {}
+
+
+def _ctx_syn(field=None, synergy=None):
+    return {"identity": {"W"}, "archetype": [], "theme": "", "tribal": "hero",
+            "commander": "Test", "field": field or {}, "synergy": synergy or {}}
+
+
+def test_synergy_promotes_a_commander_signature_card():
+    """A card the field plays only moderately, but plays FAR more here than elsewhere,
+    should outrank one that's merely popular everywhere."""
+    field = {mtglib._norm("Signature"): 50, mtglib._norm("Generic"): 50}
+    syn = {mtglib._norm("Signature"): 60, mtglib._norm("Generic"): 3}
+    sig = deck_fit.assess_card(_card("Signature", 3), REP, _ctx_syn(field, syn), REFS)["score"]
+    gen = deck_fit.assess_card(_card("Generic", 3), REP, _ctx_syn(field, syn), REFS)["score"]
+    assert sig > gen
+
+
+def test_synergy_does_not_inflate_a_generic_staple():
+    """Command Tower is 93% inclusion / ~5 synergy — already maxed by inclusion, and low
+    synergy must never drag it down."""
+    field = {mtglib._norm("Staple"): 93}
+    with_syn = deck_fit.assess_card(_card("Staple", 1), REP,
+                                    _ctx_syn(field, {mtglib._norm("Staple"): 5}), REFS)["score"]
+    without = deck_fit.assess_card(_card("Staple", 1), REP, _ctx_syn(field), REFS)["score"]
+    assert with_syn == without
+
+
+def test_synergy_tiers_are_monotonic():
+    scores = []
+    for s in (5, 20, 35, 60):
+        scores.append(deck_fit.assess_card(_card("X", 3), REP,
+                                           _ctx_syn({}, {mtglib._norm("X"): s}), REFS)["score"])
+    assert scores == sorted(scores)
+
+
+def test_synergy_reason_text_is_explanatory():
+    r = deck_fit.assess_card(_card("X", 3), REP, _ctx_syn({}, {mtglib._norm("X"): 70}), REFS)
+    power = [x for x in r["reasons"] if x["label"] == "Power"][0]
+    assert "signature" in power["detail"].lower() and "70" in power["detail"]
+
+
+def test_missing_synergy_key_is_safe():
+    ctx = {"identity": {"W"}, "archetype": [], "theme": "", "tribal": "hero",
+           "commander": "T", "field": {}}          # no "synergy" key at all
+    assert deck_fit.assess_card(_card("X", 2), REP, ctx, REFS)["score"] > 0
+
+
+def test_load_synergy_is_graceful_without_a_commander():
+    assert deck_fit.load_synergy("") == {}

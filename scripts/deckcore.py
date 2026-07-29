@@ -95,13 +95,9 @@ def _default_notes_path():
                         "..", "data", "reference", "card_notes.csv")
 
 
-def load_card_notes(path=None):
-    """name(normalized) -> {"why": str, "alts": [names]}. The curated, editable
-    knowledge base behind the click-a-card panel. First row per name wins."""
-    path = path or _default_notes_path()
-    out = {}
-    if not os.path.exists(path):
-        return out
+def _read_notes_csv(path, out, generated):
+    if not path or not os.path.exists(path):
+        return
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):
             name = (r.get("Name") or r.get("Card") or "").strip()
@@ -109,10 +105,26 @@ def load_card_notes(path=None):
                 continue
             k = mtglib._norm(name)
             if k in out:
-                continue
+                continue                      # first writer wins (curated is read first)
             alts = [a.strip() for a in re.split(r"[;|]", r.get("Alternatives") or "")
                     if a.strip()]
-            out[k] = {"why": (r.get("Why") or "").strip(), "alts": alts}
+            out[k] = {"why": (r.get("Why") or "").strip(), "alts": alts,
+                      "generated": generated}
+
+
+def load_card_notes(path=None, include_generated=True):
+    """name(normalized) -> {"why": str, "alts": [names], "generated": bool}.
+
+    Two layers: the hand-written `card_notes.csv` and, if present, the machine-drafted
+    `card_notes.generated.csv` (see scripts/gen_card_notes.py). **Curated always wins** —
+    the generated file only fills cards nobody has written up yet, so growing coverage
+    never overwrites a human blurb."""
+    path = path or _default_notes_path()
+    out = {}
+    _read_notes_csv(path, out, generated=False)
+    if include_generated:
+        gen = os.path.join(os.path.dirname(path), "card_notes.generated.csv")
+        _read_notes_csv(gen, out, generated=True)
     return out
 
 

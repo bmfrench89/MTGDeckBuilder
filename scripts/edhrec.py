@@ -111,6 +111,29 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
             "sections": sections, "owned": owned, "missing": missing}
 
 
+def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
+    """{normalized name: synergy} — how much MORE this commander plays a card than decks
+    in general. Inclusion alone can't tell a signature card from a format staple:
+    Command Tower is 93% inclusion / 5 synergy (everyone runs it), while Dragon Tempest is
+    77% / 69 (it's a Dragon payoff). Synergy is what makes a card *this deck's* card."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error"):
+        return {}
+    out = {}
+    for sec in rec.get("sections", []):
+        for c in sec.get("cards", []):
+            syn = c.get("synergy")
+            if syn is None or not c.get("name"):
+                continue
+            k = mtglib._norm(c["name"])
+            if syn > out.get(k, -999):
+                out[k] = syn
+            front = c["name"].split("//")[0].strip()
+            if front:
+                out.setdefault(mtglib._norm(front), syn)
+    return out
+
+
 def field_names(commander, coll_index=None, ttl=CACHE_TTL):
     """{normalized name: EDHREC's properly-cased card name}. Needed because a card the
     player doesn't own has no collection entry to take a display name from — and
