@@ -171,9 +171,10 @@ def pip_table(rep):
             f"</span>{COLOR_NAME[c]}</td><td>{dem:g}</td><td>{dbl}</td>"
             f"<td>{s if src else '—'}</td></tr>")
     src_hdr = "Sources" if src else "Sources (need CSV)"
-    return ("<table class='data'><thead><tr><th>Color</th><th>Pip demand</th>"
+    return ("<div class='tablewrap'><table class='data'><thead><tr>"
+            "<th>Color</th><th>Pip demand</th>"
             f"<th>Double-pip cards</th><th>{src_hdr}</th></tr></thead><tbody>"
-            + "".join(rows) + "</tbody></table>")
+            + "".join(rows) + "</tbody></table></div>")
 
 
 def ownership_block(rep):
@@ -531,7 +532,7 @@ def power_html(a):
         f"<span class='pscore'>{a['power']}<span class='muted'>/100 · "
         f"{esc(a['tier'])}</span></span></div>"
         f"<ul class='notes'>{reasons}</ul>"
-        "<table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table>"
+        "<div class='tablewrap'><table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table></div>"
         "<p class='muted'>Bracket follows WotC's Commander Bracket system; the "
         "0-100 score is a countable-signal estimate — a guide, not a verdict.</p>")
 
@@ -797,7 +798,7 @@ ul.notes li {{ margin:var(--sp-1) 0; }}
 section p {{ margin:var(--sp-2) 0; }}
 code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
   padding:2px var(--sp-2); border-radius:5px; font-size:var(--fs-xs); }}
-.tablewrap {{ overflow-x:auto; }}
+.tablewrap {{ overflow-x:auto; max-width:100%; border-radius:var(--r-md); }}
 .buytoggle {{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2);
   margin-bottom:14px; }}
 .thbtn {{ background:transparent; color:var(--text); cursor:pointer;
