@@ -159,14 +159,29 @@ COLLECTION_URL = "https://api.scryfall.com/cards/collection"
 _BATCH = 75  # Scryfall's max identifiers per /cards/collection request
 
 
-def _post_collection(identifiers):
-    """POST up to 75 identifiers; return (found cards, not_found identifiers)."""
+def _post_collection(identifiers, retries=4):
+    """POST up to 75 identifiers; return (found cards, not_found identifiers).
+
+    Scryfall answers a burst with 429 and asks for a pause. Enriching a 2,000-card
+    collection is ~28 back-to-back requests, so retry with exponential backoff rather
+    than failing the whole run (which used to throw away every batch already fetched)."""
     body = json.dumps({"identifiers": identifiers}).encode()
     req = urllib.request.Request(COLLECTION_URL, data=body,
                                  headers={**_HEADERS, "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        j = json.loads(r.read())
-    return j.get("data", []), j.get("not_found", [])
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                j = json.loads(r.read())
+            return j.get("data", []), j.get("not_found", [])
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 503) or attempt == retries - 1:
+                raise
+            # Scryfall applies roughly a 30s cooldown once it starts 429ing, so short
+            # exponential waits just burn retries — ramp straight into that window.
+            wait = (5, 15, 30, 60)[min(attempt, 3)]
+            print(f"  (Scryfall {e.code} — waiting {wait}s)", file=sys.stderr)
+            time.sleep(wait)
+    return [], []
 
 
 def _best_identifier(card):

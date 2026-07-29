@@ -10,9 +10,9 @@
 # --- Ramp ---
 1 Arcane Signet
 1 Sol Ring
-1 Azorius Signet
-1 Explorer's Scope
-1 Sky Diamond
+1 Captain Marvel, Apex Avenger
+1 Captain America, Wings of Freedom
+1 Captain America, Super-Soldier
 1 Talisman of Progress
 1 Thought Vessel
 1 Archaeomancer's Map

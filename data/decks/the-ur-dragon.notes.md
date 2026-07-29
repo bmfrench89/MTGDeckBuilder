@@ -36,16 +36,19 @@ Ramp hard, land dragons ahead of curve, swing, draw, repeat.
   enough bodies that you don't need to trade early.
 
 # Weaknesses to respect
-- **The tribe is shallow.** You own ~13 dragons and 2 are committed to other decks, so this
-  runs **10** — the eminence discount and the attack trigger both scale with dragon count,
-  and neither is firing at full power yet. See `the-ur-dragon.buylist.csv`.
-- **~16 creature slots are vanilla filler** (Raging Goblin, Cloud Sprite, Merfolk of the
-  Pearl Trident, Goblin Recruiter…). They're there because the owned dragon pool ran dry —
-  they do **not** trigger Ur-Dragon and they don't advance the plan. They're the first cards
-  to cut, either for bought dragons or for more ramp / removal / card draw you already own.
-- **Five colors on a mostly-basic base.** Mana is the real constraint; prioritize duals.
-- **No Dragon tribal payoffs yet** (no Dragon Tempest, Scourge of Valkas, Temur Ascendancy,
-  Sarkhan effects) — the deck is "some dragons," not yet "a dragon deck."
+- **Five colors.** Mana is the real constraint — prioritize fixing and don't keep a hand
+  that can't cast its dragons on curve.
+- **Top-heavy.** The tribe lives at MV 4–7, so a stumble on ramp costs you whole turns.
+  Ramp on 2–3 is not optional.
+- **Board wipes.** Your threats are all on the battlefield; hold a protection effect when
+  you can rather than committing every dragon at once.
+
+# Grounding note
+Rebuilt 2026-07-28 after the collection grew from **13 owned dragons to 32**. The deck now
+runs **22 dragons** (was 10) plus real tribal payoffs — Lathliss makes a 5/5 per other
+dragon, Scourge of Valkas converts the board into damage, Miirym copies them, Atarka gives
+double strike. Eminence and the attack trigger finally fire at full strength. Field overlap
+(EDHREC top-25): **24/25**.
 
 # Grounding note
 Auto-built from owned cards after the tribal-detection fix (it previously ran **zero**
