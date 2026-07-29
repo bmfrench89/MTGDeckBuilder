@@ -2,7 +2,8 @@
 {% block title %}Decks · MTG Deckbuilder{% endblock %}
 {% block content %}
 <h1>Your Decks</h1>
-<div class="sub">Power leaderboard — tap a deck for its full dashboard.</div>
+<div class="sub">Ranked by power. Each row shows whether the deck is ready to sleeve —
+open one for its full dashboard.</div>
 
 <div class="decklist">
 {% for d in decks %}
@@ -11,22 +12,38 @@
   <div>
     <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
     <div class="cmd">{{ d.commander }}</div>
+    <div class="health">
+      {% if d.total and d.total != 100 %}
+        <span class="tag alert">{{ d.total }} cards</span>
+      {% endif %}
+      {% if d.to_buy %}
+        <span class="tag buy">{{ d.to_buy }} to buy</span>
+      {% endif %}
+      {% if d.contested %}
+        <span class="tag alert" title="Cards this deck shares beyond the copies you own">
+          ⇄ {{ d.contested }} contested</span>
+      {% endif %}
+      {% if d.total == 100 and not d.to_buy and not d.contested %}
+        <span class="tag">✓ ready to sleeve</span>
+      {% endif %}
+    </div>
   </div>
   <div class="stat">
     {% if d.assess %}
-    <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
-    <div class="meter" style="width:90px"><span style="width:{{ d.assess.power }}%"></span></div>
-    <span class="pw">{{ d.assess.power }}</span>
-    <span class="muted" style="font-size:.75rem">{{ d.assess.tier }}</span>
+      <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
+      <div class="meter" style="width:88px"><span style="width:{{ d.assess.power }}%"></span></div>
+      <span class="pw">{{ d.assess.power }}</span>
+      <span class="muted fs-xs">{{ d.assess.tier }}</span>
     {% else %}<span class="muted">—</span>{% endif %}
+    <a class="btn sm" href="{{ url_for('deck', stem=d.stem) }}">Open</a>
   </div>
   <div class="acts">
-    <a href="{{ url_for('deck', stem=d.stem) }}">▸ Dashboard</a>
-    <a href="{{ url_for('deck_visual', stem=d.stem) }}">🖼 Images</a>
-    <a href="{{ url_for('export_deck', stem=d.stem) }}">⬇ ManaPool</a>
-    <a href="{{ url_for('deck_assess', stem=d.stem) }}" title="Deck + all analytics, to hand to a coaching session">📋 Assess</a>
-    <a class="muted" href="{{ url_for('deck_edit', stem=d.stem) }}">✎ Edit</a>
-    <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" style="display:inline"
+    <a href="{{ url_for('deck_visual', stem=d.stem) }}">Images</a>
+    <a href="{{ url_for('export_deck', stem=d.stem) }}">Export</a>
+    <a href="{{ url_for('deck_assess', stem=d.stem) }}"
+       title="Deck + all analytics, to hand to a coaching session">Assess</a>
+    <a href="{{ url_for('deck_edit', stem=d.stem) }}">Edit</a>
+    <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" class="push"
       onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">
       <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
     </form>
@@ -35,9 +52,13 @@
 {% endfor %}
 </div>
 
-<form method="post" action="{{ url_for('refresh') }}">
-  <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
-</form>
-<p class="muted" style="margin-top:8px;font-size:.85rem">Everything is live — this also writes the
-static <code>build/</code> + <code>wishlist.md</code>.</p>
+<div class="card">
+  <div class="row">
+    <form method="post" action="{{ url_for('refresh') }}">
+      <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
+    </form>
+    <span class="muted fs-xs">Everything on this page is live — this also writes the static
+      <code>build/</code> pages and <code>wishlist.md</code>.</span>
+  </div>
+</div>
 {% endblock %}

@@ -119,14 +119,35 @@ def collection_index():
 # --------------------------------------------------------------------------- #
 @app.route("/")
 def index():
-    _, idx = collection_index()
+    """Deck leaderboard. Each row carries a small health summary so the page answers
+    'which deck needs attention?', not just 'which is strongest'."""
+    coll, idx = collection_index()
+    # one scan for every deck, rather than one per row
+    try:
+        usage = deck_conflicts.scan(DECKS_DIR, idx)
+    except Exception:
+        usage = {}
+    short_by_deck = {}
+    for name, v in usage.items():
+        if v["total"] > v["owned"]:
+            for d in v["decks"]:
+                short_by_deck[d] = short_by_deck.get(d, 0) + 1
+
     rows = []
     for m in list_decks():
         try:
             res = power.build_for_deck(m["path"], idx)
         except Exception:
             res = None
-        rows.append({**m, "assess": res})
+        try:
+            deck = mtglib.parse_deck(open(m["path"], encoding="utf-8").read())
+            total = sum(c.quantity for c in deck)
+            to_buy = sum(1 for c in deck if mtglib.lookup(idx, c.name) is None)
+        except Exception:
+            total, to_buy = None, 0
+        label = deck_conflicts.deck_label(m["path"])
+        rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
+                     "contested": short_by_deck.get(label, 0)})
     rows.sort(key=lambda r: -(r["assess"]["power"] if r["assess"] else 0))
     return render_template("index.html", decks=rows, page="home")
 

@@ -13,71 +13,9 @@
 <link rel="apple-touch-icon" href="/static/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/cardpanel.css">
-<style>
-:root{--void:#0b0d13;--panel:#151924;--panel2:#1c2130;--accent:#5BE0D4;--accent2:#8aa0ff;
-  --warn:#E86A6A;--gold:#E8B84B;--text:#e8ecf5;--muted:#8a93a8;}
-*{box-sizing:border-box}
-body{margin:0;background:var(--void);color:var(--text);font-family:'Rajdhani',sans-serif;line-height:1.5}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-nav{position:sticky;top:0;z-index:10;background:rgba(11,13,19,.92);backdrop-filter:blur(8px);
-  border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:6px;
-  padding:10px 18px;flex-wrap:wrap}
-nav .brand{font-family:'Oswald',sans-serif;font-weight:700;font-size:1.15rem;color:var(--accent);
-  margin-right:14px;letter-spacing:.5px}
-nav a.tab{color:var(--muted);padding:6px 12px;border-radius:20px;font-size:.92rem}
-nav a.tab:hover{color:var(--text);text-decoration:none}
-nav a.tab.on{background:var(--accent);color:#000;font-weight:700}
-.wrap{max-width:1080px;margin:0 auto;
-  padding:26px max(18px,env(safe-area-inset-right)) 70px max(18px,env(safe-area-inset-left))}
-nav{padding-top:max(10px,env(safe-area-inset-top))}
-h1{font-family:'Oswald',sans-serif;color:var(--accent);margin:0 0 4px}
-h2{font-family:'Oswald',sans-serif;color:var(--accent);margin:26px 0 10px;font-size:1.35rem}
-.sub{color:var(--muted);margin-bottom:18px}
-.card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.86rem}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
-th{color:var(--muted);font-weight:600}
-.pill{display:inline-block;padding:1px 9px;border-radius:20px;font-size:.72rem;font-weight:700;
-  font-family:'JetBrains Mono',monospace}
-.b2{background:#3a4b6e;color:#cfe0ff}.b3{background:#4a7a5f;color:#d7ffe9}
-.b4{background:#7a4a4a;color:#ffd7d7}.b5{background:#7a4a6e;color:#ffd7f2}.b1{background:#4a4a4a;color:#ddd}
-.muted{color:var(--muted)}.warn{color:var(--warn)}.gold{color:var(--gold)}.good{color:var(--accent)}
-.meter{height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px}
-.meter>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
-.btn{display:inline-block;background:var(--accent);color:#000;font-weight:700;border:none;cursor:pointer;
-  padding:8px 15px;border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:.92rem}
-.btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.2)}
-input,textarea{background:var(--panel2);color:var(--text);border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:.86rem}
-textarea{width:100%;min-height:60vh}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:40px}
-.chk{accent-color:var(--accent);width:15px;height:15px}
-.tablewrap{overflow-x:auto}
-.sb{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;
-  padding:0 6px;border-radius:8px;background:var(--accent2);color:#000;vertical-align:middle}
-.decklist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
-.deckrow{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;
-  padding:14px 16px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center}
-.deckrow .rank{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--muted)}
-.deckrow .name{font-weight:700;font-size:1.05rem}
-.deckrow .cmd{color:var(--muted);font-size:.8rem;font-family:'JetBrains Mono',monospace}
-.deckrow .stat{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.deckrow .pw{font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--accent)}
-.deckrow .acts{grid-column:2/4;display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
-.deckrow .acts a{font-size:.85rem}
-/* a form button that reads as one of the .acts links */
-.linkbtn{background:none;border:none;padding:0;font:inherit;font-size:.85rem;
-  color:var(--accent);cursor:pointer}
-.linkbtn:hover{text-decoration:underline}
-@media(max-width:600px){
-  .deckrow{grid-template-columns:28px 1fr}
-  .deckrow .stat{grid-column:2/3;justify-content:flex-start}
-  .deckrow .acts{grid-column:1/3}
-}
-</style></head><body>
+</head><body>
 <nav>
   <span class="brand">🕸 MTG Deckbuilder</span>
   <a class="tab {{ 'on' if page=='home' }}" href="{{ url_for('index') }}">Decks</a>
