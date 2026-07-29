@@ -5,7 +5,7 @@
 <div class="sub">{{ unique }} unique cards · {{ copies }} copies
 {% if has_price %}· <span class="gold">~${{ '%.2f'|format(total) }}</span> MARKET value{% endif %}</div>
 
-<div class="card" style="margin:14px 0;border-left:3px solid {{ '#3fb950' if carddb.on and carddb.pct >= 60 else '#d29922' }}">
+<div class="card mt-4" style="border-left:3px solid {{ '#3fb950' if carddb.on and carddb.pct >= 60 else '#d29922' }}">
   {% if carddb.on %}
     <b class="good">Card DB: enriched</b> — {{ carddb.covered }}/{{ carddb.total }}
     cards ({{ carddb.pct }}%) have real colors / types / mana value / image ids.
@@ -20,24 +20,19 @@
   {% endif %}
 </div>
 
-<div class="grid" style="margin-bottom:22px">
+<div class="grid mb-4">
   <div class="card">
-    <h2 style="margin-top:0">Upload a new export</h2>
+    <h2 class="mt-0">Upload a new export</h2>
     <p class="muted">Replace <code>collection.csv</code> with a fresh Archidekt/ManaBox export.
       Stays on this machine.</p>
     <form method="post" action="{{ url_for('collection_upload') }}" enctype="multipart/form-data">
-      <div class="row filepick" style="align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="row filepick" >
         <input type="file" name="csv" id="csvfile" accept=".csv" required>
         <label for="csvfile" class="btn ghost">Choose file…</label>
-        <span id="csvname" class="muted" style="font-size:.85rem">No file chosen</span>
+        <span id="csvname" class="muted fs-xs">No file chosen</span>
         <button class="btn" type="submit">Upload</button>
       </div>
     </form>
-    <style>
-      .filepick input[type=file]{position:absolute;width:1px;height:1px;padding:0;
-        margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-      .filepick label.btn{cursor:pointer}
-    </style>
     <script>
       (function(){var f=document.getElementById('csvfile'),n=document.getElementById('csvname');
         if(f)f.addEventListener('change',function(){
@@ -45,7 +40,7 @@
     </script>
   </div>
   <div class="card">
-    <h2 style="margin-top:0">Own something the export missed?</h2>
+    <h2 class="mt-0">Own something the export missed?</h2>
     <p class="muted">Add it here (your word beats the export). Saved to
       <code>owned_additions.txt</code> and merged everywhere.</p>
     <form method="post" action="{{ url_for('collection_add') }}">
@@ -53,34 +48,25 @@
         <input type="text" name="name" placeholder="Card name" style="flex:1" required>
         <button class="btn" type="submit">Add</button></div>
     </form>
-    {% if additions %}<div class="muted" style="margin-top:10px;font-size:.8rem">
+    {% if additions %}<div class="muted mt-3 fs-xs">
       Added: {{ additions|join(' · ') }}</div>{% endif %}
   </div>
 </div>
 
 <h2>Browse your collection</h2>
-<style>
-.collctl select,.collctl input[type=text]{background:var(--panel2);color:var(--text);
-  border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 9px;
-  font-family:'JetBrains Mono',monospace;font-size:.82rem}
-.colorbtn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
-  cursor:pointer;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:.82rem;
-  background:var(--panel2);color:var(--muted)}
-.colorbtn.on{background:var(--accent);color:#000;border-color:var(--accent)}
-</style>
-<div class="card collctl" style="margin-bottom:14px">
-  <input type="text" id="collsearch" placeholder="Search by name…" autocomplete="off" style="width:100%;margin-bottom:10px">
-  <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-    <span class="muted" style="font-size:.8rem">Colors:</span>
+<div class="card collctl mb-4">
+  <input type="text" id="collsearch" placeholder="Search by name…" autocomplete="off" class="mb-3" style="width:100%">
+  <div class="row tight">
+    <span class="muted fs-xs">Colors:</span>
     {% for col in ['W','U','B','R','G'] %}<button type="button" class="colorbtn" data-color="{{ col }}">{{ col }}</button>{% endfor %}
     <select id="collType"><option value="">All types</option>{% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
     <select id="collRole"><option value="">Any role</option><option value="ramp">Ramp</option><option value="draw">Draw</option><option value="removal">Removal</option><option value="wipe">Wipe</option><option value="counter">Counter</option></select>
-    <label class="muted" style="font-size:.82rem"><input type="checkbox" id="collIndeck" class="chk"> in a deck</label>
-    <label class="muted" style="font-size:.82rem"><input type="checkbox" id="collPriced" class="chk"> priced</label>
-    <select id="collSort" style="margin-left:auto"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
+    <label class="muted fs-xs"><input type="checkbox" id="collIndeck" class="chk"> in a deck</label>
+    <label class="muted fs-xs"><input type="checkbox" id="collPriced" class="chk"> priced</label>
+    <select id="collSort" class="push"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
   </div>
-  <div class="muted" style="font-size:.8rem;margin-top:10px"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
-  {% if not carddb.on %}<div class="warn" style="font-size:.78rem;margin-top:4px">Name-only collection — the color / type / mana-value filters need enrichment (run <code>enrich.bat</code>).</div>{% endif %}
+  <div class="muted fs-xs mt-3"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
+  {% if not carddb.on %}<div class="warn fs-xs mt-2">Name-only collection — the color / type / mana-value filters need enrichment (run <code>enrich.bat</code>).</div>{% endif %}
 </div>
 <div id="collgrid" class="cardgrid">
   {% for c in cards %}
@@ -104,7 +90,7 @@
   <td>{{ c.quantity }}×</td><td><span class="cardlink" data-card="{{ c.name }}">{{ c.name }}</span></td>
   <td class="muted">{{ c.set_code }}</td></tr>{% endfor %}
 </tbody></table></div>
-<p class="muted" style="margin-top:10px">Some obscure rows are mispriced in the export — treat as rough.</p>
+<p class="muted mt-3">Some obscure rows are mispriced in the export — treat as rough.</p>
 {% else %}
 <div class="card muted">No price data in this collection format — load a pricing export to see value.</div>
 {% endif %}

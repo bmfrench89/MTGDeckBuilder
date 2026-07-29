@@ -4,7 +4,7 @@
 <h1>Wishlist</h1>
 <div class="sub">Nothing here is required — it's what you'd buy to run every deck at once, or to upgrade.</div>
 
-<div class="card" style="margin:14px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<div class="card row mt-4">
   <b>Export for ManaPool</b>
   <button type="button" class="btn" id="mpcopy">📋 Copy list</button>
   <a class="btn ghost" href="{{ url_for('export_wishlist') }}">⬇ Download .txt</a>
@@ -60,6 +60,6 @@ document.getElementById('mpcopy').addEventListener('click',function(){
 {% else %}<tr><td colspan="5" class="muted">none</td></tr>{% endfor %}
 </tbody></table></div>
 
-<p class="muted" style="margin-top:16px">Prices are your export's MARKET / buy-list estimates.
+<p class="muted mt-4">Prices are your export's MARKET / buy-list estimates.
 Checkboxes are for your own tracking (not saved).</p>
 {% endblock %}

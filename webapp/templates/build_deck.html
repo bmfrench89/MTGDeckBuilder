@@ -13,21 +13,21 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 {% if d.tribe_warning %}<br><span class="warn">⚠ {{ d.tribe_warning }}</span>{% endif %}
 {% if d.tribal %}<br><span class="muted">Tribal build — prioritizing your owned <b>{{ d.tribal|title }}s</b>.</span>{% endif %}</div>
 
-<div class="row" style="gap:8px;margin:14px 0">
+<div class="row mt-4">
   {% set ci = d.identity if d.identity != 'C' else '' %}
   <a class="btn ghost" href="{{ url_for('build_next') }}">← Build Next</a>
   <a class="btn" href="{{ url_for('build_deck_export', commander=d.commander, ci=ci) }}">⬇ Export .txt</a>
-  <form method="post" action="{{ url_for('build_deck_save', commander=d.commander) }}" style="display:inline"
+  <form method="post" action="{{ url_for('build_deck_save', commander=d.commander) }}"
     onsubmit="return confirm('Save this draft to data/decks/ so it joins your leaderboard?');">
     <input type="hidden" name="ci" value="{{ ci }}">
     <button class="btn" type="submit">💾 Save to my decks</button></form>
 </div>
 
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr));margin-bottom:8px">
+<div class="grid tiles">
   {% for role,label in [('land','Lands'),('ramp','Ramp'),('draw','Draw'),('removal','Removal'),('wipe','Wipes'),('counter','Counters')] %}
-  <div class="card" style="text-align:center;padding:12px 8px">
-    <div style="font-size:1.5rem;font-family:'Oswald',sans-serif;color:var(--accent2)">{{ d.counts.get(role,0) }}<span class="muted" style="font-size:.85rem">/{{ d.targets[role] }}</span></div>
-    <div class="muted" style="font-size:.68rem;text-transform:uppercase;letter-spacing:1px">{{ label }}{% if role in d.gaps %} <span class="warn">−{{ d.gaps[role] }}</span>{% endif %}</div>
+  <div class="tile">
+    <div class="val">{{ d.counts.get(role,0) }}<span class="muted fs-xs">/{{ d.targets[role] }}</span></div>
+    <div class="lbl">{{ label }}{% if role in d.gaps %} <span class="warn">−{{ d.gaps[role] }}</span>{% endif %}</div>
   </div>
   {% endfor %}
 </div>
@@ -41,19 +41,19 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 {% endif %}
 
 {% if d.combos.complete or d.combos.near %}
-<div class="card" style="margin:14px 0">
+<div class="card mt-4">
   {% if d.combos.complete %}<div><b class="warn">Combo present:</b> {{ d.combos.complete|join('; ') }}</div>{% endif %}
-  {% if d.combos.near %}<div class="muted" style="margin-top:4px">One piece away: {{ d.combos.near|join('; ') }}</div>{% endif %}
+  {% if d.combos.near %}<div class="muted mt-2">One piece away: {{ d.combos.near|join('; ') }}</div>{% endif %}
 </div>
 {% endif %}
 
-<section id="edhrec" data-commander="{{ d.commander }}" style="margin:14px 0">
-  <h2>EDHREC staples <span class="muted" style="font-size:.82rem;font-weight:400">· vs your collection</span></h2>
+<section id="edhrec" data-commander="{{ d.commander }}" class="mt-4">
+  <h2>EDHREC staples <span class="muted fs-xs">· vs your collection</span></h2>
   <div id="edhrec-body" class="card"><span class="muted">Loading community staples from EDHREC…</span></div>
 </section>
 
-<section id="csb" data-commander="{{ d.commander }}" data-ci="{{ d.identity if d.identity != 'C' else '' }}" style="margin:14px 0">
-  <h2>Combos <span class="muted" style="font-size:.82rem;font-weight:400">· Commander Spellbook (present + one card away)</span></h2>
+<section id="csb" data-commander="{{ d.commander }}" data-ci="{{ d.identity if d.identity != 'C' else '' }}" class="mt-4">
+  <h2>Combos <span class="muted fs-xs">· Commander Spellbook (present + one card away)</span></h2>
   <div id="csb-body" class="card"><span class="muted">Checking Commander Spellbook…</span></div>
 </section>
 
@@ -64,7 +64,7 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
     <span class="pill b{{ a.bracket }}">B{{ a.bracket }} · {{ a.bracket_name }}</span>
     <div class="meter" style="width:120px"><span style="width:{{ a.power }}%"></span></div>
     <span style="font-family:'Oswald',sans-serif;font-size:1.4rem;color:var(--accent)">{{ a.power }}</span>
-    <span class="muted" style="font-size:.8rem">/100 · {{ a.tier }}</span>
+    <span class="muted fs-xs">/100 · {{ a.tier }}</span>
   </div>
   <ul class="muted" style="font-size:.82rem;margin:10px 0 0;padding-left:18px">
     {% for r in a.bracket_reasons %}<li>{{ r }}</li>{% endfor %}
@@ -81,10 +81,10 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
   {% else %}
     {% set lo = d.mana.land_odds %}
     {% if lo %}
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(118px,1fr));margin-bottom:12px">
-      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:1.4rem;font-family:'Oswald',sans-serif;color:var(--accent2)">{{ (lo.keepable*100)|round|int }}%</div><div class="muted" style="font-size:.66rem;letter-spacing:1px">KEEPABLE HAND</div></div>
-      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:1.4rem;font-family:'Oswald',sans-serif;color:var(--accent2)">{{ (lo.ge3_open*100)|round|int }}%</div><div class="muted" style="font-size:.66rem;letter-spacing:1px">3+ LANDS OPENER</div></div>
-      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:1.4rem;font-family:'Oswald',sans-serif;color:var(--accent2)">{{ (lo.ge4_by_t4*100)|round|int }}%</div><div class="muted" style="font-size:.66rem;letter-spacing:1px">4TH LAND BY T4</div></div>
+    <div class="grid tiles">
+      <div class="tile"><div class="val">{{ (lo.keepable*100)|round|int }}%</div><div class="lbl">KEEPABLE HAND</div></div>
+      <div class="tile"><div class="val">{{ (lo.ge3_open*100)|round|int }}%</div><div class="lbl">3+ LANDS OPENER</div></div>
+      <div class="tile"><div class="val">{{ (lo.ge4_by_t4*100)|round|int }}%</div><div class="lbl">4TH LAND BY T4</div></div>
     </div>
     {% endif %}
     <div class="tablewrap"><table><thead><tr><th>Color</th><th>Sources</th><th>Karsten</th><th>Pip demand</th><th>P(≥1 opener)</th><th></th></tr></thead><tbody>
@@ -96,7 +96,7 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
     {% endfor %}
     </tbody></table></div>
     {% if d.mana.risky %}
-    <p style="margin-top:10px;font-size:.84rem"><b class="warn">Risky to cast on curve ({{ d.mana.risky_total }}):</b>
+    <p class="mt-3 fs-xs"><b class="warn">Risky to cast on curve ({{ d.mana.risky_total }}):</b>
     <span class="muted">{% for r in d.mana.risky %}{{ r.name }} ({{ (r.p*100)|round|int }}%){% if not loop.last %}, {% endif %}{% endfor %}</span></p>
     {% endif %}
     <p class="muted" style="font-size:.76rem;margin-top:8px">Exact hypergeometric odds (unconditional
@@ -106,7 +106,7 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 {% endif %}
 
 {% for title, cards in d.sections %}
-<h2>{{ title }} <span class="muted" style="font-size:.82rem;font-weight:400">{{ cards|length }}</span></h2>
+<h2>{{ title }} <span class="muted fs-xs">{{ cards|length }}</span></h2>
 <div class="cardgrid">
   {% for c in cards %}
   <figure class="mc" data-card="{{ c.name }}" tabindex="0" role="button" title="{{ c.name }}">
@@ -118,7 +118,7 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 </div>
 {% endfor %}
 
-<p class="muted" style="margin-top:18px;font-size:.82rem">Built by ranking your owned, in-color, uncommitted cards with the
+<p class="muted mt-4 fs-xs">Built by ranking your owned, in-color, uncommitted cards with the
 deck-fit engine and filling the Command Zone / 8x8 role template. Click any card for details + buy links.
 Off-color cards skipped: {{ d.off_color_skipped }}.</p>
 
@@ -130,18 +130,18 @@ Off-color cards skipped: {{ d.off_color_skipped }}.</p>
   var cmd = sec.getAttribute('data-commander');
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
   function chip(c) {
-    var inc = c.inclusion != null ? ' <span class="muted" style="font-size:.72rem">' + c.inclusion + '%</span>' : '';
-    var q = c.qty > 1 ? ' <span class="muted" style="font-size:.72rem">' + c.qty + '×</span>' : '';
+    var inc = c.inclusion != null ? ' <span class="muted fs-xs">' + c.inclusion + '%</span>' : '';
+    var q = c.qty > 1 ? ' <span class="muted fs-xs">' + c.qty + '×</span>' : '';
     return '<button class="cp-tag" data-card="' + esc(c.name) + '" style="cursor:pointer;margin:2px" title="' + esc(c.name) + '">' + esc(c.name) + inc + q + '</button>';
   }
   function list(title, arr, empty) {
-    if (!arr || !arr.length) return '<div style="margin-bottom:6px"><b>' + title + '</b> <span class="muted">' + empty + '</span></div>';
-    return '<div style="margin-bottom:10px"><b>' + title + '</b><div style="margin-top:6px">' + arr.slice(0, 24).map(chip).join('') + '</div></div>';
+    if (!arr || !arr.length) return '<div class="mb-3"><b>' + title + '</b> <span class="muted">' + empty + '</span></div>';
+    return '<div class="mb-3"><b>' + title + '</b><div class="mt-2">' + arr.slice(0, 24).map(chip).join('') + '</div></div>';
   }
   fetch('/api/edhrec/' + encodeURIComponent(cmd)).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) { body.innerHTML = '<span class="muted">EDHREC data unavailable.</span>'; return; }
     if (d.error) { body.innerHTML = '<span class="muted">No EDHREC page for this commander yet (' + esc(d.slug) + ').</span>'; return; }
-    var head = '<div class="muted" style="font-size:.8rem;margin-bottom:10px">From ' + (d.sample_decks || '?') +
+    var head = '<div class="muted fs-xs mb-3">From ' + (d.sample_decks || '?') +
       ' decks on <a href="' + esc(d.url) + '" target="_blank" rel="noopener">EDHREC</a>. Click a card for details + buy links.</div>';
     body.innerHTML = head +
       list('✓ Staples you own — add these', d.owned, 'none of the top staples yet.') +
@@ -159,7 +159,7 @@ Off-color cards skipped: {{ d.off_color_skipped }}.</p>
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
   function cards(arr) { return (arr || []).map(function (n) { return '<button class="cp-tag" data-card="' + esc(n) + '" style="cursor:pointer;margin:1px">' + esc(n) + '</button>'; }).join(' '); }
   function combo(c, prefix) {
-    return '<div style="margin-top:4px">' + (prefix || '') + cards(prefix ? c.missing : c.cards) +
+    return '<div class="mt-2">' + (prefix || '') + cards(prefix ? c.missing : c.cards) +
       ' <span class="muted">→ ' + esc((c.produces || []).join(', ') || '?') + '</span></div>';
   }
   fetch('/api/combos/build/' + encodeURIComponent(cmd) + (ci ? ('?ci=' + encodeURIComponent(ci)) : ''))
@@ -167,7 +167,7 @@ Off-color cards skipped: {{ d.off_color_skipped }}.</p>
       if (!d || d.error) { body.innerHTML = '<span class="muted">Commander Spellbook unavailable.</span>'; return; }
       var pres = d.present || [], alm = (d.almost || []).filter(function (c) { return (c.missing || []).length === 1; });
       var html = '';
-      if (pres.length) html += '<div style="margin-bottom:10px"><b>✓ Combos present (' + pres.length + ')</b>' +
+      if (pres.length) html += '<div class="mb-3"><b>✓ Combos present (' + pres.length + ')</b>' +
         pres.slice(0, 12).map(function (c) { return combo(c, ''); }).join('') + '</div>';
       if (alm.length) html += '<div><b>✗ One card away (' + alm.length + ')</b>' +
         alm.slice(0, 15).map(function (c) { return combo(c, '<span class="muted">add </span>'); }).join('') + '</div>';

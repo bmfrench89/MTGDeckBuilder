@@ -6,36 +6,23 @@
 <span class="sb">OWN</span> = you have the commander; others are a cheap buy to unlock a deck
 you can mostly build today.</div>
 
-<div class="card" style="margin:0 0 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<div class="card row mb-4">
   <b>Build any commander:</b>
-  <span style="position:relative;flex:1;min-width:180px">
+  <span class="grow">
     <input id="cmdname" placeholder="Type a commander name…" autocomplete="off" style="width:100%">
     <div id="cmdac" class="cmd-ac" hidden></div>
   </span>
   <button class="btn" id="cmdgo" type="button">Build the deck →</button>
-  <span class="muted" id="cmdmsg" style="width:100%;font-size:.82rem">We look the card up on
+  <span class="muted fs-xs" id="cmdmsg" style="width:100%">We look the card up on
     Scryfall to get its color identity, then build a deck from your collection in those colors.</span>
 </div>
 
-<div class="row" style="margin-bottom:16px;gap:8px;flex-wrap:wrap">
+<div class="row tight mb-4">
   <a class="thchip {{ 'on' if not arch }}" href="{{ url_for('build_next') }}">all</a>
   {% for a in archetypes %}
   <a class="thchip {{ 'on' if a==arch }}" href="{{ url_for('build_next', archetype=a) }}">{{ a }}</a>
   {% endfor %}
 </div>
-<style>
-.thchip{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.82rem;
-  border:1px solid rgba(255,255,255,.16);color:var(--muted);font-family:'JetBrains Mono',monospace}
-.thchip.on{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
-.thchip:hover{color:var(--text);text-decoration:none}
-.deckrow .support{font-family:'Oswald',sans-serif;font-size:.9rem;color:var(--accent2)}
-.cmd-ac{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--panel2);
-  border:1px solid rgba(255,255,255,.16);border-radius:8px;margin-top:4px;max-height:260px;
-  overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.4);text-align:left}
-.cmd-ac div{padding:8px 12px;cursor:pointer;font-size:.9rem;color:var(--text)}
-.cmd-ac div:hover,.cmd-ac div.on{background:var(--accent);color:#000}
-</style>
-
 <div class="decklist">
 {% set maxn = rows[0].support_n if rows else 1 %}
 {% for r in rows %}
@@ -43,17 +30,16 @@ you can mostly build today.</div>
   <div class="rank">{{ loop.index }}</div>
   <div>
     <div class="name"><span class="cardlink" data-card="{{ r.name }}">{{ r.name }}</span>
-      <span class="muted" style="font-size:.78rem;font-family:'JetBrains Mono',monospace">[{{ r.colors }}]</span>
-      {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted" style="font-size:.75rem">· buy the commander</span>{% endif %}</div>
+      <span class="muted mono fs-xs">[{{ r.colors }}]</span>
+      {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted fs-xs">· buy the commander</span>{% endif %}</div>
     <div class="cmd">{{ r.archetypes|join(' · ') }}</div>
   </div>
   <div class="stat">
     <div class="meter" style="width:84px"><span style="width:{{ (100 * r.support_n / maxn)|round }}%"></span></div>
-    <span class="support">{{ r.support_n }}</span><span class="muted" style="font-size:.72rem">support</span>
-    <a class="btn" href="{{ url_for('build_deck', commander=r.name) }}"
-      style="font-size:.8rem;padding:5px 12px">Build →</a>
+    <span class="support">{{ r.support_n }}</span><span class="muted fs-xs">support</span>
+    <a class="btn sm" href="{{ url_for('build_deck', commander=r.name) }}">Build →</a>
   </div>
-  <div class="acts" style="font-size:.8rem;color:var(--muted)">
+  <div class="acts">
     <span>You own:</span>
     {% for sc in r.support_cards[:10] %}<span class="cardlink" data-card="{{ sc }}">{{ sc }}</span>{% if not loop.last %}, {% endif %}{% endfor %}{% if r.support_cards|length > 10 %} (+{{ r.support_cards|length - 10 }}){% endif %}
     {% if r.notes %}<span style="width:100%">{{ r.notes }}</span>{% endif %}
@@ -65,7 +51,7 @@ you can mostly build today.</div>
 {% endfor %}
 </div>
 
-<p class="muted" style="font-size:.8rem">"Support" counts owned archetype payoffs/enablers from
+<p class="muted fs-xs">"Support" counts owned archetype payoffs/enablers from
 <code>data/reference/archetype_support.csv</code> (universal staples like Sol Ring excluded).
 It's a starting signal — grow both reference files to sharpen it.</p>
 
