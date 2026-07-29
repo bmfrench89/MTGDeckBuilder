@@ -409,6 +409,12 @@ DRAW = {
     "brainstorm", "frantic search", "think twice", "winged words", "insight",
     "kindred discovery", "coastal piracy", "reconnaissance mission", "horn of greed",
     "visions of beyond", "harmonize", "sublime epiphany",
+    # repeatable engines that draw off a deck's own payoffs rather than saying "draw a
+    # card" on a cheap spell — these were being scored as generic enchantments, which
+    # under-counted card advantage in decks built around big creatures.
+    "up the beanstalk", "temur ascendancy", "esper sentinel", "smothering tithe",
+    "guardian project", "beast whisperer", "garruk's uprising", "elemental bond",
+    "colossal majesty", "the great henge", "toski, bearer of secrets",
 }
 REMOVAL = {
     "swords to plowshares", "path to exile", "generous gift", "beast within",
