@@ -12,28 +12,29 @@
 1 Sol Ring
 1 Rampant Growth
 1 Thought Vessel
-1 Wild Growth
+1 Up the Beanstalk
 1 Azorius Signet
 1 Elvish Mystic
-1 Explorer's Scope
+1 Temur Ascendancy
 1 Gilded Goose
 1 Llanowar Elves
-1 Moss Diamond
+1 Sarkhan, Soul Aflame
 1 Farseek
 
 # --- Card advantage ---
 1 Think Twice
 1 Insight
 1 Reconnaissance Mission
-1 Syphon Mind
+1 Selvala, Heart of the Wilds
 1 Syphon Soul
 1 Winged Words
 1 Opportunity
+1 Temur Ascendancy
 
 # --- Removal ---
 1 Assassin's Trophy
 1 Disenchant
-1 Pacifism
+1 Call the Spirit Dragons
 1 Seal of Cleansing
 1 Seal of Fire
 1 Shatter
@@ -48,9 +49,9 @@
 
 # --- Counters ---
 1 Counterspell
-1 Essence Scatter
-1 Power Sink
-1 Annul
+1 Dragonhawk, Fate's Tempest
+1 Ureni, the Song Unending
+1 Rhythm of the Wild
 
 # --- Creatures ---
 1 Dragonlord Dromoka
@@ -78,8 +79,9 @@
 1 Two-Headed Dragon
 1 Vaevictis Asmadi, the Dire
 1 Tiamat
+1 Ao, the Dawn Sky
 
-# --- Lands (37) ---
+# --- Lands (36) ---
 1 Command Tower
 1 Haven of the Spirit Dragon
 1 Dark Fortress
@@ -93,7 +95,6 @@
 1 Path of Ancestry
 1 Unclaimed Territory
 1 Secluded Courtyard
-1 Baxter Building
 1 Blossoming Sands
 1 Bonders' Enclave
 1 Castle Doom
@@ -112,9 +113,6 @@
 4 Mountain
 1 Plains
 1 Swamp
-
-# --- Enchantments ---
-1 Temur Ascendancy
 
 # --- Artifacts ---
 1 Chromatic Lantern
