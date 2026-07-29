@@ -145,6 +145,11 @@ decide which gets the physical copy when you sleeve. Unowned picks are badged **
 dashboard decklist (they're already `missing` to `deck_stats`). Use `--owned-only` for a list
 buildable from spare copies today, or `--no-buys` to stay fully owned.
 
+**What changed.** Each applying run appends to `<deck>.changes.csv` (`Card,Added,Replaced,
+Source`), and the dashboard badges anything added in the last **14 days** with a gold `NEW`
+tag (tooltip: when, and what it replaced). Without it a collection refresh can swap a dozen
+cards into a 100-card list and leave you to spot them by eye. `deckcore.load_changes()`.
+
 **Pool report.** Every run prints how the commander's top-25 splits into in-deck / free /
 committed-elsewhere / not-owned, naming the decks holding contested copies — so a deck that
 *can't* improve reads as "pool exhausted", not "badly built". `write_buylist()` turns the

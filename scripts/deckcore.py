@@ -71,6 +71,38 @@ def load_buylist(path):
     return [r for r in rows if r["card"]]
 
 
+NEW_CARD_DAYS = 14
+
+
+def load_changes(path, days=NEW_CARD_DAYS):
+    """`<deck>.changes.csv` -> {normalized card: {added, replaced, days_ago}} for cards the
+    optimizer added within `days`. Lets the dashboard badge what's actually new rather than
+    leaving you to diff a 100-card list by eye after every collection refresh."""
+    if not (path and os.path.exists(path)):
+        return {}
+    from datetime import date
+    today = date.today()
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            name = (r.get("Card") or "").strip()
+            if not name:
+                continue
+            try:
+                added = date.fromisoformat((r.get("Added") or "").strip())
+            except ValueError:
+                continue
+            ago = (today - added).days
+            if ago > days or ago < 0:
+                continue
+            k = mtglib._norm(name)
+            prev = out.get(k)
+            if prev is None or ago < prev["days_ago"]:   # keep the most recent entry
+                out[k] = {"added": added.isoformat(), "days_ago": ago,
+                          "replaced": (r.get("Replaced") or "").strip()}
+    return out
+
+
 def load_attrs(path):
     """Optional name -> {type, mv} map to power the MV spread without the full CSV."""
     if not (path and os.path.exists(path)):

@@ -359,8 +359,20 @@ def _buy_badge(k, missing_keys):
             "this list'>BUY</span>")
 
 
+def _new_badge(k, changes):
+    """A NEW badge for a card the optimizer added in the last couple of weeks, so a
+    refreshed deck shows what actually changed instead of making you diff 100 cards."""
+    c = (changes or {}).get(k)
+    if not c:
+        return ""
+    ago = c["days_ago"]
+    when = "today" if ago == 0 else ("yesterday" if ago == 1 else f"{ago} days ago")
+    why = f" — replaced {c['replaced']}" if c.get("replaced") else ""
+    return (f"<span class='nb' title='Added {when} ({c['added']}){esc(why)}'>NEW</span>")
+
+
 def sections_html(sections, enriched, shared=None, images=True, size="small",
-                  missing=None):
+                  missing=None, changes=None):
     missing_keys = {mtglib._norm(getattr(c, "name", c)) for c in (missing or [])}
     mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
     pr = {mtglib._norm(c.name): c.price for c in enriched}
@@ -392,6 +404,7 @@ def sections_html(sections, enriched, shared=None, images=True, size="small",
                     f"role='button' aria-label='{esc(name)} — details'>"
                     f"<img loading='lazy' data-src='{esc(url)}' "
                     f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
+                    f"{_new_badge(k, changes)}"
                     f"<figcaption>{mvb}{esc(name)}{price}</figcaption></figure>")
             out.append("</div>")
         else:
@@ -405,7 +418,7 @@ def sections_html(sections, enriched, shared=None, images=True, size="small",
                 price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
                 qty = f"{q}× " if q > 1 else ""
                 out.append(f"<li>{mvb}{qty}{esc(name)}"
-                           f"{_share_badge(k, shared)}{price}</li>")
+                           f"{_share_badge(k, shared)}{_new_badge(k, changes)}{price}</li>")
             out.append("</ul>")
     return "".join(out)
 
@@ -690,7 +703,7 @@ def card_modal_block(details, editable=False, stem=""):
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
-                     editable=False, stem="", missing=None):
+                     editable=False, stem="", missing=None, changes=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -846,6 +859,10 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
   font-weight:700; letter-spacing:.5px; padding:0 var(--sp-1); border-radius:var(--r-sm);
   background:var(--accent2); color:#000; }}
 .mc .bb {{ position:absolute; bottom:22px; left:4px; }}
+.nb {{ display:inline-block; font-family:{t['mono']}; font-size:var(--fs-2xs);
+  font-weight:700; letter-spacing:.5px; padding:0 var(--sp-1);
+  border-radius:var(--r-sm); background:var(--gold); color:#000; }}
+.mc .nb {{ position:absolute; top:22px; right:4px; }}
 .need {{ color:var(--warn); font-weight:700; }}
 .mc figcaption {{ font-family:{t['mono']}; font-size:var(--fs-2xs); color:var(--muted);
   margin-top:3px; line-height:1.25; }}
@@ -864,7 +881,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 </header>
 <div class="tiles">{tiles}</div>
 {power_sec}
-<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared, missing=missing)}</section>
+<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared, missing=missing, changes=changes)}</section>
 {combo_sec}
 {notes_sec}
 <section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
@@ -944,6 +961,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
     buylist = load_buylist(f"{stem}.buylist.csv")
+    changes = deckcore.load_changes(f"{stem}.changes.csv")
 
     shared = None
     dd = decks_dir if decks_dir is not None else os.path.dirname(deck_path)
@@ -989,7 +1007,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
                                  similar, details, combos, mana,
-                                 editable=editable, stem=url_stem, missing=missing)
+                                 editable=editable, stem=url_stem, missing=missing,
+                                 changes=changes)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}
