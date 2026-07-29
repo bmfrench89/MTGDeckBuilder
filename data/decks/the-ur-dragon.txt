@@ -9,24 +9,21 @@
 
 # --- Ramp ---
 1 Arcane Signet
-1 Rampant Growth
 1 Sol Ring
-1 Wild Growth
-1 Moss Diamond
-1 Priest of Titania
-1 Talisman of Progress
+1 Rampant Growth
 1 Thought Vessel
-1 Grow from the Ashes
-1 Crux of Fate
-1 Heroic Intervention
-1 Cultivate
-1 Springbloom Druid
-1 Old Gnawbone
+1 Wild Growth
+1 Azorius Signet
+1 Elvish Mystic
+1 Explorer's Scope
+1 Gilded Goose
+1 Llanowar Elves
+1 Moss Diamond
 1 Farseek
 
 # --- Card advantage ---
 1 Think Twice
-1 Harmonize
+1 Insight
 1 Reconnaissance Mission
 1 Syphon Mind
 1 Syphon Soul
@@ -34,24 +31,19 @@
 1 Opportunity
 
 # --- Removal ---
+1 Assassin's Trophy
 1 Disenchant
 1 Pacifism
-1 Rip Apart
 1 Seal of Cleansing
 1 Seal of Fire
 1 Shatter
 1 Smite
-1 Swords to Plowshares
 1 Vendetta
-1 Banishing Light
-1 Unlicensed Disintegration
 1 Chaos Warp
-1 Mortality Spear
-1 Seal of Doom
 
 # --- Board wipes ---
+1 Crux of Fate
 1 Culling Ritual
-1 Miirym, Sentinel Wyrm
 1 Dragon Tempest
 
 # --- Counters ---
@@ -61,58 +53,68 @@
 1 Annul
 
 # --- Creatures ---
+1 Dragonlord Dromoka
+1 Lathliss, Dragon Queen
+1 Miirym, Sentinel Wyrm
+1 Rith, Liberated Primeval
+1 Hellkite Courser
+1 Scourge of Valkas
 1 Fin Fang Foom
 1 Pet Avengers
-1 Atsushi, the Blazing Sky
-1 Ao, the Dawn Sky
-1 Hraesvelgr of the First Brood
-1 Niv-Mizzet, Visionary
-1 Silumgar, the Drifting Death
-1 Dragonlord Dromoka
-1 Temur Ascendancy
-1 Goblin Recruiter
-1 Dragonspeaker Shaman
 1 Atarka, World Render
-1 Lathliss, Dragon Queen
+1 Atsushi, the Blazing Sky
+1 Decadent Dragon // Expensive Taste
+1 Parapet Thrasher
+1 Hellkite Tyrant
+1 Ganax, Astral Hunter
+1 Scalelord Reckoner
+1 Silumgar, the Drifting Death
+1 Wrathful Red Dragon
+1 Dragonlord Ojutai
 1 Terror of the Peaks
+1 Dragonspeaker Shaman
+1 Old Gnawbone
+1 Niv-Mizzet, Visionary
+1 Two-Headed Dragon
+1 Vaevictis Asmadi, the Dire
 1 Tiamat
-1 Haven of the Spirit Dragon
-
-# --- Instants / sorceries ---
-1 Crop Rotation
-1 Dark Ritual
-1 Steelshaper's Gift
 
 # --- Lands (37) ---
 1 Command Tower
-2 Forest
+1 Haven of the Spirit Dragon
+1 Dark Fortress
 1 Omashu City
-1 Scavenger Grounds
 1 Spectacle Summit
 1 Study Hall
-1 Sunscorched Divide
 1 Thriving Bluff
 1 Tranquil Cove
 1 Villainous Hideout
-2 Swamp
-2 Mountain
-2 Island
-2 Plains
 1 Exotic Orchard
 1 Path of Ancestry
 1 Unclaimed Territory
 1 Secluded Courtyard
-1 Glittering Massif
-1 Grim Backwoods
-1 Haunted Mire
-1 Havenwood Battleground
-1 Henge of Ramos
-1 Hickory Woodlot
-1 Hidden Lair
-1 Horizon of Progress
-1 Irrigated Farmland
-1 Jasmine Dragon Tea Shop
-1 Llanowar Wastes
-1 Lorehold Campus
-1 Lotus Field
-1 Meandering River
+1 Baxter Building
+1 Blossoming Sands
+1 Bonders' Enclave
+1 Castle Doom
+1 Coastal Tower
+1 Crystal Vein
+1 Emeria, the Sky Ruin
+1 Faerie Conclave
+1 Festering Thicket
+1 Fields of Strife
+1 Fire Nation Palace
+1 Forbidding Watchtower
+1 Forum of Amity
+1 Fountain of Cho
+2 Forest
+2 Island
+4 Mountain
+1 Plains
+1 Swamp
+
+# --- Enchantments ---
+1 Temur Ascendancy
+
+# --- Artifacts ---
+1 Chromatic Lantern
