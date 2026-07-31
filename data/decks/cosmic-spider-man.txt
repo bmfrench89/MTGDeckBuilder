@@ -28,7 +28,7 @@
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
 1 Peter Parker
-2 SP//dr, Piloted by Peni
+3 SP//dr, Piloted by Peni
 1 Spider-UK
 1 Coastal Piracy
 1 Spider-Gwen, Free Spirit
@@ -45,7 +45,6 @@
 1 Spider-Man India
 1 Spider-Man Noir
 1 Spider-Man, Brooklyn Visionary
-1 Spider-Man, To the Rescue
 1 Spider-Man, Web-Slinger
 1 Mystic Remora
 1 Frantic Search
