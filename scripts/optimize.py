@@ -58,8 +58,13 @@ def _protected(deck_path, commander):
     except OSError:
         notes = ""
     try:
-        for k in deckcore.load_card_notes():
-            keep.add(k)
+        # ONLY hand-written notes count as "the player values this card". The loader also
+        # returns machine-drafted notes (card_notes.generated.csv) which cover most of the
+        # collection — treating those as curated protected ~429 cards instead of ~51 and
+        # silently froze the manabase pass, since almost every land had a generated note.
+        for k, v in deckcore.load_card_notes().items():
+            if not (isinstance(v, dict) and v.get("generated")):
+                keep.add(k)
     except Exception:
         pass
     return keep, notes

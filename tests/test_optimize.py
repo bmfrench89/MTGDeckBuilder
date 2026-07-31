@@ -248,3 +248,29 @@ def test_buy_threshold_filters_fringe_cards(tmp_path, collection_file, monkeypat
     r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True,
                           buy_threshold=55, apply=False)
     assert all(s[4] != "buy" for s in r["swaps"])
+
+
+def test_only_hand_written_notes_protect_a_card(tmp_path, monkeypatch):
+    """Regression: _protected() treated EVERY card_notes key as curated. The loader also
+    returns machine-drafted notes covering most of the collection, so ~429 cards were
+    protected instead of ~51 — which silently froze the manabase pass, because almost
+    every land had a generated note and could never be swapped out."""
+    import deckcore
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {
+        "curated card": {"why": "hand written", "alts": [], "generated": False},
+        "generated card": {"why": "auto drafted", "alts": [], "generated": True},
+    })
+    p = tmp_path / "d.txt"
+    p.write_text("# Commander: X\n1 Sol Ring\n", encoding="utf-8")
+    keep, _notes = optimize._protected(str(p), "X")
+    assert "curated card" in keep
+    assert "generated card" not in keep
+
+
+def test_protection_still_covers_commander_and_basics_only_otherwise(tmp_path, monkeypatch):
+    import deckcore
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {})
+    p = tmp_path / "d.txt"
+    p.write_text("# Commander: My Commander\n", encoding="utf-8")
+    keep, _ = optimize._protected(str(p), "My Commander")
+    assert "my commander" in keep and "island" in keep
