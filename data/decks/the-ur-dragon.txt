@@ -20,6 +20,9 @@
 1 Llanowar Elves
 1 Sarkhan, Soul Aflame
 1 Farseek
+1 Moss Diamond
+1 Talisman of Progress
+1 Sky Diamond
 
 # --- Card advantage ---
 1 Think Twice
@@ -75,9 +78,6 @@
 1 Terror of the Peaks
 1 Dragonspeaker Shaman
 1 Old Gnawbone
-1 Niv-Mizzet, Visionary
-1 Two-Headed Dragon
-1 Vaevictis Asmadi, the Dire
 1 Tiamat
 1 Ao, the Dawn Sky
 
@@ -101,13 +101,13 @@
 1 Coastal Tower
 1 Crystal Vein
 1 Emeria, the Sky Ruin
-1 Faerie Conclave
+1 Twilight Mire
 1 Festering Thicket
 1 Fields of Strife
 1 Fire Nation Palace
-1 Forbidding Watchtower
+1 Training Compound
 1 Forum of Amity
-1 Fountain of Cho
+1 Sunscorched Divide
 2 Forest
 2 Island
 4 Mountain

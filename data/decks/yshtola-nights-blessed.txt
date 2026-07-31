@@ -100,9 +100,9 @@
 1 Sunken Ruins
 1 Desolate Mire
 1 Shineshadow Snarl
-1 Contaminated Aquifer
+1 Gleaming Bastion
 1 Sunlit Marsh
-1 Idyllic Beachfront
+1 Hidden Lair
 1 Scavenger Grounds
 5 Swamp
 1 Ash Barrens

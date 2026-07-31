@@ -216,13 +216,19 @@ def _response_keys(c):
 
 def _attrs_from_scryfall(c):
     ci = c.get("color_identity", []) or []
+    faces = c.get("card_faces") or []
     cost = c.get("mana_cost") or ""
-    if not cost and c.get("card_faces"):
-        cost = " // ".join(f.get("mana_cost", "") for f in c["card_faces"]
-                           if f.get("mana_cost"))
+    if not cost and faces:
+        cost = " // ".join(f.get("mana_cost", "") for f in faces if f.get("mana_cost"))
+    # Omen/adventure/MDFC layouts can carry type_line/cmc only on the FACES. Without this
+    # fallback "Scavenger Regent // Exude Toxin" enriched with an empty Type, and the
+    # name-based land heuristic then misread a Dragon creature as a land.
+    type_line = c.get("type_line") or (faces[0].get("type_line", "") if faces else "")
     cmc = c.get("cmc")
+    if cmc is None and faces:
+        cmc = faces[0].get("cmc")
     mv = "" if cmc is None else f"{cmc:g}"
-    return {"type": primary_type(c.get("type_line", "")),
+    return {"type": primary_type(type_line),
             "subtypes": subtypes_of(c.get("type_line", "")), "mv": mv,
             "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or ""}
 

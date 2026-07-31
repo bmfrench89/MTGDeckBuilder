@@ -101,15 +101,15 @@
 1 Mystic Monastery
 1 Daily Bugle Building
 1 Jungle Shrine
-1 Sacred Peaks
+1 Willowrush Verge
 1 Path of Ancestry
 1 Secluded Courtyard
 1 Unclaimed Territory
 1 Terramorphic Expanse
 1 Evolving Wilds
-1 University Campus
+1 Viridescent Bog
 1 Suburban Sanctuary
-1 Myriad Landscape
+1 Henge of Ramos
 5 Forest
 5 Plains
 4 Island
