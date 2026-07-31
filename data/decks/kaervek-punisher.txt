@@ -113,7 +113,7 @@
 1 Stensia Bloodhall
 1 Cinder Barrens
 1 Molten Slagheap
-1 Myriad Landscape
+1 Dark Fortress
 1 Terramorphic Expanse
 1 Fabled Passage
 1 Evolving Wilds
