@@ -274,3 +274,29 @@ def test_protection_still_covers_commander_and_basics_only_otherwise(tmp_path, m
     p.write_text("# Commander: My Commander\n", encoding="utf-8")
     keep, _ = optimize._protected(str(p), "My Commander")
     assert "my commander" in keep and "island" in keep
+
+
+def test_built_commanders_reads_deck_headers(tmp_path):
+    """Build Next ranks what the collection SUPPORTS, so it happily surfaces a commander
+    you finished months ago. The OWN badge only ever meant 'you own the card'."""
+    import commander_finder as cf
+    (tmp_path / "a.txt").write_text("# Commander: Y'shtola, Night's Blessed\n1 Sol Ring\n",
+                                    encoding="utf-8")
+    (tmp_path / "b.txt").write_text("# Commander: Kaervek the Merciless  (5BR)\n", encoding="utf-8")
+    built = cf.built_commanders(str(tmp_path))
+    assert built[mtglib._norm("Y'shtola, Night's Blessed")] == "a"
+    assert built[mtglib._norm("Kaervek the Merciless")] == "b"      # trailing detail stripped
+    assert cf.built_commanders(str(tmp_path / "nope")) == {}
+
+
+def test_built_commanders_sink_below_new_ideas():
+    import commander_finder as cf
+    commanders = [
+        {"name": "Built Guy", "colors": {"W"}, "archetypes": {"x"}, "notes": ""},
+        {"name": "Fresh Idea", "colors": {"W"}, "archetypes": {"x"}, "notes": ""},
+    ]
+    built = {mtglib._norm("Built Guy"): "built-guy"}
+    rows = cf.score({}, commanders, {"x": []}, built=built)
+    assert rows[0]["name"] == "Fresh Idea"          # unbuilt first, even at equal support
+    assert rows[1]["built"] == "built-guy"
+    assert rows[0]["built"] is None

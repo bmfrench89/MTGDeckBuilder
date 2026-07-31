@@ -370,7 +370,10 @@ def shared_view():
 @app.route("/build-next")
 def build_next():
     _, idx = collection_index()
-    rows = cf.score(idx, simc.load_commanders(), cf.load_support())
+    rows = cf.score(idx, simc.load_commanders(), cf.load_support(),
+                    built=cf.built_commanders(DECKS_DIR))
+    if request.args.get('hide_built'):
+        rows = [r for r in rows if not r['built']]
     arch = request.args.get("archetype", "")
     if arch:
         rows = [r for r in rows if arch in r["archetypes"]]
