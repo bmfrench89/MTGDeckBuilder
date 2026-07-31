@@ -224,3 +224,8 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
 .filepick input[type=file] { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
   overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .filepick label.btn { cursor:pointer; }
+
+/* "you already built this" chip on Build Next — distinct from the OWN chip, which only
+   ever meant "you own the commander card". Links to the existing deck. */
+.sb.built { background: var(--accent2); color: #000; text-decoration: none; }
+.sb.built:hover { filter: brightness(1.1); text-decoration: none; }

@@ -3,8 +3,9 @@
 {% block content %}
 <h1>What Should I Build Next?</h1>
 <div class="sub">Commanders ranked by how much of <b>your collection</b> already supports them.
-<span class="sb">OWN</span> = you have the commander; others are a cheap buy to unlock a deck
-you can mostly build today.</div>
+<span class="sb">OWN</span> = you have the commander card; others are a cheap buy to unlock a
+deck you can mostly build today. <span class="sb built">✓ BUILT</span> = you already have a
+deck for it — those sink to the bottom, and <b>+ variant</b> generates a second take.</div>
 
 <div class="card row mb-4">
   <b>Build any commander:</b>
@@ -19,6 +20,9 @@ you can mostly build today.</div>
 
 <div class="row tight mb-4">
   <a class="thchip {{ 'on' if not arch }}" href="{{ url_for('build_next') }}">all</a>
+  <a class="thchip {{ 'on' if request.args.get('hide_built') }}"
+     href="{{ url_for('build_next', archetype=arch, hide_built=1) }}"
+     title="Hide commanders you've already built">new ideas only</a>
   {% for a in archetypes %}
   <a class="thchip {{ 'on' if a==arch }}" href="{{ url_for('build_next', archetype=a) }}">{{ a }}</a>
   {% endfor %}
@@ -31,13 +35,17 @@ you can mostly build today.</div>
   <div>
     <div class="name"><span class="cardlink" data-card="{{ r.name }}">{{ r.name }}</span>
       <span class="muted mono fs-xs">[{{ r.colors }}]</span>
-      {% if r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted fs-xs">· buy the commander</span>{% endif %}</div>
+      {% if r.built %}<a class="sb built" href="{{ url_for('deck', stem=r.built) }}"
+        title="You've already built this — open the deck">✓ BUILT</a>{% elif r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted fs-xs">· buy the commander</span>{% endif %}</div>
     <div class="cmd">{{ r.archetypes|join(' · ') }}</div>
   </div>
   <div class="stat">
     <div class="meter" style="width:84px"><span style="width:{{ (100 * r.support_n / maxn)|round }}%"></span></div>
     <span class="support">{{ r.support_n }}</span><span class="muted fs-xs">support</span>
-    <a class="btn sm" href="{{ url_for('build_deck', commander=r.name) }}">Build →</a>
+    {% if r.built %}<a class="btn sm ghost" href="{{ url_for('deck', stem=r.built) }}">Open deck</a>
+    <a class="linkbtn fs-xs" href="{{ url_for('build_deck', commander=r.name) }}"
+       title="Generate a fresh build — a variant of the deck you already have">+ variant</a>
+    {% else %}<a class="btn sm" href="{{ url_for('build_deck', commander=r.name) }}">Build →</a>{% endif %}
   </div>
   <div class="acts">
     <span>You own:</span>

@@ -14,6 +14,7 @@ Usage:
 """
 import argparse
 import csv
+import re
 import os
 import sys
 
@@ -48,7 +49,29 @@ def color_depth(colors, coll_index):
     return tot / len(colors)  # average basics per color
 
 
-def score(coll_index, commanders, support):
+def built_commanders(decks_dir):
+    """{normalized commander name: deck stem} for decks you've already built.
+
+    "Build Next" ranks what your collection *supports*, which will happily surface a
+    commander you finished months ago — the OWN badge only ever meant "you own the card",
+    not "you've built it". Knowing this lets the page mark those rows instead of pretending
+    they're new, while still allowing a deliberate second build (a variant)."""
+    import glob
+    out = {}
+    for path in sorted(glob.glob(os.path.join(decks_dir or "", "*.txt"))):
+        try:
+            text = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        m = re.search(r"^#\s*Commander\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+        if m:
+            name = re.split(r"\s{2,}|\(", m.group(1))[0].strip()
+            out[mtglib._norm(name)] = os.path.splitext(os.path.basename(path))[0]
+    return out
+
+
+def score(coll_index, commanders, support, built=None):
+    built = built or {}
     rows = []
     for c in commanders:
         owned_support = {}
@@ -66,11 +89,14 @@ def score(coll_index, commanders, support):
             "support_cards": sorted(owned_support, key=lambda n: -owned_support[n]),
             "depth": round(depth, 1),
             "owns_commander": owns_cmd,
+            "built": built.get(mtglib._norm(c["name"])),   # deck stem, if already built
             # score: owned support pieces dominate; color depth is a light tiebreak
             "score": round(len(owned_support) + depth / 12, 2),
             "notes": c["notes"],
         })
-    rows.sort(key=lambda r: (-r["score"], not r["owns_commander"], r["name"]))
+    # already-built sink below new ideas — this page answers "what NEXT?"
+    rows.sort(key=lambda r: (bool(r["built"]), -r["score"],
+                             not r["owns_commander"], r["name"]))
     return rows
 
 
