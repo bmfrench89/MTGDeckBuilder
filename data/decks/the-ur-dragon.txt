@@ -32,7 +32,6 @@
 1 Syphon Soul
 1 Winged Words
 1 Opportunity
-1 Temur Ascendancy
 
 # --- Removal ---
 1 Assassin's Trophy
@@ -116,3 +115,6 @@
 
 # --- Artifacts ---
 1 Chromatic Lantern
+
+# --- Instants & sorceries ---
+1 Heroic Intervention

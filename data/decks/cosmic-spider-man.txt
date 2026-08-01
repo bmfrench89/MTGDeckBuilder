@@ -24,11 +24,11 @@
 
 1 Cosmic Spider-Man
 
-# --- Spiders & Spider-matters creatures (30) ---
+# --- Spiders & Spider-matters creatures (26) ---
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
 1 Peter Parker
-4 SP//dr, Piloted by Peni
+1 SP//dr, Piloted by Peni
 1 Spider-UK
 1 Coastal Piracy
 1 Spider-Gwen, Free Spirit
@@ -45,7 +45,6 @@
 1 Spider-Man India
 1 Spider-Man Noir
 1 Spider-Man, Brooklyn Visionary
-1 Spider-Man, Web-Slinger
 1 Mystic Remora
 1 Frantic Search
 1 Mary Jane Watson
@@ -53,9 +52,8 @@
 1 Spider-Bot
 1 Spider-Punk
 
-# --- Typal anthems / gear (5) ---
+# --- Typal anthems / gear (4) ---
 1 Roaming Throne
-1 SP//dr, Piloted by Peni
 1 Radioactive Spider
 1 Miles Morales
 1 Aunt May
@@ -114,3 +112,14 @@
 4 Island
 4 Swamp
 4 Mountain
+
+# --- Enchantments ---
+1 Origin of Spider-Man
+1 Wall Crawl
+
+# --- Creatures ---
+1 Madame Web, Clairvoyant
+
+# --- Instants & sorceries ---
+1 Counterspell
+1 Amazing Acrobatics

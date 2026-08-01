@@ -300,3 +300,41 @@ def test_built_commanders_sink_below_new_ideas():
     assert rows[0]["name"] == "Fresh Idea"          # unbuilt first, even at equal support
     assert rows[1]["built"] == "built-guy"
     assert rows[0]["built"] is None
+
+
+# --------------------------------------------------------------------------- #
+# Singleton legality. A card whose NAME contains a literal "//" — "SP//dr, Piloted by
+# Peni" — used to be split into a bogus front face "SP". That alias became its own
+# EDHREC field key, and because the add-guard only compared the field KEY against the
+# deck, the optimizer never recognised the card as already present and added a fresh
+# copy on every run. The deck still totalled 100 cards, so nothing surfaced it: it
+# reached SIX copies of a singleton before anyone noticed.
+
+def test_front_face_only_splits_on_a_spaced_separator():
+    assert mtglib.front_face("Fire // Ice") == "Fire"
+    assert mtglib.front_face("Murderous Rider // Swift End") == "Murderous Rider"
+    # a literal // inside a real card name is NOT a split card
+    assert mtglib.front_face("SP//dr, Piloted by Peni") == "SP//dr, Piloted by Peni"
+
+
+def test_a_literal_slash_name_does_not_get_a_truncated_alias():
+    cards = mtglib.parse_collection("Name,Quantity\n\"SP//dr, Piloted by Peni\",1\n")
+    idx = mtglib.index_by_name(cards)
+    assert mtglib.lookup(idx, "SP//dr, Piloted by Peni") is not None
+    assert "sp" not in idx, "a bare '//' must not create a truncated alias"
+
+
+def test_a_genuine_dfc_is_still_findable_by_its_front_face():
+    cards = mtglib.parse_collection("Name,Quantity\n\"Murderous Rider // Swift End\",1\n")
+    idx = mtglib.index_by_name(cards)
+    assert mtglib.lookup(idx, "Murderous Rider") is not None
+
+
+def test_singleton_violations_flags_duplicate_nonbasics(tmp_path):
+    p = _deck(tmp_path, DECK.replace("1 Serra Angel", "2 Serra Angel"))
+    assert optimize.singleton_violations(p) == [(2, "Serra Angel")]
+
+
+def test_singleton_violations_allows_duplicate_basics(tmp_path):
+    # DECK already has 7 Island + 5 Island; basics are exempt from the singleton rule
+    assert optimize.singleton_violations(_deck(tmp_path)) == []

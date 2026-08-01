@@ -35,6 +35,7 @@
 1 Agent 13, Sharon Carter
 2 Agent Maria Hill
 3 Agent of Atlas
+1 Agent Phil Coulson
 2 Agent Venom
 1 Agents of HYDRA
 1 Agents of S.H.I.E.L.D.
@@ -81,6 +82,7 @@
 2 Ant-Man's Army
 3 Ant-Man, Colony Commander
 1 Ant-Man, Elusive Avenger
+1 Anti-Venom, Horrifying Healer
 1 Ao, the Dawn Sky
 1 Apathy
 1 Apocalypse Runner
@@ -279,10 +281,11 @@
 1 Captain America's Shield
 2 Captain America, Living Legend
 1 Captain America, Team Leader
-1 Captain America, Wings of Freedom
+2 Captain America, Wings of Freedom
 1 Captain Howler, Sea Scourge
 3 Captain Mar-Vell, Space-Born
 1 Captain Marvel, Apex Avenger
+1 Carnage, Crimson Chaos
 1 Carrion Wall
 1 Cartographer's Hawk
 1 Castle
@@ -348,8 +351,10 @@
 1 Clear
 1 Clear the Land
 1 Clever Concealment
+1 Clever Impersonator
 3 Clifftop Retreat
 1 Clive, Ifrit's Dominant
+1 Cloak and Dagger, Entwined
 1 Clot Sliver
 1 Cloud of Faeries
 5 Cloud Sprite
@@ -512,6 +517,7 @@
 2 Dominate
 1 Don't Move
 1 Donatello, Way with Machines
+1 Doom Reigns Supreme
 1 Door of Destinies
 2 Doorman
 1 Dose of Dawnglow
@@ -926,7 +932,7 @@
 2 HYDRA Assault Robot
 1 HYDRA Infiltration
 2 Hydraulic Helper
-1 Hydro-Man, Fluid Felon
+2 Hydro-Man, Fluid Felon
 1 Hydroblast
 1 Hypnotic Sprite // Mesmeric Glare
 2 I Am Iron Man
@@ -945,6 +951,7 @@
 1 Infernal Grasp
 3 Infiltrate
 1 Inflame
+1 Informed Inkwright
 1 Insight
 1 Inspired Fire
 1 Inspired Sphinx
@@ -969,7 +976,7 @@
 1 Iron Man, Master of Machines
 1 Iron Spider, Stark Upgrade
 2 Iron Will
-1 Ironheart, Clever Champion
+2 Ironheart, Clever Champion
 2 Irrigated Farmland
 23 Island
 1 Isolated Chapel
@@ -979,6 +986,7 @@
 1 Item Shopkeep
 1 Ivory Mask
 1 Jack of Hearts, Volatile Hero
+1 Jackal, Genius Geneticist
 1 Jadar, Ghoulcaller of Nephalia
 1 Jadzi, Steward of Fate // Oracle's Gift
 1 Jalum Tome
@@ -1632,7 +1640,7 @@
 1 Scent of Nightshade
 1 Scheming Silvertongue // Sign in Blood
 1 School Daze
-1 Scientist Supreme of A.I.M.
+2 Scientist Supreme of A.I.M.
 1 Scorched Geyser
 1 Scorched Ruins
 2 Scorpion Sentinel
@@ -1779,7 +1787,7 @@
 1 Spawning Pool
 2 Spectacle Summit
 1 Spectacular Skywhale
-1 Spectacular Spider-Man
+2 Spectacular Spider-Man
 4 Spectacular Tactics
 1 Spectator Seating
 1 Specter's Wail
@@ -1857,7 +1865,7 @@
 1 Stern Proctor
 1 Stinging Barrier
 2 Stirring Honormancer
-1 Stirring Hopesinger
+2 Stirring Hopesinger
 1 Stolen Stark Tech
 1 Stomped by the Foot
 2 Stone Docent
@@ -1922,7 +1930,7 @@
 1 Super Strength
 1 Super Suit
 2 Super Villain Lockup
-1 Super-Skrull
+2 Super-Skrull
 4 Superior Foes of Spider-Man
 1 Suplex
 1 Supportive Parents
@@ -2245,7 +2253,7 @@
 1 Winged Sliver
 1 Winged Words
 2 Winter Soldier, Reborn Avenger
-2 Wisdom of Ages
+3 Wisdom of Ages
 2 Wisecrack
 1 Wishmonger
 1 Witch of the Moors

@@ -96,7 +96,8 @@ def pool_report(deck_path, coll, idx, decks_dir, top_n=25):
     have, free, taken, unowned = [], [], [], []
     for k, inc in sorted(field.items(), key=lambda kv: -kv[1])[:top_n]:
         ref = mtglib.lookup(idx, k)
-        if k in in_deck:
+        # match on the resolved name too — one card can have several field keys
+        if k in in_deck or (ref and mtglib._norm(ref.name) in in_deck):
             have.append((inc, ref.name if ref else k))
         elif not ref:
             unowned.append((inc, k))
@@ -190,11 +191,19 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         else:
             if ref.identity and not (ref.identity <= identity):
                 continue
+            # Dedup on the RESOLVED name, not just the field key. Several keys can point
+            # at one card (a DFC front face, or an EDHREC alias), and checking only `k`
+            # let a card already in the deck come back in as a "new" add — Commander is
+            # singleton, so that quietly made the deck illegal.
+            if mtglib._norm(ref.name) in in_deck:
+                continue
             free = ref.quantity - committed.get(k, 0) >= 1
             if not free and owned_only:
                 continue
             name, is_land, avail = ref.name, ref.is_land, ("free" if free else "share")
         rank = {"free": 2, "share": 1, "buy": 0}[avail]
+        if mtglib._norm(name) in in_deck:
+            continue
         (land_adds if is_land else adds).append((inc, rank, name, avail))
     adds.sort(reverse=True)
     land_adds.sort(reverse=True)
@@ -302,7 +311,19 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
         _tidy(deck_path, idx)
+        result["illegal"] = singleton_violations(deck_path)
     return result
+
+
+def singleton_violations(deck_path):
+    """Nonbasic cards appearing more than once — Commander is a singleton format.
+
+    Run after every write. A silent duplicate is the worst kind of bug here: the deck
+    still totals 100 cards and every dashboard looks healthy, so nothing surfaces it
+    until you physically sleeve the deck and come up a card short."""
+    deck = mtglib.parse_deck(open(deck_path, encoding="utf-8").read())
+    return [(c.quantity, c.name) for c in deck
+            if c.quantity > 1 and mtglib._norm(c.name) not in BASICS]
 
 
 # FUNCTION sections can hold any card type — Sol Ring belongs under "Ramp" even though
@@ -539,6 +560,8 @@ def main():
         for old, new, avail in r["land_swaps"]:
             tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
             print(f"   land  {old:32} ->  {new}{tag}")
+        for qty, name in r.get("illegal") or []:
+            print(f"   !! ILLEGAL: {qty}x {name} — Commander allows one copy")
 
         # Why can't it get closer? A deck with no free staples isn't badly built —
         # its pool is exhausted, and that needs saying out loud.
