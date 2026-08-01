@@ -5,9 +5,20 @@
 <div class="sub">Ranked by power. Each row shows whether the deck is ready to sleeve —
 open one for its full dashboard.</div>
 
+<div class="row tight mb-4" id="deckfilters">
+  <input id="deckq" type="text" placeholder="Filter decks…" autocomplete="off" class="grow-sm">
+  <a class="thchip on" data-f="all" href="#">all</a>
+  {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
+  <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">ready to sleeve</a>
+  <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">needs attention</a>
+  <span class="muted fs-xs" id="deckcount"></span>
+</div>
+
 <div class="decklist">
 {% for d in decks %}
-<div class="deckrow">
+<div class="deckrow" data-name="{{ (d.title ~ ' ' ~ d.commander)|lower }}"
+     data-bracket="{{ d.assess.bracket if d.assess else '' }}"
+     data-ready="{{ '1' if (d.total == 100 and not d.to_buy and not d.contested) else '0' }}">
   <div class="rank">{{ loop.index }}</div>
   <div>
     <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
@@ -47,6 +58,12 @@ open one for its full dashboard.</div>
       onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">
       <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
     </form>
+    <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
+      onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; and its notes/buy-list/history?
+
+Git keeps the history, so this is recoverable from the repo — but the files go now.');">
+      <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>
+    </form>
   </div>
 </div>
 {% endfor %}
@@ -61,4 +78,36 @@ open one for its full dashboard.</div>
       <code>build/</code> pages and <code>wishlist.md</code>.</span>
   </div>
 </div>
+<script>
+(function () {
+  // Client-side: the whole list is already on the page, so filtering is instant and
+  // doesn't cost a round-trip (or re-run every deck's analysis).
+  var rows = [].slice.call(document.querySelectorAll('.deckrow'));
+  var chips = [].slice.call(document.querySelectorAll('#deckfilters .thchip'));
+  var q = document.getElementById('deckq'), count = document.getElementById('deckcount');
+  var active = 'all';
+  function apply() {
+    var term = (q.value || '').trim().toLowerCase(), shown = 0;
+    rows.forEach(function (r) {
+      var okText = !term || r.getAttribute('data-name').indexOf(term) !== -1;
+      var ok = okText && (
+        active === 'all' ||
+        (active === 'ready' && r.getAttribute('data-ready') === '1') ||
+        (active === 'attention' && r.getAttribute('data-ready') === '0') ||
+        (active.charAt(0) === 'b' && r.getAttribute('data-bracket') === active.slice(1)));
+      r.hidden = !ok; if (ok) shown++;
+    });
+    count.textContent = shown === rows.length ? '' : shown + ' of ' + rows.length;
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function (e) {
+      e.preventDefault();
+      active = c.getAttribute('data-f');
+      chips.forEach(function (o) { o.classList.toggle('on', o === c); });
+      apply();
+    });
+  });
+  q.addEventListener('input', apply);
+})();
+</script>
 {% endblock %}

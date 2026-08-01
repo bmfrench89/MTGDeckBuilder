@@ -240,3 +240,7 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
 .tile-warn { border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
 .tile-warn .val { color: var(--gold); }
 .tile .note { color: var(--muted); font-size: var(--fs-2xs); margin-top: var(--sp-1); }
+
+/* destructive link-style action (delete) — muted until you're actually near it */
+.linkbtn.danger { color: var(--muted); }
+.linkbtn.danger:hover { color: var(--warn); }

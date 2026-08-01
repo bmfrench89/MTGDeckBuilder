@@ -992,6 +992,15 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         except Exception:
             pass
 
+    # which cards are pinned, and to which deck — the panel shows and toggles
+    try:
+        pins = deckcore.load_pins()
+        if details:
+            for k, d in details.items():
+                d["pinned"] = pins.get(k)
+    except Exception:
+        pass
+
     # merge shared-across-decks status into the panel payload (drives the edit view's badge)
     if details and shared:
         try:

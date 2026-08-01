@@ -149,11 +149,14 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     ctx = deck_fit.deck_context(deck_path, a["enriched"], commander, field=field,
                                 synergy=deck_fit.load_synergy(commander, idx))
     keep, notes = _protected(deck_path, commander)
+    keep |= {c for c, d in deckcore.load_pins().items() if d == stem}   # pinned here = keep
 
     deck = mtglib.parse_deck(text)
     in_deck = {mtglib._norm(c.name) for c in deck}
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
     committed = {mtglib._norm(n): v["total"] for n, v in usage.items()}
+    # a copy you've PINNED to another deck is spoken for, however well it scores here
+    reserved = deckcore.pinned_elsewhere(stem)
     identity = ctx.get("identity") or set()
     cats = dict(rep.get("categories", {}))
 
@@ -175,7 +178,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # 37-land / 62-spell split silently drifts.
     adds, land_adds = [], []
     for k, inc in field.items():
-        if k in in_deck or k in BASICS or inc <= 0:
+        if k in in_deck or k in BASICS or inc <= 0 or k in reserved:
             continue
         ref = mtglib.lookup(idx, k)
         if ref is None:
