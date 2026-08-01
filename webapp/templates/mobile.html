@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Use on your phone · MTG Deckbuilder{% endblock %}
+{% block content %}
+
+<h1>Use this on your phone</h1>
+<div class="sub">It installs to your home screen and opens full-screen, like an app.
+No store, no APK — the page below <em>is</em> the app.</div>
+
+<div class="card">
+  <div class="cm-h">1 · The address to open on your phone</div>
+  {% if lan %}
+    <div class="row">
+      <code class="bigurl" id="phoneurl">http://{{ lan }}:{{ port }}</code>
+      <button class="btn sm" id="copyurl" type="button">Copy</button>
+    </div>
+    <p class="muted fs-xs mt-2">Type that into Chrome on your phone. Both devices must be on
+    the <b>same Wi-Fi</b>, and this computer has to stay awake with the server running.</p>
+  {% else %}
+    <p class="warn">The server is bound to localhost, so your phone can't reach it yet.</p>
+    <p class="muted fs-sm">Start it with <code>webapp\run.bat</code> (Windows) or
+    <code>./webapp/run.sh</code> — those set <code>MTG_HOST=0.0.0.0</code>, which is what
+    allows other devices on your network in. Then reload this page.</p>
+  {% endif %}
+</div>
+
+<div class="card mt-3">
+  <div class="cm-h">2 · Install it to the home screen</div>
+  <p class="fs-sm"><b>Android (Chrome):</b> tap <b>⋮</b> → <b>Add to Home screen</b> →
+    <b>Install</b>. You get an icon that opens without browser chrome.</p>
+  <p class="fs-sm"><b>iPhone (Safari):</b> tap <b>Share</b> → <b>Add to Home Screen</b>.
+    It must be Safari — Chrome on iOS can't install web apps.</p>
+  <p class="muted fs-xs mt-2">Long-press the installed icon for shortcuts straight to
+  Collection, Build Next and Wishlist.</p>
+</div>
+
+<div class="card mt-3">
+  <div class="cm-h">3 · What works, and what doesn't</div>
+  <ul class="fs-sm reasons-plain">
+    <li><b>Everything works</b> while this computer is on and running the server —
+      dashboards, the card panel, optimizing, editing decks, the collection grid.</li>
+    <li><b>Card images</b> come straight from Scryfall's CDN, so they load on any connection.</li>
+    <li><b>Offline it shows an honest error</b>, not a stale deck. Your decks change every
+      time you optimize; a cached copy would tell you the wrong 100 cards.</li>
+    <li><b>Away from home?</b> This only works on your own Wi-Fi. A tunnel
+      (<code>cloudflared tunnel --url http://localhost:{{ port }}</code>) gives you a
+      temporary public HTTPS link — but that exposes your collection and prices, so treat
+      it as short-lived.</li>
+  </ul>
+</div>
+
+<p class="muted fs-xs mt-4">Why not a real APK? An installable Android package would either
+be a browser pointed at this same address (identical to the above, plus a build system), or
+would need the app hosted publicly over HTTPS. See <code>docs/mobile.md</code>.</p>
+
+<script>
+(function () {
+  var btn = document.getElementById('copyurl'), url = document.getElementById('phoneurl');
+  if (!btn || !url) return;
+  btn.addEventListener('click', function () {
+    navigator.clipboard.writeText(url.textContent.trim()).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    }).catch(function () { btn.textContent = 'Select it manually'; });
+  });
+})();
+</script>
+{% endblock %}

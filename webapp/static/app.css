@@ -244,3 +244,10 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
 /* destructive link-style action (delete) — muted until you're actually near it */
 .linkbtn.danger { color: var(--muted); }
 .linkbtn.danger:hover { color: var(--warn); }
+
+/* ---- mobile install page ------------------------------------------------ */
+.bigurl { font-family: var(--font-mono); font-size: var(--fs-lg); color: var(--accent);
+  background: var(--panel2); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm);
+  user-select: all; word-break: break-all; }
+.reasons-plain { margin: 0; padding-left: var(--sp-4); }
+.reasons-plain li { margin: var(--sp-2) 0; }
