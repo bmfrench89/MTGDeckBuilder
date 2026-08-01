@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Deckbuilder">
 <link rel="manifest" href="/static/manifest.webmanifest">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/static/icon.svg">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/tokens.css">
@@ -24,6 +24,8 @@
   <a class="tab {{ 'on' if page=='wishlist' }}" href="{{ url_for('wishlist_view') }}">Wishlist</a>
   <a class="tab {{ 'on' if page=='shared' }}" href="{{ url_for('shared_view') }}">Shared</a>
   <a class="tab {{ 'on' if page=='collection' }}" href="{{ url_for('collection_view') }}">Collection</a>
+  <a class="tab {{ 'on' if page=='mobile' }}" href="{{ url_for('mobile') }}"
+     title="Install on your phone">Mobile</a>
 </nav>
 <div class="wrap">
 {% block content %}{% endblock %}
@@ -31,4 +33,14 @@
 </div>
 {% include "_cardpanel.html" %}
 <script src="/static/cardgrid.js" defer></script>
+<script>
+  // Register the service worker so "Add to Home Screen" behaves like an app. It only
+  // caches the static shell — deck and collection pages always hit the network, because
+  // showing you a stale decklist would be worse than showing an error.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+</script>
 </body></html>

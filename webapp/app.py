@@ -644,6 +644,24 @@ def api_combos_build(commander):
     return jsonify(r)
 
 
+@app.route("/mobile")
+def mobile():
+    """How to install this on a phone. Shown in-app so the address and the steps live
+    together — reading it off the terminal is the part people get stuck on."""
+    host = os.environ.get("MTG_HOST", "127.0.0.1")
+    lan = lan_ip() if host == "0.0.0.0" else None
+    return render_template("mobile.html", lan=lan,
+                           port=int(os.environ.get("MTG_PORT", "5000")), page="mobile")
+
+
+@app.route("/sw.js")
+def service_worker():
+    """Served from the root, not /static/, because a service worker can only control
+    pages at or below its own path — at /static/sw.js it could never manage the app."""
+    return send_from_directory(os.path.join(ROOT, "webapp", "static"), "sw.js",
+                               mimetype="application/javascript")
+
+
 @app.route("/static/tokens.css")
 def shared_tokens():
     """Serve the shared design tokens that live with the scripts (the dashboards inline
