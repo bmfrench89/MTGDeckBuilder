@@ -78,3 +78,39 @@ def test_record_changes_is_a_no_op_with_nothing_to_log(tmp_path):
     deck.write_text("# Commander: X\n", encoding="utf-8")
     assert optimize.record_changes(str(deck), [], []) == 0
     assert not os.path.exists(tmp_path / "d.changes.csv")
+
+
+# ---- pins: reserving a single copy for one deck -----------------------------------
+
+def test_pins_round_trip(tmp_path):
+    p = str(tmp_path / "pins.csv")
+    deckcore.save_pins({"sol ring": "deck-a", "arcane signet": "deck-b"}, p)
+    assert deckcore.load_pins(p) == {"sol ring": "deck-a", "arcane signet": "deck-b"}
+
+
+def test_missing_pins_file_is_empty(tmp_path):
+    assert deckcore.load_pins(str(tmp_path / "nope.csv")) == {}
+
+
+def test_pinned_elsewhere_excludes_the_owning_deck(tmp_path):
+    pins = {"sol ring": "deck-a", "mana crypt": "deck-b"}
+    assert deckcore.pinned_elsewhere("deck-a", pins) == {"mana crypt"}
+    assert deckcore.pinned_elsewhere("deck-b", pins) == {"sol ring"}
+    assert deckcore.pinned_elsewhere("deck-c", pins) == {"sol ring", "mana crypt"}
+
+
+def test_optimizer_will_not_take_a_pinned_card(tmp_path, collection_file, monkeypatch):
+    """The whole point: a copy reserved for another deck stays reserved, however well it
+    scores for this one."""
+    import deck_fit, optimize, mtglib as _m
+    coll = _m.load_collection(collection_file)
+    idx = _m.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {_m._norm("Counterspell"): 99})
+    monkeypatch.setattr(deckcore, "pinned_elsewhere",
+                        lambda stem, pins=None: {_m._norm("Counterspell")})
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Creatures ---\n1 Serra Angel\n1 Llanowar Elves\n", encoding="utf-8")
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), apply=False)
+    assert all("Counterspell" not in s[2] for s in r["swaps"])

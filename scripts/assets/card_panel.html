@@ -63,11 +63,13 @@
             <div id="cm-shared" class="cm-shared" hidden></div>
             <div class="cm-editrow">
               <button id="cm-remove" type="button" class="cm-editbtn danger">Remove from deck</button>
-              <button id="cm-replace" type="button" class="cm-editbtn">Replace\u2026</button>
+              <button id="cm-replace" type="button" class="cm-editbtn">Replace&hellip;</button>
+              <button id="cm-pin" type="button" class="cm-editbtn ghost"
+                title="Reserve your copy for this deck">&#128204; Pin to this deck</button>
             </div>
             <div id="cm-replacebox" hidden>
               <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection:</p>
-              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection\u2026" autocomplete="off">
+              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection&hellip;" autocomplete="off">
               <div id="cm-searchres" class="cm-searchres"></div>
             </div>
           </div>
@@ -245,11 +247,32 @@
         (d.shared.covered?' (\u2713 enough for all)':' (\u26a0 not enough to sleeve them all)')+
         '. Removing or swapping it here frees a copy.';
     } else if(shd){ shd.hidden=true; }
+    // Pin state. Owning ONE copy that several decks want is a call the arithmetic can't
+    // make; a pin records your decision and other decks stop claiming that copy.
+    var pb=document.getElementById('cm-pin'), PIN='\ud83d\udccc';
+    if(pb){
+      var p=d.pinned;
+      if(p===STEM){ pb.textContent=PIN+' Pinned here \u2014 unpin'; pb.dataset.action='unpin';
+        pb.title='This copy is reserved for this deck. Unpin to free it up.'; }
+      else if(p){ pb.textContent=PIN+' Pinned to '+p; pb.dataset.action='pin';
+        pb.title='Reserved for '+p+'. Pinning here moves it to this deck.'; }
+      else { pb.textContent=PIN+' Pin to this deck'; pb.dataset.action='pin';
+        pb.title='Reserve your copy for this deck so other decks stop claiming it.'; }
+    }
   }
   if(EDITABLE && ew){
     var rm=document.getElementById('cm-remove'), rp=document.getElementById('cm-replace'), stimer=null;
     if(rm) rm.addEventListener('click',function(){ editCard('remove'); });
     if(rp) rp.addEventListener('click',function(){ if(rb){ rb.hidden=!rb.hidden; if(!rb.hidden&&si) si.focus(); } });
+    var pinbtn=document.getElementById('cm-pin');
+    if(pinbtn) pinbtn.addEventListener('click',function(){
+      if(!curKey) return;
+      var f=new FormData(); f.append('name', curKey);
+      f.append('action', pinbtn.dataset.action||'pin');
+      fetch('/deck/'+encodeURIComponent(STEM)+'/pin',{method:'POST',body:f})
+        .then(function(r){ if(r.ok||r.redirected) location.reload(); })
+        .catch(function(){ alert('Pin failed \u2014 is the app still running?'); });
+    });
     if(si) si.addEventListener('input', function(){
       var q=si.value.trim(); clearTimeout(stimer);
       if(q.length<2){ sr.innerHTML=''; return; }

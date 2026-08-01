@@ -149,7 +149,8 @@ def index():
         rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
                      "contested": short_by_deck.get(label, 0)})
     rows.sort(key=lambda r: -(r["assess"]["power"] if r["assess"] else 0))
-    return render_template("index.html", decks=rows, page="home")
+    brackets = sorted({r["assess"]["bracket"] for r in rows if r["assess"]})
+    return render_template("index.html", decks=rows, brackets=brackets, page="home")
 
 
 @app.route("/deck/<stem>")
@@ -347,6 +348,49 @@ def _assess_packet(m):
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())
     return "\n".join(L) + "\n"
+
+
+@app.route("/deck/<stem>/pin", methods=["POST"])
+def deck_pin(stem):
+    """Reserve a card's physical copy for this deck (or release it).
+
+    Owning one copy of a card three decks want is a decision the arithmetic can't make.
+    Pinning records it: the other decks stop treating that copy as available, and the
+    optimizer won't cut it from here."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    name = request.form.get("name", "").strip()
+    if name:
+        pins = deckcore.load_pins()
+        key = mtglib._norm(name)
+        if request.form.get("action") == "unpin":
+            pins.pop(key, None)
+        else:
+            pins[key] = stem                      # pinning elsewhere MOVES the pin
+        deckcore.save_pins(pins)
+    return redirect(url_for("deck", stem=stem))
+
+
+@app.route("/deck/<stem>/delete", methods=["POST"])
+def deck_delete(stem):
+    """Delete a deck and its companion files. Git keeps the history, so this is
+    recoverable — but it is still destructive, hence POST + a confirm in the UI."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    base = os.path.splitext(m["path"])[0]
+    for suffix in (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv"):
+        try:
+            os.remove(base + suffix)
+        except OSError:
+            pass
+    # drop any pins that pointed at it, so those copies free up again
+    pins = deckcore.load_pins()
+    left = {c: d for c, d in pins.items() if d != stem}
+    if len(left) != len(pins):
+        deckcore.save_pins(left)
+    return redirect(url_for("index"))
 
 
 @app.route("/deck/<stem>/assess")

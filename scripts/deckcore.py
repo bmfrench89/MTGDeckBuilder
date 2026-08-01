@@ -103,6 +103,44 @@ def load_changes(path, days=NEW_CARD_DAYS):
     return out
 
 
+PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
+
+
+def load_pins(path=PINS):
+    """{normalized card: deck stem} — cards you've reserved for a specific deck.
+
+    When you own ONE copy of a card that three decks want, the arithmetic can't decide
+    which deck gets the physical card. A pin is you deciding: that copy belongs to this
+    deck, and the other decks must treat it as unavailable no matter how well it scores.
+    """
+    if not os.path.exists(path):
+        return {}
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            card = (r.get("Card") or "").strip()
+            deck = (r.get("Deck") or "").strip()
+            if card and deck:
+                out[mtglib._norm(card)] = deck
+    return out
+
+
+def save_pins(pins, path=PINS):
+    """Write the pin map back. One deck per card — pinning elsewhere moves it."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Card", "Deck"])
+        for card, deck in sorted(pins.items()):
+            w.writerow([card, deck])
+
+
+def pinned_elsewhere(stem, pins=None):
+    """Normalized cards reserved for a deck OTHER than `stem` — off-limits to it."""
+    pins = load_pins() if pins is None else pins
+    return {c for c, d in pins.items() if d != stem}
+
+
 def load_attrs(path):
     """Optional name -> {type, mv} map to power the MV spread without the full CSV."""
     if not (path and os.path.exists(path)):
