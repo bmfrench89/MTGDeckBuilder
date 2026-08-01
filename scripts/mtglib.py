@@ -301,14 +301,26 @@ def load_collection(path: str) -> list:
     return cards
 
 
+def front_face(name: str) -> str:
+    """The front face of a split/DFC name, e.g. 'Fire // Ice' -> 'Fire'.
+
+    Splits only on ' // ' WITH surrounding spaces, which is the separator Scryfall and
+    every deck-list format actually use. A bare '//' can be part of a real card name —
+    'SP//dr, Piloted by Peni' — and naive `split("//")` turned that into the front face
+    'SP'. That bogus alias then made every name-keyed lookup resolve 'sp' to the card,
+    so the optimizer never saw it as already-in-deck and added a fresh copy on each run
+    (it reached 6 copies of a singleton before this was caught)."""
+    return name.split(" // ")[0].strip() if " // " in name else name
+
+
 def index_by_name(cards: list) -> dict:
     """Case-insensitive name -> Card. Handles 'Front // Back' by also indexing
     the front face."""
     idx = {}
     for c in cards:
         idx[_norm(c.name)] = c
-        if "//" in c.name:
-            front = c.name.split("//")[0].strip()
+        front = front_face(c.name)
+        if front != c.name:
             idx.setdefault(_norm(front), c)
     return idx
 
@@ -318,7 +330,7 @@ def _norm(name: str) -> str:
 
 
 def lookup(idx: dict, name: str):
-    return idx.get(_norm(name)) or idx.get(_norm(name.split("//")[0]))
+    return idx.get(_norm(name)) or idx.get(_norm(front_face(name)))
 
 
 # --------------------------------------------------------------------------- #

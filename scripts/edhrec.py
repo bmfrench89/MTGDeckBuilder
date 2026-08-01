@@ -41,7 +41,7 @@ def _is_basic(name):
 def slugify(name):
     """Commander name -> EDHREC slug. "Atraxa, Praetors' Voice" -> atraxa-praetors-voice.
     Uses the front face of a DFC/partner name; apostrophes drop, other punctuation -> '-'."""
-    n = name.split("//")[0].strip().lower()
+    n = mtglib.front_face(name).lower()
     n = n.replace("'", "").replace("’", "")           # drop straight + curly apostrophes
     n = re.sub(r"[^a-z0-9]+", "-", n).strip("-")
     return n or "commander"
@@ -128,8 +128,8 @@ def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
             k = mtglib._norm(c["name"])
             if syn > out.get(k, -999):
                 out[k] = syn
-            front = c["name"].split("//")[0].strip()
-            if front:
+            front = mtglib.front_face(c["name"])
+            if front and front != c["name"]:
                 out.setdefault(mtglib._norm(front), syn)
     return out
 
@@ -167,8 +167,8 @@ def inclusion_map(commander, coll_index=None, ttl=CACHE_TTL):
             k = mtglib._norm(c["name"])
             if inc > out.get(k, 0):
                 out[k] = inc
-            front = c["name"].split("//")[0].strip()   # DFC front face
-            if front:
+            front = mtglib.front_face(c["name"])        # DFC front face
+            if front and front != c["name"]:
                 fk = mtglib._norm(front)
                 if inc > out.get(fk, 0):
                     out[fk] = inc
