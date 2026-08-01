@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Assessment: {{ meta.title }} · MTG Deckbuilder{% endblock %}
+{% block content %}
+
+<h1>{{ meta.title }}</h1>
+<div class="sub">Full assessment — every number computed from your collection and
+{{ '{:,}'.format(field_decks) if field_decks else 'the field' }} real decks on EDHREC.
+It's a grounded read, not a verdict.</div>
+
+<div class="row mb-4">
+  <a class="btn ghost sm" href="{{ url_for('deck', stem=meta.stem) }}">← Back to the deck</a>
+  <a class="btn ghost sm" href="{{ url_for('deck_assess', stem=meta.stem) }}"
+     title="The same data as plain text, to paste into a coaching session">⬇ Export as text</a>
+</div>
+
+{# ── headline ─────────────────────────────────────────────────────────────── #}
+{% if a.assessment %}{% set asm = a.assessment %}
+<div class="card">
+  <div class="row">
+    <span class="pill b{{ asm.bracket }}">B{{ asm.bracket }} · {{ asm.bracket_name }}</span>
+    <div class="meter grow-sm"><span style="width:{{ asm.power }}%"></span></div>
+    <span class="stat-big">{{ asm.power }}</span>
+    <span class="muted fs-xs">/100 · {{ asm.tier }}</span>
+  </div>
+  <ul class="reasons">
+    {% for r in asm.bracket_reasons %}<li>{{ r }}</li>{% endfor %}
+  </ul>
+  <p class="muted fs-xs mt-2"><b>Bracket is not a power score.</b> It counts specific cards
+  (Game Changers, mass land denial, extra turns) so a pod knows what to expect — a B2 deck can
+  be stronger than a B3 one.</p>
+</div>
+{% endif %}
+
+{# ── role balance vs the template ─────────────────────────────────────────── #}
+<h2>Role balance</h2>
+<div class="card">
+  <div class="grid tiles">
+    {% for role, label, lo, hi in roles %}
+    <div class="tile {{ 'tile-warn' if (cats.get(role,0) < lo or cats.get(role,0) > hi) }}">
+      <div class="val">{{ cats.get(role, 0) }}</div>
+      <div class="lbl">{{ label }}</div>
+      <div class="note">target {{ lo }}–{{ hi }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="muted fs-xs mt-3">Counts are heuristic (curated staple lists + card types) —
+  a strong first pass, then eyeball it. Amber = outside the template range.</p>
+</div>
+
+{# ── manabase ─────────────────────────────────────────────────────────────── #}
+<h2>Consistency &amp; manabase</h2>
+<div class="card">
+  {% if a.mana and a.mana.have_colors %}
+    {% set lo = a.mana.land_odds %}
+    {% if lo %}
+    <div class="grid tiles mb-3">
+      <div class="tile"><div class="val">{{ (lo.keepable*100)|round|int }}%</div>
+        <div class="lbl">Keepable hand</div></div>
+      <div class="tile"><div class="val">{{ (lo.ge3_open*100)|round|int }}%</div>
+        <div class="lbl">3+ lands opener</div></div>
+      <div class="tile"><div class="val">{{ (lo.ge4_by_t4*100)|round|int }}%</div>
+        <div class="lbl">4th land by T4</div></div>
+    </div>
+    {% endif %}
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Color</th><th>Sources</th><th>Karsten</th><th>Pip demand</th>
+          <th>P(≥1 in opener)</th><th></th></tr></thead>
+        <tbody>
+        {% for c in a.mana.colors %}
+          <tr>
+            <td><b>{{ c.color }}</b></td>
+            <td>{{ c.sources }}</td>
+            <td class="muted">~{{ c.karsten_target }}</td>
+            <td>{{ c.demand }}{% if c.double_pips %} <span class="muted">· {{ c.double_pips }} double</span>{% endif %}</td>
+            <td>{{ (c.p_open*100)|round|int }}%{% if c.double_pips %}
+              <span class="muted fs-xs">· 2 by T3 {{ (c.p_two_t3*100)|round|int }}%</span>{% endif %}</td>
+            <td>{% if c.status=='low' %}<span class="warn">⚠ under target</span>
+                {% else %}<span class="good">✓</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if a.mana.risky %}
+    <p class="mt-3"><b class="warn">Risky to cast on curve ({{ a.mana.risky_total }}):</b>
+      <span class="muted fs-sm">{% for r in a.mana.risky %}<span class="cardlink"
+        data-card="{{ r.name }}">{{ r.name }}</span> {{ (r.p*100)|round|int }}%{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+    {% endif %}
+    <p class="muted fs-xs mt-3">Exact hypergeometric odds, unconditional (not Karsten's
+    mulligan-adjusted figures). Sources approximate a permanent's output from its color
+    identity, which is rough for fetches and oddballs. Karsten's targets assume you want the
+    card castable <i>on curve</i> — a 5-colour deck will sit under them and still function.</p>
+  {% else %}
+    <p class="muted">Colored-source odds need card colors and mana costs. Run
+    <code>enrich.bat</code> (or <code>scripts/carddb.py</code>) and this fills in.</p>
+  {% endif %}
+</div>
+
+{# ── how it compares to the field ─────────────────────────────────────────── #}
+{% if pool %}
+<h2>Versus the field</h2>
+<div class="card">
+  <div class="grid tiles">
+    <div class="tile"><div class="val">{{ pool.have|length }}<span class="muted fs-sm">/{{ pool.top_n }}</span></div>
+      <div class="lbl">Top cards you run</div></div>
+    <div class="tile {{ 'tile-warn' if pool.free }}"><div class="val">{{ pool.free|length }}</div>
+      <div class="lbl">Free to add</div></div>
+    <div class="tile"><div class="val">{{ pool.taken|length }}</div>
+      <div class="lbl">In another deck</div></div>
+    <div class="tile"><div class="val">{{ pool.unowned|length }}</div>
+      <div class="lbl">Not owned</div></div>
+  </div>
+  {% if pool.free %}
+  <p class="mt-3"><b>You own these and aren't using them:</b>
+    <span class="muted fs-sm">{% for inc, n in pool.free[:10] %}<span class="cardlink"
+      data-card="{{ n }}">{{ n }}</span> {{ inc }}%{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+  {% endif %}
+  {% if pool.unowned %}
+  <p class="mt-2"><b>Buy targets:</b>
+    <span class="muted fs-sm">{% for inc, n in pool.unowned[:10] %}<span class="cardlink"
+      data-card="{{ n }}">{{ n }}</span> {{ inc }}%{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ── combos ───────────────────────────────────────────────────────────────── #}
+{% if a.combos and (a.combos.complete or a.combos.near) %}
+<h2>Combos</h2>
+<div class="card">
+  {% for c in a.combos.complete %}
+  <div><b class="warn">Present:</b> {{ c.name }} → {{ c.result }}</div>
+  {% endfor %}
+  {% if a.combos.near %}
+  <div class="muted fs-sm mt-2">One card away:
+    {% for c in a.combos.near %}add <span class="cardlink" data-card="{{ c.missing }}">{{ c.missing }}</span>
+    → {{ c.name }}{% if not loop.last %}; {% endif %}{% endfor %}</div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ── ownership ────────────────────────────────────────────────────────────── #}
+<h2>Ownership</h2>
+<div class="card">
+  {% if a.missing %}
+  <p><b class="warn">{{ a.missing|length }} card(s) you don't own yet:</b>
+    <span class="muted fs-sm">{% for c in a.missing %}<span class="cardlink"
+      data-card="{{ c.name }}">{{ c.name }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+  {% else %}
+  <p class="good">✓ Every card in this list is owned.</p>
+  {% endif %}
+  {% if a.report.deck_value %}
+  <p class="muted fs-xs mt-2">Deck value ≈ ${{ '{:,.2f}'.format(a.report.deck_value) }}
+    (your export's MARKET figures — a ballpark, not a live quote).</p>
+  {% endif %}
+</div>
+
+<p class="muted fs-xs mt-4">Want a written critique instead of numbers? Export this as text
+and hand it to a coaching session — see the <code>mtg-deckbuilder</code> skill.</p>
+{% endblock %}

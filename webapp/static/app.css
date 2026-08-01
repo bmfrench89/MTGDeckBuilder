@@ -229,3 +229,14 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
    ever meant "you own the commander card". Links to the existing deck. */
 .sb.built { background: var(--accent2); color: #000; text-decoration: none; }
 .sb.built:hover { filter: brightness(1.1); text-decoration: none; }
+
+/* ---- assessment page ---------------------------------------------------- */
+.stat-big { font-family: var(--font-display); font-size: var(--fs-2xl); color: var(--accent);
+  line-height: 1; }
+.grow-sm { flex: 0 1 160px; }
+.reasons { margin: var(--sp-3) 0 0; padding-left: var(--sp-4); color: var(--muted);
+  font-size: var(--fs-xs); }
+.reasons li { margin: var(--sp-1) 0; }
+.tile-warn { border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
+.tile-warn .val { color: var(--gold); }
+.tile .note { color: var(--muted); font-size: var(--fs-2xs); margin-top: var(--sp-1); }

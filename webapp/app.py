@@ -349,6 +349,33 @@ def _assess_packet(m):
     return "\n".join(L) + "\n"
 
 
+@app.route("/deck/<stem>/assess")
+def deck_assess_page(stem):
+    """The assessment as a readable page. Same numbers as the .txt export, which stays
+    around because pasting a plain block into a coaching session is a different job."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    coll, idx = collection_index()
+    a = deckcore.analyze_deck(m["path"], coll)
+    try:
+        pool = optimize.pool_report(m["path"], coll, idx, DECKS_DIR)
+    except Exception:
+        pool = None
+    field_decks = None
+    try:
+        rec = edhrec.recommendations(m["commander"], idx)
+        field_decks = None if rec.get("error") else rec.get("sample_decks")
+    except Exception:
+        pass
+    roles = [("ramp", "Ramp", 9, 13), ("draw", "Card draw", 8, 12),
+             ("removal", "Removal", 8, 11), ("wipe", "Wipes", 2, 5),
+             ("counter", "Counters", 0, 6), ("land", "Lands", 35, 38)]
+    return render_template("assess.html", meta=m, a=a, pool=pool, roles=roles,
+                           cats=a["report"].get("categories", {}),
+                           field_decks=field_decks, page="decks")
+
+
 @app.route("/deck/<stem>/assess.txt")
 def deck_assess(stem):
     m = deck_meta(stem)

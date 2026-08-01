@@ -40,7 +40,7 @@ open one for its full dashboard.</div>
   <div class="acts">
     <a href="{{ url_for('deck_visual', stem=d.stem) }}">Images</a>
     <a href="{{ url_for('export_deck', stem=d.stem) }}">Export</a>
-    <a href="{{ url_for('deck_assess', stem=d.stem) }}"
+    <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
        title="Deck + all analytics, to hand to a coaching session">Assess</a>
     <a href="{{ url_for('deck_edit', stem=d.stem) }}">Edit</a>
     <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" class="push"
