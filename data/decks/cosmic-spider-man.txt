@@ -28,7 +28,7 @@
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
 1 Peter Parker
-3 SP//dr, Piloted by Peni
+4 SP//dr, Piloted by Peni
 1 Spider-UK
 1 Coastal Piracy
 1 Spider-Gwen, Free Spirit
@@ -48,7 +48,6 @@
 1 Spider-Man, Web-Slinger
 1 Mystic Remora
 1 Frantic Search
-1 Arachne, Psionic Weaver
 1 Mary Jane Watson
 1 Web-Warriors
 1 Spider-Bot
@@ -109,7 +108,7 @@
 1 Evolving Wilds
 1 Viridescent Bog
 1 Suburban Sanctuary
-1 Henge of Ramos
+1 University Campus
 5 Forest
 5 Plains
 4 Island
