@@ -221,6 +221,10 @@ to the renderer changes the CLI output and the app identically — check both.
   `!! ILLEGAL`. Keep that check — this class of bug was silent for four commits.
 - **A dashboard must stay one self-contained file.** Assets in `scripts/assets/` are read by
   `_asset()` and inlined at render time; don't turn them into external links.
+- **The two surfaces open the card panel from different hooks.** App templates use
+  `data-card="<name>"` (`webapp/static/cardpanel.js`); generated dashboards wire their own
+  inlined panel to `figure.mc[data-key], .cardlink[data-key]`. A selector that works on one
+  surface will silently no-op on the other — check both when touching panel wiring.
 - **`docs/handoff.md` is layered history.** The top "START HERE — CURRENT STATE" block is
   authoritative; sections below it are older and partly superseded. For architecture, trust
   `docs/codemap.md` over the handoff.
