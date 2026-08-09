@@ -188,14 +188,9 @@ def deck_edit(stem):
     return render_template("edit.html", meta=m, content=content, page="decks")
 
 
-def _section_label(line):
-    """The label out of a `# --- Ramp (12) ---` header, or None. Section names are
-    free-form per deck, so we always read the deck's own labels — never a fixed list."""
-    s = line.strip()
-    if not s.startswith("#"):
-        return None
-    m = re.search(r"---\s*(.*?)\s*---", s)
-    return re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip() if m else None
+# The one section-header parser lives in the deckcore hub; the picker's labels and the
+# insert's matching MUST come from the same function or adds silently mis-file.
+_section_label = deckcore.section_label
 
 
 def _insert_deck_card(path, lines, name, section=None):
@@ -295,8 +290,16 @@ def _validate_add(meta, stem, name):
                       "collection first (or check the spelling)."), None
     text = open(meta["path"], encoding="utf-8").read()
     key = mtglib._norm(card.name)
-    in_deck = {mtglib._norm(c.name) for c in mtglib.parse_deck(text)}
-    if key in in_deck and card.name.strip().lower() not in mtglib._BASICS:
+    # Compare on BOTH the full name and the split-card front face. A deck line often
+    # carries only the front face ('Fire') while the collection stores 'Fire // Ice';
+    # matching raw names alone let the same card in twice — the known " // " trap, so
+    # every membership test goes through front_face + _norm, never a naive compare.
+    in_deck = set()
+    for c in mtglib.parse_deck(text):
+        in_deck.add(mtglib._norm(c.name))
+        in_deck.add(mtglib._norm(mtglib.front_face(c.name)))
+    keys = {key, mtglib._norm(mtglib.front_face(card.name))}
+    if keys & in_deck and not mtglib.is_basic(card.name):
         return None, f"{card.name} is already in this deck — Commander is singleton.", None
     ident = _deck_identity(text)
     # Only enforce when we actually have identity data; a name-only collection
@@ -376,9 +379,14 @@ def api_deck_advise(stem):
     name = (request.args.get("name") or "").strip()
     if not name:
         return jsonify({"error": "name required"}), 400
-    v = deckcore.advise_card(m["path"], COLLECTION, name,
-                             section=(request.args.get("section") or "").strip() or None,
-                             commander=m["commander"])
+    # Same degrade-contract as /deck/<stem>/add: the picker consumes JSON, so an
+    # analysis failure must come back as a JSON error, never Flask's HTML 500 page.
+    try:
+        v = deckcore.advise_card(m["path"], COLLECTION, name,
+                                 section=(request.args.get("section") or "").strip() or None,
+                                 commander=m["commander"])
+    except Exception:
+        return jsonify({"error": "Couldn't analyze this deck — no opinion available."}), 500
     if v is None:
         return jsonify({"error": f"{name} isn't in your collection."}), 404
     return jsonify(v)
@@ -387,11 +395,12 @@ def api_deck_advise(stem):
 @app.route("/api/deck/<stem>/sections")
 def api_deck_sections(stem):
     """The deck file's OWN section labels, for the add picker. Never a hardcoded list —
-    every deck sections itself its own way."""
+    every deck sections itself its own way. Real headers only: load_deck_sections'
+    synthetic 'Cards' group has no header line for the insert to find."""
     m = deck_meta(stem)
     if not m:
         abort(404)
-    return jsonify([label for label, _cards in deckcore.load_deck_sections(m["path"])])
+    return jsonify(deckcore.real_section_labels(m["path"]))
 
 
 @app.route("/api/collection/search")

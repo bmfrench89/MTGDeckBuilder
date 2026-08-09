@@ -80,6 +80,12 @@ only the runtime-edited paths, rebases, and pushes.
      what the advisor keys off.
    - **The advisor never acts.** `optimize` prints an advisory review of manual adds
      and still never cuts them. Don't "helpfully" wire it into the swap logic.
+   - A post-ship review pass fixed 8 findings (crash on missing reference data,
+     split-card and snow-basic singleton bugs, a dead reason branch, N× redundant
+     loads in the advisor loop, synthetic 'Cards' in the section picker, duplicated
+     section parsing, HTML-500 from a JSON route) — each with a regression test.
+     `mtglib.is_basic()` and `deckcore.section_label()`/`real_section_labels()` are
+     the new canonical helpers; don't reintroduce local copies.
 5. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
    HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
    server-side — request whitelisting via their forums, or enrich on the PC and upload the

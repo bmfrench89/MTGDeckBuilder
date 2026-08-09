@@ -535,15 +535,23 @@ def manual_adds_review(deck_path, coll):
     if not rows:
         return []
     out = ["   manual adds (advisory — the optimizer never cuts these):"]
+    # Pay the analysis / reference / EDHREC-cache cost once, not once per add.
+    analysis, refs, ctx = None, None, None
     try:
         analysis = deckcore.analyze_deck(deck_path, coll)
+        refs = power.load_refs()
+        commander = _commander_of(open(deck_path, encoding="utf-8").read())
+        ctx = deck_fit.deck_context(deck_path, analysis["enriched"], commander,
+                                    field=deck_fit.load_field(commander, analysis["idx"]),
+                                    synergy=deck_fit.load_synergy(commander, analysis["idx"]))
     except Exception:
-        analysis = None
+        pass
     for r in rows:
         name = r.get("name") or r.get("key")
         v = None
         try:
-            v = deckcore.advise_card(deck_path, coll, name, analysis=analysis)
+            v = deckcore.advise_card(deck_path, coll, name, analysis=analysis,
+                                     refs=refs, ctx=ctx)
         except Exception:
             v = None
         if v is None:

@@ -1113,6 +1113,10 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     except Exception:
         similar = None
 
+    # Pre-bind: the try below can fail BEFORE assigning these, and both are read again
+    # outside it (dead-weight pass, has_field). Leaving them unbound turned a degraded
+    # page into an UnboundLocalError crash — the one failure mode this repo forbids.
+    refs = ctx = None
     try:
         refs = power.load_refs()
         ctx = deck_fit.deck_context(deck_path, enriched, commander,

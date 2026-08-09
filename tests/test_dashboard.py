@@ -123,3 +123,17 @@ def test_add_card_picker_only_on_the_editable_surface(deck_file, collection_file
     assert 'id="ac-open"' in editable
     assert 'id="ac-open"' not in readonly, "a CLI dashboard has no server — no dead controls"
     assert ".ac-open" in editable and ".ac-open" not in readonly
+
+
+def test_dashboard_degrades_when_the_fit_engine_fails(deck_file, collection_file, monkeypatch):
+    """Regression: the dead-weight/has_field additions read `ctx` and `refs` OUTSIDE the
+    try-block that assigns them, so a deck_context failure crashed generate() with
+    UnboundLocalError instead of rendering a degraded page. 'Degrades, never crashes'
+    is this repo's rule — a broken reference file must never take the dashboard down."""
+    import deck_fit
+    def boom(*a, **k):
+        raise RuntimeError("reference data unavailable")
+    monkeypatch.setattr(deck_fit, "deck_context", boom)
+    html = _html(deck_file, collection_file)
+    assert html.lstrip().lower().startswith("<!doctype html")
+    assert "Sol Ring" in html                      # the decklist still rendered
