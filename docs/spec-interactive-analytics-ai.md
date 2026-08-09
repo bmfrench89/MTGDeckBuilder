@@ -163,9 +163,16 @@ Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tes
   → one-line insert → `Source=manual-add` in `.changes.csv` → fit verdict. The verdict
   states plainly when no EDHREC field data backs it. `optimize` prints an **advisory**
   manual-adds review and still never cuts a manual pick.
-- ☐ *(candidates from research, unscheduled)* dead-weight surfacing · synergy as
-  inclusion-vs-color-identity-baseline ratio — see
-  [`research-prior-art.md`](research-prior-art.md) §5.
+- ☑ **Dead weight — "Pulling the Least Weight"** (from the prior-art survey).
+  `deck_fit.dead_weight()` names the cards scoring below the deck's own median fit
+  that also show no theme tie and no staple pull, rendered in the Power tab. Measured
+  **relative to the deck**, not against a fixed score, so it behaves the same with and
+  without EDHREC data. Explicitly not a cut list.
+- ◐ **Optimizer add-ranking symmetry** — adds are ranked by raw inclusion while cuts
+  use a fit-blended value; see [`research-prior-art.md`](research-prior-art.md) §5.3.
+  **Blocked on validation, not on code**: needs a machine that can reach EDHREC so the
+  top-25 overlap check can be run before/after.
+- ☐ *(unscheduled)* `auto_build` role-quota overrides — see §5 "consider later".
 
 ## 5. Open questions (resolve during build)
 - EDHREC "Lift" — exposed via any endpoint/`pyedhrec` method yet? Exact formula?
