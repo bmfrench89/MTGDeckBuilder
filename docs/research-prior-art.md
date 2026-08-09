@@ -163,7 +163,9 @@ use raw rates today.
    deck's own median fit**, which behaves identically with and without field data.
 
 **The one real remaining gap (needs live data to land safely):**
-3. ◐ **The optimizer's ADD ranking is popularity-only.** `optimize.py` sorts add
+3. ☑ *(shipped in the hardening round — see `spec-optimizer-hardening.md` §C;
+   live top-25 overlap check still owed)* **The optimizer's ADD ranking was
+   popularity-only.** `optimize.py` sorts add
    candidates by raw EDHREC inclusion (`adds.sort()` on `inc`), while its CUT side
    uses `value_of = max(inc, (fit-60)*2)` — and `fit` already includes synergy. So the
    two halves disagree: a 93%-inclusion generic (Command Tower) outranks a

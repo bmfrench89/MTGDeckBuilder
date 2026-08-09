@@ -338,3 +338,170 @@ def test_singleton_violations_flags_duplicate_nonbasics(tmp_path):
 def test_singleton_violations_allows_duplicate_basics(tmp_path):
     # DECK already has 7 Island + 5 Island; basics are exempt from the singleton rule
     assert optimize.singleton_violations(_deck(tmp_path)) == []
+
+
+# --------------------------------------------------------------------------- #
+# Review round 2 (docs/spec-optimizer-hardening.md) — regression tests.
+# Field/synergy data is monkeypatched (the pattern used above): hermetic, and it
+# makes the ranking arithmetic exact instead of approximate.
+# --------------------------------------------------------------------------- #
+def test_singleton_check_catches_a_front_face_alias_duplicate(tmp_path):
+    """'1 Fire' + '1 Fire // Ice' is the same physical card twice, but parses as two
+    names each qty 1 — raw counting kept the ILLEGAL guard silent for exactly the
+    class of bug it exists for."""
+    p = tmp_path / "d.txt"
+    p.write_text("# Colors: U R\n\n# --- Spells ---\n1 Fire\n1 Fire // Ice\n",
+                 encoding="utf-8")
+    hits = optimize.singleton_violations(str(p))
+    assert len(hits) == 1 and hits[0][0] == 2
+
+
+def test_singleton_check_still_ignores_basics_including_snow(tmp_path):
+    p = tmp_path / "d.txt"
+    p.write_text("# --- Lands ---\n5 Island\n3 Snow-Covered Island\n", encoding="utf-8")
+    assert optimize.singleton_violations(str(p)) == []
+
+
+def test_manabase_basics_pass_applies_without_crashing(tmp_path, collection_file, monkeypatch):
+    """Pass 2 appended 2-tuples where every consumer unpacks 3 — the crash fired
+    AFTER _write had rewritten the deck but BEFORE tidy/legality/logging."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n"
+                    "# --- Lands ---\n1 Command Tower\n2 Island\n", encoding="utf-8")
+    import deck_fit
+    # field data exists (so passes run) and Command Tower is weak here (<40)
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {"sol ring": 90})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {})
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), apply=True)
+    for entry in r["land_swaps"]:
+        assert len(entry) == 3, "every land swap must be (old, new, availability)"
+    # the change log wrote (this is what the crash used to skip)
+    if r["land_swaps"]:
+        assert (tmp_path / "d.changes.csv").exists()
+
+
+def test_add_ranking_prefers_fit_blended_value_over_raw_inclusion(tmp_path, collection_file, monkeypatch):
+    """The A/B case: Counterspell (60% inclusion, high synergy, fills the counter
+    shortage) must outrank a higher-inclusion generic bauble (62%) now that adds use
+    the same value function as cuts. The old sort — raw inclusion — picked the bauble."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Creatures ---\n1 Serra Angel\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n"
+                    "# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import deck_fit
+    field = {"counterspell": 60, "arcane signet": 62}
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: dict(field))
+    monkeypatch.setattr(deck_fit, "load_synergy",
+                        lambda *a, **k: {"counterspell": 69})
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30)
+    assert r["swaps"], "a swap should clear the margin"
+    adds = [add for _cut, _v, add, _i, _a in r["swaps"]]
+    assert adds[0] == "Counterspell", f"value ranking should pick Counterspell first, got {adds}"
+
+
+def test_margin_gate_compares_value_to_value(tmp_path, collection_file, monkeypatch):
+    """A swap that clears the margin on VALUE but not on raw inclusion must happen:
+    Counterspell at 20% inclusion but ~92 fit (blend 64) against a near-zero-value
+    cut, margin 40. The old gate (raw inclusion minus value) refused this."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Creatures ---\n1 Serra Angel\n\n"
+                    "# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import deck_fit
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {"counterspell": 20})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {"counterspell": 69})
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=40)
+    assert any(add == "Counterspell" for _c, _v, add, _i, _a in r["swaps"]), \
+        "the value-based gate should let a high-fit low-inclusion upgrade through"
+
+
+def test_optimizer_is_idempotent_under_the_new_ranking(tmp_path, collection_file, monkeypatch):
+    """Second run on a tuned deck changes nothing — the property worth preserving."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Creatures ---\n1 Serra Angel\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n"
+                    "# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import deck_fit
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {"counterspell": 60, "sol ring": 90})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {"counterspell": 69})
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30, apply=True)
+    text_after_first = (tmp_path / "d.txt").read_text(encoding="utf-8")
+    r2 = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30, apply=True)
+    assert not r2["swaps"], "second run must find nothing to do"
+    assert (tmp_path / "d.txt").read_text(encoding="utf-8") == text_after_first
+
+
+def test_tidy_preserves_comments_inside_sections(tmp_path, collection_file):
+    """The repo contract: edits keep comment lines intact. _tidy used to delete every
+    comment below the first section header."""
+    idx = mtglib.index_by_name(mtglib.load_collection(collection_file))
+    p = tmp_path / "d.txt"
+    p.write_text("# Title: T\n\n# --- Ramp ---\n# fast mana package below\n1 Sol Ring\n",
+                 encoding="utf-8")
+    optimize._tidy(str(p), idx)
+    assert "# fast mana package below" in p.read_text(encoding="utf-8")
+
+
+def test_tidy_does_not_corrupt_1x_style_lines(tmp_path, collection_file):
+    """'2x Sol Ring' parses fine (mtglib accepts the x suffix) but _tidy's stricter
+    regex used to rewrite it as '1 2x Sol Ring' — a nonexistent card, real one gone."""
+    idx = mtglib.index_by_name(mtglib.load_collection(collection_file))
+    p = tmp_path / "d.txt"
+    p.write_text("# --- Ramp ---\n2x Sol Ring\n", encoding="utf-8")
+    optimize._tidy(str(p), idx)
+    after = {mtglib._norm(c.name): c.quantity for c in
+             mtglib.parse_deck(p.read_text(encoding="utf-8"))}
+    assert after == {"sol ring": 2}, f"got {after}"
+
+
+def test_write_swaps_an_1x_line(tmp_path):
+    p = tmp_path / "d.txt"
+    p.write_text("# --- Ramp ---\n1x Llanowar Elves\n", encoding="utf-8")
+    optimize._write(str(p), [("Llanowar Elves", 0, "Sol Ring", 90, "free")], [])
+    text = p.read_text(encoding="utf-8")
+    assert "Sol Ring" in text and "Llanowar" not in text
+
+
+def test_display_name_does_not_mangle_apostrophes():
+    assert optimize._display_name("urza's saga") == "Urza's Saga"
+    assert optimize._display_name("fire // ice") == "Fire // Ice"
+
+
+def test_land_pass_never_adds_the_same_land_under_two_field_keys(tmp_path, monkeypatch):
+    """EDHREC emits full-name AND front-face keys for a DFC land; without the add-side
+    guard both keys swapped the same land in for two different cuts, and _tidy merged
+    them into an illegal `2 <land>`."""
+    coll_csv = tmp_path / "c.csv"
+    coll_csv.write_text(
+        "Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET\n"
+        "1,Test Commander,4,W U,W U,{2}{W}{U},Legendary Creature,Human Wizard,rare,g7,1.00\n"
+        "1,Boardwalk // Promenade,0,,U,,Land,,rare,bp1,1.00\n"
+        "1,Weak Land A,0,,,,Land,,common,wa1,0.10\n"
+        "1,Weak Land B,0,,,,Land,,common,wb1,0.10\n"
+        "12,Island,0,,,,Land,Island,common,f6,0.10\n", encoding="utf-8")
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Lands ---\n1 Weak Land A\n1 Weak Land B\n10 Island\n",
+                    encoding="utf-8")
+    import deck_fit
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {
+        "boardwalk // promenade": 80, "boardwalk": 80})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {})
+    coll = mtglib.load_collection(str(coll_csv))
+    idx = mtglib.index_by_name(coll)
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path))
+    added = [new for _old, new, _avail in r["land_swaps"]]
+    assert len(added) == len({mtglib._norm(mtglib.front_face(n)) for n in added}), \
+        f"same land added twice: {added}"

@@ -43,6 +43,13 @@ LAND_TARGET = 37
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
 
 
+def _display_name(k):
+    """Readable casing for a normalized (lowercase) card key when EDHREC's proper
+    casing isn't available. str.title() capitalizes after apostrophes — it wrote
+    "Urza'S Saga" into deck files and buylists — so only word starts are raised."""
+    return " ".join(w[:1].upper() + w[1:] for w in k.split(" "))
+
+
 def _commander_of(text):
     m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
     return re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
@@ -89,7 +96,11 @@ def pool_report(deck_path, coll, idx, decks_dir, top_n=25):
     text = open(deck_path, encoding="utf-8").read()
     commander = _commander_of(text)
     field = deck_fit.load_field(commander, idx)
-    in_deck = {mtglib._norm(c.name) for c in mtglib.parse_deck(text)}
+    # BOTH keys per card (full name + front face): EDHREC emits both, so a raw-norm
+    # set lets the same card count as "missing" under its other alias.
+    in_deck = set()
+    for c in mtglib.parse_deck(text):
+        in_deck |= mtglib.name_keys(c.name)
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
     committed = {mtglib._norm(n): v for n, v in usage.items()}
 
@@ -125,7 +136,7 @@ def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
         w.writerow(["Card", "Price", "Tier", "Replaces", "Reason"])
         for inc, name in rows:
             tier = "Core" if inc >= 65 else "Value"
-            w.writerow([name.title(), "", tier, "",
+            w.writerow([_display_name(name), "", tier, "",
                         f"{inc}% of {report['commander']} decks run this — "
                         f"your pool can't fill this slot."])
     return len(rows)
@@ -153,7 +164,9 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     keep |= {c for c, d in deckcore.load_pins().items() if d == stem}   # pinned here = keep
 
     deck = mtglib.parse_deck(text)
-    in_deck = {mtglib._norm(c.name) for c in deck}
+    in_deck = set()
+    for c in deck:
+        in_deck |= mtglib.name_keys(c.name)     # full-name AND front-face keys
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
     committed = {mtglib._norm(n): v["total"] for n, v in usage.items()}
     # a copy you've PINNED to another deck is spoken for, however well it scores here
@@ -167,6 +180,19 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     def role_of(name):
         r = mtglib.lookup(idx, name)
         return deck_fit.primary_role(r) if r else None
+
+    # ONE value function for both sides of a swap. Cuts always used this blend
+    # (field inclusion OR our own fit engine, whichever rates the card higher);
+    # adds used raw inclusion, so the two halves of the same comparison disagreed
+    # about what "good" means — a 93%-inclusion generic outranked a high-synergy
+    # archetype payoff both in the queue and at the margin gate. Same units now.
+    # For an unowned candidate lookup fails -> fit 0 -> value == raw inclusion,
+    # so buy-candidates rank exactly as before.
+    def value_of(name, ref=None):
+        ref = ref or mtglib.lookup(idx, name)
+        inc = inc_of(name)
+        fit = deck_fit.assess_card(ref, rep, ctx, refs)["score"] if (ref and ref.types) else 0
+        return max(inc, (fit - 60) * 2)   # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
 
     # ---- candidates to bring IN ---------------------------------------------------------
     # Ranked by how much the field plays them, then by availability:
@@ -187,7 +213,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             # buying as well as borrowing from another deck.
             if owned_only or not include_buys or inc < buy_threshold:
                 continue
-            name, is_land, avail = proper.get(k, k.title()), False, "buy"
+            name, is_land, avail = proper.get(k, _display_name(k)), False, "buy"
         else:
             if ref.identity and not (ref.identity <= identity):
                 continue
@@ -202,9 +228,9 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 continue
             name, is_land, avail = ref.name, ref.is_land, ("free" if free else "share")
         rank = {"free": 2, "share": 1, "buy": 0}[avail]
-        if mtglib._norm(name) in in_deck:
+        if mtglib.name_keys(name) & in_deck:
             continue
-        (land_adds if is_land else adds).append((inc, rank, name, avail))
+        (land_adds if is_land else adds).append((value_of(name), rank, name, avail, inc))
     adds.sort(reverse=True)
     land_adds.sort(reverse=True)
 
@@ -213,12 +239,6 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # simply because the field's decks lean a different theme (Cloud's EDHREC data is all
     # Final Fantasy builds, which would happily cut Skyclave Apparition or Cleansing Nova).
     # So a card is worth keeping if the FIELD plays it *or* our own engine rates it highly.
-    def value_of(name, ref=None):
-        ref = ref or mtglib.lookup(idx, name)
-        inc = inc_of(name)
-        fit = deck_fit.assess_card(ref, rep, ctx, refs)["score"] if (ref and ref.types) else 0
-        return max(inc, (fit - 60) * 2)   # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
-
     cuts = []
     for c in deck:
         k = mtglib._norm(c.name)
@@ -233,7 +253,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cuts.sort()                           # least valuable first
 
     swaps, used_add, used_cut = [], set(), set()
-    for inc_add, _rank, add_name, avail in adds:
+    for val_add, _rank, add_name, avail, inc_add in adds:
         if len(swaps) >= min(len(cuts), max_swaps):
             break
         add_role = role_of(add_name)
@@ -241,8 +261,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_cut or mtglib._norm(add_name) in used_add:
                 continue
-            if inc_add - val_cut < margin:
-                continue                  # not a clear enough upgrade
+            if val_add - val_cut < margin:
+                continue                  # not a clear enough upgrade, like-for-like units
             cut_role = role_of(cut_name)
             # keep role counts inside the template
             trial = dict(cats)
@@ -276,14 +296,21 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                         if mtglib._norm(c.name) not in BASICS
                         and mtglib._norm(c.name) not in keep
                         and c.name.lower() not in notes)
-    used_land = set()
-    for inc_add, _rank, add_name, avail in land_adds:
+    used_land, used_land_add = set(), set()
+    for _val, _rank, add_name, avail, inc_add in land_adds:
+        # One field card can arrive under two keys (full name + DFC front face);
+        # without this guard the same land was swapped in for two different cuts
+        # and _tidy merged the pair into an illegal `2 <land>`.
+        akeys = mtglib.name_keys(add_name)
+        if akeys & used_land_add:
+            continue
         for inc_cut, cut_name in weak_lands:
             ck = mtglib._norm(cut_name)
             if ck in used_land or inc_add - inc_cut < margin:
                 continue
             land_swaps.append((cut_name, add_name, avail))
             used_land.add(ck)
+            used_land_add |= akeys
             break
 
     # ---- manabase pass 2: run basics (98-99% inclusion in every archetype) --------------
@@ -301,7 +328,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 break
             if inc_l >= 40:               # a genuinely-played fixing land: keep it
                 continue
-            land_swaps.append((land, cname.get(colors[i % len(colors)], "Wastes")))
+            # 3-tuple like every other land swap: consumers (record_changes, the
+            # CLI printer) unpack (old, new, avail); the 2-tuple crashed them AFTER
+            # _write had already rewritten the deck. Basics are always "free".
+            land_swaps.append((land, cname.get(colors[i % len(colors)], "Wastes"), "free"))
             i += 1
             need -= 1
 
@@ -322,8 +352,17 @@ def singleton_violations(deck_path):
     still totals 100 cards and every dashboard looks healthy, so nothing surfaces it
     until you physically sleeve the deck and come up a card short."""
     deck = mtglib.parse_deck(open(deck_path, encoding="utf-8").read())
-    return [(c.quantity, c.name) for c in deck
-            if c.quantity > 1 and mtglib._norm(c.name) not in BASICS]
+    # Aggregate by FRONT-FACE key, not raw name: '1 Fire' + '1 Fire // Ice' is the
+    # same physical card twice, but parses as two names each qty 1 — the exact
+    # alias-duplicate class this guard was written for, and raw counting missed it.
+    counts = {}
+    for c in deck:
+        if mtglib.is_basic(c.name):
+            continue
+        k = mtglib._norm(mtglib.front_face(c.name))
+        entry = counts.setdefault(k, [0, c.name])
+        entry[0] += c.quantity
+    return [(q, name) for q, name in counts.values() if q > 1]
 
 
 # FUNCTION sections can hold any card type — Sol Ring belongs under "Ramp" even though
@@ -383,7 +422,7 @@ def _tidy(deck_path, idx):
         if not s or s.startswith("#"):
             (header if cur is None else sections.setdefault(cur, [])).append(("raw", ln))
             continue
-        m = re.match(r"^(\d+)\s+(.*)$", s)
+        m = mtglib._QTY_RE.match(s)          # the ONE qty-line parser ('1x Name' included)
         qty, name = (int(m.group(1)), m.group(2)) if m else (1, s)
         sections.setdefault(cur or (order[0] if order else "Cards"), []).append(("card", qty, name))
 
@@ -438,16 +477,21 @@ def _tidy(deck_path, idx):
     for sec, items in moved.items():
         sections.setdefault(sec, []).extend(items)
 
-    out = list(l for _t, l in header) if header and header[0][0] == "raw" else []
-    out = [ln for ln in lines[:0]]                      # rebuilt below
     # header block = everything before the first section marker
     first_sec_i = next((i for i, ln in enumerate(lines)
                         if re.match(r"^#\s*-+\s*.+?\s*-+\s*$", ln.strip())), len(lines))
     out = lines[:first_sec_i]
     for sec in order:
-        merged, seen_order = {}, []
+        merged, seen_order, comments = {}, [], []
         for item in sections.get(sec, []):
             if item[0] != "card":
+                # Keep the player's comment lines — 'edits keep comment lines intact'
+                # is the repo contract, and this loop used to delete every comment
+                # that lived under a section header. Stored blank lines are dropped;
+                # the rebuild manages its own spacing.
+                raw = item[1]
+                if raw.strip().startswith("#"):
+                    comments.append(raw)
                 continue
             _t, qty, name = item
             k = mtglib._norm(name)
@@ -456,13 +500,14 @@ def _tidy(deck_path, idx):
             else:
                 merged[k] = [qty, name]
                 seen_order.append(k)
-        if not seen_order:
+        if not seen_order and not comments:
             continue                                     # drop a section left empty
         # refresh a stale "(14)" style count in the header
         total = sum(merged[k][0] for k in seen_order)
         title = re.sub(r"\s*\(\d+\)\s*$", "", sec)
         label = f"{title} ({total})" if re.search(r"\(\d+\)\s*$", sec) else title
         out.append(f"# --- {label} ---")
+        out.extend(comments)
         for k in seen_order:
             qty, name = merged[k]
             out.append(f"{qty} {name}")
@@ -507,7 +552,7 @@ def _write(deck_path, swaps, land_swaps):
     for ln in lines:
         s = ln.strip()
         if s and not s.startswith("#"):
-            m = re.match(r"^(\d+)\s+(.*)$", s)
+            m = mtglib._QTY_RE.match(s)     # shared parser: '1x Name' must not silently no-op
             name = m.group(2) if m else s
             k = mtglib._norm(name)
             if k in repl and k not in done:

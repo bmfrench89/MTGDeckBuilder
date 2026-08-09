@@ -63,3 +63,37 @@ def test_land_detection_by_type(collection_file):
     idx = mtglib.index_by_name(mtglib.load_collection(collection_file))
     assert mtglib.lookup(idx, "Command Tower").is_land is True
     assert mtglib.lookup(idx, "Sol Ring").is_land is False
+
+
+# --------------------------------------------------------------------------- #
+# Review round 2 (docs/spec-optimizer-hardening.md)
+# --------------------------------------------------------------------------- #
+def test_hybrid_phyrexian_pips_split_not_double():
+    """{G/W/P} is ONE symbol — it must contribute one pip split across its colours,
+    not a full pip per colour (which inflated pip demand and the Karsten math)."""
+    out = mtglib.pip_counts("{1}{G/W/P}")
+    assert out["G"] == 0.5 and out["W"] == 0.5
+
+
+def test_mono_phyrexian_still_counts_a_full_pip():
+    assert mtglib.pip_counts("{W/P}{W/P}")["W"] == 2.0
+
+
+def test_plain_hybrid_unchanged():
+    out = mtglib.pip_counts("{W/U}")
+    assert out["W"] == 0.5 and out["U"] == 0.5
+
+
+def test_name_keys_covers_both_faces():
+    assert mtglib.name_keys("Fire // Ice") == {"fire // ice", "fire"}
+
+
+def test_name_keys_plain_name_is_one_key():
+    assert mtglib.name_keys("Sol Ring") == {"sol ring"}
+
+
+def test_name_keys_does_not_invent_an_alias_for_a_bare_slash_name():
+    """The SP//dr rule: a bare '//' inside a real name must not create a bogus
+    front-face key."""
+    keys = mtglib.name_keys("SP//dr, Piloted by Peni")
+    assert len(keys) == 1

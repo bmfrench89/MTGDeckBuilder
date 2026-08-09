@@ -69,7 +69,7 @@ def load_deck_sections(path):
                     cur = (label, [])
                     sections.append(cur)
                 continue
-            m = re.match(r"^(\d+)\s*[xX]?\s+(.*\S)$", s)
+            m = mtglib._QTY_RE.match(s)      # the one qty-line parser (mtglib)
             qty, name = (int(m.group(1)), m.group(2).strip()) if m else (1, s)
             if cur is None:
                 cur = ("Cards", [])

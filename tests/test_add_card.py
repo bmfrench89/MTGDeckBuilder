@@ -252,3 +252,23 @@ def test_advise_card_gives_the_same_verdict_with_prebuilt_context(client, collec
     fast = deckcore.advise_card(deck, collection_file, "Sol Ring", commander="Test Commander",
                                 analysis=a, refs=refs, ctx=ctx)
     assert (slow["score"], slow["band"]) == (fast["score"], fast["band"])
+
+
+def test_replace_refuses_a_card_already_in_the_deck(client):
+    """Replace had none of Add's guards: swapping Arcane Signet for Sol Ring (already
+    in the deck) silently wrote a duplicate that Add would have hard-rejected."""
+    before = _deck_text(client)
+    client.post("/deck/testdeck/card", data={"action": "replace",
+                                             "name": "Arcane Signet",
+                                             "replacement": "Sol Ring"})
+    assert _deck_text(client) == before, "a duplicating replace must be refused"
+
+
+def test_replace_with_a_new_card_still_works_and_is_logged(client):
+    client.post("/deck/testdeck/card", data={"action": "replace",
+                                             "name": "Arcane Signet",
+                                             "replacement": "Counterspell"})
+    text = _deck_text(client)
+    assert "Counterspell" in text and "Arcane Signet" not in text
+    log = (client._decks / "testdeck.changes.csv").read_text(encoding="utf-8")
+    assert "manual-replace" in log

@@ -341,19 +341,19 @@ _SYMBOL_RE = re.compile(r"\{([^}]+)\}")
 
 def pip_counts(mana_cost: str) -> dict:
     """Return {W,U,B,R,G: count} of colored pips in a mana cost string.
-    Hybrid symbols like {W/U} count 0.5 to each side; Phyrexian {W/P} counts 1."""
+
+    Every multi-letter symbol splits one pip across its letters: {W/U} is 0.5/0.5,
+    and hybrid-Phyrexian {G/W/P} is likewise 0.5/0.5 — ONE symbol is one pip at most.
+    (The old special case gave {G/W/P} a full pip per letter, 2.0 from a single
+    symbol, inflating pip demand and the Karsten source math for any deck running
+    hybrid-Phyrexian cards.) Mono Phyrexian {W/P} stays a full W pip: paying life is
+    the fallback, not the plan."""
     out = {c: 0.0 for c in "WUBRG"}
     for sym in _SYMBOL_RE.findall(mana_cost or ""):
         s = sym.upper()
         letters = [ch for ch in s if ch in _COLOR_LETTERS]
-        if not letters:
-            continue
-        if "P" in s or len(letters) == 1:
-            for ch in letters:
-                out[ch] += 1.0 / (len(letters) if "P" not in s else 1)
-        else:  # hybrid mana e.g. W/U
-            for ch in letters:
-                out[ch] += 1.0 / len(letters)
+        for ch in letters:
+            out[ch] += 1.0 / len(letters)
     return out
 
 
@@ -388,6 +388,15 @@ _LAND_HINTS = (
     "courtyard", "territory", "plaza", "shrine", "peaks", "outpost",
     "bivouac", "orchard", "sanctum", "panorama", "bloodfell",
 )
+
+
+def name_keys(name: str) -> frozenset:
+    """Every normalized key this card answers to: the full name AND the split/DFC
+    front face. Membership tests (is it already in the deck?) must check both sides —
+    EDHREC deliberately emits both keys, and deck lines often carry only the front
+    face, so comparing raw `_norm` alone lets the same card in twice (the " // "
+    trap, caught live three separate times now)."""
+    return frozenset({_norm(name), _norm(front_face(name))})
 
 
 def is_basic(name: str) -> bool:

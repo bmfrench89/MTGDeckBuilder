@@ -168,10 +168,12 @@ Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tes
   that also show no theme tie and no staple pull, rendered in the Power tab. Measured
   **relative to the deck**, not against a fixed score, so it behaves the same with and
   without EDHREC data. Explicitly not a cut list.
-- ◐ **Optimizer add-ranking symmetry** — adds are ranked by raw inclusion while cuts
-  use a fit-blended value; see [`research-prior-art.md`](research-prior-art.md) §5.3.
-  **Blocked on validation, not on code**: needs a machine that can reach EDHREC so the
-  top-25 overlap check can be run before/after.
+- ☑ **Optimizer add-ranking symmetry + hardening round 2** — shipped; spec and the
+  full 11-finding list in [`spec-optimizer-hardening.md`](spec-optimizer-hardening.md).
+  Adds now use the same `value_of()` as cuts (sort + margin gate), proven by
+  monkeypatched-field A/B tests. ◐ **One step still owed, live:** the CLAUDE.md
+  top-25 overlap check on real EDHREC data (run `optimize --all` preview→apply→re-run
+  from a machine that can reach EDHREC; revert if any deck drops below ~50%).
 - ☐ *(unscheduled)* `auto_build` role-quota overrides — see §5 "consider later".
 
 ## 5. Open questions (resolve during build)
