@@ -98,6 +98,10 @@ nothing; a green one closes the loop permanently.
   refresh via `refresh.py` as before.)
 - It does not remove the live-fetch path: a machine with EDHREC access still gets
   the freshest data directly, snapshot untouched.
-- It does not solve the *other* two phone-independence items: the server PAT
-  (deck sync) and the collection CSV upload. Those remain in `handoff.md`'s
-  pending list.
+- It does not deliver the data to the server by itself — GitHub cannot reach into
+  PythonAnywhere. The delivery leg is a **PythonAnywhere daily Scheduled Task**
+  (free tier includes one) running `sync_server.sh`, which now ends by touching the
+  WSGI file — PythonAnywhere's documented reload trigger — so pull and reload are
+  one step. Until that task (and the PAT it wants) exist, delivery is a manual
+  `git pull` + Reload.
+- It does not solve the collection CSV upload; that remains in `handoff.md`.

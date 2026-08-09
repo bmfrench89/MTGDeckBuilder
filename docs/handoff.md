@@ -49,7 +49,15 @@ a code update will eventually conflict. `sync_server.sh` (repo root) resolves th
 only the runtime-edited paths, rebases, and pushes.
 
 ### 🔧 PENDING — pick this up first next session
-1. **GitHub push credentials are NOT set up yet.** Steps 2–4 below were deferred by the player:
+1. **GitHub push credentials are NOT set up yet** — and they are now the key to FULL
+   automation: once the PAT is in place, ONE PythonAnywhere daily Scheduled Task
+   (free tier includes exactly one) running `~/MTGDeckBuilder/sync_server.sh` gives a
+   complete daily cycle — deck edits push up, code + field snapshots pull down, and
+   the script now ends by touching the WSGI file, which IS PythonAnywhere's reload
+   trigger. Set it at Tasks tab → new daily task → command:
+   `~/MTGDeckBuilder/sync_server.sh`. (The PAT itself only grants push; pulling was
+   never blocked — the Scheduled Task is what automates the pull+reload.)
+   Steps 2–4 below were deferred by the player:
    - Create a **fine-grained PAT** on GitHub: resource owner `bmfrench89`, *only* the
      `MTGDeckBuilder` repo, permission **Contents: Read and write**.
    - On the server: `cd ~/MTGDeckBuilder && git remote set-url origin
