@@ -99,8 +99,14 @@ pieces into its Upgrades section via `buy_signals` — curated buylist rows stil
 `near` shape, and the dashboard merges them (piece-set dedupe) into ONE Combo Watch
 and ONE Buy view; `edhrec.recommendations()` itself synthesizes from a snapshot, so
 `/api/edhrec` staples and the panel's same-slot alternatives work on the server too,
-labeled "Snapshot (saved DATE)". **Still open:** the assess packet lists its sources
-separately rather than through `buy_signals` (cosmetic — same underlying engines).
+labeled "Snapshot (saved DATE)". **Also closed:** the assess
+packet now ends its analytics with ONE merged "CARDS TO BUY" section through
+`buy_signals` (provenance-labeled, CSB-merged), and `card_api` carries the REVERSE
+combo signal — `completes`: decks where the viewed card is the one missing piece —
+rendered by the site-wide panel (so the wishlist's combo rows explain themselves).
+**Still open:** the dashboard's Buy-tab rows for non-deck cards (combo pieces) are
+plain text, not panel-clickable — the inlined panel only carries details for cards
+in the deck.
 
 ## Where each signal works — the deployment reality
 

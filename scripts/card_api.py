@@ -19,6 +19,28 @@ import combo_detector
 import deckcore   # shared hub: load_card_notes + role labels (no heavy renderer import)
 
 
+def _completes(name, decks_dir, combos):
+    """Decks where THIS card is the one missing combo piece — the reverse direction
+    of the Buy tab's combo signal. When the player looks at a card (wishlist, panel,
+    collection), 'buying/slotting this completes a combo in <deck>' is the single
+    most decision-relevant fact the engines know, and it used to stay locked inside
+    each deck's own Combo Watch."""
+    import combo_detector
+    keys = mtglib.name_keys(name)
+    out = []
+    for path in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
+        try:
+            det = combo_detector.for_deck(path, None, combos)
+        except Exception:
+            continue
+        stem = os.path.splitext(os.path.basename(path))[0]
+        for cb in det.get("near", []):
+            if mtglib.name_keys(cb.get("missing", "")) & keys:
+                out.append({"deck": stem, "combo": cb.get("name", ""),
+                            "result": cb.get("result", "")})
+    return out
+
+
 def _decks_using(name, decks_dir):
     """Which deck stems list this card (by normalized name)."""
     key = mtglib._norm(name)
@@ -98,6 +120,7 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
         "strategy": _strategy(ref, roles, decks),
         "note": {"why": note["why"], "alts": note["alts"]} if note else None,
         "combos": _combos_with(name, combos),
+        "completes": _completes(name, decks_dir, combos),
         "decks": decks,
         "scryfall_id": sid,
         "image": image,

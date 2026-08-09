@@ -302,3 +302,60 @@ def test_wishlist_curated_buylist_still_wins(tmp_path, collection_file, monkeypa
     _s, _u, upgrades = wl.build(collection_file, str(decks))
     hits = [u for u in upgrades if u["card"] == "Wish Widget"]
     assert len(hits) == 1 and hits[0]["reason"] == "hand-written"
+
+
+# --------------------------------------------------------------------------- #
+# Cohesion round 3 — the assess packet and the reverse combo signal
+# --------------------------------------------------------------------------- #
+def test_assess_packet_carries_the_merged_buy_view(tmp_path, collection_file, monkeypatch):
+    """The coach must read the same shopping list the player sees — one merged,
+    provenance-labeled section, not fragments to reassemble."""
+    import shutil
+    import sys as _sys
+    import combo_detector
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "t.txt").write_text("# Title: T\n# Commander: Test Commander\n"
+                                 "# Colors: W U\n\n# --- Ramp ---\n1 Sol Ring\n",
+                                 encoding="utf-8")
+    os.environ["MTG_DECKS_DIR"] = str(decks)
+    os.environ["MTG_COLLECTION"] = collection_file
+    _sys.modules.pop("app", None)
+    import app
+    fake = [{"name": "Sol Ring + Widget", "pieces": ["sol ring", "assess widget"],
+             "display": ["Sol Ring", "Assess Widget"], "result": "Infinite mana",
+             "early": False}]
+    monkeypatch.setattr(combo_detector, "load_combos", lambda *a, **k: fake)
+    app.app.config["TESTING"] = True
+    txt = app.app.test_client().get("/deck/t/assess.txt").get_data(as_text=True)
+    assert "CARDS TO BUY" in txt
+    assert "Assess Widget" in txt
+    assert "[combo" in txt, "provenance labels must survive into the packet"
+
+
+def test_card_payload_says_what_this_card_completes(tmp_path, collection_file):
+    import card_api
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "vito.txt").write_text("# Title: V\n# --- Cards ---\n"
+                                    "1 Vito, Thorn of the Dusk Rose\n", encoding="utf-8")
+    combos = [{"name": "Exquisite Blood + Vito", "pieces": ["exquisite blood",
+               "vito, thorn of the dusk rose"],
+               "display": ["Exquisite Blood", "Vito, Thorn of the Dusk Rose"],
+               "result": "Drain the table", "early": False, "notes": ""}]
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    payload = card_api.card_payload("Exquisite Blood", idx, str(decks), combos=combos)
+    assert payload["completes"] == [{"deck": "vito", "combo": "Exquisite Blood + Vito",
+                                     "result": "Drain the table"}]
+
+
+def test_completes_is_empty_for_an_uninvolved_card(tmp_path, collection_file):
+    import card_api
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "d.txt").write_text("# --- Cards ---\n1 Sol Ring\n", encoding="utf-8")
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    payload = card_api.card_payload("Counterspell", idx, str(decks), combos=[])
+    assert payload["completes"] == []

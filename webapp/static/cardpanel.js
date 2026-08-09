@@ -85,13 +85,19 @@
       $('cp-alts').textContent = (d.note.alts && d.note.alts.length) ? ('Alternatives: ' + d.note.alts.join(' · ')) : '';
     } else wrap('cp-whywrap', false);
 
-    if (d.combos && d.combos.length) {
+    if ((d.combos && d.combos.length) || (d.completes && d.completes.length)) {
       wrap('cp-combowrap', true);
-      $('cp-combos').innerHTML = d.combos.map(function (c) {
+      var comboHtml = (d.combos || []).map(function (c) {
         return '<div class="cp-combo"><b>' + esc(c.name) + '</b> → ' + esc(c.result) +
           (c.early ? '<span class="early">EARLY → B4</span>' : '') +
           '<br><span class="cp-imgmeta">needs: ' + (c.with || []).map(esc).join(', ') + '</span></div>';
       }).join('');
+      // The reverse signal: this card is the ONE missing piece somewhere.
+      comboHtml += (d.completes || []).map(function (c) {
+        return '<div class="cp-combo"><b>Completes a combo in ' + esc(c.deck) + '</b>' +
+          '<br><span class="cp-imgmeta">' + esc(c.combo) + ' → ' + esc(c.result) + '</span></div>';
+      }).join('');
+      $('cp-combos').innerHTML = comboHtml;
     } else wrap('cp-combowrap', false);
 
     if (d.decks && d.decks.length) {
