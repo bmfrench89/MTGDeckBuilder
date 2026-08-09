@@ -4,6 +4,21 @@ Card-image loading has broken **the same way several times** (the deck dashboard
 the auto-build view, the collection grid). The cause is always the same, and so is
 the fix. Read this before touching any code that shows card images.
 
+## Loader resilience (added after the 2026-08-09 phone incident)
+
+Both batch loaders (`scripts/assets/card_images.html` for dashboards,
+`webapp/static/cardgrid.js` for app pages) now carry three protections, because a
+single failed batch POST on the player's phone once cascaded into a full page of
+429 broken-image glyphs:
+
+1. **One retry per batch** (1.5s later) — a transient Scryfall/API failure recovers
+   with zero per-card requests (verified in-browser: flaky batch → 95/95 images,
+   0 by-name calls).
+2. **Fallback paced at 700ms** — the old 400ms was ~2.5/s, OVER the by-name limit,
+   so the fallback *guaranteed* 429s whenever it carried the whole page.
+3. **Failed images clear their `src`** — a card degrades to its name, never a
+   broken-icon glyph.
+
 ## The one rule
 
 > **Showing MANY card images? Resolve them in BATCHES via `POST /cards/collection`
