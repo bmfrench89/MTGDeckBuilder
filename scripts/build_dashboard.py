@@ -476,8 +476,10 @@ def buylist_html(rows):
         p = r["price"]
         dp = p if p is not None else 999999
         pstr = f"${p:,.2f}" if p is not None else "—"
+        src_tag = {"combo": " <span class='tier'>from Combo Watch</span>",
+                   "decklist": " <span class='tier'>in decklist</span>"}.get(r.get("source"), "")
         repl = (f"<span class='repl'>replace:</span> {esc(r['replaces'])}"
-                if r["replaces"] else "<span class='muted'>new add</span>")
+                if r["replaces"] else "<span class='muted'>new add</span>") + src_tag
         tier = f"<span class='tier'>{esc(r['tier'])}</span>" if r["tier"] else ""
         body.append(
             f"<tr class='buyrow' data-price='{dp:.2f}'>"
@@ -1098,7 +1100,12 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
 
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
-    buylist = load_buylist(f"{stem}.buylist.csv")
+    # The Buy view is fed by EVERY engine that knows about a gap — curated buylist,
+    # one-away combos (unowned piece), and the decklist's own BUY-badged cards —
+    # merged in the hub with provenance. A combo the deck is one card away from
+    # completing IS a buy signal; it used to die inside the Combo Watch section.
+    buylist = deckcore.buy_signals(load_buylist(f"{stem}.buylist.csv"),
+                                   combos, missing, idx)
     changes = deckcore.load_changes(f"{stem}.changes.csv")
 
     shared = None

@@ -111,6 +111,80 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
             "sections": sections, "owned": owned, "missing": missing}
 
 
+# --------------------------------------------------------------------------- #
+# Committed field snapshots — EDHREC data as a reference artifact.
+#
+# Why: the live JSON endpoint isn't reachable everywhere the app runs. The hosted
+# server (PythonAnywhere free tier) only allows sites with official public API
+# docs, which json.edhrec.com is not — so the field signal silently vanished
+# there ("fit-only" verdicts, no Buy staples, manabase pass disabled). The fix is
+# the same pattern as combos.csv and game_changers.txt: the signal lives in git
+# as a small committed file, refreshed from a machine that CAN reach EDHREC
+# (`python3 scripts/edhrec.py --snapshot-all ...` on the PC), and every surface —
+# server, sandbox, offline dev — reads the same data. Precedence: live/cache
+# first (freshest), snapshot as the fallback, {} only when neither exists.
+# --------------------------------------------------------------------------- #
+SNAP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "data", "reference", "field")
+
+
+def _snapshot_path(slug):
+    return os.path.join(SNAP_DIR, slug + ".json")
+
+
+def _load_snapshot(slug):
+    try:
+        with open(_snapshot_path(slug), encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _distill(rec):
+    """The three maps the fit engine consumes, from a recommendations() result."""
+    inclusion, synergy, names = {}, {}, {}
+    for sec in rec.get("sections", []):
+        for c in sec.get("cards", []):
+            name = c.get("name")
+            if not name:
+                continue
+            keys = {mtglib._norm(name), mtglib._norm(mtglib.front_face(name))}
+            names.setdefault(mtglib._norm(name), name)
+            inc, syn = c.get("inclusion"), c.get("synergy")
+            for k in keys:
+                if inc and inc > inclusion.get(k, 0):
+                    inclusion[k] = inc
+                if syn is not None and syn > synergy.get(k, -999):
+                    synergy[k] = syn
+    return {"inclusion": inclusion, "synergy": synergy, "names": names}
+
+
+def save_snapshot(commander, coll_index=None, ttl=CACHE_TTL):
+    """Fetch live and write `data/reference/field/<slug>.json`. Returns the path,
+    or None when EDHREC wasn't reachable (an unreachable fetch must never
+    overwrite a good committed snapshot with an empty one)."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error"):
+        return None
+    data = _distill(rec)
+    if not data["inclusion"]:
+        return None
+    from datetime import date
+    payload = {"commander": commander, "slug": rec["slug"],
+               "saved": date.today().isoformat(),
+               "sample_decks": rec.get("sample_decks"), **data}
+    os.makedirs(SNAP_DIR, exist_ok=True)
+    path = _snapshot_path(rec["slug"])
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=1)
+    return path
+
+
+def _snapshot_map(commander, key):
+    snap = _load_snapshot(slugify(commander))
+    return dict(snap.get(key) or {}) if snap else {}
+
+
 def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
     """{normalized name: synergy} — how much MORE this commander plays a card than decks
     in general. Inclusion alone can't tell a signature card from a format staple:
@@ -118,7 +192,7 @@ def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
     77% / 69 (it's a Dragon payoff). Synergy is what makes a card *this deck's* card."""
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
-        return {}
+        return _snapshot_map(commander, "synergy")
     out = {}
     for sec in rec.get("sections", []):
         for c in sec.get("cards", []):
@@ -140,7 +214,7 @@ def field_names(commander, coll_index=None, ttl=CACHE_TTL):
     "Sigarda's Aid" title-cased from a normalized key comes out as "Sigarda'S Aid"."""
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
-        return {}
+        return _snapshot_map(commander, "names")
     out = {}
     for sec in rec.get("sections", []):
         for c in sec.get("cards", []):
@@ -157,7 +231,7 @@ def inclusion_map(commander, coll_index=None, ttl=CACHE_TTL):
     auto-include. Returns {} on any failure so scoring silently falls back."""
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
-        return {}
+        return _snapshot_map(commander, "inclusion")
     out = {}
     for sec in rec.get("sections", []):
         for c in sec.get("cards", []):
@@ -179,16 +253,47 @@ if __name__ == "__main__":
     import argparse
     import sys
     ap = argparse.ArgumentParser(description="EDHREC staples for a commander, vs your collection.")
-    ap.add_argument("commander")
+    ap.add_argument("commander", nargs="?")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--top", type=int, default=15)
+    ap.add_argument("--snapshot", action="store_true",
+                    help="write data/reference/field/<slug>.json for COMMANDER")
+    ap.add_argument("--snapshot-all", action="store_true",
+                    help="snapshot every commander found in --decks-dir deck headers")
+    ap.add_argument("--decks-dir", default="data/decks")
     args = ap.parse_args()
     try:
         coll = mtglib.load_collection(args.collection)
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(2)
-    rec = recommendations(args.commander, mtglib.index_by_name(coll))
+    idx = mtglib.index_by_name(coll)
+    if args.snapshot_all or args.snapshot:
+        import glob as _glob
+        commanders = []
+        if args.snapshot_all:
+            for pth in sorted(_glob.glob(os.path.join(args.decks_dir, "*.txt"))):
+                m = re.search(r"^#\s*Commander\s*:\s*(.+)$",
+                              open(pth, encoding="utf-8").read(), re.M | re.I)
+                if m:
+                    c = re.split(r"\s{2,}|\(", m.group(1))[0].strip()
+                    if c and c not in commanders:
+                        commanders.append(c)
+        else:
+            commanders = [args.commander]
+        wrote = 0
+        for c in commanders:
+            path = save_snapshot(c, idx)
+            print(f"  {'OK  ' if path else 'FAIL'} {c}" + (f" -> {path}" if path else
+                  "  (EDHREC unreachable — kept any existing snapshot)"))
+            wrote += bool(path)
+        print(f"{wrote}/{len(commanders)} snapshots written. Commit data/reference/field/ "
+              "and pull on the server to give every surface the field signal.")
+        raise SystemExit(0 if wrote == len(commanders) else 1)
+    if not args.commander:
+        print("error: pass a commander (or --snapshot-all)", file=sys.stderr)
+        raise SystemExit(2)
+    rec = recommendations(args.commander, idx)
     if rec.get("error"):
         print(f"EDHREC lookup failed for '{rec['slug']}': {rec['error']}")
         raise SystemExit(1)
