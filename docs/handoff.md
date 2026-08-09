@@ -12,7 +12,75 @@
 
 ---
 
-## 🧭 START HERE — CURRENT STATE (updated 2026-07-24, through PR #39)
+## 🚀 START HERE — THE APP IS HOSTED NOW (updated 2026-08-09, through PR #69)
+
+> **This block supersedes everything below it, including the 2026-07-24 block.** The single
+> biggest change: **the app no longer runs on the player's PC.** It is hosted, and the phone
+> and PC both use the same URL and the same data.
+
+**Live at:** <https://bmfrench89.pythonanywhere.com> — installed as a PWA on the player's
+phone (home-screen icon, full-screen). `webapp/run.sh` / `run.bat` still work for offline
+local dev, but are no longer how the player reaches the app day to day.
+
+### Server facts (verified live, 2026-08-09)
+- **Host:** PythonAnywhere **free tier**, account `bmfrench89`. Chosen because it is the one
+  free host with a **persistent** filesystem — Render's free tier was verified (primary source)
+  to wipe all filesystem writes on every redeploy/restart/spin-down, which would destroy this
+  app's read-write flat-file data model.
+- **Repo:** `~/MTGDeckBuilder`, tracking **`main`** (not a feature branch).
+- **Python 3.13**, virtualenv **`mtg`** (`/home/bmfrench89/.virtualenvs/mtg`). Only Flask
+  installed, plus pytest. Suite runs clean on the server.
+- **WSGI:** `/var/www/bmfrench89_pythonanywhere_com_wsgi.py` is three lines that put
+  `~/MTGDeckBuilder/webapp` on `sys.path` and import `application` from `webapp/pa_wsgi.py`.
+- **⚠ "Static files" on the Web tab is deliberately EMPTY — do not fill it in.**
+  `/static/tokens.css` is a Flask *route* serving `scripts/assets/tokens.css`; a directory
+  mapping would shadow it and silently 404 the shared design scales on every page.
+  `tests/test_deploy.py` guards this.
+- **Verified working:** `/health` 200 · deck dashboards render · **card images load** (browser
+  hotlinks to Scryfall's CDN, unaffected by any server-side network limits) · **a deck edit
+  survived a full app reload** (the persistence property that disqualified Render).
+- **Keepalive:** free web apps need "Run until 3 months from today" clicked every ~3 months.
+  Missing it sleeps the app; **no data is lost**.
+
+### ⚠ THE SERVER IS NOW SOURCE OF TRUTH FOR `data/decks/`
+Deck files are git-tracked but are rewritten **on the server** by the card panel, the deck
+editor and the optimizer. The server clone therefore drifts from GitHub, and a `git pull` for
+a code update will eventually conflict. `sync_server.sh` (repo root) resolves this: it commits
+only the runtime-edited paths, rebases, and pushes.
+
+### 🔧 PENDING — pick this up first next session
+1. **GitHub push credentials are NOT set up yet.** Steps 2–4 below were deferred by the player:
+   - Create a **fine-grained PAT** on GitHub: resource owner `bmfrench89`, *only* the
+     `MTGDeckBuilder` repo, permission **Contents: Read and write**.
+   - On the server: `cd ~/MTGDeckBuilder && git remote set-url origin
+     https://bmfrench89:<TOKEN>@github.com/bmfrench89/MTGDeckBuilder.git`
+   - Run `~/MTGDeckBuilder/sync_server.sh`.
+   - **Never ask the player to paste the token into chat, and warn them off screenshotting the
+     console once it is in the remote URL** — `git remote -v` and some git errors print it in full.
+   - Git identity IS already configured on the server (`bmfrench89@gmail.com` / "Brendan French").
+2. **One deck edit currently exists only on the server:** **Mystic Remora was removed from
+   `cosmic-spider-man`.** It is not in git yet. The first `sync_server.sh` run will push it.
+   Do not "restore" it locally thinking it was lost.
+3. **Collection upload status unconfirmed.** As of the last `/health` check the server was still
+   serving the name-only `collection_snapshot.txt` (6 decks found). If the player has not yet
+   uploaded the full CSV via `/collection`, the rich color/type/tribe/curve analysis is not
+   available server-side. Uploading rebinds the `COLLECTION` global in-process — no reload needed.
+4. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
+   HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
+   server-side — request whitelisting via their forums, or enrich on the PC and upload the
+   resulting `collection_attrs.csv` via the Files tab. Card images are unaffected either way.
+
+### What shipped in PR #69
+`webapp/pa_wsgi.py` (self-locating WSGI entry — no hardcoded home directory, so the checkout
+needs no per-user edit) · `tests/test_deploy.py` (5 tests: the entry point boots and serves
+`/health` with **no env vars set**, and the `/static/` mapping trap fails loudly) ·
+`sync_server.sh` · `docs/plan-pythonanywhere-deploy.md` (the full runbook, with every
+PythonAnywhere platform detail flagged as unverified-until-confirmed) · `CLAUDE.md`.
+Suite: **127 tests** (122 + 5 new).
+
+---
+
+## 🧭 PREVIOUS STATE (updated 2026-07-24, through PR #39) — superseded by the block above
 
 > **2026-07-24 — the fast-moving facts (authoritative; the subsections below this block are
 > older and partly superseded — kept as history):**

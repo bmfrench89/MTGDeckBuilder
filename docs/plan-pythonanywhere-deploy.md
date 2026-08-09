@@ -9,6 +9,40 @@ repo, with the account-creation and dashboard-clicking steps clearly marked **[H
 Everything else is **[AGENT]** or **[CONSOLE]** (commands the human pastes into a
 PythonAnywhere bash console, or the agent walks them through live).
 
+---
+
+## ✅ STATUS 2026-08-09 — DEPLOYED AND LIVE
+
+**<https://bmfrench89.pythonanywhere.com> is serving.** Phases 0–3 and 6 are complete;
+the app is installed as a PWA on the player's phone.
+
+| Phase | Status |
+|---|---|
+| 0 · Repo prep | ✅ shipped in PR #69 |
+| 1 · Account | ✅ `bmfrench89`, Python 3.13 |
+| 2 · Clone + virtualenv | ✅ `~/MTGDeckBuilder` on `main`, venv `mtg` |
+| 3 · Web app config | ✅ manual config, WSGI wired, **Static files left empty** |
+| 4 · Data | ⚠️ **collection CSV upload unconfirmed** — `/health` last showed the snapshot |
+| 5 · Enrichment / whitelist | ⬜ untested |
+| 6 · Install on devices | ✅ PWA installed on phone; card images load |
+| 7 · Verification | ✅ **persistence confirmed** — a deck edit survived a full app reload |
+
+**Verified live, worth not re-deriving:** `/health` returns 200 · dashboards render with
+working card images (browser hotlinks, so server-side network limits don't touch them) ·
+a removal persisted across an app reload, which is the property that disqualified Render.
+
+**🔧 Outstanding, in priority order:**
+1. **GitHub push credentials** — the PAT + `git remote set-url` + first `sync_server.sh`
+   run were deferred (see Ongoing maintenance below). Until then, **one deck edit exists
+   only on the server**: Mystic Remora was removed from `cosmic-spider-man`.
+2. Confirm/complete the **collection CSV upload** (Phase 4).
+3. Test **server-side Scryfall reachability** (Phase 5).
+
+Platform details in this plan were flagged as unverified when written. Confirmed since:
+free tier does provide a web app at `<username>.pythonanywhere.com` with HTTPS, a
+persistent filesystem, Python 3.13, and virtualenv support. The whitelist and keepalive
+specifics remain unconfirmed.
+
 **Why PythonAnywhere:** it is the one free host whose filesystem **persists** — it's a
 long-lived shared server, not an ephemeral container. Render's free tier was verified
 (primary source) to lose all filesystem writes on every redeploy/restart/spin-down, which
