@@ -171,3 +171,134 @@ def test_live_data_still_wins_over_the_snapshot(snapdir, monkeypatch):
              "synergy": 0.1}]}]}}}
     monkeypatch.setattr(edhrec, "_fetch", lambda *a, **k: page)
     assert edhrec.inclusion_map("Test Commander") == {"fresh card": 80}
+
+
+# --------------------------------------------------------------------------- #
+# Cohesion round 2 — recommendations from snapshot, CSB one-aways, wishlist
+# --------------------------------------------------------------------------- #
+def test_recommendations_synthesize_from_the_snapshot(snapdir, offline, tmp_path):
+    """/api/edhrec (Build Next staples) and the panel's same-slot alternatives both
+    consume recommendations() — on the server they died with an error payload even
+    when a snapshot existed. Now they get an honestly-labeled synthesis."""
+    (snapdir / "test-commander.json").write_text(json.dumps({
+        "slug": "test-commander", "saved": "2026-08-09", "sample_decks": 1234,
+        "inclusion": {"sol ring": 90, "rhystic study": 60},
+        "synergy": {"sol ring": 5},
+        "names": {"sol ring": "Sol Ring", "rhystic study": "Rhystic Study"}}),
+        encoding="utf-8")
+    coll = [mtglib.Card(name="Sol Ring", quantity=1)]
+    idx = mtglib.index_by_name(coll)
+    rec = edhrec.recommendations("Test Commander", idx)
+    assert rec.get("error") is None or "error" not in rec
+    assert rec["source"] == "snapshot" and rec["saved"] == "2026-08-09"
+    assert [c["name"] for c in rec["owned"]] == ["Sol Ring"]
+    assert [c["name"] for c in rec["missing"]] == ["Rhystic Study"]
+    assert "Snapshot (saved 2026-08-09)" in rec["sections"][0]["header"]
+
+
+def test_save_snapshot_refuses_to_write_from_its_own_snapshot(snapdir, offline):
+    """Freshness honesty: a snapshot-sourced rec must never re-stamp itself with
+    today's date — only LIVE data writes snapshots."""
+    (snapdir / "test-commander.json").write_text(json.dumps({
+        "slug": "test-commander", "saved": "2026-01-01",
+        "inclusion": {"sol ring": 90}, "synergy": {},
+        "names": {"sol ring": "Sol Ring"}}), encoding="utf-8")
+    assert edhrec.save_snapshot("Test Commander") is None
+    data = json.loads((snapdir / "test-commander.json").read_text(encoding="utf-8"))
+    assert data["saved"] == "2026-01-01", "the old snapshot must be untouched"
+
+
+def test_spellbook_one_aways_convert_to_the_standard_near_shape(tmp_path, monkeypatch):
+    import spellbook
+    deck = tmp_path / "d.txt"
+    deck.write_text("# --- Cards ---\n1 Vito, Thorn of the Dusk Rose\n", encoding="utf-8")
+    fake = {"error": None, "present": [], "almost": [
+        {"id": 1, "cards": ["Exquisite Blood", "Vito, Thorn of the Dusk Rose"],
+         "produces": ["Infinite lifeloss"]},
+        {"id": 2, "cards": ["Piece A", "Piece B", "Vito, Thorn of the Dusk Rose"],
+         "produces": ["Two away — must be excluded"]},
+    ]}
+    monkeypatch.setattr(spellbook, "combos_for_deck", lambda *a, **k: fake)
+    near = spellbook.near_for_deck(str(deck))
+    assert len(near) == 1, "two-away combos are not one-aways"
+    n = near[0]
+    assert n["missing"] == "Exquisite Blood" and n["csb"] is True
+    assert n["result"] == "Infinite lifeloss"
+
+
+def test_dashboard_merges_csb_one_aways_into_combo_watch_and_buy(tmp_path, collection_file, monkeypatch):
+    import spellbook
+    import combo_detector
+    import build_dashboard as bd
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n# --- Lands ---\n10 Island\n",
+                    encoding="utf-8")
+    monkeypatch.setattr(combo_detector, "load_combos", lambda *a, **k: [])
+    monkeypatch.setattr(spellbook, "near_for_deck", lambda *a, **k: [
+        {"name": "Sol Ring + CSB Widget", "result": "Infinite mana",
+         "missing": "CSB Widget", "missing_owned": False, "early": False, "csb": True}])
+    html = bd.generate(str(deck), collection_file, title="T",
+                       commander="Test Commander")["dashboard"]
+    assert "CSB Widget" in html
+    assert "One piece away" in html, "CSB nears render in Combo Watch"
+    assert "id='tab-buy'" in html, "and produce a Buy tab"
+
+
+def test_dashboard_dedupes_csb_against_combos_csv(tmp_path, collection_file, monkeypatch):
+    """The same combo known to both sources must render once, not twice."""
+    import spellbook
+    import combo_detector
+    import build_dashboard as bd
+    import re as _re
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n# --- Lands ---\n10 Island\n",
+                    encoding="utf-8")
+    csvside = [{"name": "Sol Ring + CSB Widget", "pieces": ["sol ring", "csb widget"],
+                "display": ["Sol Ring", "CSB Widget"], "result": "Infinite mana",
+                "early": False}]
+    monkeypatch.setattr(combo_detector, "load_combos", lambda *a, **k: csvside)
+    monkeypatch.setattr(spellbook, "near_for_deck", lambda *a, **k: [
+        {"name": "Sol Ring + CSB Widget", "result": "Infinite mana",
+         "missing": "CSB Widget", "missing_owned": False, "early": False, "csb": True}])
+    html = bd.generate(str(deck), collection_file, title="T",
+                       commander="Test Commander")["dashboard"]
+    m = _re.search(r"One piece away <span class='count'>(\d+)</span>", html)
+    assert m and m.group(1) == "1", f"expected 1 near combo, got {m.group(1) if m else 'none'}"
+
+
+def test_wishlist_includes_unowned_combo_pieces(tmp_path, collection_file, monkeypatch):
+    import combo_detector
+    import wishlist as wl
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "t.txt").write_text("# Title: T\n# Commander: Test Commander\n"
+                                 "# Colors: W U\n\n# --- Ramp ---\n1 Sol Ring\n",
+                                 encoding="utf-8")
+    fake = [{"name": "Sol Ring + Widget", "pieces": ["sol ring", "wish widget"],
+             "display": ["Sol Ring", "Wish Widget"], "result": "Infinite mana",
+             "early": False}]
+    monkeypatch.setattr(combo_detector, "load_combos", lambda *a, **k: fake)
+    _shared, _unowned, upgrades = wl.build(collection_file, str(decks))
+    hits = [u for u in upgrades if u["card"] == "Wish Widget"]
+    assert hits and "Completes a combo" in hits[0]["reason"]
+    assert hits[0]["deck"] == "t"
+
+
+def test_wishlist_curated_buylist_still_wins(tmp_path, collection_file, monkeypatch):
+    import combo_detector
+    import wishlist as wl
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "t.txt").write_text("# Title: T\n# Colors: W U\n\n# --- Ramp ---\n1 Sol Ring\n",
+                                 encoding="utf-8")
+    (decks / "t.buylist.csv").write_text(
+        "Card,Price,Tier,Replaces,Reason\nWish Widget,5,Core,,hand-written\n",
+        encoding="utf-8")
+    fake = [{"name": "c", "pieces": ["sol ring", "wish widget"],
+             "display": ["Sol Ring", "Wish Widget"], "result": "r", "early": False}]
+    monkeypatch.setattr(combo_detector, "load_combos", lambda *a, **k: fake)
+    _s, _u, upgrades = wl.build(collection_file, str(decks))
+    hits = [u for u in upgrades if u["card"] == "Wish Widget"]
+    assert len(hits) == 1 and hits[0]["reason"] == "hand-written"

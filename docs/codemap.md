@@ -92,10 +92,15 @@ knew; the buy view didn't. `deckcore.buy_signals()` is the fix and the pattern.
 — one verdict shape everywhere · `mtglib.name_keys()` — every membership test ·
 `deckcore.section_label()` / `mtglib._QTY_RE` — every deck-file parse.
 
-**Known gaps (tracked, not yet closed):** the standalone `/wishlist` page and
-`wishlist.py` CLI predate `buy_signals` and don't consume it yet; `spellbook`'s
-one-away results (CSB's full DB) reach the assess packet and Build Next view but are
-not merged into the dashboard's Buy tab (only `combos.csv` one-aways are).
+**Closed gaps (were listed here; now wired):** `wishlist.py` (and therefore
+`/wishlist` and the ManaPool export, which call it) folds unowned one-away combo
+pieces into its Upgrades section via `buy_signals` — curated buylist rows still win;
+`spellbook.near_for_deck()` converts CSB one-aways into `combo_detector`'s standard
+`near` shape, and the dashboard merges them (piece-set dedupe) into ONE Combo Watch
+and ONE Buy view; `edhrec.recommendations()` itself synthesizes from a snapshot, so
+`/api/edhrec` staples and the panel's same-slot alternatives work on the server too,
+labeled "Snapshot (saved DATE)". **Still open:** the assess packet lists its sources
+separately rather than through `buy_signals` (cosmetic — same underlying engines).
 
 ## Where each signal works — the deployment reality
 
@@ -109,7 +114,7 @@ silently vanished there.
 | Card images (browser hotlinks) | ✅ | ✅ (phone fetches from Scryfall CDN directly) | n/a |
 | `api.scryfall.com` (enrichment) | ✅ | ✅ *(allowlisted — documented public API)* | usually ❌ |
 | `json.edhrec.com` (field, live) | ✅ | ❌ **permanently** — free accounts reach only [documented public APIs](https://help.pythonanywhere.com/pages/RequestingAllowlistAdditions/), which EDHREC's internal JSON is not | ❌ |
-| Commander Spellbook API | ✅ | likely ✅ (documented API; verify once) | ❌ |
+| Commander Spellbook API | ✅ | likely ✅ (documented API; verify once — degrades to combos.csv-only if not) | ❌ |
 | `data/reference/*` (combos, game-changers, **field snapshots**) | ✅ | ✅ via git | ✅ |
 | `data/cache/*` (gitignored) | ✅ | only what the server itself fetched | ❌ |
 

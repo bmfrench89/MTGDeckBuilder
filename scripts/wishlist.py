@@ -21,6 +21,8 @@ import os
 import sys
 
 import mtglib
+import combo_detector
+import deckcore
 import deck_conflicts
 
 
@@ -54,6 +56,30 @@ def build(collection_path, decks_dir):
     shared = [c for c in conf if c["owned"] > 0]          # own some, need more
     unowned = [c for c in conf if c["owned"] == 0]        # own none
     upgrades = load_buylists(decks_dir)
+
+    # Cohesion with the dashboard's Buy tab: an unowned piece that completes a
+    # combo is a buy signal HERE too, not just inside that deck's Combo Watch.
+    # Routed through the hub's buy_signals so dedupe/provenance match everywhere;
+    # curated buylist rows still win (they're already in `upgrades`).
+    seen = set()
+    for u in upgrades:
+        seen |= mtglib.name_keys(u["card"])
+    for path in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
+        deck_name = os.path.basename(path)[:-4]
+        try:
+            combos = combo_detector.for_deck(path, idx)
+        except Exception:
+            continue
+        for row in deckcore.buy_signals(None, combos, [], idx):
+            if row.get("source") != "combo":
+                continue
+            keys = mtglib.name_keys(row["card"])
+            if keys & seen:
+                continue
+            seen |= keys
+            upgrades.append({"card": row["card"], "price": row["price"],
+                             "deck": deck_name, "replaces": "",
+                             "reason": row["reason"]})
     return shared, unowned, upgrades
 
 

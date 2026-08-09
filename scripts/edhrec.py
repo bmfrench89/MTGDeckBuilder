@@ -82,6 +82,29 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
     try:
         page = _fetch(slug, ttl)
     except Exception as e:  # 404 (unknown commander), network, parse — all non-fatal
+        snap = _load_snapshot(slug)
+        if snap:
+            # Synthesize the full payload from the committed snapshot, so EVERY
+            # consumer — /api/edhrec staples, the panel's same-slot alternatives,
+            # the maps — works on a box that can't reach EDHREC (the hosted
+            # server). Honestly labeled: source/saved say what's behind it.
+            seen, owned, missing, cards = set(), [], [], []
+            for k, name in sorted(snap.get("names", {}).items(),
+                                  key=lambda kv: -(snap.get("inclusion", {}).get(kv[0]) or 0)):
+                ref = mtglib.lookup(coll_index, name)
+                card = {"name": name,
+                        "inclusion": snap.get("inclusion", {}).get(k),
+                        "synergy": snap.get("synergy", {}).get(k, 0),
+                        "owned": bool(ref), "qty": ref.quantity if ref else 0}
+                cards.append(card)
+                if k not in seen and not _is_basic(name):
+                    seen.add(k)
+                    (owned if ref else missing).append(card)
+            label = f"Snapshot (saved {snap.get('saved', '?')})"
+            return {**base, "sample_decks": snap.get("sample_decks"),
+                    "source": "snapshot", "saved": snap.get("saved"),
+                    "sections": [{"header": label, "cards": cards}],
+                    "owned": owned, "missing": missing}
         return {**base, "error": str(e), "sample_decks": None,
                 "sections": [], "owned": [], "missing": []}
 
@@ -164,8 +187,8 @@ def save_snapshot(commander, coll_index=None, ttl=CACHE_TTL):
     or None when EDHREC wasn't reachable (an unreachable fetch must never
     overwrite a good committed snapshot with an empty one)."""
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
-    if rec.get("error"):
-        return None
+    if rec.get("error") or rec.get("source") == "snapshot":
+        return None        # only LIVE data may write a snapshot — never itself
     data = _distill(rec)
     if not data["inclusion"]:
         return None
@@ -193,6 +216,10 @@ def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
         return _snapshot_map(commander, "synergy")
+    if rec.get("source") == "snapshot":
+        # The snapshot stores these maps directly — read them lossless rather than
+        # re-deriving from the synthesized sections (which only carry `names` keys).
+        return _snapshot_map(commander, "synergy")
     out = {}
     for sec in rec.get("sections", []):
         for c in sec.get("cards", []):
@@ -215,6 +242,10 @@ def field_names(commander, coll_index=None, ttl=CACHE_TTL):
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
         return _snapshot_map(commander, "names")
+    if rec.get("source") == "snapshot":
+        # The snapshot stores these maps directly — read them lossless rather than
+        # re-deriving from the synthesized sections (which only carry `names` keys).
+        return _snapshot_map(commander, "names")
     out = {}
     for sec in rec.get("sections", []):
         for c in sec.get("cards", []):
@@ -231,6 +262,10 @@ def inclusion_map(commander, coll_index=None, ttl=CACHE_TTL):
     auto-include. Returns {} on any failure so scoring silently falls back."""
     rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
     if rec.get("error"):
+        return _snapshot_map(commander, "inclusion")
+    if rec.get("source") == "snapshot":
+        # The snapshot stores these maps directly — read them lossless rather than
+        # re-deriving from the synthesized sections (which only carry `names` keys).
         return _snapshot_map(commander, "inclusion")
     out = {}
     for sec in rec.get("sections", []):
