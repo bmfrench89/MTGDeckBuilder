@@ -65,7 +65,12 @@ only the runtime-edited paths, rebases, and pushes.
    serving the name-only `collection_snapshot.txt` (6 decks found). If the player has not yet
    uploaded the full CSV via `/collection`, the rich color/type/tribe/curve analysis is not
    available server-side. Uploading rebinds the `COLLECTION` global in-process — no reload needed.
-4. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
+4. **Specs ready to implement (2026-08-09, player-requested):** deck-page **subtabs**
+   (`docs/spec-deck-subtabs.md`) and the **add-card flow + advisor**
+   (`docs/spec-add-card-advisor.md`), with prior-art research in
+   `docs/research-prior-art.md` and tracker entries in §4b of the spec tracker.
+   Research + specs only — no implementation yet, per the player.
+5. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
    HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
    server-side — request whitelisting via their forums, or enrich on the PC and upload the
    resulting `collection_attrs.csv` via the Files tab. Card images are unaffected either way.
