@@ -359,3 +359,28 @@ def test_completes_is_empty_for_an_uninvolved_card(tmp_path, collection_file):
     idx = mtglib.index_by_name(coll)
     payload = card_api.card_payload("Counterspell", idx, str(decks), combos=[])
     assert payload["completes"] == []
+
+
+# --------------------------------------------------------------------------- #
+# The snapshot Action — textual guards (no YAML parser in a stdlib-only suite).
+# These catch the drift that would silently break the automation: renaming the
+# CLI flag, dropping the write permission, or losing a trigger.
+# --------------------------------------------------------------------------- #
+def test_snapshot_workflow_matches_the_cli_it_drives():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    wf = open(os.path.join(root, ".github", "workflows", "field-snapshots.yml"),
+              encoding="utf-8").read()
+    assert "--snapshot-all" in wf, "the workflow must call the flag edhrec.py actually has"
+    assert "collection_snapshot.txt" in wf, "name-only snapshot only — nothing private"
+    assert "contents: write" in wf, "without write permission the commit step 403s"
+    for trigger in ("schedule:", "workflow_dispatch:", "data/decks/*.txt"):
+        assert trigger in wf, f"missing trigger: {trigger}"
+    assert "data/reference/field/" in wf, "must commit the snapshot dir the loaders read"
+
+
+def test_snapshot_cli_flags_still_exist():
+    """The workflow shells out to this exact interface — if a rename lands here
+    without updating the YAML, this pins the mismatch to a test name."""
+    import edhrec as _e
+    src = open(_e.__file__, encoding="utf-8").read()
+    assert "--snapshot-all" in src and "save_snapshot" in src

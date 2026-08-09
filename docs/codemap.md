@@ -124,8 +124,12 @@ silently vanished there.
 | `data/reference/*` (combos, game-changers, **field snapshots**) | ✅ | ✅ via git | ✅ |
 | `data/cache/*` (gitignored) | ✅ | only what the server itself fetched | ❌ |
 
-**Field snapshots** close the EDHREC row: `python3 scripts/edhrec.py --snapshot-all
---collection <csv>` (run on the PC) writes distilled `{inclusion, synergy, names}` maps
+**Field snapshots** close the EDHREC row — and a **GitHub Action** keeps them fresh
+with no human in the loop (`.github/workflows/field-snapshots.yml`: weekly cron +
+on new decks + a phone-friendly manual button; spec/manual in
+[spec-field-snapshot-action.md](spec-field-snapshot-action.md)). Manually,
+`python3 scripts/edhrec.py --snapshot-all --collection <csv>` on any
+EDHREC-reachable machine writes distilled `{inclusion, synergy, names}` maps
 to `data/reference/field/<slug>.json` — a few KB per commander, committed like any
 reference file. `edhrec.inclusion_map/synergy_map/field_names` fall back to the
 snapshot when live + cache both fail, so `deck_fit`, the optimizer, verdicts, and Buy
