@@ -62,41 +62,33 @@ re-verify quickly if the file has moved on.
 
 ---
 
-## Phase 0 — [AGENT] Repo prep (do before touching PythonAnywhere)
+## Phase 0 — [AGENT] Repo prep — ✅ COMPLETE
 
-0.1. **Create `webapp/pa_wsgi.py`** — a committed, documented WSGI entry template:
+Landed on `claude/claude-md-docs-67vnq0`. Nothing here is left to do; it is recorded
+so the executing agent knows what already exists.
 
-```python
-"""PythonAnywhere WSGI entry template.
+0.1. ✅ **`webapp/pa_wsgi.py`** — the WSGI entry point. It is **self-locating** (adds
+   its own directory to `sys.path` via `__file__`), so it works from any checkout path
+   with no edits and the repo carries no user-specific path. The `<username>` appears
+   exactly once, in `/var/www/...` — which is outside the repo. See Phase 3.3.
 
-Paste (or import) this from the auto-generated
-/var/www/<username>_pythonanywhere_com_wsgi.py, replacing <username>.
-webapp/app.py handles the scripts/ sys.path insertion itself.
-"""
-import sys
+0.2. ✅ **`tests/test_deploy.py`** — 5 tests guarding the deploy: `application` is
+   exposed and is the Flask app; the entry hardcodes no home directory; the app boots
+   and serves `/health` with **no env vars set**; `/static/tokens.css` is served by the
+   route (and no stray copy exists in `webapp/static/`); `/sw.js` answers from the root.
+   Hermetic — `DECKS_DIR` is redirected into `tmp_path`.
 
-PROJECT_WEBAPP = "/home/<username>/MTGDeckBuilder/webapp"
-if PROJECT_WEBAPP not in sys.path:
-    sys.path.insert(0, PROJECT_WEBAPP)
+0.3. ✅ **`sync_server.sh`** (repo root, alongside `update.bat`/`enrich.bat`) — the
+   deck sync described under Ongoing maintenance. Adds only the three runtime-edited
+   paths explicitly (never `git add -A`), no-ops cleanly when there is nothing to
+   commit, and rebases **before** pushing so a code update and a deck edit can't race
+   into a rejected push.
 
-from app import app as application  # noqa: E402,F401
-```
+0.4. ✅ **Suite green: 127 passed** (122 baseline + 5 new), Python 3.11, offline.
 
-   Keep it import-inert (nothing at module scope beyond the above). It must not break
-   the test suite or the stdlib-only CI check (it's under `webapp/`, so Flask-adjacent
-   is fine, but it imports nothing third-party anyway).
-
-0.2. **Run the full test suite** (`pip install -r requirements-dev.txt && pytest`) —
-   confirm green before deploying, so any server-side breakage is known to be
-   environmental, not a regression.
-
-0.3. **Do NOT commit private data.** `data/collection/collection.csv`,
-   `collection_attrs.csv`, and `data/cache/` are gitignored and must stay that way. The
-   private CSV travels to the server via the app's own upload page (Phase 4), never via
-   git.
-
-0.4. Commit and push these prep changes to the working branch so the server clone
-   includes them.
+0.5. ✅ **Private data stays out of git** — verified `data/collection/collection.csv`,
+   `collection_attrs.csv`, and `data/cache/` are all gitignored. The private CSV travels
+   to the server via the app's own upload page (Phase 4), never via git.
 
 ## Phase 1 — [HUMAN] Account
 
@@ -136,8 +128,16 @@ On the **Web** tab:
 3.2. **Virtualenv** section: enter `mtg` (or the full path it resolves to).
 3.3. **Code** section → WSGI configuration file (opens
    `/var/www/<username>_pythonanywhere_com_wsgi.py` in their editor): delete the
-   generated contents and paste the body of `webapp/pa_wsgi.py`, replacing
-   `<username>`.
+   generated contents and paste exactly this, substituting the real username —
+
+   ```python
+   import sys
+   sys.path.insert(0, "/home/<username>/MTGDeckBuilder/webapp")
+   from pa_wsgi import application  # noqa: F401
+   ```
+
+   Nothing in the repo needs editing: `webapp/pa_wsgi.py` locates itself. This file is
+   the only place the username appears.
 3.4. **Static files: leave EMPTY** (repo fact #5 — a `/static/` mapping breaks
    `tokens.css`).
 3.5. Click **Reload**. Then verify from any browser:
@@ -207,19 +207,17 @@ with public API docs.
 - **⚠ Deck edits diverge from git.** Deck `.txt`/companion files are git-tracked, and
   the web app now edits them **on the server**, so the server clone will show
   uncommitted changes and a future `git pull` can conflict. Adopt one rule:
-  **the server is the source of truth for `data/decks/`**. Set up push access once
-  (a GitHub fine-grained PAT for this repo, stored via
-  `git remote set-url origin https://<user>:<token>@github.com/bmfrench89/MTGDeckBuilder.git`
-  or a credential helper), then periodically — and always before pulling code changes:
+  **the server is the source of truth for `data/decks/`**. Set up push access once —
+  a GitHub fine-grained PAT with Contents: read/write on this repo:
   ```bash
-  cd ~/MTGDeckBuilder
-  git add data/decks data/collection/owned_additions.txt data/collection/pins.csv
-  git commit -m "Deck edits from hosted app"
-  git push
-  git pull --rebase
+  git remote set-url origin https://<user>:<token>@github.com/bmfrench89/MTGDeckBuilder.git
   ```
-  The executing agent should make this a tiny documented script (e.g.
-  `scripts/sync_server.sh`, stdlib/shell only) rather than folklore.
+  then run the committed helper periodically, and always before pulling code changes:
+  ```bash
+  ~/MTGDeckBuilder/sync_server.sh
+  ```
+  It commits only the three runtime-edited paths, rebases, pushes, and tells you
+  whether a Web-tab Reload is needed.
 - **Disk:** venv + repo + caches fit comfortably in 512 MB (Flask is the only
   dependency; `data/cache/` is a few MB of JSON). If quota bites, clear `data/cache/`.
 
