@@ -772,10 +772,41 @@ TABS_JS = """<script>
 </script>"""
 
 
+def deadweight_html(rows, has_field=True):
+    """"Pulling the least weight" — cards nothing in the deck is asking for.
+
+    Deliberately NOT a cut list: the optimizer owns cuts and has its own guardrails.
+    This just stops a 100-card list hiding its passengers. `None` means the fit engine
+    couldn't run; an empty list is a real, and good, answer."""
+    if rows is None:
+        return ""
+    note = ("" if has_field else
+            "<p class='muted'>No EDHREC field data was reachable, so this is a "
+            "fit-only read — judged on colors, roles, curve and theme alone.</p>")
+    if not rows:
+        return ("<div class='ok'>Nothing stands out — every card here either fills a "
+                "role, ties to the theme, or brings real power.</div>" + note)
+    med = rows[0].get("median")
+    body = "".join(
+        f"<tr><td>{esc(r['name'])}</td><td>{r['score']}</td>"
+        f"<td>{esc(r['band'])}</td><td class='br'>{esc(r['why'])}</td></tr>"
+        for r in rows)
+    return (note +
+            "<p class='muted'>Ranked <em>against the rest of this deck</em>"
+            + (f" (its median fit is {med})" if med is not None else "") +
+            ": these score below the middle <em>and</em> show no theme tie or staple "
+            "pull. Not an instruction to cut — a prompt to check whether each one is "
+            "doing a job the numbers can't see.</p>"
+            "<div class='tablewrap'><table class='data'><thead><tr><th>Card</th>"
+            "<th>Fit</th><th>Band</th><th>Why it stands out</th></tr></thead>"
+            f"<tbody>{body}</tbody></table></div>")
+
+
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
-                     editable=False, stem="", missing=None, changes=None):
+                     editable=False, stem="", missing=None, changes=None,
+                     dead=None, has_field=True):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -802,6 +833,9 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                  "</section>" if assessment else "")
     combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
                  if combos is not None else "")
+    dead_sec = (f"<section><h2>Pulling the Least Weight</h2>"
+                f"{deadweight_html(dead, has_field)}</section>"
+                if dead is not None else "")
 
     notes_sec = (f"<section><h2>Game Plan &amp; Player Notes</h2>"
                  f"{notes_html(notes)}</section>" if notes else "")
@@ -829,7 +863,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     tab_css, tabs = tabs_block([
         ("deck",  "Deck",  deck_sec + own_sec),
         ("mana",  "Mana",  curve_sec + pip_sec + mana_sec),
-        ("power", "Power", power_sec + combo_sec),
+        ("power", "Power", power_sec + combo_sec + dead_sec),
         ("buy",   "Buy",   buy_sec),
         ("plan",  "Plan",  notes_sec),
         ("more",  "More",  sim_sec + shared_sec),
@@ -1116,12 +1150,28 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         except Exception:
             pass
 
+    # "Pulling the least weight" — reuses the ctx/refs already built above, so it costs
+    # one extra pass over the list and no extra IO. None = the fit engine couldn't run.
+    dead = None
+    try:
+        prot, notes_text = set(), (notes or "").lower()
+        prot |= {mtglib._norm(commander)} if commander else set()
+        prot |= {mtglib._norm(c.name) for c in enriched
+                 if c.name.lower() in notes_text}
+        section_of = {mtglib._norm(n): label for label, cards in sections
+                      for _q, n in cards}
+        dead = deck_fit.dead_weight(enriched, rep, ctx, refs, protected=prot,
+                                    section_of=section_of)
+    except Exception:
+        dead = None
+
     url_stem = os.path.splitext(os.path.basename(deck_path))[0]
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
                                  similar, details, combos, mana,
                                  editable=editable, stem=url_stem, missing=missing,
-                                 changes=changes)
+                                 changes=changes, dead=dead,
+                                 has_field=bool((ctx or {}).get("field")))
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

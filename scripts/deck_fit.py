@@ -320,3 +320,54 @@ def better_alternatives(card, ctx, idx, refs, curated_alts, in_deck, staples):
             if s["colors"] <= ctx["identity"] and mtglib._norm(s["name"]) not in in_deck:
                 add(s["name"], f"a strong {role} option in your colors")
     return out[:4]
+
+
+def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit=8):
+    """Cards pulling the least weight — RELATIVE to the rest of this same deck.
+
+    This answers a different question from "what should I cut". The optimizer decides
+    cuts and has its own guardrails; this just names the cards nothing in the deck is
+    asking for, so a 100-card list stops hiding its passengers. It never edits anything.
+
+    The comparison is deliberately relative, not an absolute score threshold. Fit scores
+    shift wholesale depending on whether EDHREC field data was reachable — offline, an
+    ordinary on-colour creature can score in the 60s, so any fixed cutoff either fires
+    constantly or never fires at all. Asking "which cards score lowest in THIS deck"
+    behaves identically online and off, and is the question a player actually has.
+
+    A card must also clear two absolute conditions: no theme tie and no staple/field/
+    synergy pull. Both are the floor value (7). That's the "synergises with nothing"
+    test — without it this would just be a list of the deck's most expensive cards.
+
+    Skipped: lands (the manabase pass owns those), cards with no type data (nothing to
+    judge), the commander, and anything the player named in their own game plan — they
+    already said why those are there, and "the heuristic disagrees" isn't an answer.
+    """
+    protected = protected or set()
+    scored = []
+    for c in enriched:
+        k = mtglib._norm(c.name)
+        if k in protected or c.is_land or not c.types:
+            continue
+        fit = assess_card(c, rep, ctx, refs, (section_of or {}).get(k))
+        pts = {r["label"]: r["pts"] for r in fit["reasons"]}
+        scored.append((c, fit, pts))
+    if len(scored) < 4:                   # too small a sample to call anything an outlier
+        return []
+    ranked = sorted(s[1]["score"] for s in scored)
+    median = ranked[len(ranked) // 2]
+    out = []
+    for c, fit, pts in scored:
+        if pts.get("Theme", 0) > 7 or pts.get("Power", 0) > 7:
+            continue                      # has a theme tie or real muscle — not dead
+        if fit["score"] >= median:
+            continue                      # at or above this deck's own middle
+        why = []
+        if pts.get("Role need", 0) <= 10:
+            why.append("fills no role the deck is short on")
+        why += ["no theme tie", "not a staple here"]
+        out.append({"name": c.name, "score": fit["score"], "band": fit["band"],
+                    "role": fit["role"], "why": " · ".join(why),
+                    "median": median, "mana_value": c.mana_value})
+    out.sort(key=lambda r: r["score"])
+    return out[:limit] if limit else out
