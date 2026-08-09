@@ -53,5 +53,12 @@ echo "sync: pushing…"
 git push
 
 echo
-echo "sync: done. If the pull brought code changes, hit Reload on the"
-echo "      PythonAnywhere Web tab to put them live."
+echo "sync: done."
+
+# On the hosted server a pulled change only takes effect after a web-app reload,
+# and touching the WSGI file is PythonAnywhere's documented reload trigger — so
+# every sync ends by reloading, and "pull happened but the app is stale" can't
+# occur. On any machine without /var/www (the PC, CI) the loop simply no-ops.
+for w in /var/www/*_wsgi.py; do
+  [ -e "$w" ] && touch "$w" && echo "sync: touched $(basename "$w") — web app reloading"
+done
