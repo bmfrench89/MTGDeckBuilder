@@ -1,6 +1,26 @@
 # Spec — Add a Card to a Deck + Optimizer Opinion on Manual Adds
 
-**Status:** ☐ specced 2026-08-09, not implemented ·
+**Status:** ☑ **SHIPPED 2026-08-09.** `deckcore.advise_card()` / `deckcore.manual_adds()`
+· `webapp/app.py` (`_insert_deck_card`, `_validate_add`, `/deck/<stem>/add`,
+`/api/deck/<stem>/advise`, `/api/deck/<stem>/sections`) ·
+`scripts/assets/add_card.{html,css}` · `optimize.manual_adds_review()` ·
+tests in `tests/test_add_card.py` + `tests/test_deck_edit.py`.
+
+> **Deviations from this spec, and why:**
+> 1. **The advisor lives in `deckcore` (the hub), not `deck_fit`.** `deck_fit` is a pure
+>    scoring engine that imports only `mtglib`; orchestrating a full deck analysis from
+>    inside it would have inverted the dependency rule. `advise_card()` sits next to
+>    `analyze_deck()` and imports engines locally, exactly like its neighbours.
+> 2. **The picker is its own asset pair** (`add_card.html` / `add_card.css`) rendered into
+>    the Decklist section, rather than living in the card panel. The panel is per-card;
+>    Add is a deck-level action.
+> 3. **Added `/api/deck/<stem>/sections`** — not in the spec, but the picker needs the
+>    deck's own free-form section labels, and hardcoding a list would have violated the
+>    data-format rule.
+> 4. `advise_card()` accepts a **pre-computed `analysis=`** so the optimizer's review can
+>    score N manual adds against one deck analysis instead of N.
+
+·
 **Player ask:** "I need a way to add a card if one is removed from a deck, and then
 I want the optimizer to check manually added cards and see how they fit into the
 deck with an opinion like current cards in the deck."

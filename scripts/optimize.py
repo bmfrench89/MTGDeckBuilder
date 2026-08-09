@@ -519,6 +519,44 @@ def _write(deck_path, swaps, land_swaps):
         f.write("\n".join(out))
 
 
+def manual_adds_review(deck_path, coll):
+    """Advisory read-out on cards the PLAYER added by hand — never an instruction.
+
+    The optimizer deliberately does not touch manual edits, and that stays true: this
+    only reports how each hand-picked card scores, because "we left it alone" and "it's
+    a good pick" are different statements and the player asked for the second one.
+    Returns [] when there's nothing recent, so quiet runs stay quiet.
+    """
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    try:
+        rows = deckcore.manual_adds(f"{stem}.changes.csv")
+    except Exception:
+        return []
+    if not rows:
+        return []
+    out = ["   manual adds (advisory — the optimizer never cuts these):"]
+    try:
+        analysis = deckcore.analyze_deck(deck_path, coll)
+    except Exception:
+        analysis = None
+    for r in rows:
+        name = r.get("name") or r.get("key")
+        v = None
+        try:
+            v = deckcore.advise_card(deck_path, coll, name, analysis=analysis)
+        except Exception:
+            v = None
+        if v is None:
+            out.append(f"     {name:32} (no opinion — not resolvable in the collection)")
+            continue
+        note = "" if v["has_field"] else "  [fit-only — no field data]"
+        out.append(f"     {v['name']:32} {v['score']:>3}/100  {v['band']}{note}")
+        if v["alternatives"]:
+            out.append("       would also consider: "
+                       + ", ".join(a["n"] for a in v["alternatives"]))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description="Optimize a deck against what the field plays.")
     ap.add_argument("--deck")
@@ -562,6 +600,9 @@ def main():
             print(f"   land  {old:32} ->  {new}{tag}")
         for qty, name in r.get("illegal") or []:
             print(f"   !! ILLEGAL: {qty}x {name} — Commander allows one copy")
+
+        for line in manual_adds_review(p, coll):
+            print(line)
 
         # Why can't it get closer? A deck with no free staples isn't badly built —
         # its pool is exhausted, and that needs saying out loud.

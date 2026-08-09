@@ -65,11 +65,21 @@ only the runtime-edited paths, rebases, and pushes.
    serving the name-only `collection_snapshot.txt` (6 decks found). If the player has not yet
    uploaded the full CSV via `/collection`, the rich color/type/tribe/curve analysis is not
    available server-side. Uploading rebinds the `COLLECTION` global in-process — no reload needed.
-4. **Specs ready to implement (2026-08-09, player-requested):** deck-page **subtabs**
-   (`docs/spec-deck-subtabs.md`) and the **add-card flow + advisor**
-   (`docs/spec-add-card-advisor.md`), with prior-art research in
-   `docs/research-prior-art.md` and tracker entries in §4b of the spec tracker.
-   Research + specs only — no implementation yet, per the player.
+4. **✅ SHIPPED 2026-08-09 — deck subtabs + add-card advisor.** Both player-requested
+   features are implemented, tested (**suite 127 → 153**) and on `main`; the specs
+   (`docs/spec-deck-subtabs.md`, `docs/spec-add-card-advisor.md`) carry a "deviations
+   and why" block each. **The hosted server needs a `git pull` + Web-tab Reload to
+   pick them up.** Prior-art survey behind the design: `docs/research-prior-art.md`.
+   Things a next session should know rather than rediscover:
+   - The deck page is now **six CSS-only tabs**; inactive panels are hidden, never
+     removed, because both card-panel hook systems bind across the whole page.
+   - `＋ Add card` renders **only when `editable=True`** — a CLI dashboard has no
+     server to POST to.
+   - `.changes.csv` gained a meaningful **`Source`** column: `manual-add` /
+     `manual-replace` = the player, anything else = the optimizer. That distinction is
+     what the advisor keys off.
+   - **The advisor never acts.** `optimize` prints an advisory review of manual adds
+     and still never cuts them. Don't "helpfully" wire it into the swap logic.
 5. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
    HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
    server-side — request whitelisting via their forums, or enrich on the PC and upload the

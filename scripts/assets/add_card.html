@@ -1,0 +1,151 @@
+<!-- Add-a-card picker. Rendered ONLY on the editable surface (the web app); a
+     CLI-generated dashboard file has no server to POST to, so it never emits this.
+     Inlined by build_dashboard._asset() so the dashboard stays one file. -->
+<div class="ac" id="ac">
+  <button type="button" class="ac-open" id="ac-open"
+    title="Add a card you own to this deck">&#43; Add card</button>
+  <div class="ac-box" id="ac-box" hidden>
+    <label class="ac-lab" for="ac-q">Search your collection</label>
+    <input id="ac-q" class="ac-q" type="text" autocomplete="off"
+      placeholder="Start typing a card you own&hellip;">
+    <div id="ac-res" class="ac-res"></div>
+    <div class="ac-row">
+      <label class="ac-lab" for="ac-sec">Section</label>
+      <select id="ac-sec" class="ac-sec"></select>
+    </div>
+    <div class="ac-row">
+      <button type="button" class="ac-go" id="ac-go" disabled>Add to deck</button>
+      <span class="ac-picked" id="ac-picked"></span>
+    </div>
+    <div class="ac-out" id="ac-out" hidden></div>
+  </div>
+</div>
+<script>
+(function(){
+  var STEM=__STEM__;
+  var open=document.getElementById('ac-open'), box=document.getElementById('ac-box');
+  var q=document.getElementById('ac-q'), res=document.getElementById('ac-res');
+  var sec=document.getElementById('ac-sec'), go=document.getElementById('ac-go');
+  var picked=document.getElementById('ac-picked'), out=document.getElementById('ac-out');
+  if(!open) return;
+  var chosen=null, timer=null, loaded=false;
+
+  function api(p){ return '/api/deck/'+encodeURIComponent(STEM)+p; }
+
+  open.addEventListener('click', function(){
+    box.hidden=!box.hidden;
+    if(!box.hidden){
+      q.focus();
+      if(!loaded){
+        loaded=true;
+        fetch(api('/sections')).then(function(r){return r.ok?r.json():[];})
+          .then(function(list){
+            sec.innerHTML='';
+            (list||[]).forEach(function(s){
+              var o=document.createElement('option'); o.value=s; o.textContent=s; sec.appendChild(o);
+            });
+          }).catch(function(){});
+      }
+    }
+  });
+
+  q.addEventListener('input', function(){
+    var v=q.value.trim(); clearTimeout(timer); chosen=null; go.disabled=true; picked.textContent='';
+    if(v.length<2){ res.innerHTML=''; return; }
+    timer=setTimeout(function(){
+      fetch('/api/collection/search?q='+encodeURIComponent(v))
+        .then(function(r){return r.ok?r.json():[];})
+        .then(function(list){
+          res.innerHTML='';
+          if(!list||!list.length){ res.innerHTML='<span class="ac-hint">No owned card matches.</span>'; return; }
+          list.forEach(function(it){
+            var b=document.createElement('button'); b.type='button'; b.className='ac-item';
+            b.textContent=it.name+(it.qty>1?(' ×'+it.qty):'');
+            b.addEventListener('click', function(){
+              chosen=it.name; go.disabled=false;
+              picked.textContent='Selected: '+it.name;
+              res.innerHTML='';
+              q.value=it.name;
+              preview(it.name);
+            });
+            res.appendChild(b);
+          });
+        }).catch(function(){});
+    }, 220);
+  });
+
+  function meter(v){
+    var d=document.createElement('div'); d.className='ac-meter';
+    var s=document.createElement('span'); s.style.width=Math.max(0,Math.min(100,v))+'%';
+    d.appendChild(s); return d;
+  }
+
+  // The opinion, rendered the same way whether it's a preview or a post-add verdict.
+  function render(v, note){
+    out.hidden=false; out.innerHTML='';
+    if(!v){ out.textContent=note||'No opinion available for that card.'; return; }
+    var h=document.createElement('div'); h.className='ac-vhead';
+    h.innerHTML='<b>'+v.band+'</b> <span class="ac-score">'+v.score+'/100</span>';
+    out.appendChild(h);
+    out.appendChild(meter(v.score));
+    if(note){ var n=document.createElement('p'); n.className='ac-note'; n.textContent=note; out.appendChild(n); }
+    var c=document.createElement('p'); c.className='ac-ctx'; c.textContent=v.context; out.appendChild(c);
+    var ul=document.createElement('ul'); ul.className='ac-reasons';
+    (v.reasons||[]).forEach(function(r){
+      var li=document.createElement('li');
+      li.textContent=r.label+': '+r.pts+'/'+r.max+' — '+r.detail;
+      ul.appendChild(li);
+    });
+    out.appendChild(ul);
+    // Say plainly when there's no field data behind the verdict rather than implying it.
+    var src=document.createElement('p'); src.className='ac-src';
+    src.textContent = v.has_field
+      ? ('EDHREC field data included' + (v.field_pct!=null ? (' — played in '+v.field_pct+'% of decks') : '') + '.')
+      : 'No EDHREC field data available — this is a fit-only opinion.';
+    out.appendChild(src);
+    if(v.alternatives && v.alternatives.length){
+      var a=document.createElement('p'); a.className='ac-alts';
+      a.textContent='Also consider: '+v.alternatives.map(function(x){return x.n;}).join(', ');
+      out.appendChild(a);
+    }
+  }
+
+  function preview(name){
+    fetch(api('/advise')+'?name='+encodeURIComponent(name)+'&section='+encodeURIComponent(sec.value||''))
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(v){ if(v && !v.error) render(v, 'Preview — not added yet.'); })
+      .catch(function(){});
+  }
+
+  go.addEventListener('click', function(){
+    if(!chosen) return;
+    go.disabled=true; go.textContent='Adding…';
+    var f=new FormData(); f.append('name', chosen); f.append('section', sec.value||'');
+    fetch('/deck/'+encodeURIComponent(STEM)+'/add',{method:'POST',body:f})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(x){
+        go.textContent='Add to deck';
+        if(!x.ok || !x.j.ok){
+          out.hidden=false;
+          out.innerHTML='<p class="ac-err"></p>';
+          out.querySelector('.ac-err').textContent = (x.j && x.j.error) || 'Could not add that card.';
+          go.disabled=false;
+          return;
+        }
+        var notes=[];
+        if(x.j.warning) notes.push(x.j.warning);
+        if(x.j.illegal && x.j.illegal.length) notes.push('Singleton check flagged: '+
+          x.j.illegal.map(function(p){return p[1];}).join(', '));
+        render(x.j.verdict, notes.join(' '));
+        var done=document.createElement('button');
+        done.type='button'; done.className='ac-go'; done.textContent='Reload deck';
+        done.addEventListener('click', function(){ location.reload(); });
+        out.appendChild(done);
+      })
+      .catch(function(){
+        go.textContent='Add to deck'; go.disabled=false;
+        out.hidden=false; out.textContent='Add failed — is the app still running?';
+      });
+  });
+})();
+</script>
