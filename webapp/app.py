@@ -234,7 +234,7 @@ def _edit_deck_card(path, action, name, replacement=None, section=None):
     for ln in lines:
         s = ln.strip()
         if not changed and s and not s.startswith("#"):
-            m = re.match(r"^(\d+)\s+(.*)$", s)
+            m = mtglib._QTY_RE.match(s)   # shared parser — '1x Name' must not no-op
             cardname = m.group(2) if m else s
             qty = m.group(1) if m else "1"
             if mtglib._norm(cardname) == key:
@@ -275,15 +275,19 @@ def _deck_identity(text):
     return set(re.findall(r"[WUBRG]", (_hdr(text, "Colors") or "").upper()))
 
 
-def _validate_add(meta, stem, name):
+def _validate_add(meta, stem, name, idx=None):
     """Ordered checks for adding a card. Returns (card, error, warning).
 
     Ownership and color legality are hard stops — an off-identity card makes the deck
     illegal, which isn't a matter of taste. A pin held by another deck is only a
     warning: the player's word beats their own earlier reservation, but they should
     know they're spending a copy that was spoken for.
+
+    `idx` lets the route share one collection load across validate + advise instead
+    of parsing the CSV once per step.
     """
-    _, idx = collection_index()
+    if idx is None:
+        _, idx = collection_index()
     card = mtglib.lookup(idx, name)
     if card is None:
         return None, (f"You don't own a card called “{name}”. Add it to the "
@@ -296,10 +300,8 @@ def _validate_add(meta, stem, name):
     # every membership test goes through front_face + _norm, never a naive compare.
     in_deck = set()
     for c in mtglib.parse_deck(text):
-        in_deck.add(mtglib._norm(c.name))
-        in_deck.add(mtglib._norm(mtglib.front_face(c.name)))
-    keys = {key, mtglib._norm(mtglib.front_face(card.name))}
-    if keys & in_deck and not mtglib.is_basic(card.name):
+        in_deck |= mtglib.name_keys(c.name)
+    if mtglib.name_keys(card.name) & in_deck and not mtglib.is_basic(card.name):
         return None, f"{card.name} is already in this deck — Commander is singleton.", None
     ident = _deck_identity(text)
     # Only enforce when we actually have identity data; a name-only collection
@@ -328,6 +330,17 @@ def deck_card(stem):
     action = request.form.get("action", "")
     name = request.form.get("name", "").strip()
     replacement = request.form.get("replacement", "").strip() or None
+    if action == "replace" and replacement:
+        # The same front-face-aware singleton guard the Add path enforces — minus the
+        # card being replaced (swapping A for A's other face is still one copy), and
+        # minus an ownership block: deck files legitimately hold unowned BUY cards.
+        text = open(m["path"], encoding="utf-8").read()
+        others = set()
+        for c in mtglib.parse_deck(text):
+            if not (mtglib.name_keys(c.name) & mtglib.name_keys(name)):
+                others |= mtglib.name_keys(c.name)
+        if mtglib.name_keys(replacement) & others and not mtglib.is_basic(replacement):
+            return redirect(url_for("deck", stem=stem))   # would duplicate — refuse
     if action in ("remove", "replace") and name:
         if _edit_deck_card(m["path"], action, name, replacement):
             if action == "replace" and replacement:
@@ -349,7 +362,8 @@ def deck_add(stem):
     section = (request.form.get("section") or "").strip() or None
     if not name:
         return jsonify({"ok": False, "error": "No card name given."}), 400
-    card, err, warn = _validate_add(m, stem, name)
+    coll, idx = collection_index()      # ONE load for validate + advise
+    card, err, warn = _validate_add(m, stem, name, idx=idx)
     if err:
         return jsonify({"ok": False, "error": err}), 400
     _edit_deck_card(m["path"], "add", card.name, section=section)
@@ -361,7 +375,7 @@ def deck_add(stem):
         pass
     verdict = None
     try:
-        verdict = deckcore.advise_card(m["path"], COLLECTION, card.name,
+        verdict = deckcore.advise_card(m["path"], coll, card.name,
                                        section=section, commander=m["commander"])
     except Exception:
         verdict = None
@@ -382,7 +396,8 @@ def api_deck_advise(stem):
     # Same degrade-contract as /deck/<stem>/add: the picker consumes JSON, so an
     # analysis failure must come back as a JSON error, never Flask's HTML 500 page.
     try:
-        v = deckcore.advise_card(m["path"], COLLECTION, name,
+        coll, _ = collection_index()
+        v = deckcore.advise_card(m["path"], coll, name,
                                  section=(request.args.get("section") or "").strip() or None,
                                  commander=m["commander"])
     except Exception:

@@ -84,8 +84,17 @@ only the runtime-edited paths, rebases, and pushes.
      split-card and snow-basic singleton bugs, a dead reason branch, N× redundant
      loads in the advisor loop, synthetic 'Cards' in the section picker, duplicated
      section parsing, HTML-500 from a JSON route) — each with a regression test.
-     `mtglib.is_basic()` and `deckcore.section_label()`/`real_section_labels()` are
-     the new canonical helpers; don't reintroduce local copies.
+   - **Review round 2 (full-file) fixed 11 more** — see
+     `docs/spec-optimizer-hardening.md` for the list. Highlights a next session must
+     not undo: the optimizer's adds and cuts now share ONE `value_of()` (sort AND
+     margin gate — the ≥25 margin is value-vs-value); `singleton_violations`
+     aggregates by front-face key; `_tidy` preserves in-section comments and parses
+     `1x Name` lines; manabase pass 2 emits 3-tuples. Canonical helpers:
+     `mtglib.name_keys()` (every membership test), `mtglib.is_basic()`,
+     `mtglib._QTY_RE` (every qty-line parse), `deckcore.section_label()`.
+     **⚠ Still owed, live:** the top-25 overlap check on real EDHREC data after the
+     ranking change — preview→apply→re-run `optimize --all` from the PC or server;
+     one `git revert` if a deck drops below ~50% overlap.
 5. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
    HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
    server-side — request whitelisting via their forums, or enrich on the PC and upload the
