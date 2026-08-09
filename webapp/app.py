@@ -473,7 +473,7 @@ def _assess_packet(m):
     deck to an mtg-deckbuilder COACHING session (Phase 5 bridge). All grounded numbers,
     no opinions — the coaching happens in Claude Code on the player's subscription."""
     a = deckcore.analyze_deck(m["path"], COLLECTION)
-    rep, missing = a["report"], a["missing"]
+    rep, missing, idx = a["report"], a["missing"], a["idx"]
     assessment, mana, combos = a["assessment"], a["mana"], a["combos"]
 
     L = [f"=== ASSESSMENT PACKET — {m['title']} ===",
@@ -530,9 +530,27 @@ def _assess_packet(m):
             L.append(f"  one card away: add {c['missing'][0]} → "
                      f"{' + '.join(c['cards'])} ⇒ {', '.join(c['produces']) or '?'}")
         L.append("")
-    if missing:
-        L.append("-- NOT IN COLLECTION (buy-list candidates) --")
-        L.append("  " + ", ".join(x.name for x in missing))
+    # ONE merged buy view, same hub function as the dashboard's Buy tab and the
+    # wishlist — the coach reads the same shopping list the player sees, with
+    # provenance, instead of re-assembling it from the scattered sections above.
+    stem_path = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
+    merged_combos = dict(combos or {})
+    try:
+        csb_near = spellbook.near_for_deck(m["path"], idx)
+        have = {frozenset(mtglib.name_keys(p) for p in c.get("pieces", []))
+                for c in merged_combos.get("near", []) + merged_combos.get("complete", [])}
+        merged_combos["near"] = list(merged_combos.get("near", [])) + [
+            n for n in csb_near
+            if frozenset(mtglib.name_keys(p) for p in n["name"].split(" + ")) not in have]
+    except Exception:
+        pass
+    buys = deckcore.buy_signals(deckcore.load_buylist(f"{stem_path}.buylist.csv"),
+                                merged_combos, missing, idx)
+    if buys:
+        L.append("-- CARDS TO BUY (merged: curated buylist + combo pieces + unowned decklist) --")
+        for r in buys:
+            price = f" ~${r['price']:,.2f}" if r.get("price") is not None else ""
+            L.append(f"  [{r.get('source', '?'):8}] {r['card']}{price} — {r['reason']}")
         L.append("")
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())
