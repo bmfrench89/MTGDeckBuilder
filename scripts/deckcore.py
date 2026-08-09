@@ -98,9 +98,24 @@ def load_changes(path, days=NEW_CARD_DAYS):
             k = mtglib._norm(name)
             prev = out.get(k)
             if prev is None or ago < prev["days_ago"]:   # keep the most recent entry
-                out[k] = {"added": added.isoformat(), "days_ago": ago,
-                          "replaced": (r.get("Replaced") or "").strip()}
+                out[k] = {"name": name, "added": added.isoformat(), "days_ago": ago,
+                          "replaced": (r.get("Replaced") or "").strip(),
+                          "source": (r.get("Source") or "").strip()}
     return out
+
+
+MANUAL_SOURCES = ("manual-add", "manual-replace")
+
+
+def manual_adds(path, days=NEW_CARD_DAYS):
+    """Just the cards the PLAYER put in by hand (Source=manual-*), newest first.
+
+    The optimizer writes its own swaps to the same log, so `Source` is what separates
+    "the tool did this" from "the player decided this" — the distinction the advisor
+    exists to respect."""
+    rows = [dict(v, key=k) for k, v in load_changes(path, days).items()
+            if v.get("source") in MANUAL_SOURCES]
+    return sorted(rows, key=lambda r: r["days_ago"])
 
 
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
@@ -275,3 +290,55 @@ def analyze_deck(deck_path, collection, refs=None):
     return {"coll": coll, "idx": idx, "deck": deck, "enriched": enriched,
             "missing": missing, "attrs": attrs, "report": core["report"],
             "assessment": core["assessment"], "mana": core["mana"], "combos": combos}
+
+
+def advise_card(deck_path, collection, name, section=None, commander="", analysis=None):
+    """A read-only opinion on how ONE card fits a deck — the same components the
+    dashboard already shows for cards in the list, computed for any card by name.
+
+    This is ADVICE, never an action. Nothing here edits a deck, and the optimizer
+    still never cuts a card the player added by hand; the player asked to know how
+    a manual pick lands, not to have it second-guessed.
+
+    Returns None when the card can't be resolved in the collection (never a guess —
+    an unknown name gets no opinion rather than an invented one). Otherwise:
+    {name, score, band, reasons[], context, role, in_deck, has_field, field_pct,
+     alternatives[]}. `has_field` False means EDHREC data wasn't reachable/cached, so
+    the verdict is fit-only — callers must say so rather than implying field backing.
+    """
+    import deck_fit
+    import power
+    a = analysis or analyze_deck(deck_path, collection)
+    idx, enriched, rep = a["idx"], a["enriched"], a["report"]
+    card = mtglib.lookup(idx, name)
+    if card is None:
+        return None
+    if not commander:
+        m = re.search(r"^#\s*Commander:\s*(.+)$", open(deck_path, encoding="utf-8").read(),
+                      re.M | re.I)
+        commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
+    refs = power.load_refs()
+    field = deck_fit.load_field(commander, idx) if commander else {}
+    ctx = deck_fit.deck_context(deck_path, enriched, commander, field=field,
+                                synergy=deck_fit.load_synergy(commander, idx) if commander else None)
+    fit = deck_fit.assess_card(card, rep, ctx, refs, section)
+    in_deck = {mtglib._norm(c.name) for c in enriched}
+    try:
+        alts = deck_fit.better_alternatives(card, ctx, idx, refs, [], in_deck,
+                                            load_role_staples_safe())
+    except Exception:
+        alts = []
+    return {"name": card.name, "score": fit["score"], "band": fit["band"],
+            "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
+            "in_deck": mtglib._norm(card.name) in in_deck,
+            "has_field": bool(field),
+            "field_pct": field.get(mtglib._norm(card.name)) if field else None,
+            "alternatives": alts[:3]}
+
+
+def load_role_staples_safe():
+    import deck_fit
+    try:
+        return deck_fit.load_role_staples()
+    except Exception:
+        return {}

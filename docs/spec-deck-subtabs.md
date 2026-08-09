@@ -1,6 +1,18 @@
 # Spec — Deck Page Subtabs
 
-**Status:** ☐ specced 2026-08-09, not implemented ·
+**Status:** ☑ **SHIPPED 2026-08-09.** Implemented in `scripts/build_dashboard.py`
+(`tabs_block()` + `TABS_JS`); tests in `tests/test_dashboard.py`.
+
+> **Deviations from this spec, and why:**
+> 1. **Summary tiles stayed ABOVE the tab bar** rather than moving into the Deck tab.
+>    Summary-before-detail beats hiding the bracket/power numbers behind a tab, and the
+>    tab bar is `position:sticky` so it stays one tap away after scrolling past them.
+> 2. **Empty tabs are dropped.** A deck with no buylist or no `.notes.md` gets no Buy /
+>    Plan tab at all, rather than a tab leading to an empty panel.
+> 3. The tab **CSS is generated per-key** alongside the HTML (one `tabs_block()` call
+>    returns both), so adding a tab can't leave a panel unstyled.
+
+·
 **Player ask:** "incorporate subtabs on the Decks page for all of the content we have.
 it'll be easier to process being able to block through things like 'cards to buy'"
 **Prior-art validation:** joliverson/mtg_deck_rec ships its results UI the same way

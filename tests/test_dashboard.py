@@ -58,3 +58,68 @@ def test_visual_gallery_is_optional(deck_file, collection_file):
     assert bd.generate(deck_file, collection_file, title="T", commander="C")["visual"] is None
     assert bd.generate(deck_file, collection_file, title="T", commander="C",
                        want_visual=True)["visual"] is not None
+
+
+# --------------------------------------------------------------------------- #
+# Subtabs — the deck page is regrouped into tabs, and the rule is that nothing
+# is LOST by the regrouping: hidden panels stay in the DOM (the card panel needs
+# its targets) and printing restores every section.
+# --------------------------------------------------------------------------- #
+def test_tabs_render_with_one_default_and_matching_panels(deck_file, collection_file):
+    import re
+    html = _html(deck_file, collection_file)
+    ids = set(re.findall(r"id='tab-(\w+)'", html))
+    panels = set(re.findall(r"<div class='tabpanel' data-tab='(\w+)'", html))
+    assert ids, "no tabs rendered"
+    assert ids == panels, "every tab input needs exactly one panel and vice versa"
+    assert html.count("class='tabinput' checked") == 1, "exactly one tab starts open"
+    assert "<nav class='tabs'" in html
+
+
+def test_tabs_do_not_drop_any_section(deck_file, collection_file):
+    """The regrouping is presentation only — every heading that rendered before a
+    tab existed must still be in the document."""
+    import re
+    html = _html(deck_file, collection_file)
+    headings = set(re.findall(r"<h2>([^<]+)</h2>", html))
+    for expected in ("Decklist by Section", "Ownership", "Mana Curve (MV Spread)"):
+        assert expected in headings
+
+
+def test_hidden_tabs_keep_their_content_in_the_dom(deck_file, collection_file):
+    """Hidden, not omitted: the card panel binds to figure.mc[data-key] across the
+    whole page, so a panel that removed its cards would silently break clicking."""
+    html = _html(deck_file, collection_file)
+    assert ".tabpanel { display:none; }" in html
+    # Ownership lives in a non-default tab position but is still present
+    assert "Ownership" in html
+
+
+def test_printing_restores_every_tab(deck_file, collection_file):
+    html = _html(deck_file, collection_file)
+    assert "@media print" in html
+    printed = html.split("@media print", 1)[1][:200]
+    assert "display:block !important" in printed
+
+
+def test_tabs_add_no_external_assets(deck_file, collection_file):
+    html = _html(deck_file, collection_file)
+    assert "<script src=" not in html
+    assert '<link rel="stylesheet"' not in html
+
+
+def test_every_theme_renders_the_tab_bar(deck_file, collection_file):
+    for theme in ("default", "yshtola", "cloud", "rakdos", "spider"):
+        html = _html(deck_file, collection_file, theme=theme)
+        assert "<nav class='tabs'" in html, f"{theme} lost the tab bar"
+
+
+# --------------------------------------------------------------------------- #
+# Add-card picker — editable surface only (a file on disk has no server to POST to)
+# --------------------------------------------------------------------------- #
+def test_add_card_picker_only_on_the_editable_surface(deck_file, collection_file):
+    editable = _html(deck_file, collection_file, editable=True)
+    readonly = _html(deck_file, collection_file)
+    assert 'id="ac-open"' in editable
+    assert 'id="ac-open"' not in readonly, "a CLI dashboard has no server — no dead controls"
+    assert ".ac-open" in editable and ".ac-open" not in readonly

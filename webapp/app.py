@@ -188,11 +188,53 @@ def deck_edit(stem):
     return render_template("edit.html", meta=m, content=content, page="decks")
 
 
-def _edit_deck_card(path, action, name, replacement=None):
-    """Line-based edit of a deck .txt: remove or replace a single card, preserving its
+def _section_label(line):
+    """The label out of a `# --- Ramp (12) ---` header, or None. Section names are
+    free-form per deck, so we always read the deck's own labels — never a fixed list."""
+    s = line.strip()
+    if not s.startswith("#"):
+        return None
+    m = re.search(r"---\s*(.*?)\s*---", s)
+    return re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip() if m else None
+
+
+def _insert_deck_card(path, lines, name, section=None):
+    """Insert `1 <name>` as the LAST card of `section`, leaving every other byte of the
+    file untouched — same contract as remove/replace (quantities, comments, and section
+    headers all survive). Falls back to after the final card line if the section isn't
+    found, so a stale section name can never drop the card on the floor."""
+    want = (section or "").strip().lower()
+    start = None
+    if want:
+        for i, ln in enumerate(lines):
+            label = _section_label(ln)
+            if label and label.lower() == want:
+                start = i
+                break
+    if start is None:
+        last = [i for i, l in enumerate(lines) if l.strip() and not l.strip().startswith("#")]
+        at = (last[-1] + 1) if last else len(lines)
+    else:
+        at = start + 1
+        for j in range(start + 1, len(lines)):
+            s = lines[j].strip()
+            if _section_label(lines[j]):
+                break
+            if s and not s.startswith("#"):
+                at = j + 1
+    lines.insert(at, f"1 {name}")
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines))
+    return True
+
+
+def _edit_deck_card(path, action, name, replacement=None, section=None):
+    """Line-based edit of a deck .txt: remove, replace, or add a single card, preserving
     quantity, section, and everything else. Returns True if a line changed."""
     key = mtglib._norm(name)
     lines = open(path, encoding="utf-8").read().split("\n")
+    if action == "add":
+        return _insert_deck_card(path, lines, name, section)
     out, changed = [], False
     for ln in lines:
         s = ln.strip()
@@ -215,6 +257,65 @@ def _edit_deck_card(path, action, name, replacement=None):
     return changed
 
 
+def _log_manual_change(deck_path, card, replaced="", source="manual-add"):
+    """Append a player edit to `<deck>.changes.csv` — same schema the optimizer writes.
+
+    Two things fall out of this one row: the dashboard's existing NEW badge lights up,
+    and `Source` marks the card as the PLAYER's decision, which is what lets the advisor
+    offer an opinion on it without the optimizer ever touching it."""
+    import csv as _csv
+    from datetime import date
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    path = f"{stem}.changes.csv"
+    exists = os.path.exists(path)
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        w = _csv.writer(f)
+        if not exists:
+            w.writerow(["Card", "Added", "Replaced", "Source"])
+        w.writerow([card, date.today().isoformat(), replaced, source])
+
+
+def _deck_identity(text):
+    """Color identity from the deck's own `# Colors:` header, as a WUBRG set."""
+    return set(re.findall(r"[WUBRG]", (_hdr(text, "Colors") or "").upper()))
+
+
+def _validate_add(meta, stem, name):
+    """Ordered checks for adding a card. Returns (card, error, warning).
+
+    Ownership and color legality are hard stops — an off-identity card makes the deck
+    illegal, which isn't a matter of taste. A pin held by another deck is only a
+    warning: the player's word beats their own earlier reservation, but they should
+    know they're spending a copy that was spoken for.
+    """
+    _, idx = collection_index()
+    card = mtglib.lookup(idx, name)
+    if card is None:
+        return None, (f"You don't own a card called “{name}”. Add it to the "
+                      "collection first (or check the spelling)."), None
+    text = open(meta["path"], encoding="utf-8").read()
+    key = mtglib._norm(card.name)
+    in_deck = {mtglib._norm(c.name) for c in mtglib.parse_deck(text)}
+    if key in in_deck and card.name.strip().lower() not in mtglib._BASICS:
+        return None, f"{card.name} is already in this deck — Commander is singleton.", None
+    ident = _deck_identity(text)
+    # Only enforce when we actually have identity data; a name-only collection
+    # (fresh clone on the snapshot) must not produce false rejections.
+    if card.identity and ident and not card.identity <= ident:
+        bad = "".join(sorted(card.identity - ident))
+        return None, (f"{card.name} is outside this deck's color identity "
+                      f"(needs {bad}). It would make the deck illegal."), None
+    warn = None
+    try:
+        owner = deckcore.load_pins().get(key)
+        if owner and owner != stem:
+            warn = (f"Heads up: your copy of {card.name} is pinned to “{owner}”. "
+                    "Adding it here spends a copy that deck is counting on.")
+    except Exception:
+        pass
+    return card, None, warn
+
+
 @app.route("/deck/<stem>/card", methods=["POST"])
 def deck_card(stem):
     """Remove a card from a deck, or replace it with another — in place, from the panel."""
@@ -225,8 +326,72 @@ def deck_card(stem):
     name = request.form.get("name", "").strip()
     replacement = request.form.get("replacement", "").strip() or None
     if action in ("remove", "replace") and name:
-        _edit_deck_card(m["path"], action, name, replacement)
+        if _edit_deck_card(m["path"], action, name, replacement):
+            if action == "replace" and replacement:
+                _log_manual_change(m["path"], replacement, replaced=name,
+                                   source="manual-replace")
     return redirect(url_for("deck", stem=stem))
+
+
+@app.route("/deck/<stem>/add", methods=["POST"])
+def deck_add(stem):
+    """Add an owned card to a deck and hand back an opinion on how it fits.
+
+    JSON rather than a redirect so the picker can show the verdict at the moment it's
+    actionable — and so a rejection explains itself instead of silently doing nothing."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    name = request.form.get("name", "").strip()
+    section = (request.form.get("section") or "").strip() or None
+    if not name:
+        return jsonify({"ok": False, "error": "No card name given."}), 400
+    card, err, warn = _validate_add(m, stem, name)
+    if err:
+        return jsonify({"ok": False, "error": err}), 400
+    _edit_deck_card(m["path"], "add", card.name, section=section)
+    _log_manual_change(m["path"], card.name, source="manual-add")
+    illegal = []
+    try:
+        illegal = optimize.singleton_violations(m["path"])
+    except Exception:
+        pass
+    verdict = None
+    try:
+        verdict = deckcore.advise_card(m["path"], COLLECTION, card.name,
+                                       section=section, commander=m["commander"])
+    except Exception:
+        verdict = None
+    return jsonify({"ok": True, "card": card.name, "section": section,
+                    "warning": warn, "illegal": illegal, "verdict": verdict})
+
+
+@app.route("/api/deck/<stem>/advise")
+def api_deck_advise(stem):
+    """Read-only fit opinion for any card against this deck — used by the add picker
+    before committing, and by the panel for cards the player added by hand."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    name = (request.args.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "name required"}), 400
+    v = deckcore.advise_card(m["path"], COLLECTION, name,
+                             section=(request.args.get("section") or "").strip() or None,
+                             commander=m["commander"])
+    if v is None:
+        return jsonify({"error": f"{name} isn't in your collection."}), 404
+    return jsonify(v)
+
+
+@app.route("/api/deck/<stem>/sections")
+def api_deck_sections(stem):
+    """The deck file's OWN section labels, for the add picker. Never a hardcoded list —
+    every deck sections itself its own way."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    return jsonify([label for label, _cards in deckcore.load_deck_sections(m["path"])])
 
 
 @app.route("/api/collection/search")

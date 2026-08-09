@@ -700,6 +700,78 @@ def card_modal_block(details, editable=False, stem=""):
     return _asset("card_panel.html").replace("__PAYLOAD__", payload).replace("__EDITABLE__", "true" if editable else "false").replace("__STEM__", json.dumps(stem))
 
 
+def add_card_block(stem, editable):
+    """The add-a-card picker — editable surface only.
+
+    A CLI-rendered dashboard is a file on disk with no server behind it, so offering an
+    Add button there would be a dead control. Remove/Replace already follow this rule.
+    """
+    if not editable:
+        return ""
+    return _asset("add_card.html").replace("__STEM__", json.dumps(stem))
+
+
+def add_card_css(t):
+    return (_asset("add_card.css")
+            .replace("__HEAD__", t["head"])
+            .replace("__MONO__", t["mono"]))
+
+
+def tabs_block(groups):
+    """CSS-only subtabs over the dashboard's sections. Returns (css, html).
+
+    Why radios and not JS: a dashboard has to stay ONE self-contained file that works
+    from disk with no network, so the tab state lives in `:checked` and the panels are
+    plain siblings. If anything about the page breaks, the failure mode is "everything
+    visible", never "content lost".
+
+    Inactive panels are hidden, NOT omitted — both surfaces' card-panel hooks
+    (`data-card=` in the app, `figure.mc[data-key]` in generated files) need their
+    targets present in the DOM, and a printed copy restores every panel.
+
+    `groups` is [(key, label, html)]; empty groups are dropped so a deck with no buylist
+    doesn't get an empty Buy tab.
+    """
+    live = [(k, lab, html) for k, lab, html in groups if html and html.strip()]
+    if not live:
+        return "", ""
+    css, inputs, nav, panels = [], [], [], []
+    for i, (k, lab, html) in enumerate(live):
+        css.append(f"#tab-{k}:checked ~ .tabpanel[data-tab='{k}'] {{ display:block; }}")
+        css.append(f"#tab-{k}:checked ~ .tabs label[for='tab-{k}'] {{ background:var(--accent); "
+                   "color:#000; border-color:var(--accent); font-weight:700; }")
+        # the radio stays in the tab order (native arrow-key radiogroup nav); the focus
+        # ring is drawn on its label, since the input itself is visually clipped away.
+        css.append(f"#tab-{k}:focus-visible ~ .tabs label[for='tab-{k}'] "
+                   "{ outline:2px solid var(--accent2); outline-offset:2px; }")
+        inputs.append(f"<input type='radio' name='decktabs' id='tab-{k}' class='tabinput'"
+                      f"{' checked' if i == 0 else ''}>")
+        nav.append(f"<label for='tab-{k}'>{esc(lab)}</label>")
+        panels.append(f"<div class='tabpanel' data-tab='{k}'>{html}</div>")
+    html = ("".join(inputs)
+            + "<nav class='tabs' aria-label='Deck sections'>" + "".join(nav) + "</nav>"
+            + "".join(panels))
+    return "\n".join(css), html
+
+
+TABS_JS = """<script>
+(function(){
+  var key='mtgtab:'+location.pathname;
+  function pick(k){var el=k&&document.getElementById('tab-'+k);
+    if(el){el.checked=true;return true;} return false;}
+  var h=(location.hash||'').replace(/^#tab-/,'');
+  if(!pick(h)){try{pick(localStorage.getItem(key));}catch(e){}}
+  Array.prototype.forEach.call(document.querySelectorAll('.tabinput'),function(i){
+    i.addEventListener('change',function(){
+      var k=i.id.replace(/^tab-/,'');
+      try{localStorage.setItem(key,k);}catch(e){}
+      if(history.replaceState){history.replaceState(null,'','#tab-'+k);}
+    });
+  });
+})();
+</script>"""
+
+
 def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
@@ -743,6 +815,25 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                f"{similar_html(similar)}</section>" if similar is not None else "")
     shared_sec = (f"<section><h2>Shared Across Decks</h2>{shared_html(shared)}"
                   "</section>" if shared is not None else "")
+
+    deck_sec = (f"<section><h2>Decklist by Section</h2>"
+                f"{add_card_block(stem, editable)}"
+                f"{sections_html(sections, enriched, shared, missing=missing, changes=changes)}"
+                f"</section>")
+    own_sec = f"<section><h2>Ownership</h2>{ownership_block(rep)}</section>"
+    curve_sec = (f"<section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}"
+                 f"{curve_note(enriched)}</section>")
+
+    # Grouping is presentation only — every section's generator is untouched, and the
+    # order inside each tab matches the old top-to-bottom page order.
+    tab_css, tabs = tabs_block([
+        ("deck",  "Deck",  deck_sec + own_sec),
+        ("mana",  "Mana",  curve_sec + pip_sec + mana_sec),
+        ("power", "Power", power_sec + combo_sec),
+        ("buy",   "Buy",   buy_sec),
+        ("plan",  "Plan",  notes_sec),
+        ("more",  "More",  sim_sec + shared_sec),
+    ])
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -872,6 +963,29 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   text-align:center; }}
 @media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:var(--fs-2xl); }}
   .buysum {{ margin-left:0; width:100%; }} }}
+/* --- subtabs: state lives in :checked, so the file needs no JS to work --- */
+.tabinput {{ position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }}
+.tabs {{ display:flex; gap:var(--sp-2); overflow-x:auto; -webkit-overflow-scrolling:touch;
+  position:sticky; top:0; z-index:5; padding:var(--sp-3) 0;
+  background:var(--void); border-bottom:1px solid rgba(255,255,255,.08);
+  scrollbar-width:none; }}
+.tabs::-webkit-scrollbar {{ display:none; }}
+.tabs label {{ flex:none; cursor:pointer; user-select:none; white-space:nowrap;
+  min-height:44px; display:inline-flex; align-items:center;
+  padding:var(--sp-2) var(--sp-4); border:1px solid rgba(255,255,255,.18);
+  border-radius:var(--r-pill); color:var(--text); font-family:{t['mono']};
+  font-size:var(--fs-xs); letter-spacing:.5px; }}
+.tabs label:hover {{ border-color:var(--accent); }}
+.tabpanel {{ display:none; }}
+.tabpanel > section:first-child {{ margin-top:var(--sp-4); }}
+{tab_css}
+@media print {{
+  .tabs {{ display:none; }}
+  .tabpanel {{ display:block !important; }}
+  .ac {{ display:none; }}
+}}
+{add_card_css(t) if editable else ''}
 {modal_css}
 </style></head><body><div class="wrap">
 <header>
@@ -880,20 +994,10 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
 </header>
 <div class="tiles">{tiles}</div>
-{power_sec}
-<section><h2>Decklist by Section</h2>{sections_html(sections, enriched, shared, missing=missing, changes=changes)}</section>
-{combo_sec}
-{notes_sec}
-<section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}{curve_note(enriched)}</section>
-{pip_sec}
-{mana_sec}
-<section><h2>Ownership</h2>{ownership_block(rep)}</section>
-{shared_sec}
-{sim_sec}
-{buy_sec}
+{tabs}
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
-</div>{modal_block}{IMG_LOADER}</body></html>"""
+</div>{modal_block}{IMG_LOADER}{TABS_JS}</body></html>"""
 
 
 def render_visual(title, deck, idx, theme, size="normal"):

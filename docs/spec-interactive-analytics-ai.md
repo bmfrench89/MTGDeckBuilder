@@ -148,19 +148,21 @@ Code on the subscription; no Anthropic API in the app.
 
 ---
 
-## 4b. Next up — specced 2026-08-09, not implemented
+## 4b. Phase 6 — deck subtabs + manual adds (shipped 2026-08-09)
 
-Three companion docs were added after the app went hosted (see `handoff.md` for the
-deployment state). Implementation order per the player: subtabs and add-card are the
-asks; dead-weight/synergy-ratio are research-suggested candidates, not yet requested.
+Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tests**.
 
-- ☐ **Deck page subtabs** — spec: [`spec-deck-subtabs.md`](spec-deck-subtabs.md).
-  CSS-only tabs inside `build_dashboard.generate()`, one-tap "Buy" on the phone,
-  deep-linkable `#tab-buy`, print shows all.
-- ☐ **Add-card flow + advisor** — spec: [`spec-add-card-advisor.md`](spec-add-card-advisor.md).
-  `action="add"` on the existing edit route + `Source=manual-add` in changes.csv +
-  read-only fit verdicts from `deck_fit.assess_card()`. Optimizer never cuts manual
-  adds — unchanged invariant.
+- ☑ **Deck page subtabs** — spec: [`spec-deck-subtabs.md`](spec-deck-subtabs.md).
+  Six CSS-only tabs (Deck / Mana / Power / Buy / Plan / More) inside
+  `build_dashboard.generate()`, so both surfaces get them from one change. Sticky tab
+  bar, deep-linkable `#tab-buy`, last tab remembered per deck, print restores every
+  panel. Empty tabs are dropped.
+- ☑ **Add-card flow + advisor** — spec: [`spec-add-card-advisor.md`](spec-add-card-advisor.md).
+  `＋ Add card` on the editable deck page: owned-card search → the deck's own section
+  labels → validation (ownership · singleton · color identity hard-block · pin warning)
+  → one-line insert → `Source=manual-add` in `.changes.csv` → fit verdict. The verdict
+  states plainly when no EDHREC field data backs it. `optimize` prints an **advisory**
+  manual-adds review and still never cuts a manual pick.
 - ☐ *(candidates from research, unscheduled)* dead-weight surfacing · synergy as
   inclusion-vs-color-identity-baseline ratio — see
   [`research-prior-art.md`](research-prior-art.md) §5.
