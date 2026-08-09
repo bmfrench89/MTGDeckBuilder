@@ -101,7 +101,12 @@ only the runtime-edited paths, rebases, and pushes.
    **Fix shipped: committed field snapshots** — `data/reference/field/<slug>.json`, written
    by `python3 scripts/edhrec.py --snapshot-all --collection <csv>` on the PC, read as the
    fallback by `edhrec.inclusion_map/synergy_map/field_names`. See codemap's "deployment
-   reality" table. **Player actions still open:** (a) run `--snapshot-all` on the PC, commit
+   reality" table. **AUTOMATED (same day):** the field-snapshot GitHub Action
+   (`.github/workflows/field-snapshots.yml`, spec: `docs/spec-field-snapshot-action.md`)
+   refreshes snapshots weekly + on new decks + on a manual phone-friendly button and
+   commits them to `main` — the PC is out of the loop. Check the Action's FIRST run:
+   if red, EDHREC is blocking GitHub runner IPs and the PC fallback below applies.
+   (a) *(fallback only)* run `--snapshot-all` on the PC, commit
    `data/reference/field/`, push, pull on the server → field data lights up everywhere;
    (b) upload the collection CSV via `/collection` — the screenshot's "avg MV unavailable
    (add attrs)" means the server is still on the name-only snapshot; `api.scryfall.com` IS

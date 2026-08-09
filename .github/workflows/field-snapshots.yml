@@ -1,0 +1,83 @@
+# Field snapshots — EDHREC data refreshed on GitHub's machines, delivered via git.
+#
+# Why this exists: the hosted server (PythonAnywhere free tier) can never reach
+# json.edhrec.com (their allowlist covers only documented public APIs), and the
+# player is phone-first — "run this on your PC weekly" is a chore that stops
+# happening. GitHub's runners have unrestricted internet, so the refresh runs
+# here and every surface picks it up with a `git pull`.
+#
+# Full explanation, cadence rationale, cost, and failure modes:
+# docs/spec-field-snapshot-action.md
+name: field-snapshots
+
+on:
+  schedule:
+    - cron: "23 9 * * 1"        # weekly, Monday 09:23 UTC — matches the app's own
+                                # 7-day cache TTL; off :00 to dodge cron congestion
+  push:
+    branches: [main]
+    paths: ["data/decks/*.txt"] # a new deck's commander gets its snapshot promptly
+  workflow_dispatch: {}         # the "Run workflow" button — works from a phone browser
+
+permissions:
+  contents: write               # the built-in GITHUB_TOKEN commits the snapshots
+
+concurrency:
+  group: field-snapshots
+  cancel-in-progress: false     # let a running refresh finish; queue the next
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Stdlib-only by design — no pip install at all. The collection argument is
+      # a formality: snapshots store inclusion/synergy/names, never ownership, so
+      # the committed name-only snapshot is all this needs (nothing private).
+      - name: Refresh snapshots
+        id: refresh
+        run: |
+          set +e
+          python3 scripts/edhrec.py --snapshot-all \
+            --collection data/collection/collection_snapshot.txt
+          code=$?
+          # Exit 1 = at least one commander failed. Partial success still commits
+          # below (a failed fetch never writes an empty file — tested), but the
+          # run is flagged so a Cloudflare block or EDHREC change shows up red
+          # instead of silently serving stale data forever.
+          if [ $code -ne 0 ]; then
+            echo "::warning::one or more snapshots failed — see log; good snapshots were kept"
+            echo "partial=true" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "field-snapshot-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/reference/field/
+          if git diff --cached --quiet; then
+            echo "No snapshot changes — nothing to commit."
+            exit 0
+          fi
+          git commit -m "Field snapshots: scheduled refresh"
+          # A deck sync or merge may have landed while we ran; rebase, then push.
+          git pull --rebase origin main
+          git push origin main
+
+      # The refresh step always exits 0 so partial successes commit; this step is
+      # what makes a TOTAL failure (0 snapshots, e.g. runner IPs blocked) turn the
+      # run red — the signal to fall back to running --snapshot-all on the PC.
+      - name: Fail loudly if nothing was fetchable
+        run: |
+          if [ "${{ steps.refresh.outputs.partial }}" = "true" ]; then
+            ls data/reference/field/*.json >/dev/null 2>&1 || {
+              echo "::error::No field snapshots exist and none could be fetched — EDHREC may be blocking runner IPs."
+              exit 1
+            }
+          fi
