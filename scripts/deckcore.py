@@ -26,6 +26,34 @@ def _to_float_price(s):
         return None
 
 
+def section_label(line):
+    """The label out of a `# --- Ramp (12) ---` header line, or None.
+
+    THE one parser for deck section headers. The add-into-section flow depends on the
+    labels the API serves matching the labels the insert looks for, so both sides (and
+    load_deck_sections below) must call this — a second copy of the regex would let the
+    two drift and silently turn every add into 'append to end of file'."""
+    s = line.strip()
+    if not s.startswith("#"):
+        return None
+    m = re.search(r"---\s*(.*?)\s*---", s)
+    return re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip() if m else None
+
+
+def real_section_labels(path):
+    """Only the labels that exist as actual headers in the file — unlike
+    load_deck_sections, which invents a synthetic 'Cards' group for cards that precede
+    any header. A picker offering 'Cards' would send the insert hunting for a header
+    that isn't there."""
+    labels = []
+    with open(path, encoding="utf-8") as f:
+        for ln in f:
+            lab = section_label(ln)
+            if lab and lab not in labels:
+                labels.append(lab)
+    return labels
+
+
 def load_deck_sections(path):
     """Group the deck by the `# --- Label ---` headers in the deck file itself,
     so each build sections its own way ("Spiders", "Ramp", ...)."""
@@ -36,9 +64,8 @@ def load_deck_sections(path):
             if not s:
                 continue
             if s.startswith("#"):
-                m = re.search(r"---\s*(.*?)\s*---", s)
-                if m:
-                    label = re.sub(r"\s*\(\d+\)\s*$", "", m.group(1)).strip()
+                label = section_label(s)
+                if label is not None:
                     cur = (label, [])
                     sections.append(cur)
                 continue
@@ -292,7 +319,8 @@ def analyze_deck(deck_path, collection, refs=None):
             "assessment": core["assessment"], "mana": core["mana"], "combos": combos}
 
 
-def advise_card(deck_path, collection, name, section=None, commander="", analysis=None):
+def advise_card(deck_path, collection, name, section=None, commander="", analysis=None,
+                refs=None, ctx=None):
     """A read-only opinion on how ONE card fits a deck — the same components the
     dashboard already shows for cards in the list, computed for any card by name.
 
@@ -305,6 +333,10 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
     {name, score, band, reasons[], context, role, in_deck, has_field, field_pct,
      alternatives[]}. `has_field` False means EDHREC data wasn't reachable/cached, so
     the verdict is fit-only — callers must say so rather than implying field backing.
+
+    `analysis`, `refs` and `ctx` let a caller scoring many cards (the optimizer's
+    manual-adds review) pay the deck-analysis / reference-file / EDHREC-cache cost
+    once instead of once per card. When omitted, each is computed here.
     """
     import deck_fit
     import power
@@ -317,10 +349,13 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
         m = re.search(r"^#\s*Commander:\s*(.+)$", open(deck_path, encoding="utf-8").read(),
                       re.M | re.I)
         commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
-    refs = power.load_refs()
-    field = deck_fit.load_field(commander, idx) if commander else {}
-    ctx = deck_fit.deck_context(deck_path, enriched, commander, field=field,
-                                synergy=deck_fit.load_synergy(commander, idx) if commander else None)
+    refs = refs or power.load_refs()
+    if ctx is None:
+        field = deck_fit.load_field(commander, idx) if commander else {}
+        ctx = deck_fit.deck_context(deck_path, enriched, commander, field=field,
+                                    synergy=deck_fit.load_synergy(commander, idx) if commander else None)
+    else:
+        field = ctx.get("field") or {}
     fit = deck_fit.assess_card(card, rep, ctx, refs, section)
     in_deck = {mtglib._norm(c.name) for c in enriched}
     try:

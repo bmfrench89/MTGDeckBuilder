@@ -99,9 +99,14 @@ def test_respects_cards_the_player_named_in_the_game_plan(built):
 
 
 def test_says_why_rather_than_just_naming_a_card(built):
-    for r in _dead(built):
+    rows = _dead(built)
+    for r in rows:
         assert r["why"] and "no theme tie" in r["why"]
         assert r["band"]
+    # The role-based reason must actually be reachable: a vanilla creature body fills
+    # no role the deck is short on. (This line was dead code at first ship — the
+    # threshold sat below _role_component's minimum score.)
+    assert any("fills no role" in r["why"] for r in rows)
 
 
 def test_a_tiny_list_produces_no_outliers(built):

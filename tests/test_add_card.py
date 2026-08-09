@@ -153,3 +153,102 @@ def test_review_is_silent_when_there_are_no_manual_adds(client, collection_file)
     import optimize
     deck = str(client._decks / "testdeck.txt")
     assert optimize.manual_adds_review(deck, mtglib.load_collection(collection_file)) == []
+
+
+# --------------------------------------------------------------------------- #
+# Review findings — each of these is a regression test for a shipped bug
+# --------------------------------------------------------------------------- #
+SPLIT_DECK = """# Title: S
+# Commander: Test Commander
+# Colors: W U R
+
+# --- Spells ---
+1 Fire
+
+# --- Lands ---
+1 Snow-Covered Island
+"""
+
+SPLIT_COLL = """Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET
+2,Fire // Ice,2,U R,U R,{1}{R},Instant,,uncommon,fi1,0.50
+4,Snow-Covered Island,0,,U,,Land,Island,common,si1,0.20
+1,Test Commander,4,W U R,W U R,{1}{W}{U}{R},Legendary Creature,Human Wizard,rare,g7,1.00
+"""
+
+
+@pytest.fixture
+def split_client(tmp_path):
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "s.txt").write_text(SPLIT_DECK, encoding="utf-8")
+    coll = tmp_path / "c.csv"
+    coll.write_text(SPLIT_COLL, encoding="utf-8")
+    os.environ["MTG_DECKS_DIR"] = str(decks)
+    os.environ["MTG_COLLECTION"] = str(coll)
+    sys.modules.pop("app", None)
+    import app
+    app.app.config["TESTING"] = True
+    c = app.app.test_client()
+    c._decks = decks
+    return c
+
+
+def test_front_face_alias_cannot_sneak_in_a_second_copy(split_client):
+    """The ' // ' trap: the deck says 'Fire', the collection says 'Fire // Ice' — the
+    same physical card. Matching raw names let it in twice; membership must go through
+    front_face on both sides."""
+    r = split_client.post("/deck/s/add", data={"name": "Fire // Ice"})
+    assert r.status_code == 400
+    assert "singleton" in r.get_json()["error"].lower()
+    assert "Fire // Ice" not in (split_client._decks / "s.txt").read_text(encoding="utf-8")
+
+
+def test_snow_covered_basics_are_exempt_from_the_singleton_rule(split_client):
+    """Snow-Covered Island is a basic land — any number is legal. The exemption used
+    the six plain-basic names only, so a second snow basic was falsely refused."""
+    r = split_client.post("/deck/s/add", data={"name": "Snow-Covered Island",
+                                              "section": "Lands"})
+    assert r.status_code == 200 and r.get_json()["ok"] is True
+
+
+def test_is_basic_names(client):
+    import mtglib
+    assert mtglib.is_basic("Island") and mtglib.is_basic("Snow-Covered Wastes")
+    assert not mtglib.is_basic("Command Tower")
+    assert not mtglib.is_basic("Snow-Covered Command Tower")
+
+
+def test_sections_endpoint_never_offers_the_synthetic_cards_label(tmp_path):
+    """Cards before any header get grouped under an invented 'Cards' label for display;
+    offering it in the picker sends the insert hunting for a header that isn't there."""
+    import deckcore
+    p = tmp_path / "d.txt"
+    p.write_text("# Title: T\n\n1 Sol Ring\n\n# --- Lands ---\n1 Island\n",
+                 encoding="utf-8")
+    assert deckcore.real_section_labels(str(p)) == ["Lands"]
+    # while the display grouping still shows the synthetic group:
+    assert [l for l, _ in deckcore.load_deck_sections(str(p))] == ["Cards", "Lands"]
+
+
+def test_advise_route_returns_json_when_analysis_fails(client, monkeypatch):
+    """The picker consumes JSON; an analysis failure must not surface as an HTML 500."""
+    import deckcore
+    def boom(*a, **k):
+        raise RuntimeError("companion file corrupt")
+    monkeypatch.setattr(deckcore, "advise_card", boom)
+    r = client.get("/api/deck/testdeck/advise?name=Sol Ring")
+    assert r.status_code == 500
+    assert "error" in r.get_json()
+
+
+def test_advise_card_gives_the_same_verdict_with_prebuilt_context(client, collection_file):
+    """The refs/ctx fast path for the optimizer's loop must not change the answer."""
+    import deckcore, deck_fit, power, mtglib
+    deck = str(client._decks / "testdeck.txt")
+    a = deckcore.analyze_deck(deck, collection_file)
+    refs = power.load_refs()
+    ctx = deck_fit.deck_context(deck, a["enriched"], "Test Commander")
+    slow = deckcore.advise_card(deck, collection_file, "Sol Ring", commander="Test Commander")
+    fast = deckcore.advise_card(deck, collection_file, "Sol Ring", commander="Test Commander",
+                                analysis=a, refs=refs, ctx=ctx)
+    assert (slow["score"], slow["band"]) == (fast["score"], fast["band"])

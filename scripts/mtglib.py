@@ -390,6 +390,16 @@ _LAND_HINTS = (
 )
 
 
+def is_basic(name: str) -> bool:
+    """True for any card exempt from the singleton rule: the six basics and their
+    Snow-Covered printings. Name-based on purpose — the exemption must hold even when
+    the collection is name-only (fresh clone on the snapshot, no supertype data)."""
+    low = name.strip().lower()
+    if low.startswith("snow-covered "):
+        low = low[len("snow-covered "):]
+    return low in _BASICS
+
+
 def _looks_like_land_by_name(name: str) -> bool:
     low = name.lower()
     if low in _BASICS:

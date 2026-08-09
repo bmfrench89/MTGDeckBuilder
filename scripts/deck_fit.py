@@ -363,7 +363,12 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
         if fit["score"] >= median:
             continue                      # at or above this deck's own middle
         why = []
-        if pts.get("Role need", 0) <= 10:
+        # _role_component's scale: 30 = fills a shortage · 22 = contributes to a role
+        # at a healthy count · 18 = generic creature body · 16 = role not detected ·
+        # 12 = over-target depth. Only 30 and 22 mean the card is doing a role job the
+        # deck wants, so the reason fires at <=18. (An earlier <=10 was dead code — no
+        # role path scores that low — so this reason never rendered at all.)
+        if pts.get("Role need", 0) <= 18:
             why.append("fills no role the deck is short on")
         why += ["no theme tie", "not a staple here"]
         out.append({"name": c.name, "score": fit["score"], "band": fit["band"],
