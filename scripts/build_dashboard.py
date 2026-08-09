@@ -1098,6 +1098,20 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     assessment, mana, combos, attrs = a["assessment"], a["mana"], a["combos"], a["attrs"]
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
 
+    # Fold Commander Spellbook's one-aways into the same combos dict combos.csv
+    # feeds, deduped by piece-set — one Combo Watch, one Buy view, two sources.
+    # Cached + graceful: unreachable CSB just means combos.csv stands alone.
+    try:
+        import spellbook
+        have = {frozenset(mtglib.name_keys(p) for p in c.get("pieces", []))
+                for c in (combos or {}).get("near", []) + (combos or {}).get("complete", [])}
+        extra = [n for n in spellbook.near_for_deck(deck_path, idx)
+                 if frozenset(mtglib.name_keys(p) for p in n["name"].split(" + ")) not in have]
+        if extra:
+            combos = dict(combos or {}, near=list((combos or {}).get("near", [])) + extra)
+    except Exception:
+        pass
+
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
     # The Buy view is fed by EVERY engine that knows about a gap — curated buylist,

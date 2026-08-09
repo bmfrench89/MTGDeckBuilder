@@ -119,3 +119,41 @@ if __name__ == "__main__":
     print(f"\nONE CARD AWAY ({len(one_away)} of {len(r['almost'])} near):")
     for c in one_away[:args.top]:
         print(f"   add {c['missing'][0]}  →  {' + '.join(c['cards'])}  ⇒  {', '.join(c['produces']) or '?'}")
+
+
+def near_for_deck(deck_path, coll_index=None, ttl=CACHE_TTL):
+    """CSB's one-away combos in combo_detector's `near` shape, so the dashboard's
+    Combo Watch and the hub's buy_signals() consume them exactly like combos.csv
+    entries. Cohesion rule: an engine exposes its knowledge in the standard shape;
+    it never gets a private rendering path.
+
+    Only true one-aways qualify (CSB's almostIncluded can be two cards away —
+    'buy these two and you have a combo' is a different, weaker suggestion).
+    Empty list on any failure: same graceful degradation as everything else here.
+    """
+    try:
+        sb = combos_for_deck(deck_path, ttl)
+    except Exception:
+        return []
+    if not sb or sb.get("error"):
+        return []
+    with open(deck_path, encoding="utf-8") as f:
+        deck = mtglib.parse_deck(f.read())
+    in_deck = set()
+    for c in deck:
+        in_deck |= mtglib.name_keys(c.name)
+    out = []
+    for cb in sb.get("almost", []):
+        pieces = cb.get("cards") or []
+        missing = [n for n in pieces if not (mtglib.name_keys(n) & in_deck)]
+        if len(missing) != 1:
+            continue
+        piece = missing[0]
+        ref = mtglib.lookup(coll_index, piece) if coll_index else None
+        out.append({"name": " + ".join(pieces),
+                    "result": ", ".join(cb.get("produces") or []),
+                    "missing": piece,
+                    "missing_owned": bool(ref),
+                    "early": False,
+                    "csb": True})
+    return out
