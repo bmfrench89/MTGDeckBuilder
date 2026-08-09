@@ -60,17 +60,80 @@ flowchart TB
 the hubs, never the reverse; spokes don't import each other. After **R1** no analysis
 module imports the `build_dashboard` renderer (the old circular imports are gone).
 
+## Card knowledge flow — the hub-and-spoke rule for FACTS, not just imports
+
+The dependency rule above is necessary but not sufficient. A second rule governs
+*information*: **everything the system knows about a card must flow through the hubs
+before any spoke renders it — no engine's knowledge may die inside its own section.**
+
+The rule exists because it was violated, live: Combo Watch told the player *"add
+Exquisite Blood (not owned) → drain the whole table"* while the Buy tab — whose entire
+job is "what should I spend money on" — had never heard of the card. The combo engine
+knew; the buy view didn't. `deckcore.buy_signals()` is the fix and the pattern.
+
+### The facts, where they're computed, and where they must surface
+
+| Fact about a card | Computed by | Must surface in |
+|---|---|---|
+| owned / qty / spare copies | `mtglib.load_collection` + `deck_conflicts` | decklist badges, panel, add-picker, optimizer tiers |
+| identity / legality here | `mtglib` + deck `# Colors:` header | add/replace validation, optimizer candidate filter |
+| fit (color/role/curve/power/theme) | `deck_fit.assess_card` | panel, add verdict, dead-weight, optimizer `value_of` |
+| field: inclusion % + synergy | `edhrec` (live → cache → **committed snapshot**) | fit scoring, optimizer, Buy staples, verdicts (with an honest "fit-only" note when absent) |
+| combo membership: present / one-away | `combo_detector` (+ `spellbook` beyond `combos.csv`) | Combo Watch, bracket signal, **Buy tab when the piece is unowned** |
+| curated buy intent | `.buylist.csv` (player-written) | Buy tab — **always wins dedupe over generated rows** |
+| in-decklist-but-unowned | `deck_stats.analyze` → `missing` | BUY badge in decklist **and** the Buy tab |
+| who decided (player vs tool) | `.changes.csv` `Source` column | NEW badge, advisor scope, optimizer's never-cut set |
+| reserved for another deck | `pins.csv` | panel pin toggle, optimizer `reserved`, add-picker warning |
+| player's own words | `.notes.md` | Plan tab, optimizer/dead-weight protection |
+
+**The merge points** (hub functions spokes must use, never re-derive):
+`deckcore.buy_signals(buylist, combos, missing, idx)` — one Buy list with provenance
+(`curated` > `combo` > `decklist`, front-face-aware dedupe) · `deckcore.advise_card()`
+— one verdict shape everywhere · `mtglib.name_keys()` — every membership test ·
+`deckcore.section_label()` / `mtglib._QTY_RE` — every deck-file parse.
+
+**Known gaps (tracked, not yet closed):** the standalone `/wishlist` page and
+`wishlist.py` CLI predate `buy_signals` and don't consume it yet; `spellbook`'s
+one-away results (CSB's full DB) reach the assess packet and Build Next view but are
+not merged into the dashboard's Buy tab (only `combos.csv` one-aways are).
+
+## Where each signal works — the deployment reality
+
+The app runs in three places; not every data source is reachable from each. **A
+signal that must work everywhere has to exist as a committed reference artifact** —
+that's why `combos.csv` worked on the hosted server the day the EDHREC field signal
+silently vanished there.
+
+| Signal | Player's PC | Hosted server (PythonAnywhere free) | CI / sandboxes |
+|---|---|---|---|
+| Card images (browser hotlinks) | ✅ | ✅ (phone fetches from Scryfall CDN directly) | n/a |
+| `api.scryfall.com` (enrichment) | ✅ | ✅ *(allowlisted — documented public API)* | usually ❌ |
+| `json.edhrec.com` (field, live) | ✅ | ❌ **permanently** — free accounts reach only [documented public APIs](https://help.pythonanywhere.com/pages/RequestingAllowlistAdditions/), which EDHREC's internal JSON is not | ❌ |
+| Commander Spellbook API | ✅ | likely ✅ (documented API; verify once) | ❌ |
+| `data/reference/*` (combos, game-changers, **field snapshots**) | ✅ | ✅ via git | ✅ |
+| `data/cache/*` (gitignored) | ✅ | only what the server itself fetched | ❌ |
+
+**Field snapshots** close the EDHREC row: `python3 scripts/edhrec.py --snapshot-all
+--collection <csv>` (run on the PC) writes distilled `{inclusion, synergy, names}` maps
+to `data/reference/field/<slug>.json` — a few KB per commander, committed like any
+reference file. `edhrec.inclusion_map/synergy_map/field_names` fall back to the
+snapshot when live + cache both fail, so `deck_fit`, the optimizer, verdicts, and Buy
+staples work identically on every surface. Precedence: live/cache first (freshest),
+snapshot second, `{}` only when neither exists — and an unreachable fetch never
+overwrites a good snapshot. Refresh cadence: whenever decks change meaningfully;
+inclusion rates drift slowly (the live cache TTL is a week).
+
 ## Module reference (`scripts/`, stdlib-only Python 3)
 
 | Module | Role | Depends on |
 |---|---|---|
 | **mtglib** | Data hub: `Card`, parsing, `classify`, pip math, `load_collection` (+ attrs/additions overlay) | — |
-| **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()` | mtglib |
+| **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()`; `advise_card()` (per-card verdict), `manual_adds()` (Source=manual-*), `buy_signals()` (the merged Buy view), `section_label()`/`real_section_labels()` | mtglib |
 | deck_stats | curve, colored-pip demand vs sources, role counts, ownership | mtglib |
 | power | WotC bracket (1–5, estimated) + 0–100 power score | mtglib, deck_stats, combo_detector, deckcore |
 | manabase | hypergeometric consistency: keepable %, source adequacy vs Karsten, risky-on-curve | mtglib |
 | combo_detector | infinite / 2-card combos present or one-away (`combos.csv`) | mtglib |
-| deck_fit | per-card fit score (library; no CLI) | mtglib |
+| deck_fit | per-card fit score + `dead_weight()` (below-deck-median passengers) (library; no CLI) | mtglib |
 | deck_conflicts | shared-across-decks + `--available` buildable pool | mtglib |
 | analyze_collection | "what can I build?" pool stats by color/type/tribe | mtglib |
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
@@ -79,7 +142,7 @@ module imports the `build_dashboard` renderer (the old circular imports are gone
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
 | carddb | enrich the collection (colors/types/MV/**subtypes**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build). | mtglib |
-| edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`, the **field signal** behind `deck_fit`; disk-cached, degrades gracefully | mtglib |
+| edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
 | **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply` | mtglib, deckcore, deck_fit, deck_conflicts, power |
 | spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully | mtglib |
@@ -93,10 +156,12 @@ site-wide via `data-card`), `static/cardgrid.js` + `static/collection.js` (batch
 loading — see **[card-images.md](card-images.md)** for the retrieval rules). The **saved-deck dashboard is editable** (`generate(..., editable=True)`): the card panel
 gets Remove / Replace (from the alternatives or an owned-card search), `POST /deck/<stem>/card`
 rewrites the deck `.txt` in place, and shared-across-decks status shows in the panel. CLI-rendered
-dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<stem>` dashboard
-· `/deck/<stem>/card` (remove/replace) · `/api/collection/search` (owned autocomplete) · `/build-next` (+
-`/…/deck` auto-build, "build any commander") · `/collection` (searchable grid) · `/wishlist`
-· `/shared` · `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet).
+dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<stem>` dashboard (six subtabs; ＋ Add card)
+· `/deck/<stem>/card` (remove/replace, front-face duplicate guard) · `/deck/<stem>/add`
+(validated add + fit verdict) · `/api/deck/<stem>/advise` · `/api/deck/<stem>/sections`
+· `/api/collection/search` (owned autocomplete) · `/build-next` (+ `/…/deck` auto-build,
+"build any commander") · `/collection` (searchable grid) · `/wishlist` · `/shared`
+· `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet).
 
 ## The coaching skill (`.claude/skills/mtg-deckbuilder/`)
 
@@ -107,9 +172,10 @@ CLIs* to stay grounded; it doesn't reimplement them. Runs in Claude Code (no app
 ## Data (`data/`)
 
 `collection/` (name-only `collection_snapshot.txt` committed; private `collection.csv` +
-derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional `.attrs/.notes/.buylist`
-companions) · `reference/` (game_changers, tutors, combos, card_notes, role_staples,
-commanders, archetype_support).
+derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional
+`.attrs/.notes/.buylist/.changes` companions) · `reference/` (game_changers, tutors,
+combos, card_notes, role_staples, commanders, archetype_support, **field/** — committed
+EDHREC snapshots, one per commander).
 
 ## Keeping decks optimized (automated at four points)
 
@@ -155,13 +221,16 @@ committed-elsewhere / not-owned, naming the decks holding contested copies — s
 *can't* improve reads as "pool exhausted", not "badly built". `write_buylist()` turns the
 unowned gaps into `<deck>.buylist.csv` (never overwriting a hand-written one).
 
-**Guardrails** (each exists because a naive pass got it wrong): a swap needs a ≥25-point
-inclusion gain; a card is valued at `max(field %, (fit−60)×2)` so premium-but-unpopular
-cards survive; the commander, basics, `card_notes.csv` entries and anything named in the
-deck's `.notes.md` are never cut; role counts must stay in template range; lands only swap
-for lands; only cards with a **free** copy (not committed to another deck) can come in; and
-with no field data the manabase is left alone entirely. Validate with EDHREC top-25 overlap
-before/after — see `docs/handoff.md`.
+**Guardrails** (each exists because a naive pass got it wrong): both sides of a swap are
+scored by ONE `value_of()` = `max(field %, (fit−60)×2)` — adds are queued by it and the
+≥25-point margin compares value to value (the old raw-inclusion queue let a 93% generic
+beat a high-synergy archetype payoff twice); the commander, basics, `card_notes.csv`
+entries, anything named in the deck's `.notes.md`, and every `Source=manual-*` card are
+never cut; role counts must stay in template range; lands only swap for lands; every
+membership test goes through `mtglib.name_keys()` (front-face aware) and
+`singleton_violations` aggregates by front-face key; and with no field data the manabase
+is left alone entirely. Validate with EDHREC top-25 overlap before/after — see
+`docs/handoff.md`.
 
 ## Design system (one visual language, two surfaces)
 

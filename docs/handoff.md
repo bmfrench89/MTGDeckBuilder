@@ -95,10 +95,20 @@ only the runtime-edited paths, rebases, and pushes.
      **⚠ Still owed, live:** the top-25 overlap check on real EDHREC data after the
      ranking change — preview→apply→re-run `optimize --all` from the PC or server;
      one `git revert` if a deck drops below ~50% overlap.
-5. **Untested: server-side Scryfall reachability.** PythonAnywhere free accounts proxy outbound
-   HTTP through a whitelist. If `api.scryfall.com` is not on it, `carddb.py` enrichment fails
-   server-side — request whitelisting via their forums, or enrich on the PC and upload the
-   resulting `collection_attrs.csv` via the Files tab. Card images are unaffected either way.
+5. **ANSWERED empirically (2026-08-09): server-side network reality.** The live deck page
+   showed "No EDHREC field data was reachable" — PythonAnywhere free accounts reach only
+   sites with official public API docs, which `json.edhrec.com` is not and never will be.
+   **Fix shipped: committed field snapshots** — `data/reference/field/<slug>.json`, written
+   by `python3 scripts/edhrec.py --snapshot-all --collection <csv>` on the PC, read as the
+   fallback by `edhrec.inclusion_map/synergy_map/field_names`. See codemap's "deployment
+   reality" table. **Player actions still open:** (a) run `--snapshot-all` on the PC, commit
+   `data/reference/field/`, push, pull on the server → field data lights up everywhere;
+   (b) upload the collection CSV via `/collection` — the screenshot's "avg MV unavailable
+   (add attrs)" means the server is still on the name-only snapshot; `api.scryfall.com` IS
+   allowlisted (documented public API), so upload-time enrichment should work server-side.
+   Also shipped same day: `deckcore.buy_signals()` — the Buy tab now merges curated buylist
+   + unowned one-away combo pieces + BUY-badged decklist cards with provenance (the
+   "Exquisite Blood was in Combo Watch but not in Buy" bug).
 
 ### What shipped in PR #69
 `webapp/pa_wsgi.py` (self-locating WSGI entry — no hardcoded home directory, so the checkout

@@ -377,3 +377,52 @@ def load_role_staples_safe():
         return deck_fit.load_role_staples()
     except Exception:
         return {}
+
+
+def buy_signals(buylist, combos, missing, idx=None):
+    """ONE merged 'cards to buy' list from every engine that knows about a gap.
+
+    The Buy view exists to answer 'what should I spend money on for this deck' —
+    but that knowledge used to be scattered: the curated `.buylist.csv` rendered,
+    while the combo engine's 'one piece away (not owned)' and the decklist's own
+    unowned BUY-badged cards each stayed inside their own section. A player could
+    read 'add Exquisite Blood to drain the table' in Combo Watch and then find a
+    Buy tab that had never heard of the card. Hub rule: signals about a card
+    flow together, with provenance, before any spoke renders them.
+
+    Row shape matches `load_buylist` (card/price/tier/replaces/reason) plus
+    `source`: 'curated' (always wins dedupe — the player wrote it), 'combo'
+    (an unowned piece completing a combo), 'decklist' (in the list, unowned).
+    Dedupe is front-face aware, like every membership test in this repo.
+    """
+    rows, seen = [], set()
+
+    def _add(row):
+        keys = mtglib.name_keys(row["card"])
+        if keys & seen:
+            return
+        seen.update(keys)
+        rows.append(row)
+
+    for r in (buylist or []):
+        _add(dict(r, source="curated"))
+
+    for cb in (combos or {}).get("near", []):
+        piece = cb.get("missing")
+        if not piece or cb.get("missing_owned"):
+            continue                      # owned pieces are a sleeving job, not a buy
+        ref = mtglib.lookup(idx, piece) if idx else None
+        _add({"card": piece,
+              "price": ref.price if ref else None,
+              "tier": "Combo",
+              "replaces": "",
+              "reason": f"Completes a combo: {cb.get('name', piece)} → {cb.get('result', '')}".strip(" →"),
+              "source": "combo"})
+
+    for c in (missing or []):
+        name = getattr(c, "name", c)
+        _add({"card": name, "price": None, "tier": "",
+              "replaces": "",
+              "reason": "Already in the decklist but not owned (the BUY badge).",
+              "source": "decklist"})
+    return rows
