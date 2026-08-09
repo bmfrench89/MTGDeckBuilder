@@ -1,0 +1,244 @@
+# CLAUDE.md
+
+Guidance for Claude Code (and any AI assistant) working in this repository.
+
+## What this project is
+
+A grounded **Magic: The Gathering Commander (EDH) deckbuilder** built around one player's
+real collection. Three layers, one shared code path:
+
+1. **A Claude skill** — `.claude/skills/mtg-deckbuilder/` — a 40-year-veteran / World
+   Champion persona plus the grounding rules and build/coach workflows. It *runs the CLIs*;
+   it never reimplements their logic. (`.claude/skills/mtg-mobile/` covers phone/PWA setup.)
+2. **A stdlib-only Python toolkit** — `scripts/` — parsing, analysis, optimization,
+   dashboards, rankings. No third-party imports (CI enforces this).
+3. **A local Flask web app** — `webapp/` — a front end over the same scripts (imported,
+   not duplicated). Runs on localhost so the collection and prices stay on the machine.
+
+## The prime directive: stay grounded
+
+This is the project's whole reason for existing, and the rule set exists because each item
+was gotten wrong before. Full text: `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
+
+- **The collection is the source of truth.** Never claim a card is owned, or that an
+  archetype has support, without checking the collection data.
+- **Count the pool; never spot-check staples.** "You own 10 dragons" is an answer;
+  "dragons look supported" is how you recommend Ur-Dragon to someone who can't cast it.
+- **Verify card text you aren't certain of** — especially post-2025 sets (Marvel,
+  Spider-Man, Final Fantasy, Avatar, Lorwyn Eclipsed, newer Strixhaven). One card at a time.
+- **Label estimates as estimates.** No live price feed is reachable; prices are estimates.
+- **Never invent a card.** Adds/cuts come from the collection, saved decks, curated
+  references, `auto_build.py`'s candidate pool, or a verified Scryfall lookup.
+
+## Layout
+
+```
+scripts/          The engine — stdlib-only Python 3 (see Architecture below)
+  assets/         Dashboard front-end assets, inlined at render time
+                  (tokens.css, card_panel.html/.css, card_images.html)
+webapp/           Flask app: app.py + templates/ + static/
+tests/            pytest — offline, hermetic (everything in tmp_path)
+data/
+  collection/     collection_snapshot.txt (committed, name-only) · collection.csv +
+                  collection_attrs.csv (gitignored, private) · owned_additions.txt · pins.csv
+  decks/          <stem>.txt + optional .notes.md / .buylist.csv / .attrs.csv / .changes.csv
+  reference/      game_changers, tutors, combos.csv, card_notes.csv, commanders.csv, …
+docs/             codemap.md (architecture) · handoff.md (session history) ·
+                  spec-interactive-analytics-ai.md (feature tracker) · research-roadmap.md ·
+                  power-and-brackets.md · card-images.md · mobile.md · SETUP-windows.md
+.claude/skills/   The mtg-deckbuilder and mtg-mobile skills
+```
+
+Root helpers: `update.bat` (pull + rebuild), `enrich.bat` (Scryfall enrichment),
+`webapp/run.sh` / `webapp/run.bat` (venv + launch, LAN-bound).
+
+## Architecture — hub and spoke
+
+Two **hubs** feed a ring of **analysis engines**, which feed **presentation spokes**,
+consumed by the web app, the CLIs, and the skill. `docs/codemap.md` has the full map and
+per-module table — read it before any structural change.
+
+- **Hubs:** `mtglib` (data: `Card`, deck/collection parsing, `classify`, pip math,
+  `load_collection`) → `deckcore` (analysis: shared loaders, card-notes KB,
+  `analyze_deck()` / `analyze_cards()` — the one pipeline every consumer calls).
+- **Engines:** `deck_stats`, `power`, `manabase`, `combo_detector`, `deck_fit`,
+  `deck_conflicts`, `analyze_collection`, `similar_commanders`, `commander_finder`,
+  `card_image`.
+- **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
+  `auto_build` (assemble a full 99), plus `optimize`.
+- **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
+  `/cards/collection`), `edhrec`, `spellbook`.
+
+**The dependency rule: dependencies point inward.** Engines and spokes depend on the hubs,
+never the reverse; spokes do not import each other. No analysis module may import
+`build_dashboard` (the old circular imports were removed in refactor R1 — don't reintroduce
+them).
+
+Scripts import siblings as flat top-level modules (`import mtglib`). Running
+`python3 scripts/foo.py` works because Python puts the script's directory on the path;
+other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `tests/conftest.py`).
+
+## Commands
+
+```bash
+# Tests (the only dev dependency is pytest)
+pip install -r requirements-dev.txt && pytest          # 122 tests, ~30s, offline
+
+# Web app
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r webapp/requirements.txt
+python3 webapp/app.py                                  # -> http://127.0.0.1:5000
+./webapp/run.sh                                        # same, but bound to 0.0.0.0 for phones
+
+# Core analysis (COLL = data/collection/collection.csv, or the snapshot on a fresh clone)
+python3 scripts/analyze_collection.py $COLL --subtype Dragon --list
+python3 scripts/deck_stats.py --deck data/decks/<stem>.txt --collection $COLL
+python3 scripts/power.py --rank --collection $COLL
+python3 scripts/manabase.py --deck data/decks/<stem>.txt --collection $COLL
+python3 scripts/combo_detector.py --deck data/decks/<stem>.txt --collection $COLL
+python3 scripts/deck_conflicts.py --collection $COLL [--available]
+
+# Build / tune / render
+python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL          # preview
+python3 scripts/optimize.py --all --collection $COLL --apply                        # write
+python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $COLL \
+    --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
+python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
+python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
+```
+
+Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conflicts`, and
+`auto_build` also take `--json` — prefer that when consuming output programmatically.
+
+## Working rules for this repo
+
+### Privacy — the hard line
+`data/collection/collection.csv` and `collection_attrs.csv` are **gitignored and private**
+(a priced export of someone's real collection). Never commit them, never print their full
+contents into a PR body, and never write uploads to the tracked name-only snapshot —
+`/collection/upload` deliberately writes to the private CSV only (this closed a real leak).
+The committed `collection_snapshot.txt` is name + quantity only and is the ownership
+fallback for a fresh clone.
+
+### scripts/ is stdlib-only
+CI uninstalls Flask and imports every module in `scripts/` with no third-party packages
+present. Adding a dependency there breaks the build — and the design. Flask belongs in
+`webapp/requirements.txt`; `duckdb` is genuinely optional (`scripts/requirements-optional.txt`).
+
+### Tests are offline and hermetic
+Every deck/collection a test touches is written into pytest's `tmp_path`; the suite never
+reads or writes the player's real `data/`. Keep it that way. Coverage targets the code that
+can *destroy data or lie*: `test_deck_edit` (in-place deck rewrites), `test_mtglib`
+(parsing/normalization/classification), `test_manabase` (hypergeometric math),
+`test_auto_build` (exactly 100 cards, color legality, singleton), `test_optimize`,
+`test_dashboard` (self-contained HTML, editable only in-app), `test_design_tokens`.
+CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
+
+### One design system, two surfaces
+`scripts/assets/tokens.css` is the single source of truth for the type scale, 4px spacing
+scale, radii and elevation. It deliberately contains **no colours and no fonts** — those
+are the only things a surface may differ on. The web app links it (`/static/tokens.css`);
+generated dashboards **inline** it so the file stays self-contained/offline.
+`tests/test_design_tokens.py` fails if `app.css` redefines a scale token, if `tokens.css`
+starts hardcoding a colour, or if the two surfaces resolve a token differently. Don't add
+ad-hoc font sizes or spacing values — use a token.
+
+### Optimization is automatic in four places, and deliberately NOT in a fifth
+It runs when a deck is saved from Build Next, via the ⚡ button (`POST /deck/<stem>/optimize`),
+via `refresh.py --optimize`, and as step 5 of the skill's build workflow. It does **not**
+run after a manual edit — the card panel's Remove/Replace and the deck editor save the
+player's choice as-is. Never second-guess a deliberate swap. The optimizer is idempotent:
+a second run on a tuned deck changes nothing, and that property is worth preserving.
+
+Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥25-point
+EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
+basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` are never
+cut; role counts must stay in template range; lands only swap for lands; with no field data
+the manabase is left alone. Validate a tuned deck with EDHREC top-25 overlap — below ~50%
+means something is wrong, so say so rather than shipping quietly.
+
+### Network access degrades, never crashes
+Scryfall / EDHREC / Commander Spellbook are reachable from the player's machine but may be
+proxy-blocked in a sandbox. Those clients are disk-cached (`data/cache/`, gitignored) and
+must degrade gracefully. Card images are always **browser hotlinks**, never server-side
+fetches — see `docs/card-images.md`. When delivering a dashboard, warn that card images only
+render in a real browser.
+
+## Data formats
+
+**Deck** — `data/decks/<stem>.txt`: `# Key: value` headers (`Title`, `Commander`, `Colors`,
+`Archetype`, and optionally `Theme`, `Source`, `Deck`, `Note`), then `# --- Section ---`
+groups of `<qty> <card name>` lines. Section names are free-form; the dashboard groups the
+decklist by the file's own sections, so **preserve them when editing**. Edits rewrite the
+file in place and must keep quantity, section, and comment lines intact (that's what
+`test_deck_edit.py` guards).
+
+**Deck companions** (auto-detected next to `<stem>.txt`):
+`.notes.md` (game plan — markdown-lite; cards named here are protected from the optimizer),
+`.buylist.csv` (`Card,Price,Tier,Replaces,Reason`), `.attrs.csv` (`Name,Type,MV,Colors` —
+curve without the full CSV), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
+each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`).
+
+**Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
+Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks
+color/type/tribe/curve/pip analysis; the name-only snapshot answers ownership only.
+`load_collection` auto-merges `collection_attrs.csv` (derived) and `owned_additions.txt`
+(player-confirmed cards the export missed — the player's word beats the export).
+`pins.csv` (`Card,Deck`) reserves a physical copy for one deck; other decks treat it as
+unavailable.
+
+**Reference** — `data/reference/*.csv|.txt` are hand-editable knowledge: `combos.csv`
+(`Pieces` are `;`-separated so card-name commas survive), `card_notes.csv` (curated "why it
+works" — always beats `card_notes.generated.csv`), `game_changers.txt` (the verified 53-card
+WotC list), `commanders.csv`, `role_staples.csv`, `archetype_support.csv`.
+
+## Web app notes
+
+`webapp/app.py` is the primary spoke consumer: routes call engines/spokes and render Jinja
+templates. Config via env: `MTG_COLLECTION`, `MTG_DECKS_DIR`, `MTG_PORT`, `MTG_HOST`
+(`0.0.0.0` for phone access — noted as a LAN exposure in the README).
+
+Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<stem>/card`
+(remove/replace) · `/deck/<stem>/optimize` · `/deck/<stem>/pin` · `/deck/<stem>/assess[.txt]`
+(coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` (+ `/add`,
+`/upload`) · `/wishlist` · `/shared` · `/api/card/<name>` · `/api/collection/search` ·
+`/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health`.
+
+The saved-deck dashboard is editable (`build_dashboard.generate(..., editable=True)`);
+CLI-rendered dashboards keep `editable=False`. Both surfaces share `generate()`, so a change
+to the renderer changes the CLI output and the app identically — check both.
+
+## Known traps
+
+- **`" // "` with spaces is the split-card separator.** A bare `//` can be part of a real
+  card name (`SP//dr, Piloted by Peni`). `mtglib.front_face()` handles this; a naive
+  `split("//")` once produced a bogus alias that let the optimizer add six copies of a
+  singleton. Any new name-normalization must go through `front_face` / `_norm` / `lookup`.
+- **Role/category counts are heuristic.** `classify()` works from curated name lists plus
+  card types. Strong first pass; eyeball the result before asserting it.
+- **`optimize.singleton_violations()` runs after every write** and the CLI prints
+  `!! ILLEGAL`. Keep that check — this class of bug was silent for four commits.
+- **A dashboard must stay one self-contained file.** Assets in `scripts/assets/` are read by
+  `_asset()` and inlined at render time; don't turn them into external links.
+- **The two surfaces open the card panel from different hooks.** App templates use
+  `data-card="<name>"` (`webapp/static/cardpanel.js`); generated dashboards wire their own
+  inlined panel to `figure.mc[data-key], .cardlink[data-key]`. A selector that works on one
+  surface will silently no-op on the other — check both when touching panel wiring.
+- **`docs/handoff.md` is layered history.** The top "START HERE — CURRENT STATE" block is
+  authoritative; sections below it are older and partly superseded. For architecture, trust
+  `docs/codemap.md` over the handoff.
+
+## Git workflow
+
+Develop on the assigned feature branch, never directly on `main`. PRs are **squash-merged**,
+so re-sync the branch to `origin/main` before starting new work or the next PR conflicts.
+
+Commit messages in this repo are substantial: a one-line subject describing the user-visible
+outcome, then a body explaining the root cause, the fix in layers, and what was verified
+(test counts, deck totals, before/after field overlap). Match that style — see
+`git log` for examples.
+
+When a session produces or materially changes a deck, update `docs/handoff.md` so the next
+session starts grounded instead of re-deriving, and tick the tracker in
+`docs/spec-interactive-analytics-ai.md` when a spec'd feature lands.
