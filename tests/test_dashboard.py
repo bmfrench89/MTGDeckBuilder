@@ -137,3 +137,26 @@ def test_dashboard_degrades_when_the_fit_engine_fails(deck_file, collection_file
     html = _html(deck_file, collection_file)
     assert html.lstrip().lower().startswith("<!doctype html")
     assert "Sol Ring" in html                      # the decklist still rendered
+
+
+def test_image_loader_survives_a_failed_batch():
+    """The live phone bug: one failed batch POST used to dump every card onto the
+    rate-limited by-name endpoint at 2.5/s — a page of 429 broken-image glyphs
+    (the exact failure docs/card-images.md documents). The loader must retry the
+    batch, pace any fallback under Scryfall's ~2/s limit, and clear a failed src
+    so a card degrades to its name, never a broken icon. Textual guards here;
+    behavior was verified in a real browser (healthy / flaky / down scenarios)."""
+    loader = bd._asset("card_images.html")
+    assert "runBatch(batch, attempt+1)" in loader, "batch retry missing"
+    assert ",700)" in loader and ",400)" not in loader, "fallback must pace under ~2/s"
+    assert "removeAttribute('src')" in loader, "a 429'd image must degrade to its name"
+
+
+def test_app_side_grid_loader_has_the_same_protections():
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    js = open(os.path.join(root, "webapp", "static", "cardgrid.js"),
+              encoding="utf-8").read()
+    assert "runBatch(batch, attempt + 1)" in js, "batch retry missing"
+    assert ", 700)" in js and ", 400)" not in js, "fallback must pace under ~2/s"
+    assert "removeAttribute('src')" in js, "a 429'd image must degrade to its name"

@@ -28,7 +28,9 @@
   }
 
   var batches = chunk(keys, 75), pending = batches.length;
-  batches.forEach(function (batch) {
+  // One retry per batch — a single failed POST used to dump every card onto the
+  // rate-limited by-name fallback at once (the 429 cascade in docs/card-images.md).
+  function runBatch(batch, attempt) {
     fetch('https://api.scryfall.com/cards/collection', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifiers: batch.map(function (k) { return { name: byName[k].orig }; }) })
@@ -38,11 +40,18 @@
           var url = cdn(card), k = (card.name || '').toLowerCase();
           if (url && byName[k]) { byName[k].imgs.forEach(function (i) { i.src = url; }); resolved[k] = true; }
         });
-      }).catch(function () {})
-      .finally(function () { if (--pending === 0) fallback(); });
-  });
+        if (!j && attempt < 1) { setTimeout(function () { runBatch(batch, attempt + 1); }, 1500); return; }
+        if (--pending === 0) fallback();
+      }).catch(function () {
+        if (attempt < 1) { setTimeout(function () { runBatch(batch, attempt + 1); }, 1500); return; }
+        if (--pending === 0) fallback();
+      });
+  }
+  batches.forEach(function (batch) { runBatch(batch, 0); });
 
-  // Fallback: cards the batch didn't resolve -> their data-src, gently throttled.
+  // Fallback: cards the batch didn't resolve -> their data-src. 700ms stays under
+  // Scryfall's ~2/s by-name limit (400ms was over it); a failed load clears src so
+  // the card shows its name cleanly instead of a broken-image glyph.
   function fallback() {
     var rest = [];
     keys.forEach(function (k) {
@@ -52,7 +61,10 @@
     var q = rest.slice(), timer = setInterval(function () {
       var i = q.shift();
       if (!i) { clearInterval(timer); return; }
-      if (!i.getAttribute('src')) i.src = i.getAttribute('data-src');
-    }, 400);
+      if (!i.getAttribute('src')) {
+        i.onerror = function () { this.onerror = null; this.removeAttribute('src'); };
+        i.src = i.getAttribute('data-src');
+      }
+    }, 700);
   }
 })();
