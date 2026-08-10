@@ -31,10 +31,10 @@ which destroys this app's data model (deck rewrites, `.changes.csv` appends, col
 uploads). PythonAnywhere free includes one web app at `<username>.pythonanywhere.com`,
 HTTPS by default, ~512 MB persistent disk, Python 3.13, virtualenvs.
 
-> **Security note:** the hosted app has **no authentication** — anyone who finds the URL
-> can read and edit everything the app exposes. Treat the URL as sensitive (it is
-> deliberately not written anywhere in this repo) and prefer enabling access protection
-> at the host or app level before sharing it.
+> **Security note:** set `MTG_PASSWORD` in the WSGI file (see `docs/spec-auth-gate.md`)
+> so the hosted app requires a sign-in. Without it, anyone who finds the URL can read
+> and edit everything the app exposes. The URL is deliberately not written anywhere in
+> this repo; treat it as sensitive either way.
 
 ---
 

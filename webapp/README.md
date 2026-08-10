@@ -23,6 +23,9 @@ Config via env vars:
 - `MTG_HOST` — bind address (default `127.0.0.1`; `0.0.0.0` allows LAN/phone access)
 - `MTG_AUTO_SYNC` — force the in-app GitHub sync on (`1`) or off (`0`); by default it
   is on only when a PythonAnywhere host is detected (`docs/spec-in-app-sync.md`)
+- `MTG_PASSWORD` — when set, every page requires a one-time sign-in per device
+  (shared password, 90-day session; `docs/spec-auth-gate.md`). Unset = no gate,
+  for local use.
 
 ## Pages
 
@@ -65,10 +68,10 @@ Public HTTPS URL while the tunnel runs; the URL changes each run.
 ### 3. Always-on hosting
 The app runs on any WSGI host (`webapp/pa_wsgi.py` is a ready entry point;
 `docs/plan-pythonanywhere-deploy.md` documents a complete free-tier PythonAnywhere
-setup, including the daily GitHub sync). **A hosted copy is reachable by anyone who
-finds the URL — the app itself has no authentication.** Before hosting: keep the
-private collection CSV out of git (it is gitignored), enable whatever access
-protection the host offers, and treat the URL as sensitive.
+setup, including the daily GitHub sync). **On any hosted copy, set `MTG_PASSWORD`
+in the server environment** so the app requires a sign-in (`docs/spec-auth-gate.md`)
+— without it, anyone who finds the URL can read and edit everything. Also keep the
+private collection CSV out of git (it is gitignored) and treat the URL as sensitive.
 
 ## Note on the dev server
 

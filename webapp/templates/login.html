@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in · MTG Deckbuilder</title>
+<meta name="theme-color" content="#0b0d13">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  /* Login-only layout: center the card; everything else is stock app styling. */
+  .gate { min-height: 100svh; display: flex; align-items: center; justify-content: center;
+          padding: var(--sp-5); }
+  .gate .card { width: 100%; max-width: 360px; }
+  .gate input[type=password] { width: 100%; box-sizing: border-box; }
+</style>
+</head><body>
+<div class="gate">
+  <div class="card stack">
+    <div>
+      <h1>🕸 MTG Deckbuilder</h1>
+      <div class="sub" style="margin-bottom:0">This is a private deckbuilder — sign in to continue.</div>
+    </div>
+    <form method="post" action="{{ url_for('login') }}" class="stack">
+      <input type="hidden" name="next" value="{{ next }}">
+      <input type="password" name="password" placeholder="Password" autofocus
+             autocomplete="current-password" aria-label="Password">
+      {% if error %}<div class="warn fs-sm">{{ error }}</div>{% endif %}
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+</body></html>
