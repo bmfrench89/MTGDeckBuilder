@@ -1,7 +1,7 @@
 {
  "commander": "Captain America, First Avenger",
  "slug": "captain-america-first-avenger",
- "saved": "2026-08-09",
+ "saved": "2026-08-10",
  "sample_decks": 15144,
  "inclusion": {
   "mj\u00f6lnir, hammer of thor": 49,
@@ -111,8 +111,8 @@
   "galvanic blast": 9,
   "untimely malfunction": 8,
   "sink into stupor": 7,
-  "wear // tear": 7,
   "wear": 7,
+  "wear // tear": 7,
   "akroma's will": 7,
   "sejiri shelter": 7,
   "brainstorm": 6,
@@ -401,8 +401,8 @@
   "galvanic blast": 8,
   "untimely malfunction": 4,
   "sink into stupor": -2,
-  "wear // tear": 1,
   "wear": 1,
+  "wear // tear": 1,
   "akroma's will": -5,
   "sejiri shelter": 4,
   "brainstorm": -13,
