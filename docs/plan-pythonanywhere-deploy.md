@@ -11,58 +11,37 @@ PythonAnywhere bash console, or the agent walks them through live).
 
 ---
 
-## ✅ STATUS 2026-08-09 — DEPLOYED AND LIVE
+## STATUS — deployed and live (last updated 2026-08-10)
 
-**<https://bmfrench89.pythonanywhere.com> is serving.** Phases 0–3 and 6 are complete;
-the app is installed as a PWA on the player's phone.
+The deploy is complete and this document now serves as the **repeatable setup guide**
+(for a redeploy or a fresh account). Confirmed live: `/health` 200 · dashboards render
+with working card images (browser hotlinks, unaffected by server-side network limits) ·
+**persistence verified** — a deck edit survived a full app reload · PWA installed on
+phone and PC · GitHub push credentials (fine-grained PAT) installed and the sync loop
+verified end to end · daily sync + reload handled **in-app** (`docs/spec-in-app-sync.md`;
+PythonAnywhere's Scheduled Tasks are paid-only as of 2026-08-10).
 
-| Phase | Status |
-|---|---|
-| 0 · Repo prep | ✅ shipped in PR #69 |
-| 1 · Account | ✅ `bmfrench89`, Python 3.13 |
-| 2 · Clone + virtualenv | ✅ `~/MTGDeckBuilder` on `main`, venv `mtg` |
-| 3 · Web app config | ✅ manual config, WSGI wired, **Static files left empty** |
-| 4 · Data | ⚠️ **collection CSV upload unconfirmed** — `/health` last showed the snapshot |
-| 5 · Enrichment / whitelist | ⬜ untested |
-| 6 · Install on devices | ✅ PWA installed on phone; card images load |
-| 7 · Verification | ✅ **persistence confirmed** — a deck edit survived a full app reload |
+Still open: the **collection CSV upload** (Phase 4 — the server runs on the name-only
+snapshot until then) and a one-time **server-side Scryfall reachability test** (Phase 5).
 
-**Verified live, worth not re-deriving:** `/health` returns 200 · dashboards render with
-working card images (browser hotlinks, so server-side network limits don't touch them) ·
-a removal persisted across an app reload, which is the property that disqualified Render.
-
-**🔧 Outstanding, in priority order:**
-1. **GitHub push credentials** — the PAT + `git remote set-url` + first `sync_server.sh`
-   run were deferred (see Ongoing maintenance below). Until then, **one deck edit exists
-   only on the server**: Mystic Remora was removed from `cosmic-spider-man`.
-2. Confirm/complete the **collection CSV upload** (Phase 4).
-3. Test **server-side Scryfall reachability** (Phase 5).
-
-Platform details in this plan were flagged as unverified when written. Confirmed since:
-free tier does provide a web app at `<username>.pythonanywhere.com` with HTTPS, a
-persistent filesystem, Python 3.13, and virtualenv support. The whitelist and keepalive
-specifics remain unconfirmed.
-
-**Why PythonAnywhere:** it is the one free host whose filesystem **persists** — it's a
-long-lived shared server, not an ephemeral container. Render's free tier was verified
-(primary source) to lose all filesystem writes on every redeploy/restart/spin-down, which
-destroys this app's data model (deck rewrites, `.changes.csv` appends, collection
+**Why PythonAnywhere:** it is the one free host whose filesystem **persists** — a
+long-lived shared server, not an ephemeral container. Render's free tier loses all
+filesystem writes on every redeploy/restart/spin-down (verified against its own docs),
+which destroys this app's data model (deck rewrites, `.changes.csv` appends, collection
 uploads). PythonAnywhere free includes one web app at `<username>.pythonanywhere.com`,
-HTTPS by default, ~512 MB persistent disk.
+HTTPS by default, ~512 MB persistent disk, Python 3.13, virtualenvs.
 
-> **Facts flagged as unverified:** PythonAnywhere specifics in this plan (free-tier
-> limits, whitelist behavior, keepalive interval, available Python versions) come from
-> prior knowledge — pythonanywhere.com was egress-blocked from the research sandbox.
-> They have been stable for years, but the executing agent should verify each one against
-> the live site during Phase 1 and adjust. Nothing in this plan is expected to change
-> architecturally if a detail differs.
+> **Security note:** the hosted app has **no authentication** — anyone who finds the URL
+> can read and edit everything the app exposes. Treat the URL as sensitive (it is
+> deliberately not written anywhere in this repo) and prefer enabling access protection
+> at the host or app level before sharing it.
 
 ---
 
 ## Repo facts the deploy depends on (verified in-repo, current as of this plan)
 
-These were checked against `webapp/app.py` on branch `claude/claude-md-docs-67vnq0`;
-re-verify quickly if the file has moved on.
+These were checked against `webapp/app.py` when the deploy shipped; line numbers may
+have drifted since — re-verify quickly if needed.
 
 1. **WSGI-clean import.** `app.run()` sits behind `if __name__ == "__main__":`
    (`webapp/app.py:690`). Importing `app` from `webapp/app.py` starts nothing. No

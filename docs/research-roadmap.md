@@ -1,6 +1,7 @@
 # MTG Deckbuilder — Interactive + Analytics + AI Roadmap
 
-**Status:** proposed blueprint (awaiting build kickoff). Created 2026-07-22.
+**Status:** historical research record — the blueprint was executed (see the tracker in
+`spec-interactive-analytics-ai.md` for what shipped). Created 2026-07-22.
 **Source:** deep-research pass (106 agents, 24 sources, 21/25 claims adversarially
 verified) + design decisions with the player. This is the durable plan; the
 "Open threads" in `docs/handoff.md` point here.

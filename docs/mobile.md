@@ -3,7 +3,14 @@
 The app installs to your home screen and opens full-screen. There is no APK to sideload —
 **the installed web app is the app**, and the reasons why are at the bottom.
 
-## Quick start
+## Hosted deploy (if one exists)
+
+If the app is hosted (see `docs/plan-pythonanywhere-deploy.md`), skip the LAN setup
+entirely: open the hosted URL on the phone and install it from there (step 4 below).
+The PC never needs to be on. Everything below covers the **local/LAN mode**, which
+still works for offline development.
+
+## Quick start (local/LAN mode)
 
 1. **On the PC**, start the server so your network can reach it:
 
@@ -27,13 +34,15 @@ The app installs to your home screen and opens full-screen. There is no APK to s
 
 Long-press the installed icon for shortcuts straight to Collection, Build Next and Wishlist.
 
-## What works away from the PC
+## What works away from the PC (local/LAN mode)
 
 | | Works? |
 |---|---|
 | Dashboards, card panel, optimize, edit, collection | ✅ while the PC is on and serving |
 | Card images | ✅ always — they come from Scryfall's CDN, not your PC |
 | PC asleep / different network | ❌ shows a "can't reach the deckbuilder" page |
+
+(On a hosted deploy none of this applies — the server is always on.)
 
 The service worker (`webapp/static/sw.js`) caches only the **static shell** (CSS, JS,
 icons). Deck and collection pages are always fetched live and are **never** served from
@@ -66,8 +75,8 @@ Three ways to make an installable Android package, and none of them beat the PWA
    there — at which point it can't see the data on your PC anyway.
 
 The PWA gives you the same home-screen icon and full-screen launch as option 1, with none
-of the cost. If you ever host this publicly over HTTPS, option 2 becomes a one-command
-build and worth revisiting.
+of the cost. With a hosted HTTPS deploy, option 2 (TWA) becomes technically possible —
+but the installed PWA already delivers the same UX, so it remains an explicit non-goal.
 
 ## Regenerating the icons
 
