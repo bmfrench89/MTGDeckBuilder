@@ -16,13 +16,13 @@
 1 Blood Artist
 1 Baleful Strix
 1 Murderous Rider
-1 The Kingpin of Crime
+1 White Auracite
 1 Archmage Emeritus
 1 Emet-Selch of the Third Seat
 1 Fandaniel, Telophoroi Ascian
 1 Vito, Thorn of the Dusk Rose
 1 Alphinaud Leveilleur
-1 Serra Paragon
+1 Risky Shortcut
 1 Sun Titan
 1 Papalymo Totolymo
 1 Lyse Hext
@@ -33,7 +33,7 @@
 1 Counterspell
 1 Infernal Grasp
 1 Absorb
-1 Sphinx's Revelation
+1 Eye of Nidhogg
 1 Void Rend
 1 Soul Shatter
 1 Snuff Out
@@ -46,20 +46,20 @@
 
 # --- Finishers / drain / value ---
 1 Exsanguinate
-1 Profane Command
+1 Syphon Mind
 1 Syphon Soul
 1 Toxic Deluge
 1 Vindicate
 1 Godless Shrine
-1 Ambition's Cost
-1 Extinction Event
+1 G'raha Tia, Scion Reborn
+1 Tataru Taru
 1 Frantic Search
-1 Time Wipe
+1 Hermes, Overseer of Elpis
 1 Transpose
 1 Cleansing Nova
 1 Talisman of Progress
 1 Authority of the Consuls
-1 Staggering Insight
+1 Dancer's Chakrams
 1 Rhystic Study
 1 Bastion of Remembrance
 1 Propaganda
@@ -102,7 +102,7 @@
 1 Shineshadow Snarl
 1 Evolving Wilds
 1 Sunlit Marsh
-1 Hidden Lair
+1 Observed Stasis
 1 Scavenger Grounds
 5 Swamp
 1 Ash Barrens

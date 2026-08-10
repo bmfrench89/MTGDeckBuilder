@@ -13,8 +13,8 @@
 1 Rampant Growth
 1 Thought Vessel
 1 Up the Beanstalk
-1 Azorius Signet
-1 Elvish Mystic
+1 Cultivate
+1 Fellwar Stone
 1 Temur Ascendancy
 1 Gilded Goose
 1 Llanowar Elves
@@ -35,7 +35,7 @@
 
 # --- Removal ---
 1 Assassin's Trophy
-1 Disenchant
+1 Kindred Discovery
 1 Call the Spirit Dragons
 1 Seal of Cleansing
 1 Seal of Fire
@@ -65,8 +65,8 @@
 1 Fin Fang Foom
 1 Pet Avengers
 1 Atarka, World Render
-1 Atsushi, the Blazing Sky
-1 Decadent Dragon // Expensive Taste
+1 Nature's Lore
+1 Path to Exile
 1 Parapet Thrasher
 1 Hellkite Tyrant
 1 Ganax, Astral Hunter
@@ -78,7 +78,7 @@
 1 Dragonspeaker Shaman
 1 Old Gnawbone
 1 Tiamat
-1 Ao, the Dawn Sky
+1 Swords to Plowshares
 
 # --- Lands (36) ---
 1 Command Tower
@@ -95,10 +95,10 @@
 1 Unclaimed Territory
 1 Secluded Courtyard
 1 Maelstrom of the Spirit Dragon
-1 Bonders' Enclave
-1 Castle Doom
+1 Roaming Throne
+1 Lightning Greaves
 1 Coastal Tower
-1 Crystal Vein
+1 Rhystic Study
 1 Emeria, the Sky Ruin
 1 Twilight Mire
 1 Festering Thicket
