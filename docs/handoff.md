@@ -54,35 +54,39 @@ editor, and the optimizer. `sync_server.sh` (repo root) reconciles: commits only
 three runtime-edited paths (never `git add -A`), rebases before pushing (aborting
 cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
-## Current data
+## Current data (season closed 2026-08-10)
 
-- **Six decks** in `data/decks/`: Y'shtola Night's Blessed, Captain America Team
-  Leader, The Ur-Dragon, Cosmic Spider-Man, Cloud Ex-SOLDIER, Captain America First
-  Avenger.
-- The server still runs on the committed **name-only snapshot** — the rich collection
-  CSV has not been uploaded there yet (see "Open items").
-- Test suite: **231 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- **Six decks** in `data/decks/`, all re-optimized against the field snapshots and
+  idempotent (a fresh `optimize.py --all` proposes nothing). Bracket state vs the
+  owner's stated aim of **Bracket 3/4 where possible**: four decks at B3 (Y'shtola
+  71 · Team Leader 58 · Ur-Dragon 58 · Cosmic Spider-Man 55); Cloud (B2, 50) and
+  First Avenger (B2, 32) below. Cloud has an approved-path fix (Crop Rotation, the
+  one FREE owned Game Changer in its colors, notably fetching its Slayers'
+  Stronghold at instant speed); First Avenger **cannot** reach B3 from the owned
+  pool — every blue Game Changer is committed elsewhere (Force of Will ×2,
+  Mystical Tutor, Rhystic Study ×2-across-4-decks) — only a purchase gets it there.
+  No deck can reach B4 from the owned pool (4 unique Game Changers owned, total).
+- **The server runs on the full Sorted collection** (uploaded via the app; 2,518
+  unique / 3,602 copies, enriched). The committed name-only snapshot was
+  regenerated from the same export (PR #88) — grounding is consistent everywhere.
+- **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
+  at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
+- Test suite: **255 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 
 ## Open items
 
-1. **Auth gate shipped — needs one server-side step to turn ON.** The app now
-   supports a shared-password login (`docs/spec-auth-gate.md`); until the player
-   adds `os.environ["MTG_PASSWORD"] = "…"` to the PythonAnywhere WSGI file and
-   reloads, the hosted app is still open to anyone who finds the URL. That env
-   line is the whole setup. Never ask for or handle the actual password in chat.
-2. **Collection CSV upload.** Until an export is uploaded via the app's Collection
-   page, server-side analysis runs name-only (no curve/color/tribe data). Exports
-   from all major collection apps load directly (`docs/collection-formats.md`);
-   attributes come from the upload's auto-enrichment. Uploading rebinds the
-   collection in-process — no reload needed.
-3. **Optimizer ranking validation.** The `value_of()` ranking change shipped without
-   live EDHREC top-25 overlap validation (unreachable from the sandbox that wrote it).
-   From any EDHREC-reachable machine: run `optimize.py --all` preview, check overlap;
-   below ~50% on any deck means revert the ranking commit.
-4. **PAT renewal when due** (see GitHub token settings) and the quarterly
-   keepalive click (above).
-5. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain text,
-   not panel-clickable (`docs/codemap.md`, "still open").
+1. **Cloud → B3 swap awaiting the owner's yes/no:** Evolving Wilds → Crop Rotation
+   (owned ×3, free). Apply via the app's card panel or a deck-file edit; the
+   optimizer will respect it as a manual edit either way.
+2. **First Avenger bracket:** stays B2 unless a Game Changer in R/U/W is bought
+   (estimates only — no live prices): e.g. Drannith Magistrate or Smothering
+   Tithe class cards. The deck also still lists 21 cards to buy — bracket is not
+   its binding constraint.
+3. **PAT renewal when due** (see GitHub token settings) and the quarterly
+   keepalive click (above). Auth gate is ON (verified live); collection upload is
+   DONE; ranking validation is DONE.
+4. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain
+   text, not panel-clickable (`docs/codemap.md`, "still open").
 
 ## Session workflow reminders
 
