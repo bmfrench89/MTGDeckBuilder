@@ -26,6 +26,11 @@
   <a class="tab {{ 'on' if page=='collection' }}" href="{{ url_for('collection_view') }}">Collection</a>
   <a class="tab {{ 'on' if page=='mobile' }}" href="{{ url_for('mobile') }}"
      title="Install on your phone">Mobile</a>
+  {% if auth_enabled %}
+  <form method="post" action="{{ url_for('logout') }}" class="push">
+    <button class="linkbtn" type="submit" title="Sign out on this device">Sign out</button>
+  </form>
+  {% endif %}
 </nav>
 <div class="wrap">
 {% block content %}{% endblock %}

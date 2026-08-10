@@ -10,14 +10,18 @@ Run:
   python3 webapp/app.py                        # -> http://127.0.0.1:5000
 Config via env: MTG_COLLECTION, MTG_DECKS_DIR, MTG_PORT.
 """
+import hashlib
+import hmac
 import os
 import re
 import socket
 import subprocess
 import sys
+import time
+from datetime import timedelta
 
 from flask import (Flask, Response, abort, jsonify, redirect, render_template,
-                   request, send_from_directory, url_for)
+                   request, send_from_directory, session, url_for)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -69,6 +73,66 @@ DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
 app = Flask(__name__)
+
+# ---- access gate -----------------------------------------------------------
+# A hosted copy is reachable by anyone who finds the URL, so the app supports a
+# single shared password: set MTG_PASSWORD in the server's environment (on
+# PythonAnywhere: an os.environ line in the WSGI file) and every route demands a
+# login. Unset — local dev, tests, CI — the gate does not exist and nothing
+# below changes behavior. The secret key derives from the password so sessions
+# survive app reloads; a random key when no password is set (sessions unused).
+PASSWORD = os.environ.get("MTG_PASSWORD") or None
+app.secret_key = hashlib.sha256(f"mtg-auth-v1:{PASSWORD}".encode()).digest() \
+    if PASSWORD else os.urandom(32)
+app.permanent_session_lifetime = timedelta(days=90)  # the PWA stays signed in
+
+# Endpoints that must work logged-out: the login page itself, and the shell
+# assets the login page + installed PWA need before a session exists.
+_PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens"}
+
+
+def _safe_next(target):
+    """Only ever redirect within the app — an absolute URL here would be an
+    open-redirect hole on a public host."""
+    return target if target and target.startswith("/") \
+        and not target.startswith("//") else url_for("index")
+
+
+@app.before_request
+def _require_login():
+    if not PASSWORD or session.get("authed") \
+            or request.endpoint in _PUBLIC_ENDPOINTS:
+        return None
+    if request.method == "GET":
+        return redirect(url_for("login", next=request.full_path.rstrip("?")))
+    abort(401)  # unauthenticated POSTs get a hard no, not a redirect-to-form
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not PASSWORD or session.get("authed"):
+        return redirect(_safe_next(request.args.get("next")))
+    error = None
+    if request.method == "POST":
+        if hmac.compare_digest(request.form.get("password", ""), PASSWORD):
+            session.permanent = True
+            session["authed"] = True
+            return redirect(_safe_next(request.form.get("next")))
+        time.sleep(0.6)  # blunt but effective brake on password guessing
+        error = "Wrong password."
+    return render_template("login.html", error=error,
+                           next=request.values.get("next", "/"))
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.context_processor
+def _auth_flags():
+    return {"auth_enabled": bool(PASSWORD)}
 
 
 @app.before_request
