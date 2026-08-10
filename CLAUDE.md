@@ -90,7 +90,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 455 tests, ~100s, offline
+pip install -r requirements-dev.txt && pytest          # 456 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate

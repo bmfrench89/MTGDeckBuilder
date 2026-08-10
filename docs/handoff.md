@@ -71,16 +71,16 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **455 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **456 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
   new `scripts/oracle_flags.py`. Colored-source counts use real production where it exists
   and print "identity approx." where it doesn't. **The player's own attrs file is still the
   old 7-column shape until `enrich.bat` is re-run** — until then every manabase surface will
-  correctly show the identity-approximation label. Two owner-machine checks are outstanding:
-  a one-time Scryfall-schema sanity check on the `test_oracle_flags.py` fixture shapes, and
-  a ~30-random-card audit of derived flags after the first real enrichment run (open item 5).
+  correctly show the identity-approximation label. The one-time Scryfall-schema check of the
+  `test_oracle_flags.py` fixture shapes is **DONE** (16/16 against the live API, 2026-08-10 —
+  open item 5); the ~30-random-card flag audit after the first real enrichment run remains.
 - **Role/category counts read those flags too** (engine-season follow-up A-F):
   `oracle_flags` also derives `removal` / `wipe` / `counter`, and `mtglib.classify()`
   consults `Card.flags` **only where its curated name lists are silent** — curated always
@@ -131,11 +131,14 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   **Player's-PC feature:** magic.wizards.com is unreachable from the hosted server (not a
   documented public API) and from CI, which is also why there is no `/api/rules` route.
   Back-compat: this added two gitignored cache directories and touched no existing format.
-  **Owner-machine acceptance step, outstanding (one-time):** run
-  `python3 scripts/rules.py 903.1 --refresh` on the player's PC — it must fetch, parse
-  **≥3,000 rules**, and answer. The real CR layout cannot be verified from a sandbox, and a
-  *silent partial* parse is the residual risk that run exists to catch. If it parses far
-  fewer rules than that, the file's layout drifted: check `rules._slice_body` first.
+  **Real-CR acceptance: DONE (2026-08-10, from a GitHub runner — the `live-checks`
+  workflow on the `claude/live-network-checks` branch):** fetched and parsed the real CR —
+  **3,161 rules, 739 glossary entries, effective August 7, 2026** — and answered 903.1 with
+  the genuine text. The gate earned its keep: the live page turned out to carry a **literal
+  space** in the CR href (`MagicCompRules 20260807.txt`) which the original `_RE_TXT_URL`'s
+  `\s`-excluding class truncated at — `--refresh` reported "no link found" with the link in
+  plain sight. Fixed (span the space, percent-encode before fetching) and pinned by a test
+  against the real 2026 page shape.
 
 ## Open items
 
@@ -155,24 +158,26 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    ratified with four workstreams and one follow-up, and **all five PRs have landed** —
    A production-aware enrichment, C goldfish Monte Carlo, D subagents, B the
    Comprehensive Rules layer, and A-F `classify()` consuming the oracle flags (all
-   described above). Nothing in that spec is outstanding. What IS outstanding is the
-   **owner-machine checklist** — four one-time runs no sandbox can perform, because
-   Scryfall and magic.wizards.com are both egress-blocked here:
-   1. **Scryfall schema check of the A1 fixtures** — run the `tests/test_oracle_flags.py`
-      fixture shapes (especially the MDFC) against real Scryfall JSON or the cached
-      `data/collection/scryfall-oracle_cards.json`. They rest on the documented schema,
-      not on an observed response.
-   2. **~30-card flag audit after the first real `enrich.bat` run** — spot-check random
-      flagged cards against their actual oracle text. **More important since A-F landed:**
-      flags now feed `classify()`, so a wrong flag no longer just skews the mana model, it
+   described above). Nothing in that spec is outstanding. The four network-gated acceptance steps were
+   run 2026-08-10 **from a GitHub Actions runner** (the `live-checks` workflow on the
+   `claude/live-network-checks` branch — GitHub runners have the open egress the dev
+   sandbox lacks), and three of the four are DONE:
+   1. ☑ **Scryfall schema check of the A1 fixtures** — every `test_oracle_flags.py`
+      fixture validated against real Scryfall JSON, 16/16 (produced sets, all flags
+      including the A-F `removal`/`wipe`/`counter` tokens against real wordings, the
+      MDFC schema shape, and Blasphemous Act confirmed as the documented wipe-regex miss).
+   2. ☐ **~30-card flag audit after the first real `enrich.bat` run** — the ONE step
+      that still needs the player's machine, because the private collection never leaves
+      it. **More important since A-F landed:** flags feed `classify()`, so a wrong flag
       miscategorizes a card in every role count downstream (power, dashboard, optimizer
-      role guardrails). The honesty labels fire when data is *absent*, never when a derived
-      flag is *wrong* — this audit is the only guard for that case.
-   3. **`python3 scripts/carddb.py --verify "Sol Ring"`** once on a networked machine —
-      every test of that path is monkeypatched; the live path is unproven.
-   4. **`python3 scripts/rules.py 903.1 --refresh`** — must fetch, parse **≥3,000 rules**,
-      and answer. A silent partial parse is the residual risk; if the count is far lower,
-      the CR layout drifted — check `rules._slice_body` first.
+      role guardrails). The honesty labels fire when data is *absent*, never when a
+      derived flag is *wrong* — this audit is the only guard for that case.
+   3. ☑ **`carddb.py --verify "Sol Ring"` live** — found, verbatim `{T}: Add {C}{C}.`,
+      commander-legal, via the real Scryfall API.
+   4. ☑ **`rules.py --refresh` against the real CR** — 3,161 rules / 739 glossary
+      entries parsed, effective August 7, 2026, 903.1 answered. This gate also caught a
+      real bug (the literal-space href — see the rules-layer bullet above), fixed the
+      same day.
 
 ## Session workflow reminders
 

@@ -66,7 +66,13 @@ _RE_RULE = re.compile(r"^(\d{3})\.(\d+)([a-z])?\.?(?:\s|$)")
 _RE_SECTION = re.compile(r"^(\d{3})\.\s+(.*)$")
 _RE_CHAPTER = re.compile(r"^([1-9])\.\s+(.*)$")
 _RE_EFFECTIVE = re.compile(r"effective as of\s+(.+?)\.\s*$", re.I)
-_RE_TXT_URL = re.compile(r"https?://[^\"'\s]*MagicComp[Rr]ules[^\"'\s]*\.txt")
+# The filename carries a date after a LITERAL SPACE in the href
+# ("MagicCompRules 20260807.txt") — verified against the live page 2026-08-10
+# from a GitHub runner. A \s in the character class truncates the match at that
+# space and the finder reports "no link" with the link in plain sight, so the
+# tail class stops at quotes/angle brackets only; spaces are percent-encoded
+# before the URL is fetched (a raw space in a request line is invalid HTTP).
+_RE_TXT_URL = re.compile(r"https?://[^\"'\s]*MagicComp[Rr]ules[^\"'<>]*?\.txt")
 # "See rule 702.2" / "see rules 601.2a and 601.2b" inside a glossary definition.
 _RE_SEE_RULE = re.compile(r"\brules?\s+(\d{3}(?:\.\d+[a-z]?)?)", re.I)
 
@@ -99,9 +105,10 @@ def _decode(raw):
 def _find_txt_url(html):
     """The .txt link on the rules landing page (the filename carries a date, so it
     can't be hardcoded). Returns None if the page layout changed — the caller then
-    degrades to the manual-download note rather than guessing a URL."""
+    degrades to the manual-download note rather than guessing a URL. Spaces in the
+    href come back percent-encoded, fetch-ready."""
     m = _RE_TXT_URL.search(html or "")
-    return m.group(0) if m else None
+    return m.group(0).replace(" ", "%20") if m else None
 
 
 def cache_path(cache_dir=None):
