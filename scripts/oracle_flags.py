@@ -32,11 +32,26 @@ v1 flag vocabulary (docs/spec-engine-upgrades.md §4.2):
 `draw`               draws its own controller cards
 `mana2` / `mana3`    one activation adds more than one mana (Sol Ring →
                      `mana2`). Absence of both means one.
+`removal`            an Instant/Sorcery/Enchantment face that destroys or exiles
+                     a TARGET (Swords to Plowshares, Banishing Light)
+`wipe`               an Instant/Sorcery face that destroys/exiles ALL, or hits
+                     every creature with a `-X/-X` or damage rider (Damnation,
+                     Toxic Deluge, Blasphemous Act)
+`counter`            counters a target spell (Counterspell). Not type-gated: a
+                     creature or enchantment that counters still counters.
 ===================  ========================================================
 
 Known limits, stated rather than hidden: variable production ("add {B} for each
 Swamp you control") counts as one; hybrid/phyrexian symbols in an Add clause count
-as one mana each; ramp sorceries that make treasure are not `ramp`.
+as one mana each; ramp sorceries that make treasure are not `ramp`. And the
+`removal` regex reads the VERB, not the victim — "destroy target land you control"
+is flagged `removal` exactly as "destroy target creature" is. That is the accepted
+heuristic (the module docstring's disclaimer is the contract), not an oversight:
+narrowing it would mean parsing targeting restrictions, which is a rules engine.
+`wipe` covers the two forms the vocabulary names and no others — the active-voice
+sweeper ("Blasphemous Act deals 13 damage to each creature") is missed here and
+caught by the curated `mtglib.WIPES` list instead, which is exactly the layering
+`classify()` relies on: curated first, flags only where curation is silent.
 """
 
 import re
@@ -66,6 +81,18 @@ _MANA_SYM_RE = re.compile(r"\{(?:[wubrgc]|[wubrgc]/[wubrgc])\}")
 _GENERIC_SYM_RE = re.compile(r"\{(\d+)\}")
 # Everything an "Add" clause covers, up to the end of its sentence/clause.
 _ADD_CLAUSE_RE = re.compile(r"\badd\b([^.;\n]*)")
+
+# --- interaction: removal / wipe / counter (spec §4.5) ----------------------------
+# Spot removal reads the verb + "target". Deliberately blind to what is being
+# targeted — see the "destroy target land you control" note in the module docstring.
+_REMOVAL_RE = re.compile(r"\b(?:destroy|exile) target\b")
+# A sweeper says "all", or reaches every creature at once with a shrink/damage rider.
+_WIPE_ALL_RE = re.compile(r"\b(?:destroy|exile) all\b")
+_WIPE_EACH_RE = re.compile(r"\b(?:all|each) creatures?\b[^.]{0,60}?"
+                           r"(?:gets? -|is dealt|are dealt)")
+# `.{0,40}` spans the qualifier a counterspell puts between the words —
+# "counter target creature spell", "counter target noncreature spell".
+_COUNTER_RE = re.compile(r"counter target .{0,40}spell")
 
 
 def faces(c):
@@ -160,6 +187,17 @@ def derive_flags(c):
             if not any(before.endswith(p) for p in _NOT_YOUR_DRAW):
                 flags.add("draw")
                 break
+
+        # Interaction. The type gates keep an ETB creature ("when this enters,
+        # destroy target creature") out of the removal count — that card is a
+        # creature first, and classify()'s type fallback already says so.
+        is_spell = "instant" in tl or "sorcery" in tl
+        if (is_spell or "enchantment" in tl) and _REMOVAL_RE.search(t):
+            flags.add("removal")
+        if is_spell and (_WIPE_ALL_RE.search(t) or _WIPE_EACH_RE.search(t)):
+            flags.add("wipe")
+        if _COUNTER_RE.search(t):
+            flags.add("counter")
 
         if not is_land or taps_for_mana:
             amount = max(amount, _mana_added(t))

@@ -4,10 +4,11 @@ Stdlib-only. Parses a player's collection (rich Archidekt CSV or a name-only
 list) and deck lists into a common Card structure, and provides the category
 heuristics and mana-cost math the other scripts share.
 
-Grounding note: category classification (ramp/draw/removal/wipe) is a HEURISTIC
-based on curated name lists plus card types. It is a starting point, not gospel.
-Always eyeball the output and verify uncertain cards (see the skill's
-grounding-rules.md).
+Grounding note: category classification (ramp/draw/removal/wipe) is a HEURISTIC.
+It reads, in this order: curated name lists, then the oracle-derived flags
+`carddb` writes via `oracle_flags` (consulted only where the curated lists are
+silent), then card types. It is a starting point, not gospel. Always eyeball the
+output and verify uncertain cards (see the skill's grounding-rules.md).
 """
 
 from __future__ import annotations
@@ -546,9 +547,42 @@ COUNTERS = {
     "thwart", "annul", "misstep",
 }
 
+# Layer 2: what an oracle-derived flag means in role terms. The curated lists above
+# are hand-maintained and every new set outgrows them; `Card.flags` (written by
+# carddb via oracle_flags, see that module for the vocabulary) covers the tail.
+# Tokens that describe HOW a card makes mana rather than what job it does
+# (`etb-tapped`, `etb-tapped-cond`, `mana2`, `mana3`) map to no role on purpose —
+# they are inputs to the goldfish mana model, not deck-role categories.
+FLAG_ROLES = {
+    "rock": "ramp",
+    "dork": "ramp",
+    "ramp": "ramp",
+    "draw": "draw",
+    "removal": "removal",
+    "wipe": "wipe",
+    "counter": "counter",
+}
+
 
 def classify(card: Card) -> set:
-    """Return the set of roles this card fills (heuristic)."""
+    """Return the set of roles this card fills (heuristic).
+
+    Three layers, in strict precedence order:
+
+    1. **Curated name lists** (RAMP/DRAW/REMOVAL/WIPES/COUNTERS) — hand-verified,
+       and they always win.
+    2. **Oracle-derived flags** (`Card.flags`, from `oracle_flags`) — consulted
+       ONLY when the curated lists said nothing about this card. The `if not
+       roles` guard IS the curated-wins rule; it is first-writer-wins, the same
+       shape `deckcore.load_card_notes` uses to let a curated note beat a
+       generated one. A card the player curated as `ramp` stays `ramp` even if a
+       regex read `draw` in its text.
+    3. **Card types** — the last-resort fallback ("creature", "spell", …), then
+       "other".
+
+    Still a heuristic at every layer: a regex is not a rules engine and a name
+    list is only as fresh as its last edit. Eyeball the output and verify
+    uncertain cards (see the skill's grounding-rules.md)."""
     roles = set()
     n = _norm(card.name)
     if card.is_land:
@@ -564,6 +598,14 @@ def classify(card: Card) -> set:
         roles.add("wipe")
     if n in COUNTERS:
         roles.add("counter")
+    # Layer 2 — only where curation is silent. An unenriched card has flags ==
+    # set(), so this whole layer no-ops on a collection that has never been
+    # through carddb, and category counts are byte-identical to pre-A-F.
+    if not roles and card.flags:
+        for f in card.flags:
+            role = FLAG_ROLES.get(f)
+            if role:
+                roles.add(role)
     # light type-based fallback
     if not roles and card.types:
         pt = card.primary_type.lower()

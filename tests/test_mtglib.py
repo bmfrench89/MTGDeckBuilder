@@ -190,6 +190,70 @@ def test_two_cards_do_not_share_a_flags_set():
     assert b.flags == set()
 
 
+# --------------------------------------------------------------------------- #
+# classify() layer 2: oracle-derived flags, only where curation is silent
+# (spec §4.5). The precedence contract is the whole feature — a flag may fill a
+# gap, never overrule a hand-verified list.
+# --------------------------------------------------------------------------- #
+def test_flags_fill_a_role_the_curated_lists_never_heard_of():
+    """The point of the layer: a card from a set newer than RAMP's last edit still
+    lands in the ramp bucket instead of the generic type fallback."""
+    c = mtglib.Card(name="Brand New Mana Elf", types=["Creature"],
+                    flags={"dork", "ramp"})
+    assert mtglib.classify(c) == {"ramp"}
+
+
+def test_each_interaction_flag_maps_to_its_role():
+    for flag, role in (("removal", "removal"), ("wipe", "wipe"),
+                       ("counter", "counter"), ("draw", "draw"), ("rock", "ramp")):
+        c = mtglib.Card(name=f"Unlisted {flag}", types=["Instant"], flags={flag})
+        assert mtglib.classify(c) == {role}, flag
+
+
+def test_a_curated_card_wins_over_a_contradictory_flag():
+    """First-writer-wins, the same shape deckcore.load_card_notes uses. Sol Ring is
+    curated RAMP; a regex that read 'draw' in its text must not move it."""
+    sol = mtglib.Card(name="Sol Ring", types=["Artifact"], flags={"draw"})
+    assert mtglib.classify(sol) == {"ramp"}
+
+
+def test_mana_shape_flags_map_to_no_role_at_all():
+    """etb-tapped / mana2 / mana3 describe HOW a card makes mana — they are goldfish
+    inputs, not deck-role categories. A card carrying only those falls through to the
+    type fallback exactly as it did before this layer existed."""
+    land = mtglib.Card(name="Some Gate", types=["Land"], flags={"etb-tapped"})
+    assert mtglib.classify(land) == {"land"}
+    rock = mtglib.Card(name="Odd Stone", types=["Artifact"], flags={"mana2"})
+    assert mtglib.classify(rock) == {"artifact"}
+
+
+def test_no_flags_still_falls_through_to_the_type_layer():
+    """The regression gate in miniature: an unenriched Card has flags == set(), so
+    layer 2 no-ops and the answer is byte-identical to pre-A-F."""
+    assert mtglib.classify(mtglib.Card(name="Nobody", types=["Creature"])) == {"creature"}
+    assert mtglib.classify(mtglib.Card(name="Nobody", types=["Instant"])) == {"spell"}
+    assert mtglib.classify(mtglib.Card(name="Nobody")) == {"other"}
+
+
+def test_an_unknown_flag_token_adds_no_role():
+    c = mtglib.Card(name="Nobody", types=["Creature"], flags={"未来-token"})
+    assert mtglib.classify(c) == {"creature"}
+
+
+def test_flags_reach_classify_through_the_full_collection_load(tmp_path,
+                                                               collection_file):
+    """End to end: an attrs file on disk → load_collection overlay → classify().
+    Serra Angel is in no curated list, so its flags decide; Sol Ring is curated, so
+    its flags cannot. Both facts are read out of one real load."""
+    attrs = ("Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags\n"
+             "Serra Angel,Creature,5,W,{3}{W}{W},Angel,7777aaaa,,removal\n"
+             "Sol Ring,Artifact,1,,{1},,aaaa1111,C,draw;rock;ramp;mana2\n")
+    idx = _with_attrs(tmp_path, collection_file, attrs)
+    assert mtglib.lookup(idx, "Serra Angel").flags == {"removal"}
+    assert mtglib.classify(mtglib.lookup(idx, "Serra Angel")) == {"removal"}
+    assert mtglib.classify(mtglib.lookup(idx, "Sol Ring")) == {"ramp"}
+
+
 def test_produced_and_flags_survive_deck_stats_analyze(tmp_path, collection_file):
     """The pipeline trap: deck_stats.analyze rebuilds every deck card as a NEW Card
     from an explicit field list. A field missing from that list never reaches

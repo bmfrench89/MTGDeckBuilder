@@ -198,6 +198,107 @@ def test_vanilla_creature_has_no_flags_and_no_production():
     assert oracle_flags.produced_of(VANILLA) == set()
 
 
+# ── interaction: removal / wipe / counter ────────────────────────────────────
+SWORDS = card("Swords to Plowshares", "Instant",
+              "Exile target creature. Its controller gains life equal to its power.",
+              produced=[])
+
+DAMNATION = card("Damnation", "Sorcery",
+                 "Destroy all creatures. They can't be regenerated.", produced=[])
+
+TOXIC_DELUGE = card("Toxic Deluge", "Sorcery",
+                    "As an additional cost to cast this spell, pay X life.\n"
+                    "All creatures get -X/-X until end of turn.", produced=[])
+
+COUNTERSPELL = card("Counterspell", "Instant", "Counter target spell.", produced=[])
+
+BANISHING_LIGHT = card(
+    "Banishing Light", "Enchantment",
+    "When Banishing Light enters, exile target nonland permanent an opponent "
+    "controls until Banishing Light leaves the battlefield.", produced=[])
+
+# A modal DFC whose front face is a creature and whose back face sweeps.
+MODAL_WIPE = card("Bear Front // Sweeping Back", "Creature // Sorcery", text="",
+                  produced=[],
+                  faces=[{"type_line": "Creature — Bear",
+                          "oracle_text": "Vigilance."},
+                         {"type_line": "Sorcery",
+                          "oracle_text": "Destroy all creatures."}])
+
+
+def test_swords_style_exile_target_is_removal():
+    assert oracle_flags.derive_flags(SWORDS) == {"removal"}
+
+
+def test_removal_reads_the_verb_not_the_victim():
+    """The accepted heuristic, stated in the module docstring: 'destroy target land
+    you control' is `removal` too. Narrowing it means parsing targeting restrictions,
+    which is a rules engine — the curated lists and human verification are the guard."""
+    c = card("Self Sacrifice", "Sorcery", "Destroy target land you control.", produced=[])
+    assert "removal" in oracle_flags.derive_flags(c)
+
+
+def test_an_enchantment_that_exiles_a_target_is_removal():
+    assert oracle_flags.derive_flags(BANISHING_LIGHT) == {"removal"}
+
+
+def test_an_etb_creature_that_destroys_is_not_flagged_removal():
+    """Type-gated on purpose: a creature is a creature first, and classify()'s type
+    fallback already says so. Flagging it removal would double-count the body."""
+    c = card("Ravenous Chupacabra", "Creature — Beast Horror",
+             "When this creature enters, destroy target creature an opponent controls.",
+             produced=[])
+    assert "removal" not in oracle_flags.derive_flags(c)
+
+
+def test_damnation_style_destroy_all_is_a_wipe():
+    assert oracle_flags.derive_flags(DAMNATION) == {"wipe"}
+
+
+def test_the_each_creature_shrink_form_is_a_wipe():
+    assert oracle_flags.derive_flags(TOXIC_DELUGE) == {"wipe"}
+
+
+def test_the_is_dealt_form_is_a_wipe():
+    c = card("Sweeper", "Instant",
+             "Each creature is dealt 4 damage.", produced=[])
+    assert "wipe" in oracle_flags.derive_flags(c)
+
+
+def test_a_wipe_is_not_also_spot_removal():
+    """'Destroy all' carries no 'target', so the two tokens don't both fire and
+    double-count one card across two role buckets."""
+    assert "removal" not in oracle_flags.derive_flags(DAMNATION)
+
+
+def test_counterspell_style_text_is_counter():
+    assert oracle_flags.derive_flags(COUNTERSPELL) == {"counter"}
+
+
+def test_counter_spans_the_qualifier_between_target_and_spell():
+    for txt in ("Counter target creature spell.",
+                "Counter target noncreature spell.",
+                "Counter target spell unless its controller pays {2}."):
+        assert "counter" in oracle_flags.derive_flags(
+            card("X", "Instant", txt, produced=[])), txt
+
+
+def test_countering_an_ability_is_not_a_counter_flag():
+    c = card("Stifle", "Instant", "Counter target activated or triggered ability.",
+             produced=[])
+    assert "counter" not in oracle_flags.derive_flags(c)
+
+
+def test_a_modal_spell_whose_one_face_wipes_is_a_wipe():
+    """Face-aware, exactly like the mana tokens: a flag fires if ANY face matches."""
+    assert "wipe" in oracle_flags.derive_flags(MODAL_WIPE)
+
+
+def test_the_new_tokens_do_not_disturb_the_mana_vocabulary():
+    assert oracle_flags.derive_flags(SOL_RING) == {"rock", "ramp", "mana2"}
+    assert oracle_flags.derive_flags(GUILDGATE) == {"etb-tapped"}
+
+
 # ── structural ───────────────────────────────────────────────────────────────
 def test_module_imports_nothing_but_re():
     """CI imports every scripts/*.py with no third-party packages installed, and this
