@@ -1,15 +1,15 @@
 # Spec — Engine upgrades: production-aware enrichment, a rules layer, goldfish Monte Carlo, subagents
 
-**Status:** ☐ design awaiting owner interview, 2026-08-10 · nothing implemented ·
-four workstreams (A–D), each with implementation-ready tasks sized for a fresh
-session with no conversation context. Every current-state claim below was
-verified against the code at `c23b3ca` by independent review and adversarial
-fact-check passes; corrections from those passes are folded in. Suite baseline
-today: **259 tests collected** (CLAUDE.md's "231" is stale — fixed by the first
+**Status:** ☑ **ratified 2026-08-10** — the owner accepted every §9
+recommendation as written. Implementation proceeds **one workstream per
+session, one PR each**, in order **A → C → D → B → A-F**, each branch cut
+fresh from `origin/main` after the previous squash-merge. Four workstreams
+(A–D), each with implementation-ready tasks sized for a fresh session with no
+conversation context. Every current-state claim below was verified against the
+code at `c23b3ca` by independent review and adversarial fact-check passes;
+corrections from those passes are folded in. Suite baseline at ratification:
+**259 tests collected** (CLAUDE.md's "231" is stale — fixed by the first
 landing PR, task X-1).
-
-**Interview first:** section 9 lists every decision the owner must ratify, each
-with a recommendation. Everything else in this document is settled design.
 
 ---
 
@@ -204,7 +204,11 @@ fixture; bulk path from a tiny JSON array with `use_duckdb=False`; round-trip
 through `mtglib.load_collection` proving write→overlay end-to-end; any
 accidental `urlopen` fails the test.
 *Acceptance:* header exactly as pinned; round-trip proven; signature untouched;
-bare-import CI gate passes.
+bare-import CI gate passes. *Owner follow-up (recorded in the PR body):* after
+the first real enrichment run on the player's machine, spot-check ~30 random
+flagged cards against their actual oracle text before trusting downstream
+consumers — the honesty labels fire when data is absent, not when a derived
+flag is wrong; this audit is the only guard for the wrong-flag case.
 
 **A4 — `deck_stats` actual-production sources + labeled fallback everywhere.**
 In `build_report` (`deck_stats.py:107-112`): per land,
@@ -803,6 +807,10 @@ later, out of scope.
   body.
 
 ## 9. Interview questions (each with a recommendation)
+
+> **Ratified 2026-08-10: the owner accepted every recommendation below as
+> written.** The questions are preserved for the record; implementing sessions
+> treat each recommendation as the decision.
 
 **Workstream A**
 - **Q-A1** Rocks/dorks counted toward `color_sources`? *Rec: no — lands-only
