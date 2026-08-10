@@ -611,6 +611,12 @@ def _assess_packet(m):
         L.append(f"  curve (MV→count): {rep['curve']}")
     if rep.get("pip_demand"):
         L.append(f"  pip demand: {rep['pip_demand']}  ·  sources: {rep.get('color_sources')}")
+        # Never let the coach read a source count as precise when part of it is the
+        # color-identity approximation (see deck_stats.build_report).
+        approx = (rep.get("color_sources_basis") or {}).get("identity_lands", 0)
+        if approx:
+            L.append(f"    (note: {approx} land(s) counted by color IDENTITY, not "
+                     "actual production — approximate; enrich the collection)")
     L.append("")
     if mana and mana.get("have_colors"):
         L.append("-- CONSISTENCY (hypergeometric) --")
@@ -893,11 +899,17 @@ def collection_view():
                 additions.append(s)
     attrs_path = os.path.join(ROOT, "data/collection/collection_attrs.csv")
     enriched_n = sum(1 for c in coll if c.types)
+    # Production coverage is a SEPARATE number from type coverage: an attrs file
+    # written before enrichment learned about produced_mana has full types and zero
+    # production, and everything downstream then falls back to color identity.
+    produced_n = sum(1 for c in coll if c.produced is not None)
     carddb = {
         "on": os.path.exists(attrs_path),
         "covered": enriched_n,
         "total": len(coll),
         "pct": round(100 * enriched_n / len(coll)) if coll else 0,
+        "produced_covered": produced_n,
+        "produced_pct": round(100 * produced_n / len(coll)) if coll else 0,
     }
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,

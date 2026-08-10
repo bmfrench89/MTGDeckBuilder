@@ -118,6 +118,10 @@ def analyze(rep, enriched, deck=DECK):
 
     return {
         "have_colors": have_colors,
+        # How the source counts were arrived at: {'produced_lands': n,
+        # 'identity_lands': m}. Any identity_lands > 0 means part of this analysis
+        # rests on the color-identity approximation the module docstring warns about.
+        "basis": rep.get("color_sources_basis") or {},
         "lands": lands,
         "land_odds": land_odds(lands, deck) if lands else None,
         "colors": colors,
@@ -159,6 +163,11 @@ if __name__ == "__main__":
         print(f"  {c['color']}: {c['sources']:>2} src · demand {c['demand']:>4} · "
               f"target ~{c['karsten_target']} · P {c['p_open']*100:>3.0f}%"
               + (f" · P(>=2 by t3) {c['p_two_t3']*100:.0f}%" if c['double_pips'] else "") + flag)
+    approx = (a.get("basis") or {}).get("identity_lands", 0)
+    if approx:
+        print(f"  [!] {approx} land(s) counted by color IDENTITY, not actual "
+              "production — an approximation. Enrich the collection "
+              "(scripts/carddb.py) for what they really tap for.")
     if a["risky"]:
         print(f"\n{a['risky_total']} card(s) risky to cast on curve (lowest first):")
         for r in a["risky"]:

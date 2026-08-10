@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Enrich the whole collection with card attributes (colors / type / mana value /
-Scryfall id) — the fix for the "name-only export" limitation.
+what it taps for / oracle-derived flags / Scryfall id) — the fix for the
+"name-only export" limitation.
 
 Default: Scryfall's /cards/collection API — ~1 request per 75 cards, no download.
 It resolves each owned card by its exact printing (set + collector number, or a
@@ -28,6 +29,14 @@ import time
 import urllib.request
 
 import mtglib
+import oracle_flags
+
+# collection_attrs.csv, in order. Produced/Flags were APPENDED after Scryfall so an
+# attrs file written by an older build still loads (mtglib reads columns by header
+# name and ignores the ones it doesn't know) and an older build still reads a new
+# file. An absent Produced column means "unknown", not "produces nothing".
+ATTRS_HEADER = ["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall",
+                "Produced", "Flags"]
 
 BULK_LIST_URL = "https://api.scryfall.com/bulk-data"
 # Scryfall asks API clients to send a descriptive User-Agent and an Accept header.
@@ -93,14 +102,34 @@ def subtypes_of(type_line):
     return ";".join(left.split("—", 1)[1].split()) if "—" in left else ""
 
 
+def _loads(v):
+    """duckdb hands a JSON column back as a string; the stdlib path already has the
+    parsed value. Anything unreadable degrades to None rather than killing a 40 MB run."""
+    if not v or isinstance(v, (list, dict)):
+        return v or None
+    try:
+        return json.loads(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def _rows_duckdb(bulk_path):
+    """Yield Scryfall-shaped card dicts. produced_mana / oracle_text / card_faces are
+    selected alongside the original columns so the bulk path derives exactly the same
+    Produced/Flags the API path does. The SELECT stays inside build_index's existing
+    try/except fallback: CI has no duckdb, and a schema drift here must degrade to the
+    stdlib reader rather than fail the run."""
     import duckdb
     con = duckdb.connect()
-    q = ("SELECT name, color_identity, type_line, cmc, mana_cost, id "
+    q = ("SELECT name, color_identity, type_line, cmc, mana_cost, id, "
+         "produced_mana, oracle_text, to_json(card_faces) "
          f"FROM read_json_auto('{bulk_path}', maximum_object_size=100000000) "
          "WHERE name IS NOT NULL")
-    for name, ci, type_line, cmc, cost, sid in con.execute(q).fetchall():
-        yield name, (ci or []), type_line, cmc, cost, sid
+    for name, ci, type_line, cmc, cost, sid, prod, otext, faces in con.execute(q).fetchall():
+        yield {"name": name, "color_identity": list(ci or []), "type_line": type_line,
+               "cmc": cmc, "mana_cost": cost, "id": sid,
+               "produced_mana": list(prod or []), "oracle_text": otext or "",
+               "card_faces": _loads(faces)}
     con.close()
 
 
@@ -109,12 +138,12 @@ def _rows_json(bulk_path):
         data = json.load(f)
     for c in data:
         if c.get("name"):
-            yield (c["name"], c.get("color_identity", []), c.get("type_line"),
-                   c.get("cmc"), c.get("mana_cost"), c.get("id"))
+            yield c
 
 
 def build_index(bulk_path, use_duckdb=True):
-    """name(normalized) -> {colors, type, mv, cost, id}. First printing per name wins."""
+    """name(normalized) -> the same attrs dict the API path builds (colors, type,
+    subtypes, mv, cost, id, produced, flags). First printing per name wins."""
     idx = {}
     rows = None
     if use_duckdb:
@@ -125,15 +154,23 @@ def build_index(bulk_path, use_duckdb=True):
                   file=sys.stderr)
     if rows is None:
         rows = _rows_json(bulk_path)
-    for name, ci, type_line, cmc, cost, sid in rows:
+    for c in rows:
+        name = c.get("name")
+        if not name:
+            continue
         k = mtglib._norm(name)
         if k in idx:
             continue
-        idx[k] = {"colors": " ".join(ci), "type": primary_type(type_line),
-                  "subtypes": subtypes_of(type_line),
-                  "mv": cmc if cmc is not None else None, "cost": cost or "",
-                  "id": sid or ""}
+        # One derivation for both paths — the bulk and API files must not drift.
+        idx[k] = _attrs_from_scryfall(c)
     return idx
+
+
+def _attrs_row(card, a):
+    """One collection_attrs.csv row, in ATTRS_HEADER order."""
+    return [card.name, a["type"], a["mv"], a["colors"], a["cost"],
+            a.get("subtypes", ""), a.get("id", ""),
+            a.get("produced", ""), a.get("flags", "")]
 
 
 def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
@@ -142,15 +179,13 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     matched = 0
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall"])
+        w.writerow(ATTRS_HEADER)
         for card in sorted(coll, key=lambda c: c.name):
             a = index.get(mtglib._norm(card.name))
             if not a:
                 continue
             matched += 1
-            mv = "" if a["mv"] is None else (f"{a['mv']:g}")
-            w.writerow([card.name, a["type"], mv, a["colors"], a["cost"],
-                        a.get("subtypes", ""), a.get("id", "")])
+            w.writerow(_attrs_row(card, a))
     return matched, len(coll), len(index)
 
 
@@ -228,9 +263,16 @@ def _attrs_from_scryfall(c):
     if cmc is None and faces:
         cmc = faces[0].get("cmc")
     mv = "" if cmc is None else f"{cmc:g}"
+    # What it ACTUALLY taps for, plus the oracle-derived flag vocabulary. Both are
+    # face-aware (oracle_flags never naive-splits "//"). Produced is written in WUBRGC
+    # order to match the existing Colors style; an empty string here means "enriched,
+    # produces nothing" — the absence of the whole column is what means "unknown".
+    produced = oracle_flags.produced_of(c)
     return {"type": primary_type(type_line),
             "subtypes": subtypes_of(c.get("type_line", "")), "mv": mv,
-            "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or ""}
+            "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or "",
+            "produced": " ".join(p for p in "WUBRGC" if p in produced),
+            "flags": ";".join(sorted(oracle_flags.derive_flags(c)))}
 
 
 def enrich_api(collection_path, out_path, delay=0.1, log=None):
@@ -264,12 +306,11 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None):
 
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall"])
+        w.writerow(ATTRS_HEADER)
         for card in sorted(coll, key=lambda c: c.name):
             a = resolved.get(card.name)
             if a:
-                w.writerow([card.name, a["type"], a["mv"], a["colors"], a["cost"],
-                            a.get("subtypes", ""), a["id"]])
+                w.writerow(_attrs_row(card, a))
     unmatched = sorted(c.name for c in coll if c.name not in resolved)
     return len(resolved), len(coll), unmatched
 
@@ -327,6 +368,13 @@ def main():
         pt = Counter(c.primary_type for c in coll if c.types)
         print("\nBy color identity:", dict(ci.most_common()))
         print("By primary type  :", dict(pt.most_common()))
+        # Coverage of the production data the manabase/goldfish models prefer. Cards
+        # without it aren't broken — every consumer falls back to color identity and
+        # labels the fallback — but this is the number that says how much is guessed.
+        known = sum(1 for c in coll if c.produced is not None)
+        pct = round(100 * known / len(coll)) if coll else 0
+        print(f"produced known: {known}/{len(coll)} ({pct}%) — the rest fall back to "
+              "color identity, and every consumer says so.")
     return 0
 
 

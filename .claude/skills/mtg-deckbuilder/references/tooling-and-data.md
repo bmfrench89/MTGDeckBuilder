@@ -7,7 +7,11 @@ Reachability to Scryfall/Archidekt **varies by environment.** A quick probe beat
 - On a **normal machine** (the player's own — the common case): outbound HTTPS to Scryfall
   works. `python scripts/carddb.py --collection <file>` enriches the WHOLE collection via the
   **`/cards/collection` API** (no ~40 MB download), resolving each card by exact printing →
-  real colors / types / mana value / correct-art Scryfall id. Verified 2040/2040 live.
+  real colors / types / mana value / correct-art Scryfall id, plus **`Produced`** (what the
+  card actually taps for) and **`Flags`** (oracle-derived: `etb-tapped`/`-cond`, `rock`,
+  `dork`, `ramp`, `draw`, `mana2`/`mana3`). Verified 2040/2040 live. If a manabase report
+  says "identity approx.", the attrs file predates production enrichment — re-run
+  `enrich.bat` rather than quoting the approximate source counts as exact.
 - In a **locked-down sandbox** (some CI): the Scryfall/Archidekt API + bulk data may be
   **proxy-blocked** (403 on CONNECT). Then fall back to `carddb.py --bulk oracle-cards.json`
   (a local file), `WebSearch`/`WebFetch` for one-off oracle text, and the committed snapshot.

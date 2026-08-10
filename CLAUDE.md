@@ -63,7 +63,8 @@ per-module table — read it before any structural change.
   `analyze_deck()` / `analyze_cards()` — the one pipeline every consumer calls).
 - **Engines:** `deck_stats`, `power`, `manabase`, `combo_detector`, `deck_fit`,
   `deck_conflicts`, `analyze_collection`, `similar_commanders`, `commander_finder`,
-  `card_image`.
+  `card_image`, `oracle_flags` (dict-in/set-out oracle derivation; `re` only — it
+  imports nothing else in the repo).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
@@ -82,7 +83,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 231 tests, ~45s, offline
+pip install -r requirements-dev.txt && pytest          # 320 tests, ~45s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -176,13 +177,24 @@ file in place and must keep quantity, section, and comment lines intact (that's 
 
 **Deck companions** (auto-detected next to `<stem>.txt`):
 `.notes.md` (game plan — markdown-lite; cards named here are protected from the optimizer),
-`.buylist.csv` (`Card,Price,Tier,Replaces,Reason`), `.attrs.csv` (`Name,Type,MV,Colors` —
-curve without the full CSV), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
+`.buylist.csv` (`Card,Price,Tier,Replaces,Reason`), `.attrs.csv`
+(`Name,Type,MV,Colors[,Produced,Flags]` — curve without the full CSV; the two optional
+columns are the same contract as the collection file, and `deckcore.load_attrs` learns to
+carry them in workstream C), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
 each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`).
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks
 color/type/tribe/curve/pip analysis; the name-only snapshot answers ownership only.
+`collection_attrs.csv` (written by `carddb.py`) is
+`Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags` — `Produced` is
+space-joined WUBRGC letters for what the card actually taps for, `Flags` is `;`-joined
+oracle-derived tokens (`oracle_flags.py`'s vocabulary: `etb-tapped`,
+`etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). **The
+empty-vs-absent rule is load-bearing:** an *empty cell* means enriched and produces
+nothing (Maze of Ith → `Card.produced == set()`), while an *absent column* means
+unknown (`Card.produced is None`) and every consumer must fall back to color identity
+**and say so**. Conflating the two is a bug, not a rounding error.
 `load_collection` auto-merges `collection_attrs.csv` (derived) and `owned_additions.txt`
 (player-confirmed cards the export missed — the player's word beats the export).
 `pins.csv` (`Card,Deck`) reserves a physical copy for one deck; other decks treat it as

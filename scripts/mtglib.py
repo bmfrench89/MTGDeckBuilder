@@ -40,6 +40,13 @@ class Card:
     price: Optional[float] = None   # representative (max) MARKET unit price
     value: float = 0.0              # total value across printings: sum(qty*market)
     date_added: str = ""            # newest acquisition date the export carries (ISO)
+    # What the card can ACTUALLY add to a mana pool (Scryfall `produced_mana`), and
+    # oracle-derived behaviour flags — both written by carddb via oracle_flags.
+    # The None-vs-empty distinction is load-bearing and conflating them is a bug:
+    #   None    = not enriched. Consumers fall back (to color identity) AND SAY SO.
+    #   set()   = enriched, and this card really produces no mana (Maze of Ith).
+    produced: Optional[set] = None
+    flags: set = field(default_factory=set)   # see oracle_flags for the vocabulary
 
     @property
     def is_land(self) -> bool:
@@ -88,6 +95,26 @@ def _parse_colorish(value: str) -> set:
         elif tok in {"WHITE", "BLUE", "BLACK", "RED", "GREEN"}:
             out.add(tok[0])
     return out
+
+
+def _parse_produced(value: str) -> set:
+    """Parse a `Produced` cell ('W U B', WUBRGC order) into a set of letters.
+
+    Always returns a set, never None: an empty cell is the real answer "enriched and
+    produces no mana". Only the caller knows whether the COLUMN existed at all, and
+    that is what distinguishes unknown (`Card.produced is None`) from empty."""
+    out = set()
+    for tok in re.split(r"[;,\s]+", (value or "").strip()):
+        tok = tok.strip().upper()
+        if len(tok) == 1 and tok in "WUBRGC":
+            out.add(tok)
+    return out
+
+
+def _parse_flags(value: str) -> set:
+    """Parse a `Flags` cell — `;`-joined tokens, the combos.csv convention, so a
+    comma inside anything never splits a token. Blanks are dropped."""
+    return {t.strip() for t in (value or "").split(";") if t.strip()}
 
 
 def _strip_sep_preamble(text: str) -> str:
@@ -291,6 +318,8 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
     c_cost = _header_index(fn, "cost", "mana cost")
     c_sub = _header_index(fn, "sub-types", "subtypes", "sub types", "subtype")
     c_sid = _header_index(fn, "scryfall", "scryfall id", "id")
+    c_prod = _header_index(fn, "produced", "produced mana")
+    c_flags = _header_index(fn, "flags")
     idx = index_by_name(cards)
     n = 0
     for row in reader:
@@ -313,6 +342,14 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
             card.subtypes = _split_multi(row[c_sub])
         if c_sid and (row.get(c_sid) or "").strip():
             card.scryfall_id = row[c_sid].strip()
+        # Produced/Flags are keyed off the COLUMN's presence, not the cell's content:
+        # an empty cell under a present column means "produces nothing", while an
+        # attrs file written before enrichment learned these columns leaves
+        # produced=None so every consumer falls back and labels the fallback.
+        if c_prod:
+            card.produced = _parse_produced(row.get(c_prod))
+        if c_flags:
+            card.flags = _parse_flags(row.get(c_flags))
     return n
 
 

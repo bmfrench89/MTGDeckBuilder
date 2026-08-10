@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
@@ -70,6 +70,12 @@ Unlocks site-wide interactivity + the data layer later phases consume.
   the offline path). Verified 2040/2040; auto-runs on collection upload. *(Scryfall turned out
   to be reachable on the player's machine — the "firewalled" note applied only to the CI sandbox,
   which also unblocks the EDHREC/CSB clients below.)*
+- ☑ **Production-aware enrichment** — `carddb.py` also stores `Produced` (what each card
+  actually taps for, from Scryfall `produced_mana`) and `Flags` (oracle-derived:
+  `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`) via the new
+  `scripts/oracle_flags.py`. Two columns appended to `collection_attrs.csv`; an empty cell
+  means "produces nothing", an absent column means "unknown". Workstream A of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md).
 - ☐ Cached CSB + `pyedhrec` client wrappers — *deferred to their consuming phases (1, 3).*
 - ☐ Verify ManaPool & Card Kingdom per-card URL schemes — *best-effort links shipped;
   verify on the live sites (one-line fix in `card_image.purchase_links`).*
@@ -104,8 +110,15 @@ against live data (Sol Ring #1 → TOP 100, Swords to Plowshares #11 → TOP 100
   a name-only collection; sources come from the enriched collection's `Cost`/colors).
 - ☑ Wired into `auto_build`: **pip-demand-weighted basics** + full **power/bracket + Consistency/Manabase**
   analysis shown on the "Build this deck" view (#23).
+- ☑ **Colored sources from actual production** — with an enriched collection, each land
+  contributes what it really taps for (`Card.produced`) instead of its color identity;
+  `deck_stats` reports `color_sources_basis = {'produced_lands': n, 'identity_lands': m}`
+  and `print_report` / the manabase CLI / the dashboard pip table / the assess packet each
+  print an "identity approx." label whenever `identity_lands > 0`. Unowned lands stay on the
+  identity basis by design, so a deck with any unowned land never claims false precision.
 **Honest simplifications:** probabilities are UNCONDITIONAL (not Karsten's mulligan-adjusted %),
-and sources approximate a permanent's output from its color identity (rough for fetches/oddballs).
+and where production data is missing sources still approximate a permanent's output from its
+color identity (rough for fetches/oddballs) — now always labeled as such.
 
 ### Phase 3 — Full auto-built decks for Build Next  ☑
 **Detailed spec:** [spec-build-next-full-deck.md](spec-build-next-full-deck.md).
@@ -227,3 +240,13 @@ Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tes
   Build Next view (`/api/combos/build/<commander>`). Verified live: cloud-ex-soldier → 19 one-away
   (add Repercussion → Blasphemous Act → near-infinite damage); Atraxa draft → 8; Y'shtola → 2.
   Fills the Phase 3 "CSB one-away" deferral.
+- **2026-08-10** — **Production-aware enrichment shipped** (workstream A of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md)): new `scripts/oracle_flags.py` derives
+  `produced_mana` + a small oracle flag vocabulary face-aware from a Scryfall card object;
+  `carddb.py` writes them as the appended `Produced` / `Flags` columns of
+  `collection_attrs.csv` in **both** the API and bulk paths; `mtglib.Card` carries
+  `produced` / `flags` and `deck_stats.analyze` propagates them to deck level. Colored-source
+  counts now use actual production where it is known and say "identity approx." where it
+  isn't (`deck_stats`, manabase CLI, dashboard pip table, assess packet), and `/collection`
+  gained a production-coverage line. Suite 259 → 320, offline. Phase 2's identity
+  approximation is the thing this closes.

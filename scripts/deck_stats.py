@@ -46,7 +46,10 @@ def analyze(deck_cards, coll_index):
             missing.append(d)
             enriched.append(d)  # keep, but unknown data
         else:
-            # copy known attributes, keep deck quantity
+            # copy known attributes, keep deck quantity.
+            # This explicit list is the only way a Card field reaches deck-level
+            # analysis: anything omitted here silently never reaches build_report,
+            # classify(), manabase or the dashboard for ANY deck. Add new fields.
             merged = mtglib.Card(
                 name=ref.name, quantity=d.quantity,
                 mana_value=ref.mana_value, colors=ref.colors,
@@ -54,7 +57,8 @@ def analyze(deck_cards, coll_index):
                 types=ref.types, subtypes=ref.subtypes,
                 supertypes=ref.supertypes, rarity=ref.rarity,
                 scryfall_id=ref.scryfall_id, set_code=ref.set_code,
-                collector_number=ref.collector_number, price=ref.price)
+                collector_number=ref.collector_number, price=ref.price,
+                produced=ref.produced, flags=ref.flags)
             enriched.append(merged)
     return enriched, missing
 
@@ -104,10 +108,21 @@ def build_report(deck_cards, enriched, missing, coll_index):
             if dp:
                 double[dp] += c.quantity
 
-    # color sources among lands (needs identity/color data on lands)
+    # Color sources among lands — what each land ACTUALLY taps for once the
+    # collection has been enriched (Card.produced), falling back to its color
+    # IDENTITY when it hasn't. The two bases are counted separately so every
+    # consumer can label the approximation instead of quietly implying precision.
+    # A deck card that isn't in the collection keeps produced=None, so a list with
+    # any unowned land can never report a purely produced basis — by design.
     sources = Counter()
+    basis = {"produced_lands": 0, "identity_lands": 0}
     for c in lands:
-        prod = c.colors or c.identity
+        if c.produced is not None:
+            prod = {p for p in c.produced if p in "WUBRG"}
+            basis["produced_lands"] += c.quantity
+        else:
+            prod = c.colors or c.identity
+            basis["identity_lands"] += c.quantity
         for color in prod:
             sources[color] += c.quantity
 
@@ -124,6 +139,7 @@ def build_report(deck_cards, enriched, missing, coll_index):
         "pip_demand": {k: round(v, 1) for k, v in pips.items()} if have_cost else None,
         "double_pips": dict(double) if have_cost else None,
         "color_sources": dict(sources) if sources else None,
+        "color_sources_basis": basis,
         "missing_from_collection": [m.name for m in missing],
         "quantity_problems": owned_enough(deck_cards, coll_index),
         "have_mv": have_mv,
@@ -178,6 +194,11 @@ def print_report(rep):
         if not rep["color_sources"]:
             print("  [!] Land color data unavailable — can't count sources. "
                   "Load the CSV (lands need Colors/Identities).")
+        approx = (rep.get("color_sources_basis") or {}).get("identity_lands", 0)
+        if approx:
+            print(f"  [!] {approx} land(s) counted by color IDENTITY, not actual "
+                  "production — sources are an approximation for those. Enrich the "
+                  "collection (scripts/carddb.py) to count what they really tap for.")
 
     if not rep["have_cost"]:
         print("\n[!] No mana-cost data (name-only collection). Curve and pip "
