@@ -304,9 +304,15 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         analysis += [c["card"] for c in chosen]
         for bn, q in basics.items():
             col = _BASIC_COLOR.get(bn)
+            # produced= is not optional decoration: a basic with produced=None would
+            # make every freshly built deck report an identity-approximated manabase
+            # forever, even though a Mountain's production is the one certain fact
+            # in the whole list.
             analysis.append(mtglib.Card(name=bn, quantity=q, types=["Land"],
                                         identity=({col} if col else set()),
-                                        colors=({col} if col else set()), mana_value=0.0))
+                                        colors=({col} if col else set()),
+                                        produced=({col} if col else set()),
+                                        mana_value=0.0))
         _a = deckcore.analyze_cards(analysis, idx, refs)
         assessment, mana = _a["assessment"], _a["mana"]
     except Exception:

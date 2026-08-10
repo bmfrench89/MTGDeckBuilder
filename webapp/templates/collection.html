@@ -12,6 +12,17 @@
     Curves, color scores, and card-fit scores use them across every deck.
     {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
     new cards — run <code>enrich.bat</code> again after a Scryfall update.</span>{% endif %}
+    <div class="fs-xs mt-2">
+      {% if carddb.produced_covered %}
+        <b class="good">Mana production: known</b> for {{ carddb.produced_covered }}/{{ carddb.total }}
+        cards ({{ carddb.produced_pct }}%) — manabase source counts use what those lands
+        actually tap for instead of their color identity.
+      {% else %}
+        <b class="warn">Mana production: unknown</b> — this attrs file predates production
+        enrichment, so colored-source counts fall back to color <i>identity</i> (and say so).
+        Re-run <code>enrich.bat</code> to pick it up.
+      {% endif %}
+    </div>
   {% else %}
     <b class="warn">Card DB: not enriched</b> — tools are running on the name-only list, so
     curves and fit scores are limited. Run <code>enrich.bat</code> (or

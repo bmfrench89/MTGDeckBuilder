@@ -56,6 +56,21 @@ Field data (EDHREC) measures *what wins tables in practice* — thousands of hum
 decisions the simulator cannot model. Simulation measures *whether the deck's own
 machine turns over*. They answer different questions; the app should keep both.
 
+## Precondition: the mana model comes from enrichment, not from this doc
+
+The simulator's two-tier mana model consumes exactly two fields, pinned in
+[spec-engine-upgrades.md](spec-engine-upgrades.md) **§4.2** and shipped by workstream A:
+`Card.produced` (`Optional[set]`) and `Card.flags` (`set[str]` —
+`etb-tapped`/`etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). Use
+those names and no others.
+
+The load-bearing rule: **`produced is None` means "not enriched"** and the sim must fall
+back to `colors or identity` *and label the run as the fallback tier*, while **`set()`
+means "enriched, produces nothing"** and really contributes zero mana. Code that treats
+the two alike turns Maze of Ith into a producer or a whole un-enriched deck into a
+zero-mana one, and either way the honesty label never fires. Deck-level `.attrs.csv`
+companions carry the same two columns from task C6 onward.
+
 ## Recommendation
 
 Build **tier 1 (goldfish Monte Carlo)** as the next engine season:

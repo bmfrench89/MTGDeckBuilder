@@ -30,6 +30,7 @@ flowchart TB
     simc["similar_commanders"]
     cfind["commander_finder"]
     cimg["card_image<br/>URLs + buy links"]
+    oflags["oracle_flags<br/>produced_mana + oracle-derived flags<br/>(stdlib re only — no repo imports)"]
   end
 
   subgraph SPOKES["🖼️ Presentation / aggregation spokes"]
@@ -46,6 +47,7 @@ flowchart TB
 
   mtglib --> deckcore
   mtglib --> ENGINES
+  oflags -->|"carddb → Produced/Flags"| refresh
   deckcore --> ENGINES
   deckcore --> SPOKES
   ENGINES --> SPOKES
@@ -77,6 +79,7 @@ knew; the buy view didn't. `deckcore.buy_signals()` is the fix and the pattern.
 |---|---|---|
 | owned / qty / spare copies | `mtglib.load_collection` + `deck_conflicts` | decklist badges, panel, add-picker, optimizer tiers |
 | identity / legality here | `mtglib` + deck `# Colors:` header | add/replace validation, optimizer candidate filter |
+| what it actually taps for / oracle-derived flags | `oracle_flags` → `carddb` → `collection_attrs.csv` → `Card.produced` / `Card.flags` | `deck_stats` colored-source counts (+ `color_sources_basis`), manabase CLI, dashboard pip table, assess packet, `/collection` coverage tile — **each labels the color-identity fallback when `produced is None`** |
 | fit (color/role/curve/power/theme) | `deck_fit.assess_card` | panel, add verdict, dead-weight, optimizer `value_of` |
 | field: inclusion % + synergy | `edhrec` (live → cache → **committed snapshot**) | fit scoring, optimizer, Buy staples, verdicts (with an honest "fit-only" note when absent) |
 | combo membership: present / one-away | `combo_detector` (+ `spellbook` beyond `combos.csv`) | Combo Watch, bracket signal, **Buy tab when the piece is unowned** |
@@ -157,10 +160,11 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | analyze_collection | "what can I build?" pool stats by color/type/tribe | mtglib |
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
 | card_image | Scryfall image URLs + `purchase_links` (TCGplayer/ManaPool/Card Kingdom) | mtglib |
+| oracle_flags | Face-aware derivation from a Scryfall card object: `produced_of()` (what it actually taps for) + `derive_flags()` (`etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). Pure dict-in/set-out, no I/O; heuristic by construction, so curated lists and human verification win | — (`re` only; no repo imports) |
 | **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
-| carddb | enrich the collection (colors/types/MV/**subtypes**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build). | mtglib |
+| carddb | enrich the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. | mtglib, oracle_flags |
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
 | **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply` | mtglib, deckcore, deck_fit, deck_conflicts, power |
@@ -282,7 +286,11 @@ files in place — quantity/section preservation, no-op safety, comment lines, f
 values + monotonicity), `test_auto_build.py` (exactly 100 cards, color legality, singleton,
 honest shortfall, the `scan(skip=)` self-exclusion regression), and `test_dashboard.py`
 (self-contained HTML, card panel present, editable-only-in-app, batch image loader) — which
-doubles as the safety net for refactoring `build_dashboard`. CI: `.github/workflows/tests.yml`
+doubles as the safety net for refactoring `build_dashboard`. The enrichment contract has its
+own three: `test_oracle_flags.py` (the flag vocabulary, dict fixtures only),
+`test_carddb.py` (the pinned 9-column header + write→overlay round trip, Scryfall
+monkeypatched) and `test_color_sources.py` (produced-vs-identity counting and the honesty
+label on every surface). CI: `.github/workflows/tests.yml`
 runs pytest on 3.11/3.13 and re-checks that `scripts/` still imports with **no third-party
 packages installed**.
 

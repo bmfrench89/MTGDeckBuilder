@@ -97,3 +97,109 @@ def test_name_keys_does_not_invent_an_alias_for_a_bare_slash_name():
     front-face key."""
     keys = mtglib.name_keys("SP//dr, Piloted by Peni")
     assert len(keys) == 1
+
+
+# --------------------------------------------------------------------------- #
+# Produced mana + oracle flags (the enrichment contract, spec §4.2)
+#
+# The load-bearing distinction: produced is None when the attrs file has no
+# Produced column at all ("unknown — fall back and SAY SO"), and set() when the
+# column is there but empty ("enriched; this really produces no mana"). Code that
+# conflates the two silently turns Maze of Ith into a rainbow land, or claims
+# precision it doesn't have.
+# --------------------------------------------------------------------------- #
+ATTRS_9COL = """\
+Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags
+Command Tower,Land,0,,,,eeee5555,W U B R G,
+Sol Ring,Artifact,1,,{1},,aaaa1111,C,rock;ramp;mana2
+Island,Land,0,,,Island,ffff6666,U,
+Maze of Ith,Land,0,,,,mmmm0000,,
+"""
+
+ATTRS_7COL = """\
+Name,Type,MV,Colors,Cost,Sub-types,Scryfall
+Command Tower,Land,0,,,,eeee5555
+Sol Ring,Artifact,1,,{1},,aaaa1111
+"""
+
+
+def _with_attrs(tmp_path, collection_file, attrs_text):
+    import os
+    import shutil
+    d = tmp_path / "coll"
+    d.mkdir(exist_ok=True)
+    shutil.copy(collection_file, d / "collection.csv")
+    (d / "collection_attrs.csv").write_text(attrs_text, encoding="utf-8")
+    return mtglib.index_by_name(mtglib.load_collection(str(d / "collection.csv")))
+
+
+def test_attrs_with_the_new_columns_populate_produced_and_flags(tmp_path,
+                                                                collection_file):
+    idx = _with_attrs(tmp_path, collection_file, ATTRS_9COL)
+    assert mtglib.lookup(idx, "Command Tower").produced == {"W", "U", "B", "R", "G"}
+    sol = mtglib.lookup(idx, "Sol Ring")
+    assert sol.produced == {"C"} and sol.flags == {"rock", "ramp", "mana2"}
+
+
+def test_an_empty_produced_cell_is_enriched_not_unknown(tmp_path, collection_file):
+    # Maze of Ith isn't in the base collection CSV, so give the empty-Produced row to
+    # a card that is — the point is the CELL, not which card carries it.
+    idx = _with_attrs(tmp_path, collection_file,
+                      ATTRS_9COL.replace("Maze of Ith", "Serra Angel"))
+    angel = mtglib.lookup(idx, "Serra Angel")
+    assert angel.produced is not None
+    assert angel.produced == set()
+
+
+def test_attrs_without_the_columns_leave_produced_unknown(tmp_path, collection_file):
+    """The pre-enrichment 7-column file. Every pre-existing assertion still holds —
+    only produced/flags are absent, and absent means None, never set()."""
+    idx = _with_attrs(tmp_path, collection_file, ATTRS_7COL)
+    tower = mtglib.lookup(idx, "Command Tower")
+    assert tower.produced is None
+    assert tower.flags == set()
+    assert tower.mana_value == 0 and "Land" in tower.types
+    assert mtglib.lookup(idx, "Sol Ring").scryfall_id == "aaaa1111"
+
+
+def test_parse_produced_keeps_wubrgc_and_drops_the_rest():
+    assert mtglib._parse_produced("W U B R G C") == set("WUBRGC")
+    assert mtglib._parse_produced(" u,g ") == {"U", "G"}
+    assert mtglib._parse_produced("") == set()
+    assert mtglib._parse_produced(None) == set()
+    assert mtglib._parse_produced("S X WU") == set()      # snow / nonsense / pairs
+
+
+def test_parse_flags_splits_on_semicolons_only():
+    """';' is the separator (the combos.csv convention) so a token never splits on a
+    comma — and blanks from a trailing ';' are dropped."""
+    assert mtglib._parse_flags("rock;ramp;mana2") == {"rock", "ramp", "mana2"}
+    assert mtglib._parse_flags(" etb-tapped ; ") == {"etb-tapped"}
+    assert mtglib._parse_flags("") == set()
+    assert mtglib._parse_flags(None) == set()
+
+
+def test_card_still_constructs_bare():
+    c = mtglib.Card(name="Nothing Special")
+    assert c.produced is None and c.flags == set()
+
+
+def test_two_cards_do_not_share_a_flags_set():
+    a, b = mtglib.Card(name="A"), mtglib.Card(name="B")
+    a.flags.add("rock")
+    assert b.flags == set()
+
+
+def test_produced_and_flags_survive_deck_stats_analyze(tmp_path, collection_file):
+    """The pipeline trap: deck_stats.analyze rebuilds every deck card as a NEW Card
+    from an explicit field list. A field missing from that list never reaches
+    build_report, classify(), manabase or the dashboard for any DECK — which would
+    no-op this entire feature at deck level while the collection looked fine."""
+    import deck_stats
+    idx = _with_attrs(tmp_path, collection_file, ATTRS_9COL)
+    deck = mtglib.parse_deck("1 Sol Ring\n10 Island\n1 Command Tower\n")
+    enriched, _missing = deck_stats.analyze(deck, idx)
+    by = {c.name: c for c in enriched}
+    assert by["Sol Ring"].produced == {"C"}
+    assert by["Sol Ring"].flags == {"rock", "ramp", "mana2"}
+    assert by["Command Tower"].produced == {"W", "U", "B", "R", "G"}

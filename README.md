@@ -80,7 +80,11 @@ python3 scripts/carddb.py --collection data/collection/collection.csv --stats
 
 It writes `data/collection/collection_attrs.csv` (also gitignored), which
 `mtglib.load_collection` merges automatically. Uploading an export through the web app's
-Collection page runs the same enrichment.
+Collection page runs the same enrichment. Besides colors/types/mana value it records
+**`Produced`** (what each card actually taps for) and **`Flags`** (oracle-derived:
+enters-tapped, mana rock/dork, ramp, draw), so colored-source counts stop approximating a
+land's output from its color identity — and where that data is missing, every surface
+labels the count "identity approx." rather than implying precision.
 
 ## What the tools do
 

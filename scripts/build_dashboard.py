@@ -171,6 +171,10 @@ def pip_table(rep):
             f"</span>{COLOR_NAME[c]}</td><td>{dem:g}</td><td>{dbl}</td>"
             f"<td>{s if src else '—'}</td></tr>")
     src_hdr = "Sources" if src else "Sources (need CSV)"
+    # Say which basis the numbers rest on: enriched lands report what they actually
+    # tap for, un-enriched (or unowned) ones fall back to color identity.
+    if src and (rep.get("color_sources_basis") or {}).get("identity_lands"):
+        src_hdr += " (identity approx.)"
     return ("<div class='tablewrap'><table class='data'><thead><tr>"
             "<th>Color</th><th>Pip demand</th>"
             f"<th>Double-pip cards</th><th>{src_hdr}</th></tr></thead><tbody>"

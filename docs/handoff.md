@@ -71,7 +71,16 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **255 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **320 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
+  now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
+  `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
+  new `scripts/oracle_flags.py`. Colored-source counts use real production where it exists
+  and print "identity approx." where it doesn't. **The player's own attrs file is still the
+  old 7-column shape until `enrich.bat` is re-run** — until then every manabase surface will
+  correctly show the identity-approximation label. Two owner-machine checks are outstanding:
+  a one-time Scryfall-schema sanity check on the `test_oracle_flags.py` fixture shapes, and
+  a ~30-random-card audit of derived flags after the first real enrichment run.
 
 ## Open items
 
@@ -91,7 +100,10 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    `docs/spec-engine-upgrades.md` — four workstreams (production-aware
    enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents).
    The owner accepted every §9 recommendation; implementation proceeds one
-   workstream per session/PR in order A → C → D → B → A-F.
+   workstream per session/PR in order A → C → D → B → A-F. **A has landed**
+   (production-aware enrichment, above); C is next and consumes A's fields in task C6,
+   which also extends `deckcore.load_attrs`/`apply_attrs` to carry `Produced`/`Flags`
+   on deck-level `.attrs.csv` companions — deliberately not done in A.
 
 ## Session workflow reminders
 

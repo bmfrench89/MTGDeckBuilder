@@ -47,6 +47,19 @@ export has one), falling back to the card name. It writes **`collection_attrs.cs
 (gitignored), which `mtglib.load_collection` auto-merges, so every tool sees real
 colors / types / mana value and the correct-art Scryfall id.
 
+The file's columns are
+`Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags`. The last two say what a
+card **actually taps for** and a few oracle-derived facts about it:
+
+- **`Produced`** — space-joined WUBRGC letters, e.g. `W U B R G` for Command Tower, `C`
+  for Sol Ring. An **empty cell means it produces no mana** (Maze of Ith). A **missing
+  column** — an attrs file written before this shipped — means *unknown*, and every tool
+  then counts colored sources from color identity instead and **says so** ("identity
+  approx."). Re-run `enrich.bat` to replace the approximation with the real thing.
+- **`Flags`** — `;`-joined tokens: `etb-tapped`, `etb-tapped-cond` (shock/check/battle
+  lands), `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`. These are a **heuristic** read
+  of oracle text, not gospel — curated notes and your own eyes win.
+
 - Works from either export flavor **or** the name-only snapshot.
 - Offline? `--download-bulk` grabs Scryfall's ~40 MB Oracle Cards file instead, or pass
   a file you already have with `--bulk oracle-cards.json`.
