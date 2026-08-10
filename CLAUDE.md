@@ -46,7 +46,10 @@ data/
 docs/             codemap.md (architecture) · handoff.md (session history) ·
                   spec-interactive-analytics-ai.md (feature tracker) · research-roadmap.md ·
                   power-and-brackets.md · card-images.md · mobile.md · SETUP-windows.md
-.claude/skills/   The mtg-deckbuilder and mtg-mobile skills
+.claude/
+  skills/         The mtg-deckbuilder and mtg-mobile skills
+  agents/         card-verifier · collection-auditor (Bash+Read, read-only subagents
+                  the deckbuilder skill delegates verification / pool scans to)
 ```
 
 Root helpers: `update.bat` (pull + rebuild), `enrich.bat` (Scryfall enrichment),
@@ -85,7 +88,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 375 tests, ~80s, offline
+pip install -r requirements-dev.txt && pytest          # 401 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -112,6 +115,8 @@ python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $CO
     --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
+python3 scripts/carddb.py --verify "Sol Ring" --verify "Rejoinder" [--json]
+                                                             # verify named cards' oracle text
 ```
 
 Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conflicts`,
@@ -140,7 +145,11 @@ can *destroy data or lie*: `test_deck_edit` (in-place deck rewrites), `test_mtgl
 `test_auto_build` (exactly 100 cards, color legality, singleton), `test_optimize`,
 `test_dashboard` (self-contained HTML, editable only in-app), `test_design_tokens`,
 `test_goldfish` (Monte Carlo convergence against the exact hypergeometrics, seeded
-determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidation).
+determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidation),
+`test_carddb_verify` (`--verify`'s positional batch reconciliation, the fuzzy retry, and
+that an unreachable Scryfall reports UNVERIFIED instead of guessing) and `test_agents`
+(the `.claude/agents/` prompts nothing else executes — names, the Bash+Read tool limit,
+the grounding-rules path).
 CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
 
 ### One design system, two surfaces

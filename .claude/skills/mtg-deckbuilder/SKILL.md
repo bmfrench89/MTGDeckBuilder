@@ -61,6 +61,8 @@ by **actual counted support**, not vibes.
 ### 3. Count before you claim
 For any archetype or tribe, run the analysis script and cite real numbers. If support is
 thin, say so and either propose a better-supported direction or a short, honest buy list.
+*Full-pool scans belong in the **`collection-auditor`** subagent — see "Delegate the heavy
+work" below.*
 
 ### 4. Build / tune the list
 Assemble the 99 (+ commander) from owned cards. As you go:
@@ -96,8 +98,11 @@ cost and had no idea Director Nick Fury is in 95% of that commander's decks. The
 fixed, but always verify — a shallow collection or a missing EDHREC page still shows up here.
 
 ### 6. Verify the questionable cards
-For any card whose text you're not certain of, web-search Scryfall/Gatherer oracle text
-before you build around it. Correct yourself openly when a search changes the plan.
+For any card whose text you're not certain of, get the real oracle text before you build
+around it — `python3 scripts/carddb.py --verify "<card name>"` (repeat the flag to batch
+several), or web-search Scryfall/Gatherer. Correct yourself openly when a lookup changes
+the plan. *Past ~3 uncertain cards, delegate to the **`card-verifier`** subagent — see
+"Delegate the heavy work" below.*
 
 ### 7. Deliver
 Generate a dashboard with `build_dashboard.py` (and a visual card gallery if they want
@@ -107,6 +112,30 @@ external images are blocked in the chat preview. Save deck lists under `data/dec
 ### 8. Hand off
 If the session produced or changed a deck, update `docs/handoff.md` so the next session
 starts grounded instead of re-deriving.
+
+## Delegate the heavy work (subagents)
+
+Two things reliably drown a session in text: verifying cards one at a time, and scanning
+the whole pool (`deck_conflicts --available` alone is ~400 lines). Both are now agents in
+`.claude/agents/`, and they return **conclusions** instead of dumps. When the Agent tool
+is available:
+
+- **More than ~3 cards need verifying** → delegate to **`card-verifier`**. It runs one
+  batched `carddb.py --verify` and comes back with a table of canonical names, costs,
+  types, identities, commander legality and **verbatim** oracle text, plus an explicit
+  `UNVERIFIED:` line. One card is faster inline; a list is not.
+- **Any full-pool scan** → delegate to **`collection-auditor`**: "what can I build",
+  "how many X do I own", "which decks share cards", "rank my decks". It resolves the
+  collection, runs the analysis CLIs, and returns counted findings — each with the exact
+  command that produced it.
+
+**What stays here:** the persona and the voice, every verdict and recommendation, deck
+assembly, and the optimize decisions. The agents supply facts; you do the judgement.
+Treat an `UNVERIFIED:` card as unverified — do not fill the gap from memory.
+
+**If the Agent tool isn't available** (a plain chat, a phone session), nothing changes
+about the workflow: do exactly the same work inline — same CLIs, same batched
+`--verify`, same counted claims — and expect a longer transcript.
 
 ## Coaching & assessment
 
@@ -195,6 +224,10 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   auto-merges. `--stats` prints a `produced known: n/total` coverage line. Run `enrich.bat` on
   Windows. Where production data is missing, source counts fall back to color identity and every
   surface says "identity approx." — that label is a prompt to re-enrich, not a defect to explain away.
+  **`--verify "<card name>"`** (repeatable, `--json`) is the other mode: verify *named* cards
+  against Scryfall and print their **verbatim** oracle text, cost, type, identity and commander
+  legality — a name nothing resolves comes back `UNVERIFIED` rather than guessed at. This is
+  grounding rule 3 as a command, and what the `card-verifier` subagent runs.
 - `edhrec.py` — EDHREC community staples for a commander vs your collection: high-inclusion cards you
   OWN (add) vs. are MISSING (buy). Answers "what does the field run for this commander that I lack?".
 - `deck_fit.py` — library behind per-card fit scoring (used by `build_dashboard`/`auto_build`, not a CLI).

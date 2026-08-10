@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Enrich the whole collection with card attributes (colors / type / mana value /
-what it taps for / oracle-derived flags / Scryfall id) — the fix for the
-"name-only export" limitation.
+"""Scryfall card data for this collection — two modes, one client.
+
+**Enrichment** (`--collection`) fills in card attributes (colors / type / mana value /
+what it taps for / oracle-derived flags / Scryfall id) — the fix for the "name-only
+export" limitation.
 
 Default: Scryfall's /cards/collection API — ~1 request per 75 cards, no download.
 It resolves each owned card by its exact printing (set + collector number, or a
@@ -14,18 +16,35 @@ Offline / bulk path: --download-bulk grabs Scryfall's ~40 MB "Oracle Cards" file
 (cached), or --bulk points at one you already have. Uses DuckDB to stream it if
 installed, else stdlib json.
 
+**Verification** (`--verify`) answers a different question: *is this card real, and
+what does it actually say?* It takes card NAMES (repeat the flag), batches them
+through the same /cards/collection endpoint, retries each miss once as a fuzzy
+name lookup, and prints VERBATIM oracle text — never a paraphrase. A name nothing
+resolves is reported UNVERIFIED rather than guessed at, which is how a hallucinated
+card dies here instead of in a decklist. Results are cached for 30 days under
+data/cache/scryfall/. This is the mode `.claude/agents/card-verifier.md` runs; the
+skill's grounding rule 3 ("verify card text past the knowledge cutoff") is the
+reason it exists.
+
+The two modes are exclusive: verification never touches the collection file, and
+enrichment still requires --collection.
+
 Usage:
   python3 carddb.py --collection data/collection/collection.csv          # API (default)
   python3 carddb.py --collection coll.csv --stats                        # + breakdown
   python3 carddb.py --collection coll.csv --download-bulk                # offline bulk
   python3 carddb.py --bulk oracle-cards.json --collection coll.csv       # local bulk file
+  python3 carddb.py --verify "Sol Ring" --verify "Llanowar Elves"        # verify names
+  python3 carddb.py --verify "Sol Ring" --json                           # machine-readable
 """
 import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 
 import mtglib
@@ -315,21 +334,257 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None):
     return len(resolved), len(coll), unmatched
 
 
+# ── single-card verification (--verify) ──────────────────────────────────────
+# Where verified card objects are cached. Under data/cache/, which is gitignored:
+# Scryfall's text is theirs, and a stale copy of it is a grounding hazard, so it
+# lives with the other caches and expires.
+VERIFY_CACHE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "cache",
+                 "scryfall"))
+# 30 days. Oracle text is amended (rare) far more slowly than it is asked about, and
+# an expired entry costs one request, so this is long on purpose.
+VERIFY_TTL = 30 * 24 * 3600
+NAMED_URL = "https://api.scryfall.com/cards/named"
+
+# The verified-row contract, in order. Every consumer (the CLI text block, --json,
+# the card-verifier agent's table) reads these names and nothing else.
+VERIFY_FIELDS = ("requested", "found", "name", "mana_cost", "type_line", "oracle_text",
+                 "color_identity", "legal_commander", "set", "collector_number",
+                 "scryfall_uri", "reason", "source")
+
+
+def _verify_key(name):
+    """The cache key: `_norm(front_face(name))`. Goes through front_face, so
+    'SP//dr, Piloted by Peni' keeps its whole name — a naive split("//") would key it
+    as 'sp' and collide with anything else starting there."""
+    return mtglib._norm(mtglib.front_face(name))
+
+
+def _cache_path(key, cache_dir):
+    """A filesystem-safe file per key. The key itself is stored INSIDE the file and
+    re-checked on read, so the lossy slug (card names carry ':' and '//') can never
+    serve one card's text under another card's name."""
+    slug = re.sub(r"[^a-z0-9]+", "-", key).strip("-") or "card"
+    return os.path.join(cache_dir, slug[:120] + ".json")
+
+
+def _cache_get(key, cache_dir, ttl=None):
+    """The cached Scryfall card object, or None (missing / wrong key / expired /
+    unreadable). A bad cache file is a miss, never an exception."""
+    ttl = VERIFY_TTL if ttl is None else ttl   # read at call time, not at def time
+    path = _cache_path(key, cache_dir)
+    try:
+        with open(path, encoding="utf-8") as f:
+            entry = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if entry.get("key") != key:
+        return None
+    if time.time() - float(entry.get("fetched") or 0) > ttl:
+        return None
+    return entry.get("card") or None
+
+
+def _cache_put(key, card, cache_dir):
+    """Best-effort write — an unwritable cache dir must not fail a verification."""
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+        tmp = _cache_path(key, cache_dir) + ".part"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"key": key, "fetched": time.time(), "card": card}, f)
+        os.replace(tmp, _cache_path(key, cache_dir))
+    except OSError:
+        pass
+
+
+def _legal_commander(c):
+    """True / False / None — None means Scryfall didn't tell us, which is NOT 'illegal'.
+    Conflating the two is the same class of mistake as produced=None vs set()."""
+    legal = (c.get("legalities") or {}).get("commander")
+    return None if not legal else legal == "legal"
+
+
+def _verified_row(requested, c, source):
+    return {"requested": requested, "found": True, "name": c.get("name", "") or "",
+            "mana_cost": c.get("mana_cost") or _face_costs(c),
+            "type_line": c.get("type_line") or _face_types(c),
+            # Face-aware join (oracle_flags), never split("//") — the SP//dr bug class.
+            "oracle_text": oracle_flags.oracle_text_of(c),
+            "color_identity": " ".join(c.get("color_identity") or []),
+            "legal_commander": _legal_commander(c),
+            "set": (c.get("set") or "").upper(),
+            "collector_number": str(c.get("collector_number") or ""),
+            "scryfall_uri": c.get("scryfall_uri") or "", "reason": "", "source": source}
+
+
+def _unverified_row(requested, reason):
+    return {"requested": requested, "found": False, "name": "", "mana_cost": "",
+            "type_line": "", "oracle_text": "", "color_identity": "",
+            "legal_commander": None, "set": "", "collector_number": "",
+            "scryfall_uri": "", "reason": reason, "source": ""}
+
+
+def _face_costs(c):
+    faces = c.get("card_faces") or []
+    return " // ".join(f.get("mana_cost", "") for f in faces if f.get("mana_cost"))
+
+
+def _face_types(c):
+    faces = c.get("card_faces") or []
+    return faces[0].get("type_line", "") if faces else ""
+
+
+def _ident_key(ident):
+    return json.dumps(ident, sort_keys=True)
+
+
+def _fetch_named_fuzzy(name):
+    """One fuzzy /cards/named lookup — the second chance for a misspelling or a
+    back-face name that /cards/collection's exact matching rejects. Returns the card
+    object or None; never raises."""
+    url = NAMED_URL + "?fuzzy=" + urllib.parse.quote(name)
+    try:
+        return json.loads(_get(url))
+    except Exception:
+        return None
+
+
+def verify_cards(names, cache_dir=None, refresh=False, delay=0.1):
+    """Verify card NAMES against Scryfall. Returns one dict per requested name, in
+    the order asked, shaped by VERIFY_FIELDS.
+
+    Resolution, in three steps:
+      1. cache (30 days) — free, and the reason a repeated question costs nothing;
+      2. exact names batched through /cards/collection, reconciled **positionally**.
+         Scryfall returns `data` in identifier order with the misses listed separately
+         in `not_found`; matching the response back BY NAME breaks the moment someone
+         asks about a back face or an adventure half, because the returned card is
+         named "Front // Back" and the request wasn't;
+      3. each miss retried once as a fuzzy name lookup, with the courtesy delay
+         Scryfall asks for. The resolved name comes back in `name` while `requested`
+         keeps what was asked, so a correction is visible rather than silent.
+
+    Nothing resolves → `found: False` with a reason. That is where a hallucinated
+    card name dies. Network failure is the same shape — the report IS the product, so
+    an unreachable Scryfall yields UNVERIFIED rows, not an exception and not a guess.
+    """
+    cache_dir = cache_dir or VERIFY_CACHE_DIR
+    names = [n for n in (str(n or "").strip() for n in names) if n]
+    rows = {}          # index -> row
+    pending = []       # (index, requested name)
+
+    for i, name in enumerate(names):
+        card = None if refresh else _cache_get(_verify_key(name), cache_dir)
+        if card:
+            rows[i] = _verified_row(name, card, "cache")
+        else:
+            pending.append((i, name))
+
+    for start in range(0, len(pending), _BATCH):
+        chunk = pending[start:start + _BATCH]
+        idents = [{"name": n} for _i, n in chunk]
+        try:
+            data, not_found = _post_collection(idents)
+        except Exception as e:
+            for i, n in chunk:
+                rows[i] = _unverified_row(n, f"network unreachable: {e}")
+            continue
+        misses = [_ident_key(x) for x in (not_found or [])]
+        found_iter = iter(data or [])
+        for (i, n), ident in zip(chunk, idents):
+            key = _ident_key(ident)
+            if key in misses:
+                misses.remove(key)          # positional: this slot produced no card
+                continue
+            c = next(found_iter, None)
+            if c is None:
+                continue
+            rows[i] = _verified_row(n, c, "scryfall")
+            _cache_put(_verify_key(n), c, cache_dir)
+        if delay:
+            time.sleep(delay)
+
+    for i, n in pending:                     # step 3 — fuzzy retry for whatever is left
+        if i in rows:
+            continue
+        if delay:
+            time.sleep(delay)
+        c = _fetch_named_fuzzy(n)
+        if c and c.get("name"):
+            rows[i] = _verified_row(n, c, "fuzzy")
+            _cache_put(_verify_key(n), c, cache_dir)
+        else:
+            rows[i] = _unverified_row(
+                n, "no Scryfall match (exact or fuzzy) — treat the name as unverified")
+
+    return [rows[i] for i in range(len(names))]
+
+
+def print_verified(rows, out=print):
+    """One block per card, or one UNVERIFIED line. Oracle text is printed VERBATIM:
+    a paraphrase here is exactly the misreading grounding rule 3 exists to prevent."""
+    for r in rows:
+        if not r["found"]:
+            out(f'UNVERIFIED "{r["requested"]}" — {r["reason"]}')
+            continue
+        legal = {True: "yes", False: "NO", None: "unknown"}[r["legal_commander"]]
+        out(f'{r["name"]}  {r["mana_cost"] or "—"}')
+        if mtglib._norm(r["name"]) != mtglib._norm(r["requested"]):
+            out(f'  (asked for "{r["requested"]}" — Scryfall resolved it to this card)')
+        out(f'  {r["type_line"]}')
+        out(f'  identity: {r["color_identity"] or "colorless"} · commander-legal: {legal}'
+            f' · {r["set"]} {r["collector_number"]} · via {r["source"]}')
+        for line in (r["oracle_text"] or "(no oracle text)").split("\n"):
+            out(f'  | {line}')
+        if r["scryfall_uri"]:
+            out(f'  {r["scryfall_uri"]}')
+        out("")
+
+
 def main():
     ap = argparse.ArgumentParser(
-        description="Enrich the collection with colors/types/mana value/Scryfall ids. "
-                    "Default: Scryfall's /cards/collection API (no download). Use "
-                    "--bulk / --download-bulk for the offline bulk-file path.")
-    ap.add_argument("--collection", required=True)
+        description="Scryfall card data, two modes. ENRICH the collection with "
+                    "colors/types/mana value/production/Scryfall ids (--collection; "
+                    "default path is the /cards/collection API, --bulk / --download-bulk "
+                    "for offline), or VERIFY named cards' real oracle text (--verify).")
+    ap.add_argument("--collection", required=False,
+                    help="enrichment mode: the collection CSV to enrich.")
+    ap.add_argument("--verify", action="append", metavar="CARD NAME",
+                    help="verification mode: verify this card name against Scryfall and "
+                         "print its VERBATIM oracle text. Repeat for more cards — they go "
+                         "out in one batched request.")
+    ap.add_argument("--json", action="store_true",
+                    help="with --verify, print the rows as JSON.")
     ap.add_argument("--out", default=None, help="default: <collection dir>/collection_attrs.csv")
     ap.add_argument("--bulk", help="use a local Scryfall bulk JSON (offline).")
     ap.add_argument("--download-bulk", action="store_true",
                     help="download Scryfall's ~40 MB Oracle Cards file, then enrich from it.")
     ap.add_argument("--refresh", action="store_true",
-                    help="with --download-bulk, re-download even if a cached copy exists.")
+                    help="with --download-bulk, re-download even if a cached copy exists; "
+                         "with --verify, ignore the 30-day cache and re-fetch.")
     ap.add_argument("--no-duckdb", action="store_true", help="bulk path only.")
     ap.add_argument("--stats", action="store_true", help="print a color/type breakdown after")
     args = ap.parse_args()
+
+    # Exactly one mode. --collection stopped being argparse-required when --verify
+    # arrived, so this check is what still makes enrichment demand it — enrich.bat and
+    # the webapp upload route both call the enrichment path and would otherwise get a
+    # confusing crash instead of a usage error.
+    if bool(args.verify) == bool(args.collection):
+        ap.error("choose one mode: --collection <csv> to enrich, or --verify "
+                 '"<card name>" (repeatable) to verify card text')
+
+    if args.verify:
+        rows = verify_cards(args.verify, refresh=args.refresh)
+        if args.json:
+            print(json.dumps(rows, indent=2))
+        else:
+            print_verified(rows)
+            unverified = [r["requested"] for r in rows if not r["found"]]
+            if unverified:
+                print(f"{len(unverified)}/{len(rows)} unverified — do not build around "
+                      "a card this run could not confirm.", file=sys.stderr)
+        return 0   # an UNVERIFIED report is a successful run; the report IS the product
 
     out = args.out or os.path.join(os.path.dirname(args.collection) or ".",
                                    "collection_attrs.csv")

@@ -71,7 +71,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **375 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **401 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
@@ -97,6 +97,16 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   cached entry point (`goldfish.sim_for_deck` → `data/cache/goldfish/`), so a page view
   after a deck edit costs one simulation across all three surfaces (~0.1–0.3s cold,
   a file read warm).
+- **The skill delegates the heavy work** (engine-season workstream D): `.claude/agents/`
+  now holds **card-verifier** (batched card-text verification) and **collection-auditor**
+  (full-pool scans), both read-only `Bash, Read`; SKILL.md sends >~3 uncertain cards to the
+  first and any full-pool scan to the second, doing the same work inline where no Agent
+  tool exists. They are fed by `carddb.py --verify "<card name>"` — a new second mode that
+  verifies *named* cards against Scryfall (batched, positionally reconciled, one fuzzy
+  retry, 30-day cache in `data/cache/scryfall/`) and prints verbatim oracle text or an
+  honest `UNVERIFIED`. Owner-machine follow-up: run `python3 scripts/carddb.py --verify
+  "Sol Ring"` once on a networked machine — Scryfall is egress-blocked from the sandbox
+  this landed in, so every test is monkeypatched and the live path is unproven.
 
 ## Open items
 
@@ -116,11 +126,11 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    `docs/spec-engine-upgrades.md` — four workstreams (production-aware
    enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents).
    The owner accepted every §9 recommendation; implementation proceeds one
-   workstream per session/PR in order A → C → D → B → A-F. **A and C have landed**
-   (production-aware enrichment and the goldfish simulator, both above).
-   **Next up: D** (subagents, §7), then **B** (the Comprehensive Rules layer, §5),
-   then **A-F** (`classify()` consuming the oracle flags, §4.5 — that one owes a
-   before/after categories diff and an explicit re-proof of optimizer idempotency).
+   workstream per session/PR in order A → C → D → B → A-F. **A, C and D have landed**
+   (production-aware enrichment, the goldfish simulator, and the subagents — all above).
+   **Next up: B** (the Comprehensive Rules layer, §5), then **A-F** (`classify()`
+   consuming the oracle flags, §4.5 — that one owes a before/after categories diff and
+   an explicit re-proof of optimizer idempotency).
 
 ## Session workflow reminders
 
