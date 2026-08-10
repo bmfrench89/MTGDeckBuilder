@@ -16,7 +16,7 @@
 
 # --- Equipment (14) ---
 1 Colossus Hammer
-1 Hard-Won Jitte
+1 Professional Face-Breaker
 1 Sword of the Animist
 1 Behemoth Sledge
 1 Conqueror's Flail
@@ -25,9 +25,9 @@
 1 Mask of Memory
 1 Lightning Greaves
 1 Trailblazer's Boots
-1 Mjölnir, Hammer of Thor
+1 Summoning Materia
 1 Hero's Blade
-1 Bitterthorn, Nissa's Animus
+1 Yuffie, Materia Hunter
 1 Hero's Heirloom
 
 # --- Equipment support ---
@@ -58,7 +58,7 @@
 1 Cultivate
 1 Sram, Senior Edificer
 1 Sakura-Tribe Elder
-1 Priest of Titania
+1 Unfinished Business
 1 Solemn Simulacrum
 1 Rampant Growth
 

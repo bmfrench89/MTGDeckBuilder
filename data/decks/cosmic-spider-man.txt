@@ -24,7 +24,7 @@
 
 1 Cosmic Spider-Man
 
-# --- Spiders & Spider-matters creatures (26) ---
+# --- Spiders & Spider-matters creatures (25) ---
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
 1 Peter Parker
@@ -34,9 +34,9 @@
 1 Spider-Gwen, Free Spirit
 1 Gwenom, Remorseless
 1 Scarlet Spider, Ben Reilly
-1 Scarlet Spider, Kaine
+1 Arachnogenesis
 1 Araña, Heart of the Spider
-1 Spider-Girl, Legacy Hero
+1 Spider-Man 2099
 1 Spider-Byte, Web Warden
 1 Superior Spider-Man
 1 Spinneret and Spiderling
@@ -97,7 +97,7 @@
 1 Mystic Monastery
 1 Daily Bugle Building
 1 Jungle Shrine
-1 Willowrush Verge
+1 Spider-Sense
 1 Path of Ancestry
 1 Secluded Courtyard
 1 Unclaimed Territory
@@ -105,7 +105,7 @@
 1 Evolving Wilds
 1 Viridescent Bog
 1 Suburban Sanctuary
-1 University Campus
+1 Arasta of the Endless Web
 5 Forest
 5 Plains
 4 Island

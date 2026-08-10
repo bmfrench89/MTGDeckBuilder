@@ -22,7 +22,7 @@
 
 # --- Board wipes ---
 1 Leyline Axe
-1 Cleansing Nova
+1 Blasphemous Act
 1 Final Judgment
 
 # --- Counters ---
@@ -39,11 +39,11 @@
 1 Misty Knight, Hero for Hire
 1 Sacred Foundry
 1 Raging Goblin
-1 Agent Maria Hill
-1 Agent of Atlas
+1 Mjölnir, Hammer of Thor
+1 Inventory Management
 1 Puresteel Paladin
-1 Bola Warrior
-1 Brave Brawler
+1 Boros Charm
+1 Lightning Greaves
 1 Excalibur, Sword of Eden
 1 Elite Interceptor // Rejoinder
 1 Flash Thompson, Spider-Fan
@@ -101,10 +101,10 @@
 1 Glacial Fortress
 1 Sulfur Falls
 1 Battlefield Forge
-1 Country Roads
+1 The Mighty Thor, Jane Foster
 1 Dark Depths
 1 Drifting Meadow
-1 Dwarven Ruins
+1 Rogue's Passage
 3 Island
 4 Mountain
 6 Plains
