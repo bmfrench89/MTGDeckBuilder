@@ -72,6 +72,14 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
 - Test suite: **456 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
+  export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards
+  that are in no deck (Decks-page card, identity-matched to decks); `optimize()`
+  reports **field risers** — owned cards the ≥25 anti-churn margin gate suppressed —
+  in the CLI preview, `report["risers"]`, and the coaching packet. Both are strictly
+  advisory: they never write. They exist because three good owned cards (Codsworth,
+  Mana Drain, Smaug) sat unused while every deck reported "already aligned" — see
+  open item 1.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
@@ -142,13 +150,38 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-1. **Cloud → B3 swap awaiting the owner's yes/no:** Evolving Wilds → Crop Rotation
-   (owned ×3, free). Apply via the app's card panel or a deck-file edit; the
-   optimizer will respect it as a manual edit either way.
+**START HERE — 1. The placement pass.** Four known-good OWNED cards are still in no
+deck. The principle the owner stated matters more than the backlog: placing a new
+card should be a **routine pass over every arrival**, not a one-off that waits on
+someone noticing. The advisors below now surface such cards; surfacing is not placing.
+- `Crop Rotation` → cloud-ex-soldier, over `Evolving Wilds`. The one FREE owned Game
+  Changer in Cloud's colors, and it fetches the deck's own Slayers' Stronghold at
+  instant speed. **This is the swap that moves Cloud from B2 to B3.**
+- `Codsworth, Handy Helper` → cloud-ex-soldier, over `Bitterthorn, Nissa's Animus`
+  (11%). 30% field inclusion there; the ≥25 margin gate held it at 19 points — the
+  case that motivated the risers advisory.
+- `Mana Drain` → yshtola-nights-blessed. Only 15% on a young commander's page —
+  new-commander fields undervalue universal staples.
+- `Smaug, Wicked Worm` → the-ur-dragon. 12% and climbing; the field lags new printings.
+
+Apply through the app's ＋Add / card-panel Replace so each lands as a **manual** add
+(permanently optimizer-protected), then re-run `power.py --rank` to confirm Cloud
+moved to B3. **Then generalize:** the recurring flow should be "new arrivals →
+per-deck verdict → place or dismiss". `deckcore.new_arrivals()` already produces the
+list and `deckcore.advise_card()` already produces the verdict — the missing piece is
+one screen that walks them.
+
 2. **First Avenger bracket:** stays B2 unless a Game Changer in R/U/W is bought
    (estimates only — no live prices): e.g. Drannith Magistrate or Smothering
    Tithe class cards. The deck also still lists 21 cards to buy — bracket is not
-   its binding constraint.
+   its binding constraint. No deck reaches B4 from the owned pool (4 unique Game
+   Changers owned).
+2b. **Bracket-filtered field data (experiment, not started).** EDHREC publishes
+   bracket-specific average decks; the owner builds toward Bracket 3, but snapshots
+   use the all-brackets page. `json.edhrec.com` is egress-blocked from every sandbox
+   path, so the probe must run **in a GitHub Action** (the `live-checks` pattern
+   above proved this works): teach `edhrec.py --snapshot-all` to try bracket-variant
+   endpoints and commit whatever answers. See `docs/spec-engine-advisors.md` §3.
 3. **PAT renewal when due** (see GitHub token settings) and the quarterly
    keepalive click (above). Auth gate is ON (verified live); collection upload is
    DONE; ranking validation is DONE.
