@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** + **grounded subagents (Phase 8)** + **a rules layer (Phase 9)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv, a card-panel Rules tab)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**, and its flags now feed `classify()`) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** + **grounded subagents (Phase 8)** + **a rules layer (Phase 9)** · the **engine-upgrades season is complete** (A, B, C, D, A-F) · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv, a card-panel Rules tab)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
@@ -80,6 +80,13 @@ Unlocks site-wide interactivity + the data layer later phases consume.
   `scripts/oracle_flags.py`. Two columns appended to `collection_attrs.csv`; an empty cell
   means "produces nothing", an absent column means "unknown". Workstream A of
   [spec-engine-upgrades.md](spec-engine-upgrades.md).
+- ☑ **`classify()` reads the flags** — `oracle_flags` gained `removal` / `wipe` / `counter`,
+  and `mtglib.classify()` consults `Card.flags` **only where the curated name lists are
+  silent** (curated always wins, first-writer-wins). Role/category counts — which feed
+  `power.assess`, the dashboard and the optimizer's role-template guardrails — now cover
+  cards no hand-maintained list has caught up with. Follow-up A-F of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md); the whole **engine-upgrades season is
+  complete** (workstreams A, B, C, D + A-F, five PRs).
 - ☐ Cached CSB + `pyedhrec` client wrappers — *deferred to their consuming phases (1, 3).*
 - ☐ Verify ManaPool & Card Kingdom per-card URL schemes — *best-effort links shipped;
   verify on the live sites (one-line fix in `card_image.purchase_links`).*
@@ -459,3 +466,25 @@ tool.
   left to coexist: per-card lookups beat it for a single-player tool. Back-compat: this
   adds two gitignored cache directories and touches no existing data format. Suite
   401 → 434, offline.
+- **2026-08-10** — **`classify()` learned to read the oracle flags** (follow-up A-F of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md), and the close of the engine-upgrades
+  season — five PRs: A, C, D, B, A-F). `oracle_flags` gained the three tokens workstream A
+  deliberately deferred — `removal` (destroy/exile *target* on an Instant/Sorcery/
+  Enchantment face), `wipe` (destroy/exile *all*, or the each-creature `-X/-X` / "is dealt"
+  forms, on an Instant/Sorcery face), `counter` (counter target … spell) — face-aware like
+  the rest of the vocabulary. `mtglib.classify()` now consults `Card.flags` **after** the
+  five curated name lists and **before** the type fallback: the `if not roles` guard is the
+  curated-wins rule, the same first-writer-wins shape `deckcore.load_card_notes` uses to let
+  a curated note beat a generated one. So a card from a set newer than `RAMP`'s last edit
+  lands in the ramp bucket instead of the generic type bucket, while a hand-verified card can
+  never be overruled by a regex. The mana-shape tokens (`etb-tapped`, `mana2`, `mana3`) map to
+  no role on purpose — they are goldfish inputs, not deck-role categories. Why this was a
+  separate, deliberately small PR: category counts feed `power.assess`, the dashboard and the
+  optimizer's role-template guardrails, so the blast radius belonged on its own diff with its
+  own proofs. Both were run and both are in the PR body: a `deck_stats --json` categories diff
+  on the fixture deck is **byte-identical** (an unenriched collection has `flags == set()`, so
+  the layer no-ops), and optimizer idempotency is re-proven *with* flag-bearing attrs present
+  rather than assumed. Honest limit, unchanged and now more load-bearing: a *wrong* flag is
+  invisible to the honesty labels, which fire when data is absent, not when it is wrong — the
+  ~30-card audit after the first real enrichment run is the only guard. Suite 434 → 455,
+  offline.

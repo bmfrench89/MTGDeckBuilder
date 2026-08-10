@@ -443,6 +443,44 @@ def test_optimizer_is_idempotent_under_the_new_ranking(tmp_path, collection_file
     assert (tmp_path / "d.txt").read_text(encoding="utf-8") == text_after_first
 
 
+def test_optimizer_is_still_idempotent_with_oracle_flags_present(tmp_path,
+                                                                 collection_file,
+                                                                 monkeypatch):
+    """The A-F re-proof (spec §4.5). classify() now reads `Card.flags` where the
+    curated lists are silent, and its category counts feed the optimizer's
+    ROLE_RANGE guardrails — so a swap this run permits must still be a swap the
+    NEXT run declines to undo. Idempotency is the optimizer's load-bearing
+    contract; with a new input feeding the gate it has to be re-proven, not
+    assumed. Same deck as the no-flags idempotency test above, plus an attrs file
+    that moves Serra Angel out of `creature` and into `removal`."""
+    import deck_fit
+    # the collection_file fixture already lives at tmp_path/collection.csv;
+    # load_collection auto-merges an attrs file sitting beside it.
+    (tmp_path / "collection_attrs.csv").write_text(
+        "Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags\n"
+        "Serra Angel,Creature,5,W,{3}{W}{W},Angel,7777aaaa,,removal\n"
+        "Counterspell,Instant,2,U,{U}{U},,cccc3333,,counter\n"
+        "Island,Land,0,,,Island,ffff6666,U,\n", encoding="utf-8")
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Creatures ---\n1 Serra Angel\n\n"
+                    "# --- Ramp ---\n1 Sol Ring\n\n"
+                    "# --- Lands ---\n10 Island\n", encoding="utf-8")
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {"counterspell": 60, "sol ring": 90})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {"counterspell": 69})
+    coll = mtglib.load_collection(collection_file)
+    idx = mtglib.index_by_name(coll)
+    # the flags really did reach classify — otherwise this test proves nothing
+    assert mtglib.classify(mtglib.lookup(idx, "Serra Angel")) == {"removal"}
+
+    optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30, apply=True)
+    text_after_first = deck.read_text(encoding="utf-8")
+    r2 = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30, apply=True)
+    assert not r2["swaps"], "second run must find nothing to do, flags or not"
+    assert deck.read_text(encoding="utf-8") == text_after_first
+
+
 def test_tidy_preserves_comments_inside_sections(tmp_path, collection_file):
     """The repo contract: edits keep comment lines intact. _tidy used to delete every
     comment below the first section header."""

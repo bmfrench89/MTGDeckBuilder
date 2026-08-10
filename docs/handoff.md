@@ -71,7 +71,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **434 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **455 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
@@ -80,7 +80,19 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   old 7-column shape until `enrich.bat` is re-run** — until then every manabase surface will
   correctly show the identity-approximation label. Two owner-machine checks are outstanding:
   a one-time Scryfall-schema sanity check on the `test_oracle_flags.py` fixture shapes, and
-  a ~30-random-card audit of derived flags after the first real enrichment run.
+  a ~30-random-card audit of derived flags after the first real enrichment run (open item 5).
+- **Role/category counts read those flags too** (engine-season follow-up A-F):
+  `oracle_flags` also derives `removal` / `wipe` / `counter`, and `mtglib.classify()`
+  consults `Card.flags` **only where its curated name lists are silent** — curated always
+  wins, first-writer-wins, the same shape `deckcore.load_card_notes` uses. So a card from a
+  set newer than the lists lands in the right bucket instead of the generic type bucket,
+  and a hand-verified card can never be overruled by a regex. The mana-shape tokens
+  (`etb-tapped`, `mana2`, `mana3`) map to no role — they are goldfish inputs. Proven on
+  landing rather than assumed: the fixture deck's `deck_stats --json` categories are
+  byte-identical without flags present (an unenriched collection has `flags == set()`, so
+  the layer no-ops), and optimizer idempotency was re-run **with** flag-bearing attrs — the
+  second pass proposes nothing. **Consequence to remember:** the flag audit in open item 5
+  is now a category-count guard, not just a mana-model one.
 - **The engine can goldfish** (engine-season workstream C): `scripts/goldfish.py` is a
   seeded, stdlib, offline Monte Carlo — shuffle, London mulligan, land drops, greedy
   casting — reporting P(commander by turn N), keepable / screw / flood **with their
@@ -139,16 +151,28 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    DONE; ranking validation is DONE.
 4. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain
    text, not panel-clickable (`docs/codemap.md`, "still open").
-5. **Engine season is spec'd and RATIFIED (2026-08-10):**
-   `docs/spec-engine-upgrades.md` — four workstreams (production-aware
-   enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents).
-   The owner accepted every §9 recommendation; implementation proceeds one
-   workstream per session/PR in order A → C → D → B → A-F. **A, C, D and B have all
-   landed** (production-aware enrichment, the goldfish simulator, the subagents, and the
-   Comprehensive Rules layer — all above). **Next and last: A-F** (`classify()` consuming
-   the oracle flags, §4.5 — that one owes a before/after categories diff and an explicit
-   re-proof of optimizer idempotency, since category counts feed the optimizer's role
-   guardrails).
+5. **Engine season: COMPLETE (2026-08-10).** `docs/spec-engine-upgrades.md` was
+   ratified with four workstreams and one follow-up, and **all five PRs have landed** —
+   A production-aware enrichment, C goldfish Monte Carlo, D subagents, B the
+   Comprehensive Rules layer, and A-F `classify()` consuming the oracle flags (all
+   described above). Nothing in that spec is outstanding. What IS outstanding is the
+   **owner-machine checklist** — four one-time runs no sandbox can perform, because
+   Scryfall and magic.wizards.com are both egress-blocked here:
+   1. **Scryfall schema check of the A1 fixtures** — run the `tests/test_oracle_flags.py`
+      fixture shapes (especially the MDFC) against real Scryfall JSON or the cached
+      `data/collection/scryfall-oracle_cards.json`. They rest on the documented schema,
+      not on an observed response.
+   2. **~30-card flag audit after the first real `enrich.bat` run** — spot-check random
+      flagged cards against their actual oracle text. **More important since A-F landed:**
+      flags now feed `classify()`, so a wrong flag no longer just skews the mana model, it
+      miscategorizes a card in every role count downstream (power, dashboard, optimizer
+      role guardrails). The honesty labels fire when data is *absent*, never when a derived
+      flag is *wrong* — this audit is the only guard for that case.
+   3. **`python3 scripts/carddb.py --verify "Sol Ring"`** once on a networked machine —
+      every test of that path is monkeypatched; the live path is unproven.
+   4. **`python3 scripts/rules.py 903.1 --refresh`** — must fetch, parse **≥3,000 rules**,
+      and answer. A silent partial parse is the residual risk; if the count is far lower,
+      the CR layout drifted — check `rules._slice_body` first.
 
 ## Session workflow reminders
 

@@ -90,7 +90,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 434 tests, ~100s, offline
+pip install -r requirements-dev.txt && pytest          # 455 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -256,8 +256,14 @@ to the renderer changes the CLI output and the app identically — check both.
   card name (`SP//dr, Piloted by Peni`). `mtglib.front_face()` handles this; a naive
   `split("//")` once produced a bogus alias that let the optimizer add six copies of a
   singleton. Any new name-normalization must go through `front_face` / `_norm` / `lookup`.
-- **Role/category counts are heuristic.** `classify()` works from curated name lists plus
-  card types. Strong first pass; eyeball the result before asserting it.
+- **Role/category counts are heuristic.** `classify()` reads three layers in strict
+  precedence: curated name lists, then the oracle-derived `Card.flags` `carddb` writes
+  (`rock`/`dork`/`ramp`, `draw`, `removal`, `wipe`, `counter` — consulted **only where the
+  curated lists are silent**, which is what keeps a hand-verified card from being
+  overruled by a regex), then card types. A collection that has never been enriched has
+  `flags == set()`, so the flag layer no-ops and counts are unchanged. Strong first pass;
+  eyeball the result before asserting it — and a wrong flag is invisible to the honesty
+  labels, which fire when data is *absent*, not when it is *wrong*.
 - **`optimize.singleton_violations()` runs after every write** and the CLI prints
   `!! ILLEGAL`. Keep that check — this class of bug was silent for four commits.
 - **A dashboard must stay one self-contained file.** Assets in `scripts/assets/` are read by
