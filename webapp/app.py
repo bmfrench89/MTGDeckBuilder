@@ -86,6 +86,33 @@ app.secret_key = hashlib.sha256(f"mtg-auth-v1:{PASSWORD}".encode()).digest() \
     if PASSWORD else os.urandom(32)
 app.permanent_session_lifetime = timedelta(days=90)  # the PWA stays signed in
 
+
+def _cookie_secure():
+    """Secure-only session cookie whenever the deploy is known to be HTTPS
+    (PythonAnywhere always is) or explicitly declared so. Not unconditional:
+    a Secure cookie over plain-http LAN dev would silently never be sent and
+    every login would 'not stick'."""
+    return bool(PASSWORD and (os.environ.get("PYTHONANYWHERE_SITE")
+                              or os.environ.get("PYTHONANYWHERE_DOMAIN")
+                              or os.environ.get("MTG_COOKIE_SECURE") == "1"))
+
+
+app.config["SESSION_COOKIE_HTTPONLY"] = True          # no script access to the cookie
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"         # cross-site POSTs carry no session → CSRF brake
+app.config["SESSION_COOKIE_SECURE"] = _cookie_secure()
+app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024   # uploads are ~1–2 MB CSVs; cap the rest
+
+
+@app.after_request
+def _security_headers(resp):
+    """Baseline headers on every response. No CSP — the dashboards and app pages
+    deliberately use inline scripts/styles (self-contained-file requirement), so a
+    useful CSP would be 'unsafe-inline' theater; these three are free wins."""
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "same-origin")
+    return resp
+
 # Endpoints that must work logged-out: the login page itself, and the shell
 # assets the login page + installed PWA need before a session exists.
 _PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens"}

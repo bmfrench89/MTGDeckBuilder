@@ -8,7 +8,7 @@ the fix. Read this before touching any code that shows card images.
 
 Both batch loaders (`scripts/assets/card_images.html` for dashboards,
 `webapp/static/cardgrid.js` for app pages) now carry three protections, because a
-single failed batch POST on the player's phone once cascaded into a full page of
+single failed batch POST on a phone once cascaded into a full page of
 429 broken-image glyphs:
 
 1. **One retry per batch** (1.5s later) — a transient Scryfall/API failure recovers
