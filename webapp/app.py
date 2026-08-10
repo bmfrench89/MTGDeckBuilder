@@ -255,7 +255,14 @@ def index():
                      "contested": short_by_deck.get(label, 0)})
     rows.sort(key=lambda r: -(r["assess"]["power"] if r["assess"] else 0))
     brackets = sorted({r["assess"]["bracket"] for r in rows if r["assess"]})
+    try:
+        # "I just scanned these — where do they go?" Only fires when the collection
+        # export carries acquisition dates; empty on the name-only snapshot.
+        arrivals = deckcore.new_arrivals(coll, DECKS_DIR)
+    except Exception:
+        arrivals = []
     return render_template("index.html", decks=rows, brackets=brackets, page="home",
+                           arrivals=arrivals,
                            sync_enabled=sync.enabled(), sync_status=sync.status_view())
 
 
@@ -657,6 +664,20 @@ def _assess_packet(m):
         for r in buys:
             price = f" ~${r['price']:,.2f}" if r.get("price") is not None else ""
             L.append(f"  [{r.get('source', '?'):8}] {r['card']}{price} — {r['reason']}")
+        L.append("")
+    try:
+        # Advisory: owned cards the optimizer's margin gate held back — a coaching
+        # session should see what the field is starting to adopt.
+        coll_l = mtglib.load_collection(COLLECTION)
+        rz = optimize.optimize(m["path"], coll_l, mtglib.index_by_name(coll_l),
+                               DECKS_DIR).get("risers", [])
+    except Exception:
+        rz = []
+    if rz:
+        L.append("-- FIELD RISERS (owned; below the auto-swap margin — your call) --")
+        for r in rz:
+            L.append(f"  {r['add']} ({r['add_inc']}%) over {r['over']} "
+                     f"({r['over_inc']}%) — {r['gap']} pts short of auto-swap")
         L.append("")
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())

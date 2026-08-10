@@ -69,6 +69,20 @@ Git keeps the history, so this is recoverable from the repo — but the files go
 {% endfor %}
 </div>
 
+{% if arrivals %}
+<div class="card mb-4">
+  <h3 class="mt-0">🆕 New arrivals — not in a deck yet</h3>
+  <div class="sub" style="margin-bottom:var(--sp-2)">From your latest export's purchase dates.
+    Tap a name for details; add it from the deck's own page so it counts as your call
+    (manual adds are protected from the optimizer).</div>
+  <div class="row tight">
+    {% for a in arrivals %}
+    <span class="tag" style="cursor:pointer" data-card="{{ a.name }}">{{ a.name }}
+      {%- if a.fits %} <span class="muted">→ {{ a.fits|join(', ') }}</span>{% endif %}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 <div class="card" id="maint">
   <div class="row">
     <form method="post" action="{{ url_for('refresh') }}">

@@ -39,6 +39,7 @@ class Card:
     collector_number: str = ""
     price: Optional[float] = None   # representative (max) MARKET unit price
     value: float = 0.0              # total value across printings: sum(qty*market)
+    date_added: str = ""            # newest acquisition date the export carries (ISO)
 
     @property
     def is_land(self) -> bool:
@@ -181,6 +182,7 @@ def _parse_csv(text: str) -> list:
     c_num = _header_index(fn, "card number", "collector number", "number")
     c_price = _price_header(fn)
     c_game = _header_index(fn, "collection", "game")
+    c_date = _header_index(fn, "date bought", "date added", "date")
 
     # One physical printing per row. Aggregate by card name: sum quantity, sum
     # value (qty*market), keep the max unit price as representative, keep the
@@ -222,6 +224,12 @@ def _parse_csv(text: str) -> list:
                 c.price = price
         if c.mana_value is None and mv is not None:
             c.mana_value = mv
+        if c_date:
+            # Newest date across printings — "when did I last add copies", which is
+            # what the new-arrivals view asks. ISO dates compare lexically.
+            d = (row.get(c_date) or "").strip()[:10]
+            if d and d > c.date_added:
+                c.date_added = d
     return list(agg.values())
 
 
