@@ -11,8 +11,6 @@
 name: recertify
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/recertify-and-matrix]  # pre-merge validation hook
 
 jobs:
   recertify:

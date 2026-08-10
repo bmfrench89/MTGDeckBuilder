@@ -88,8 +88,10 @@ Unlocks site-wide interactivity + the data layer later phases consume.
   [spec-engine-upgrades.md](spec-engine-upgrades.md); the whole **engine-upgrades season is
   complete** (workstreams A, B, C, D + A-F, five PRs).
 - ☐ Cached CSB + `pyedhrec` client wrappers — *deferred to their consuming phases (1, 3).*
-- ☐ Verify ManaPool & Card Kingdom per-card URL schemes — *best-effort links shipped;
-  verify on the live sites (one-line fix in `card_image.purchase_links`).*
+- ☑ Verify ManaPool & Card Kingdom per-card URL schemes — **verified live 2026-08-10**
+  from a GitHub Actions runner (`recertify.yml`): 4/4 straight 200s — ManaPool's direct
+  card page for both a plain and an apostrophe name (`/card/urzas-saga`, so the slug
+  rule holds) and Card Kingdom's by-name search. No scheme fix needed.
 **Acceptance:** ☑ verified in a real browser — clicking a card opens the panel with image,
 live oracle text, rulings, grounded local data, and three working buy-links.
 
@@ -503,3 +505,17 @@ tool.
   glossary entries parsed, effective August 7, 2026, 903.1 answered. The only
   acceptance step still owner-machine-bound is the ~30-card flag audit — the private
   collection never leaves the player's PC. Suite 455 → 456, offline.
+- **2026-08-10** — **Recertification institutionalized + the blind spot documented.**
+  The season retro asked why the network-gated acceptance steps sat on the owner's
+  checklist when GitHub-hosted runners (open egress — `field-snapshots.yml` had proven
+  it weekly since it shipped) could run them all along: `docs/codemap.md`'s deployment
+  matrix had blurred runners and dev sandboxes into one "CI ❌" column. The matrix now
+  separates them and states the rule — reach for a runner before parking a network
+  check on the owner's checklist. The throwaway live-checks harness is promoted to
+  `.github/workflows/recertify.yml` (`workflow_dispatch`): one click re-runs the
+  Scryfall schema + flag audit, live `--verify`, `rulings.py` live (the one Scryfall
+  leg never exercised before — and its first run taught us Sol Ring legitimately has
+  zero rulings, so the check counts Humility instead), `rules.py --refresh` **end to
+  end** through the fixed `_find_txt_url`, and the buy-link scheme probe. First full
+  pass green, which also closed the Phase 0 leftover: ManaPool/Card Kingdom URL
+  schemes verified live, 4/4, no fix needed.
