@@ -87,6 +87,10 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    DONE; ranking validation is DONE.
 4. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain
    text, not panel-clickable (`docs/codemap.md`, "still open").
+5. **Next engine season is spec'd and awaiting the owner interview:**
+   `docs/spec-engine-upgrades.md` — four workstreams (production-aware
+   enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents)
+   with implementation-ready tasks and the decisions the owner must ratify.
 
 ## Session workflow reminders
 
