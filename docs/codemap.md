@@ -32,6 +32,8 @@ flowchart TB
     cimg["card_image<br/>URLs + buy links"]
     oflags["oracle_flags<br/>produced_mana + oracle-derived flags<br/>(stdlib re only — no repo imports)"]
     gold["goldfish<br/>seeded Monte Carlo: commander-by-turn,<br/>keepable/screw/flood, CRN A/B"]
+    crules["rules<br/>Comprehensive Rules: lookup · search · glossary<br/>(zero repo imports — a first)"]
+    crulings["rulings<br/>Scryfall rulings for one card"]
   end
 
   subgraph SPOKES["🖼️ Presentation / aggregation spokes"]
@@ -48,6 +50,7 @@ flowchart TB
 
   mtglib --> deckcore
   mtglib --> ENGINES
+  skill -. "rules Q&A: retrieve → read → cite" .-> crules
   oflags -->|"carddb → Produced/Flags"| refresh
   gold -->|"sim_for_deck (disk-cached)"| dashboard
   deckcore --> ENGINES
@@ -130,6 +133,8 @@ silently vanished there.
 | `data/reference/*` (combos, game-changers, **field snapshots**) | ✅ | ✅ via git | ✅ |
 | `data/cache/*` (gitignored) | ✅ | only what the server itself fetched | ❌ |
 | `data/cache/scryfall/` (verified card text, 30-day TTL — `carddb --verify`) | ✅ | ✅ once fetched | ❌ — every uncached `--verify` is honestly UNVERIFIED |
+| `magic.wizards.com` (Comprehensive Rules txt — `rules.py`) | ✅ | ❌ — not a documented public API, same wall as EDHREC | ❌ |
+| `api.scryfall.com/cards/named` + rulings (`rulings.py`) | ✅ | ✅ *(same allowlisted API as enrichment)* | ❌ — degrades to a stale cached copy, labeled, or an error payload |
 
 **Field snapshots** close the EDHREC row — and a **GitHub Action** keeps them fresh
 with no human in the loop (`.github/workflows/field-snapshots.yml`: weekly cron +
@@ -165,6 +170,8 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
 | card_image | Scryfall image URLs + `purchase_links` (TCGplayer/ManaPool/Card Kingdom) | mtglib |
 | oracle_flags | Face-aware derivation from a Scryfall card object: `produced_of()` (what it actually taps for) + `derive_flags()` (`etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). Pure dict-in/set-out, no I/O; heuristic by construction, so curated lists and human verification win | — (`re` only; no repo imports) |
+| rules | The **Comprehensive Rules**, retrieved rather than recalled: downloads WotC's official txt once into `data/cache/rules/` (never committed — ~1 MB of copyrighted text revving 5-6×/year), parses it into rules / sections / chapters / glossary in document order, and answers three questions — `lookup()` by number (with subrules and section/chapter context), `search()` (bag-of-words: +2/term, +5 all terms, +10 exact phrase, ties by document order), `glossary_lookup()` (exact → prefix → substring, with the rule refs the definition points at). Manual refresh only (`--refresh`); any cached copy is used and labeled `fetched <date>` from its mtime. Never raises — every failure is the standard error payload plus manual-download instructions | **nothing — the first engine here with zero repo imports.** Every other engine imports `mtglib`; rule text contains no card names, so there is nothing to normalize |
+| rulings | Scryfall **rulings for one named card** — the official clarifications behind an interaction. `/cards/named?fuzzy=` → the card's `rulings_uri` (0.1s courtesy delay, `has_more` followed), cached 30 days in `data/cache/rulings/`. On a failure the cache is consulted **regardless of age** (stale-and-labeled beats a shrug) before the error payload. Always carries `requested` alongside the resolved `name`: a fuzzy match can confidently resolve to the wrong card, and the caller must confirm | mtglib (`front_face`/`_norm` for the cache key — the `' // '` trap) |
 | goldfish | Seeded goldfish Monte Carlo: commander-by-turn, keepable/screw/flood (definitions shipped as data), mean lands by turn, sequenced first-cast per card, CRN A/B swap deltas. `sim_for_deck()` is the ONE cached entry point every surface calls (`data/cache/goldfish/`). Two mana tiers — enriched `Card.produced`/`Card.flags`, else a **labelled** color-identity fallback. Answers the sequenced-play questions `manabase`'s exact-but-unconditional closed forms structurally cannot | mtglib (`deck_stats`/`deckcore` imported inside the loader only) |
 | **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts, goldfish |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
@@ -196,6 +203,15 @@ dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<s
 `SKILL.md` (persona + build/analyze/**coach** workflows) + `references/` (grounding-rules,
 deckbuilding-principles, rules-reference, tooling-and-data, **coaching**). It *invokes the
 CLIs* to stay grounded; it doesn't reimplement them. Runs in Claude Code (no app-side API).
+
+**Rules questions are retrieved, not recalled.** `references/rules-reference.md` leads with
+"Ask the CR, don't recall it": `rules.py` for the Comprehensive Rules, `rulings.py` for a
+card's official clarifications, `carddb.py --verify` for its verbatim text — retrieve, then
+**read**, then cite a rule number that came out of the retrieved text. The five corrections
+that file used to open with are now framed as *known traps*, not an index. Because
+wizards.com is reachable from the player's PC only, a degraded run must say the answer is
+**uncited** rather than quietly falling back to memory; that honesty line, plus the absence
+of any `/api/rules` route, is the whole story of where this layer runs.
 
 **Subagents (`.claude/agents/`)** — two, one per shape of transcript bloat. They run the
 same CLIs and return **conclusions**, so the numbers are byte-identical; only the context
@@ -318,7 +334,13 @@ what they *both* know, nothing they disagree about is credible), seeded determin
 A/A-exact-zero tripwire for common-random-numbers pairing, degenerate decks, and cache
 invalidation. The verification path has `test_carddb_verify.py` (the positional batch
 reconciliation a back-face request breaks by name, the one fuzzy retry, the True/False/
-**None** legality tri-state, and UNVERIFIED-not-invented when Scryfall is unreachable) and
+**None** legality tri-state, and UNVERIFIED-not-invented when Scryfall is unreachable). The
+rules layer has `test_rules.py` — a module-level `SAMPLE_CR` replicating the official
+layout *including its duplicated Contents headings*, because slicing the body on the first
+"Glossary" (the one in the Contents listing) yields a parsed-looking file with zero rules
+in it; plus the cp1252 round-trip, the no-TTL stale-cache date label, and the
+blocked-network degrade — and `test_rulings.py` (fuzzy resolution surfaced, stale-okay
+cache, `has_more` pagination, and that a `//` name is never naively split). Then
 `test_agents.py` — six structural invariants over `.claude/agents/`, since a subagent
 prompt is the one artifact here that nothing else in CI executes. CI: `.github/workflows/tests.yml`
 runs pytest on 3.11/3.13 and re-checks that `scripts/` still imports with **no third-party

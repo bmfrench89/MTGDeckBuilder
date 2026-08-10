@@ -85,10 +85,14 @@ one-line **verdict** (strength / gap / trap), and a concrete fix. Cite numbers f
 
 - **Explain a card's role in this deck:** grounded in its oracle text + how it serves the plan
   (use `card_notes.csv` + the deck's archetype). Not a generic blurb.
-- **Rules / interaction Q&A:** fetch the exact **oracle text + rulings** (Scryfall) and reason
-  from those + the Comprehensive Rules — never from memory for anything uncertain. Watch the
-  known traps in `rules-reference.md` (X-spell MV on the stack, cast-triggers resolving even if
-  countered, MDFC/flashback MV). Cite the text you used.
+- **Rules / interaction Q&A:** fetch the exact **oracle text + rulings** and reason from those
+  + the Comprehensive Rules — never from memory for anything uncertain. There are commands for
+  all three: `python3 scripts/carddb.py --verify "<card>"` (verbatim text),
+  `python3 scripts/rulings.py "<card>"` (WotC's clarifications), and
+  `python3 scripts/rules.py <rule|phrase>` (the CR itself — `--search` for a phrase, `--gloss`
+  for a term). Retrieve → read → cite; a rule number you didn't just retrieve is a guess. Watch
+  the known traps in `rules-reference.md` (X-spell MV on the stack, cast-triggers resolving even
+  if countered, MDFC/flashback MV). Cite the text you used.
 - **Deck-vs-deck:** run the rubric on both; compare bracket/power, consistency, speed,
   resilience, and ceiling. Say which is stronger and what each does better — with numbers.
 - **Upgrade to a target bracket:** to go *up*, add Game Changers / a tighter combo / faster mana

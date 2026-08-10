@@ -73,7 +73,9 @@ per-module table — read it before any structural change.
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
-  `/cards/collection`), `edhrec`, `spellbook`.
+  `/cards/collection`), `edhrec`, `spellbook`, `rules` (WotC's Comprehensive Rules txt —
+  **zero repo imports**, a first for the ring: rule text has no card names in it),
+  `rulings` (Scryfall rulings for one card).
 
 **The dependency rule: dependencies point inward.** Engines and spokes depend on the hubs,
 never the reverse; spokes do not import each other. No analysis module may import
@@ -88,7 +90,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 401 tests, ~100s, offline
+pip install -r requirements-dev.txt && pytest          # 434 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -117,6 +119,13 @@ python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashb
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
 python3 scripts/carddb.py --verify "Sol Ring" --verify "Rejoinder" [--json]
                                                              # verify named cards' oracle text
+
+# Rules — retrieve, then read, then cite (player's PC only: wizards.com is blocked elsewhere)
+python3 scripts/rules.py 903.1                    # a CR rule by number, subrules in context
+python3 scripts/rules.py "commander tax"          # glossary first, then full-text search
+python3 scripts/rules.py --search "deathtouch trample" --limit 5 [--json]
+python3 scripts/rules.py 903.1 --refresh          # re-download the CR (the only refresh)
+python3 scripts/rulings.py "Sol Ring" [--json]    # Scryfall's rulings for ONE card
 ```
 
 Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conflicts`,
@@ -147,7 +156,10 @@ can *destroy data or lie*: `test_deck_edit` (in-place deck rewrites), `test_mtgl
 `test_goldfish` (Monte Carlo convergence against the exact hypergeometrics, seeded
 determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidation),
 `test_carddb_verify` (`--verify`'s positional batch reconciliation, the fuzzy retry, and
-that an unreachable Scryfall reports UNVERIFIED instead of guessing) and `test_agents`
+that an unreachable Scryfall reports UNVERIFIED instead of guessing), `test_rules`
+(the CR parser against a `SAMPLE_CR` that replicates the official layout *including its
+duplicated Contents headings*, the cp1252 round-trip, and the blocked-network degrade),
+`test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination) and `test_agents`
 (the `.claude/agents/` prompts nothing else executes — names, the Bash+Read tool limit,
 the grounding-rules path).
 CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
@@ -260,6 +272,11 @@ to the renderer changes the CLI output and the app identically — check both.
   deck anywhere breaks the pairing **silently** — the numbers stay plausible, the
   confidence intervals just stop meaning anything. `test_goldfish`'s A/A-exact-zero
   test is the tripwire; if it fails, that's what happened.
+- **The Comprehensive Rules file repeats its own headings.** Its Contents listing names
+  every chapter and section and *ends with the words "Glossary" and "Credits"*. Slice the
+  body on the FIRST "Glossary" and you get a parsed-looking dict with **zero rules** in it —
+  a silent failure, not a crash. `rules._slice_body` uses first-Credits / last-Glossary /
+  last-Credits, and `test_rules.py`'s `SAMPLE_CR` carries the duplication so the guard bites.
 - **`docs/handoff.md` is current-state only** (rewritten 2026-08-10; the layered history
   moved to git). Keep it that way — update it in place, don't append dated layers. For
   architecture, trust `docs/codemap.md` over the handoff.

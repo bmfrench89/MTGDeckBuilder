@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** + **grounded subagents (Phase 8)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** + **grounded subagents (Phase 8)** + **a rules layer (Phase 9)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv, a card-panel Rules tab)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
@@ -46,6 +46,7 @@ opponent / game simulation remains out of scope (tier 2 deferred, tier 3 rejecte
 | 5 | AI coaching skill + export bridge | ☑ Done | #25 |
 | 7 | Goldfish Monte Carlo (`scripts/goldfish.py`) — sequenced play beside the closed forms | ☑ Engine + CRN A/B + cached loader + dashboard/assess panels | #93 |
 | 8 | Grounded subagents (`.claude/agents/`) + `carddb.py --verify` — conclusions instead of transcript dumps | ☑ card-verifier + collection-auditor + the verify CLI + SKILL.md delegation | #94 |
+| 9 | Rules layer (`scripts/rules.py` + `scripts/rulings.py`) — the tool behind "never from memory" | ☑ CR fetch/parse/lookup/search/glossary + per-card rulings + the skill's retrieve→read→cite discipline | #95 |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
 "build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool
@@ -153,7 +154,8 @@ Chose to **extend the existing `mtg-deckbuilder` skill** rather than fork a sepa
 Code on the subscription; no Anthropic API in the app.
 - ☑ `references/coaching.md` — the grounded method: rubric critique, cut/add **by candidate
   selection** (never invent cards), rules/interaction Q&A over oracle text + rulings, pilot /
-  mulligan guide, deck-vs-deck, upgrade-to-bracket.
+  mulligan guide, deck-vs-deck, upgrade-to-bracket. *(Rules Q&A stopped being policy-only in
+  Phase 9: the bullet now carries `rules.py` / `rulings.py` / `carddb --verify`.)*
 - ☑ SKILL.md — coaching triggers in the description, a "Coaching & assessment" workflow, and a
   refreshed script list (manabase / combo_detector / auto_build / card_api / carddb / …).
 - ☑ Web app **"Export assessment packet"** (`/deck/<stem>/assess.txt` + "📋 Assess" on the Decks
@@ -283,6 +285,51 @@ transcript it costs to get one.
   contract; refactoring the two together is deliberately out of scope, recorded so it
   reads as a decision rather than an accident.
 
+## 4e. Phase 9 — the rules layer (shipped 2026-08-10)
+
+Workstream B of [`spec-engine-upgrades.md`](spec-engine-upgrades.md) §5. Suite grew
+401 → **434 tests**. `coaching.md` had instructed answering rules questions "from the
+Comprehensive Rules — never from memory" since Phase 5, with **no tool behind it**; the
+whole rules knowledge base was a 38-line corrections file plus web search. This is the
+tool.
+
+- ☑ **`scripts/rules.py`** — downloads WotC's official Comprehensive Rules txt once into
+  `data/cache/rules/` (gitignored — ~1 MB of copyrighted text revving 5–6× a year; the
+  repo is public), parses it into rules / sections / chapters / glossary in **document
+  order**, and answers by number (`lookup`, subrules and section/chapter context
+  included), by phrase (`search`) or by term (`glossary_lookup`, with the rule refs the
+  definition points at). Search scores +2 per distinct term, +5 for all terms, +10 for
+  the exact phrase, ties by document order — a shortlist, never an answer.
+- ☑ **Manual refresh only.** `--refresh` re-downloads; otherwise any cached copy is used
+  and labeled `fetched <date>` from its mtime. No TTL, no `meta.json`, no surprise
+  60-second fetch mid-question. First-ever run fetches; every failure returns the
+  standard error payload with manual-download instructions and **never raises**.
+- ☑ **Zero repo imports** — a first for the engine ring. Every other engine imports
+  `mtglib`; rule text has no card names in it.
+- ☑ **`scripts/rulings.py`** — Scryfall rulings for ONE card (`/cards/named?fuzzy=` →
+  `rulings_uri`, 0.1s courtesy delay, `has_more` followed), 30-day cache in
+  `data/cache/rulings/`. On a failure the cache is consulted **regardless of age** —
+  stale-and-labeled beats a shrug. `requested` always travels beside the resolved
+  `name`, because a fuzzy match can confidently resolve to a *different card*.
+- ☑ **The skill learned to ask.** `references/rules-reference.md` now leads with "Ask the
+  CR, don't recall it" — the commands, then **retrieve → READ → cite**, then the rule
+  that on a degrade you fall back to web search *and say the answer is uncited*. Its five
+  original corrections are reframed as **known traps**, not an index. `coaching.md`'s
+  rules line and SKILL.md's workflow step 6 + scripts index carry the commands.
+- ⊘ **No `/api/rules` route** (§5.4): no UI consumer, and on the hosted server it would be
+  *permanently* degraded — wizards.com is not a documented public API, the same wall
+  EDHREC hit. It lands with the future card-panel Rules tab. ⊘ **No committed CR excerpt**
+  (Q-B1) — verbatim redistribution in miniature; the skill runs on the player's PC.
+  ⊘ **No TTL/auto-refresh machinery** and ⊘ **no semantic/RAG search** — bag-of-words plus
+  *read the text* is the grounding win.
+- ⊘ **Recorded reconciliation:** `research-roadmap.md` planned rulings as a ~24.7 MB bulk
+  download through `carddb.py`. Per-card lookups win for a single-player tool (nothing to
+  download, a KB-sized cache, works the first time it's asked), so the roadmap line is
+  amended rather than left to coexist as a second plan.
+- **Residual risk, stated:** the CR layout is unverifiable from a sandbox — a *silent
+  partial* parse is what the one-time owner-machine acceptance run
+  (`python3 scripts/rules.py 903.1 --refresh` → ≥3,000 rules parsed) exists to catch.
+
 ## 5. Open questions (resolve during build)
 - EDHREC "Lift" — exposed via any endpoint/`pyedhrec` method yet? Exact formula?
 - Full current WotC bracket ruleset beyond B3 ≤ 3 Game Changers (syncable list + criteria).
@@ -385,3 +432,30 @@ transcript it costs to get one.
   persona/verdicts/assembly/optimize) plus the inline fallback where no Agent tool
   exists. Honest limit, unchanged from the spec: this cuts context bloat only — every
   engine number is byte-identical. Suite 375 → 401, offline.
+- **2026-08-10** — **Rules layer shipped** (workstream B of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md)): two new engines. **`rules.py`**
+  puts Magic's Comprehensive Rules behind a command — it downloads WotC's official txt
+  once into the gitignored `data/cache/rules/` (the CR is ~1 MB of copyrighted text
+  revving 5–6× a year; a public repo must not redistribute it), parses it into rules /
+  sections / chapters / glossary in document order, and answers by rule number (with
+  subrules and section/chapter context), by phrase, or by glossary term. The parser's
+  load-bearing detail: the official file **repeats its own headings** — the Contents
+  listing names every section and ends with the words "Glossary" and "Credits", so
+  slicing the body on the first "Glossary" yields a parsed-looking file with zero rules
+  in it. First-Credits / last-Glossary / last-Credits is the fix and `SAMPLE_CR` carries
+  the duplication so the guard bites. Refresh is manual (`--refresh`); any cached copy is
+  used and labeled `fetched <date>`; nothing raises. It is the first engine in the ring
+  with **zero repo imports** — rule text has no card names in it. **`rulings.py`** adds
+  Scryfall's rulings for one card (fuzzy name → `rulings_uri`, 30-day cache, `has_more`
+  followed), consults that cache regardless of age when the network is down, and always
+  prints what was *asked for* beside what Scryfall *resolved* — a fuzzy match can land
+  confidently on the wrong card. The skill learned to use them: `rules-reference.md` now
+  opens with "Ask the CR, don't recall it" (**retrieve → READ → cite**, and on a degrade
+  fall back to web search *and say the answer is uncited*), with its five original
+  corrections reframed as known traps; `coaching.md` and SKILL.md carry the commands.
+  Cut from v1 on purpose: no `/api/rules` route (permanently degraded on the hosted
+  server — wizards.com is not a documented public API), no committed CR excerpt, no
+  TTL machinery, no RAG. The roadmap's ~24.7 MB bulk-Rulings plan is **amended**, not
+  left to coexist: per-card lookups beat it for a single-player tool. Back-compat: this
+  adds two gitignored cache directories and touches no existing data format. Suite
+  401 → 434, offline.

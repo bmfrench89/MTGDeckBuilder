@@ -71,7 +71,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **401 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **434 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
@@ -107,6 +107,23 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   honest `UNVERIFIED`. Owner-machine follow-up: run `python3 scripts/carddb.py --verify
   "Sol Ring"` once on a networked machine — Scryfall is egress-blocked from the sandbox
   this landed in, so every test is monkeypatched and the live path is unproven.
+- **Rules questions have a tool now** (engine-season workstream B): `scripts/rules.py`
+  downloads WotC's Comprehensive Rules txt once into the gitignored `data/cache/rules/`,
+  parses it, and answers by rule number (`rules.py 903.1` — subrules and section/chapter
+  context included), by phrase (`--search`) or by glossary term (`--gloss`); refresh is
+  manual (`--refresh`) and any cached copy is used with an honest `fetched <date>` label.
+  `scripts/rulings.py "<card>"` adds Scryfall's per-card rulings (30-day cache, stale-okay
+  when the network is down, resolved-vs-requested name always surfaced). The skill's
+  `rules-reference.md` now leads with **"Ask the CR, don't recall it"** — retrieve → READ →
+  cite, and on a degrade fall back to web search *and say the answer is uncited*.
+  **Player's-PC feature:** magic.wizards.com is unreachable from the hosted server (not a
+  documented public API) and from CI, which is also why there is no `/api/rules` route.
+  Back-compat: this added two gitignored cache directories and touched no existing format.
+  **Owner-machine acceptance step, outstanding (one-time):** run
+  `python3 scripts/rules.py 903.1 --refresh` on the player's PC — it must fetch, parse
+  **≥3,000 rules**, and answer. The real CR layout cannot be verified from a sandbox, and a
+  *silent partial* parse is the residual risk that run exists to catch. If it parses far
+  fewer rules than that, the file's layout drifted: check `rules._slice_body` first.
 
 ## Open items
 
@@ -126,11 +143,12 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    `docs/spec-engine-upgrades.md` — four workstreams (production-aware
    enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents).
    The owner accepted every §9 recommendation; implementation proceeds one
-   workstream per session/PR in order A → C → D → B → A-F. **A, C and D have landed**
-   (production-aware enrichment, the goldfish simulator, and the subagents — all above).
-   **Next up: B** (the Comprehensive Rules layer, §5), then **A-F** (`classify()`
-   consuming the oracle flags, §4.5 — that one owes a before/after categories diff and
-   an explicit re-proof of optimizer idempotency).
+   workstream per session/PR in order A → C → D → B → A-F. **A, C, D and B have all
+   landed** (production-aware enrichment, the goldfish simulator, the subagents, and the
+   Comprehensive Rules layer — all above). **Next and last: A-F** (`classify()` consuming
+   the oracle flags, §4.5 — that one owes a before/after categories diff and an explicit
+   re-proof of optimizer idempotency, since category counts feed the optimizer's role
+   guardrails).
 
 ## Session workflow reminders
 
