@@ -281,6 +281,23 @@ def test_find_txt_url_from_a_landing_snippet():
     assert rules._find_txt_url("<html>no link here</html>") is None
 
 
+def test_find_txt_url_survives_a_literal_space_in_the_href():
+    """The real 2026 landing page (verified live 2026-08-10 from a GitHub runner)
+    puts a LITERAL space in the href — `MagicCompRules 20260807.txt` — and the old
+    regex's \\s class truncated the match at it, reporting "no link found" with the
+    link in plain sight. The finder must span the space and hand back a
+    percent-encoded, fetch-ready URL. The .docx/.pdf siblings on the same page must
+    not win over the .txt."""
+    html = ('<p><a href="https://media.wizards.com/2026/downloads/'
+            'MagicCompRules 20260807.docx"><span class="txt">DOCX</span></a></p>'
+            '<a href="https://media.wizards.com/2026/downloads/'
+            'MagicCompRules 20260807.txt" target="_blank"><span>TXT</span></a>')
+    url = rules._find_txt_url(html)
+    assert url == ("https://media.wizards.com/2026/downloads/"
+                   "MagicCompRules%2020260807.txt")
+    assert " " not in url
+
+
 # ── B4: CLI ──────────────────────────────────────────────────────────────────
 
 def test_cli_rule_lookup_json(cr_file, capsys):

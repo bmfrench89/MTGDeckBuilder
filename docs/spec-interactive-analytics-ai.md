@@ -488,3 +488,18 @@ tool.
   invisible to the honesty labels, which fire when data is absent, not when it is wrong — the
   ~30-card audit after the first real enrichment run is the only guard. Suite 434 → 455,
   offline.
+- **2026-08-10** — **The network-gated acceptance steps ran for real** — from a GitHub
+  Actions runner (`live-checks` workflow, `claude/live-network-checks` branch), since
+  runners have the open egress the dev sandbox lacks. Results: the A1 Scryfall schema
+  check passed 16/16 (every `test_oracle_flags.py` fixture validated against live API
+  JSON, MDFC shape included, Blasphemous Act confirmed as the documented wipe-regex
+  miss); `carddb.py --verify "Sol Ring"` returned the verbatim text live; and the
+  real-CR gate **caught the bug it existed to catch** — the 2026 rules landing page
+  carries a **literal space** in the CR href (`MagicCompRules 20260807.txt`), which
+  `rules._RE_TXT_URL`'s `\s`-excluding class truncated, so `--refresh` reported "no
+  link found" with the link in plain sight. Fixed: the regex spans the space (stopping
+  at quotes/angle brackets), `_find_txt_url` percent-encodes before fetching, and a
+  test pins the real 2026 page shape. Re-verified end to end: 3,161 rules / 739
+  glossary entries parsed, effective August 7, 2026, 903.1 answered. The only
+  acceptance step still owner-machine-bound is the ~30-card flag audit — the private
+  collection never leaves the player's PC. Suite 455 → 456, offline.
