@@ -10,6 +10,16 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 sys.path.insert(0, os.path.join(ROOT, "webapp"))
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _goldfish_cache_in_tmp(tmp_path_factory):
+    """The dashboard and the assess surfaces self-compute a goldfish sim, and that
+    helper writes a disk cache. Point it at tmp for the whole session so the suite
+    never writes into the player's real `data/cache/` — the same hermetic rule every
+    other fixture here follows."""
+    import goldfish
+    goldfish.CACHE_DIR = str(tmp_path_factory.mktemp("goldfish-cache"))
+
+
 DECK_TEXT = """\
 # Title: Test Deck
 # Commander: Test Commander

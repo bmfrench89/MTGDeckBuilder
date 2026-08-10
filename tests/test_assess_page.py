@@ -65,3 +65,34 @@ def test_text_export_still_works(client):
 
 def test_unknown_deck_is_404(client):
     assert client.get("/deck/nope/assess").status_code == 404
+
+
+# --------------------------------------------------------------------------- #
+# Goldfish Monte Carlo — page + packet, both through the shared cached helper
+# --------------------------------------------------------------------------- #
+def test_assess_page_shows_the_goldfish_section(client):
+    html = client.get("/deck/testdeck/assess").get_data(as_text=True)
+    assert "Goldfish simulation" in html
+    assert "Keepable opener" in html
+    assert "lands in play at the start of turn" in html      # the screw definition
+    assert "Seeded Monte Carlo" in html                       # the assumptions footer
+
+
+def test_assess_packet_carries_the_goldfish_block(client):
+    text = client.get("/deck/testdeck/assess.txt?raw=1").get_data(as_text=True)
+    assert "-- GOLDFISH SIMULATION (Monte Carlo, seeded) --" in text
+    assert "keepable opener" in text
+    assert "assumption:" in text
+    # it lands AFTER the closed forms, which is the order the two engines read in
+    assert text.index("-- GOLDFISH SIMULATION") > text.index("-- ROLE COUNTS")
+
+
+def test_both_surfaces_render_when_the_simulation_is_unavailable(client, monkeypatch):
+    """A degraded sim must cost a paragraph, not a 500."""
+    import goldfish
+    monkeypatch.setattr(goldfish, "sim_for_deck", lambda *a, **k: None)
+    html = client.get("/deck/testdeck/assess").get_data(as_text=True)
+    assert "Goldfish simulation" in html and "unavailable" in html
+    text = client.get("/deck/testdeck/assess.txt?raw=1").get_data(as_text=True)
+    assert "-- GOLDFISH SIMULATION (Monte Carlo, seeded) --" in text
+    assert "unavailable" in text

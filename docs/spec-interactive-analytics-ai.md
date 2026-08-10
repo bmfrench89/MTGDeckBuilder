@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
@@ -17,8 +17,9 @@ current project state in [handoff.md](handoff.md) (history lives in `git log`).
 Make the site an end-to-end, **analytics-first Commander deckbuilder for an expert
 player**: everything interactive, full auto-built decks in Build Next, full per-card
 strategy, and a browsable collection — grounded in real data, with **AI assessments**
-delivered as a Claude Code skill. **Out of scope: playtesting / goldfishing / game
-simulation of any kind.**
+delivered as a Claude Code skill. **Scope note (amended 2026-08-10):** tier-1 goldfish
+Monte Carlo is now **in scope** per [research-simulation.md](research-simulation.md);
+opponent / game simulation remains out of scope (tier 2 deferred, tier 3 rejected).
 
 ## 2. Locked decisions (see roadmap for detail)
 
@@ -43,6 +44,7 @@ simulation of any kind.**
 | 3 | Full auto-built decks for Build Next | ☑ v1 + images + on-view analysis (deferred: EDHREC/CSB) | #19, #21, #22, #23 |
 | 4 | Full card strategies | ☑ Grounded "how it works" (role + oracle mechanic + combo + usage) | #33 |
 | 5 | AI coaching skill + export bridge | ☑ Done | #25 |
+| 7 | Goldfish Monte Carlo (`scripts/goldfish.py`) — sequenced play beside the closed forms | ☑ Engine + CRN A/B + cached loader + dashboard/assess panels | #93 |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
 "build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool
@@ -189,6 +191,48 @@ Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tes
   from a machine that can reach EDHREC; revert if any deck drops below ~50%).
 - ☐ *(unscheduled)* `auto_build` role-quota overrides — see §5 "consider later".
 
+## 4c. Phase 7 — goldfish Monte Carlo (shipped 2026-08-10)
+
+Workstream C of [`spec-engine-upgrades.md`](spec-engine-upgrades.md) §6, and the first
+feature to land under the amended scope note in §1. Suite grew 320 → **375 tests**.
+
+- ☑ **`scripts/goldfish.py`** — a seeded, stdlib, offline simulator: shuffle, London
+  mulligan (keep 2–5 lands, floor 5, bottom excess lands beyond three then highest MV),
+  on-the-play turn loop, untapped-first/color-greedy land drops, scarcest-color-first
+  payment. Reports P(commander by turn N), keepable / mulligan rate / screw / flood,
+  mean lands by turn, and the worst-sequenced cards. **The screw and flood definitions
+  ship as data** (`report['definitions']`) and every surface prints them, so nobody
+  supplies their own and misreads the number.
+- ☑ **Two mana tiers, one of them labelled.** With workstream A's `Card.produced` /
+  `Card.flags` a permanent taps for exactly what Scryfall says, taplands give nothing on
+  the turn they drop (conditional ones pessimistically so, Q-A2), and `mana2`/`mana3`
+  rocks accelerate. Without them the sim falls back to `colors or identity` — the exact
+  expression `deck_stats` uses, so the sim and the closed forms carry ONE bias — and
+  says so in `report['assumptions']`. Over 25% of nonlands with no mana value at all
+  trips `have_data: False` and every surface prints the note instead of numbers.
+- ☑ **A/B over common random numbers** (`simulate_ab`): both arms replay identical
+  shuffles, so a paired confidence interval measures the swap rather than the luck. The
+  incoming card must resolve through `mtglib.lookup` — never an invented card. An A/A
+  run yields deltas of exactly 0.0, which is the tripwire for any refactor that
+  re-sorts a compiled deck.
+- ☑ **One cached entry point** — `sim_for_deck` writes `data/cache/goldfish/<stem>.json`
+  keyed by deck/attrs mtime+size and the run parameters. The dashboard, the assess page
+  and the assess packet all call it, so a page visit costs one simulation *per deck
+  edit*, total. It catches everything and returns `None`; one guard, not three.
+- ☑ **Surfaces:** a Goldfish Simulation panel in the dashboard's Mana tab (stat tiles
+  with definitions, worst-sequenced `.cardlink` table, assumptions footer), the same
+  numbers on `/deck/<stem>/assess`, and a `-- GOLDFISH SIMULATION --` block in the
+  coaching packet. CLI: `python3 scripts/goldfish.py --deck … --collection … [--ab
+  "Out=In"] [--json]`.
+- ☑ **Deck-companion leg:** `deckcore.load_attrs`/`apply_attrs` now carry exact-case
+  `Produced`/`Flags`, so a deck `.attrs.csv` powers the enriched model on a fresh clone
+  with only the name-only snapshot.
+- ⊘ **Out of scope, on purpose:** tier-2 scripted opponents, optimizer integration
+  (advisory-only, a future spec — the swap gate's idempotency contract is load-bearing),
+  and partner commanders (v1 simulates the parsed `# Commander:` line only).
+- ⊘ **Recorded deviation:** `research-simulation.md` suggested A/B deltas "in the card
+  advisor"; v1 puts them in the CLI instead.
+
 ## 5. Open questions (resolve during build)
 - EDHREC "Lift" — exposed via any endpoint/`pyedhrec` method yet? Exact formula?
 - Full current WotC bracket ruleset beyond B3 ≤ 3 Game Changers (syncable list + criteria).
@@ -250,3 +294,22 @@ Added after the app went hosted (see `handoff.md`). Suite grew 127 → **153 tes
   isn't (`deck_stats`, manabase CLI, dashboard pip table, assess packet), and `/collection`
   gained a production-coverage line. Suite 259 → 320, offline. Phase 2's identity
   approximation is the thing this closes.
+- **2026-08-10** — **Goldfish Monte Carlo shipped** (workstream C of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md)) and with it the **scope-lock lift**:
+  tier-1 goldfishing is now in scope (§1 above and `research-roadmap.md` amended);
+  opponent/game simulation stays out (tier 2 deferred, tier 3 rejected). New
+  `scripts/goldfish.py` — seeded, stdlib, offline — shuffles, mulligans (London, keep
+  2–5 lands, floor 5), plays lands untapped-first and casts greedily, and reports
+  P(commander by turn N), keepable/screw/flood **with their definitions shipped as
+  data**, mean lands by turn, and the worst-sequenced cards. Two mana tiers: enriched
+  (`Card.produced`/`Card.flags` from workstream A — taplands give nothing on the drop
+  turn, `mana2`/`mana3` rocks accelerate) and a color-identity fallback that is
+  **labelled as an approximation everywhere it is used**. `simulate_ab` swaps one card
+  over **common random numbers** so a paired CI measures the swap and not the luck.
+  Everything runs through one cached entry point (`sim_for_deck`,
+  `data/cache/goldfish/`) so the dashboard, the assess page and the assess packet cost
+  ONE simulation per deck edit between them. `deckcore.load_attrs`/`apply_attrs` learned
+  the `Produced`/`Flags` columns, so a deck-level `.attrs.csv` powers the enriched model
+  on a fresh clone. One recorded deviation from the research doc: A/B deltas ship in the
+  CLI (`--ab "Out=In"`), not in the card advisor — optimizer integration stays
+  advisory-only and out of scope (Q-C3). Suite 320 → 375, offline.

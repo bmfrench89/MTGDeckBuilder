@@ -31,6 +31,7 @@ flowchart TB
     cfind["commander_finder"]
     cimg["card_image<br/>URLs + buy links"]
     oflags["oracle_flags<br/>produced_mana + oracle-derived flags<br/>(stdlib re only — no repo imports)"]
+    gold["goldfish<br/>seeded Monte Carlo: commander-by-turn,<br/>keepable/screw/flood, CRN A/B"]
   end
 
   subgraph SPOKES["🖼️ Presentation / aggregation spokes"]
@@ -48,6 +49,7 @@ flowchart TB
   mtglib --> deckcore
   mtglib --> ENGINES
   oflags -->|"carddb → Produced/Flags"| refresh
+  gold -->|"sim_for_deck (disk-cached)"| dashboard
   deckcore --> ENGINES
   deckcore --> SPOKES
   ENGINES --> SPOKES
@@ -85,6 +87,7 @@ knew; the buy view didn't. `deckcore.buy_signals()` is the fix and the pattern.
 | combo membership: present / one-away | `combo_detector` (+ `spellbook` beyond `combos.csv`) | Combo Watch, bracket signal, **Buy tab when the piece is unowned** |
 | curated buy intent | `.buylist.csv` (player-written) | Buy tab — **always wins dedupe over generated rows** |
 | in-decklist-but-unowned | `deck_stats.analyze` → `missing` | BUY badge in decklist **and** the Buy tab |
+| how late it actually lands in sequenced play | `goldfish.sim_for_deck` (cast rate + mean first cast vs MV) | dashboard Mana tab, assess page, assess packet — **each printing the screw/flood definitions and the mana-model tier**, since a fallback-tier number is an approximation |
 | who decided (player vs tool) | `.changes.csv` `Source` column | NEW badge, advisor scope, optimizer's never-cut set |
 | reserved for another deck | `pins.csv` | panel pin toggle, optimizer `reserved`, add-picker warning |
 | player's own words | `.notes.md` | Plan tab, optimizer/dead-weight protection |
@@ -161,7 +164,8 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
 | card_image | Scryfall image URLs + `purchase_links` (TCGplayer/ManaPool/Card Kingdom) | mtglib |
 | oracle_flags | Face-aware derivation from a Scryfall card object: `produced_of()` (what it actually taps for) + `derive_flags()` (`etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). Pure dict-in/set-out, no I/O; heuristic by construction, so curated lists and human verification win | — (`re` only; no repo imports) |
-| **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts |
+| goldfish | Seeded goldfish Monte Carlo: commander-by-turn, keepable/screw/flood (definitions shipped as data), mean lands by turn, sequenced first-cast per card, CRN A/B swap deltas. `sim_for_deck()` is the ONE cached entry point every surface calls (`data/cache/goldfish/`). Two mana tiers — enriched `Card.produced`/`Card.flags`, else a **labelled** color-identity fallback. Answers the sequenced-play questions `manabase`'s exact-but-unconditional closed forms structurally cannot | mtglib (`deck_stats`/`deckcore` imported inside the loader only) |
+| **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts, goldfish |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
 | carddb | enrich the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. | mtglib, oracle_flags |
@@ -290,7 +294,11 @@ doubles as the safety net for refactoring `build_dashboard`. The enrichment cont
 own three: `test_oracle_flags.py` (the flag vocabulary, dict fixtures only),
 `test_carddb.py` (the pinned 9-column header + write→overlay round trip, Scryfall
 monkeypatched) and `test_color_sources.py` (produced-vs-identity counting and the honesty
-label on every surface). CI: `.github/workflows/tests.yml`
+label on every surface). The simulator has `test_goldfish.py`: convergence against
+`manabase`'s exact hypergeometrics (±2pp at 4,000 games — if the two engines disagree on
+what they *both* know, nothing they disagree about is credible), seeded determinism, the
+A/A-exact-zero tripwire for common-random-numbers pairing, degenerate decks, and cache
+invalidation. CI: `.github/workflows/tests.yml`
 runs pytest on 3.11/3.13 and re-checks that `scripts/` still imports with **no third-party
 packages installed**.
 

@@ -44,6 +44,7 @@ import deckcore
 import edhrec
 import spellbook
 import optimize
+import goldfish
 
 import sync
 
@@ -633,6 +634,44 @@ def _assess_packet(m):
         L.append("")
     elif mana is not None:
         L.append("-- CONSISTENCY -- (name-only collection: enrich for colored-source math)\n")
+    # Sequenced play — the questions the closed forms above structurally cannot answer.
+    # Same cached helper the dashboard calls, so a coach and a page never disagree.
+    sim = goldfish.sim_for_deck(m["path"], COLLECTION)
+    L.append("-- GOLDFISH SIMULATION (Monte Carlo, seeded) --")
+    if sim is None:
+        L.append("  unavailable — the simulation couldn't be run for this deck.\n")
+    elif not sim.get("have_data"):
+        L.append(f"  {sim.get('note')}\n")
+    else:
+        d, p = sim["definitions"], sim["p_cast_by"]
+        L.append(f"  {sim['games']:,} games, seed {sim['seed']}, "
+                 f"{sim['library']}-card library · model: {sim['model']} "
+                 f"(enriched {sim['coverage']['exact']} · identity "
+                 f"{sim['coverage']['identity']} · no data {sim['coverage']['none']})")
+        L.append("  commander in play: " +
+                 " · ".join(f"T{t} {v*100:.0f}%" for t, v in p.items())
+                 + f"   [{d['p_cast_by']}]")
+        L.append(f"  keepable opener {sim['keepable_first7']*100:.0f}% "
+                 f"[{d['keepable_first7']}] · mulliganed "
+                 f"{sim['mulligan_rate']*100:.0f}%")
+        if sim.get("screw") is not None:
+            L.append(f"  screw {sim['screw']*100:.0f}% [{d['screw']}] · "
+                     f"flood {sim['flood']*100:.0f}% [{d['flood']}]")
+        L.append("  lands in play: " +
+                 " · ".join(f"T{t} {v}" for t, v in
+                            list(sim["mean_lands_by_turn"].items())[:8]))
+        worst = [c for c in sim["cards"]
+                 if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0][:5]
+        if worst:
+            L.append(f"  worst-sequenced [{d['cards']}]:")
+            for c in worst:
+                when = ("never cast" if c["mean_first_cast"] is None
+                        else f"first cast T{c['mean_first_cast']:g} "
+                             f"({c['delta']:+g} vs MV {c['mv']:g})")
+                L.append(f"    {c['name']} — cast {c['cast_rate']*100:.0f}%, {when}")
+        for a in sim["assumptions"]:
+            L.append(f"  assumption: {a}")
+        L.append("")
     if combos and (combos.get("complete") or combos.get("near")):
         L.append("-- COMBOS (curated) --")
         for c in combos.get("complete", []):
@@ -755,9 +794,12 @@ def deck_assess_page(stem):
     roles = [("ramp", "Ramp", 9, 13), ("draw", "Card draw", 8, 12),
              ("removal", "Removal", 8, 11), ("wipe", "Wipes", 2, 5),
              ("counter", "Counters", 0, 6), ("land", "Lands", 35, 38)]
+    # Shares the dashboard's disk cache, so visiting both pages after a deck edit
+    # costs ONE simulation in total, not one per surface.
+    sim = goldfish.sim_for_deck(m["path"], coll, collection_path=COLLECTION)
     return render_template("assess.html", meta=m, a=a, pool=pool, roles=roles,
                            cats=a["report"].get("categories", {}),
-                           field_decks=field_decks, page="decks")
+                           field_decks=field_decks, sim=sim, page="decks")
 
 
 @app.route("/deck/<stem>/assess.txt")
