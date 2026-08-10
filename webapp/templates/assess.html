@@ -97,6 +97,44 @@ It's a grounded read, not a verdict.</div>
   {% endif %}
 </div>
 
+{# ── goldfish simulation ──────────────────────────────────────────────────── #}
+<h2>Goldfish simulation</h2>
+<div class="card">
+  {% if sim and sim.have_data %}
+    <div class="grid tiles mb-3">
+      {% for t in ['4', '6'] %}{% if sim.p_cast_by.get(t) is not none %}
+      <div class="tile"><div class="val">{{ (sim.p_cast_by[t]*100)|round|int }}%</div>
+        <div class="lbl">Commander by T{{ t }}</div>
+        <div class="note">{{ sim.definitions.p_cast_by }}</div></div>
+      {% endif %}{% endfor %}
+      <div class="tile"><div class="val">{{ (sim.keepable_first7*100)|round|int }}%</div>
+        <div class="lbl">Keepable opener</div>
+        <div class="note">{{ sim.definitions.keepable_first7 }}</div></div>
+      {% if sim.screw is not none %}
+      <div class="tile"><div class="val">{{ (sim.screw*100)|round|int }}%</div>
+        <div class="lbl">Screwed</div><div class="note">{{ sim.definitions.screw }}</div></div>
+      {% endif %}
+      <div class="tile"><div class="val">{{ (sim.flood*100)|round|int }}%</div>
+        <div class="lbl">Flooded</div><div class="note">{{ sim.definitions.flood }}</div></div>
+    </div>
+    {% set worst = sim.cards | selectattr('cast_rate', 'lt', 1.0) | list %}
+    {% if worst %}
+    <p class="mt-3"><b>Worst-sequenced cards:</b>
+      <span class="muted fs-sm">{% for c in worst[:8] %}<span class="cardlink"
+        data-card="{{ c.name }}">{{ c.name }}</span> {{ (c.cast_rate*100)|round|int }}%{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+    <p class="muted fs-xs">{{ sim.definitions.cards }}</p>
+    {% endif %}
+    <ul class="muted fs-xs mt-3">
+      {% for a in sim.assumptions %}<li>{{ a }}</li>{% endfor %}
+    </ul>
+  {% elif sim %}
+    <p class="muted">{{ sim.note }}</p>
+  {% else %}
+    <p class="muted">Goldfish simulation unavailable for this deck — it needs a deck
+    file plus card data (enriched collection or a deck <code>.attrs.csv</code>).</p>
+  {% endif %}
+</div>
+
 {# ── how it compares to the field ─────────────────────────────────────────── #}
 {% if pool %}
 <h2>Versus the field</h2>

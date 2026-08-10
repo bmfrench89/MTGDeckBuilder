@@ -13,8 +13,12 @@ verified) + design decisions made with the project owner. This is the durable pl
 Turn the site into an **end-to-end, analytics-first Commander deckbuilder for an
 expert player**: everything interactive, full auto-built decks for "Build Next",
 full per-card strategy, and a browsable/searchable collection — grounded in real
-data, with **AI assessments** layered on top. **No playtesting / goldfishing /
-game simulation** — every metric is computed from card data, not simulated games.
+data, with **AI assessments** layered on top. **Scope note (amended 2026-08-10):**
+tier-1 goldfish Monte Carlo is now **in scope** per
+[research-simulation.md](research-simulation.md) — `scripts/goldfish.py`, seeded and
+offline, answers the sequenced-play questions the closed forms structurally cannot.
+Opponent / game simulation remains out of scope (tier 2 deferred, tier 3 rejected);
+every other metric is still computed from card data, not simulated games.
 
 ## Architecture decisions (resolved)
 

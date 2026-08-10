@@ -1,8 +1,14 @@
 # Research — Mass playtesting / simulation ("prove what cards mathematically work")
 
-**Status:** assessment + phased ladder, 2026-08-10. Nothing here is implemented;
-Phase 1 is the candidate for a future season. This revisits the project's earlier
-"no simulation" scope lock with a concrete cost/benefit per tier.
+**Status:** assessment + phased ladder, 2026-08-10. **Tier 1 is now SHIPPED** —
+`scripts/goldfish.py` (spec: [spec-engine-upgrades.md](spec-engine-upgrades.md) §6,
+tracker Phase 7), with the scope lock formally lifted in
+[spec-interactive-analytics-ai.md](spec-interactive-analytics-ai.md) §1 and
+[research-roadmap.md](research-roadmap.md). **Tier 2 remains deferred** (revisit only
+once tier 1 proves useful in real coaching) and **tier 3 remains rejected**. One
+recorded deviation from the recommendation below: A/B swap deltas ship in the goldfish
+CLI (`--ab "Out=In"`), not in the card advisor. This doc stays as the cost/benefit
+assessment that justified the lift.
 
 ## The idea being assessed
 

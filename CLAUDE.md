@@ -64,7 +64,9 @@ per-module table — read it before any structural change.
 - **Engines:** `deck_stats`, `power`, `manabase`, `combo_detector`, `deck_fit`,
   `deck_conflicts`, `analyze_collection`, `similar_commanders`, `commander_finder`,
   `card_image`, `oracle_flags` (dict-in/set-out oracle derivation; `re` only — it
-  imports nothing else in the repo).
+  imports nothing else in the repo), `goldfish` (seeded Monte Carlo for *sequenced*
+  play — the questions `manabase`'s exact-but-unconditional closed forms cannot reach;
+  `deck_stats`/`deckcore` are imported inside its loader only).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
@@ -83,7 +85,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 320 tests, ~45s, offline
+pip install -r requirements-dev.txt && pytest          # 375 tests, ~80s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -98,6 +100,9 @@ python3 scripts/power.py --rank --collection $COLL
 python3 scripts/manabase.py --deck data/decks/<stem>.txt --collection $COLL
 python3 scripts/combo_detector.py --deck data/decks/<stem>.txt --collection $COLL
 python3 scripts/deck_conflicts.py --collection $COLL [--available]
+python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL [--games 5000]
+python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL \
+    --ab "Out Card=In Card"          # swap one card, replay the identical games
 
 # Build / tune / render
 python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]
@@ -109,8 +114,8 @@ python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashb
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
 ```
 
-Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conflicts`, and
-`auto_build` also take `--json` — prefer that when consuming output programmatically.
+Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conflicts`,
+`goldfish` and `auto_build` also take `--json` — prefer that when consuming output programmatically.
 
 ## Working rules for this repo
 
@@ -133,7 +138,9 @@ reads or writes the player's real `data/`. Keep it that way. Coverage targets th
 can *destroy data or lie*: `test_deck_edit` (in-place deck rewrites), `test_mtglib`
 (parsing/normalization/classification), `test_manabase` (hypergeometric math),
 `test_auto_build` (exactly 100 cards, color legality, singleton), `test_optimize`,
-`test_dashboard` (self-contained HTML, editable only in-app), `test_design_tokens`.
+`test_dashboard` (self-contained HTML, editable only in-app), `test_design_tokens`,
+`test_goldfish` (Monte Carlo convergence against the exact hypergeometrics, seeded
+determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidation).
 CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
 
 ### One design system, two surfaces
@@ -179,8 +186,9 @@ file in place and must keep quantity, section, and comment lines intact (that's 
 `.notes.md` (game plan — markdown-lite; cards named here are protected from the optimizer),
 `.buylist.csv` (`Card,Price,Tier,Replaces,Reason`), `.attrs.csv`
 (`Name,Type,MV,Colors[,Produced,Flags]` — curve without the full CSV; the two optional
-columns are the same contract as the collection file, and `deckcore.load_attrs` learns to
-carry them in workstream C), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
+columns are the same contract as the collection file, carried by
+`deckcore.load_attrs`/`apply_attrs` under the same empty-vs-absent rule, which is what
+lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
 each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`).
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
@@ -237,6 +245,12 @@ to the renderer changes the CLI output and the app identically — check both.
   `data-card="<name>"` (`webapp/static/cardpanel.js`); generated dashboards wire their own
   inlined panel to `figure.mc[data-key], .cardlink[data-key]`. A selector that works on one
   surface will silently no-op on the other — check both when touching panel wiring.
+- **The goldfish A/B pairs positionally.** `compile_deck` expands copies in deck-file
+  order and `simulate_ab` replaces the outgoing card *at the same library indices*, so
+  both arms replay identical shuffles (common random numbers). Re-sorting a compiled
+  deck anywhere breaks the pairing **silently** — the numbers stay plausible, the
+  confidence intervals just stop meaning anything. `test_goldfish`'s A/A-exact-zero
+  test is the tripwire; if it fails, that's what happened.
 - **`docs/handoff.md` is current-state only** (rewritten 2026-08-10; the layered history
   moved to git). Keep it that way — update it in place, don't append dated layers. For
   architecture, trust `docs/codemap.md` over the handoff.

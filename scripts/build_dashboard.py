@@ -653,6 +653,63 @@ def manabase_html(mana):
     return "".join(out)
 
 
+def goldfish_html(sim):
+    """Goldfish Monte Carlo section from `goldfish.sim_for_deck()`. Same classes as
+    manabase_html (stat tiles / data table / notes) — no new CSS.
+
+    Every tile carries its own definition, because "screw" and "flood" are judgement
+    calls the engine ships as data, and the footer says out loud that these are
+    SIMULATED frequencies sitting next to exact hypergeometrics. The two sections are
+    meant to disagree; a reader who doesn't know why would trust the wrong one."""
+    if not sim:
+        return ""
+    if not sim.get("have_data"):
+        return f"<p class='muted'>{esc(sim.get('note') or 'Simulation unavailable.')}</p>"
+    d = sim.get("definitions") or {}
+    p = sim.get("p_cast_by") or {}
+    out = ["<div class='tiles'>"]
+    for turn in ("4", "6"):
+        if turn in p:
+            out.append(stat_tile(f"Commander by T{turn}", f"{p[turn]*100:.0f}%",
+                                 d.get("p_cast_by", "")))
+    out.append(stat_tile("Keepable opener", f"{sim['keepable_first7']*100:.0f}%",
+                         d.get("keepable_first7", "")))
+    if sim.get("screw") is not None:
+        out.append(stat_tile("Screwed", f"{sim['screw']*100:.0f}%", d.get("screw", "")))
+    out.append(stat_tile("Flooded", f"{sim['flood']*100:.0f}%", d.get("flood", "")))
+    out.append("</div>")
+
+    lands = sim.get("mean_lands_by_turn") or {}
+    if lands:
+        out.append("<p class='muted'>" + esc(d.get("mean_lands_by_turn", "")) + " "
+                   + " · ".join(f"T{t} <b>{v}</b>" for t, v in list(lands.items())[:8])
+                   + "</p>")
+
+    worst = [c for c in (sim.get("cards") or [])
+             if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0][:10]
+    if worst:
+        rows = []
+        for c in worst:
+            when = ("<span class='warn'>never cast</span>" if c["mean_first_cast"] is None
+                    else f"T{c['mean_first_cast']:g}")
+            delta = "—" if c["delta"] is None else f"{c['delta']:+g}"
+            rows.append(f"<tr><td><a class='cardlink' data-card=\"{esc(c['name'])}\" "
+                        f"data-key='{esc(mtglib._norm(c['name']))}'>{esc(c['name'])}</a></td>"
+                        f"<td>{c['mv']:g}</td><td>{c['cast_rate']*100:.0f}%</td>"
+                        f"<td>{when}</td><td>{delta}</td></tr>")
+        out.append("<h3>Worst-sequenced cards <span class='count'>"
+                   f"{len(worst)}</span></h3>"
+                   f"<p class='muted'>{esc(d.get('cards', ''))}</p>"
+                   "<div class='tablewrap'><table class='data'><thead><tr><th>Card</th>"
+                   "<th>MV</th><th>Cast rate</th><th>Mean first cast</th>"
+                   "<th>vs curve</th></tr></thead><tbody>"
+                   + "".join(rows) + "</tbody></table></div>")
+
+    notes = "".join(f"<li>{esc(a)}</li>" for a in (sim.get("assumptions") or []))
+    out.append("<h3>Assumptions</h3><ul class='notes muted'>" + notes + "</ul>")
+    return "".join(out)
+
+
 def combos_html(combos):
     """Render the Combo Watch section from combo_detector output:
     {'complete':[...], 'near':[...]}. `None` (detector failed) renders nothing."""
@@ -812,7 +869,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
-                     dead=None, has_field=True):
+                     dead=None, has_field=True, sim=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -849,6 +906,11 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                if rep.get("pip_demand") else "")
     mana_sec = (f"<section><h2>Consistency &amp; Manabase</h2>{manabase_html(mana)}</section>"
                 if mana is not None else "")
+    # Sequenced play sits right under the exact closed forms, on purpose: the two
+    # engines answer different questions and are meant to disagree.
+    goldfish_block = goldfish_html(sim)
+    mana_sec += (f"<section><h2>Goldfish Simulation</h2>{goldfish_block}</section>"
+                 if goldfish_block else "")
     buy_sec = (f"<section><h2>Buy &amp; Replace</h2>{buylist_html(buylist)}</section>"
                if buylist else "")
     sim_sec = (f"<section><h2>Commanders That Also Fit This Shell</h2>"
@@ -1088,12 +1150,21 @@ search couldn't match.</div>
 </div>{IMG_LOADER}</body></html>"""
 
 
+_SIM_UNSET = object()   # "not passed" — distinct from an explicit sim=None
+
+
 def generate(deck_path, collection_path, title="Commander Deck", commander="",
              subtitle="Commander (EDH) deck dashboard", theme="default",
-             decks_dir=None, size="normal", want_visual=False, editable=False):
+             decks_dir=None, size="normal", want_visual=False, editable=False,
+             sim=_SIM_UNSET):
     """Load a deck + collection and return rendered HTML. Shared by the CLI and
     the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
-    'report': dict}."""
+    'report': dict}.
+
+    `sim` is the goldfish Monte Carlo report: omit it and this self-computes through
+    the shared disk cache (`goldfish.sim_for_deck`); pass `sim=None` to leave the
+    section out entirely. Because the webapp re-renders this on EVERY page view, the
+    cache is what keeps a page load at one file read instead of one simulation."""
     # One pass through the shared analysis hub (load + enrich + report + power +
     # manabase + combos) — the same pipeline the assess packet + auto-builder use.
     a = deckcore.analyze_deck(deck_path, collection_path)
@@ -1115,6 +1186,16 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
             combos = dict(combos or {}, near=list((combos or {}).get("near", [])) + extra)
     except Exception:
         pass
+
+    # Sequenced play, next to the exact closed forms in the Mana tab. Imported here
+    # (not at module scope) so the spoke keeps its engine list flat, and guarded
+    # because a failed simulation must cost the page a section, never the render.
+    if sim is _SIM_UNSET:
+        try:
+            import goldfish
+            sim = goldfish.sim_for_deck(deck_path, collection_path)
+        except Exception:
+            sim = None
 
     sections = load_deck_sections(deck_path)
     notes = load_notes(f"{stem}.notes.md")
@@ -1200,7 +1281,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
                                  similar, details, combos, mana,
                                  editable=editable, stem=url_stem, missing=missing,
                                  changes=changes, dead=dead,
-                                 has_field=bool((ctx or {}).get("field")))
+                                 has_field=bool((ctx or {}).get("field")), sim=sim)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

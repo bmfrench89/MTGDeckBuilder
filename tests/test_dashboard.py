@@ -160,3 +160,52 @@ def test_app_side_grid_loader_has_the_same_protections():
     assert "runBatch(batch, attempt + 1)" in js, "batch retry missing"
     assert ", 700)" in js and ", 400)" not in js, "fallback must pace under ~2/s"
     assert "removeAttribute('src')" in js, "a 429'd image must degrade to its name"
+
+
+# --------------------------------------------------------------------------- #
+# Goldfish Monte Carlo panel (Mana tab)
+# --------------------------------------------------------------------------- #
+def test_goldfish_panel_renders_whole(deck_file, collection_file):
+    """One render, every invariant — `generate()` is the expensive call in this file.
+
+    The panel has to carry three things at once: the DEFINITIONS of screw/flood (they
+    are judgement calls the engine ships as data, and a reader who supplies their own
+    misreads the number), the PROVENANCE line (two engines sit on one tab and are
+    meant to disagree — without it a reader averages them), and BOTH card-panel hooks
+    (generated dashboards fire on `.cardlink[data-key]`, app templates on `data-card`,
+    so a selector change on one surface must not silently no-op the other)."""
+    html = _html(deck_file, collection_file)
+    assert "Goldfish Simulation" in html
+    for marker in ("Keepable opener", "Flooded",
+                   "lands in play at the start of turn",
+                   "or more lands seen by the end of turn"):
+        assert marker in html
+    assert "Seeded Monte Carlo" in html
+    assert "distinct from the exact hypergeometrics" in html
+    i = html.find("Worst-sequenced cards")
+    assert i > 0
+    block = html[i:i + 3000]
+    assert "data-key=" in block and "data-card=" in block
+    # self-containment is the dashboard's contract; the new section is no exception
+    assert "<script src=" not in html
+
+
+def test_passing_sim_none_omits_the_section(deck_file, collection_file):
+    html = bd.generate(deck_file, collection_file, title="T",
+                       commander="Test Commander", sim=None)["dashboard"]
+    assert "Goldfish Simulation" not in html
+
+
+def test_the_page_still_renders_when_the_simulation_fails(deck_file, collection_file,
+                                                          monkeypatch):
+    """A failed sim costs the page a section, never the render — the one failure mode
+    this repo forbids."""
+    import goldfish
+
+    def boom(*a, **k):
+        raise RuntimeError("no")
+    monkeypatch.setattr(goldfish, "sim_for_deck", boom)
+    html = _html(deck_file, collection_file)
+    assert "Goldfish Simulation" not in html
+    assert html.lstrip().lower().startswith("<!doctype html")
+    assert "Consistency &amp; Manabase" in html

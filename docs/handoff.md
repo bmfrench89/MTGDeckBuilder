@@ -71,7 +71,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **320 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **375 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Enrichment is production-aware** (engine-season workstream A): `collection_attrs.csv`
   now carries `Produced` (what a card actually taps for) and `Flags` (oracle-derived —
   `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`), derived by the
@@ -81,6 +81,22 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   correctly show the identity-approximation label. Two owner-machine checks are outstanding:
   a one-time Scryfall-schema sanity check on the `test_oracle_flags.py` fixture shapes, and
   a ~30-random-card audit of derived flags after the first real enrichment run.
+- **The engine can goldfish** (engine-season workstream C): `scripts/goldfish.py` is a
+  seeded, stdlib, offline Monte Carlo — shuffle, London mulligan, land drops, greedy
+  casting — reporting P(commander by turn N), keepable / screw / flood **with their
+  definitions printed beside them**, mean lands by turn, and which cards actually land
+  late. It answers the *sequenced*-play questions `manabase.py`'s exact-but-unconditional
+  hypergeometrics structurally cannot, and the two are deliberately shown side by side in
+  the dashboard's Mana tab, on `/deck/<stem>/assess`, and in the coaching packet.
+  `--ab "Out=In"` re-runs the identical shuffles with one card swapped (common random
+  numbers) and prints paired confidence intervals. **On the current data the honesty gate
+  fires on the name-only snapshot** — over 25% of nonlands have no mana value there, so
+  the surfaces print the note instead of numbers; the server, running the enriched
+  collection, gets real numbers, and they will jump from the fallback tier to the
+  production-aware tier the first time `enrich.bat` is re-run. Everything goes through one
+  cached entry point (`goldfish.sim_for_deck` → `data/cache/goldfish/`), so a page view
+  after a deck edit costs one simulation across all three surfaces (~0.1–0.3s cold,
+  a file read warm).
 
 ## Open items
 
@@ -96,14 +112,15 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    DONE; ranking validation is DONE.
 4. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain
    text, not panel-clickable (`docs/codemap.md`, "still open").
-5. **Next engine season is spec'd and RATIFIED (2026-08-10):**
+5. **Engine season is spec'd and RATIFIED (2026-08-10):**
    `docs/spec-engine-upgrades.md` — four workstreams (production-aware
    enrichment, a Comprehensive Rules layer, goldfish Monte Carlo, subagents).
    The owner accepted every §9 recommendation; implementation proceeds one
-   workstream per session/PR in order A → C → D → B → A-F. **A has landed**
-   (production-aware enrichment, above); C is next and consumes A's fields in task C6,
-   which also extends `deckcore.load_attrs`/`apply_attrs` to carry `Produced`/`Flags`
-   on deck-level `.attrs.csv` companions — deliberately not done in A.
+   workstream per session/PR in order A → C → D → B → A-F. **A and C have landed**
+   (production-aware enrichment and the goldfish simulator, both above).
+   **Next up: D** (subagents, §7), then **B** (the Comprehensive Rules layer, §5),
+   then **A-F** (`classify()` consuming the oracle flags, §4.5 — that one owes a
+   before/after categories diff and an explicit re-proof of optimizer idempotency).
 
 ## Session workflow reminders
 
