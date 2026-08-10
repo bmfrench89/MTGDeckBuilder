@@ -49,26 +49,21 @@ a code update will eventually conflict. `sync_server.sh` (repo root) resolves th
 only the runtime-edited paths, rebases, and pushes.
 
 ### 🔧 PENDING — pick this up first next session
-1. **GitHub push credentials are NOT set up yet** — and they are now the key to FULL
-   automation: once the PAT is in place, ONE PythonAnywhere daily Scheduled Task
-   (free tier includes exactly one) running `~/MTGDeckBuilder/sync_server.sh` gives a
-   complete daily cycle — deck edits push up, code + field snapshots pull down, and
-   the script now ends by touching the WSGI file, which IS PythonAnywhere's reload
-   trigger. Set it at Tasks tab → new daily task → command:
-   `~/MTGDeckBuilder/sync_server.sh`. (The PAT itself only grants push; pulling was
-   never blocked — the Scheduled Task is what automates the pull+reload.)
-   Steps 2–4 below were deferred by the player:
-   - Create a **fine-grained PAT** on GitHub: resource owner `bmfrench89`, *only* the
-     `MTGDeckBuilder` repo, permission **Contents: Read and write**.
-   - On the server: `cd ~/MTGDeckBuilder && git remote set-url origin
-     https://bmfrench89:<TOKEN>@github.com/bmfrench89/MTGDeckBuilder.git`
-   - Run `~/MTGDeckBuilder/sync_server.sh`.
-   - **Never ask the player to paste the token into chat, and warn them off screenshotting the
-     console once it is in the remote URL** — `git remote -v` and some git errors print it in full.
-   - Git identity IS already configured on the server (`bmfrench89@gmail.com` / "Brendan French").
-2. **One deck edit currently exists only on the server:** **Mystic Remora was removed from
-   `cosmic-spider-man`.** It is not in git yet. The first `sync_server.sh` run will push it.
-   Do not "restore" it locally thinking it was lost.
+1. **✅ DONE 2026-08-10 — PAT live, bidirectional sync verified end to end.** The
+   fine-grained PAT (Contents: read/write, this repo only, expires **2026-11-07** —
+   pushes start failing then; mint a new one and re-run `git remote set-url`) is in
+   the server's remote URL. First `sync_server.sh` run: committed+pushed `777b433`,
+   pulled clean, and auto-reloaded via the WSGI touch. The push even triggered
+   field-snapshots run #2 (event: push) — the whole loop fired on real events.
+   **Never ask the player to paste the token into chat or screenshot the console** —
+   `git remote -v` prints it in full.
+   **⬜ One piece left un-confirmed: the daily Scheduled Task.** Tasks tab → new
+   daily task → command `~/MTGDeckBuilder/sync_server.sh`. Until it exists, syncs
+   are manual runs of the same script. Free-tier tasks also need periodic
+   click-to-extend, like the web app's 3-month button.
+2. **✅ RESOLVED — the Mystic Remora removal is in git** (commit `777b433`, along with
+   16 optimizer swaps + change logs for Ur-Dragon and Y'shtola that had accumulated
+   server-side). Nothing lives only on the server anymore.
 3. **Collection upload status unconfirmed.** As of the last `/health` check the server was still
    serving the name-only `collection_snapshot.txt` (6 decks found). If the player has not yet
    uploaded the full CSV via `/collection`, the rich color/type/tribe/curve analysis is not
