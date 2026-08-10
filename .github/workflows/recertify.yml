@@ -40,16 +40,24 @@ jobs:
           print("live --verify: found Sol Ring with verbatim oracle text — OK")
           EOF
 
+      # Run 1 taught us Sol Ring legitimately has ZERO rulings on Scryfall — so
+      # it proves the resolve->fetch mechanism, and Humility (a card famous for
+      # its pile of rulings) proves a non-empty fetch. Don't assert counts on a
+      # card whose count you don't control.
       - name: "rulings.py live (fuzzy resolve + rulings fetch)"
         run: |
-          python3 scripts/rulings.py "Sol Ring" --json | tee /tmp/rulings.json
+          python3 scripts/rulings.py "Sol Ring" --json | tee /tmp/rulings1.json
+          python3 scripts/rulings.py "Humility" --json | tee /tmp/rulings2.json
           python3 - <<'EOF'
           import json
-          d = json.load(open("/tmp/rulings.json"))
-          assert "error" not in d, d
-          assert d["name"] == "Sol Ring", d
-          assert isinstance(d.get("rulings"), list) and len(d["rulings"]) >= 1, d
-          print(f"live rulings: {d['name']} -> {len(d['rulings'])} rulings — OK")
+          a = json.load(open("/tmp/rulings1.json"))
+          assert a.get("error") is None and a["name"] == "Sol Ring", a
+          assert isinstance(a.get("rulings"), list), a
+          b = json.load(open("/tmp/rulings2.json"))
+          assert b.get("error") is None and b["name"] == "Humility", b
+          assert len(b["rulings"]) >= 1, b
+          print(f"live rulings: Sol Ring -> {len(a['rulings'])} (mechanism OK), "
+                f"Humility -> {len(b['rulings'])} rulings — OK")
           EOF
 
       - name: "rules.py --refresh end to end (landing page -> URL -> parse >= 3,000 rules)"
