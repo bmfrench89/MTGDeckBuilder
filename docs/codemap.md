@@ -129,6 +129,7 @@ silently vanished there.
 | Commander Spellbook API | ✅ | likely ✅ (documented API; verify once — degrades to combos.csv-only if not) | ❌ |
 | `data/reference/*` (combos, game-changers, **field snapshots**) | ✅ | ✅ via git | ✅ |
 | `data/cache/*` (gitignored) | ✅ | only what the server itself fetched | ❌ |
+| `data/cache/scryfall/` (verified card text, 30-day TTL — `carddb --verify`) | ✅ | ✅ once fetched | ❌ — every uncached `--verify` is honestly UNVERIFIED |
 
 **Field snapshots** close the EDHREC row — and a **GitHub Action** keeps them fresh
 with no human in the loop (`.github/workflows/field-snapshots.yml`: weekly cron +
@@ -168,7 +169,7 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts, goldfish |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
-| carddb | enrich the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. | mtglib, oracle_flags |
+| carddb | **Two modes.** *Enrich* the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. *Verify* named cards — **`--verify "<name>"`** (repeatable, `--json`) batches names through the same endpoint, reconciles **positionally** (a back-face request returns a card named `Front // Back`, so name-keyed matching misfiles it), retries each miss once via `/cards/named?fuzzy=`, and returns verbatim oracle text + commander legality or an honest `UNVERIFIED`. 30-day cache in `data/cache/scryfall/`; a hallucinated card name dies here. The two modes are exclusive (enrichment still requires `--collection`). | mtglib, oracle_flags |
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
 | **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply` | mtglib, deckcore, deck_fit, deck_conflicts, power |
@@ -195,6 +196,23 @@ dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<s
 `SKILL.md` (persona + build/analyze/**coach** workflows) + `references/` (grounding-rules,
 deckbuilding-principles, rules-reference, tooling-and-data, **coaching**). It *invokes the
 CLIs* to stay grounded; it doesn't reimplement them. Runs in Claude Code (no app-side API).
+
+**Subagents (`.claude/agents/`)** — two, one per shape of transcript bloat. They run the
+same CLIs and return **conclusions**, so the numbers are byte-identical; only the context
+cost changes.
+
+| Agent | Delegated when | Runs | Returns |
+|---|---|---|---|
+| `card-verifier` | more than ~3 cards need verifying (esp. post-2025 sets) | one batched `carddb.py --verify` | a table (canonical name / cost / type / identity / commander-legal / **verbatim** text) + one `UNVERIFIED:` line |
+| `collection-auditor` | any full-pool scan — "what can I build", "how many X do I own", "which decks share cards", "rank my decks" | `analyze_collection`, `deck_conflicts [--available]`, `power --rank`, `commander_finder`, `edhrec` | verdict first, then findings — each with its count and the exact producing command |
+
+Both are `tools: Bash, Read` (read-only, no web tools — the verifier answers from the
+Scryfall CLI, never a search dump) and both **Read `references/grounding-rules.md` first**
+rather than carrying a copy that drifts. The main session keeps the persona, every verdict,
+deck assembly and the optimize decisions. `tests/test_agents.py` pins the structure;
+SKILL.md's "Delegate the heavy work" section is the deterministic path, since automatic
+delegation is probabilistic. Where the Agent tool doesn't exist, the skill does the same
+work inline — the workflow is unchanged, the transcript is longer.
 
 ## Data (`data/`)
 
@@ -298,7 +316,11 @@ label on every surface). The simulator has `test_goldfish.py`: convergence again
 `manabase`'s exact hypergeometrics (±2pp at 4,000 games — if the two engines disagree on
 what they *both* know, nothing they disagree about is credible), seeded determinism, the
 A/A-exact-zero tripwire for common-random-numbers pairing, degenerate decks, and cache
-invalidation. CI: `.github/workflows/tests.yml`
+invalidation. The verification path has `test_carddb_verify.py` (the positional batch
+reconciliation a back-face request breaks by name, the one fuzzy retry, the True/False/
+**None** legality tri-state, and UNVERIFIED-not-invented when Scryfall is unreachable) and
+`test_agents.py` — six structural invariants over `.claude/agents/`, since a subagent
+prompt is the one artifact here that nothing else in CI executes. CI: `.github/workflows/tests.yml`
 runs pytest on 3.11/3.13 and re-checks that `scripts/` still imports with **no third-party
 packages installed**.
 

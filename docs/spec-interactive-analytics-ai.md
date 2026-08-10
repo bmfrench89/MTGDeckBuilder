@@ -1,7 +1,7 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API, now **production-aware**) + EDHREC staples + Commander Spellbook combos + **goldfish Monte Carlo (Phase 7)** + **grounded subagents (Phase 8)** · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
 current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
@@ -45,6 +45,7 @@ opponent / game simulation remains out of scope (tier 2 deferred, tier 3 rejecte
 | 4 | Full card strategies | ☑ Grounded "how it works" (role + oracle mechanic + combo + usage) | #33 |
 | 5 | AI coaching skill + export bridge | ☑ Done | #25 |
 | 7 | Goldfish Monte Carlo (`scripts/goldfish.py`) — sequenced play beside the closed forms | ☑ Engine + CRN A/B + cached loader + dashboard/assess panels | #93 |
+| 8 | Grounded subagents (`.claude/agents/`) + `carddb.py --verify` — conclusions instead of transcript dumps | ☑ card-verifier + collection-auditor + the verify CLI + SKILL.md delegation | #94 |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
 "build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool
@@ -233,6 +234,55 @@ feature to land under the amended scope note in §1. Suite grew 320 → **375 te
 - ⊘ **Recorded deviation:** `research-simulation.md` suggested A/B deltas "in the card
   advisor"; v1 puts them in the CLI instead.
 
+## 4d. Phase 8 — grounded subagents (shipped 2026-08-10)
+
+Workstream D of [`spec-engine-upgrades.md`](spec-engine-upgrades.md) §7. Suite grew
+375 → **401 tests**. This phase makes no engine number different — it changes how much
+transcript it costs to get one.
+
+- ☑ **`carddb.py --verify "<name>"`** (repeatable, `--json`) — the prerequisite, because
+  no CLI could verify a *single* card before: enrichment is whole-collection-only and
+  `card_api` carries no oracle text. Names batch through the existing
+  `/cards/collection` client and are reconciled **positionally** — Scryfall returns
+  `data` in identifier order with the misses listed separately, so matching by name
+  breaks the moment someone asks about a back face and the card comes back named
+  `Front // Back`. Each miss retries once via `/cards/named?fuzzy=`, which tolerates a
+  misspelling and surfaces the correction. Nothing resolves → `found: False`, which is
+  where a hallucinated card name dies. Oracle text is joined face-aware; 30-day cache in
+  `data/cache/scryfall/`; an unreachable Scryfall yields UNVERIFIED rows and exit 0 —
+  the report IS the product.
+- ☑ **`.claude/agents/card-verifier.md`** — one batched `--verify`, then one markdown
+  table (Requested | Canonical | Cost | Type | Identity | Commander-legal | **verbatim**
+  text) plus one `UNVERIFIED:` line. No paraphrase (a paraphrase is the misreading
+  grounding rule 3 exists to kill), no hand-built URLs, no memory answers, no search
+  transcripts.
+- ☑ **`.claude/agents/collection-auditor.md`** — five read-only commands
+  (`analyze_collection`, `deck_conflicts [--available]`, `power --rank`,
+  `commander_finder`, `edhrec`), verdict-first output, every finding carrying its count
+  and the exact producing command. It resolves the collection itself and repeats the
+  CLI's name-only degradation warning rather than softening it. The privacy line is
+  explicit: counts and ≤10 exemplar names, never `collection.csv` rows or prices
+  wholesale — "read-only" alone would not stop Bash from `cat`-ing the private CSV into
+  the parent transcript.
+- ☑ **Both are `tools: Bash, Read`** and both Read
+  `references/grounding-rules.md` first, citing rule numbers rather than carrying a copy
+  that drifts. `tests/test_agents.py` pins six structural invariants, so widening an
+  agent's tools means deliberately editing a test — the same friction
+  `test_design_tokens.py` uses for new tokens.
+- ☑ **SKILL.md "Delegate the heavy work"** is the deterministic path (automatic
+  delegation is probabilistic), with pointers from workflow steps 3 and 6 and an
+  **inline-fallback sentence**: where the Agent tool doesn't exist, the same work happens
+  inline and the workflow is unchanged.
+- ⊘ **No WebSearch/WebFetch fallback for the verifier** (Q-D1): UNVERIFIED-and-say-so
+  beats reopening search-dump transcripts inside the agent. ⊘ **The per-deck coaching
+  gather stays in the main session** (Q-D2) — delegating it would strip the champion
+  persona of its evidence. ⊘ **Read-only is prompt-enforced**, not hook-enforced; a
+  hooks-based hardening is out of scope.
+- ⊘ **Acknowledged duplication:** `gen_card_notes.py` already implements batched
+  oracle-text fetch. `verify_cards` is a second copy of that plumbing with a different
+  contract; refactoring the two together is deliberately out of scope, recorded so it
+  reads as a decision rather than an accident.
+
 ## 5. Open questions (resolve during build)
 - EDHREC "Lift" — exposed via any endpoint/`pyedhrec` method yet? Exact formula?
 - Full current WotC bracket ruleset beyond B3 ≤ 3 Game Changers (syncable list + criteria).
@@ -313,3 +363,25 @@ feature to land under the amended scope note in §1. Suite grew 320 → **375 te
   on a fresh clone. One recorded deviation from the research doc: A/B deltas ship in the
   CLI (`--ab "Out=In"`), not in the card advisor — optimizer integration stays
   advisory-only and out of scope (Q-C3). Suite 320 → 375, offline.
+- **2026-08-10** — **Grounded subagents shipped** (workstream D of
+  [spec-engine-upgrades.md](spec-engine-upgrades.md)): `carddb.py` gained a second mode,
+  `--verify "<card name>"` (repeatable, `--json`) — the first tool in the repo that can
+  verify a SINGLE card. Names batch through the existing `/cards/collection` client and
+  are reconciled **positionally** (name-keyed matching misfiles a back-face request,
+  whose card returns named `Front // Back`); each miss retries once via
+  `/cards/named?fuzzy=` and any resolved-name correction is surfaced; a name nothing
+  resolves comes back `found: False`, which is where a hallucinated card dies. Oracle
+  text is joined face-aware — never `split("//")` — and cached 30 days under
+  `data/cache/scryfall/`; an unreachable Scryfall yields UNVERIFIED rows and exit 0.
+  On top of it, two `.claude/agents/`: **card-verifier** (one batched `--verify` → one
+  table of canonical name / cost / type / identity / commander-legality / **verbatim**
+  oracle text + one `UNVERIFIED:` line) and **collection-auditor** (five read-only
+  analysis commands → verdict first, then findings each carrying its count and the exact
+  producing command, with an explicit privacy line: counts and ≤10 exemplar names, never
+  the private CSV's rows or prices). Both are `tools: Bash, Read` and both read the
+  grounding rules rather than copying them; `tests/test_agents.py` makes widening either
+  one a deliberate test edit. SKILL.md gained the "Delegate the heavy work" section
+  (>~3 uncertain cards → verifier, any full-pool scan → auditor, the main session keeps
+  persona/verdicts/assembly/optimize) plus the inline fallback where no Agent tool
+  exists. Honest limit, unchanged from the spec: this cuts context bloat only — every
+  engine number is byte-identical. Suite 375 → 401, offline.
