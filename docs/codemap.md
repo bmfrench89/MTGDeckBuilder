@@ -124,7 +124,20 @@ signal that must work everywhere has to exist as a committed reference artifact*
 that's why `combos.csv` worked on the hosted server the day the EDHREC field signal
 silently vanished there.
 
-| Signal | Player's PC | Hosted server (PythonAnywhere free) | CI / sandboxes |
+**One distinction this table used to blur, at real cost: "CI / sandboxes" is two
+different surfaces.** Claude/dev *sandboxes* proxy-block everything (the ❌ column
+below). **GitHub-hosted Actions runners have OPEN egress** — they reach Scryfall,
+EDHREC, *and* magic.wizards.com. Two workflows prove it: `field-snapshots.yml`
+(fetches EDHREC weekly, which is the whole reason it exists) and `recertify.yml`
+(runs every network-gated acceptance check on demand). Blurring the two once cost a
+whole release cycle: the engine-season spec filed "sandbox blocked" as "must wait
+for the player's PC," when a runner could execute the checks all along — and when
+one finally did, it caught a live `rules.py` URL-scrape bug (PR #97) the offline
+tests could never see. When a check needs the real network, reach for a runner
+before parking it on the owner's checklist; only the private collection is
+genuinely owner-machine-bound (it never leaves that machine).
+
+| Signal | Player's PC | Hosted server (PythonAnywhere free) | Claude/dev sandboxes |
 |---|---|---|---|
 | Card images (browser hotlinks) | ✅ | ✅ (phone fetches from Scryfall CDN directly) | n/a |
 | `api.scryfall.com` (enrichment) | ✅ | ✅ *(allowlisted — documented public API)* | usually ❌ |

@@ -1,0 +1,75 @@
+# On-demand recertification of every network-gated check the offline suite
+# cannot run. GitHub-hosted runners have OPEN egress (unlike the Claude/dev
+# sandboxes — see the deployment-reality matrix in docs/codemap.md), so this is
+# the place to re-prove the live paths after a new set drops, WotC ships a new
+# Comprehensive Rules file, or Scryfall changes its schema. First full pass:
+# 2026-08-10 — the run that caught the literal-space CR-URL bug (PR #97).
+#
+# What it does NOT cover, by design: anything touching the private collection
+# (the ~30-card flag audit stays on the owner's machine — the priced CSV never
+# leaves it).
+name: recertify
+on:
+  workflow_dispatch:
+
+jobs:
+  recertify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: "Scryfall schema + flag audit (oracle_flags fixtures vs live API)"
+        run: python3 .github/scripts/live_schema_check.py
+
+      - name: "carddb --verify live (Sol Ring, verbatim text)"
+        run: |
+          python3 scripts/carddb.py --verify "Sol Ring" --json | tee /tmp/verify.json
+          python3 - <<'EOF'
+          import json
+          r = json.load(open("/tmp/verify.json"))[0]
+          assert r["found"] is True, r
+          assert r["name"] == "Sol Ring", r
+          assert "Add {C}{C}" in r["oracle_text"], r
+          assert r["legal_commander"] is True, r
+          print("live --verify: found Sol Ring with verbatim oracle text — OK")
+          EOF
+
+      # Run 1 taught us Sol Ring legitimately has ZERO rulings on Scryfall — so
+      # it proves the resolve->fetch mechanism, and Humility (a card famous for
+      # its pile of rulings) proves a non-empty fetch. Don't assert counts on a
+      # card whose count you don't control.
+      - name: "rulings.py live (fuzzy resolve + rulings fetch)"
+        run: |
+          python3 scripts/rulings.py "Sol Ring" --json | tee /tmp/rulings1.json
+          python3 scripts/rulings.py "Humility" --json | tee /tmp/rulings2.json
+          python3 - <<'EOF'
+          import json
+          a = json.load(open("/tmp/rulings1.json"))
+          assert a.get("error") is None and a["name"] == "Sol Ring", a
+          assert isinstance(a.get("rulings"), list), a
+          b = json.load(open("/tmp/rulings2.json"))
+          assert b.get("error") is None and b["name"] == "Humility", b
+          assert len(b["rulings"]) >= 1, b
+          print(f"live rulings: Sol Ring -> {len(a['rulings'])} (mechanism OK), "
+                f"Humility -> {len(b['rulings'])} rulings — OK")
+          EOF
+
+      - name: "rules.py --refresh end to end (landing page -> URL -> parse >= 3,000 rules)"
+        run: |
+          python3 scripts/rules.py --refresh --json | tee /tmp/cr.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("/tmp/cr.json"))
+          assert "error" not in d, d
+          assert d["rules"] >= 3000, f"only {d['rules']} rules — layout drift? check rules._find_txt_url / _slice_body"
+          assert d["glossary"] > 100, d
+          print(f"parsed {d['rules']} rules, {d['glossary']} glossary entries, effective {d['effective']} — OK")
+          EOF
+          python3 scripts/rules.py 903.1
+
+      - name: "buy-link URL schemes (ManaPool direct page + Card Kingdom search)"
+        run: python3 .github/scripts/live_buylink_check.py

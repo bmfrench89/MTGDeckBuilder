@@ -159,9 +159,14 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    A production-aware enrichment, C goldfish Monte Carlo, D subagents, B the
    Comprehensive Rules layer, and A-F `classify()` consuming the oracle flags (all
    described above). Nothing in that spec is outstanding. The four network-gated acceptance steps were
-   run 2026-08-10 **from a GitHub Actions runner** (the `live-checks` workflow on the
-   `claude/live-network-checks` branch — GitHub runners have the open egress the dev
-   sandbox lacks), and three of the four are DONE:
+   run 2026-08-10 **from a GitHub Actions runner** — GitHub runners have the open
+   egress the dev sandboxes lack (the codemap's deployment matrix now says so
+   explicitly; blurring the two is the blind spot that parked these checks here in
+   the first place). The harness is institutionalized as
+   **`.github/workflows/recertify.yml`** (`workflow_dispatch` — one click re-certifies
+   every live path after a new CR release, a new set, or a Scryfall schema change;
+   its first full pass also ran `rulings.py` live and verified the ManaPool/Card
+   Kingdom buy-link schemes 4/4). Three of the four steps are DONE:
    1. ☑ **Scryfall schema check of the A1 fixtures** — every `test_oracle_flags.py`
       fixture validated against real Scryfall JSON, 16/16 (produced sets, all flags
       including the A-F `removal`/`wipe`/`counter` tokens against real wordings, the
