@@ -46,8 +46,14 @@ fi
 
 # Rebase BEFORE pushing: replays local deck commits on top of any new upstream code,
 # so a code update and a deck edit never race into a non-fast-forward rejection.
+# A conflict must not leave the clone mid-rebase (with `set -e`, every later run
+# would then fail worse) — abort restores the pre-pull state, local commit intact.
 echo "sync: pulling code updates (rebase)…"
-git pull --rebase
+if ! git pull --rebase; then
+  git rebase --abort 2>/dev/null || true
+  echo "sync: PULL FAILED — rebase aborted, clone restored; resolve from a console" >&2
+  exit 1
+fi
 
 echo "sync: pushing…"
 git push
@@ -59,6 +65,11 @@ echo "sync: done."
 # and touching the WSGI file is PythonAnywhere's documented reload trigger — so
 # every sync ends by reloading, and "pull happened but the app is stale" can't
 # occur. On any machine without /var/www (the PC, CI) the loop simply no-ops.
-for w in /var/www/*_wsgi.py; do
-  [ -e "$w" ] && touch "$w" && echo "sync: touched $(basename "$w") — web app reloading"
-done
+# SYNC_SKIP_RELOAD=1 hands the reload decision to the caller: the web app runs
+# this script from INSIDE a request, where an immediate reload would kill the
+# response mid-flight — it touches the WSGI file itself, only if HEAD moved.
+if [ "${SYNC_SKIP_RELOAD:-0}" != "1" ]; then
+  for w in /var/www/*_wsgi.py; do
+    [ -e "$w" ] && touch "$w" && echo "sync: touched $(basename "$w") — web app reloading"
+  done
+fi

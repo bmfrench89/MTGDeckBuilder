@@ -57,10 +57,14 @@ only the runtime-edited paths, rebases, and pushes.
    field-snapshots run #2 (event: push) — the whole loop fired on real events.
    **Never ask the player to paste the token into chat or screenshot the console** —
    `git remote -v` prints it in full.
-   **⬜ One piece left un-confirmed: the daily Scheduled Task.** Tasks tab → new
-   daily task → command `~/MTGDeckBuilder/sync_server.sh`. Until it exists, syncs
-   are manual runs of the same script. Free-tier tasks also need periodic
-   click-to-extend, like the web app's 3-month button.
+   **✅ Scheduled-Task plan replaced 2026-08-10 — PythonAnywhere made tasks
+   paid-only** (Tasks tab, checked live: "only enabled for paid accounts", both
+   Scheduled and Always-on). The delivery leg is now **in-app**: the web app
+   itself runs `sync_server.sh` in a background thread on the first request of
+   each day, plus a "⇅ Sync with GitHub" button in the maintenance card on the
+   Decks page. Auto-detects PythonAnywhere (`PYTHONANYWHERE_SITE` env);
+   `MTG_AUTO_SYNC=1|0` overrides. Nothing for the player to set up. Spec +
+   failure modes: `docs/spec-in-app-sync.md`.
 2. **✅ RESOLVED — the Mystic Remora removal is in git** (commit `777b433`, along with
    16 optimizer swaps + change logs for Ur-Dragon and Y'shtola that had accumulated
    server-side). Nothing lives only on the server anymore.

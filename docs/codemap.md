@@ -127,7 +127,11 @@ silently vanished there.
 **Field snapshots** close the EDHREC row — and a **GitHub Action** keeps them fresh
 with no human in the loop (`.github/workflows/field-snapshots.yml`: weekly cron +
 on new decks + a phone-friendly manual button; spec/manual in
-[spec-field-snapshot-action.md](spec-field-snapshot-action.md)). Manually,
+[spec-field-snapshot-action.md](spec-field-snapshot-action.md)). Delivery to the
+hosted server is also automatic: **`webapp/sync.py`** runs `sync_server.sh` daily
+from inside the app (deck edits up, code + snapshots down, reload only if HEAD
+moved), with a manual button on the Decks page — spec in
+[spec-in-app-sync.md](spec-in-app-sync.md). Manually,
 `python3 scripts/edhrec.py --snapshot-all --collection <csv>` on any
 EDHREC-reachable machine writes distilled `{inclusion, synergy, names}` maps
 to `data/reference/field/<slug>.json` — a few KB per commander, committed like any
