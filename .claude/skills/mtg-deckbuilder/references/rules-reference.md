@@ -1,6 +1,46 @@
-# Rules Reference — facts that were gotten wrong and corrected
+# Rules Reference — ask the CR, don't recall it
 
-Keep this handy while building. Each item is a real correction from this project.
+## Ask the CR, don't recall it
+
+There is a tool for this now. Rules answers come from **retrieved text**, not memory —
+that is the whole reason `scripts/rules.py` exists.
+
+```bash
+python3 scripts/rules.py 903.1                    # a rule by number (subrules included)
+python3 scripts/rules.py "commander tax"          # glossary first, then full-text search
+python3 scripts/rules.py --search "deathtouch trample" --limit 5
+python3 scripts/rules.py --gloss "Deathtouch"
+python3 scripts/rulings.py "Sol Ring"             # Scryfall's rulings for ONE card
+python3 scripts/carddb.py --verify "Sol Ring"     # what the card actually says
+```
+
+The order matters: **retrieve → READ → cite.**
+
+1. **Retrieve.** Search is a shortlist ranked by word overlap; it is not an answer and
+   it does not know what you meant.
+2. **Read.** Look the winning rule up by number and read its actual text, including its
+   subrules. A snippet is not a rule.
+3. **Cite.** Quote the rule number *from the text you just retrieved* — never a number
+   you remember. A confidently wrong rule number is worse than no citation, because it
+   looks checked.
+
+Card-specific questions take two lookups, not one: `carddb.py --verify "<card>"` for the
+verbatim oracle text and `rulings.py "<card>"` for WotC's clarifications, then the CR for
+the general rule underneath. First-ever run of `rules.py` downloads the Comprehensive
+Rules (~1 MB) into `data/cache/rules/`; it is never committed and never auto-refreshes —
+`--refresh` when a new set drops.
+
+**When it degrades** (the CR is reachable from the player's PC only — not from the hosted
+server, not from a sandbox), `rules.py` prints a manual-download note and exits 1. Then,
+and only then, fall back to a web search of Scryfall/Gatherer — **and say the answer is
+uncited**: "I couldn't reach the Comprehensive Rules, so this is from a web source rather
+than the rule text." Never silently substitute memory for the retrieval that failed.
+
+## Known traps
+
+Each item below is a real correction from this project — a place where the confident
+answer was the wrong one. They are traps, not a rules index: when a question touches one,
+go look the rule up anyway.
 
 ## X spells and mana value on the stack
 While an X spell is **on the stack**, X equals the value chosen, so its mana value includes X.
@@ -33,6 +73,7 @@ your own lifegain does not make *you* the one who lost life. Amplifiers that con
 opponent life loss (Vito, Defiling Daemogoth) are how a lifegain shell feeds a "lost life" trigger.
 
 ## General verification habit
-For anything from a post-2025 set, or any interaction you're not certain of, search Scryfall/
-Gatherer for the current oracle text and any relevant rulings before building around it. A wrong
-reading of one engine piece can invalidate a whole deck plan.
+For anything from a post-2025 set, or any interaction you're not certain of, get the current
+oracle text (`carddb.py --verify`) and the card's rulings (`rulings.py`) before building around
+it, and the rule underneath from `rules.py`. A wrong reading of one engine piece can invalidate
+a whole deck plan.

@@ -104,6 +104,12 @@ several), or web-search Scryfall/Gatherer. Correct yourself openly when a lookup
 the plan. *Past ~3 uncertain cards, delegate to the **`card-verifier`** subagent — see
 "Delegate the heavy work" below.*
 
+For the **interaction** behind a card — how it actually behaves — go one level deeper:
+`python3 scripts/rulings.py "<card name>"` for WotC's published rulings, and
+`python3 scripts/rules.py <rule number | phrase>` for the Comprehensive Rules themselves.
+**Retrieve → read → cite:** never quote a rule number you didn't just retrieve. If the CR
+is unreachable, say the answer is uncited (see `references/rules-reference.md`).
+
 ### 7. Deliver
 Generate a dashboard with `build_dashboard.py` (and a visual card gallery if they want
 card images). **Warn the player** that card-image HTML only renders in a real browser —
@@ -228,6 +234,17 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   against Scryfall and print their **verbatim** oracle text, cost, type, identity and commander
   legality — a name nothing resolves comes back `UNVERIFIED` rather than guessed at. This is
   grounding rule 3 as a command, and what the `card-verifier` subagent runs.
+- `rules.py` — **the Comprehensive Rules, retrieved not recalled.** `rules.py 903.1` looks a
+  rule up by number (subrules included and in context); a bare phrase tries the glossary then
+  full-text search; `--search` / `--gloss` force one; `--json` for machine output. Downloads
+  the official txt once into `data/cache/rules/` (never committed), re-downloads only with
+  `--refresh`. Reachable from the player's PC only — on a degrade it prints a manual-download
+  note and exits 1, and any answer you give from a web search after that must be labeled
+  **uncited**.
+- `rulings.py` — Scryfall's **rulings for one card** (`rulings.py "Sol Ring"`, `--json`): the
+  official clarifications behind an interaction, 30-day cached, stale-but-labeled when the
+  network is down. It echoes both what you asked for and what Scryfall resolved — a fuzzy
+  match can land on a *different card*, so confirm the name before trusting the answer.
 - `edhrec.py` — EDHREC community staples for a commander vs your collection: high-inclusion cards you
   OWN (add) vs. are MISSING (buy). Answers "what does the field run for this commander that I lack?".
 - `deck_fit.py` — library behind per-card fit scoring (used by `build_dashboard`/`auto_build`, not a CLI).

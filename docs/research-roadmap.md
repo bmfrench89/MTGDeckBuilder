@@ -82,6 +82,15 @@ every other metric is still computed from card data, not simulated games.
 - **Full local Scryfall bulk DB + Rulings file** (~24.7 MB, keyed by oracle_id) —
   extend `carddb.py`; surface **rulings** in the card panel (not shown today).
   *Medium.* Ref: `scryfall.com/docs/api/bulk-data`.
+  **Amended 2026-08-10 — the rulings half of this shipped a different way.**
+  `scripts/rulings.py` fetches rulings **per card** via `/cards/named?fuzzy=` →
+  `rulings_uri`, cached 30 days in `data/cache/rulings/`. For a single-player tool
+  that asks about a handful of cards a session, on-demand lookups beat a 24.7 MB
+  bulk download on every axis that matters: no download, a KB-sized cache, nothing
+  to keep fresh, and it works the first time it's asked. The bulk-Rulings path is
+  **not** also planned — two rulings plans would be one too many. What remains open
+  here is the *bulk oracle DB* (already `carddb.py --bulk`) and the **card-panel
+  Rules tab**, which is where a browser-side rulings surface would land.
 
 ### Analytics (no games simulated)
 - **[FLAGSHIP] Frank Karsten manabase math + hypergeometric engine** — per-card
