@@ -1,9 +1,9 @@
 # Spec & Tracker — Interactive Analytics + AI Deckbuilder
 
 **Type:** feature spec + progress tracker (living document — update status as work lands).
-**Owner:** Brendan · **Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
+**Started:** 2026-07-22 · **Status:** 🟢 Phases 0–5 shipped + enrichment (Scryfall API) + EDHREC staples + Commander Spellbook combos · remaining: optional polish (EDHREC "Lift", CSB on the saved-deck dashboard, grow card_notes.csv)
 **Companion docs:** blueprint/rationale in [research-roadmap.md](research-roadmap.md) ·
-session history in [handoff.md](handoff.md).
+current project state in [handoff.md](handoff.md) (history lives in `git log`).
 
 > Update rule: when a task ships, tick its box and update the phase status + the
 > Changelog at the bottom. Keep the tracker table in sync.

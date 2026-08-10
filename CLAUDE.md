@@ -82,7 +82,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 122 tests, ~30s, offline
+pip install -r requirements-dev.txt && pytest          # 231 tests, ~45s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -225,9 +225,9 @@ to the renderer changes the CLI output and the app identically — check both.
   `data-card="<name>"` (`webapp/static/cardpanel.js`); generated dashboards wire their own
   inlined panel to `figure.mc[data-key], .cardlink[data-key]`. A selector that works on one
   surface will silently no-op on the other — check both when touching panel wiring.
-- **`docs/handoff.md` is layered history.** The top "START HERE — CURRENT STATE" block is
-  authoritative; sections below it are older and partly superseded. For architecture, trust
-  `docs/codemap.md` over the handoff.
+- **`docs/handoff.md` is current-state only** (rewritten 2026-08-10; the layered history
+  moved to git). Keep it that way — update it in place, don't append dated layers. For
+  architecture, trust `docs/codemap.md` over the handoff.
 
 ## Git workflow
 

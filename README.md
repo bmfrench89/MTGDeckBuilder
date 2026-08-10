@@ -1,225 +1,134 @@
 # MTG Commander Deckbuilder
 
-An end-to-end program for building **Magic: The Gathering Commander (EDH)** decks from
-*your* collection — grounded by a Claude skill that role-plays a **40-year veteran and
-former World Champion**, and backed by Python tools that do the counting and math so
-nothing is eyeballed or guessed.
-
-The guiding principle, learned the hard way (see `docs/handoff.md`): **a champion never
-bluffs their own deck.** Every ownership claim is checked against your real collection;
-every uncertain card gets verified; every price is labeled an estimate.
+An end-to-end toolkit for building **Magic: The Gathering Commander (EDH)** decks from
+*your* collection: a stdlib-only Python analysis engine, a local Flask web app, and a
+Claude skill that drives both. The guiding principle throughout: **every claim is
+grounded** — ownership is checked against the real collection, uncertain card text gets
+verified, and prices are labeled as estimates.
 
 ---
 
-## What's in here
+## The three layers
 
-```
-.claude/skills/mtg-deckbuilder/   The skill: persona, grounded workflow, reference knowledge
-  SKILL.md                        Entry point — persona + the build loop
-  references/
-    persona.md                    Voice & philosophy of the champion
-    grounding-rules.md            The non-negotiables (read first, every session)
-    deckbuilding-principles.md    EDH ratios, curve, roles, power brackets, archetypes
-    rules-reference.md            Specific rules facts that were gotten wrong & corrected
-    tooling-and-data.md           Network limits, Scryfall image hotlinks, price disclaimers
-scripts/                          The engine (stdlib-only Python 3)
-  mtglib.py                       Shared parsing + pip math + category heuristics
-  analyze_collection.py           Pool stats & tribal/type/color counts ("what can I build?")
-  deck_stats.py                   Curve, pip demand, category counts, ownership check
-  card_image.py                   Scryfall ID -> hotlinkable card-image URL
-  build_dashboard.py              Deck -> rich HTML dashboard (+ visual gallery)
-  staples_crossref.py             Staples list vs collection -> owned/missing buy-list
-  power.py                        Bracket (1-5) + 0-100 power score; rank all decks
-  combo_detector.py               Detect infinite / 2-card combos in a deck or collection (feeds the bracket)
-  deck_conflicts.py               Show cards shared across decks vs. owned (+ buy-doubles)
-  wishlist.py                     Consolidated wishlist (shared copies + upgrades) -> data/wishlist.md
-  similar_commanders.py           "This commander would also work" — alternates by archetype + color fit
-  commander_finder.py             "What should I build next?" — commanders ranked by owned support
-  carddb.py                       Enrich the whole collection (colors/types/MV/ids) via Scryfall's /cards/collection API
-data/reference/                   Game Changers, tutor/fast-mana/combo lists + card_notes (all editable)
-data/wishlist.md                  Auto-generated shopping list (shared copies + upgrades)
-data/
-  collection/                     Your collection (snapshot committed; full CSV you provide)
-  decks/                          Saved deck lists (two completed decks preserved here)
-docs/handoff.md                   The running session handoff from the prior build
-```
+1. **`scripts/`** — the engine. Stdlib-only Python 3 (CI enforces this): collection and
+   deck parsing, curve/pip/role analysis, power scoring and WotC bracket estimation,
+   hypergeometric manabase math, combo detection, deck optimization, full-deck
+   auto-building, and self-contained HTML dashboards.
+2. **`webapp/`** — a Flask front end over the same scripts (imported, not duplicated):
+   a power leaderboard, live editable dashboards, wishlist, collection browser, and
+   "Build Next". Installable on a phone as a PWA.
+3. **`.claude/skills/`** — the `mtg-deckbuilder` skill: a grounded build/coach workflow
+   that runs these CLIs rather than reimplementing them (plus `mtg-mobile` for phone
+   setup).
 
-## How the skill activates
+Architecture map and per-module reference: `docs/codemap.md`. Data formats and working
+rules: `CLAUDE.md`.
 
-In a Claude Code / Claude session with this repo, the `mtg-deckbuilder` skill triggers
-when you ask to build/tune/analyze a Commander deck, evaluate your collection, get
-recommendations or a buy list, check a card, or generate a dashboard. It then follows the
-grounded workflow in `SKILL.md`. You don't have to invoke it manually — but you can:
-just say what you want ("build me a Rakdos punisher deck", "what can I build?", "tune my
-Cloud manabase", "make a dashboard for Y'shtola").
+## Quickstart
 
-## Quickstart (the tools, run directly)
-
-Everything is stdlib Python 3 — no install step.
+Everything in `scripts/` is stdlib Python 3 — no install step for the CLI tools.
 
 ```bash
-# 1) What do I own? (works on the committed name-only snapshot)
+# What do I own? (works on the committed name-only snapshot)
 python3 scripts/analyze_collection.py data/collection/collection_snapshot.txt
 
-# 2) How many <tribe> do I really own? (the "don't recommend Ur-Dragon" check)
+# How many of a tribe do I really own?
 python3 scripts/analyze_collection.py data/collection/collection_snapshot.txt --name dragon --list
 
-# 3) Analyze a deck: curve, pips, categories, and what you DON'T own
-python3 scripts/deck_stats.py \
-  --deck data/decks/yshtola-nights-blessed.txt \
+# Analyze a deck: curve, pips, roles, and what you don't own
+python3 scripts/deck_stats.py --deck data/decks/yshtola-nights-blessed.txt \
   --collection data/collection/collection_snapshot.txt
 
-# 4) Build a shareable dashboard (open the .html in a browser)
-python3 scripts/build_dashboard.py \
-  --deck data/decks/yshtola-nights-blessed.txt \
-  --collection data/collection/collection_snapshot.txt \
-  --title "Y'shtola, Night's Blessed" --commander "Y'shtola, Night's Blessed" \
-  --theme yshtola --out yshtola-dashboard.html --visual
+# Rank every deck by power, with its estimated bracket
+python3 scripts/power.py --rank --collection data/collection/collection_snapshot.txt
 ```
 
-### Unlock full analysis: add your Archidekt CSV
+Every script takes `--help`; most analysis tools also take `--json`.
 
-The committed `collection_snapshot.txt` is **name + quantity only**, so it answers
-*ownership* but not color / type / tribe / curve / pip questions. Export your collection
-from **Archidekt as CSV** (columns: `Quantity, Name, Mana Value, Colors, Identities, Mana
-cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`), drop it at
-`data/collection/collection.csv`, and re-run any command with
-`--collection data/collection/collection.csv`. That turns on:
-
-- real tribal/type counts (`analyze_collection.py --subtype Dragon`, `--tribes`),
-- mana curve + colored **pip demand vs. sources** in `deck_stats.py`,
-- Scryfall card images in the visual gallery.
-
-## Rich dashboards + companion files
-
-`build_dashboard.py` produces a sectioned dashboard: stat tiles (incl. deck value),
-a **Game Plan / player notes** section, a **mana-curve (MV spread)**, ownership, an
-interactive **Buy & Replace** panel with **price-threshold toggles** (All / ≤$5 / ≤$10 /
-…), and a **decklist grouped by the deck file's own sections**. It auto-detects three
-optional companion files next to `<deck>.txt`:
-
-- `<deck>.notes.md` — player notes / game plan (markdown-lite: `#` headings, `-` bullets,
-  `**bold**`). Rendered as the Game Plan section.
-- `<deck>.buylist.csv` — columns `Card,Price,Tier,Replaces,Reason`. Drives the interactive
-  Buy & Replace panel; the toggles filter by price and show a running total.
-- `<deck>.attrs.csv` — columns `Name,Type,MV,Colors`. Powers the MV spread without the full
-  collection CSV (cards without an entry are noted, not hidden). See
-  `data/decks/cosmic-spider-man.attrs.csv` for the pattern.
-
-```bash
-python3 scripts/build_dashboard.py --deck data/decks/cosmic-spider-man.txt \
-  --collection data/collection/collection.csv --theme spider \
-  --title "Cosmic Spider-Man" --out cosmic.html   # notes/buylist/attrs auto-detected
-```
-
-The dashboard also shows, for every deck: **card images** in the decklist, a
-**Commander Bracket (1–5)** and **0–100 power score** (see `docs/power-and-brackets.md`),
-a **Combo Watch** panel (complete or one-piece-away infinite combos), and a
-**Cross-Deck Conflicts** panel warning when a card is committed to more decks
-than you own copies of. Clicking a card opens a panel with a deck-fit score, a grounded
-"why it's good" blurb (curated from `card_notes.csv` where present, else generated from
-role + oracle + EDHREC), alternatives, and — in the web app on a saved deck — in-place
-**Remove / Replace** controls.
-
-## Power ranking & cross-deck conflicts
-
-```bash
-# Rank every deck by power, with its bracket
-python3 scripts/power.py --rank --collection data/collection/collection.csv
-
-# Bracket + power breakdown for one deck
-python3 scripts/power.py --deck data/decks/yshtola-nights-blessed.txt \
-  --collection data/collection/collection.csv
-
-# Which cards are double-committed across decks beyond the copies you own?
-python3 scripts/deck_conflicts.py --collection data/collection/collection.csv
-
-# Which infinite / 2-card combos are complete — or one piece away — in a deck?
-python3 scripts/combo_detector.py --deck data/decks/yshtola-nights-blessed.txt \
-  --collection data/collection/collection.csv
-python3 scripts/combo_detector.py --all --collection data/collection/collection.csv
-python3 scripts/combo_detector.py --collection data/collection/collection.csv \
-  --collection-combos          # everything your whole pool can already assemble
-```
-
-Bracket rules and the 53-card Game Changers list are grounded in WotC's official
-Commander Bracket system and live in editable `data/reference/*.txt` files. The combo
-definitions are curated in `data/reference/combos.csv` (`Pieces` are `;`-separated so
-card-name commas stay intact); a **complete, cheap two-card** combo is the signal that
-pushes a deck to Bracket 4.
-
-## Card database (optional) — do we need a backend DB?
-
-**Short answer: no database for the app's own data.** The collection (~2,800 rows), decks,
-and reference tables are tiny and read-mostly; parsing CSV/txt into memory is instant, and
-keeping the files as the source of truth means everything is diffable in git and portable.
-
-**Where a DB earns its place: ingesting real card attributes.** The pricing export has no
-card attributes (colors/types/mana value). `carddb.py` fixes that — **by default it queries
-Scryfall's `/cards/collection` API** (no download, ~1 request per 75 cards), resolving each
-owned card by its exact printing:
-
-```bash
-python3 scripts/carddb.py --collection data/collection/collection.csv --stats
-# offline instead? --download-bulk grabs the ~40 MB Oracle Cards file (DuckDB streams it if installed)
-python3 scripts/carddb.py --collection data/collection/collection.csv --download-bulk
-```
-
-That writes `data/collection/collection_attrs.csv` (gitignored — it's derived + personal),
-which `mtglib.load_collection` auto-merges. From then on **every tool** works collection-wide —
-real mana curves, colored pip demand, tribal/type counts, power color-scores, and exact
-similar-commander color-fit %. Uploading a fresh export in the web app auto-enriches it.
-(No SQL database for the app's own data — the files stay the diffable source of truth; SQLite
-would only be warranted if we add write-heavy app state like saved deck versions / edit history.)
-
-## Web app (local front end)
-
-A Flask app in `webapp/` puts a front end over the same scripts (imported, not
-duplicated): a power leaderboard, live deck dashboards, the wishlist, a shared-cards view,
-an interactive/searchable **Collection**, and **Build Next** — which auto-builds a full 99
-for any commander from your owned pool (with a commander typeahead). Every card opens a
-panel with a grounded **Strategy** blurb, **alternatives**, the commander's **EDHREC**
-staples (own→add / missing→buy), **Commander Spellbook** combos, and **buy links**; on a
-saved deck you can **Remove/Replace cards in place** right from that panel. It runs locally
-so your collection + prices stay on your machine.
+### Web app
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r webapp/requirements.txt
-python3 webapp/app.py            # -> http://127.0.0.1:5000
+pip install -r webapp/requirements.txt      # Flask is the only dependency
+python3 webapp/app.py                        # -> http://127.0.0.1:5000
 ```
 
-Editing a decklist in the UI re-analyzes it instantly (curve, bracket, power, shared
-cards). See `webapp/README.md`. The CLI and the app share `build_dashboard.generate()`,
-so both render identical dashboards.
+Windows: double-click `webapp\run.bat` (full guide: `docs/SETUP-windows.md`).
+Phone access and hosting options: `webapp/README.md` and `docs/mobile.md`.
 
-## The decks (in `data/decks/`)
+### Tests
 
-Six saved decks, power-ranked in the app's leaderboard:
-- **Captain America, Team Leader** (WUR) · **The Ur-Dragon** (5-color) · **Y'shtola, Night's
-  Blessed** (Esper control/drain) · **Cosmic Spider-Man** (5-color Spider typal) ·
-  **Cloud, Ex-SOLDIER** (Naya equipment/Voltron) · **Kaervek the Merciless** (Rakdos punisher).
+```bash
+pip install -r requirements-dev.txt && pytest    # offline, hermetic; CI runs 3.11 + 3.13
+```
 
-Regenerate any dashboard with `build_dashboard.py` (themes `yshtola` / `cloud` / `rakdos` /
-`spider` / `default`), or just open the deck in the web app.
+## Unlock full analysis: add a collection CSV
 
-## Grounding, in one paragraph
+The committed `data/collection/collection_snapshot.txt` is **name + quantity only** — it
+answers ownership, nothing more. A rich CSV export (Archidekt/ManaPool format, with
+`Quantity, Name, Mana Value, Colors, Identities, Mana cost, Types, Sub-types, Rarity,
+Scryfall ID` columns) at `data/collection/collection.csv` unlocks color, type, tribe,
+curve, and pip analysis. That file is **gitignored — it stays on your machine**.
 
-The collection is the source of truth. Count the pool — never spot-check staples (owning
-one Ur-Dragon is not a dragon deck). Verify card text for anything recent (Marvel,
-Spider-Man, Final Fantasy, Avatar, Lorwyn Eclipsed, newer Strixhaven) with a web search —
-one card at a time. Do the manabase math against real pip demand. Prefer destroy-based
-wipes when the deck wants its creatures in the graveyard. Be honest about tool limits:
-Scryfall/Archidekt APIs and price sites are blocked here, so prices are labeled estimates
-and card-image galleries only render in a real browser. Full detail lives in
-`.claude/skills/mtg-deckbuilder/references/`.
+No rich export? `carddb.py` builds the attributes from Scryfall's `/cards/collection`
+API (about one request per 75 cards):
+
+```bash
+python3 scripts/carddb.py --collection data/collection/collection.csv --stats
+```
+
+It writes `data/collection/collection_attrs.csv` (also gitignored), which
+`mtglib.load_collection` merges automatically. Uploading an export through the web app's
+Collection page runs the same enrichment.
+
+## What the tools do
+
+- **Dashboards** (`build_dashboard.py`) — one self-contained HTML file per deck: stat
+  tiles, mana curve, colored-pip demand vs. sources, ownership, an estimated
+  bracket (1–5) and 0–100 power score (`docs/power-and-brackets.md`), Combo Watch
+  (complete and one-away combos), cross-deck conflicts, and a decklist grouped by the
+  deck file's own sections. Every card opens a panel with a fit score, a grounded
+  "why it works" blurb, alternatives, and buy links. Card images are browser hotlinks
+  to Scryfall's CDN (`docs/card-images.md`). Themes: `default`, `yshtola`, `cloud`,
+  `rakdos`, `spider`.
+- **Manabase math** (`manabase.py`) — hypergeometric keepable-hand odds and
+  color-source adequacy against Karsten-style targets.
+- **Combos** (`combo_detector.py` + curated `data/reference/combos.csv`, plus a
+  Commander Spellbook client) — complete or one-piece-away combos per deck or across
+  the whole pool; a cheap complete two-card combo is what pushes a deck's bracket up.
+- **Cross-deck conflicts** (`deck_conflicts.py`) — cards committed to more decks than
+  you own copies of; `pins.csv` can reserve a copy for one deck.
+- **Optimizer** (`optimize.py`) — swaps low-value cards for higher-inclusion owned
+  cards using EDHREC field data, with hard guardrails (commander/basics/game-plan
+  cards protected, role counts kept in range, lands only for lands, idempotent). It
+  runs automatically after saves from Build Next and via the app's ⚡ button — never
+  after a manual edit, which is always kept as-is.
+- **Build Next** (`commander_finder.py` + `auto_build.py`) — ranks commanders by owned
+  support and assembles a legal 100-card deck from the owned pool.
+- **Field data** (`edhrec.py`) — per-commander inclusion % and synergy. Three-tier
+  sourcing: live fetch → disk cache → committed snapshots in `data/reference/field/`
+  (refreshed weekly by a GitHub Action), so the signal works even where EDHREC is
+  unreachable.
+- **Wishlist** (`wishlist.py`) — consolidated copies-to-buy + per-deck upgrades, with
+  ManaPool-format export.
+
+## Data
+
+- `data/decks/*.txt` — deck files with `# Key: value` headers and `# --- Section ---`
+  groups; optional companions per deck: `.notes.md` (game plan; cards named there are
+  protected from the optimizer), `.buylist.csv`, `.attrs.csv`, `.changes.csv` (change
+  history, appended by the optimizer).
+- `data/reference/` — hand-editable knowledge: curated combos, card notes, the official
+  Game Changers list, tutors, role staples, commander candidates, field snapshots.
+- `data/collection/` — the committed name-only snapshot plus your private, gitignored
+  CSV exports. `owned_additions.txt` records cards the export missed; `pins.csv`
+  reserves copies.
 
 ## Known limitations
 
-- **Network:** Scryfall reachability depends on where the app runs. On a normal machine
-  `carddb.py` enriches via Scryfall's `/cards/collection` API and the EDHREC / Commander
-  Spellbook clients work; in a locked-down sandbox those may be proxy-blocked (fall back to
-  `carddb.py --download-bulk`). Card images always load as browser hotlinks, not server fetches.
-- **Category counts are heuristic.** `deck_stats.py` classifies ramp/draw/removal/wipe from
-  curated name lists + card types. Treat the numbers as a strong first pass, then eyeball.
-- **Prices are estimates.** No live pricing source is reachable.
+- **Role/category counts are heuristic** — curated name lists plus card types. Strong
+  first pass; verify before relying on the numbers.
+- **Prices are estimates.** No live pricing feed is wired in.
+- **Network access degrades, never crashes.** Scryfall, EDHREC, and Commander Spellbook
+  clients are disk-cached and fall back gracefully (EDHREC additionally to the
+  committed snapshots). Card images require a browser — the server never fetches them.

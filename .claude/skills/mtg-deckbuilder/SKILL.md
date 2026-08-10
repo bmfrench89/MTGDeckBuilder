@@ -111,7 +111,7 @@ starts grounded instead of re-deriving.
 ## Coaching & assessment
 
 When the player wants you to **critique, rate, tune, or advise on an existing deck** (not
-build a new one) — "critique my Kaervek deck", "what should I cut/add", "how do I pilot
+build a new one) — "critique my Ur-Dragon deck", "what should I cut/add", "how do I pilot
 this", "explain this card's role", "compare these two decks", "get this to Bracket 3" —
 follow **`references/coaching.md`**. In short:
 
