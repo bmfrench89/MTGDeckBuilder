@@ -69,7 +69,7 @@ Git keeps the history, so this is recoverable from the repo — but the files go
 {% endfor %}
 </div>
 
-<div class="card">
+<div class="card" id="maint">
   <div class="row">
     <form method="post" action="{{ url_for('refresh') }}">
       <button class="btn ghost" type="submit">↻ Rebuild wishlist + static dashboards</button>
@@ -77,6 +77,18 @@ Git keeps the history, so this is recoverable from the repo — but the files go
     <span class="muted fs-xs">Everything on this page is live — this also writes the static
       <code>build/</code> pages and <code>wishlist.md</code>.</span>
   </div>
+  {% if sync_enabled %}
+  <div class="row mt-3">
+    <form method="post" action="{{ url_for('sync_now') }}">
+      <button class="btn ghost" type="submit"
+        title="Commit deck edits to GitHub, pull code + field-snapshot updates, reload if needed">
+        ⇅ Sync with GitHub</button>
+    </form>
+    <span class="muted fs-xs">Deck edits up, updates down — runs itself daily; this is the
+      right-now button.{% if sync_status %} <span class="{{ sync_status.cls }}">Last:
+      {{ sync_status.text }}</span>{% endif %}</span>
+  </div>
+  {% endif %}
 </div>
 <script>
 (function () {

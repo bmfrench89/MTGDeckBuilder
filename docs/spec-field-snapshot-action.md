@@ -99,9 +99,10 @@ nothing; a green one closes the loop permanently.
 - It does not remove the live-fetch path: a machine with EDHREC access still gets
   the freshest data directly, snapshot untouched.
 - It does not deliver the data to the server by itself — GitHub cannot reach into
-  PythonAnywhere. The delivery leg is a **PythonAnywhere daily Scheduled Task**
-  (free tier includes one) running `sync_server.sh`, which now ends by touching the
-  WSGI file — PythonAnywhere's documented reload trigger — so pull and reload are
-  one step. Until that task (and the PAT it wants) exist, delivery is a manual
-  `git pull` + Reload.
+  PythonAnywhere. The delivery leg is the **in-app daily sync** (the web app runs
+  `sync_server.sh` in a background thread on the first request of the day, and the
+  Decks page has a "⇅ Sync with GitHub" button) — see `docs/spec-in-app-sync.md`.
+  *(The original plan here was a PythonAnywhere daily Scheduled Task; those became
+  paid-only, checked live 2026-08-10.)* Manual fallback: `sync_server.sh` from a
+  console, unchanged.
 - It does not solve the collection CSV upload; that remains in `handoff.md`.

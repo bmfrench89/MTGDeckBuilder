@@ -41,6 +41,8 @@ import edhrec
 import spellbook
 import optimize
 
+import sync
+
 
 def _txt(text, filename):
     return Response(text + "\n", mimetype="text/plain",
@@ -67,6 +69,18 @@ DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
 app = Flask(__name__)
+
+
+@app.before_request
+def _auto_sync():
+    """Poor-man's cron: on the hosted server (where Scheduled Tasks are paid-only)
+    the first request of the day syncs deck edits up and code/snapshots down in a
+    background thread. Off everywhere else — sync.enabled() decides. Never allowed
+    to take a page down."""
+    try:
+        sync.maybe_start()
+    except Exception:
+        pass
 
 
 @app.errorhandler(500)
@@ -150,7 +164,8 @@ def index():
                      "contested": short_by_deck.get(label, 0)})
     rows.sort(key=lambda r: -(r["assess"]["power"] if r["assess"] else 0))
     brackets = sorted({r["assess"]["bracket"] for r in rows if r["assess"]})
-    return render_template("index.html", decks=rows, brackets=brackets, page="home")
+    return render_template("index.html", decks=rows, brackets=brackets, page="home",
+                           sync_enabled=sync.enabled(), sync_status=sync.status_view())
 
 
 @app.route("/deck/<stem>")
@@ -816,6 +831,15 @@ def refresh():
                     "--collection", COLLECTION, "--decks-dir", DECKS_DIR],
                    cwd=ROOT, capture_output=True, text=True)
     return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/sync", methods=["POST"])
+def sync_now():
+    """Run the GitHub sync on demand (same script as the daily auto-sync and the
+    console path). Synchronous — ~10 s — so the redirect lands with the status
+    freshly written; any needed reload is deferred past the redirect."""
+    sync.run("manual", reload_delay=sync.RELOAD_DELAY)
+    return redirect(url_for("index") + "#maint")
 
 
 @app.route("/api/card/<path:name>")

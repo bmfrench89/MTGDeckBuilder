@@ -246,12 +246,16 @@ with public API docs.
   ```bash
   git remote set-url origin https://<user>:<token>@github.com/bmfrench89/MTGDeckBuilder.git
   ```
-  then run the committed helper periodically, and always before pulling code changes:
+  Since 2026-08-10 the sync **runs itself**: the web app kicks `sync_server.sh` in a
+  background thread on the first request of each day, and the Decks page has a
+  "⇅ Sync with GitHub" button (`docs/spec-in-app-sync.md` — this replaced the
+  Scheduled-Task idea after PythonAnywhere made tasks paid-only). Console fallback,
+  same script, always available:
   ```bash
   ~/MTGDeckBuilder/sync_server.sh
   ```
-  It commits only the three runtime-edited paths, rebases, pushes, and tells you
-  whether a Web-tab Reload is needed.
+  It commits only the three runtime-edited paths, rebases (aborting cleanly on
+  conflict), pushes, and reloads the app via the WSGI touch.
 - **Disk:** venv + repo + caches fit comfortably in 512 MB (Flask is the only
   dependency; `data/cache/` is a few MB of JSON). If quota bites, clear `data/cache/`.
 
