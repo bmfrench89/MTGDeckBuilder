@@ -70,9 +70,12 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    adds `os.environ["MTG_PASSWORD"] = "…"` to the PythonAnywhere WSGI file and
    reloads, the hosted app is still open to anyone who finds the URL. That env
    line is the whole setup. Never ask for or handle the actual password in chat.
-2. **Collection CSV upload.** Until the player uploads the rich export via the app's
+2. **Collection CSV upload.** Until the player uploads an export via the app's
    Collection page, server-side analysis runs name-only (no curve/color/tribe data).
-   Uploading rebinds the collection in-process — no reload needed.
+   The player's collection app is now **Sorted** (Dragon Shield's successor) and its
+   export loads directly — all major app formats do (`docs/collection-formats.md`);
+   attributes come from the upload's auto-enrichment. Uploading rebinds the
+   collection in-process — no reload needed.
 3. **Optimizer ranking validation.** The `value_of()` ranking change shipped without
    live EDHREC top-25 overlap validation (unreachable from the sandbox that wrote it).
    From any EDHREC-reachable machine: run `optimize.py --all` preview, check overlap;

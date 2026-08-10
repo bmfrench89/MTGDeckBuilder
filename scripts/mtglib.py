@@ -135,12 +135,39 @@ def _to_float(s):
         return None
 
 
+def _price_header(fieldnames):
+    """Price columns vary the most across apps. Exact aliases first; then any
+    live-market column (Sorted exports 'Current Price (tcgplayer_…)'); then any
+    other price column EXCEPT what-you-paid history, which is the least useful
+    value and often 0.00 — it is the last resort, not the first match."""
+    exact = _header_index(fieldnames, "market", "price", "mid", "low",
+                          "purchase price", "my price")
+    if exact:
+        return exact
+    low = [(f.lower().strip(), f) for f in fieldnames if f]
+    for key, f in low:
+        if "market" in key:
+            return f
+    for key, f in low:
+        if "price" in key and "bought" not in key:
+            return f
+    for key, f in low:
+        if "price" in key:
+            return f
+    return None
+
+
+# Multi-TCG apps (e.g. Sorted) export every game in one file, tagged by a
+# game column. Anything except Magic must not enter the pool.
+_MTG_GAME_VALUES = {"", "mtg", "magic", "magic: the gathering"}
+
+
 def _parse_csv(text: str) -> list:
     text = _strip_sep_preamble(text)
     reader = csv.DictReader(io.StringIO(text))
     fn = reader.fieldnames or []
     c_qty = _header_index(fn, "quantity", "count", "qty")
-    c_name = _header_index(fn, "name", "card name", "card")
+    c_name = _header_index(fn, "name", "card name", "card", "simple name")
     c_mv = _header_index(fn, "mana value", "cmc", "mana_value", "mv")
     c_colors = _header_index(fn, "colors", "color")
     c_ident = _header_index(fn, "identities", "identity", "color identity")
@@ -150,9 +177,10 @@ def _parse_csv(text: str) -> list:
     c_super = _header_index(fn, "super-types", "supertypes", "super types")
     c_rarity = _header_index(fn, "rarity")
     c_sid = _header_index(fn, "scryfall id", "scryfall_id", "scryfallid", "id")
-    c_set = _header_index(fn, "set code", "set", "edition")
+    c_set = _header_index(fn, "set code", "edition code", "set", "edition")
     c_num = _header_index(fn, "card number", "collector number", "number")
-    c_price = _header_index(fn, "market", "price", "mid", "low", "purchase price")
+    c_price = _price_header(fn)
+    c_game = _header_index(fn, "collection", "game")
 
     # One physical printing per row. Aggregate by card name: sum quantity, sum
     # value (qty*market), keep the max unit price as representative, keep the
@@ -161,6 +189,8 @@ def _parse_csv(text: str) -> list:
     for row in reader:
         name = (row.get(c_name) or "").strip() if c_name else ""
         if not name:
+            continue
+        if c_game and (row.get(c_game) or "").strip().lower() not in _MTG_GAME_VALUES:
             continue
         try:
             qty = int(float((row.get(c_qty) or "1").strip())) if c_qty else 1

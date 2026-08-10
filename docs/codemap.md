@@ -146,7 +146,7 @@ inclusion rates drift slowly (the live cache TTL is a week).
 
 | Module | Role | Depends on |
 |---|---|---|
-| **mtglib** | Data hub: `Card`, parsing, `classify`, pip math, `load_collection` (+ attrs/additions overlay) | — |
+| **mtglib** | Data hub: `Card`, parsing, `classify`, pip math, `load_collection` (+ attrs/additions overlay); reads all major collection-app CSV formats via header aliases (`docs/collection-formats.md`) | — |
 | **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()`; `advise_card()` (per-card verdict), `manual_adds()` (Source=manual-*), `buy_signals()` (the merged Buy view), `section_label()`/`real_section_labels()` | mtglib |
 | deck_stats | curve, colored-pip demand vs sources, role counts, ownership | mtglib |
 | power | WotC bracket (1–5, estimated) + 0–100 power score | mtglib, deck_stats, combo_detector, deckcore |
