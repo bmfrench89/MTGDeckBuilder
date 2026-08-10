@@ -65,10 +65,11 @@ pip install -r requirements-dev.txt && pytest    # offline, hermetic; CI runs 3.
 ## Unlock full analysis: add a collection CSV
 
 The committed `data/collection/collection_snapshot.txt` is **name + quantity only** — it
-answers ownership, nothing more. A rich CSV export (Archidekt/ManaPool format, with
-`Quantity, Name, Mana Value, Colors, Identities, Mana cost, Types, Sub-types, Rarity,
-Scryfall ID` columns) at `data/collection/collection.csv` unlocks color, type, tribe,
-curve, and pip analysis. That file is **gitignored — it stays on your machine**.
+answers ownership, nothing more. A CSV export at `data/collection/collection.csv`
+unlocks color, type, tribe, curve, and pip analysis; **exports from Sorted /
+Dragon Shield, ManaBox, Moxfield, Deckbox, Archidekt/ManaPool, and TCGplayer are all
+read directly** (`docs/collection-formats.md`). That file is **gitignored — it stays
+on your machine**.
 
 No rich export? `carddb.py` builds the attributes from Scryfall's `/cards/collection`
 API (about one request per 75 cards):

@@ -37,8 +37,9 @@ Config via env vars:
 - **Wishlist** — copies-to-buy + not-owned + per-deck upgrades, with ManaPool-format
   export (copy or download `qty name` text).
 - **Shared** — cards used across decks beyond owned copies, priced.
-- **Collection** — value + searchable browser, upload a fresh export (auto-enriched via
-  Scryfall), add owned-but-missing cards.
+- **Collection** — value + searchable browser, upload a fresh export (all major app
+  formats accepted — `docs/collection-formats.md` — and auto-enriched via Scryfall),
+  add owned-but-missing cards.
 - **Mobile** — in-app instructions for installing the PWA on a phone.
 
 Editing a decklist and saving re-analyzes it instantly (curve, bracket, power, shared
