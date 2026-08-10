@@ -105,7 +105,7 @@ If the status line ever shows a failure: open a PythonAnywhere console and run
 
 | Failure | What you see | State of the repo |
 |---|---|---|
-| Push rejected (PAT expired — next due **2026-11-07**) | warn status: push failed | Deck edits stay safely committed locally; renew the PAT, next sync delivers them. |
+| Push rejected (PAT expired) | warn status: push failed | Deck edits stay safely committed locally; renew the PAT, next sync delivers them. |
 | Rebase conflict (same deck edited on server and elsewhere) | warn status: pull failed, rebase aborted | Clone restored to pre-pull state, local commit intact. Resolve once from a console. Single-player, so rare by construction. |
 | Thread killed mid-run (reload/restart race) | stale "running" → shown as failed | Git operations are atomic-ish and idempotent — the next run picks up whatever finished. |
 | `bash`/git missing (Windows PC with `MTG_AUTO_SYNC=1`) | warn status immediately | Nothing ran. The feature targets the server; use `update.bat` locally. |

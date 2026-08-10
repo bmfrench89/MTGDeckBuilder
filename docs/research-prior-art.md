@@ -15,7 +15,7 @@ adopting (§5).
 
 ## 1. Method (and its honesty constraints)
 
-Per the player's instruction after the r/ClaudeAI "WebFetch is unreliable" thread:
+Method constraint (fetch-and-summarize tools can silently distort sources):
 **discovery and reading were kept separate.** Discovery used WebSearch; **all
 substantive reading was `curl` of raw page text** (`raw.githubusercontent.com`
 READMEs), quoted verbatim below — no fetch-and-summarize layer between the source
@@ -62,7 +62,7 @@ sliders and coverage summary are borrowable ideas (§5).
 Flask + EDHREC JSON, same pairing as ours. Two details matter:
 1. Its thresholds are **user-tunable CLI flags** (`--add-threshold 0.30
    --cut-threshold 0.15`) where ours is a fixed ≥25-point rule.
-2. It ships **exactly the feature the player just asked for**: "**Card
+2. It ships **exactly the feature this project was asked to add**: "**Card
    Evaluation** — Evaluate candidate cards via image upload, file upload, or text
    input with **weighted scoring (synergy, inclusion rate, strategic fit, mana
    efficiency)**." That is independent validation of the add-card-advisor design in

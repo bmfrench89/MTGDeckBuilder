@@ -11,11 +11,10 @@ _Last updated: 2026-08-10._
 ## Where the app runs
 
 - **Hosted:** a PythonAnywhere **free-tier** web app (Python 3.13, virtualenv with
-  Flask only, WSGI entry `webapp/pa_wsgi.py`). The player uses it from a phone as an
-  installed PWA and from the PC through the same URL. Chosen over Render because
-  PythonAnywhere's filesystem is **persistent** — this app's flat-file data model
-  requires that. The hosted URL is deliberately not written in this repo; the app has
-  no authentication (see "Open items").
+  Flask only, WSGI entry `webapp/pa_wsgi.py`), used from every device — phone as an
+  installed PWA, PC through the same URL. Chosen over Render because PythonAnywhere's
+  filesystem is **persistent** — this app's flat-file data model requires that. The
+  hosted URL is deliberately not written in this repo; treat it as sensitive.
 - **Local:** `webapp/run.sh` / `run.bat` still work for offline development.
 - **⚠ On the host, "Static files" on the Web tab must stay EMPTY** — `/static/tokens.css`
   is a Flask *route* serving `scripts/assets/tokens.css`; a directory mapping would
@@ -42,10 +41,11 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   PythonAnywhere Scheduled Task, which became **paid-only** (checked live 2026-08-10).
   Auto-detects the host via `PYTHONANYWHERE_SITE`; `MTG_AUTO_SYNC=1|0` overrides.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
-  only) lives in the server clone's remote URL. **It expires 2026-11-07** — pushes
-  start failing then; mint a new one and re-run `git remote set-url`. Never ask the
-  player to paste the token into chat or screenshot a console where `git remote -v`
-  could print it.
+  only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
+  pushes start failing, mint a new one and re-run `git remote set-url` (a calendar
+  reminder ahead of the expiry date shown in GitHub's token settings avoids the
+  surprise). Never ask for the token in chat or a screenshot — `git remote -v`
+  prints it in full.
 
 ## The server is the source of truth for `data/decks/`
 
@@ -70,17 +70,17 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
    adds `os.environ["MTG_PASSWORD"] = "…"` to the PythonAnywhere WSGI file and
    reloads, the hosted app is still open to anyone who finds the URL. That env
    line is the whole setup. Never ask for or handle the actual password in chat.
-2. **Collection CSV upload.** Until the player uploads an export via the app's
-   Collection page, server-side analysis runs name-only (no curve/color/tribe data).
-   The player's collection app is now **Sorted** (Dragon Shield's successor) and its
-   export loads directly — all major app formats do (`docs/collection-formats.md`);
+2. **Collection CSV upload.** Until an export is uploaded via the app's Collection
+   page, server-side analysis runs name-only (no curve/color/tribe data). Exports
+   from all major collection apps load directly (`docs/collection-formats.md`);
    attributes come from the upload's auto-enrichment. Uploading rebinds the
    collection in-process — no reload needed.
 3. **Optimizer ranking validation.** The `value_of()` ranking change shipped without
    live EDHREC top-25 overlap validation (unreachable from the sandbox that wrote it).
    From any EDHREC-reachable machine: run `optimize.py --all` preview, check overlap;
    below ~50% on any deck means revert the ranking commit.
-4. **PAT renewal by 2026-11-07** and the quarterly keepalive click (above).
+4. **PAT renewal when due** (see GitHub token settings) and the quarterly
+   keepalive click (above).
 5. **Known UI gap:** dashboard Buy-tab rows for cards not in the deck are plain text,
    not panel-clickable (`docs/codemap.md`, "still open").
 

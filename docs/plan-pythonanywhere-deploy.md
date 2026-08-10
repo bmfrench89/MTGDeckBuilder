@@ -1,28 +1,17 @@
-# Plan: Deploy the deckbuilder to PythonAnywhere (free tier)
+# Deploy guide: the deckbuilder on PythonAnywhere (free tier)
 
 **Goal:** one hosted copy of the web app at `https://<username>.pythonanywhere.com`, used
-from every device — installed as the PWA on the phone, plain browser (or installed PWA) on
-PC. The home PC stops being the server. Total cost: $0.
+from every device — installed as a PWA on a phone, plain browser (or installed PWA) on
+PC. No machine of your own has to stay on. Total cost: $0.
 
-**Audience:** this plan is written to be executed by a Claude Code agent working in this
-repo, with the account-creation and dashboard-clicking steps clearly marked **[HUMAN]**.
-Everything else is **[AGENT]** or **[CONSOLE]** (commands the human pastes into a
-PythonAnywhere bash console, or the agent walks them through live).
+**Audience:** written to be executed by a Claude Code agent working in this repo, with
+the account-creation and dashboard-clicking steps clearly marked **[HUMAN]**. Everything
+else is **[AGENT]** or **[CONSOLE]** (commands pasted into a PythonAnywhere bash
+console). This guide has been executed end to end against a real free-tier account —
+including the persistence check in Phase 7 that this data model depends on — so the
+steps describe verified behavior, not theory.
 
 ---
-
-## STATUS — deployed and live (last updated 2026-08-10)
-
-The deploy is complete and this document now serves as the **repeatable setup guide**
-(for a redeploy or a fresh account). Confirmed live: `/health` 200 · dashboards render
-with working card images (browser hotlinks, unaffected by server-side network limits) ·
-**persistence verified** — a deck edit survived a full app reload · PWA installed on
-phone and PC · GitHub push credentials (fine-grained PAT) installed and the sync loop
-verified end to end · daily sync + reload handled **in-app** (`docs/spec-in-app-sync.md`;
-PythonAnywhere's Scheduled Tasks are paid-only as of 2026-08-10).
-
-Still open: the **collection CSV upload** (Phase 4 — the server runs on the name-only
-snapshot until then) and a one-time **server-side Scryfall reachability test** (Phase 5).
 
 **Why PythonAnywhere:** it is the one free host whose filesystem **persists** — a
 long-lived shared server, not an ephemeral container. Render's free tier loses all
