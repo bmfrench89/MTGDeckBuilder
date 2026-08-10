@@ -283,13 +283,34 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             used_add.add(mtglib._norm(add_name))
             break
 
+    # ---- advisory: field risers the margin gate suppressed ------------------------------
+    # The margin gate exists to stop churn, but it also silences a NEW card the field is
+    # still adopting (a 30%-inclusion arrival vs an 11% incumbent is a 19-point gain:
+    # blocked). Surface those, never act on them: owned with a free copy, would beat the
+    # deck's current weakest cut, just not by enough to swap automatically. The player
+    # decides; a manual add is then protected forever.
+    risers = []
+    open_cuts = [t for t in cuts if mtglib._norm(t[2]) not in used_cut]
+    if open_cuts:
+        val_cut, inc_cut, cut_name = open_cuts[0]
+        for val_add, _rank, add_name, avail, inc_add in adds:
+            if len(risers) >= 6:
+                break
+            if avail != "free" or mtglib._norm(add_name) in used_add:
+                continue
+            gap = val_add - val_cut
+            if 0 < gap < margin and inc_add >= 20:
+                risers.append({"add": add_name, "add_inc": inc_add,
+                               "over": cut_name, "over_inc": inc_cut,
+                               "gap": round(gap)})
+
     # ---- manabase passes. Both need field data: without it every land scores 0 and we
     # can't tell Command Tower from a bad tapland, so we leave the manabase alone. -------
     land_swaps = []
     lands = [c for c in deck if (mtglib.lookup(idx, c.name) and mtglib.lookup(idx, c.name).is_land)]
     if not field:
         return {"stem": stem, "commander": commander, "swaps": swaps,
-                "land_swaps": [], "field_size": 0}
+                "land_swaps": [], "field_size": 0, "risers": risers}
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
@@ -336,7 +357,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             need -= 1
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "field_size": len(field)}
+              "land_swaps": land_swaps, "field_size": len(field), "risers": risers}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
@@ -656,6 +677,13 @@ def main():
 
         for line in manual_adds_review(p, coll):
             print(line)
+
+        # Advisory only — cards you own that the margin gate held back. The field
+        # hasn't fully adopted them (or the incumbent still rates well); adding one
+        # by hand marks it manual and protects it.
+        for rz in r.get("risers", []):
+            print(f"   ~ own it, gate held it: {rz['add']} ({rz['add_inc']}%) "
+                  f"over {rz['over']} ({rz['over_inc']}%) — {rz['gap']} pts short of auto-swap")
 
         # Why can't it get closer? A deck with no free staples isn't badly built —
         # its pool is exhausted, and that needs saying out loud.

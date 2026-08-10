@@ -426,3 +426,36 @@ def buy_signals(buylist, combos, missing, idx=None):
               "reason": "Already in the decklist but not owned (the BUY badge).",
               "source": "decklist"})
     return rows
+
+
+def new_arrivals(coll, decks_dir, days=30, now=None, limit=12):
+    """Cards acquired in the last `days` (per the export's Date Bought column) that
+    are in NO deck — the "I just scanned these, where do they go?" signal. Newest
+    first. `fits` lists deck stems whose color identity can legally run the card,
+    and is empty when the collection carries no color data (name-only snapshot) —
+    the list degrades, it never guesses. Basics are noise here and are skipped."""
+    import datetime
+    import glob
+    now = (now or datetime.date.today().isoformat())[:10]
+    cutoff = (datetime.date.fromisoformat(now)
+              - datetime.timedelta(days=days)).isoformat()
+    in_decks, deck_ids = set(), {}
+    for p in glob.glob(os.path.join(decks_dir, "*.txt")):
+        text = open(p, encoding="utf-8").read()
+        for c in mtglib.parse_deck(text):
+            in_decks |= mtglib.name_keys(c.name)
+        m = re.search(r"^#\s*Colors:\s*(.+)$", text, re.M)
+        ids = set((m.group(1) if m else "").replace(",", " ").upper().split())
+        deck_ids[os.path.splitext(os.path.basename(p))[0]] = ids
+    out = []
+    for c in coll:
+        d = (c.date_added or "")[:10]
+        if not d or d < cutoff or mtglib.is_basic(c.name):
+            continue
+        if mtglib.name_keys(c.name) & in_decks:
+            continue
+        fits = sorted(s for s, ids in deck_ids.items()
+                      if c.identity and ids and c.identity <= ids)
+        out.append({"name": c.name, "qty": c.quantity, "date": d, "fits": fits})
+    out.sort(key=lambda r: (r["date"], r["name"]), reverse=True)
+    return out[:limit]
