@@ -10,14 +10,12 @@ Fellwar Stone,Artifact
 Archaeomancer's Map,Artifact
 Tome of Legends,Artifact
 Mystic Remora,Enchantment
-Prosperity,Sorcery
 Think Twice,Instant
 Visions of Beyond,Instant
 Rhystic Study,Enchantment
 Kindred Discovery,Enchantment
 Reconnaissance Mission,Enchantment
 Abrade,Instant
-Condemn,Instant
 Dispatch,Instant
 Swords to Plowshares,Instant
 Metallic Mimic,Creature
@@ -40,3 +38,6 @@ Folk Hero,Enchantment
 "Black Widow, Agile Avenger",Creature
 Avengers Quinjet,Artifact
 Spectacular Spider-Man,Creature
+"Silver Sable, Mercenary Leader",Creature
+"Mjölnir, Hammer of Thor",Artifact
+"Captain Mar-Vell, Space-Born",Creature

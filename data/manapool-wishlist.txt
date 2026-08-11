@@ -2,9 +2,7 @@
 2 Fellwar Stone
 2 Lightning Greaves
 2 Force of Will
-2 Frantic Search
 2 Kindred Discovery
-2 Nature's Lore
 2 Secluded Courtyard
 2 Solemn Simulacrum
 2 Unclaimed Territory
@@ -20,6 +18,7 @@
 1 Archmage Emeritus
 1 Dig Through Time
 1 Dispatch
+1 Frantic Search
 1 Generous Gift
 1 Iron Man, Armored Avenger
 1 Kid Loki
@@ -27,6 +26,7 @@
 1 Mystic Monastery
 1 Mystic Remora
 1 Mystical Tutor
+1 Nature's Lore
 1 Night's Whisper
 1 Professor Hulk
 1 Propaganda
@@ -37,7 +37,6 @@
 1 Sublime Epiphany
 1 Sun Titan
 1 Visions of Beyond
-1 Void Rend
 1 Winged Words
 1 Sapphire Medallion
 1 Lyla, Holographic Assistant

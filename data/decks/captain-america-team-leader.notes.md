@@ -47,3 +47,15 @@ Auto-built from owned cards (tribal-aware builder) and hand-checked: the creatur
 **all Heroes** — no off-tribe filler. Bracket 3 / power ~70, with 2 Game Changers
 (Rhystic Study, Force of Will). Rhystic Study is contested with two other decks — see the
 shared-cards panel before sleeving.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Mjölnir, Hammer of Thor — 4 damage on ETB, then DOUBLES all damage the equipped
+  creature deals; equip worthy is {1} and Cap qualifies (legendary non-Villain,
+  red/white). Discard mode wipes small boards. Verified MSH #146. In over Masked
+  Meower (0%-field draft filler).
+- Captain Mar-Vell, Space-Born — 4/4 flying vigilance; while an opponent has cast a
+  spell this turn, your spells have flash. 24% field, gate-held by the optimizer
+  margin. Verified MSH #12. In over Condemn (0% field).
+- Silver Sable, Mercenary Leader — ETB +1/+1 counter, attack grants a modified
+  creature lifelink; on-theme with the counters engine. Verified SPM #13. In over
+  Prosperity (0%-field symmetric group draw).

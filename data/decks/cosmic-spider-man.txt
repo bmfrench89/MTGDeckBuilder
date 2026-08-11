@@ -56,11 +56,11 @@
 1 Arachne, Psionic Weaver
 1 Spider-Punk
 1 Anti-Venom, Horrifying Healer
+1 Sensational Spider-Man
 
 # --- Instants ---
 1 Grow Extra Arms
 1 Spectacular Tactics
-1 Frantic Search
 1 Swords to Plowshares
 1 Path to Exile
 1 Generous Gift
@@ -68,7 +68,6 @@
 1 Chaos Warp
 1 Assassin's Trophy
 1 Terminate
-1 Void Rend
 1 Heroic Intervention
 1 Counterspell
 1 Amazing Acrobatics
@@ -76,8 +75,8 @@
 # --- Sorceries ---
 1 Cultivate
 1 Farseek
-1 Nature's Lore
 1 Night's Whisper
+1 Villainous Wrath
 
 # --- Artifacts ---
 1 Roaming Throne
@@ -94,6 +93,7 @@
 1 Kindred Discovery
 1 Origin of Spider-Man
 1 Wall Crawl
+1 Web Up
 
 # --- Lands ---
 1 University Campus

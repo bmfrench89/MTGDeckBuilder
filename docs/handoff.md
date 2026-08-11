@@ -164,6 +164,30 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   protected in its `.notes.md` so the optimizer stops re-proposing that swap.
   The ⇄ swaps deepen shared-copy shortfalls (Fellwar Stone and Lightning
   Greaves are now short 2) — priced in `data/wishlist.md` per mark-don't-block.
+- **The sleeper audit is now a ratified process (2026-08-11, player request):**
+  `.claude/skills/mtg-deckbuilder/references/card-review-method.md`, wired into
+  SKILL.md and CLAUDE.md. Field % is a prior; the verified card text read against
+  the deck's engine is the verdict. Born from Wizard's Staff: 4% field, but it
+  DOUBLES the equipped creature's triggers — on Y'shtola that's drain-4/gain-4
+  per big spell. The audit's first full pass walked all 705 two-week arrivals
+  (124 unplaced rares/mythics card-by-card) and produced **19 verified swaps**
+  across the six decks, every text checked against Scryfall/Gatherer via web
+  search (API egress-blocked): Y'shtola took Wizard's Staff; Iron Man took
+  Valeria Richards, Wizard's Staff #2 (on Archmage), Riddles in the Dark, Myriad
+  Landscape; Cap took Mjölnir (doubles Cap's damage, equip worthy {1}),
+  Captain Mar-Vell, Silver Sable; Cloud took Forge Anew (the buylist arrival —
+  Hojo pulled as recorded), Inventory Management, Raubahn; Cosmic took
+  Sensational Spider-Man, Web Up, Villainous Wrath (its first wipe); Ur-Dragon
+  took Dragon Broodmother, Sylvia Brightspear, Kaalia, Deserted Beach. All are
+  `Source=manual-replace` in `.changes.csv` (optimizer-protected — verified: all
+  six re-previews say "already aligned"), documented in each `.notes.md`, and
+  the verified-role cards were added to `mtglib.py`'s curated DRAW/REMOVAL/WIPES
+  lists so the power score can read them (full test suite green after). Post-
+  audit ranking: Y'shtola 73 · Iron Man 72 · Cap 58 · Cloud 58 · Cosmic 54 ·
+  Ur-Dragon 49 — Ur-Dragon's drop is a deliberate interaction-for-threats trade,
+  flagged with a rebuild path in its notes. Benched-with-reasons and the Hobbit
+  verdict (zero of 96 uniques beat an incumbent; Thorin/Thranduil/Gandalf/
+  Radagast are future commander seeds) live in the audit notes sections.
 - **Field-overlap validation post-sweep (fresh, larger snapshots): PASSED** —
   Team Leader 25/25 · Cloud 24/25 · Y'shtola 21/25 · Ur-Dragon 21/25 · Cosmic
   Spider-Man 18/25 · Iron Man 14/25. Iron Man and Spider-Man sit lower because

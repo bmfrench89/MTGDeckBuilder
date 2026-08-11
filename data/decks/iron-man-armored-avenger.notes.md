@@ -31,3 +31,14 @@ box (basics are exempt from conflict tracking by convention).
 Keep: 3+ lands with a rock or a draw engine (Remora/Rhystic) or 2 counters.
 Ship: hands with zero interaction, or 5-land hands with no draw.
 The deck mulligans well — Brainstorm/Frantic Search/Accumulated Knowledge dig.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Valeria Richards, Precocious — noncreature spells cost {1} less; first noncreature
+  spell EACH turn draws a card (triggers on opponents' turns in draw-go). Verified
+  MSC #38. In over Coveted Jewel (0% field, gift-wraps 3 cards to an attacker).
+- Wizard's Staff (copy #2) — equip Archmage Emeritus for {1} (Wizard): magecraft
+  triggers twice, two cards per instant. Verified HOB #59. In over Essence Scatter.
+- Riddles in the Dark — {2}{U} instant, 4-card Fact-or-Fiction piles; instant-speed
+  selection that also fuels Dig Through Time. Verified HOB #53. In over the deck's
+  lone Accumulated Knowledge (draw 1 for 2 with no other copies).
+- Myriad Landscape — ramp in mono-blue; also shrinks the Islands-owed count by one.

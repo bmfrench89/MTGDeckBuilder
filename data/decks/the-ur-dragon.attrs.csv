@@ -14,7 +14,6 @@ Moss Diamond,Artifact
 Talisman of Progress,Artifact
 Sky Diamond,Artifact
 Think Twice,Instant
-Insight,Enchantment
 Reconnaissance Mission,Enchantment
 "Selvala, Heart of the Wilds",Creature
 "Smaug, Wicked Worm",Creature
@@ -24,12 +23,9 @@ Assassin's Trophy,Instant
 Kindred Discovery,Enchantment
 Seal of Cleansing,Enchantment
 Seal of Fire,Enchantment
-Shatter,Instant
-Smite,Instant
 Vendetta,Instant
 Chaos Warp,Instant
 Crux of Fate,Sorcery
-Culling Ritual,Sorcery
 Dragon Tempest,Enchantment
 Counterspell,Instant
 "Ureni, the Song Unending",Creature
@@ -46,3 +42,8 @@ Zurgo and Ojutai,Creature
 "Kolaghan, the Storm's Fury",Creature
 Broodcaller Scourge,Creature
 "Lozhan, Dragons' Legacy",Creature
+Dragonlord Silumgar,Creature
+Dragon Broodmother,Creature
+Sylvia Brightspear,Creature
+Kaalia of the Vast,Creature
+Deserted Beach,Land

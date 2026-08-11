@@ -54,3 +54,18 @@ double strike. Eminence and the attack trigger finally fire at full strength. Fi
 Auto-built from owned cards after the tribal-detection fix (it previously ran **zero**
 dragons). Bracket 3 / power ~73. Honest read: this is the **most improvable** deck of the
 six — the buy-list turns it from a good 5-color pile into an actual tribal deck.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Dragon Broodmother — a dragon EVERY upkeep (yours and each opponent's): four
+  eminence-discounted bodies a round, devour for scale. In over Insight (0% field).
+- Sylvia Brightspear — dragons your team controls have double strike (verified BBD
+  #10). Doubles the whole tribal board AND commander-damage clocks. In over Smite.
+- Kaalia of the Vast — each attack cheats an Angel/Demon/Dragon from hand onto the
+  battlefield tapped and attacking; the commander's own card flow keeps her fed.
+  In over Shatter.
+- Deserted Beach — strict upgrade over Coastal Tower (untapped with 2+ other lands).
+- NOTE the trade made here: Culling Ritual, Smite and Shatter left in one day —
+  interaction is now 7. That was deliberate (tribal top-end over 1-for-1s), and the
+  power score dropped to 49 because it weighs interaction. If the deck starts dying
+  to resolved threats, the buylist's Tiamat/Old Gnawbone slots are where interaction
+  should come back in instead.

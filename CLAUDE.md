@@ -29,6 +29,11 @@ was gotten wrong before. Full text: `.claude/skills/mtg-deckbuilder/references/g
 - **Label estimates as estimates.** No live price feed is reachable; prices are estimates.
 - **Never invent a card.** Adds/cuts come from the collection, saved decks, curated
   references, `auto_build.py`'s candidate pool, or a verified Scryfall lookup.
+- **Reviewing cards against decks follows the sleeper audit** —
+  `.claude/skills/mtg-deckbuilder/references/card-review-method.md` (player-ratified
+  2026-08-11): field % is a prior, the verified text read against the deck's engine is
+  the verdict; every candidate gets swap/wishlist/bench/skip, never a silent drop, and
+  manual swaps are logged `Source=manual-replace` so the optimizer never churns them.
 
 ## Layout
 
