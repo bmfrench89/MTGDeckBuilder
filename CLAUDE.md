@@ -90,7 +90,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 469 tests, ~100s, offline
+pip install -r requirements-dev.txt && pytest          # 470 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -195,7 +195,10 @@ Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥2
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
 basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` are never
 cut; role counts must stay in template range; lands only swap for lands; with no field data
-the manabase is left alone. Which pass *owns* a card (land vs spell) is layered like
+the manabase is left alone. **Buy candidates never enter the 99** (2026-08-11, player
+request): decks are built from owned cards only, and each buy is instead appended to the
+deck's `.buylist.csv` with `Replaces` = the in-deck card to pull when it arrives —
+existing buylist rows are never removed, only their `Replaces` refreshed. Which pass *owns* a card (land vs spell) is layered like
 `classify()`: real type data first (collection CSV / deck `.attrs.csv`), then the deck
 file's own type-exclusive section for cards already in the deck, then the field snapshot's
 `lands` key (EDHREC's own Lands sections) for incoming candidates, and the name heuristic

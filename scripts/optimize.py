@@ -14,10 +14,13 @@ Design rules (learned from a pass that tried to cut Exsanguinate out of Y'shtola
   * Role counts (ramp / draw / removal / wipe / counter) must stay inside the template — a
     swap that would push a role out of range is rejected.
   * Incoming cards are ranked free (a spare copy) > shared (owned but committed to another
-    deck) > buy (not owned). Sharing and buying are ON by default: two decks in the same
-    archetype legitimately want the same cards, and the player decides which one gets the
-    physical copy at sleeving time. Unowned picks are badged "BUY" on the dashboard.
-    `--owned-only` restricts to spare copies; `--no-buys` keeps the list fully owned.
+    deck) > buy (not owned). Sharing is ON by default: two decks in the same archetype
+    legitimately want the same cards, and the player decides which one gets the physical
+    copy at sleeving time. Buys are considered by default but NEVER enter the 99
+    (2026-08-11, player request: decks are built from what's owned) — each pairs with an
+    in-deck card and is appended to `.buylist.csv` with Replaces = that card, so the list
+    answers "when this arrives, which card do I pull". `--owned-only` restricts adds to
+    spare copies; `--no-buys` skips the buylist recommendations too.
 
 Usage:
   python3 optimize.py --deck data/decks/foo.txt --collection data/collection/collection.csv
@@ -142,6 +145,46 @@ def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
     return len(rows)
 
 
+def append_buylist(deck_path, buy_swaps, commander=""):
+    """Append buy recommendations to `<deck>.buylist.csv`, each mapped to the in-deck
+    card it would replace. Existing rows are NEVER removed or reordered — hand-written
+    entries survive — but a re-mapped card's Replaces cell is refreshed so "when this
+    arrives, which card do I pull" stays true. Prices are left blank (no live feed)."""
+    if not buy_swaps:
+        return 0
+    import csv
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    path = f"{stem}.buylist.csv"
+    fields = ["Card", "Price", "Tier", "Replaces", "Reason"]
+    rows = []
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", newline="") as f:
+            rd = csv.DictReader(f)
+            fields = rd.fieldnames or fields
+            rows = list(rd)
+    existing = {mtglib._norm(r.get("Card") or ""): r for r in rows}
+    changed = 0
+    for cut, _inc_cut, add, inc_add, _kind in buy_swaps:
+        k = mtglib._norm(add)
+        if k in existing:
+            if (existing[k].get("Replaces") or "") != cut:
+                existing[k]["Replaces"] = cut
+                changed += 1
+            continue
+        row = {"Card": add, "Price": "", "Tier": "Core" if inc_add >= 65 else "Value",
+               "Replaces": cut,
+               "Reason": f"{inc_add}% of {commander or 'this commander'}'s decks run this."}
+        rows.append(row)
+        existing[k] = row
+        changed += 1
+    if changed:
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=fields, restval="", extrasaction="ignore")
+            w.writeheader()
+            w.writerows(rows)
+    return changed
+
+
 def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
              max_swaps=40, owned_only=False, include_buys=True, buy_threshold=55):
     """Return a report dict; writes the deck file when apply=True."""
@@ -227,8 +270,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     #   free  = you own a spare copy            (always allowed)
     #   share = owned but committed to another deck — allowed unless owned_only; the player
     #           decides which deck gets the physical card at sleeving time
-    #   buy   = not owned at all — allowed when include_buys, so a deck can show its IDEAL
-    #           list. The dashboard badges these "BUY" (they're `missing` to deck_stats).
+    #   buy   = not owned at all — considered when include_buys, but NEVER written into
+    #           the 99 (2026-08-11, player request: a deck is built from what's owned).
+    #           Buys pair against a real in-deck card and are APPENDED to the deck's
+    #           .buylist.csv with Replaces = that card, so the list always answers
+    #           "when this arrives, which card do I pull".
     # Lands stay in their own bucket: a land must replace a LAND, or the deck's
     # 37-land / 62-spell split silently drifts.
     # EDHREC's own Lands sections, for typing candidates the collection can't:
@@ -238,7 +284,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # an empty set and the name heuristic carries on alone.
     field_lands = deck_fit.load_field_lands(commander, idx)
 
-    adds, land_adds = [], []
+    adds, land_adds, buy_adds, buy_land_adds = [], [], [], []
     for k, inc in field.items():
         if k in in_deck or k in BASICS or inc <= 0 or k in reserved:
             continue
@@ -267,9 +313,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         rank = {"free": 2, "share": 1, "buy": 0}[avail]
         if mtglib.name_keys(name) & in_deck:
             continue
-        (land_adds if is_land else adds).append((value_of(name), rank, name, avail, inc))
+        entry = (value_of(name), rank, name, avail, inc)
+        if avail == "buy":
+            (buy_land_adds if is_land else buy_adds).append(entry)
+        else:
+            (land_adds if is_land else adds).append(entry)
     adds.sort(reverse=True)
     land_adds.sort(reverse=True)
+    buy_adds.sort(reverse=True)
+    buy_land_adds.sort(reverse=True)
 
     # ---- candidates to cut: low VALUE, not protected, not a land ----
     # Value is deliberately NOT raw popularity. A premium card can be 0% for a commander
@@ -347,7 +399,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     lands = [c for c in deck if mtglib.lookup(idx, c.name) and is_land_in_deck(c.name)]
     if not field:
         return {"stem": stem, "commander": commander, "swaps": swaps,
-                "land_swaps": [], "field_size": 0, "risers": risers,
+                "land_swaps": [], "buy_swaps": [], "field_size": 0, "risers": risers,
                 "untyped": untyped}
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
@@ -394,14 +446,38 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             i += 1
             need -= 1
 
+    # ---- buys: recommended, never written into the 99 -----------------------------------
+    # Each buy pairs one-to-one with a card that STAYS in the deck (a cut the owned
+    # passes didn't consume, or a weak land the land pass left) so the buylist's
+    # Replaces column always names a real card to pull when the purchase arrives.
+    buy_swaps, used_buy = [], set()
+    for val_add, _rank, add_name, avail, inc_add in buy_adds:
+        for val_cut, inc_cut, cut_name in cuts:
+            ck = mtglib._norm(cut_name)
+            if ck in used_cut or ck in used_buy or val_add - val_cut < margin:
+                continue
+            buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "spell"))
+            used_buy.add(ck)
+            break
+    for _val, _rank, add_name, avail, inc_add in buy_land_adds:
+        for inc_cut, cut_name in weak_lands:
+            ck = mtglib._norm(cut_name)
+            if ck in used_land or ck in used_buy or inc_add - inc_cut < margin:
+                continue
+            buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "land"))
+            used_buy.add(ck)
+            break
+
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "field_size": len(field), "risers": risers,
-              "untyped": untyped}
+              "land_swaps": land_swaps, "buy_swaps": buy_swaps,
+              "field_size": len(field), "risers": risers, "untyped": untyped}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
         _tidy(deck_path, idx)
         result["illegal"] = singleton_violations(deck_path)
+    if apply and buy_swaps:
+        result["buylist_appended"] = append_buylist(deck_path, buy_swaps, commander)
     return result
 
 
@@ -739,6 +815,12 @@ def main():
         for old, new, avail in r["land_swaps"]:
             tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
             print(f"   land  {old:32} ->  {new}{tag}")
+        for cut, ic, add, ia, kind in r.get("buy_swaps", []):
+            print(f"   buy   {add} ({ia}%) — would replace {cut} ({ic}%)"
+                  f"{'  [land]' if kind == 'land' else ''}  -> .buylist.csv")
+        if r.get("buylist_appended"):
+            print(f"     appended/updated {r['buylist_appended']} row(s) in "
+                  f"{r['stem']}.buylist.csv")
         for qty, name in r.get("illegal") or []:
             print(f"   !! ILLEGAL: {qty}x {name} — Commander allows one copy")
 

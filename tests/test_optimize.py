@@ -267,8 +267,11 @@ def test_an_unowned_field_land_is_never_added_by_the_spell_pass(tmp_path, monkey
                         lambda *a, **k: {mtglib._norm("Hallowed Fountain")})
     r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
     assert all("Hallowed Fountain" not in add for _cut, _vc, add, *_ in r["swaps"])
-    assert any(mtglib._norm(new) == mtglib._norm("Hallowed Fountain")
-               for _old, new, _avail in r["land_swaps"])
+    assert all("Hallowed Fountain" not in new for _old, new, _avail in r["land_swaps"])
+    # it arrives as a LAND buy recommendation, paired against a weak in-deck land
+    land_buys = [b for b in r["buy_swaps"] if b[4] == "land"]
+    assert land_buys and land_buys[0][2] == "Hallowed Fountain"
+    assert mtglib._norm(land_buys[0][0]) == mtglib._norm("Hidden Lair")
 
 
 def test_manabase_pass_owns_a_section_signalled_land(tmp_path, monkeypatch):
@@ -340,19 +343,46 @@ def test_owned_only_refuses_to_add_unowned_cards(tmp_path, collection_file, monk
     p = _deck(tmp_path)
     r = optimize.optimize(p, coll, idx, str(tmp_path), owned_only=True, apply=False)
     assert all("Totally Unowned Card" not in s[2] for s in r["swaps"])
+    assert r["buy_swaps"] == []
 
 
-def test_buys_are_added_and_flagged(tmp_path, collection_file, monkeypatch):
-    """By default an unowned, heavily-played card may be added and is marked 'buy'."""
+def test_buys_never_enter_the_deck_and_go_to_the_buylist(tmp_path, collection_file, monkeypatch):
+    """2026-08-11 (player request): a deck is built from what's owned. An unowned,
+    heavily-played card is recommended in buy_swaps — mapped to the in-deck card it
+    would replace — and on apply is APPENDED to .buylist.csv, never into the 99."""
     import deck_fit
     coll = mtglib.load_collection(collection_file)
     idx = mtglib.index_by_name(coll)
     monkeypatch.setattr(deck_fit, "load_field",
                         lambda *a, **k: {mtglib._norm("Totally Unowned Card"): 99})
     p = _deck(tmp_path)
-    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
-    buys = [s for s in r["swaps"] if s[4] == "buy"]
-    assert buys and "Totally Unowned Card" in buys[0][2]
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=True)
+    assert all("Totally Unowned Card" not in s[2] for s in r["swaps"])
+    assert "Totally Unowned Card" not in open(p, encoding="utf-8").read()
+    assert r["buy_swaps"] and r["buy_swaps"][0][2] == "Totally Unowned Card"
+    replaces = r["buy_swaps"][0][0]
+    assert mtglib._norm(replaces) in {
+        mtglib._norm(c.name) for c in mtglib.parse_deck(open(p, encoding="utf-8").read())}
+    text = open(str(tmp_path / "d.buylist.csv"), encoding="utf-8").read()
+    assert "Totally Unowned Card" in text and replaces in text
+
+
+def test_append_buylist_preserves_existing_rows(tmp_path):
+    """Append semantics: hand-written rows survive verbatim; a re-mapped card only
+    has its Replaces cell refreshed; new buys are appended."""
+    bl = tmp_path / "d.buylist.csv"
+    bl.write_text("Card,Price,Tier,Replaces,Reason\n"
+                  "Hand Written Buy,25,Core,Old Target,The player's own note.\n"
+                  "Remapped Buy,3,Value,Stale Target,Curated reason stays.\n",
+                  encoding="utf-8")
+    n = optimize.append_buylist(str(tmp_path / "d.txt"), [
+        ("Fresh Target", 5, "Remapped Buy", 60, "spell"),
+        ("Weak Card", 2, "Brand New Buy", 70, "spell")], "Test Commander")
+    assert n == 2
+    text = bl.read_text(encoding="utf-8")
+    assert "Hand Written Buy,25,Core,Old Target,The player's own note." in text
+    assert "Remapped Buy,3,Value,Fresh Target,Curated reason stays." in text
+    assert "Brand New Buy" in text and "Weak Card" in text
 
 
 def test_buy_threshold_filters_fringe_cards(tmp_path, collection_file, monkeypatch):
@@ -365,6 +395,7 @@ def test_buy_threshold_filters_fringe_cards(tmp_path, collection_file, monkeypat
     r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True,
                           buy_threshold=55, apply=False)
     assert all(s[4] != "buy" for s in r["swaps"])
+    assert r["buy_swaps"] == []
 
 
 def test_only_hand_written_notes_protect_a_card(tmp_path, monkeypatch):

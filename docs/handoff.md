@@ -92,6 +92,24 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   proposal visibly corrects to a land-for-land swap once it does — verified by
   simulating the refreshed snapshot).
 
+- **Decks are owned-only as of 2026-08-11 (player request), and the optimizer now
+  keeps them that way.** Buy candidates never enter a 99: `optimize()` pairs each
+  buy with an in-deck card and APPENDS it to `.buylist.csv` with Replaces = that
+  card ("when this arrives, pull that"); existing buylist rows are never removed,
+  only their Replaces refreshed (`append_buylist`). The migration pulled every
+  provenance-confirmed BUY out of the five affected decks and swapped in owned,
+  field-ranked, web-verified substitutes: cosmic-spider-man restored the four
+  cards its 2026-08-10 buy run had displaced (Willowrush Verge, University
+  Campus, Scarlet Spider Kaine, Spider-Girl Legacy Hero — two of those "buys"
+  had cut LANDS through the same typeless-spell-pass hole fixed above);
+  team-leader took Avengers Quinjet + Spectacular Spider-Man; cloud took
+  Wrecking Ball Arm, Cid Freeflier Pilot, Professor Hojo, Bugenhagen; ur-dragon
+  took Zurgo and Ojutai, Kolaghan the Storm's Fury, Broodcaller Scourge, Lozhan;
+  yshtola took Krile Baldesion, Contaminated Aquifer, and a 4th Plains. Every
+  deck is 100 cards, singleton-clean, zero unowned — EXCEPT cosmic-spider-man's
+  eight hand-built spiders still pending the player's owned_additions
+  confirmation (list in its `.notes.md`). Cloud's stray duplicate commander
+  line (same bug as yshtola's) was also removed.
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
   snapshot as the "strongest possible new deck". Power **70/100, Bracket 3** at the
@@ -120,7 +138,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **469 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **470 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
   export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards
   that are in no deck (Decks-page card, identity-matched to decks); `optimize()`
@@ -214,9 +232,10 @@ placing a new card should be a routine pass over every arrival.
   churned the kill package out for field-popular FF cards (the field builds Cloud
   precon-adjacent); the rebuild restored it as a deliberate manual edit and kept the
   optimizer's three genuine upgrades (Bastion Protector, Summoning Materia, Bonders'
-  Enclave). Optimizer is idempotent on it again (0 proposals, 22/25 field overlap).
-  Four buylist cards sit in its 99 unowned: Buster Sword, Sram, Forge Anew, Cloud
-  Midgar Mercenary (see `.buylist.csv`).
+  Enclave). Its four unowned buylist cards left the 99 in the 2026-08-11 owned-only
+  migration (see the Current-data bullet): Buster Sword → Wrecking Ball Arm,
+  Sram → Bugenhagen, Forge Anew → Professor Hojo, Cloud Midgar Mercenary → Cid,
+  Freeflier Pilot — buy any of them and `.buylist.csv`'s Replaces says what to pull.
 - `Mana Drain` → yshtola-nights-blessed. Only 15% on a young commander's page —
   new-commander fields undervalue universal staples.
 - `Smaug, Wicked Worm` → the-ur-dragon. 12% and climbing; the field lags new printings.
