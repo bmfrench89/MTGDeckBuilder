@@ -14,27 +14,30 @@
 
 1 Cloud, Ex-SOLDIER
 
-# --- Equipment (14) ---
+# --- Equipment ---
 1 Colossus Hammer
-1 Hard-Won Jitte
+1 Fireshrieker
+1 True Conviction
 1 Sword of the Animist
 1 Behemoth Sledge
 1 Conqueror's Flail
 1 Champion's Helm
 1 Darksteel Plate
+1 All That Glitters
+1 Summoning Materia
+1 Gift of Immortality
 1 Mask of Memory
 1 Lightning Greaves
 1 Trailblazer's Boots
-1 Mjölnir, Hammer of Thor
+1 Bonders' Enclave
 1 Hero's Blade
-1 Bitterthorn, Nissa's Animus
-1 Hero's Heirloom
+1 Bastion Protector
 
 # --- Equipment support ---
 1 Puresteel Paladin
-1 Conformer Shuriken
 1 Buster Sword
 1 Steelshaper's Gift
+1 Godo, Bandit Warlord
 
 # --- Creatures ---
 1 Vincent, Vengeful Atoner
@@ -42,10 +45,7 @@
 1 Sun Titan
 1 Tifa, Martial Artist
 1 Cloud, Midgar Mercenary
-1 Bugenhagen, Wise Elder
 1 Barret, Avalanche Leader
-1 Professor Hojo
-1 Cid, Freeflier Pilot
 1 Zack Fair
 
 # --- Ramp ---
@@ -58,6 +58,7 @@
 1 Cultivate
 1 Sram, Senior Edificer
 1 Sakura-Tribe Elder
+1 Crop Rotation
 1 Priest of Titania
 1 Solemn Simulacrum
 1 Rampant Growth
@@ -77,16 +78,18 @@
 
 # --- Card draw ---
 1 Skullclamp
+1 Professional Face-Breaker
 1 Tome of Legends
 1 Staff of the Storyteller
 1 Harmonize
-1 Horn of Greed
 
 # --- Anthems & finish ---
 1 Rancor
+1 Tireless Tracker
+1 Boros Charm
 1 Red XIII, Proud Warrior
 
-# --- Lands (37) ---
+# --- Lands (36) ---
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
@@ -107,7 +110,6 @@
 1 Spire of Industry
 1 Slayers' Stronghold
 1 Mossfire Valley
-1 Evolving Wilds
 8 Forest
 1 Sunscorched Divide
 1 Radiant Grove
@@ -118,7 +120,3 @@
 # --- Instants & sorceries ---
 1 Cloud's Limit Break
 1 Clever Concealment
-1 Ultimate Magic: Holy
-
-# --- Artifacts ---
-1 Wrecking Ball Arm

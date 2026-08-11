@@ -1,0 +1,74 @@
+Name,Type,MV,Colors
+Forest,Land,0,
+Mountain,Land,0,
+Plains,Land,0,
+Command Tower,Land,0,
+Path of Ancestry,Land,0,
+Exotic Orchard,Land,0,
+Sacred Peaks,Land,0,
+Jungle Shrine,Land,0,
+Rugged Prairie,Land,0,
+Battlefield Forge,Land,0,
+Clifftop Retreat,Land,0,
+Sunpetal Grove,Land,0,
+Rootbound Crag,Land,0,
+Game Trail,Land,0,
+Fortified Village,Land,0,
+Furycalm Snarl,Land,0,
+Brushland,Land,0,
+Sungrass Prairie,Land,0,
+Canopy Vista,Land,0,
+Cinder Glade,Land,0,
+Spire of Industry,Land,0,
+Slayers' Stronghold,Land,0,
+Mossfire Valley,Land,0,
+Sunscorched Divide,Land,0,
+Radiant Grove,Land,0,
+Fire-Lit Thicket,Land,0,
+Bonders' Enclave,Land,0,
+Colossus Hammer,Artifact,1,
+Fireshrieker,Artifact,3,
+Sword of the Animist,Artifact,2,
+Behemoth Sledge,Artifact,3,GW
+Conqueror's Flail,Artifact,2,
+Champion's Helm,Artifact,3,
+Darksteel Plate,Artifact,3,
+All That Glitters,Enchantment,2,W
+Mantle of the Ancients,Enchantment,5,W
+Gift of Immortality,Enchantment,3,W
+Mask of Memory,Artifact,2,
+Lightning Greaves,Artifact,2,
+Trailblazer's Boots,Artifact,2,
+Rancor,Enchantment,1,G
+True Conviction,Enchantment,6,W
+Boros Charm,Instant,2,RW
+Puresteel Paladin,Creature,2,W
+Steelshaper's Gift,Sorcery,1,W
+Godo, Bandit Warlord,Creature,6,R
+Sun Titan,Creature,6,W
+Tireless Tracker,Creature,3,G
+Sram, Senior Edificer,Creature,2,W
+Sol Ring,Artifact,1,
+Arcane Signet,Artifact,2,
+Fellwar Stone,Artifact,2,
+Farseek,Sorcery,2,G
+Nature's Lore,Sorcery,2,G
+Cultivate,Sorcery,3,G
+Crop Rotation,Instant,1,G
+Sakura-Tribe Elder,Creature,2,G
+Priest of Titania,Creature,2,G
+Solemn Simulacrum,Creature,4,
+Rampant Growth,Sorcery,2,G
+Swords to Plowshares,Instant,1,W
+Path to Exile,Instant,1,W
+Generous Gift,Instant,3,W
+Beast Within,Instant,3,G
+Chaos Warp,Instant,3,R
+Blasphemous Act,Sorcery,9,R
+Vandalblast,Sorcery,1,R
+Austere Command,Sorcery,6,W
+Dispatch,Instant,1,W
+Rip Apart,Sorcery,2,RW
+Harmonize,Sorcery,4,G
+Skullclamp,Artifact,1,
+Tome of Legends,Artifact,2,

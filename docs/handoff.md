@@ -161,16 +161,20 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-**START HERE — 1. The placement pass.** Four known-good OWNED cards are still in no
-deck. The principle the owner stated matters more than the backlog: placing a new
-card should be a **routine pass over every arrival**, not a one-off that waits on
-someone noticing. The advisors below now surface such cards; surfacing is not placing.
-- `Crop Rotation` → cloud-ex-soldier, over `Evolving Wilds`. The one FREE owned Game
-  Changer in Cloud's colors, and it fetches the deck's own Slayers' Stronghold at
-  instant speed. **This is the swap that moves Cloud from B2 to B3.**
-- `Codsworth, Handy Helper` → cloud-ex-soldier, over `Bitterthorn, Nissa's Animus`
-  (11%). 30% field inclusion there; the ≥25 margin gate held it at 19 points — the
-  case that motivated the risers advisory.
+**1. The placement pass — LARGELY DONE (2026-08-11).** Of the four known-good owned
+cards that sat in no deck: `Crop Rotation` is now in cloud-ex-soldier (the B2→B3
+move, done in the voltron rebuild), `Codsworth, Handy Helper` went to
+captain-america-first-avenger via the player's own app edit, and `Mana Drain` opened
+the new iron-man-armored-avenger deck. **`Smaug, Wicked Worm` remains unplaced** —
+the principle stands: placing a new card should be a routine pass over every arrival.
+- **Cloud rebuild note:** cloud-ex-soldier is now a protected voltron build
+  (62/100, B3, `.notes.md` names the engine). A 2026-08-11 `optimize --apply` had
+  churned the kill package out for field-popular FF cards (the field builds Cloud
+  precon-adjacent); the rebuild restored it as a deliberate manual edit and kept the
+  optimizer's three genuine upgrades (Bastion Protector, Summoning Materia, Bonders'
+  Enclave). Optimizer is idempotent on it again (0 proposals, 22/25 field overlap).
+  Four buylist cards sit in its 99 unowned: Buster Sword, Sram, Forge Anew, Cloud
+  Midgar Mercenary (see `.buylist.csv`).
 - `Mana Drain` → yshtola-nights-blessed. Only 15% on a young commander's page —
   new-commander fields undervalue universal staples.
 - `Smaug, Wicked Worm` → the-ur-dragon. 12% and climbing; the field lags new printings.
