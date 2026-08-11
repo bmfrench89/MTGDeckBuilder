@@ -24,10 +24,10 @@ this deck at Bracket 3).
 - Bastion Protector / Clever Concealment / Heroic Intervention — commander protection.
 
 ## Physical copies
-Colossus Hammer (1 owned) is also sleeved in captain-america-first-avenger; Bonders'
-Enclave is shared with iron-man-armored-avenger. Dashboard badges both. Buster Sword,
-Sram, Forge Anew, Cloud Midgar Mercenary are BUYLIST cards already slotted in the 99
-— not in the collection export yet (see .buylist.csv).
+Bonders' Enclave is shared with iron-man-armored-avenger; the dashboard badges it.
+Forge Anew arrived (2026-08-11 export) and is now IN the 99 — the buylist's recorded
+pull (Professor Hojo) was executed the same day. Buster Sword, Sram and Cloud, Midgar
+Mercenary remain BUYLIST cards (see .buylist.csv for what each replaces on arrival).
 
 ## Pilot notes
 Mulligan for: 2-3 lands + a cheap equipment or Puresteel/Sram. Sequence: rock/dork
@@ -38,3 +38,32 @@ double combat.
 
 - Codsworth, Handy Helper — PLAYER'S MANUAL ADD (2026-08-11): equipment-matters
   robot in the Voltron shell; the player placed it deliberately. Do not cut.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Forge Anew — recurs an Equipment on ETB, instant-speed equips, first equip each
+  turn is FREE (verified LTR #17): a second Puresteel line and Hammer insurance.
+- Inventory Management — {R}{W} instant, SPLIT SECOND: re-attach every Aura and
+  Equipment at once (verified PIP). The anti-blowout button: in response to targeted
+  removal or a wipe, move the whole suit uncounterably.
+- Raubahn, Bull of Ala Mhigo — attack trigger attaches an Equipment FREE to an
+  attacking creature (verified FIN #151): Colossus Hammer without paying equip 8.
+  In over Staff of the Storyteller; draw sits at 4 until Sram (buylist) arrives.
+
+## Deep-research pass (2026-08-11) — confirmations & sequencing
+- All three audit swaps CONFIRMED (Forge Anew: MTGGoldfish built a Modern
+  archetype on the Hammer line; Inventory Management: 'sleeper hit' per the
+  Draftsim Cloud guide; Raubahn: rules-verified sleeper).
+- Forge Anew timing (Gatherer ruling): free equip + instant-speed equips are
+  YOUR TURN ONLY, and the {0} applies to the FIRST equip you activate — activate
+  the Hammer first each turn.
+- Raubahn stack ordering: he and Cloud must BOTH attack; his trigger and Cloud's
+  draw trigger go on the stack together — order Raubahn's attach to resolve
+  FIRST so the Hammer's +10 counts for Cloud's power-7 Treasures and the extra
+  equipped attacker adds to the draw count. The attach targets — removal in
+  response 2-for-1s it.
+- Inventory Management scope: it re-attaches (skips equip costs/timing) but does
+  NOT save creatures from wipes — its wipe play is re-suiting the survivor after.
+  Split second locks you out of further responses too.
+- Bench find: Bloodforged Battle-Axe (owned, uncommitted) — snowballs axe copies
+  on every connect, feeds All That Glitters/Forge Anew/Raubahn, and every extra
+  equipped attacker is an extra Cloud draw. Candidate for the next audit pass.

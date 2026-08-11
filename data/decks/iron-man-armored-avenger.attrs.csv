@@ -13,13 +13,11 @@ Sky Diamond,Artifact,2,,U
 Thought Vessel,Artifact,2,,C
 Worn Powerstone,Artifact,3,,C
 Hedron Archive,Artifact,4,,C
-Coveted Jewel,Artifact,6,,U
 Inspiring Statuary,Artifact,3,,
 Rhystic Study,Enchantment,3,U,
 Mystic Remora,Enchantment,1,U,
 Brainstorm,Instant,1,U,
 Frantic Search,Instant,3,U,
-Accumulated Knowledge,Instant,2,U,
 Winged Words,Sorcery,2,U,
 Think Twice,Instant,2,U,
 Thirst for Knowledge,Instant,3,U,
@@ -34,7 +32,6 @@ Mana Drain,Instant,2,U,
 Counterspell,Instant,2,U,
 Arcane Denial,Instant,2,U,
 Memory Lapse,Instant,2,U,
-Essence Scatter,Instant,2,U,
 Spell Pierce,Instant,1,U,
 Spell Snare,Instant,1,U,
 Negate,Instant,2,U,
@@ -69,3 +66,8 @@ Swiftfoot Boots,Artifact,2,,
 Darksteel Plate,Artifact,3,,
 Propaganda,Enchantment,3,U,
 Misdirection,Instant,5,U,
+"Valeria Richards, Precocious",Creature,4,U,
+Wizard's Staff,Artifact,2,U,
+Myriad Landscape,Land,0,,C
+Riddles in the Dark,Instant,3,U,
+"Falcon, Winged Wonder",Creature,5,U,

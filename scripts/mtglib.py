@@ -504,6 +504,7 @@ RAMP = {
     "talisman of creativity", "talisman of indulgence", "relic of legends",
     "cultivate", "farseek", "rampant growth", "nature's lore", "kodama's reach",
     "sakura-tribe elder", "llanowar elves", "elvish mystic", "gilded goose",
+    "wood elves",
     "priest of titania", "solemn simulacrum", "burnished hart", "wayfarer's bauble",
     "pilgrim's eye", "skyscanner", "archaeomancer's map", "springbloom druid",
     "wild growth", "grow from the ashes", "explorer's scope", "coveted jewel",
@@ -516,6 +517,10 @@ DRAW = {
     "brainstorm", "frantic search", "think twice", "winged words", "insight",
     "kindred discovery", "coastal piracy", "reconnaissance mission", "horn of greed",
     "visions of beyond", "harmonize", "sublime epiphany",
+    # 2026-08-11 sleeper audit — texts verified against Scryfall/Gatherer pages:
+    "riddles in the dark", "sensational spider-man", "valeria richards, precocious",
+    "dragonhawk, fate's tempest", "niv-mizzet, visionary",
+    "stock up", "bident of thassa", "avengers assemble!",
     # repeatable engines that draw off a deck's own payoffs rather than saying "draw a
     # card" on a cheap spell — these were being scored as generic enchantments, which
     # under-counted card advantage in decks built around big creatures.
@@ -532,6 +537,8 @@ REMOVAL = {
     "disenchant", "seal of cleansing", "seal of doom", "seal of fire",
     "crush contraband", "feed the swarm", "mortality spear", "void rend",
     "swift end", "dark banishing", "befoul", "smite", "rending volley",
+    # 2026-08-11 sleeper audit — texts verified:
+    "web up", "mjölnir, hammer of thor",
 }
 WIPES = {
     "blasphemous act", "toxic deluge", "cleansing nova", "austere command",
@@ -539,6 +546,8 @@ WIPES = {
     "cave-in", "pyroclasm", "wave of reckoning", "deadly tempest",
     "tragic arrogance", "culling ritual", "crux of fate", "planar collapse",
     "reign of the pit", "casualties of war",
+    # 2026-08-11 sleeper audit — text verified (drain + destroy all creatures):
+    "villainous wrath",
 }
 COUNTERS = {
     "counterspell", "force of will", "misdirection", "arcane denial", "negate",

@@ -47,3 +47,30 @@ Auto-built from owned cards (tribal-aware builder) and hand-checked: the creatur
 **all Heroes** — no off-tribe filler. Bracket 3 / power ~70, with 2 Game Changers
 (Rhystic Study, Force of Will). Rhystic Study is contested with two other decks — see the
 shared-cards panel before sleeving.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Mjölnir, Hammer of Thor — 4 damage on ETB, then DOUBLES all damage the equipped
+  creature deals; equip worthy is {1} and Cap qualifies (legendary non-Villain,
+  red/white). Discard mode wipes small boards. Verified MSH #146. In over Masked
+  Meower (0%-field draft filler).
+- Captain Mar-Vell, Space-Born — 4/4 flying vigilance; while an opponent has cast a
+  spell this turn, your spells have flash. 24% field, gate-held by the optimizer
+  margin. Verified MSH #12. In over Condemn (0% field).
+- Silver Sable, Mercenary Leader — ETB +1/+1 counter, attack grants a modified
+  creature lifelink; on-theme with the counters engine. Verified SPM #13. In over
+  Prosperity (0%-field symmetric group draw).
+
+## Deep-research pass (2026-08-11) — confirmations & gotchas
+- All four audit swaps CONFIRMED by community research (field snapshot + precon
+  upgrade guides + rules sources; see git log for URLs).
+- Thor, Asgard's Avenger added over Think Twice (0% field): 45% field, own 2,
+  was in no deck. On-tribe, himself worthy (backup Mjölnir carrier), and his
+  +1 damage amp turns Mjölnir's ETB into 5.
+- Mjölnir gotchas: the discard mode hits YOUR creatures too (last resort, not a
+  clean wipe); it has ONLY equip worthy — blue-only legends (Kid Loki) can never
+  carry it. Worthy = legendary + non-Villain type + red and/or white.
+- Captain Mar-Vell's flash is CONDITIONAL — only after an opponent has cast a
+  spell that turn. Their spell is your permission slip, not free flash.
+- Notes drift fixed: Quicksilver, Speedster and Masked Meower were named in the
+  old plan but are not in the 99 (Meower cut for Mjölnir; Quicksilver is a
+  47%-field bench candidate for a future audit).

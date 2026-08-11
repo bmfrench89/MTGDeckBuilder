@@ -9,17 +9,14 @@ Talisman of Creativity,Artifact,2,
 Talisman of Conviction,Artifact,2,
 Cultivate,Sorcery,3,G
 Farseek,Sorcery,2,G
-Nature's Lore,Sorcery,2,G
 Sakura-Tribe Elder,Creature,2,G
 Solemn Simulacrum,Creature,4,
 Swords to Plowshares,Instant,1,W
 Path to Exile,Instant,1,W
 Generous Gift,Instant,3,W
 Beast Within,Instant,3,G
-Chaos Warp,Instant,3,R
 Assassin's Trophy,Instant,2,BG
 Terminate,Instant,2,BR
-Void Rend,Instant,3,WUB
 Rhystic Study,Enchantment,3,U
 Kindred Discovery,Enchantment,5,U
 Night's Whisper,Sorcery,2,B
@@ -87,7 +84,6 @@ Aunt May,Creature,,
 "Spider-Ham, Peter Porker",Creature,,
 Coastal Piracy,Enchantment,3,U
 Arachnogenesis,Instant,3,G
-Frantic Search,Instant,3,U
 Arasta of the Endless Web,Creature,4,G
 "Ezekiel Sims, Spider-Totem",Creature,,
 Thriving Isle,Land,0,
@@ -98,3 +94,8 @@ Spider-Man No More,Enchantment,,
 Grow Extra Arms,Instant,,
 Spectacular Tactics,Instant,,
 "Anti-Venom, Horrifying Healer",Creature,5,W
+Sensational Spider-Man,Creature,3,W U
+Web Up,Enchantment,3,W
+Villainous Wrath,Sorcery,5,B
+Fabled Passage,Land,0,
+Lost in the Maze,Enchantment,2,U

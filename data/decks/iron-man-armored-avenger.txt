@@ -16,15 +16,15 @@
 1 Archmage Emeritus
 1 Sharding Sphinx
 1 Gearseeker Serpent
-1 Laboratory Maniac
 1 Warden of Evos Isle
 1 Thunderclap Wyvern
 1 Phantom Warrior
+1 Valeria Richards, Precocious
+1 Falcon, Winged Wonder
 
 # --- Instants ---
 1 Brainstorm
 1 Frantic Search
-1 Accumulated Knowledge
 1 Think Twice
 1 Thirst for Knowledge
 1 Fellwar Stone
@@ -36,7 +36,6 @@
 1 Counterspell
 1 Arcane Denial
 1 Memory Lapse
-1 Essence Scatter
 1 Spell Pierce
 1 Spell Snare
 1 Negate
@@ -53,6 +52,7 @@
 1 Aetherize
 1 Bident of Thassa
 1 Misdirection
+1 Riddles in the Dark
 
 # --- Sorceries ---
 1 Winged Words
@@ -68,11 +68,11 @@
 1 Thought Vessel
 1 Worn Powerstone
 1 Hedron Archive
-1 Coveted Jewel
 1 Inspiring Statuary
 1 Professor Hulk
 1 Swiftfoot Boots
 1 Kid Loki
+1 Wizard's Staff
 
 # --- Enchantments ---
 1 Rhystic Study
@@ -89,6 +89,7 @@
 1 Faerie Conclave
 1 Reliquary Tower
 1 Scavenger Grounds
+1 Myriad Landscape
 
 # --- Basics ---
-30 Island
+29 Island

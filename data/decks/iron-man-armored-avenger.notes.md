@@ -31,3 +31,30 @@ box (basics are exempt from conflict tracking by convention).
 Keep: 3+ lands with a rock or a draw engine (Remora/Rhystic) or 2 counters.
 Ship: hands with zero interaction, or 5-land hands with no draw.
 The deck mulligans well — Brainstorm/Frantic Search/Accumulated Knowledge dig.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Valeria Richards, Precocious — noncreature spells cost {1} less; first noncreature
+  spell EACH turn draws a card (triggers on opponents' turns in draw-go). Verified
+  MSC #38. In over Coveted Jewel (0% field, gift-wraps 3 cards to an attacker).
+- Wizard's Staff (copy #2) — equip Archmage Emeritus for {1} (Wizard): magecraft
+  triggers twice, two cards per instant. Verified HOB #59. In over Essence Scatter.
+- Riddles in the Dark — {2}{U} instant, 4-card Fact-or-Fiction piles; instant-speed
+  selection that also fuels Dig Through Time. Verified HOB #53. In over the deck's
+  lone Accumulated Knowledge (draw 1 for 2 with no other copies).
+- Myriad Landscape — ramp in mono-blue; also shrinks the Islands-owed count by one.
+
+## Deep-research pass (2026-08-11) — corrections
+- TRAP CAUGHT: Laboratory Maniac (an optimizer field-% add) is out — the classic
+  shells (Demonic Consultation / Tainted Pact) are BLACK, color-illegal here, and
+  the collection owns zero mono-U enablers (no Thassa's Oracle/Jace/Doomsday);
+  the deck cannot empty its own library. Falcon, Winged Wonder in (own 2, MSH #52
+  verified: {4}{U} 3/4 flier, ETB makes Redwing, legendary 1/1 flier with
+  surveil-on-attack — two evasive counter-carriers).
+- ORACLE CORRECTION (MSC #33 verified): Iron Man does NOT grant blanket team
+  flying — only other attacking MODIFIED creatures fly, and only when he attacks.
+  Counters and equipment are what turn the team airborne. His draw trigger says
+  'target creature' — it can grow anything, once per card drawn.
+- Wizard's Staff bonus lines confirmed: doubles Windreader Sphinx attack-draws,
+  Torrential Gearhulk's ETB (flash back TWO instants), Sharding Sphinx thopters,
+  and Iron Man's own draw trigger (2 counters per draw) at equip {3}.
+- Riddles in the Dark bonus: the rejected pile fills the yard for Dig Through Time.

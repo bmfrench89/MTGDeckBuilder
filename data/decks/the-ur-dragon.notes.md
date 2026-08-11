@@ -54,3 +54,75 @@ double strike. Eminence and the attack trigger finally fire at full strength. Fi
 Auto-built from owned cards after the tribal-detection fix (it previously ran **zero**
 dragons). Bracket 3 / power ~73. Honest read: this is the **most improvable** deck of the
 six — the buy-list turns it from a good 5-color pile into an actual tribal deck.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Dragon Broodmother — a dragon EVERY upkeep (yours and each opponent's): four
+  eminence-discounted bodies a round, devour for scale. In over Insight (0% field).
+- Sylvia Brightspear — dragons your team controls have double strike (verified BBD
+  #10). Doubles the whole tribal board AND commander-damage clocks. In over Smite.
+- Kaalia of the Vast — each attack cheats an Angel/Demon/Dragon from hand onto the
+  battlefield tapped and attacking; the commander's own card flow keeps her fed.
+  In over Shatter.
+- Deserted Beach — strict upgrade over Coastal Tower (untapped with 2+ other lands).
+- NOTE the trade made here: Culling Ritual, Smite and Shatter left in one day —
+  interaction is now 7. That was deliberate (tribal top-end over 1-for-1s), and the
+  power score dropped to 49 because it weighs interaction. If the deck starts dying
+  to resolved threats, the buylist's Tiamat/Old Gnawbone slots are where interaction
+  should come back in instead.
+
+## Deep-research pass (2026-08-11) — confirmations & corrections
+- Interaction concern SETTLED by the field: the average Ur-Dragon list runs ~4-5
+  interaction slots; this deck still runs ~10 after the cuts. The threat-dense
+  build is the community norm; premium interaction (Cyclonic Rift, Teferi's
+  Protection) is the buylist path if needed.
+- RECONSIDERED: Dragonhawk, Fate's Tempest is BACK (over 0%-field Opportunity) —
+  the 8/11 optimizer cut it on a 0% field read, but community consensus (4.5/5
+  Commander ratings, multiple deck techs) rates it a repeating 4-6 card impulse
+  refill on an on-tribe eminence-discounted 5/5 flier. Its 0% is recency, not
+  weakness. Logged manual-replace so it never churns again.
+- KAALIA RULING (verified): creatures she puts in attacking were never DECLARED
+  as attackers — they do NOT count for The Ur-Dragon's draw trigger and do not
+  fire their own attack triggers (incl. Savage Ventmaw's mana). They DO trigger
+  ETB payoffs (Lathliss, Dragon Tempest, Scourge of Valkas) and Sylvia's static
+  double strike applies. Path of Ancestry / Unclaimed Territory / Secluded
+  Courtyard cannot cast her (Human Cleric — WBR pips need real fixing).
+- Broodmother gotcha: her tokens do NOT trigger Lathliss or Miirym (nontoken
+  clauses); they DO trigger Dragon Tempest / Scourge of Valkas / Kindred Discovery.
+- Next upgrade wave (owned, uncommitted, on-tribe — bench until a slot opens):
+  Atsushi, the Blazing Sky · Ao, the Dawn Sky · Hraesvelgr of the First Brood ·
+  Niv-Mizzet, Visionary · Beledros Witherbloom · kicked Rite of Replication on
+  Miirym/Lathliss with Tempest/Scourge out is a known table-kill line.
+- Savage Ventmaw + buylisted Hellkite Charger = infinite combats (add to
+  combos.csv when Charger arrives).
+
+## 2026-08-11 focused improvement pass (owned-only; texts verified)
+- Niv-Mizzet, Visionary in over Think Twice: 'whenever a source you control deals
+  noncombat damage to an opponent, you draw that many cards' + no max hand size.
+  With Dragon Tempest and Scourge of Valkas out, EVERY dragon ETB is damage and
+  therefore cards — point the triggers at an opponent, not a creature, when Niv
+  is on the battlefield. Broodmother's upkeep tokens become a draw engine.
+- Atsushi (over Winged Words) and Ao, the Dawn Sky (over Sky Diamond): cheap
+  on-tribe value that pays off when it DIES — exactly what a wipe-heavy meta
+  wants. Ao's dig-7 can drop Sylvia + a rock in one trigger.
+- Wood Elves (over Moss Diamond): fetches any Forest-TYPED land onto the
+  battlefield — including Festering Thicket and the new Sheltered Thicket /
+  Scattered Groves — a body for Broodmother devour and a real ramp piece.
+- Blasphemous Act (over Seal of Fire, free copy #2 of 3): second true wipe next
+  to Crux of Fate (71% field, already in deck — keep forever).
+- Lands: Omashu City -> Sheltered Thicket and Emeria -> Scattered Groves. Both
+  incoming are TYPED cycling duals (fetchable by Farseek/Nature's Lore/Wood
+  Elves, cycle away in flood); Emeria's recursion needed 7 Plains — the deck
+  runs ONE. No color source was lost (Groves still taps W, adds G).
+- Avatar-land verdicts from verification: Festering Thicket KEEP (typed BG
+  cycling dual — better than its 0% suggests), Dark Fortress / Fields of Strife
+  / Forum of Amity KEEP for now (conditional-untapped / surveil-sink utility;
+  no better owned duals in their pairs).
+- Scorecard note: power reads 48 because the scorer counts list-shape roles and
+  cannot see death-value engines (Atsushi/Ao) or the Niv draw loop on name-only
+  data; interaction sits at 9 pieces vs the field average of ~4-5. The deck is
+  stronger at the table than on the scorecard; server enrichment will close
+  part of the gap.
+- Still benched (owned, free): Hraesvelgr of the First Brood (text unverified
+  this session), Marang River Regent, Nova Hellkite, Vaevictis Asmadi, Decadent
+  Dragon, Obsidian Charmaw x2, Dragonmaster Outcast, kicked Rite of Replication
+  (the Miirym/Lathliss + Tempest/Scourge table-kill line), 2nd Sylvia.

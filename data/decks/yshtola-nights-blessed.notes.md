@@ -29,3 +29,10 @@ shared with other decks — dashboard badges them; wishlist tracks extra copies.
 Mulligan for 3 lands + either a draw engine or two pieces of interaction. Don't
 tap out into open blue mana after turn 4 unless the play wins or stabilizes.
 Exsanguinate math: count opponents' life ÷ 3 before calling it lethal.
+
+## 2026-08-11 sleeper audit adds (manual — do not cut)
+- Wizard's Staff — equips Y'shtola ({3}, she's a Cat Warlock, not a Wizard) and her
+  triggered abilities trigger TWICE: every MV3+ noncreature spell drains each
+  opponent 4 and gains 4, and the end-step draw doubles. Verified HOB #59. In over
+  Absorb (7% field) — the deck's designated weakest counter, with two better ones
+  already queued on the buylist.

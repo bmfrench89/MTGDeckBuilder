@@ -31,9 +31,9 @@
 1 Professional Face-Breaker
 1 Tireless Tracker
 1 Red XIII, Proud Warrior
-1 Professor Hojo
 1 Bugenhagen, Wise Elder
 1 Godo, Bandit Warlord
+1 Raubahn, Bull of Ala Mhigo
 
 # --- Instants ---
 1 Crop Rotation
@@ -46,6 +46,7 @@
 1 Boros Charm
 1 Cloud's Limit Break
 1 Clever Concealment
+1 Inventory Management
 
 # --- Sorceries ---
 1 Steelshaper's Gift
@@ -57,7 +58,6 @@
 1 Vandalblast
 1 Austere Command
 1 Vanquish the Horde
-1 Rip Apart
 1 Harmonize
 
 # --- Artifacts ---
@@ -85,6 +85,7 @@
 1 All That Glitters
 1 Gift of Immortality
 1 Rancor
+1 Forge Anew
 
 # --- Lands ---
 1 Bonders' Enclave
@@ -118,4 +119,3 @@
 3 Plains
 
 # --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 Staff of the Storyteller

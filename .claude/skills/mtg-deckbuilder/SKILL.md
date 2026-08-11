@@ -165,6 +165,18 @@ The web app's **"Export assessment packet"** (`/deck/<stem>/assess.txt`, linked 
 page) dumps the decklist + all computed analytics + notes in one paste-able block, so the
 player can hand a deck straight to a coaching session.
 
+## The sleeper audit (engine-read card review)
+
+When the player asks whether **new cards** fit their decks — "review my new cards",
+"did these get scanned?", "would X make my deck better?" — or any time a batch of
+arrivals lands, follow **`references/card-review-method.md`** (player-ratified
+2026-08-11). The one-line version: *field % is a prior, reading the verified card
+text against the deck's actual engine is the verdict.* Pool → verify → engine-read →
+one of four verdicts per card (swap/wishlist/bench/skip, never a silent drop) →
+protect adds with `Source=manual-replace` + the curated role lists → validate →
+present the swap table before applying. It exists because a 4%-field trigger-doubler
+(Wizard's Staff) turned out to be the best add of the session that ratified it.
+
 ## Collection access
 
 Grounding requires the collection in a file. In priority order:
@@ -184,6 +196,8 @@ Grounding requires the collection in a file. In priority order:
 
 - `references/persona.md` — voice, philosophy, how a champion talks to a friend.
 - `references/grounding-rules.md` — the non-negotiables. **Read first, every session.**
+- `references/card-review-method.md` — the sleeper audit: how to review any card
+  against any deck (engine-read over field %). **Use for every new-arrivals pass.**
 - `references/deckbuilding-principles.md` — EDH ratios, curve, roles, power/brackets, archetypes.
 - `references/rules-reference.md` — specific rules facts that were gotten wrong and corrected.
 - `references/tooling-and-data.md` — network limits, Scryfall image hotlinking, price disclaimers.

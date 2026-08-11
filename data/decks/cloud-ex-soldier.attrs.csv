@@ -68,7 +68,6 @@ Blasphemous Act,Sorcery,9,R
 Vandalblast,Sorcery,1,R
 Austere Command,Sorcery,6,W
 Dispatch,Instant,1,W
-Rip Apart,Sorcery,2,RW
 Harmonize,Sorcery,4,G
 Skullclamp,Artifact,1,
 Tome of Legends,Artifact,2,
@@ -79,6 +78,8 @@ Professional Face-Breaker,Creature,3,R
 "Red XIII, Proud Warrior",Creature,,
 Wrecking Ball Arm,Artifact,,
 "Cid, Freeflier Pilot",Creature,,
-Professor Hojo,Creature,,
 "Bugenhagen, Wise Elder",Creature,,
 "Codsworth, Handy Helper",Creature,3,W
+Forge Anew,Enchantment,3,W
+Inventory Management,Instant,2,R W
+"Raubahn, Bull of Ala Mhigo",Creature,2,R
