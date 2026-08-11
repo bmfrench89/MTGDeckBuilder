@@ -48,3 +48,22 @@ double combat.
 - Raubahn, Bull of Ala Mhigo — attack trigger attaches an Equipment FREE to an
   attacking creature (verified FIN #151): Colossus Hammer without paying equip 8.
   In over Staff of the Storyteller; draw sits at 4 until Sram (buylist) arrives.
+
+## Deep-research pass (2026-08-11) — confirmations & sequencing
+- All three audit swaps CONFIRMED (Forge Anew: MTGGoldfish built a Modern
+  archetype on the Hammer line; Inventory Management: 'sleeper hit' per the
+  Draftsim Cloud guide; Raubahn: rules-verified sleeper).
+- Forge Anew timing (Gatherer ruling): free equip + instant-speed equips are
+  YOUR TURN ONLY, and the {0} applies to the FIRST equip you activate — activate
+  the Hammer first each turn.
+- Raubahn stack ordering: he and Cloud must BOTH attack; his trigger and Cloud's
+  draw trigger go on the stack together — order Raubahn's attach to resolve
+  FIRST so the Hammer's +10 counts for Cloud's power-7 Treasures and the extra
+  equipped attacker adds to the draw count. The attach targets — removal in
+  response 2-for-1s it.
+- Inventory Management scope: it re-attaches (skips equip costs/timing) but does
+  NOT save creatures from wipes — its wipe play is re-suiting the survivor after.
+  Split second locks you out of further responses too.
+- Bench find: Bloodforged Battle-Axe (owned, uncommitted) — snowballs axe copies
+  on every connect, feeds All That Glitters/Forge Anew/Raubahn, and every extra
+  equipped attacker is an extra Cloud draw. Candidate for the next audit pass.

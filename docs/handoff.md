@@ -188,6 +188,48 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   flagged with a rebuild path in its notes. Benched-with-reasons and the Hobbit
   verdict (zero of 96 uniques beat an incumbent; Thorin/Thranduil/Gandalf/
   Radagast are future commander seeds) live in the audit notes sections.
+- **Deep-research re-review of the sleeper audit (2026-08-11, 12-agent web
+  sweep incl. YouTube/Reddit/deck-tech coverage): 18 of 19 swaps CONFIRMED with
+  sources; 5 corrections applied** — Laboratory Maniac OUT of iron-man (TRAP:
+  Demonic Consultation/Tainted Pact are color-illegal in mono-U and zero owned
+  enablers; Falcon, Winged Wonder in, own 2); Vibrant Cityscape → Fabled
+  Passage in cosmic (Cityscape is an Evolving Wilds clone, deck ran two
+  already); Chaos Warp (0% here, own 6) → Lost in the Maze in cosmic (the only
+  owned mass stun generator — Sensational fuel + post-alpha hexproof); Think
+  Twice → Thor, Asgard's Avenger in team-leader (45% field, own 2, was in NO
+  deck); Dragonhawk, Fate's Tempest REINSTATED in ur-dragon over Opportunity
+  (the 8/11 optimizer cut was a 0%-field recency artifact; community rates it
+  4.5/5 in dragon shells). Rules findings logged in each deck's notes: Kaalia-
+  cheated creatures are never declared attackers (no Ur-Dragon draw, no attack
+  triggers, incl. Ventmaw's mana); Broodmother tokens don't trigger Lathliss/
+  Miirym; Mjölnir's discard mode is symmetric and only equips worthy; Mar-Vell's
+  flash needs an opponent's spell first; Spider-Punk blanks our own counters and
+  nonbos with Arachnogenesis's fog; Forge Anew equips your turn only; Raubahn
+  attach resolves before Cloud's draw if stacked right; iron-man grants flying
+  only to attacking MODIFIED creatures. Ur-Dragon interaction concern settled:
+  field average is ~4-5 interaction slots, this deck keeps ~10. Stale buylist
+  Replaces cells refreshed (yshtola x2, cloud x1). Bench queue in notes:
+  Ur-Dragon's next wave (Atsushi, Ao, Hraesvelgr, Niv-Mizzet Visionary,
+  Beledros, kicked Rite of Replication line), Cloud's Bloodforged Battle-Axe,
+  Cap's Quicksilver/Jocasta/Dismantling Wave tier.
+- **Commander candidates ranked (same sweep; owned-support grep-counted):**
+  BUILD_NOW: **Helga, Skittish Seer** (Bant, EDHREC #67 — the one green
+  commander whose engine matches this UB-heavy big-creature pool; ramp core
+  owned) and near-BUILD_NOW **Hulk, Gamma Goliath** (22-card owned Hulk-orbit
+  cluster + owned staples; RG identity checks needed at build time).
+  BUILD_WITH_BUYS: **Thranduil, the Elvenking** (consensus best Hobbit
+  commander, cEDH-article-worthy; ~$15-25 of bulk elf staples; Sultai NOT
+  green; Sindarin Liege x2 is the auto-include second legendary Elf);
+  **Kaalia of the Vast** (~$40-60 payload — big A/D/D + reanimation; do NOT
+  dismantle ur-dragon, she stays in its 99 meanwhile); **Tifa Lockhart**
+  (~$15-30 + ~20 basic Forests; the fetch-land instant-speed doubling core is
+  already owned; sandbox auto_build saw her as colorless — enrich first);
+  **Thorin, Mountain-king** (mono-R equipment voltron, NOT dwarf tribal; the
+  good equipment is committed to cloud; buying Thorin King of Durin's Folk
+  would unlock the owned Boros dwarf pool instead). SKIP: Selvala (zero
+  engine pieces owned — her best home IS ur-dragon's 99), Gandalf Wandering
+  Wizard (draft common, no engine), Radagast (no green fatty base yet),
+  Sindarin Liege as helm, Vadmir/Neriv/Renet (not green — verified B/RWB/U).
 - **Field-overlap validation post-sweep (fresh, larger snapshots): PASSED** —
   Team Leader 25/25 · Cloud 24/25 · Y'shtola 21/25 · Ur-Dragon 21/25 · Cosmic
   Spider-Man 18/25 · Iron Man 14/25. Iron Man and Spider-Man sit lower because

@@ -15,7 +15,6 @@ Swords to Plowshares,Instant,1,W
 Path to Exile,Instant,1,W
 Generous Gift,Instant,3,W
 Beast Within,Instant,3,G
-Chaos Warp,Instant,3,R
 Assassin's Trophy,Instant,2,BG
 Terminate,Instant,2,BR
 Rhystic Study,Enchantment,3,U
@@ -98,3 +97,5 @@ Spectacular Tactics,Instant,,
 Sensational Spider-Man,Creature,3,W U
 Web Up,Enchantment,3,W
 Villainous Wrath,Sorcery,5,B
+Fabled Passage,Land,0,
+Lost in the Maze,Enchantment,2,U

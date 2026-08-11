@@ -37,10 +37,10 @@
 1 Dragon Broodmother
 1 Sylvia Brightspear
 1 Kaalia of the Vast
+1 Dragonhawk, Fate's Tempest
 
 # --- Instants ---
 1 Think Twice
-1 Opportunity
 1 Assassin's Trophy
 1 Vendetta
 1 Chaos Warp

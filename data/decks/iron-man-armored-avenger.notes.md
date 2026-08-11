@@ -42,3 +42,19 @@ The deck mulligans well — Brainstorm/Frantic Search/Accumulated Knowledge dig.
   selection that also fuels Dig Through Time. Verified HOB #53. In over the deck's
   lone Accumulated Knowledge (draw 1 for 2 with no other copies).
 - Myriad Landscape — ramp in mono-blue; also shrinks the Islands-owed count by one.
+
+## Deep-research pass (2026-08-11) — corrections
+- TRAP CAUGHT: Laboratory Maniac (an optimizer field-% add) is out — the classic
+  shells (Demonic Consultation / Tainted Pact) are BLACK, color-illegal here, and
+  the collection owns zero mono-U enablers (no Thassa's Oracle/Jace/Doomsday);
+  the deck cannot empty its own library. Falcon, Winged Wonder in (own 2, MSH #52
+  verified: {4}{U} 3/4 flier, ETB makes Redwing, legendary 1/1 flier with
+  surveil-on-attack — two evasive counter-carriers).
+- ORACLE CORRECTION (MSC #33 verified): Iron Man does NOT grant blanket team
+  flying — only other attacking MODIFIED creatures fly, and only when he attacks.
+  Counters and equipment are what turn the team airborne. His draw trigger says
+  'target creature' — it can grow anything, once per card drawn.
+- Wizard's Staff bonus lines confirmed: doubles Windreader Sphinx attack-draws,
+  Torrential Gearhulk's ETB (flash back TWO instants), Sharding Sphinx thopters,
+  and Iron Man's own draw trigger (2 counters per draw) at equip {3}.
+- Riddles in the Dark bonus: the rejected pile fills the yard for Dig Through Time.

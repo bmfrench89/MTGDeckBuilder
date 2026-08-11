@@ -518,6 +518,7 @@ DRAW = {
     "visions of beyond", "harmonize", "sublime epiphany",
     # 2026-08-11 sleeper audit — texts verified against Scryfall/Gatherer pages:
     "riddles in the dark", "sensational spider-man", "valeria richards, precocious",
+    "dragonhawk, fate's tempest",
     "stock up", "bident of thassa", "avengers assemble!",
     # repeatable engines that draw off a deck's own payoffs rather than saying "draw a
     # card" on a cheap spell — these were being scored as generic enchantments, which

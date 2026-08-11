@@ -13,7 +13,6 @@
 1 Path to Exile
 1 Reconnaissance Mission
 1 Relic of Legends
-1 Think Twice
 1 Arcane Denial
 1 Archmage Emeritus
 1 Dig Through Time
@@ -104,5 +103,4 @@
 1 Spider Manifestation
 1 Spider-Woman, Stunning Savior
 1 Helm of the Host
-1 Demonic Consultation
 1 Exquisite Blood

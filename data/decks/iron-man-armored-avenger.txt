@@ -16,11 +16,11 @@
 1 Archmage Emeritus
 1 Sharding Sphinx
 1 Gearseeker Serpent
-1 Laboratory Maniac
 1 Warden of Evos Isle
 1 Thunderclap Wyvern
 1 Phantom Warrior
 1 Valeria Richards, Precocious
+1 Falcon, Winged Wonder
 
 # --- Instants ---
 1 Brainstorm

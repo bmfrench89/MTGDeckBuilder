@@ -59,3 +59,18 @@ shared-cards panel before sleeving.
 - Silver Sable, Mercenary Leader — ETB +1/+1 counter, attack grants a modified
   creature lifelink; on-theme with the counters engine. Verified SPM #13. In over
   Prosperity (0%-field symmetric group draw).
+
+## Deep-research pass (2026-08-11) — confirmations & gotchas
+- All four audit swaps CONFIRMED by community research (field snapshot + precon
+  upgrade guides + rules sources; see git log for URLs).
+- Thor, Asgard's Avenger added over Think Twice (0% field): 45% field, own 2,
+  was in no deck. On-tribe, himself worthy (backup Mjölnir carrier), and his
+  +1 damage amp turns Mjölnir's ETB into 5.
+- Mjölnir gotchas: the discard mode hits YOUR creatures too (last resort, not a
+  clean wipe); it has ONLY equip worthy — blue-only legends (Kid Loki) can never
+  carry it. Worthy = legendary + non-Villain type + red and/or white.
+- Captain Mar-Vell's flash is CONDITIONAL — only after an opponent has cast a
+  spell that turn. Their spell is your permission slip, not free flash.
+- Notes drift fixed: Quicksilver, Speedster and Masked Meower were named in the
+  old plan but are not in the 99 (Meower cut for Mjölnir; Quicksilver is a
+  47%-field bench candidate for a future audit).

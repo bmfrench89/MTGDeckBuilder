@@ -68,3 +68,19 @@ column says which placeholder to pull.
 - Anti-Venom, Horrifying Healer — PLAYER'S MANUAL ADD (2026-08-11): "he's
   awesome." Owned 1x, W identity, 5/5 Symbiote Hero. WWWWW is a real cost at
   five colors — keep white sources honest. Do not cut.
+
+## Deep-research pass (2026-08-11) — confirmations & gotchas
+- Audit swaps CONFIRMED (Sensational 42%, Web Up 26%, Villainous Wrath 24% = the
+  field's most-played wipe for this commander; symmetry is breakable in-deck via
+  Heroic Intervention / Spectacular Spider-Man's flash sac).
+- STRENGTHENED: Vibrant Cityscape (an Evolving Wilds clone — deck already ran two)
+  -> Fabled Passage (own 2, untapped fetch with 4+ lands). Buylist idea: 2nd Plaza
+  of Heroes (~$4 est.) — the best land for an all-legends deck; copy #1 lives in
+  captain-america.
+- Lost in the Maze added over Chaos Warp (0% field here, own 6): the ONLY owned
+  mass stun-counter generator — fuels Sensational's draw, fogs by tapping (works
+  under Spider-Punk, which stops damage prevention but not tap-down), and gives
+  tapped attackers hexproof right when the alpha strike exposes them.
+- Spider-Punk gotchas (verified): 'can't be countered' is SYMMETRIC — it blanks
+  our own Counterspell and Amazing Acrobatics' counter mode while he's out; his
+  no-damage-prevention nonbos with the buylisted Arachnogenesis fog half.

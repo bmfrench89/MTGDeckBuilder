@@ -69,3 +69,28 @@ six — the buy-list turns it from a good 5-color pile into an actual tribal dec
   power score dropped to 49 because it weighs interaction. If the deck starts dying
   to resolved threats, the buylist's Tiamat/Old Gnawbone slots are where interaction
   should come back in instead.
+
+## Deep-research pass (2026-08-11) — confirmations & corrections
+- Interaction concern SETTLED by the field: the average Ur-Dragon list runs ~4-5
+  interaction slots; this deck still runs ~10 after the cuts. The threat-dense
+  build is the community norm; premium interaction (Cyclonic Rift, Teferi's
+  Protection) is the buylist path if needed.
+- RECONSIDERED: Dragonhawk, Fate's Tempest is BACK (over 0%-field Opportunity) —
+  the 8/11 optimizer cut it on a 0% field read, but community consensus (4.5/5
+  Commander ratings, multiple deck techs) rates it a repeating 4-6 card impulse
+  refill on an on-tribe eminence-discounted 5/5 flier. Its 0% is recency, not
+  weakness. Logged manual-replace so it never churns again.
+- KAALIA RULING (verified): creatures she puts in attacking were never DECLARED
+  as attackers — they do NOT count for The Ur-Dragon's draw trigger and do not
+  fire their own attack triggers (incl. Savage Ventmaw's mana). They DO trigger
+  ETB payoffs (Lathliss, Dragon Tempest, Scourge of Valkas) and Sylvia's static
+  double strike applies. Path of Ancestry / Unclaimed Territory / Secluded
+  Courtyard cannot cast her (Human Cleric — WBR pips need real fixing).
+- Broodmother gotcha: her tokens do NOT trigger Lathliss or Miirym (nontoken
+  clauses); they DO trigger Dragon Tempest / Scourge of Valkas / Kindred Discovery.
+- Next upgrade wave (owned, uncommitted, on-tribe — bench until a slot opens):
+  Atsushi, the Blazing Sky · Ao, the Dawn Sky · Hraesvelgr of the First Brood ·
+  Niv-Mizzet, Visionary · Beledros Witherbloom · kicked Rite of Replication on
+  Miirym/Lathliss with Tempest/Scourge out is a known table-kill line.
+- Savage Ventmaw + buylisted Hellkite Charger = infinite combats (add to
+  combos.csv when Charger arrives).
