@@ -56,6 +56,20 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Current data (season closed 2026-08-10)
 
+- **Deck sections are now EDHREC-style TYPE sections (2026-08-11)** — Commander /
+  Creatures / Instants / Sorceries / Artifacts / Enchantments / Lands / Basics —
+  across all decks, kept by the new `scripts/deck_sections.py` (idempotent;
+  `--all --apply`). `auto_build` emits the same shape for future decks. Roles +
+  power-list tags (Game Changer, Tutor, …) now show in card details on both
+  surfaces via `deckcore.load_power_tags`. The migration fixed real misfiles
+  (Rhystic Study and Lightning Greaves sat under "Lands" in ur-dragon). ~15 cards
+  across the decks sit in explicit `Unsorted` sections pending enrichment — the
+  server can re-run deck_sections after a sync to resolve them. **Known issue:
+  cosmic-spider-man totals 99 cards** (one short; predates the migration — player
+  to pick the 100th). The player DELETED captain-america-first-avenger via the
+  app (2026-08-11); five decks + iron-man remain. Iron Man, Armored Avenger's
+  single copy is both a commander and in team-leader's 99 (⇄ badged).
+
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
   snapshot as the "strongest possible new deck". Power **70/100, Bracket 3** at the

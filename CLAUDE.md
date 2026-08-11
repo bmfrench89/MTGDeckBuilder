@@ -116,6 +116,7 @@ python3 scripts/optimize.py --all --collection $COLL --apply                    
 python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $COLL \
     --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
+python3 scripts/deck_sections.py --all --collection $COLL --apply   # regroup decks into type sections
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
 python3 scripts/carddb.py --verify "Sol Ring" --verify "Rejoinder" [--json]
                                                              # verify named cards' oracle text
@@ -208,7 +209,13 @@ render in a real browser.
 
 **Deck** — `data/decks/<stem>.txt`: `# Key: value` headers (`Title`, `Commander`, `Colors`,
 `Archetype`, and optionally `Theme`, `Source`, `Deck`, `Note`), then `# --- Section ---`
-groups of `<qty> <card name>` lines. Section names are free-form; the dashboard groups the
+groups of `<qty> <card name>` lines. Section names are free-form to the parser, but the
+**convention (2026-08-11) is EDHREC-style type sections** — Commander, Creatures, Instants,
+Sorceries, Artifacts, Enchantments, Planeswalkers, Lands, Basics — kept in shape by
+`deck_sections.py` (regroup; idempotent; unknown types go to an explicit `Unsorted`
+section, never guessed). Role/power info is NOT in the sections: `mtglib.classify` roles
+plus `deckcore.load_power_tags` labels (Game Changer, Fast mana, Tutor, Extra turns, Mass
+land denial) ride along in the card details on both surfaces. The dashboard groups the
 decklist by the file's own sections, so **preserve them when editing**. Edits rewrite the
 file in place and must keep quantity, section, and comment lines intact (that's what
 `test_deck_edit.py` guards).

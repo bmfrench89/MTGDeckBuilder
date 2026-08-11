@@ -257,7 +257,9 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
             full = (card_image.image_url(sid, size) if sid
                     else card_image.image_url_by_name(name, size))
             roles = mtglib.classify(c) if c else set()
-            role = " · ".join(_ROLE_LABEL.get(r, r.title()) for r in sorted(roles))
+            role_parts = [_ROLE_LABEL.get(r, r.title()) for r in sorted(roles)]
+            role_parts += deckcore.load_power_tags().get(k, [])
+            role = " · ".join(role_parts)
             note = notes.get(k)
             section = section_of.get(k, "")
             known_type = "/".join(c.types) if (c and c.types) else ""
