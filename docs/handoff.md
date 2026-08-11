@@ -63,10 +63,12 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   copies, badged). Finally places the free **Mana Drain** (ex-open-item riser).
   Ships with a hand-written `.attrs.csv` (98 pre-2025 cards, certain knowledge;
   commander row deliberately absent — its oracle text is **UNVERIFIED** offline,
-  functional role taken from `commanders.csv`). Next session on the PC:
-  `carddb.py --verify "Iron Man, Armored Avenger"`, re-enrich, re-run the
-  field-snapshot Action so `optimize.py` gets real inclusion data (0 field cards
-  today), and pull ~25 spare basic Islands (23 owned, 18 sleeved elsewhere).
+  functional role taken from `commanders.csv`). Follow-ups route through the
+  automation loop, NOT the player's PC: the merge's deck push triggers the
+  field-snapshot Action (adds this commander's EDHREC data), the server's daily
+  sync pulls it, and the app re-verifies/re-enriches/re-scores on the full CSV.
+  The only physical to-do: pull ~25 spare basic Islands (23 owned, 18 sleeved
+  elsewhere).
 - **Six prior decks** in `data/decks/`, all re-optimized against the field snapshots and
   idempotent (a fresh `optimize.py --all` proposes nothing). Bracket state vs the
   owner's stated aim of **Bracket 3/4 where possible**: four decks at B3 (Y'shtola
