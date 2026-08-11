@@ -55,6 +55,7 @@
 1 Scarlet Spider, Kaine
 1 Arachne, Psionic Weaver
 1 Spider-Man, To the Rescue
+1 Anti-Venom, Horrifying Healer
 
 # --- Instants ---
 1 Grow Extra Arms
@@ -89,7 +90,6 @@
 
 # --- Enchantments ---
 1 Spider-Man No More
-1 Coastal Piracy
 1 Rhystic Study
 1 Kindred Discovery
 1 Origin of Spider-Man

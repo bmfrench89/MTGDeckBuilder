@@ -64,3 +64,7 @@ column says which placeholder to pull.
   (whose copy was over-committed across three decks; this cut freed it).
 - Thriving Isle — the 100th card; the deck ran 99 for an unknown stretch, and at
   five colors the land count needed the slot more than any spell did.
+
+- Anti-Venom, Horrifying Healer — PLAYER'S MANUAL ADD (2026-08-11): "he's
+  awesome." Owned 1x, W identity, 5/5 Symbiote Hero. WWWWW is a real cost at
+  five colors — keep white sources honest. Do not cut.

@@ -26,13 +26,14 @@
 1 Barret, Avalanche Leader
 1 Zack Fair
 1 Sakura-Tribe Elder
-1 Priest of Titania
+1 Codsworth, Handy Helper
 1 Solemn Simulacrum
 1 Professional Face-Breaker
 1 Tireless Tracker
 1 Red XIII, Proud Warrior
 1 Professor Hojo
 1 Bugenhagen, Wise Elder
+1 Godo, Bandit Warlord
 
 # --- Instants ---
 1 Crop Rotation
@@ -73,7 +74,6 @@
 1 Trailblazer's Boots
 1 Hero's Blade
 1 Wrecking Ball Arm
-1 Godo, Bandit Warlord
 1 Sol Ring
 1 Arcane Signet
 1 Fellwar Stone

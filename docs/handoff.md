@@ -216,16 +216,18 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-**1. The placement pass — ONE CARD REOPENED (2026-08-11 review).** Placed and
-done: `Crop Rotation` → cloud-ex-soldier (the B2→B3 move), `Mana Drain` → the new
+**1. The placement pass — CLEAR again (2026-08-11).** Placed and done:
+`Crop Rotation` → cloud-ex-soldier (the B2→B3 move), `Mana Drain` → the new
 iron-man-armored-avenger deck, `Smaug, Wicked Worm` → the-ur-dragon, Dark Ritual →
-yshtola, Hero's Blade + Metallic Mimic → team-leader. **REOPENED: `Codsworth,
-Handy Helper` is in NO deck** — its recorded placement was
-captain-america-first-avenger, which the player deleted; the card (owned ×1)
-silently fell out of every list and only the hardening review caught it. Place it
-on the next pass. The principle stands: placing a new card should be a routine
-pass over every arrival — and deleting a deck should trigger the same pass over
-everything it releases.
+yshtola, Hero's Blade + Metallic Mimic → team-leader. The review-reopened
+`Codsworth, Handy Helper` (its recorded home was the deleted first-avenger deck)
+was placed BY THE PLAYER into cloud-ex-soldier (equipment-matters robot in the
+Voltron shell, over 0%-field Priest of Titania), and the player also placed
+`Anti-Venom, Horrifying Healer` into cosmic-spider-man (over 0%-field Coastal
+Piracy) — both are manual adds, named in their decks' `.notes.md`, so the
+optimizer never cuts them. The principle stands: placing a new card should be a
+routine pass over every arrival — and deleting a deck should trigger the same
+pass over everything it releases.
 - **Cloud rebuild note:** cloud-ex-soldier is now a protected voltron build
   (63/100, B3, `.notes.md` names the engine). A 2026-08-11 `optimize --apply` had
   churned the kill package out for field-popular FF cards (the field builds Cloud
