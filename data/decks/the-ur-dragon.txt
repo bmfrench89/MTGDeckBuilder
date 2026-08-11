@@ -8,7 +8,7 @@
 1 The Ur-Dragon
 
 # --- Creatures ---
-1 Gilded Goose
+1 Savage Ventmaw
 1 Llanowar Elves
 1 Selvala, Heart of the Wilds
 1 Smaug, Wicked Worm
@@ -115,4 +115,4 @@
 # --- Unsorted (type unknown — enrich and re-run deck_sections) ---
 1 Sarkhan, Soul Aflame
 1 Call the Spirit Dragons
-1 Dragonhawk, Fate's Tempest
+1 Dragonspeaker Shaman

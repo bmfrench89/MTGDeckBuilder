@@ -129,19 +129,46 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   sync pulls it, and the app re-verifies/re-enriches/re-scores on the full CSV.
   The only physical to-do: pull ~25 spare basic Islands (23 owned, 18 sleeved
   elsewhere).
-- **Six decks total, and every one is Bracket 3** (name-only snapshot scoring,
-  2026-08-11 — the owner's "Bracket 3/4 where possible" aim is MET across the
-  board): Y'shtola 73 · Iron Man 70 · Cloud 63 · Team Leader 58 · Cosmic
-  Spider-Man 58 · Ur-Dragon 56. Cloud reached B3 via the voltron rebuild + the
-  owned-only migration (the old open item is closed). No deck can reach B4 from
-  the owned pool (4 unique Game Changers owned, total). The server re-scores on
-  the full enriched CSV after each sync — expect small number shifts, not
-  bracket changes.
-- **The server runs on the full Sorted collection** (uploaded via the app; 2,518
-  unique / 3,602 copies, enriched). The committed name-only snapshot was
-  regenerated from the same export (PR #88) — grounding is consistent everywhere.
-- **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
-  at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
+- **Six decks total, and every one is Bracket 3** (fresh-export scoring,
+  2026-08-11 post-optimizer-sweep — the owner's "Bracket 3/4 where possible" aim
+  is MET across the board): Iron Man 73 · Y'shtola 73 · Cloud 61 · Team Leader
+  58 · Ur-Dragon 56 · Cosmic Spider-Man 54. No deck can reach B4 from the owned
+  pool (4 unique Game Changers owned, total). The server re-scores on the full
+  enriched CSV after each sync — expect small number shifts, not bracket changes.
+- **Fresh collection export installed 2026-08-11** (Sorted CSV: 2,621 unique /
+  3,773 copies after the owned_additions merge; was 2,518/3,602). The committed
+  name-only snapshot was regenerated from it in the same session.
+  `owned_additions.txt` dropped Vito and Force of Will — the new export carries
+  both, so the overrides would double-count; the player-confirmed 2x Cosmic
+  Spider-Man stays (export still lists 1). **Player to-do:** upload the same
+  export via the app's `/collection/upload` so the server's private CSV matches,
+  then the daily sync re-enriches (Scryfall was egress-blocked in the sandbox
+  this landed in).
+- **Painful Truths revert (2026-08-11):** an 8/11 manual replace had put the
+  never-owned Painful Truths into yshtola over Read the Bones — the only unowned
+  card across all six decks against the fresh export. Read the Bones is back
+  (optimizer advisory: 70/100 strong fit), Painful Truths is buylisted with
+  Replaces=Read the Bones, and the revert is logged in `.changes.csv`.
+- **2026-08-11 optimizer sweep on the fresh export (all six decks, applied):**
+  Iron Man took 9 spell swaps (0%-field big-blue filler → 26–68% field staples:
+  Pensive Professor, Kid Loki⇄, Laboratory Maniac, Reconnaissance Mission⇄,
+  Bident of Thassa, Professor Hulk⇄, Fellwar Stone⇄, Loki God of Mischief,
+  Lightning Greaves⇄) + Bonders' Enclave → Reliquary Tower, and rose 70 → 73
+  (tied #1). Cosmic Spider-Man: To the Rescue → Spider-Punk (83%), Plaza of
+  Heroes → Vibrant Cityscape (resolves the own-1-committed-2 Plaza conflict;
+  team-leader keeps it; 55 → 54 is the raw-card-quality cost, field overlap
+  +1). Ur-Dragon: Dragonhawk → Dragonspeaker Shaman (57%), Gilded Goose →
+  Savage Ventmaw (34%). Team Leader: Hero's Blade → Avengers Assemble! (54%).
+  Cloud and Y'shtola: already aligned, buylist refresh only. **The single owned
+  Reliquary Tower went to Iron Man by decision** — Y'shtola's Ash Barrens is
+  protected in its `.notes.md` so the optimizer stops re-proposing that swap.
+  The ⇄ swaps deepen shared-copy shortfalls (Fellwar Stone and Lightning
+  Greaves are now short 2) — priced in `data/wishlist.md` per mark-don't-block.
+- **Field-overlap validation post-sweep (fresh, larger snapshots): PASSED** —
+  Team Leader 25/25 · Cloud 24/25 · Y'shtola 21/25 · Ur-Dragon 21/25 · Cosmic
+  Spider-Man 18/25 · Iron Man 14/25. Iron Man and Spider-Man sit lower because
+  their fields' top-25 are majority unowned Marvel cards (11 and 7 not owned) —
+  above the ~50% revert threshold, gaps are buylisted, not silently shipped.
 - Test suite: **480 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
   export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards

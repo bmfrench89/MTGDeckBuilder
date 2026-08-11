@@ -66,7 +66,7 @@
 1 Relic of Legends
 1 Fellwar Stone
 1 Tome of Legends
-1 Hero's Blade
+1 Avengers Assemble!
 1 Door of Destinies
 
 # --- Enchantments ---
