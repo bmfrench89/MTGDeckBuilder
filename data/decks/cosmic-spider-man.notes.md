@@ -39,15 +39,21 @@ reasoned/spot-verified, not fully confirmed — load the attribute CSV (Type/Sub
 column) to lock in that every included card is truly a Spider, and to complete the MV
 spread below.
 
-# Physical copies & ownership (2026-08-11 audit)
-Twelve cards in this 99 are NOT in the collection snapshot (Peter Parker; Gwenom,
-Remorseless; Spider-Man 2099; Superior Spider-Man; Mary Jane Watson; Spider-Punk;
-Spider-Ham, Peter Porker; Arasta of the Endless Web; Arachnogenesis; Spider-Sense;
-Spider Manifestation; Spider-Woman, Stunning Savior). The likely cause: they are
-SLEEVED in this deck and never went through the Sorted export. If the player
+# Physical copies & ownership (2026-08-11 audit; revised same day)
+EIGHT cards in this 99 are NOT in the collection snapshot (Peter Parker; Gwenom,
+Remorseless; Superior Spider-Man; Mary Jane Watson; Spider-Punk; Spider-Ham,
+Peter Porker; Spider Manifestation; Spider-Woman, Stunning Savior). The likely
+cause: they are SLEEVED in this deck and never went through the Sorted export —
+all eight are hand-built originals with no .changes.csv entry. If the player
 confirms owning them, add them to data/collection/owned_additions.txt (player's
 word beats the export — grounding rule 6). Until then every ownership count
 treats them as unowned.
+The other four of the original twelve (Spider-Sense; Arasta of the Endless Web;
+Arachnogenesis; Spider-Man 2099) were never owned — .changes.csv records them as
+2026-08-10 optimizer BUY adds. Per the player's owned-only policy (2026-08-11)
+each was returned to the card it had displaced (Willowrush Verge; University
+Campus; Scarlet Spider, Kaine; Spider-Girl, Legacy Hero) and moved to the
+buylist with Replaces pointing at its owned placeholder.
 
 # Do not cut (riser pass 2026-08-11)
 - Ezekiel Sims, Spider-Totem — 24% field, placed over 0%-field Tome of Legends

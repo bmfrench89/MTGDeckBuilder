@@ -35,7 +35,7 @@
 1 Gwenom, Remorseless
 1 Scarlet Spider, Ben Reilly
 1 Araña, Heart of the Spider
-1 Spider-Man 2099
+1 Spider-Girl, Legacy Hero
 1 Spider-Byte, Web Warden
 1 Superior Spider-Man
 1 Spinneret and Spiderling
@@ -54,11 +54,10 @@
 1 Sakura-Tribe Elder
 1 Solemn Simulacrum
 1 Madame Web, Clairvoyant
-1 Arasta of the Endless Web
 1 Ezekiel Sims, Spider-Totem
+1 Scarlet Spider, Kaine
 
 # --- Instants ---
-1 Arachnogenesis
 1 Frantic Search
 1 Swords to Plowshares
 1 Path to Exile
@@ -95,6 +94,7 @@
 1 Wall Crawl
 
 # --- Lands ---
+1 University Campus
 1 Command Tower
 1 Thriving Isle
 1 Exotic Orchard
@@ -102,7 +102,7 @@
 1 Mystic Monastery
 1 Daily Bugle Building
 1 Jungle Shrine
-1 Spider-Sense
+1 Willowrush Verge
 1 Path of Ancestry
 1 Secluded Courtyard
 1 Unclaimed Territory

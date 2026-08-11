@@ -29,6 +29,7 @@
 1 Lyse Hext
 1 G'raha Tia, Scion Reborn
 1 Solemn Simulacrum
+1 Krile Baldesion
 
 # --- Instants ---
 1 Mystical Tutor
@@ -72,7 +73,6 @@
 1 Relic of Legends
 
 # --- Enchantments ---
-1 Curiosity
 1 Authority of the Consuls
 1 Rhystic Study
 1 Bastion of Remembrance
@@ -80,8 +80,7 @@
 1 Observed Stasis
 
 # --- Lands ---
-1 Godless Shrine
-1 Watery Grave
+1 Contaminated Aquifer
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
@@ -107,6 +106,7 @@
 1 Demolition Field
 
 # --- Basics ---
+1 Plains
 5 Island
 3 Plains
 5 Swamp
