@@ -291,6 +291,84 @@ _ROLE_LABEL = {
 
 
 # --------------------------------------------------------------------------- #
+# Power-list tags — reference-list membership shown in card details ("Game
+# Changer", "Tutor", …). Loaded once; names matched via mtglib._norm.
+# --------------------------------------------------------------------------- #
+REF_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "reference")
+_POWER_TAG_FILES = (("game_changers.txt", "Game Changer"),
+                    ("fast_mana.txt", "Fast mana"),
+                    ("tutors.txt", "Tutor"),
+                    ("extra_turns.txt", "Extra turns"),
+                    ("mass_land_denial.txt", "Mass land denial"))
+_power_tags = None
+
+
+def load_power_tags(refdir=None):
+    """norm(name) -> [tag, …] for every card on the curated power lists. The tags
+    ride along wherever card roles are shown (dashboard details, card panel), so a
+    Game Changer or tutor is labeled as such everywhere without re-deriving it."""
+    global _power_tags
+    if _power_tags is not None and refdir is None:
+        return _power_tags
+    tags = {}
+    for fname, label in _POWER_TAG_FILES:
+        path = os.path.join(refdir or REF_DIR, fname)
+        try:
+            with open(path, encoding="utf-8") as f:
+                for ln in f:
+                    name = ln.strip()
+                    if not name or name.startswith("#"):
+                        continue
+                    tags.setdefault(mtglib._norm(name), []).append(label)
+        except OSError:
+            continue                      # a missing list degrades to no tag
+    if refdir is None:
+        _power_tags = tags
+    return tags
+
+
+# --------------------------------------------------------------------------- #
+# Type buckets — the EDHREC-style section convention deck files follow. One
+# bucketer, shared by deck_sections.py (migration/regroup) and auto_build
+# (future decks), so the two can never drift.
+# --------------------------------------------------------------------------- #
+TYPE_SECTION_ORDER = ("Creatures", "Instants", "Sorceries", "Artifacts",
+                      "Enchantments", "Planeswalkers", "Battles", "Lands", "Basics")
+BASIC_LAND_NAMES = {"plains", "island", "swamp", "mountain", "forest", "wastes",
+                    "snow-covered plains", "snow-covered island", "snow-covered swamp",
+                    "snow-covered mountain", "snow-covered forest"}
+
+
+def type_bucket(name, types):
+    """EDHREC-style section for a card, or None when the type is unknown.
+    Multi-type precedence mirrors EDHREC: a creature is a creature no matter what
+    else it is; any nonbasic land files under Lands."""
+    if mtglib._norm(name) in BASIC_LAND_NAMES:
+        return "Basics"
+    tl = {t.strip().lower() for t in (types or []) if t and t.strip()}
+    joined = " ".join(tl)
+    if not tl:
+        return None
+    if "creature" in joined:
+        return "Creatures"
+    if "land" in joined:
+        return "Lands"
+    if "planeswalker" in joined:
+        return "Planeswalkers"
+    if "battle" in joined:
+        return "Battles"
+    if "instant" in joined:
+        return "Instants"
+    if "sorcery" in joined:
+        return "Sorceries"
+    if "artifact" in joined:
+        return "Artifacts"
+    if "enchantment" in joined:
+        return "Enchantments"
+    return None
+
+
+# --------------------------------------------------------------------------- #
 # Deck analysis — the single pipeline entry point. Engines are imported LOCALLY
 # (inside the functions) so this hub keeps only `mtglib` as a top-level import
 # and stays free of circular dependencies.

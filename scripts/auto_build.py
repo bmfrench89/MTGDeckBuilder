@@ -277,15 +277,32 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     counts["land"] = counts.get("land", 0) + n_basic
 
     sections = [("Commander", [{"name": commander_name, "qty": 1}])]
+    # EDHREC-style type sections (the deck-file convention) wherever the pool
+    # knows a card's type; a card with no type data files under its ROLE section
+    # instead — visible degradation, not a guess (name-only collection).
+    typed, untyped = {}, {}
     for role in SECTION_ORDER:
-        cs = sorted(role_of.get(role, []), key=lambda x: -x["score"])
+        for c in role_of.get(role, []):
+            card = mtglib.lookup(idx, c["name"])
+            b = deckcore.type_bucket(c["name"], card.types if card else None)
+            if b and b not in ("Lands", "Basics"):
+                typed.setdefault(b, []).append(c)
+            else:
+                untyped.setdefault(role, []).append(c)
+    for b in deckcore.TYPE_SECTION_ORDER:
+        cs = sorted(typed.get(b, []), key=lambda x: -x["score"])
+        if cs:
+            sections.append((b, [{"name": c["name"], "qty": 1} for c in cs]))
+    for role in SECTION_ORDER:
+        cs = sorted(untyped.get(role, []), key=lambda x: -x["score"])
         if cs:
             sections.append((ROLE_LABEL.get(role, role.title()),
                              [{"name": c["name"], "qty": 1} for c in cs]))
     land_cards = [{"name": c["name"], "qty": 1}
                   for c in sorted(role_of.get("land", []), key=lambda x: -x["score"])]
-    land_cards += [{"name": n, "qty": q} for n, q in sorted(basics.items())]
-    sections.append((f"Lands ({counts['land']})", land_cards))
+    if land_cards:
+        sections.append(("Lands", land_cards))
+    sections.append(("Basics", [{"name": n, "qty": q} for n, q in sorted(basics.items())]))
 
     for _title, cs in sections:      # attach a card image URL to every entry
         for c in cs:

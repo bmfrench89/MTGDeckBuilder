@@ -116,7 +116,8 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
         "qty": ref.quantity if ref else 0,
         "mv": ref.mana_value if ref else None,
         "type": ref.primary_type if (ref and ref.types) else None,
-        "roles": [deckcore._ROLE_LABEL.get(r, r.title()) for r in roles],
+        "roles": ([deckcore._ROLE_LABEL.get(r, r.title()) for r in roles]
+                  + deckcore.load_power_tags().get(key, [])),
         "strategy": _strategy(ref, roles, decks),
         "note": {"why": note["why"], "alts": note["alts"]} if note else None,
         "combos": _combos_with(name, combos),

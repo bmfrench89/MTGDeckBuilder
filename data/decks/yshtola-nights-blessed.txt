@@ -12,7 +12,10 @@
 
 1 Y'shtola, Night's Blessed
 
-# --- Creatures & engine ---
+# --- Commander ---
+1 Y'shtola, Night's Blessed
+
+# --- Creatures ---
 1 Blood Artist
 1 Baleful Strix
 1 Murderous Rider
@@ -26,47 +29,39 @@
 1 Sun Titan
 1 Papalymo Totolymo
 1 Lyse Hext
+1 G'raha Tia, Scion Reborn
+1 Solemn Simulacrum
 
-# --- Interaction (spot removal / counters) ---
+# --- Instants ---
 1 Mystical Tutor
 1 Swords to Plowshares
 1 Counterspell
 1 Infernal Grasp
 1 Absorb
-1 Eye of Nidhogg
 1 Void Rend
 1 Soul Shatter
 1 Snuff Out
 1 Lethal Scheme
-1 Curiosity
 1 Force of Will
 1 Misdirection
 1 Sublime Epiphany
 1 Dig Through Time
+1 Dark Ritual
+1 Frantic Search
+1 Transpose
+1 Circle of Power
 
-# --- Finishers / drain / value ---
+# --- Sorceries ---
 1 Exsanguinate
 1 Syphon Mind
-1 Dark Ritual
 1 Toxic Deluge
 1 Vindicate
-1 Godless Shrine
-1 G'raha Tia, Scion Reborn
-1 Tataru Taru
-1 Frantic Search
-1 Hermes, Overseer of Elpis
-1 Transpose
 1 Cleansing Nova
-1 Talisman of Progress
-1 Authority of the Consuls
-1 Dancer's Chakrams
-1 Rhystic Study
-1 Bastion of Remembrance
-1 Propaganda
-1 Watery Grave
-1 Alisaie Leveilleur
+1 Read the Bones
+1 Night's Whisper
 
-# --- Ramp / rocks / utility ---
+# --- Artifacts ---
+1 Talisman of Progress
 1 Sol Ring
 1 Commander's Sphere
 1 Arcane Signet
@@ -77,15 +72,21 @@
 1 Lightning Greaves
 1 Archaeomancer's Map
 1 Relic of Legends
-1 Solemn Simulacrum
 
-# --- Lands (37) ---
+# --- Enchantments ---
+1 Curiosity
+1 Authority of the Consuls
+1 Rhystic Study
+1 Bastion of Remembrance
+1 Propaganda
+
+# --- Lands ---
+1 Godless Shrine
+1 Watery Grave
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
 1 Arcane Sanctum
-5 Island
-3 Plains
 1 Choked Estuary
 1 Darkwater Catacombs
 1 Drowned Catacomb
@@ -104,11 +105,17 @@
 1 Sunlit Marsh
 1 Observed Stasis
 1 Scavenger Grounds
-5 Swamp
 1 Ash Barrens
 1 Demolition Field
 
-# --- Instants & sorceries ---
-1 Circle of Power
-1 Read the Bones
-1 Night's Whisper
+# --- Basics ---
+5 Island
+3 Plains
+5 Swamp
+
+# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
+1 Eye of Nidhogg
+1 Tataru Taru
+1 Hermes, Overseer of Elpis
+1 Dancer's Chakrams
+1 Alisaie Leveilleur

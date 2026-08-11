@@ -14,32 +14,12 @@
 
 1 Cloud, Ex-SOLDIER
 
-# --- Equipment ---
-1 Colossus Hammer
-1 Fireshrieker
-1 True Conviction
-1 Sword of the Animist
-1 Behemoth Sledge
-1 Conqueror's Flail
-1 Champion's Helm
-1 Darksteel Plate
-1 All That Glitters
-1 Summoning Materia
-1 Gift of Immortality
-1 Mask of Memory
-1 Lightning Greaves
-1 Trailblazer's Boots
-1 Bonders' Enclave
-1 Hero's Blade
-1 Bastion Protector
-
-# --- Equipment support ---
-1 Puresteel Paladin
-1 Buster Sword
-1 Steelshaper's Gift
-1 Godo, Bandit Warlord
+# --- Commander ---
+1 Cloud, Ex-SOLDIER
 
 # --- Creatures ---
+1 Bastion Protector
+1 Puresteel Paladin
 1 Vincent, Vengeful Atoner
 1 Sephiroth, Fallen Hero
 1 Sun Titan
@@ -47,49 +27,67 @@
 1 Cloud, Midgar Mercenary
 1 Barret, Avalanche Leader
 1 Zack Fair
-
-# --- Ramp ---
-1 Sol Ring
-1 Arcane Signet
-1 Fellwar Stone
-1 Farseek
-1 Nature's Lore
-1 Forge Anew
-1 Cultivate
-1 Sram, Senior Edificer
 1 Sakura-Tribe Elder
-1 Crop Rotation
 1 Priest of Titania
 1 Solemn Simulacrum
-1 Rampant Growth
+1 Professional Face-Breaker
+1 Tireless Tracker
+1 Red XIII, Proud Warrior
 
-# --- Removal & wraths ---
+# --- Instants ---
+1 Crop Rotation
 1 Swords to Plowshares
 1 Path to Exile
 1 Generous Gift
 1 Beast Within
 1 Chaos Warp
+1 Dispatch
+1 Boros Charm
+1 Cloud's Limit Break
+1 Clever Concealment
+
+# --- Sorceries ---
+1 Steelshaper's Gift
+1 Farseek
+1 Nature's Lore
+1 Cultivate
+1 Rampant Growth
 1 Blasphemous Act
 1 Vandalblast
 1 Austere Command
 1 Vanquish the Horde
-1 Dispatch
 1 Rip Apart
-
-# --- Card draw ---
-1 Skullclamp
-1 Professional Face-Breaker
-1 Tome of Legends
-1 Staff of the Storyteller
 1 Harmonize
 
-# --- Anthems & finish ---
-1 Rancor
-1 Tireless Tracker
-1 Boros Charm
-1 Red XIII, Proud Warrior
+# --- Artifacts ---
+1 Colossus Hammer
+1 Fireshrieker
+1 Sword of the Animist
+1 Behemoth Sledge
+1 Conqueror's Flail
+1 Champion's Helm
+1 Darksteel Plate
+1 Summoning Materia
+1 Mask of Memory
+1 Lightning Greaves
+1 Trailblazer's Boots
+1 Hero's Blade
+1 Buster Sword
+1 Godo, Bandit Warlord
+1 Sol Ring
+1 Arcane Signet
+1 Fellwar Stone
+1 Skullclamp
+1 Tome of Legends
 
-# --- Lands (36) ---
+# --- Enchantments ---
+1 True Conviction
+1 All That Glitters
+1 Gift of Immortality
+1 Rancor
+
+# --- Lands ---
+1 Bonders' Enclave
 1 Command Tower
 1 Path of Ancestry
 1 Exotic Orchard
@@ -110,13 +108,16 @@
 1 Spire of Industry
 1 Slayers' Stronghold
 1 Mossfire Valley
-8 Forest
 1 Sunscorched Divide
 1 Radiant Grove
 1 Fire-Lit Thicket
+
+# --- Basics ---
+8 Forest
 2 Mountain
 3 Plains
 
-# --- Instants & sorceries ---
-1 Cloud's Limit Break
-1 Clever Concealment
+# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
+1 Forge Anew
+1 Sram, Senior Edificer
+1 Staff of the Storyteller
