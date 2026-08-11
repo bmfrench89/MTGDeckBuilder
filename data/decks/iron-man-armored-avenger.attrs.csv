@@ -1,0 +1,71 @@
+Name,Type,MV,Colors,Produced
+Island,Land,0,,U
+Command Tower,Land,0,,U
+Buried Ruin,Land,0,,C
+Rogue's Passage,Land,0,,C
+Faerie Conclave,Land,0,,U
+Bonders' Enclave,Land,0,,C
+Scavenger Grounds,Land,0,,C
+Sol Ring,Artifact,1,,C
+Arcane Signet,Artifact,2,,U
+Mind Stone,Artifact,2,,C
+Sky Diamond,Artifact,2,,U
+Thought Vessel,Artifact,2,,C
+Worn Powerstone,Artifact,3,,C
+Hedron Archive,Artifact,4,,C
+Coveted Jewel,Artifact,6,,U
+Inspiring Statuary,Artifact,3,,
+Rhystic Study,Enchantment,3,U,
+Mystic Remora,Enchantment,1,U,
+Brainstorm,Instant,1,U,
+Frantic Search,Instant,3,U,
+Accumulated Knowledge,Instant,2,U,
+Winged Words,Sorcery,2,U,
+Think Twice,Instant,2,U,
+Thirst for Knowledge,Instant,3,U,
+Into the Story,Instant,7,U,
+Visions of Beyond,Instant,1,U,
+Dig Through Time,Instant,8,U,
+Opportunity,Instant,6,U,
+Coastal Piracy,Enchantment,3,U,
+Windreader Sphinx,Creature,7,U,
+Force of Will,Instant,5,U,
+Mana Drain,Instant,2,U,
+Counterspell,Instant,2,U,
+Arcane Denial,Instant,2,U,
+Memory Lapse,Instant,2,U,
+Essence Scatter,Instant,2,U,
+Spell Pierce,Instant,1,U,
+Spell Snare,Instant,1,U,
+Negate,Instant,2,U,
+Daze,Instant,2,U,
+Miscalculation,Instant,2,U,
+Power Sink,Instant,1,U,
+Thwart,Instant,3,U,
+An Offer You Can't Refuse,Instant,1,U,
+Sublime Epiphany,Instant,6,U,
+Mystical Tutor,Instant,1,U,
+Tinker,Sorcery,3,U,
+Bribery,Sorcery,5,U,
+Dominate,Instant,2,U,
+Clever Impersonator,Creature,4,U,
+Rite of Replication,Sorcery,4,U,
+Capsize,Instant,3,U,
+Snap,Instant,2,U,
+Aetherize,Instant,4,U,
+Evacuation,Instant,5,U,
+Icy Manipulator,Artifact,4,,
+Torrential Gearhulk,Creature,6,U,
+Archmage Emeritus,Creature,4,U,
+Sharding Sphinx,Creature,6,U,
+Gearseeker Serpent,Creature,6,U,
+Diluvian Primordial,Creature,7,U,
+Warden of Evos Isle,Creature,3,U,
+Thunderclap Wyvern,Creature,4,U,
+Favorable Winds,Enchantment,2,U,
+Gravitational Shift,Enchantment,5,U,
+Phantom Warrior,Creature,3,U,
+Swiftfoot Boots,Artifact,2,,
+Darksteel Plate,Artifact,3,,
+Propaganda,Enchantment,3,U,
+Misdirection,Instant,5,U,

@@ -47,7 +47,7 @@
 # --- Finishers / drain / value ---
 1 Exsanguinate
 1 Syphon Mind
-1 Syphon Soul
+1 Dark Ritual
 1 Toxic Deluge
 1 Vindicate
 1 Godless Shrine

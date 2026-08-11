@@ -133,6 +133,16 @@ Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conf
 
 ## Working rules for this repo
 
+### The PC is out of the loop
+Do not defer follow-up work to "run this on the player's PC." The automation loop
+covers it: a merged deck push triggers the field-snapshot GitHub Action (network on
+the runner), the hosted app's daily/on-demand sync pulls code + snapshots down, and
+the server re-enriches (Scryfall is reachable there) and re-scores everything on the
+full private CSV. A sandbox session's job ends at *merge*, plus an honest note of
+what the loop will finish. The one true PC-only task is `rules.py`'s Comprehensive
+Rules download (wizards.com is blocked everywhere else). Physical tasks (sleeving,
+buying, pulling basics) are for the player, not a machine.
+
 ### Privacy — the hard line
 `data/collection/collection.csv` and `collection_attrs.csv` are **gitignored and private**
 (a priced export of someone's real collection). Never commit them, never print their full

@@ -56,7 +56,20 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Current data (season closed 2026-08-10)
 
-- **Six decks** in `data/decks/`, all re-optimized against the field snapshots and
+- **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
+  control, hand-built in a sandbox session (network blocked) from the name-only
+  snapshot as the "strongest possible new deck". Power **70/100, Bracket 3** at the
+  3-Game-Changer cap (Rhystic Study, Force of Will, Mystical Tutor — all shared
+  copies, badged). Finally places the free **Mana Drain** (ex-open-item riser).
+  Ships with a hand-written `.attrs.csv` (98 pre-2025 cards, certain knowledge;
+  commander row deliberately absent — its oracle text is **UNVERIFIED** offline,
+  functional role taken from `commanders.csv`). Follow-ups route through the
+  automation loop, NOT the player's PC: the merge's deck push triggers the
+  field-snapshot Action (adds this commander's EDHREC data), the server's daily
+  sync pulls it, and the app re-verifies/re-enriches/re-scores on the full CSV.
+  The only physical to-do: pull ~25 spare basic Islands (23 owned, 18 sleeved
+  elsewhere).
+- **Six prior decks** in `data/decks/`, all re-optimized against the field snapshots and
   idempotent (a fresh `optimize.py --all` proposes nothing). Bracket state vs the
   owner's stated aim of **Bracket 3/4 where possible**: four decks at B3 (Y'shtola
   71 · Team Leader 58 · Ur-Dragon 58 · Cosmic Spider-Man 55); Cloud (B2, 50) and
@@ -150,16 +163,24 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-**START HERE — 1. The placement pass.** Four known-good OWNED cards are still in no
-deck. The principle the owner stated matters more than the backlog: placing a new
-card should be a **routine pass over every arrival**, not a one-off that waits on
-someone noticing. The advisors below now surface such cards; surfacing is not placing.
-- `Crop Rotation` → cloud-ex-soldier, over `Evolving Wilds`. The one FREE owned Game
-  Changer in Cloud's colors, and it fetches the deck's own Slayers' Stronghold at
-  instant speed. **This is the swap that moves Cloud from B2 to B3.**
-- `Codsworth, Handy Helper` → cloud-ex-soldier, over `Bitterthorn, Nissa's Animus`
-  (11%). 30% field inclusion there; the ≥25 margin gate held it at 19 points — the
-  case that motivated the risers advisory.
+**1. The placement pass — LARGELY DONE (2026-08-11).** Of the four known-good owned
+cards that sat in no deck: `Crop Rotation` is now in cloud-ex-soldier (the B2→B3
+move, done in the voltron rebuild), `Codsworth, Handy Helper` went to
+captain-america-first-avenger via the player's own app edit, and `Mana Drain` opened
+the new iron-man-armored-avenger deck. **`Smaug, Wicked Worm` placed 2026-08-11** into the-ur-dragon
+(12% field there, over 0%-field Syphon Soul) — the placement backlog is CLEAR. Same
+pass: Dark Ritual → yshtola (22%, over 0% Syphon Soul; deck now 72/100 and finally
+has a `.notes.md` protecting its core), Hero's Blade + Metallic Mimic (62% field!) →
+team-leader (over 0% Planar Collapse / Rending Volley). The principle stands:
+placing a new card should be a routine pass over every arrival.
+- **Cloud rebuild note:** cloud-ex-soldier is now a protected voltron build
+  (62/100, B3, `.notes.md` names the engine). A 2026-08-11 `optimize --apply` had
+  churned the kill package out for field-popular FF cards (the field builds Cloud
+  precon-adjacent); the rebuild restored it as a deliberate manual edit and kept the
+  optimizer's three genuine upgrades (Bastion Protector, Summoning Materia, Bonders'
+  Enclave). Optimizer is idempotent on it again (0 proposals, 22/25 field overlap).
+  Four buylist cards sit in its 99 unowned: Buster Sword, Sram, Forge Anew, Cloud
+  Midgar Mercenary (see `.buylist.csv`).
 - `Mana Drain` → yshtola-nights-blessed. Only 15% on a young commander's page —
   new-commander fields undervalue universal staples.
 - `Smaug, Wicked Worm` → the-ur-dragon. 12% and climbing; the field lags new printings.
