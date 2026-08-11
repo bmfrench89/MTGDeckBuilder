@@ -21,6 +21,9 @@ def client(tmp_path, monkeypatch, collection_file):
     monkeypatch.setattr(appmod, "DECKS_DIR", str(tmp_path))
     monkeypatch.setattr(appmod, "COLLECTION", collection_file)
     monkeypatch.setattr(sync, "maybe_start", lambda now=None: False)
+    # Stub run too: POST /sync calls it unconditionally, and the real thing executes
+    # sync_server.sh — git add/commit/pull/push on the REAL repo — from inside pytest.
+    monkeypatch.setattr(sync, "run", lambda *a, **k: {"ok": True, "stubbed": True})
     return appmod.app.test_client()
 
 
@@ -73,7 +76,9 @@ def test_right_password_opens_the_app(gated):
 
 
 def test_next_cannot_be_an_open_redirect(gated):
-    for evil in ("https://evil.example", "//evil.example", ""):
+    # '/\\evil.example': browsers normalize the backslash to '/', turning it into a
+    # protocol-relative '//evil.example' — the startswith('//') check alone missed it
+    for evil in ("https://evil.example", "//evil.example", "/\\evil.example", ""):
         r = gated.post("/login", data={"password": "correct horse", "next": evil})
         assert r.status_code == 302
         loc = r.headers["Location"]

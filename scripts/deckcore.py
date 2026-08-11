@@ -336,7 +336,8 @@ TYPE_SECTION_ORDER = ("Creatures", "Instants", "Sorceries", "Artifacts",
                       "Enchantments", "Planeswalkers", "Battles", "Lands", "Basics")
 BASIC_LAND_NAMES = {"plains", "island", "swamp", "mountain", "forest", "wastes",
                     "snow-covered plains", "snow-covered island", "snow-covered swamp",
-                    "snow-covered mountain", "snow-covered forest"}
+                    "snow-covered mountain", "snow-covered forest",
+                    "snow-covered wastes"}
 
 
 def type_bucket(name, types):
@@ -457,7 +458,9 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
     else:
         field = ctx.get("field") or {}
     fit = deck_fit.assess_card(card, rep, ctx, refs, section)
-    in_deck = {mtglib._norm(c.name) for c in enriched}
+    in_deck = set()
+    for c in enriched:                 # BOTH keys — a raw-_norm set let a front-face
+        in_deck |= mtglib.name_keys(c.name)   # staple re-recommend an in-deck split card
     try:
         alts = deck_fit.better_alternatives(card, ctx, idx, refs, [], in_deck,
                                             load_role_staples_safe())
@@ -465,7 +468,7 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
         alts = []
     return {"name": card.name, "score": fit["score"], "band": fit["band"],
             "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
-            "in_deck": mtglib._norm(card.name) in in_deck,
+            "in_deck": bool(mtglib.name_keys(card.name) & in_deck),
             "has_field": bool(field),
             "field_pct": field.get(mtglib._norm(card.name)) if field else None,
             "alternatives": alts[:3]}

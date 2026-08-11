@@ -24,7 +24,7 @@ import mtglib
 
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes",
           "snow-covered plains", "snow-covered island", "snow-covered swamp",
-          "snow-covered mountain", "snow-covered forest"}
+          "snow-covered mountain", "snow-covered forest", "snow-covered wastes"}
 
 
 def deck_files(decks_dir):
@@ -40,16 +40,26 @@ def scan(decks_dir, collection_index, skip=None):
     committed across decks, and the raw per-deck usage. `skip` (a deck stem) omits that
     deck — used when REBUILDING it, so its own current cards count as available again."""
     usage = defaultdict(lambda: {"decks": {}, "total": 0})
+    canon = {}          # front-face key -> ONE display name per physical card.
     for path in deck_files(decks_dir):
         if skip and os.path.splitext(os.path.basename(path))[0] == skip:
             continue
         label = deck_label(path)
         with open(path, encoding="utf-8") as f:
             for card in mtglib.parse_deck(f.read()):
-                key = mtglib._norm(card.name)
-                if key in BASICS:
+                if mtglib.is_basic(card.name):
                     continue
-                u = usage[card.name]
+                # Aggregate by the FRONT-FACE key, not the raw spelling: 'A // B' in
+                # one deck and 'A' in another are the same physical card, and raw
+                # keys split them into two entries that each looked covered — a
+                # real cross-deck conflict silently vanished. Display name prefers
+                # the collection's spelling so downstream _norm probes line up.
+                ck = mtglib._norm(mtglib.front_face(card.name))
+                disp = canon.get(ck)
+                if disp is None:
+                    ref = mtglib.lookup(collection_index, card.name)
+                    disp = canon.setdefault(ck, ref.name if ref else card.name)
+                u = usage[disp]
                 u["decks"][label] = u["decks"].get(label, 0) + card.quantity
                 u["total"] += card.quantity
     for name, u in usage.items():
@@ -88,11 +98,12 @@ def available_pool(usage, collection, exclude_deck=None):
     committed_elsewhere = {}
     for name, u in usage.items():
         n = sum(q for d, q in u["decks"].items() if d != exclude_deck)
-        committed_elsewhere[mtglib._norm(name)] = n
+        for k in mtglib.name_keys(name):     # full + front face: either probe hits
+            committed_elsewhere[k] = n
     rows = []
     for c in collection:
         k = mtglib._norm(c.name)
-        if k in BASICS:
+        if mtglib.is_basic(c.name):
             continue
         free = c.quantity - committed_elsewhere.get(k, 0)
         if free > 0:

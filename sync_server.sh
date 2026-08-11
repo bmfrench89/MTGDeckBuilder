@@ -22,10 +22,15 @@ cd "$(dirname "$0")"
 
 # Exactly the paths the running app edits. Never `git add -A` — that would sweep in
 # generated dashboards, caches, and anything else written at runtime.
+# wishlist.md / manapool-wishlist.txt ARE runtime-edited (the ↻ Rebuild button runs
+# refresh.py): leaving them unstaged dirtied the tree and made every subsequent
+# `git pull --rebase` fail, wedging the daily sync until a console cleanup.
 TRACKED_DATA=(
   data/decks
   data/collection/owned_additions.txt
   data/collection/pins.csv
+  data/wishlist.md
+  data/manapool-wishlist.txt
 )
 
 present=()

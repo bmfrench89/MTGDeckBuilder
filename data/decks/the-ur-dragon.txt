@@ -29,10 +29,10 @@
 1 Silumgar, the Drifting Death
 1 Wrathful Red Dragon
 1 Dragonlord Ojutai
-1 Terror of the Peaks
-1 Dragonspeaker Shaman
-1 Old Gnawbone
-1 Tiamat
+1 Zurgo and Ojutai
+1 Kolaghan, the Storm's Fury
+1 Broodcaller Scourge
+1 Lozhan, Dragons' Legacy
 
 # --- Instants ---
 1 Think Twice

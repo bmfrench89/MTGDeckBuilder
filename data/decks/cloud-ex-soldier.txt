@@ -12,8 +12,6 @@
 #     --collection data/collection/collection.csv --title "Cloud, Ex-SOLDIER" \
 #     --commander "Cloud, Ex-SOLDIER" --theme cloud --out cloud-dashboard.html --visual
 
-1 Cloud, Ex-SOLDIER
-
 # --- Commander ---
 1 Cloud, Ex-SOLDIER
 
@@ -24,15 +22,18 @@
 1 Sephiroth, Fallen Hero
 1 Sun Titan
 1 Tifa, Martial Artist
-1 Cloud, Midgar Mercenary
+1 Cid, Freeflier Pilot
 1 Barret, Avalanche Leader
 1 Zack Fair
 1 Sakura-Tribe Elder
-1 Priest of Titania
+1 Codsworth, Handy Helper
 1 Solemn Simulacrum
 1 Professional Face-Breaker
 1 Tireless Tracker
 1 Red XIII, Proud Warrior
+1 Professor Hojo
+1 Bugenhagen, Wise Elder
+1 Godo, Bandit Warlord
 
 # --- Instants ---
 1 Crop Rotation
@@ -72,8 +73,7 @@
 1 Lightning Greaves
 1 Trailblazer's Boots
 1 Hero's Blade
-1 Buster Sword
-1 Godo, Bandit Warlord
+1 Wrecking Ball Arm
 1 Sol Ring
 1 Arcane Signet
 1 Fellwar Stone
@@ -118,6 +118,4 @@
 3 Plains
 
 # --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 Forge Anew
-1 Sram, Senior Edificer
 1 Staff of the Storyteller

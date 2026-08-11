@@ -487,8 +487,8 @@ def is_basic(name: str) -> bool:
 
 def _looks_like_land_by_name(name: str) -> bool:
     low = name.lower()
-    if low in _BASICS:
-        return True
+    if is_basic(name):        # includes Snow-Covered printings — a plain _BASICS
+        return True           # check missed them, so snow basics read as spells
     return any(h in low for h in _LAND_HINTS)
 
 
@@ -584,19 +584,22 @@ def classify(card: Card) -> set:
     list is only as fresh as its last edit. Eyeball the output and verify
     uncertain cards (see the skill's grounding-rules.md)."""
     roles = set()
-    n = _norm(card.name)
+    # BOTH keys, full name and front face: a collection stores 'Murderous Rider //
+    # Swift End' while the curated lists name the faces — a raw-_norm lookup matched
+    # neither, so every split/DFC card silently classified by type alone.
+    keys = name_keys(card.name)
     if card.is_land:
         roles.add("land")
         return roles
-    if n in RAMP:
+    if keys & RAMP:
         roles.add("ramp")
-    if n in DRAW:
+    if keys & DRAW:
         roles.add("draw")
-    if n in REMOVAL:
+    if keys & REMOVAL:
         roles.add("removal")
-    if n in WIPES:
+    if keys & WIPES:
         roles.add("wipe")
-    if n in COUNTERS:
+    if keys & COUNTERS:
         roles.add("counter")
     # Layer 2 — only where curation is silent. An unenriched card has flags ==
     # set(), so this whole layer no-ops on a collection that has never been

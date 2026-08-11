@@ -39,18 +39,32 @@ reasoned/spot-verified, not fully confirmed — load the attribute CSV (Type/Sub
 column) to lock in that every included card is truly a Spider, and to complete the MV
 spread below.
 
-# Physical copies & ownership (2026-08-11 audit)
-Twelve cards in this 99 are NOT in the collection snapshot (Peter Parker; Gwenom,
-Remorseless; Spider-Man 2099; Superior Spider-Man; Mary Jane Watson; Spider-Punk;
-Spider-Ham, Peter Porker; Arasta of the Endless Web; Arachnogenesis; Spider-Sense;
-Spider Manifestation; Spider-Woman, Stunning Savior). The likely cause: they are
-SLEEVED in this deck and never went through the Sorted export. If the player
-confirms owning them, add them to data/collection/owned_additions.txt (player's
-word beats the export — grounding rule 6). Until then every ownership count
-treats them as unowned.
+# Physical copies & ownership — RESOLVED (2026-08-11)
+The player confirmed: the sleeved-but-never-exported hypothesis was wrong. Of the
+twelve snapshot-absent cards the audit found, the player owns NONE ("I don't
+think I own those cards"); they do own 2× the Cosmic Spider-Man commander card
+itself (recorded in owned_additions.txt). Per the owned-only policy every
+unowned card left the 99 for an owned, field-ranked, verified substitute, and
+each sits on the buylist with Replaces = its placeholder:
+- the four 2026-08-10 optimizer BUY adds were returned to the cards they had
+  displaced (Spider-Sense → Willowrush Verge; Arasta → University Campus;
+  Arachnogenesis → Scarlet Spider, Kaine; Spider-Man 2099 → Spider-Girl,
+  Legacy Hero);
+- the eight hand-built originals were replaced 2026-08-11 (Peter Parker →
+  Spider-Man, Web-Slinger; Gwenom → Guy in the Chair; Superior Spider-Man →
+  Spider-Man No More; Mary Jane Watson → Grow Extra Arms; Spider-Punk →
+  Spectacular Tactics; Spider-Ham → Spider-Rex, Daring Dino; Spider
+  Manifestation → Arachne, Psionic Weaver; Spider-Woman → Spider-Man, To the
+  Rescue).
+The deck is 100 cards, fully owned. Buy any buylist card and its Replaces
+column says which placeholder to pull.
 
 # Do not cut (riser pass 2026-08-11)
 - Ezekiel Sims, Spider-Totem — 24% field, placed over 0%-field Tome of Legends
   (whose copy was over-committed across three decks; this cut freed it).
 - Thriving Isle — the 100th card; the deck ran 99 for an unknown stretch, and at
   five colors the land count needed the slot more than any spell did.
+
+- Anti-Venom, Horrifying Healer — PLAYER'S MANUAL ADD (2026-08-11): "he's
+  awesome." Owned 1x, W identity, 5/5 Symbiote Hero. WWWWW is a real cost at
+  five colors — keep white sources honest. Do not cut.

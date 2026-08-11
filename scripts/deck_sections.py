@@ -38,7 +38,9 @@ SECTION_HINTS = (("basic", "Basics"), ("land", "Lands"), ("creature", "Creatures
                  ("enchantment", "Enchantments"), ("planeswalker", "Planeswalkers"),
                  ("instant", "Instants"), ("sorcer", "Sorceries"))
 
-_QTY = re.compile(r"^(\d+)\s+(.+?)\s*$")
+# Card lines are parsed with mtglib's ONE qty-line parser plus parse_deck's bare-name
+# fallback. A local `^(\d+)\s+` regex once dropped `1x Name` and bare-name lines —
+# forms mtglib.parse_deck accepts — so a regroup --apply silently DELETED those cards.
 
 
 def _hint(label):
@@ -61,9 +63,11 @@ def parse_file(path):
             if label is not None:
                 cur = label
                 continue
-            m = _QTY.match(line.strip())
-            if m and cur is not None:
-                entries.append((cur, int(m.group(1)), m.group(2)))
+            s = line.strip()
+            if cur is not None and s and not s.startswith("#"):
+                m = mtglib._QTY_RE.match(s)
+                qty, name = (int(m.group(1)), m.group(2).strip()) if m else (1, s)
+                entries.append((cur, qty, name))
                 continue
             if cur is None:
                 header.append(line)

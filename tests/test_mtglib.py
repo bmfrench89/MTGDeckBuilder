@@ -267,3 +267,20 @@ def test_produced_and_flags_survive_deck_stats_analyze(tmp_path, collection_file
     assert by["Sol Ring"].produced == {"C"}
     assert by["Sol Ring"].flags == {"rock", "ramp", "mana2"}
     assert by["Command Tower"].produced == {"W", "U", "B", "R", "G"}
+
+
+def test_classify_matches_curated_lists_through_the_front_face():
+    """Regression: the curated layer looked up only _norm(full name), so a split
+    card stored as 'Murderous Rider // Swift End' (the collection's spelling)
+    never matched REMOVAL's 'murderous rider' / 'swift end' entries and silently
+    classified by type alone."""
+    joined = mtglib.Card(name="Murderous Rider // Swift End", types=["Creature"])
+    assert "removal" in mtglib.classify(joined)
+    front = mtglib.Card(name="Murderous Rider", types=["Creature"])
+    assert "removal" in mtglib.classify(front)
+
+
+def test_snow_covered_basics_look_like_lands_by_name():
+    for b in ("Snow-Covered Island", "Snow-Covered Wastes", "Island"):
+        assert mtglib._looks_like_land_by_name(b)
+    assert not mtglib._looks_like_land_by_name("Snow Devil")   # a snow SPELL stays one

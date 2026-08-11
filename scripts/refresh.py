@@ -74,7 +74,8 @@ def main():
             ok += 1
             print(f"  ✓ {stem}  ({title}, theme={theme})")
         else:
-            print(f"  ✗ {stem}: {r.stderr.strip().splitlines()[-1] if r.stderr else 'failed'}")
+            err_lines = (r.stderr or "").strip().splitlines()
+            print(f"  ✗ {stem}: {err_lines[-1] if err_lines else 'failed'}")
 
     # Wishlist
     wl = os.path.join("data", "wishlist.md")

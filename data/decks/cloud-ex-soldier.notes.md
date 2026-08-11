@@ -35,3 +35,6 @@ T1-2, Cloud T3, suit up T4, protect the swing. Against wipes: bank Boros Charm /
 Clever Concealment; Gift of Immortality is the insurance policy. Godo lines: with
 Fireshrieker already down he threatens 24 commander-adjacent damage alone across his
 double combat.
+
+- Codsworth, Handy Helper — PLAYER'S MANUAL ADD (2026-08-11): equipment-matters
+  robot in the Voltron shell; the player placed it deliberately. Do not cut.

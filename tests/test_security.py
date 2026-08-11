@@ -63,3 +63,19 @@ def test_debug_mode_is_off_in_source():
     """The Werkzeug debugger is remote code execution. debug must be explicit False."""
     src = open(os.path.join(ROOT, "webapp", "app.py"), encoding="utf-8").read()
     assert "debug=False" in src and "debug=True" not in src
+
+
+def test_inline_js_handlers_contain_no_raw_newlines():
+    """Regression: the Delete-deck confirm() string in index.html carried a raw
+    newline, which is a JS SyntaxError in an inline handler — the browser nulls the
+    handler and the form submits UNGUARDED, deleting a deck with no confirmation.
+    Lock the invariant for every template: an on* attribute value stays one line."""
+    import glob, re
+    tpl_dir = os.path.join(ROOT, "webapp", "templates")
+    bad = []
+    for path in glob.glob(os.path.join(tpl_dir, "*.html")):
+        src = open(path, encoding="utf-8").read()
+        for m in re.finditer(r'\bon\w+\s*=\s*"([^"]*)"', src):
+            if "\n" in m.group(1):
+                bad.append((os.path.basename(path), m.group(1)[:60]))
+    assert bad == [], f"inline handlers with raw newlines: {bad}"

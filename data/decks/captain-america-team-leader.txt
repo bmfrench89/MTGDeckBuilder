@@ -10,7 +10,6 @@
 # --- Creatures ---
 1 Captain Marvel, Apex Avenger
 1 Captain America, Wings of Freedom
-1 Captain America, Super-Soldier
 1 Black Widow, Agile Avenger
 1 Metallic Mimic
 1 Masked Meower
@@ -31,6 +30,7 @@
 1 Iron Man, Armored Avenger
 1 Winter Soldier, Reborn Avenger
 1 Director Nick Fury
+1 Spectacular Spider-Man
 
 # --- Instants ---
 1 Think Twice
@@ -55,6 +55,7 @@
 1 Austere Command
 
 # --- Artifacts ---
+1 Avengers Quinjet
 1 Arcane Signet
 1 Sol Ring
 1 Talisman of Progress
@@ -66,7 +67,6 @@
 1 Fellwar Stone
 1 Tome of Legends
 1 Hero's Blade
-1 Herald's Horn
 1 Door of Destinies
 
 # --- Enchantments ---

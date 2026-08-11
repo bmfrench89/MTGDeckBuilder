@@ -54,8 +54,11 @@ def find_my_combos(commanders, main, ttl=CACHE_TTL):
     os.makedirs(CACHE_DIR, exist_ok=True)
     cache = os.path.join(CACHE_DIR, key + ".json")
     if os.path.exists(cache) and (time.time() - os.path.getmtime(cache)) < ttl:
-        with open(cache, encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(cache, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass          # corrupt cache = cache miss, never a crash (degrade contract)
     try:
         j = _post(commanders, main)
     except Exception as e:
@@ -68,8 +71,10 @@ def find_my_combos(commanders, main, ttl=CACHE_TTL):
         "almost": [_combo(c) for c in res.get("almostIncluded", [])],
         "error": None,
     }
-    with open(cache, "w", encoding="utf-8") as f:
+    tmp = cache + ".part"          # atomic write: a truncated dump must never become
+    with open(tmp, "w", encoding="utf-8") as f:   # a fresh-looking corrupt cache
         json.dump(out, f)
+    os.replace(tmp, cache)
     return out
 
 
