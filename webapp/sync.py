@@ -141,6 +141,12 @@ def status_view(now=None):
     when = ("just now" if mins < 1 else f"{mins} min ago" if mins < 60
             else f"{mins // 60} h ago" if mins < 48 * 60 else f"{mins // 1440} d ago")
     if st.get("ok"):
+        # A recovered sync is a success with homework: local edits were parked on
+        # a pushed rescue branch that a session still has to merge. Green would
+        # bury that — keep the warn styling and the script's own line until the
+        # next fully-clean sync overwrites it.
+        if "RECOVERED" in st.get("detail", ""):
+            return {"cls": "warn", "text": f"synced {when} — {st['detail'][:200]}"}
         # `pulled` stays in the status file until the NEXT sync (up to 24 h), but
         # the reload itself takes seconds — cap the "reloading" claim or the page
         # reads as stuck all day.

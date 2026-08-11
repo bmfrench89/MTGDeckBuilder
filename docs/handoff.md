@@ -40,6 +40,11 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   "⇅ Sync with GitHub" button on the Decks page. This replaced the planned
   PythonAnywhere Scheduled Task, which became **paid-only** (checked live 2026-08-10).
   Auto-detects the host via `PYTHONANYWHERE_SITE`; `MTG_AUTO_SYNC=1|0` overrides.
+  **Self-heals from squash-merge conflicts (2026-08-11):** PR #104's squash rewrote
+  deck files the server had local commits on and wedged the pull (seen live on the
+  player's phone). The script now parks local state on a PUSHED `server-rescue-<date>`
+  branch before resetting to upstream; the status line shows "synced — RECOVERED"
+  naming the branch, and **a session must merge that branch back** when it appears.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar
