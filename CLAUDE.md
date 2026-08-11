@@ -90,7 +90,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 456 tests, ~100s, offline
+pip install -r requirements-dev.txt && pytest          # 469 tests, ~100s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -195,7 +195,13 @@ Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥2
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
 basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` are never
 cut; role counts must stay in template range; lands only swap for lands; with no field data
-the manabase is left alone. Validate a tuned deck with EDHREC top-25 overlap — below ~50%
+the manabase is left alone. Which pass *owns* a card (land vs spell) is layered like
+`classify()`: real type data first (collection CSV / deck `.attrs.csv`), then the deck
+file's own type-exclusive section for cards already in the deck, then the field snapshot's
+`lands` key (EDHREC's own Lands sections) for incoming candidates, and the name heuristic
+only last — because on a name-only snapshot the spell pass once cut Hidden Lair (a real
+land the hints miss) and proposed Hallowed Fountain as a spell BUY. Untyped counts are
+reported in the CLI/report (`untyped`), never silently guessed around. Validate a tuned deck with EDHREC top-25 overlap — below ~50%
 means something is wrong, so say so rather than shipping quietly.
 
 ### Network access degrades, never crashes

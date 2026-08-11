@@ -10,8 +10,6 @@
 #     --collection data/collection/collection.csv --title "Y'shtola, Night's Blessed" \
 #     --commander "Y'shtola, Night's Blessed" --theme yshtola --out yshtola-dashboard.html --visual
 
-1 Y'shtola, Night's Blessed
-
 # --- Commander ---
 1 Y'shtola, Night's Blessed
 
@@ -79,6 +77,7 @@
 1 Rhystic Study
 1 Bastion of Remembrance
 1 Propaganda
+1 Observed Stasis
 
 # --- Lands ---
 1 Godless Shrine
@@ -103,7 +102,6 @@
 1 Shineshadow Snarl
 1 Evolving Wilds
 1 Sunlit Marsh
-1 Observed Stasis
 1 Scavenger Grounds
 1 Ash Barrens
 1 Demolition Field

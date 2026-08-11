@@ -73,6 +73,24 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   owned_additions.txt. The player DELETED captain-america-first-avenger via the
   app (2026-08-11); five decks + iron-man remain. Iron Man, Armored Avenger's
   single copy is both a commander and in team-leader's 99 (⇄ badged).
+  **yshtola repaired 2026-08-11**: `Observed Stasis` (verified: {3}{U} flash
+  Enchantment — Aura, FIC #40 — NOT a land) sat in the Lands section because the
+  2026-08-09 optimizer run, typeless on the snapshot, cut Hidden Lair (a real MSH
+  land that misses `_LAND_HINTS`) through the *spell* pass and the writer kept the
+  section. Moved to Enchantments, typed in the deck `.attrs.csv` so a regroup
+  holds, and a duplicate loose commander line (a real singleton violation flagged
+  by `singleton_violations`) removed — deck is 100 cards, 38 real lands (25
+  nonbasic + 13 basics; name-only heuristics see 36 until the server re-enriches).
+  Hidden Lair (owned ×1) is back in the available pool. The guardrail hole is now
+  CLOSED (same day): pass assignment is layered — real type data (CSV /
+  `.attrs.csv`) → the deck file's own type-exclusive section (deck cards) → the
+  field snapshot's new `lands` key, i.e. EDHREC's own Lands sections (candidates)
+  → name heuristic last — and the CLI reports the untyped count instead of
+  guessing silently. One leg waits on the loop: committed snapshots predate the
+  `lands` key, so the add-side signal is empty until the field-snapshot Action
+  regenerates them on the next deck merge (the Hallowed-Fountain-for-Absorb
+  proposal visibly corrects to a land-for-land swap once it does — verified by
+  simulating the refreshed snapshot).
 
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
@@ -102,7 +120,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **456 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **469 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
   export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards
   that are in no deck (Decks-page card, identity-matched to decks); `optimize()`

@@ -164,22 +164,31 @@ def _load_snapshot(slug):
 
 
 def _distill(rec):
-    """The three maps the fit engine consumes, from a recommendations() result."""
-    inclusion, synergy, names = {}, {}, {}
+    """The maps the fit engine consumes, from a recommendations() result.
+
+    `lands` is EDHREC's own type knowledge: every card the page files under a
+    "…Lands…" section. It matters because an unowned candidate has no collection
+    ref to type it — without this, the optimizer's spell pass once proposed
+    Hallowed Fountain (a land the name heuristic misses) as a BUY for Absorb."""
+    inclusion, synergy, names, lands = {}, {}, {}, set()
     for sec in rec.get("sections", []):
+        is_land_sec = "land" in (sec.get("header") or "").lower()
         for c in sec.get("cards", []):
             name = c.get("name")
             if not name:
                 continue
             keys = {mtglib._norm(name), mtglib._norm(mtglib.front_face(name))}
             names.setdefault(mtglib._norm(name), name)
+            if is_land_sec:
+                lands |= keys
             inc, syn = c.get("inclusion"), c.get("synergy")
             for k in keys:
                 if inc and inc > inclusion.get(k, 0):
                     inclusion[k] = inc
                 if syn is not None and syn > synergy.get(k, -999):
                     synergy[k] = syn
-    return {"inclusion": inclusion, "synergy": synergy, "names": names}
+    return {"inclusion": inclusion, "synergy": synergy, "names": names,
+            "lands": sorted(lands)}
 
 
 def save_snapshot(commander, coll_index=None, ttl=CACHE_TTL):
@@ -252,6 +261,27 @@ def field_names(commander, coll_index=None, ttl=CACHE_TTL):
             name = c.get("name")
             if name:
                 out.setdefault(mtglib._norm(name), name)
+    return out
+
+
+def land_names(commander, coll_index=None, ttl=CACHE_TTL):
+    """{normalized name, ...} — cards EDHREC files under a Lands section for this
+    commander. The field's OWN type knowledge, for candidates the collection can't
+    type (an unowned buy has no ref at all; a name-only snapshot has no Types).
+    Snapshots written before the `lands` key existed return an empty set — the
+    consumer falls back to its name heuristic, same degrade contract as the maps."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error") or rec.get("source") == "snapshot":
+        snap = _load_snapshot(slugify(commander))
+        return set(snap.get("lands") or []) if snap else set()
+    out = set()
+    for sec in rec.get("sections", []):
+        if "land" not in (sec.get("header") or "").lower():
+            continue
+        for c in sec.get("cards", []):
+            if c.get("name"):
+                out |= {mtglib._norm(c["name"]),
+                        mtglib._norm(mtglib.front_face(c["name"]))}
     return out
 
 
