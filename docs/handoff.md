@@ -56,7 +56,18 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Current data (season closed 2026-08-10)
 
-- **Six decks** in `data/decks/`, all re-optimized against the field snapshots and
+- **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
+  control, hand-built in a sandbox session (network blocked) from the name-only
+  snapshot as the "strongest possible new deck". Power **70/100, Bracket 3** at the
+  3-Game-Changer cap (Rhystic Study, Force of Will, Mystical Tutor — all shared
+  copies, badged). Finally places the free **Mana Drain** (ex-open-item riser).
+  Ships with a hand-written `.attrs.csv` (98 pre-2025 cards, certain knowledge;
+  commander row deliberately absent — its oracle text is **UNVERIFIED** offline,
+  functional role taken from `commanders.csv`). Next session on the PC:
+  `carddb.py --verify "Iron Man, Armored Avenger"`, re-enrich, re-run the
+  field-snapshot Action so `optimize.py` gets real inclusion data (0 field cards
+  today), and pull ~25 spare basic Islands (23 owned, 18 sleeved elsewhere).
+- **Six prior decks** in `data/decks/`, all re-optimized against the field snapshots and
   idempotent (a fresh `optimize.py --all` proposes nothing). Bracket state vs the
   owner's stated aim of **Bracket 3/4 where possible**: four decks at B3 (Y'shtola
   71 · Team Leader 58 · Ur-Dragon 58 · Cosmic Spider-Man 55); Cloud (B2, 50) and
