@@ -22,7 +22,7 @@
 1 Fellwar Stone
 
 # --- Card advantage ---
-1 Brainstorm
+1 Tome of Legends
 1 Mystic Remora
 1 Prosperity
 1 Think Twice
