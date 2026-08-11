@@ -76,7 +76,9 @@ def test_right_password_opens_the_app(gated):
 
 
 def test_next_cannot_be_an_open_redirect(gated):
-    for evil in ("https://evil.example", "//evil.example", ""):
+    # '/\\evil.example': browsers normalize the backslash to '/', turning it into a
+    # protocol-relative '//evil.example' — the startswith('//') check alone missed it
+    for evil in ("https://evil.example", "//evil.example", "/\\evil.example", ""):
         r = gated.post("/login", data={"password": "correct horse", "next": evil})
         assert r.status_code == 302
         loc = r.headers["Location"]

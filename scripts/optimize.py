@@ -105,7 +105,10 @@ def pool_report(deck_path, coll, idx, decks_dir, top_n=25):
     for c in mtglib.parse_deck(text):
         in_deck |= mtglib.name_keys(c.name)
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
-    committed = {mtglib._norm(n): v for n, v in usage.items()}
+    committed = {}
+    for n, v in usage.items():
+        for ck in mtglib.name_keys(n):       # full + front face: either probe hits
+            committed[ck] = v
 
     have, free, taken, unowned = [], [], [], []
     for k, inc in sorted(field.items(), key=lambda kv: -kv[1])[:top_n]:
@@ -160,8 +163,12 @@ def append_buylist(deck_path, buy_swaps, commander=""):
     if os.path.exists(path):
         with open(path, encoding="utf-8", newline="") as f:
             rd = csv.DictReader(f)
-            fields = rd.fieldnames or fields
+            existing_fields = rd.fieldnames or []
             rows = list(rd)
+        # keep the file's column order but guarantee the standard columns exist —
+        # a buylist without a Replaces column silently dropped every mapping and
+        # made this function report changes forever (never idempotent).
+        fields = list(existing_fields) + [c for c in fields if c not in existing_fields]
     existing = {mtglib._norm(r.get("Card") or ""): r for r in rows}
     changed = 0
     for cut, _inc_cut, add, inc_add, _kind in buy_swaps:
@@ -220,7 +227,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # sitting under "# --- Lands ---") through the SPELL pass because "hidden lair"
     # matches nothing in _LAND_HINTS, and the writer then parked the incoming Aura on
     # its line inside the Lands section.
-    enriched_by_key = {mtglib._norm(c.name): c for c in a["enriched"]}
+    enriched_by_key = {}
+    for c in a["enriched"]:
+        for ck in mtglib.name_keys(c.name):  # a front-face deck line must still find
+            enriched_by_key.setdefault(ck, c)   # its own type data (named 'A // B')
     section_land = _section_type_signal(text)
 
     def is_land_in_deck(name):
@@ -239,7 +249,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                   and not ((e := enriched_by_key.get(mtglib._norm(c.name))) is not None
                            and e.has_type_data))
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
-    committed = {mtglib._norm(n): v["total"] for n, v in usage.items()}
+    committed = {}
+    for n, v in usage.items():
+        for ck in mtglib.name_keys(n):       # full + front face: either probe hits
+            committed[ck] = v["total"]
     # a copy you've PINNED to another deck is spoken for, however well it scores here
     reserved = deckcore.pinned_elsewhere(stem)
     identity = ctx.get("identity") or set()
@@ -443,29 +456,38 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             # CLI printer) unpack (old, new, avail); the 2-tuple crashed them AFTER
             # _write had already rewritten the deck. Basics are always "free".
             land_swaps.append((land, cname.get(colors[i % len(colors)], "Wastes"), "free"))
-            i += 1
+            used_land.add(mtglib._norm(land))   # else the buy-land pairing can set a
+            i += 1                              # Replaces target this run just removed
             need -= 1
 
     # ---- buys: recommended, never written into the 99 -----------------------------------
     # Each buy pairs one-to-one with a card that STAYS in the deck (a cut the owned
     # passes didn't consume, or a weak land the land pass left) so the buylist's
     # Replaces column always names a real card to pull when the purchase arrives.
-    buy_swaps, used_buy = [], set()
+    buy_swaps, used_buy, used_buy_add = [], set(), set()
     for val_add, _rank, add_name, avail, inc_add in buy_adds:
+        akeys = mtglib.name_keys(add_name)   # a DFC arrives under two field keys —
+        if akeys & used_buy_add:             # without this it hit the buylist twice
+            continue
         for val_cut, inc_cut, cut_name in cuts:
             ck = mtglib._norm(cut_name)
             if ck in used_cut or ck in used_buy or val_add - val_cut < margin:
                 continue
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "spell"))
             used_buy.add(ck)
+            used_buy_add |= akeys
             break
     for _val, _rank, add_name, avail, inc_add in buy_land_adds:
+        akeys = mtglib.name_keys(add_name)
+        if akeys & used_buy_add:
+            continue
         for inc_cut, cut_name in weak_lands:
             ck = mtglib._norm(cut_name)
             if ck in used_land or ck in used_buy or inc_add - inc_cut < margin:
                 continue
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "land"))
             used_buy.add(ck)
+            used_buy_add |= akeys
             break
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
@@ -782,9 +804,11 @@ def main():
     ap.add_argument("--owned-only", action="store_true",
                     help="only add cards with a FREE copy (never share or buy)")
     ap.add_argument("--no-buys", action="store_true",
-                    help="don't add cards you don't own")
+                    help="skip buy recommendations entirely (buys never enter the "
+                         "deck either way — they go to <deck>.buylist.csv)")
     ap.add_argument("--buy-threshold", type=int, default=55,
-                    help="minimum inclusion %% for an unowned card to be added")
+                    help="minimum inclusion %% for an unowned card to be "
+                         "recommended on the buylist")
     ap.add_argument("--max-swaps", type=int, default=40,
                     help="safety cap on how many cards a single pass may change")
     ap.add_argument("--apply", action="store_true", help="write the changes")
@@ -810,10 +834,10 @@ def main():
         if not r["swaps"] and not r["land_swaps"]:
             print("   already aligned with the field — no changes")
         for cut, ic, add, ia, avail in r["swaps"]:
-            tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
+            tag = " [shared]" if avail == "share" else ""   # buys never reach swaps
             print(f"   {ic:>3}% {cut:32} ->  {ia:>3}% {add}{tag}")
         for old, new, avail in r["land_swaps"]:
-            tag = {"buy": " [BUY]", "share": " [shared]"}.get(avail, "")
+            tag = " [shared]" if avail == "share" else ""
             print(f"   land  {old:32} ->  {new}{tag}")
         for cut, ic, add, ia, kind in r.get("buy_swaps", []):
             print(f"   buy   {add} ({ia}%) — would replace {cut} ({ic}%)"

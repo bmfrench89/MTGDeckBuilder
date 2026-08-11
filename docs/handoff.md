@@ -135,7 +135,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **470 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **480 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
   export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards
   that are in no deck (Decks-page card, identity-matched to decks); `optimize()`

@@ -415,3 +415,20 @@ def test_snapshot_cli_flags_still_exist():
     import edhrec as _e
     src = open(_e.__file__, encoding="utf-8").read()
     assert "--snapshot-all" in src and "save_snapshot" in src
+
+
+def test_spellbook_degrades_on_a_corrupt_cache(tmp_path, monkeypatch):
+    """Regression: the cache-hit path was an unguarded json.load, so a truncated
+    cache file CRASHED find_my_combos instead of degrading — the module's own
+    contract says errors become an `error` payload. A corrupt file is a miss."""
+    import spellbook
+    monkeypatch.setattr(spellbook, "CACHE_DIR", str(tmp_path))
+    import hashlib as _h
+    sig = "|".join(sorted(["Test Commander"])) + "#" + "|".join(sorted(["sol ring"]))
+    key = _h.sha1(sig.encode()).hexdigest()[:16]
+    (tmp_path / f"{key}.json").write_text('{"present": [truncated', encoding="utf-8")
+    def boom(*a, **k):
+        raise OSError("egress blocked")
+    monkeypatch.setattr(spellbook, "_post", boom)
+    out = spellbook.find_my_combos(["Test Commander"], [("sol ring", 1)])
+    assert out["error"] and out["present"] == [] and out["almost"] == []

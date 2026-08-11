@@ -121,9 +121,11 @@ _PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens"}
 
 def _safe_next(target):
     """Only ever redirect within the app — an absolute URL here would be an
-    open-redirect hole on a public host."""
-    return target if target and target.startswith("/") \
-        and not target.startswith("//") else url_for("index")
+    open-redirect hole on a public host. Backslashes are normalized first:
+    browsers treat '/\\evil.example' as '//evil.example' (protocol-relative)."""
+    t = (target or "").replace("\\", "/")
+    return target if t and t.startswith("/") and not t.startswith("//") \
+        else url_for("index")
 
 
 @app.before_request
@@ -275,7 +277,24 @@ def deck(stem):
     res = bd.generate(m["path"], COLLECTION, title=m["title"],
                       commander=m["commander"], theme=m["theme"], decks_dir=DECKS_DIR,
                       editable=True)
-    return res["dashboard"]
+    html = res["dashboard"]
+    # Surface the singleton guard on the primary surface. optimize() computes this
+    # after every applying run, but the POST routes discard the report — so a
+    # violation from ANY source was invisible in the app (CLAUDE.md: this class of
+    # bug was silent for four commits; the check exists to be SEEN).
+    try:
+        bad = optimize.singleton_violations(m["path"])
+    except Exception:
+        bad = []
+    if bad:
+        from markupsafe import escape
+        msg = " · ".join(f"{q}× {escape(n)}" for q, n in bad)
+        banner = ('<div style="background:#7f1d1d;color:#fff;padding:8px 16px;'
+                  'font:600 14px system-ui">⚠ ILLEGAL — Commander allows one copy: '
+                  f'{msg}</div>')
+        html = re.sub(r"(<body[^>]*>)", r"\1" + banner.replace("\\", "\\\\"),
+                      html, count=1)
+    return html
 
 
 @app.route("/deck/<stem>/visual")
@@ -871,7 +890,9 @@ def build_deck_save(commander):
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
     try:
-        optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
+        r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
+        if r.get("illegal"):
+            app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
     except Exception:
         pass                      # offline / EDHREC down: keep the un-tuned draft
     return redirect(url_for("deck", stem=stem))
@@ -885,7 +906,9 @@ def deck_optimize(stem):
         abort(404)
     coll, idx = collection_index()
     try:
-        optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
+        r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
+        if r.get("illegal"):
+            app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
     except Exception:
         pass
     return redirect(url_for("deck", stem=stem))

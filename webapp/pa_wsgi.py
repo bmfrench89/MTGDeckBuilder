@@ -3,14 +3,20 @@
 
 Nothing about the app changes to run hosted. ``webapp/app.py`` keeps ``app.run()``
 behind ``if __name__ == "__main__":`` and resolves every path relative to the repo
-root, so importing it here starts no server, needs no environment variables, and
-needs no secret key (the app uses no signed sessions).
+root, so importing it here starts no server.
+
+**One environment variable is required on a public host: ``MTG_PASSWORD``.** It
+turns on the login gate and derives the session-cookie signing key (``app.py``
+uses signed sessions when the gate is on). Without it the app serves the whole
+collection to anyone with the URL — fine on localhost, not on a public host.
 
 This module is **self-locating**: it puts its own directory on ``sys.path``, so it
 works from any checkout path with no edits. On PythonAnywhere, replace the contents
 of the auto-generated ``/var/www/<username>_pythonanywhere_com_wsgi.py`` with::
 
+    import os
     import sys
+    os.environ.setdefault("MTG_PASSWORD", "<choose a real passphrase>")
     sys.path.insert(0, "/home/<username>/MTGDeckBuilder/webapp")
     from pa_wsgi import application   # noqa: F401
 

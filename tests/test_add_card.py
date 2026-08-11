@@ -272,3 +272,26 @@ def test_replace_with_a_new_card_still_works_and_is_logged(client):
     assert "Counterspell" in text and "Arcane Signet" not in text
     log = (client._decks / "testdeck.changes.csv").read_text(encoding="utf-8")
     assert "manual-replace" in log
+
+
+def test_dashboard_shows_an_illegal_banner_for_a_duplicate(client):
+    """Regression: optimize() computes singleton_violations after every applying
+    run, but the webapp's POST routes discarded the report — a violation from ANY
+    source was invisible in the app. The deck page now banners it."""
+    deck = client._decks / "testdeck.txt"
+    deck.write_text(deck.read_text(encoding="utf-8") + "1 Sol Ring\n1 Sol Ring\n",
+                    encoding="utf-8")
+    html = client.get("/deck/testdeck").get_data(as_text=True)
+    assert "ILLEGAL" in html and "Sol Ring" in html
+
+
+def test_dashboard_shows_no_banner_when_legal(client):
+    # the shared fixture deck runs '2 Arcane Signet' (deliberately, for the
+    # validation tests) — write a genuinely legal deck for the negative case
+    (client._decks / "testdeck.txt").write_text(
+        "# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+        "# --- Commander ---\n1 Test Commander\n\n"
+        "# --- Ramp ---\n1 Sol Ring\n\n# --- Lands ---\n10 Island\n",
+        encoding="utf-8")
+    html = client.get("/deck/testdeck").get_data(as_text=True)
+    assert "ILLEGAL — Commander allows one copy" not in html

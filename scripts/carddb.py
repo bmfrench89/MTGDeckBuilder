@@ -261,10 +261,10 @@ def _response_keys(c):
         keys.append(("sn", str(c["set"]).lower(), str(c["collector_number"])))
     name = c.get("name") or ""
     if name:
-        keys.append(("name", mtglib._norm(name)))
-        front = name.split("//")[0].strip()   # DFC / adventure front face
-        if front:
-            keys.append(("name", mtglib._norm(front)))
+        # front_face, never a naive split("//"): a bare '//' can be part of a real
+        # name ('SP//dr, Piloted by Peni') and the naive split mints a bogus alias.
+        for k in mtglib.name_keys(name):
+            keys.append(("name", k))
     return keys
 
 

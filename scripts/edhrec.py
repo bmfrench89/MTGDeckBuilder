@@ -52,13 +52,19 @@ def _fetch(slug, ttl=CACHE_TTL):
     os.makedirs(CACHE_DIR, exist_ok=True)
     cache = os.path.join(CACHE_DIR, slug + ".json")
     if os.path.exists(cache) and (time.time() - os.path.getmtime(cache)) < ttl:
-        with open(cache, encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(cache, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass    # corrupt-but-fresh cache = miss; refetch instead of pinning the
+                    # snapshot fallback for the whole TTL
     req = urllib.request.Request(BASE % slug, headers=_HEADERS)
     with urllib.request.urlopen(req, timeout=25) as r:
         data = json.loads(r.read())
-    with open(cache, "w", encoding="utf-8") as f:
+    tmp = cache + ".part"                      # atomic, like carddb/rulings/rules
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f)
+    os.replace(tmp, cache)
     return data
 
 
@@ -207,8 +213,10 @@ def save_snapshot(commander, coll_index=None, ttl=CACHE_TTL):
                "sample_decks": rec.get("sample_decks"), **data}
     os.makedirs(SNAP_DIR, exist_ok=True)
     path = _snapshot_path(rec["slug"])
-    with open(path, "w", encoding="utf-8") as f:
+    tmp = path + ".part"        # atomic: a crash mid-write must never truncate a
+    with open(tmp, "w", encoding="utf-8") as f:   # good committed snapshot
         json.dump(payload, f, indent=1)
+    os.replace(tmp, path)
     return path
 
 
