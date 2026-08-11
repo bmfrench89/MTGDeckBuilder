@@ -56,8 +56,24 @@ fi
 echo "sync: pulling code updates (rebase)…"
 if ! git pull --rebase; then
   git rebase --abort 2>/dev/null || true
-  echo "sync: PULL FAILED — rebase aborted, clone restored; resolve from a console" >&2
-  exit 1
+  # Self-heal (added after this bit live, 2026-08-11): main is squash-merged, so a
+  # session's PR can rewrite the very files the server has local commits on — the
+  # rebase then conflicts every day forever and the loop is wedged until a human
+  # opens a console. Recovery: park the local state on a rescue branch and PUSH it,
+  # then reset to upstream. The push comes first — local edits are provably on
+  # GitHub before a single byte is discarded; a session merges the rescue branch
+  # back. If the rescue push itself fails (dead PAT, network), fall back to the
+  # old honest abort: nothing is ever reset that isn't already saved remotely.
+  rescue="server-rescue-$(date +%Y%m%d)"
+  git branch -f "$rescue"
+  if git push -f origin "$rescue"; then
+    git reset --hard "@{u}"
+    echo "sync: RECOVERED — local edits parked on $rescue (pushed to GitHub); clone reset to upstream. A session should merge $rescue back."
+  else
+    git branch -D "$rescue" 2>/dev/null || true
+    echo "sync: PULL FAILED — rebase aborted, clone restored; resolve from a console" >&2
+    exit 1
+  fi
 fi
 
 echo "sync: pushing…"

@@ -253,3 +253,90 @@ def test_script_still_adds_only_the_named_paths():
         "sweeping adds could commit the private collection CSV's neighbors and runtime junk"
     for p in ("data/decks", "data/collection/owned_additions.txt", "data/collection/pins.csv"):
         assert p in src
+
+
+def test_script_pushes_the_rescue_branch_before_resetting_anything():
+    """The self-heal order is the whole safety argument: local edits must be ON
+    GITHUB before reset --hard discards them locally. Seen live 2026-08-11 —
+    a squash-merged PR rewrote deck files the server had local commits on, and
+    the old abort-only path wedged the daily sync until a console visit."""
+    code = [ln for ln in _script_src().splitlines() if not ln.lstrip().startswith("#")]
+    src = "\n".join(code)
+    push = src.find('git push -f origin "$rescue"')
+    reset = src.find("reset --hard")
+    assert push != -1 and reset != -1, "the rescue path must exist"
+    assert push < reset, "reset before the rescue push would discard unsaved edits"
+
+
+def _git_env(tmp_path):
+    """Hermetic git: identity via env, HOME redirected so no user config leaks in."""
+    return {**os.environ, "SYNC_SKIP_RELOAD": "1", "HOME": str(tmp_path),
+            "GIT_CONFIG_GLOBAL": str(tmp_path / "gitconfig"),
+            "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
+            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com"}
+
+
+@pytest.mark.skipif(os.name == "nt", reason="the script targets the bash-equipped server")
+def test_script_recovers_from_a_squash_rewritten_upstream(tmp_path):
+    """End to end in throwaway repos: upstream history rewritten under the server's
+    local deck commit (exactly what a squash-merged PR does), sync must (1) push
+    the local state to a rescue branch, (2) reset the clone to upstream, (3) exit
+    0 with RECOVERED in its summary — and the edit must be readable on origin."""
+    env = _git_env(tmp_path)
+
+    def g(cwd, *args):
+        r = subprocess.run(["git", *args], cwd=str(cwd), env=env,
+                           capture_output=True, text=True)
+        assert r.returncode == 0, f"git {args}: {r.stderr}"
+        return r.stdout
+
+    origin = tmp_path / "origin.git"
+    origin.mkdir()
+    g(origin, "init", "--bare", "--initial-branch=main", ".")
+
+    seed = tmp_path / "seed"
+    g(tmp_path, "clone", str(origin), "seed")
+    (seed / "data" / "decks").mkdir(parents=True)
+    (seed / "data" / "decks" / "a.txt").write_text("1 Foo\n", encoding="utf-8")
+    (seed / "sync_server.sh").write_text(_script_src(), encoding="utf-8")
+    g(seed, "add", "-A")
+    g(seed, "commit", "-m", "seed")
+    g(seed, "push", "-u", "origin", "main")
+
+    server = tmp_path / "server"
+    g(tmp_path, "clone", str(origin), "server")
+
+    # Upstream rewrites the deck file (the squash-merged PR)…
+    (seed / "data" / "decks" / "a.txt").write_text("1 Bar\n", encoding="utf-8")
+    g(seed, "commit", "-am", "pr rewrite")
+    g(seed, "push")
+    # …while the server holds an uncommitted local edit to the same file.
+    (server / "data" / "decks" / "a.txt").write_text("1 Baz\n", encoding="utf-8")
+
+    r = subprocess.run(["bash", "sync_server.sh"], cwd=str(server), env=env,
+                       capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    assert r.returncode == 0, f"recovery must succeed: {out}"
+    assert "RECOVERED" in out and "server-rescue-" in out
+
+    rescue = g(origin, "for-each-ref", "--format=%(refname:short)",
+               "refs/heads/server-rescue-*").strip()
+    assert rescue, "the local edit must be parked on a pushed rescue branch"
+    assert "1 Baz" in g(origin, "show", f"{rescue}:data/decks/a.txt"), \
+        "the rescued commit must carry the server's edit"
+    assert (server / "data" / "decks" / "a.txt").read_text(encoding="utf-8") == "1 Bar\n", \
+        "the clone must end on upstream's content"
+    assert g(server, "status", "--porcelain").strip() == "", "and be clean"
+    assert g(server, "rev-parse", "HEAD") == g(origin, "rev-parse", "main"), \
+        "HEAD must equal origin/main so tomorrow's sync fast-forwards"
+
+
+def test_status_view_keeps_a_recovered_sync_visible(clean_env):
+    """RECOVERED is a success with homework (a rescue branch awaits merging) —
+    it must render as warn with the script's own line, not a green 'synced'."""
+    now = 1_000_000.0
+    sync._write_status({"when": now - 60, "ok": True, "pulled": True,
+                        "detail": "sync: RECOVERED — local edits parked on "
+                                  "server-rescue-20260811 (pushed to GitHub)"})
+    v = sync.status_view(now)
+    assert v["cls"] == "warn" and "server-rescue-20260811" in v["text"]
