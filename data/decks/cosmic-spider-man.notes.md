@@ -38,3 +38,19 @@ This is a v1 from owned cards. The Spider *creature types* on the newest cards a
 reasoned/spot-verified, not fully confirmed — load the attribute CSV (Type/Subtype
 column) to lock in that every included card is truly a Spider, and to complete the MV
 spread below.
+
+# Physical copies & ownership (2026-08-11 audit)
+Twelve cards in this 99 are NOT in the collection snapshot (Peter Parker; Gwenom,
+Remorseless; Spider-Man 2099; Superior Spider-Man; Mary Jane Watson; Spider-Punk;
+Spider-Ham, Peter Porker; Arasta of the Endless Web; Arachnogenesis; Spider-Sense;
+Spider Manifestation; Spider-Woman, Stunning Savior). The likely cause: they are
+SLEEVED in this deck and never went through the Sorted export. If the player
+confirms owning them, add them to data/collection/owned_additions.txt (player's
+word beats the export — grounding rule 6). Until then every ownership count
+treats them as unowned.
+
+# Do not cut (riser pass 2026-08-11)
+- Ezekiel Sims, Spider-Totem — 24% field, placed over 0%-field Tome of Legends
+  (whose copy was over-committed across three decks; this cut freed it).
+- Thriving Isle — the 100th card; the deck ran 99 for an unknown stretch, and at
+  five colors the land count needed the slot more than any spell did.

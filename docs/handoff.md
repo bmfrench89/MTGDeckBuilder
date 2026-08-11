@@ -64,9 +64,13 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   surfaces via `deckcore.load_power_tags`. The migration fixed real misfiles
   (Rhystic Study and Lightning Greaves sat under "Lands" in ur-dragon). ~15 cards
   across the decks sit in explicit `Unsorted` sections pending enrichment — the
-  server can re-run deck_sections after a sync to resolve them. **Known issue:
-  cosmic-spider-man totals 99 cards** (one short; predates the migration — player
-  to pick the 100th). The player DELETED captain-america-first-avenger via the
+  server can re-run deck_sections after a sync to resolve them. **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
+  commander block (annotated name + stray duplicate line) — cleaned; Ezekiel
+  Sims, Spider-Totem (24% field) in over 0%-field Tome of Legends (freeing an
+  over-committed copy); Thriving Isle added as the 100th card. NEW FINDING:
+  twelve of its cards are absent from the snapshot (likely sleeved, never
+  exported) — list in the deck's .notes.md; player to confirm →
+  owned_additions.txt. The player DELETED captain-america-first-avenger via the
   app (2026-08-11); five decks + iron-man remain. Iron Man, Armored Avenger's
   single copy is both a commander and in team-leader's 99 (⇄ badged).
 
