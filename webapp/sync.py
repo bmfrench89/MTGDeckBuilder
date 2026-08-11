@@ -22,6 +22,8 @@ STATUS = os.path.join(ROOT, "data", "cache", "sync_status.json")
 TTL = 24 * 3600          # one auto-sync per day is the whole design
 STALE_RUNNING = 600      # a "running" entry older than this is a dead worker
 RELOAD_DELAY = 4.0       # button path: let the redirect land before reloading
+RELOAD_SHOWN = 120       # "app reloading" is only true this long; after that the
+                         # reload finished ages ago and the label would read as stuck
 
 _lock = threading.Lock()  # one sync at a time within this process
 
@@ -139,6 +141,12 @@ def status_view(now=None):
     when = ("just now" if mins < 1 else f"{mins} min ago" if mins < 60
             else f"{mins // 60} h ago" if mins < 48 * 60 else f"{mins // 1440} d ago")
     if st.get("ok"):
-        extra = " · updates pulled, app reloading" if st.get("pulled") else ""
+        # `pulled` stays in the status file until the NEXT sync (up to 24 h), but
+        # the reload itself takes seconds — cap the "reloading" claim or the page
+        # reads as stuck all day.
+        extra = ""
+        if st.get("pulled"):
+            extra = (" · updates pulled, app reloading" if age < RELOAD_SHOWN
+                     else " · updates pulled")
         return {"cls": "good", "text": f"synced {when}{extra}"}
     return {"cls": "warn", "text": f"sync failed {when} — {st.get('detail', '')}".rstrip(" —")}

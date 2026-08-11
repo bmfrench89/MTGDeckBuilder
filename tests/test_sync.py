@@ -204,13 +204,28 @@ def test_status_view_humanizes_ok_fail_and_stale_running(clean_env):
     now = 1_000_000.0
     sync._write_status({"when": now - 7200, "ok": True, "pulled": True, "detail": ""})
     v = sync.status_view(now)
-    assert v["cls"] == "good" and "2 h ago" in v["text"] and "reloading" in v["text"]
+    assert v["cls"] == "good" and "2 h ago" in v["text"] and "updates pulled" in v["text"]
     sync._write_status({"when": now - 120, "ok": False, "detail": "sync: PULL FAILED"})
     v = sync.status_view(now)
     assert v["cls"] == "warn" and "PULL FAILED" in v["text"]
     sync._write_status({"when": now - sync.STALE_RUNNING - 1, "ok": None,
                         "detail": "running"})
     assert sync.status_view(now)["cls"] == "warn", "a dead run must not read as success"
+
+
+def test_status_view_stops_claiming_a_reload_that_finished(clean_env):
+    """`pulled` lives in the status file until the NEXT sync — up to 24 h — but the
+    reload takes seconds. The 'app reloading' label must be time-bounded or the
+    Decks page reads as stuck syncing all day (seen live on the phone)."""
+    now = 1_000_000.0
+    sync._write_status({"when": now - 30, "ok": True, "pulled": True, "detail": ""})
+    assert "app reloading" in sync.status_view(now)["text"], \
+        "right after the pull the reload really is in flight — say so"
+    sync._write_status({"when": now - sync.RELOAD_SHOWN - 1, "ok": True,
+                        "pulled": True, "detail": ""})
+    v = sync.status_view(now)
+    assert "updates pulled" in v["text"] and "reloading" not in v["text"], \
+        "minutes later the reload is long done — keep the fact, drop the claim"
 
 
 # --------------------------------------------------------------------------- #
