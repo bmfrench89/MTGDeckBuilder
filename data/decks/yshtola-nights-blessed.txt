@@ -57,7 +57,7 @@
 1 Toxic Deluge
 1 Vindicate
 1 Cleansing Nova
-1 Read the Bones
+1 Painful Truths
 1 Night's Whisper
 
 # --- Artifacts ---
