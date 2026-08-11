@@ -38,13 +38,13 @@
 1 Condemn
 1 Dispatch
 1 Swords to Plowshares
-1 Rending Volley
+1 Metallic Mimic
 1 Rip Apart
 1 Seal of Cleansing
 1 Seal of Fire
 
 # --- Board wipes ---
-1 Planar Collapse
+1 Hero's Blade
 1 Austere Command
 
 # --- Counters ---

@@ -165,8 +165,12 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 cards that sat in no deck: `Crop Rotation` is now in cloud-ex-soldier (the B2→B3
 move, done in the voltron rebuild), `Codsworth, Handy Helper` went to
 captain-america-first-avenger via the player's own app edit, and `Mana Drain` opened
-the new iron-man-armored-avenger deck. **`Smaug, Wicked Worm` remains unplaced** —
-the principle stands: placing a new card should be a routine pass over every arrival.
+the new iron-man-armored-avenger deck. **`Smaug, Wicked Worm` placed 2026-08-11** into the-ur-dragon
+(12% field there, over 0%-field Syphon Soul) — the placement backlog is CLEAR. Same
+pass: Dark Ritual → yshtola (22%, over 0% Syphon Soul; deck now 72/100 and finally
+has a `.notes.md` protecting its core), Hero's Blade + Metallic Mimic (62% field!) →
+team-leader (over 0% Planar Collapse / Rending Volley). The principle stands:
+placing a new card should be a routine pass over every arrival.
 - **Cloud rebuild note:** cloud-ex-soldier is now a protected voltron build
   (62/100, B3, `.notes.md` names the engine). A 2026-08-11 `optimize --apply` had
   churned the kill package out for field-popular FF cards (the field builds Cloud
