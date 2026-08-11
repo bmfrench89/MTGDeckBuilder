@@ -24,7 +24,10 @@
 
 1 Cosmic Spider-Man
 
-# --- Spiders & Spider-matters creatures (25) ---
+# --- Commander ---
+1 Cosmic Spider-Man  ({W}{U}{B}{R}{G}, 5/5)
+
+# --- Creatures ---
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
 1 Peter Parker
@@ -50,28 +53,14 @@
 1 Web-Warriors
 1 Spider-Bot
 1 Spider-Punk
-
-# --- Typal anthems / gear (4) ---
-1 Roaming Throne
-1 Radioactive Spider
 1 Miles Morales
 1 Aunt May
-
-# --- Ramp / fixing (12) ---
-1 Sol Ring
-1 Arcane Signet
-1 Commander's Sphere
-1 Relic of Legends
-1 Spider Manifestation
 1 Spider-Ham, Peter Porker
-1 Spider-Woman, Stunning Savior
-1 Cultivate
-1 Farseek
-1 Nature's Lore
 1 Sakura-Tribe Elder
 1 Solemn Simulacrum
+1 Madame Web, Clairvoyant
 
-# --- Removal / interaction (8) ---
+# --- Instants ---
 1 Swords to Plowshares
 1 Path to Exile
 1 Generous Gift
@@ -80,17 +69,33 @@
 1 Assassin's Trophy
 1 Terminate
 1 Void Rend
+1 Heroic Intervention
+1 Counterspell
+1 Amazing Acrobatics
 
-# --- Card advantage / protection (7) ---
-1 Rhystic Study
-1 Kindred Discovery
+# --- Sorceries ---
+1 Cultivate
+1 Farseek
+1 Nature's Lore
 1 Night's Whisper
+
+# --- Artifacts ---
+1 Roaming Throne
+1 Sol Ring
+1 Arcane Signet
+1 Commander's Sphere
+1 Relic of Legends
 1 Skullclamp
 1 Tome of Legends
-1 Heroic Intervention
 1 Lightning Greaves
 
-# --- Lands (37) ---
+# --- Enchantments ---
+1 Rhystic Study
+1 Kindred Discovery
+1 Origin of Spider-Man
+1 Wall Crawl
+
+# --- Lands ---
 1 Command Tower
 1 Exotic Orchard
 1 Plaza of Heroes
@@ -106,19 +111,15 @@
 1 Viridescent Bog
 1 Suburban Sanctuary
 1 Arasta of the Endless Web
+
+# --- Basics ---
 5 Forest
 5 Plains
 4 Island
 4 Swamp
 4 Mountain
 
-# --- Enchantments ---
-1 Origin of Spider-Man
-1 Wall Crawl
-
-# --- Creatures ---
-1 Madame Web, Clairvoyant
-
-# --- Instants & sorceries ---
-1 Counterspell
-1 Amazing Acrobatics
+# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
+1 Radioactive Spider
+1 Spider Manifestation
+1 Spider-Woman, Stunning Savior

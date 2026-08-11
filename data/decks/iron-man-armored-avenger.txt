@@ -9,43 +9,28 @@
 # --- Commander ---
 1 Iron Man, Armored Avenger
 
-# --- Lands ---
-30 Island
-1 Command Tower
-1 Buried Ruin
-1 Rogue's Passage
-1 Faerie Conclave
-1 Bonders' Enclave
-1 Scavenger Grounds
+# --- Creatures ---
+1 Windreader Sphinx
+1 Clever Impersonator
+1 Torrential Gearhulk
+1 Archmage Emeritus
+1 Sharding Sphinx
+1 Gearseeker Serpent
+1 Diluvian Primordial
+1 Warden of Evos Isle
+1 Thunderclap Wyvern
+1 Phantom Warrior
 
-# --- Ramp ---
-1 Sol Ring
-1 Arcane Signet
-1 Mind Stone
-1 Sky Diamond
-1 Thought Vessel
-1 Worn Powerstone
-1 Hedron Archive
-1 Coveted Jewel
-1 Inspiring Statuary
-
-# --- Card Draw ---
-1 Rhystic Study
-1 Mystic Remora
+# --- Instants ---
 1 Brainstorm
 1 Frantic Search
 1 Accumulated Knowledge
-1 Winged Words
 1 Think Twice
 1 Thirst for Knowledge
 1 Into the Story
 1 Visions of Beyond
 1 Dig Through Time
 1 Opportunity
-1 Coastal Piracy
-1 Windreader Sphinx
-
-# --- Counterspells ---
 1 Force of Will
 1 Mana Drain
 1 Counterspell
@@ -61,36 +46,49 @@
 1 Thwart
 1 An Offer You Can't Refuse
 1 Sublime Epiphany
-
-# --- Tutors ---
 1 Mystical Tutor
-1 Tinker
-
-# --- Removal & Theft ---
-1 Bribery
 1 Dominate
-1 Clever Impersonator
-1 Rite of Replication
 1 Capsize
 1 Snap
 1 Aetherize
 1 Evacuation
+1 Misdirection
+
+# --- Sorceries ---
+1 Winged Words
+1 Tinker
+1 Bribery
+1 Rite of Replication
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+1 Mind Stone
+1 Sky Diamond
+1 Thought Vessel
+1 Worn Powerstone
+1 Hedron Archive
+1 Coveted Jewel
+1 Inspiring Statuary
 1 Icy Manipulator
-
-# --- Engine & Payoffs ---
-1 Torrential Gearhulk
-1 Archmage Emeritus
-1 Sharding Sphinx
-1 Gearseeker Serpent
-1 Diluvian Primordial
-1 Warden of Evos Isle
-1 Thunderclap Wyvern
-1 Favorable Winds
-1 Gravitational Shift
-1 Phantom Warrior
-
-# --- Protection & Tax ---
 1 Swiftfoot Boots
 1 Darksteel Plate
+
+# --- Enchantments ---
+1 Rhystic Study
+1 Mystic Remora
+1 Coastal Piracy
+1 Favorable Winds
+1 Gravitational Shift
 1 Propaganda
-1 Misdirection
+
+# --- Lands ---
+1 Command Tower
+1 Buried Ruin
+1 Rogue's Passage
+1 Faerie Conclave
+1 Bonders' Enclave
+1 Scavenger Grounds
+
+# --- Basics ---
+30 Island
