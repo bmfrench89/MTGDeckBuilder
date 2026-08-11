@@ -81,9 +81,16 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   holds, and a duplicate loose commander line (a real singleton violation flagged
   by `singleton_violations`) removed — deck is 100 cards, 38 real lands (25
   nonbasic + 13 basics; name-only heuristics see 36 until the server re-enriches).
-  Hidden Lair (owned ×1) is back in the available pool. Open hardening idea: the
-  optimizer's land guardrail is name-heuristic-blind when types are absent —
-  an unhinted land name can be cut as a "spell".
+  Hidden Lair (owned ×1) is back in the available pool. The guardrail hole is now
+  CLOSED (same day): pass assignment is layered — real type data (CSV /
+  `.attrs.csv`) → the deck file's own type-exclusive section (deck cards) → the
+  field snapshot's new `lands` key, i.e. EDHREC's own Lands sections (candidates)
+  → name heuristic last — and the CLI reports the untyped count instead of
+  guessing silently. One leg waits on the loop: committed snapshots predate the
+  `lands` key, so the add-side signal is empty until the field-snapshot Action
+  regenerates them on the next deck merge (the Hallowed-Fountain-for-Absorb
+  proposal visibly corrects to a land-for-land swap once it does — verified by
+  simulating the refreshed snapshot).
 
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
@@ -113,7 +120,7 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   regenerated from the same export (PR #88) — grounding is consistent everywhere.
 - **Field-overlap validation of the optimizer ranking: PASSED** — every deck sits
   at 24–25 of its field's top 25 (the ~50% revert threshold is nowhere close).
-- Test suite: **456 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
+- Test suite: **469 passing**, offline and hermetic; CI runs Python 3.11 and 3.13.
 - **Engine advisors** (PR #90, `docs/spec-engine-advisors.md`): the loader keeps the
   export's acquisition date; `deckcore.new_arrivals()` surfaces recently bought cards
   that are in no deck (Decks-page card, identity-matched to decks); `optimize()`

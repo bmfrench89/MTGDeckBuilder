@@ -171,6 +171,123 @@ def test_tidy_never_leaves_a_type_section_violated(tmp_path, collection_file):
     assert violations == []
 
 
+def test_section_type_signal_reads_only_type_exclusive_sections():
+    text = """\
+# Title: T
+1 Pre-Section Card
+
+# --- Creatures ---
+1 Some Creature
+
+# --- Ramp ---
+1 Sol Ring
+
+# --- Lands (26) ---
+1 Hidden Lair
+
+# --- Unsorted (type unknown) ---
+1 Mystery Card
+"""
+    sig = optimize._section_type_signal(text)
+    assert sig[mtglib._norm("Hidden Lair")] is True          # Lands section
+    assert sig[mtglib._norm("Some Creature")] is False       # other type section
+    for no_signal in ("Sol Ring", "Mystery Card", "Pre-Section Card"):
+        assert mtglib._norm(no_signal) not in sig            # function/Unsorted/header
+
+
+# The yshtola incident (2026-08-09): a name-only collection has no types, and
+# "Hidden Lair" — a REAL land — matches nothing in mtglib._LAND_HINTS, so the spell
+# pass cut it for a high-inclusion spell and _write parked the incoming Aura on its
+# line inside "# --- Lands ---". The deck file's own section must outrank the name
+# heuristic for pass assignment when type data is absent.
+UNHINTED_LAND_DECK = """\
+# Title: T
+# Commander: Test Commander
+# Colors: W U
+
+# --- Commander ---
+1 Test Commander
+
+# --- Creatures ---
+1 Weak Old Spell
+
+# --- Lands ---
+1 Hidden Lair
+12 Island
+"""
+
+NAME_ONLY_COLLECTION = """\
+1 Test Commander
+1 Weak Old Spell
+1 Hidden Lair
+1 Great New Spell
+13 Island
+"""
+
+
+def _name_only_setup(tmp_path, monkeypatch, field):
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text(NAME_ONLY_COLLECTION, encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: dict(field))
+    return coll, idx, _deck(tmp_path, UNHINTED_LAND_DECK)
+
+
+def test_spell_pass_never_cuts_an_untyped_card_from_the_lands_section(tmp_path, monkeypatch):
+    coll, idx, p = _name_only_setup(
+        tmp_path, monkeypatch, {mtglib._norm("Great New Spell"): 99})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    assert all(mtglib._norm(cut) != mtglib._norm("Hidden Lair")
+               for cut, *_ in r["swaps"])
+    # the untyped-card count is reported, not silently guessed around
+    assert r["untyped"] >= 2
+
+
+def test_spell_pass_still_cuts_untyped_cards_from_nonland_sections(tmp_path, monkeypatch):
+    """The section signal must not freeze the optimizer on a name-only collection:
+    an untyped card under a NONLAND type section is still fair game."""
+    coll, idx, p = _name_only_setup(
+        tmp_path, monkeypatch, {mtglib._norm("Great New Spell"): 99})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    cuts = [mtglib._norm(cut) for cut, *_ in r["swaps"]]
+    assert cuts == [mtglib._norm("Weak Old Spell")]
+
+
+def test_an_unowned_field_land_is_never_added_by_the_spell_pass(tmp_path, monkeypatch):
+    """The add-side twin of the Hidden Lair cut: Hallowed Fountain — unowned, and
+    'fountain' misses the name hints — was proposed as a BUY for Absorb (a spell).
+    EDHREC's own Lands sections type the candidate; it may only arrive through the
+    land pass, replacing a land."""
+    import deck_fit
+    coll, idx, p = _name_only_setup(
+        tmp_path, monkeypatch, {mtglib._norm("Hallowed Fountain"): 99})
+    monkeypatch.setattr(deck_fit, "load_field_lands",
+                        lambda *a, **k: {mtglib._norm("Hallowed Fountain")})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
+    assert all("Hallowed Fountain" not in add for _cut, _vc, add, *_ in r["swaps"])
+    assert any(mtglib._norm(new) == mtglib._norm("Hallowed Fountain")
+               for _old, new, _avail in r["land_swaps"])
+
+
+def test_manabase_pass_owns_a_section_signalled_land(tmp_path, monkeypatch):
+    """Hidden Lair may still be upgraded — by the LAND pass, for a land the field
+    plays, preserving the deck's land count."""
+    coll, idx, p = _name_only_setup(
+        # "...Tower" trips the name heuristic, so the incoming card lands in land_adds
+        tmp_path, monkeypatch, {mtglib._norm("Great Field Tower"): 99})
+    (tmp_path / "snapshot.txt").write_text(
+        NAME_ONLY_COLLECTION + "1 Great Field Tower\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(tmp_path / "snapshot.txt"))
+    idx = mtglib.index_by_name(coll)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    assert any(mtglib._norm(old) == mtglib._norm("Hidden Lair")
+               for old, _new, _avail in r["land_swaps"])
+    assert all(mtglib._norm(cut) != mtglib._norm("Hidden Lair")
+               for cut, *_ in r["swaps"])
+
+
 def test_optimize_is_a_no_op_without_field_data(tmp_path, collection_file):
     """Unknown commander -> no EDHREC data -> the deck must be left exactly alone."""
     coll = mtglib.load_collection(collection_file)

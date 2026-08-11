@@ -78,6 +78,19 @@ def load_field(commander, coll_index=None):
         return {}
 
 
+def load_field_lands(commander, coll_index=None):
+    """Cards EDHREC itself files as lands for this commander — the add-side type
+    signal for candidates the collection can't type. Same degrade contract:
+    an empty set just means the consumer falls back to its name heuristic."""
+    if not commander:
+        return set()
+    try:
+        import edhrec
+        return edhrec.land_names(commander, coll_index)
+    except Exception:
+        return set()
+
+
 def load_synergy(commander, coll_index=None):
     """EDHREC synergy map ({normalized name: synergy}) — "how much MORE this commander
     plays it than the format". Same graceful-degradation contract as load_field."""

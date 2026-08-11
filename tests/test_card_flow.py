@@ -151,6 +151,37 @@ def test_save_snapshot_writes_the_distilled_maps(snapdir, monkeypatch):
     assert data["saved"]
 
 
+def test_snapshot_records_edhrec_lands_sections(snapdir, monkeypatch):
+    """EDHREC's page files cards under typed sections; the Lands ones are the only
+    type signal available for a card the collection can't type (unowned buys,
+    name-only snapshots). _distill must keep them, live land_names must see them."""
+    page = {"container": {"json_dict": {"card": {}, "cardlists": [
+        {"header": "Lands", "cardviews": [
+            {"name": "Hallowed Fountain", "num_decks": 55, "potential_decks": 100,
+             "synergy": 0.0}]},
+        {"header": "Instants", "cardviews": [
+            {"name": "Counterspell", "num_decks": 60, "potential_decks": 100,
+             "synergy": 0.1}]}]}}}
+    monkeypatch.setattr(edhrec, "_fetch", lambda *a, **k: page)
+    assert edhrec.land_names("Test Commander") == {"hallowed fountain"}
+    path = edhrec.save_snapshot("Test Commander")
+    data = json.loads(open(path, encoding="utf-8").read())
+    assert data["lands"] == ["hallowed fountain"]
+
+
+def test_land_names_reads_the_snapshot_and_tolerates_old_ones(snapdir, offline):
+    (snapdir / "test-commander.json").write_text(json.dumps({
+        "slug": "test-commander", "inclusion": {"hallowed fountain": 55},
+        "synergy": {}, "names": {}, "lands": ["hallowed fountain"]}),
+        encoding="utf-8")
+    assert edhrec.land_names("Test Commander") == {"hallowed fountain"}
+    # a snapshot written before the `lands` key existed degrades to "no signal"
+    (snapdir / "old-commander.json").write_text(json.dumps({
+        "slug": "old-commander", "inclusion": {"sol ring": 90},
+        "synergy": {}, "names": {}}), encoding="utf-8")
+    assert edhrec.land_names("Old Commander") == set()
+
+
 def test_unreachable_save_never_clobbers_a_good_snapshot(snapdir, offline):
     good = {"slug": "test-commander", "inclusion": {"sol ring": 90},
             "synergy": {}, "names": {}}

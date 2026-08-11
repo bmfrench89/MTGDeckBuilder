@@ -167,6 +167,34 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     in_deck = set()
     for c in deck:
         in_deck |= mtglib.name_keys(c.name)     # full-name AND front-face keys
+
+    # Which pass owns each deck card — the land passes or the spell pass. Real type
+    # data wins: analyze_deck's enriched cards carry the collection CSV's types AND
+    # the deck's own .attrs.csv overlay. Where both are absent (name-only snapshot),
+    # the deck file's type-exclusive section outranks the name heuristic — the player
+    # filed the card there, and their word beats a substring guess (grounding rule #6).
+    # This closed a real hole: the 2026-08-09 run cut Hidden Lair (a genuine land,
+    # sitting under "# --- Lands ---") through the SPELL pass because "hidden lair"
+    # matches nothing in _LAND_HINTS, and the writer then parked the incoming Aura on
+    # its line inside the Lands section.
+    enriched_by_key = {mtglib._norm(c.name): c for c in a["enriched"]}
+    section_land = _section_type_signal(text)
+
+    def is_land_in_deck(name):
+        e = enriched_by_key.get(mtglib._norm(name))
+        if e is not None and e.has_type_data:
+            return e.is_land                 # CSV / .attrs.csv type: the truth
+        sig = section_land.get(mtglib._norm(name))
+        if sig is not None:
+            return sig                       # the player's own filing
+        return e.is_land if e is not None else mtglib._looks_like_land_by_name(name)
+
+    # Honesty count for the report: cards whose pass assignment had NO type data
+    # behind it. Absent data must be said out loud, not silently guessed around.
+    untyped = sum(1 for c in deck
+                  if not mtglib.is_basic(c.name)
+                  and not ((e := enriched_by_key.get(mtglib._norm(c.name))) is not None
+                           and e.has_type_data))
     usage = deck_conflicts.scan(decks_dir, idx, skip=stem)
     committed = {mtglib._norm(n): v["total"] for n, v in usage.items()}
     # a copy you've PINNED to another deck is spoken for, however well it scores here
@@ -203,6 +231,13 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     #           list. The dashboard badges these "BUY" (they're `missing` to deck_stats).
     # Lands stay in their own bucket: a land must replace a LAND, or the deck's
     # 37-land / 62-spell split silently drifts.
+    # EDHREC's own Lands sections, for typing candidates the collection can't:
+    # an unowned buy has no ref, and on a name-only snapshot an owned ref has no
+    # Types. Without this the spell pass proposed Hallowed Fountain — a land the
+    # name heuristic misses — as a BUY for Absorb. Pre-`lands` snapshots return
+    # an empty set and the name heuristic carries on alone.
+    field_lands = deck_fit.load_field_lands(commander, idx)
+
     adds, land_adds = [], []
     for k, inc in field.items():
         if k in in_deck or k in BASICS or inc <= 0 or k in reserved:
@@ -213,7 +248,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             # buying as well as borrowing from another deck.
             if owned_only or not include_buys or inc < buy_threshold:
                 continue
-            name, is_land, avail = proper.get(k, _display_name(k)), False, "buy"
+            name, avail = proper.get(k, _display_name(k)), "buy"
+            is_land = k in field_lands or mtglib._looks_like_land_by_name(name)
         else:
             if ref.identity and not (ref.identity <= identity):
                 continue
@@ -226,7 +262,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             free = ref.quantity - committed.get(k, 0) >= 1
             if not free and owned_only:
                 continue
-            name, is_land, avail = ref.name, ref.is_land, ("free" if free else "share")
+            name, avail = ref.name, ("free" if free else "share")
+            is_land = ref.is_land if ref.has_type_data else (ref.is_land or k in field_lands)
         rank = {"free": 2, "share": 1, "buy": 0}[avail]
         if mtglib.name_keys(name) & in_deck:
             continue
@@ -245,7 +282,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         if k in keep or k in BASICS:
             continue
         ref = mtglib.lookup(idx, c.name)
-        if not ref or ref.is_land:
+        if not ref or is_land_in_deck(c.name):
             continue                      # lands handled by the manabase pass
         if c.name.lower() in notes:
             continue                      # named in the player's own game plan
@@ -307,10 +344,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # ---- manabase passes. Both need field data: without it every land scores 0 and we
     # can't tell Command Tower from a bad tapland, so we leave the manabase alone. -------
     land_swaps = []
-    lands = [c for c in deck if (mtglib.lookup(idx, c.name) and mtglib.lookup(idx, c.name).is_land)]
+    lands = [c for c in deck if mtglib.lookup(idx, c.name) and is_land_in_deck(c.name)]
     if not field:
         return {"stem": stem, "commander": commander, "swaps": swaps,
-                "land_swaps": [], "field_size": 0, "risers": risers}
+                "land_swaps": [], "field_size": 0, "risers": risers,
+                "untyped": untyped}
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
@@ -357,7 +395,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             need -= 1
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "field_size": len(field), "risers": risers}
+              "land_swaps": land_swaps, "field_size": len(field), "risers": risers,
+              "untyped": untyped}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
@@ -422,6 +461,31 @@ def _type_allowed(section):
         if any(name.startswith(w) for w in words):
             return types
     return None
+
+
+def _section_type_signal(text):
+    """The deck file's own sections as a land/nonland signal for UNTYPED cards.
+
+    {normalized name: bool} — True for cards under a type-exclusive Lands section,
+    False under any other type-exclusive section. Function sections ("Ramp"), the
+    Unsorted section and pre-section lines give no signal (the card stays with the
+    name heuristic). Never consulted for a card that has real type data."""
+    sig, cur = {}, None
+    for ln in text.split("\n"):
+        s = ln.strip()
+        m_sec = re.match(r"^#\s*-+\s*(.+?)\s*-+\s*$", s)
+        if m_sec:
+            cur = m_sec.group(1)
+            continue
+        if not s or s.startswith("#") or cur is None:
+            continue
+        allowed = _type_allowed(cur)
+        if allowed is None:
+            continue
+        m = mtglib._QTY_RE.match(s)
+        name = m.group(2) if m else s
+        sig[mtglib._norm(name)] = "Land" in allowed
+    return sig
 
 
 def _tidy(deck_path, idx):
@@ -664,6 +728,9 @@ def main():
                      owned_only=args.owned_only, include_buys=not args.no_buys,
                      buy_threshold=args.buy_threshold)
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
+        if r.get("untyped"):
+            print(f"   note: {r['untyped']} deck cards have no type data — the land/spell "
+                  f"split falls back to the deck's own sections, then name heuristics")
         if not r["swaps"] and not r["land_swaps"]:
             print("   already aligned with the field — no changes")
         for cut, ic, add, ia, avail in r["swaps"]:
