@@ -73,6 +73,17 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   owned_additions.txt. The player DELETED captain-america-first-avenger via the
   app (2026-08-11); five decks + iron-man remain. Iron Man, Armored Avenger's
   single copy is both a commander and in team-leader's 99 (⇄ badged).
+  **yshtola repaired 2026-08-11**: `Observed Stasis` (verified: {3}{U} flash
+  Enchantment — Aura, FIC #40 — NOT a land) sat in the Lands section because the
+  2026-08-09 optimizer run, typeless on the snapshot, cut Hidden Lair (a real MSH
+  land that misses `_LAND_HINTS`) through the *spell* pass and the writer kept the
+  section. Moved to Enchantments, typed in the deck `.attrs.csv` so a regroup
+  holds, and a duplicate loose commander line (a real singleton violation flagged
+  by `singleton_violations`) removed — deck is 100 cards, 38 real lands (25
+  nonbasic + 13 basics; name-only heuristics see 36 until the server re-enriches).
+  Hidden Lair (owned ×1) is back in the available pool. Open hardening idea: the
+  optimizer's land guardrail is name-heuristic-blind when types are absent —
+  an unhinted land name can be cut as a "spell".
 
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
