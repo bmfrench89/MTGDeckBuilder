@@ -94,3 +94,35 @@ six — the buy-list turns it from a good 5-color pile into an actual tribal dec
   Miirym/Lathliss with Tempest/Scourge out is a known table-kill line.
 - Savage Ventmaw + buylisted Hellkite Charger = infinite combats (add to
   combos.csv when Charger arrives).
+
+## 2026-08-11 focused improvement pass (owned-only; texts verified)
+- Niv-Mizzet, Visionary in over Think Twice: 'whenever a source you control deals
+  noncombat damage to an opponent, you draw that many cards' + no max hand size.
+  With Dragon Tempest and Scourge of Valkas out, EVERY dragon ETB is damage and
+  therefore cards — point the triggers at an opponent, not a creature, when Niv
+  is on the battlefield. Broodmother's upkeep tokens become a draw engine.
+- Atsushi (over Winged Words) and Ao, the Dawn Sky (over Sky Diamond): cheap
+  on-tribe value that pays off when it DIES — exactly what a wipe-heavy meta
+  wants. Ao's dig-7 can drop Sylvia + a rock in one trigger.
+- Wood Elves (over Moss Diamond): fetches any Forest-TYPED land onto the
+  battlefield — including Festering Thicket and the new Sheltered Thicket /
+  Scattered Groves — a body for Broodmother devour and a real ramp piece.
+- Blasphemous Act (over Seal of Fire, free copy #2 of 3): second true wipe next
+  to Crux of Fate (71% field, already in deck — keep forever).
+- Lands: Omashu City -> Sheltered Thicket and Emeria -> Scattered Groves. Both
+  incoming are TYPED cycling duals (fetchable by Farseek/Nature's Lore/Wood
+  Elves, cycle away in flood); Emeria's recursion needed 7 Plains — the deck
+  runs ONE. No color source was lost (Groves still taps W, adds G).
+- Avatar-land verdicts from verification: Festering Thicket KEEP (typed BG
+  cycling dual — better than its 0% suggests), Dark Fortress / Fields of Strife
+  / Forum of Amity KEEP for now (conditional-untapped / surveil-sink utility;
+  no better owned duals in their pairs).
+- Scorecard note: power reads 48 because the scorer counts list-shape roles and
+  cannot see death-value engines (Atsushi/Ao) or the Niv draw loop on name-only
+  data; interaction sits at 9 pieces vs the field average of ~4-5. The deck is
+  stronger at the table than on the scorecard; server enrichment will close
+  part of the gap.
+- Still benched (owned, free): Hraesvelgr of the First Brood (text unverified
+  this session), Marang River Regent, Nova Hellkite, Vaevictis Asmadi, Decadent
+  Dragon, Obsidian Charmaw x2, Dragonmaster Outcast, kicked Rite of Replication
+  (the Miirym/Lathliss + Tempest/Scourge table-kill line), 2nd Sylvia.

@@ -504,6 +504,7 @@ RAMP = {
     "talisman of creativity", "talisman of indulgence", "relic of legends",
     "cultivate", "farseek", "rampant growth", "nature's lore", "kodama's reach",
     "sakura-tribe elder", "llanowar elves", "elvish mystic", "gilded goose",
+    "wood elves",
     "priest of titania", "solemn simulacrum", "burnished hart", "wayfarer's bauble",
     "pilgrim's eye", "skyscanner", "archaeomancer's map", "springbloom druid",
     "wild growth", "grow from the ashes", "explorer's scope", "coveted jewel",
@@ -518,7 +519,7 @@ DRAW = {
     "visions of beyond", "harmonize", "sublime epiphany",
     # 2026-08-11 sleeper audit — texts verified against Scryfall/Gatherer pages:
     "riddles in the dark", "sensational spider-man", "valeria richards, precocious",
-    "dragonhawk, fate's tempest",
+    "dragonhawk, fate's tempest", "niv-mizzet, visionary",
     "stock up", "bident of thassa", "avengers assemble!",
     # repeatable engines that draw off a deck's own payoffs rather than saying "draw a
     # card" on a cheap spell — these were being scored as generic enchantments, which

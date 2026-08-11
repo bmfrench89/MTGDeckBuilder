@@ -38,9 +38,12 @@
 1 Sylvia Brightspear
 1 Kaalia of the Vast
 1 Dragonhawk, Fate's Tempest
+1 Niv-Mizzet, Visionary
+1 Atsushi, the Blazing Sky
+1 Ao, the Dawn Sky
+1 Wood Elves
 
 # --- Instants ---
-1 Think Twice
 1 Assassin's Trophy
 1 Vendetta
 1 Chaos Warp
@@ -53,18 +56,16 @@
 1 Rampant Growth
 1 Cultivate
 1 Farseek
-1 Winged Words
 1 Crux of Fate
 1 Nature's Lore
+1 Blasphemous Act
 
 # --- Artifacts ---
 1 Arcane Signet
 1 Sol Ring
 1 Thought Vessel
 1 Fellwar Stone
-1 Moss Diamond
 1 Talisman of Progress
-1 Sky Diamond
 1 Roaming Throne
 1 Lightning Greaves
 1 Chromatic Lantern
@@ -75,7 +76,6 @@
 1 Reconnaissance Mission
 1 Kindred Discovery
 1 Seal of Cleansing
-1 Seal of Fire
 1 Dragon Tempest
 1 Rhythm of the Wild
 1 Rhystic Study
@@ -84,7 +84,6 @@
 1 Command Tower
 1 Haven of the Spirit Dragon
 1 Dark Fortress
-1 Omashu City
 1 Spectacle Summit
 1 Study Hall
 1 Thriving Bluff
@@ -95,7 +94,6 @@
 1 Unclaimed Territory
 1 Secluded Courtyard
 1 Maelstrom of the Spirit Dragon
-1 Emeria, the Sky Ruin
 1 Twilight Mire
 1 Festering Thicket
 1 Fields of Strife
@@ -104,6 +102,8 @@
 1 Forum of Amity
 1 Sunscorched Divide
 1 Deserted Beach
+1 Sheltered Thicket
+1 Scattered Groves
 
 # --- Basics ---
 2 Forest
