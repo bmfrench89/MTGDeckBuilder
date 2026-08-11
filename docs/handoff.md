@@ -67,10 +67,12 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   server can re-run deck_sections after a sync to resolve them. **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
   commander block (annotated name + stray duplicate line) — cleaned; Ezekiel
   Sims, Spider-Totem (24% field) in over 0%-field Tome of Legends (freeing an
-  over-committed copy); Thriving Isle added as the 100th card. NEW FINDING:
-  eight of its hand-built spiders are absent from the snapshot (likely sleeved,
-  never exported) — list in the deck's .notes.md; player to confirm →
-  owned_additions.txt. The player DELETED captain-america-first-avenger via the
+  over-committed copy); Thriving Isle added as the 100th card. Ownership
+  RESOLVED (2026-08-11): the player owns none of the twelve snapshot-absent
+  cards (but does own 2× the Cosmic Spider-Man commander itself →
+  owned_additions.txt); all twelve were replaced with owned substitutes and
+  buylisted — details in the deck's .notes.md. The player DELETED
+  captain-america-first-avenger via the
   app (2026-08-11); five decks + iron-man remain. Iron Man, Armored Avenger's
   single copy is both a commander and in team-leader's 99 (⇄ badged).
   **yshtola repaired 2026-08-11**: `Observed Stasis` (verified: {3}{U} flash
@@ -103,11 +105,11 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   team-leader took Avengers Quinjet + Spectacular Spider-Man; cloud took
   Wrecking Ball Arm, Cid Freeflier Pilot, Professor Hojo, Bugenhagen; ur-dragon
   took Zurgo and Ojutai, Kolaghan the Storm's Fury, Broodcaller Scourge, Lozhan;
-  yshtola took Krile Baldesion, Contaminated Aquifer, and a 4th Plains. Every
-  deck is 100 cards, singleton-clean, zero unowned — EXCEPT cosmic-spider-man's
-  eight hand-built spiders still pending the player's owned_additions
-  confirmation (list in its `.notes.md`). Cloud's stray duplicate commander
-  line (same bug as yshtola's) was also removed.
+  yshtola took Krile Baldesion, Contaminated Aquifer, and a 4th Plains; the
+  eight hand-built spiders followed on player confirmation of non-ownership
+  (see the deck's `.notes.md` for the full mapping). Every deck is 100 cards,
+  singleton-clean, **zero unowned cards anywhere**. Cloud's stray duplicate
+  commander line (same bug as yshtola's) was also removed.
 - **Seventh deck NEW (2026-08-11): `iron-man-armored-avenger`** — mono-blue draw-go
   control, hand-built in a sandbox session (network blocked) from the name-only
   snapshot as the "strongest possible new deck". Power **70/100, Bracket 3** at the

@@ -28,36 +28,37 @@
 # --- Creatures ---
 1 Silk, Web Weaver
 1 Spiders-Man, Heroic Horde
-1 Peter Parker
+1 Spider-Man, Web-Slinger
 1 SP//dr, Piloted by Peni
 1 Spider-UK
 1 Spider-Gwen, Free Spirit
-1 Gwenom, Remorseless
+1 Guy in the Chair
 1 Scarlet Spider, Ben Reilly
 1 Araña, Heart of the Spider
 1 Spider-Girl, Legacy Hero
 1 Spider-Byte, Web Warden
-1 Superior Spider-Man
 1 Spinneret and Spiderling
 1 Symbiote Spider-Man
 1 Spectacular Spider-Man
 1 Spider-Man India
 1 Spider-Man Noir
 1 Spider-Man, Brooklyn Visionary
-1 Mary Jane Watson
 1 Web-Warriors
 1 Spider-Bot
-1 Spider-Punk
 1 Miles Morales
 1 Aunt May
-1 Spider-Ham, Peter Porker
+1 Spider-Rex, Daring Dino
 1 Sakura-Tribe Elder
 1 Solemn Simulacrum
 1 Madame Web, Clairvoyant
 1 Ezekiel Sims, Spider-Totem
 1 Scarlet Spider, Kaine
+1 Arachne, Psionic Weaver
+1 Spider-Man, To the Rescue
 
 # --- Instants ---
+1 Grow Extra Arms
+1 Spectacular Tactics
 1 Frantic Search
 1 Swords to Plowshares
 1 Path to Exile
@@ -87,6 +88,7 @@
 1 Lightning Greaves
 
 # --- Enchantments ---
+1 Spider-Man No More
 1 Coastal Piracy
 1 Rhystic Study
 1 Kindred Discovery
@@ -120,5 +122,3 @@
 
 # --- Unsorted (type unknown — enrich and re-run deck_sections) ---
 1 Radioactive Spider
-1 Spider Manifestation
-1 Spider-Woman, Stunning Savior
