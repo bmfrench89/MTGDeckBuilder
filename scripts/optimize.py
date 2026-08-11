@@ -286,7 +286,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 
     adds, land_adds, buy_adds, buy_land_adds = [], [], [], []
     for k, inc in field.items():
-        if k in in_deck or k in BASICS or inc <= 0 or k in reserved:
+        if k in in_deck or mtglib.is_basic(k) or inc <= 0 or k in reserved:
             continue
         ref = mtglib.lookup(idx, k)
         if ref is None:
@@ -331,7 +331,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cuts = []
     for c in deck:
         k = mtglib._norm(c.name)
-        if k in keep or k in BASICS:
+        if k in keep or mtglib.is_basic(c.name):    # is_basic: snow printings too
             continue
         ref = mtglib.lookup(idx, c.name)
         if not ref or is_land_in_deck(c.name):
@@ -404,7 +404,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
-                        if mtglib._norm(c.name) not in BASICS
+                        if not mtglib.is_basic(c.name)
                         and mtglib._norm(c.name) not in keep
                         and c.name.lower() not in notes)
     used_land, used_land_add = set(), set()
@@ -426,7 +426,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 
     # ---- manabase pass 2: run basics (98-99% inclusion in every archetype) --------------
     n_lands = sum(c.quantity for c in lands)
-    n_basic = sum(c.quantity for c in lands if mtglib._norm(c.name) in BASICS)
+    n_basic = sum(c.quantity for c in lands if mtglib.is_basic(c.name))
     want_basic = _basics_needed(identity, n_lands)
     if n_basic < want_basic:
         worst = [(i, n) for i, n in weak_lands if mtglib._norm(n) not in used_land]

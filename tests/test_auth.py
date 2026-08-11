@@ -21,6 +21,9 @@ def client(tmp_path, monkeypatch, collection_file):
     monkeypatch.setattr(appmod, "DECKS_DIR", str(tmp_path))
     monkeypatch.setattr(appmod, "COLLECTION", collection_file)
     monkeypatch.setattr(sync, "maybe_start", lambda now=None: False)
+    # Stub run too: POST /sync calls it unconditionally, and the real thing executes
+    # sync_server.sh — git add/commit/pull/push on the REAL repo — from inside pytest.
+    monkeypatch.setattr(sync, "run", lambda *a, **k: {"ok": True, "stubbed": True})
     return appmod.app.test_client()
 
 

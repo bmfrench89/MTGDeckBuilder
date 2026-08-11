@@ -197,6 +197,10 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
 - `deck_stats.py` — given a decklist + collection, computes curve, colored-pip demand, double-pip
   count, land/ramp/removal/draw counts, ownership check (flags cards you don't own), and validates
   against target ratios.
+- `goldfish.py` — seeded Monte Carlo for sequenced play: opening-hand/mulligan quality,
+  commander-by-turn-N, color-screw rates; `--ab "Out=In"` replays identical games with one swap.
+- `deck_sections.py` — regroups a deck file into EDHREC-style type sections (idempotent;
+  unknown types go to an explicit Unsorted section, never guessed).
 - `card_image.py` — turns a Scryfall ID into a hotlinkable card-image URL.
 - `build_dashboard.py` — turns a decklist + collection into a self-contained, themeable HTML
   dashboard: stat tiles (incl. deck value, bracket, power), game-plan notes, mana curve, card

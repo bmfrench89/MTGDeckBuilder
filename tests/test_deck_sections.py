@@ -118,3 +118,21 @@ def test_power_tags_load_and_label(tmp_path):
     assert tags[mtglib._norm("Rhystic Study")] == ["Game Changer"]
     assert tags[mtglib._norm("Mystical Tutor")] == ["Tutor"]
     assert mtglib._norm("Sol Ring") not in tags, "absent lists degrade to no tag"
+
+
+def test_regroup_accepts_every_qty_line_form_parse_deck_accepts(tmp_path):
+    """Regression: a local qty regex accepted only '<digits> <name>', so '1x Name'
+    and bare-name lines — both valid to mtglib.parse_deck — were silently DELETED
+    from the deck file by a regroup --apply. Card loss, the worst failure mode."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n\n"
+                    "# --- Commander ---\n1 Test Commander\n\n"
+                    "# --- Stuff ---\n1x Sol Ring\n3x Forest\nGrizzly Bears\n",
+                    encoding="utf-8")
+    coll = tmp_path / "c.txt"
+    coll.write_text("1 Test Commander\n1 Sol Ring\n1 Grizzly Bears\n9 Forest\n",
+                    encoding="utf-8")
+    text, st = deck_sections.regroup(str(deck), str(coll))
+    assert st["total"] == 6, "every card line form must survive the regroup"
+    assert "Sol Ring" in text and "Grizzly Bears" in text
+    assert "3 Forest" in text

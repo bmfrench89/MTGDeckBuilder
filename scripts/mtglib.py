@@ -487,8 +487,8 @@ def is_basic(name: str) -> bool:
 
 def _looks_like_land_by_name(name: str) -> bool:
     low = name.lower()
-    if low in _BASICS:
-        return True
+    if is_basic(name):        # includes Snow-Covered printings — a plain _BASICS
+        return True           # check missed them, so snow basics read as spells
     return any(h in low for h in _LAND_HINTS)
 
 

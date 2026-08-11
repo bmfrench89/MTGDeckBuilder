@@ -336,7 +336,8 @@ TYPE_SECTION_ORDER = ("Creatures", "Instants", "Sorceries", "Artifacts",
                       "Enchantments", "Planeswalkers", "Battles", "Lands", "Basics")
 BASIC_LAND_NAMES = {"plains", "island", "swamp", "mountain", "forest", "wastes",
                     "snow-covered plains", "snow-covered island", "snow-covered swamp",
-                    "snow-covered mountain", "snow-covered forest"}
+                    "snow-covered mountain", "snow-covered forest",
+                    "snow-covered wastes"}
 
 
 def type_bucket(name, types):

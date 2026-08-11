@@ -59,9 +59,7 @@ open one for its full dashboard.</div>
       <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
     </form>
     <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
-      onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; and its notes/buy-list/history?
-
-Git keeps the history, so this is recoverable from the repo — but the files go now.');">
+      onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; and its notes/buy-list/history? Git keeps the history, so this is recoverable from the repo — but the files go now.');">
       <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>
     </form>
   </div>

@@ -691,3 +691,29 @@ def test_land_pass_never_adds_the_same_land_under_two_field_keys(tmp_path, monke
     added = [new for _old, new, _avail in r["land_swaps"]]
     assert len(added) == len({mtglib._norm(mtglib.front_face(n)) for n in added}), \
         f"same land added twice: {added}"
+
+
+def test_snow_covered_basics_are_never_cut_and_count_as_basics(tmp_path, monkeypatch):
+    """Regression: BASICS held only the six plain names and the land-name heuristic
+    missed the 'Snow-Covered ' prefix, so on a name-only collection the SPELL pass
+    could cut Snow-Covered Island — quantity preserved — wrecking the manabase and
+    minting an N-copy singleton line."""
+    import deck_fit
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: U\n\n"
+                    "# --- Commander ---\n1 Test Commander\n\n"
+                    "# --- Creatures ---\n1 Weak Old Spell\n\n"
+                    "# --- Basics ---\n12 Snow-Covered Island\n", encoding="utf-8")
+    coll = tmp_path / "c.txt"
+    coll.write_text("1 Test Commander\n1 Weak Old Spell\n13 Snow-Covered Island\n"
+                    "1 Great New Spell\n", encoding="utf-8")
+    c = mtglib.load_collection(str(coll))
+    idx = mtglib.index_by_name(c)
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {mtglib._norm("Great New Spell"): 99})
+    r = optimize.optimize(str(deck), c, idx, str(tmp_path), apply=True)
+    text = open(str(deck), encoding="utf-8").read()
+    assert "12 Snow-Covered Island" in text, "snow basics must never be cut"
+    assert optimize.singleton_violations(str(deck)) == []
+    # and they are lands/basics to the engine, not spells
+    assert mtglib._looks_like_land_by_name("Snow-Covered Island")

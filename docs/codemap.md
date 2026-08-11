@@ -280,11 +280,14 @@ vanilla 1-drop outranked a 95%-played auto-include on curve alone — that's why
 auto-built decks scored 12–24% against the field while hand-built ones scored 56–80%.
 
 **Availability tiers.** Incoming cards rank **free** (you own a spare) > **shared** (owned
-but committed to another deck) > **buy** (not owned, ≥55% inclusion). Sharing and buying are
-**on by default** — two decks in one archetype legitimately want the same cards, and you
-decide which gets the physical copy when you sleeve. Unowned picks are badged **BUY** in the
-dashboard decklist (they're already `missing` to `deck_stats`). Use `--owned-only` for a list
-buildable from spare copies today, or `--no-buys` to stay fully owned.
+but committed to another deck) > **buy** (not owned, ≥55% inclusion). Sharing is **on by
+default** — two decks in one archetype legitimately want the same cards, and you decide
+which gets the physical copy when you sleeve. Buys are considered by default but **never
+enter the 99** (2026-08-11, player request: decks are built from owned cards only): each
+pairs with an in-deck card and is appended to `<deck>.buylist.csv` with `Replaces` = that
+card, so the buylist always answers "when this arrives, which card do I pull". Use
+`--owned-only` for a list buildable from spare copies today, or `--no-buys` to skip the
+buylist recommendations too.
 
 **What changed.** Each applying run appends to `<deck>.changes.csv` (`Card,Added,Replaced,
 Source`), and the dashboard badges anything added in the last **14 days** with a gold `NEW`

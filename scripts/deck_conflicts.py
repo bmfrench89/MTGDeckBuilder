@@ -24,7 +24,7 @@ import mtglib
 
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes",
           "snow-covered plains", "snow-covered island", "snow-covered swamp",
-          "snow-covered mountain", "snow-covered forest"}
+          "snow-covered mountain", "snow-covered forest", "snow-covered wastes"}
 
 
 def deck_files(decks_dir):
