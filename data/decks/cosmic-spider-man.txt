@@ -54,7 +54,7 @@
 1 Ezekiel Sims, Spider-Totem
 1 Scarlet Spider, Kaine
 1 Arachne, Psionic Weaver
-1 Spider-Man, To the Rescue
+1 Spider-Punk
 1 Anti-Venom, Horrifying Healer
 
 # --- Instants ---
@@ -100,7 +100,7 @@
 1 Command Tower
 1 Thriving Isle
 1 Exotic Orchard
-1 Plaza of Heroes
+1 Vibrant Cityscape
 1 Mystic Monastery
 1 Daily Bugle Building
 1 Jungle Shrine

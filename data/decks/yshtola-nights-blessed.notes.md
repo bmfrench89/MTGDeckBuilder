@@ -9,6 +9,8 @@ matters, wipe what resolves, and let the drain engine grind the table out.
 ## Engine pieces (do not cut — this is the strongest deck in the stable; the
 ## optimizer must never churn its core for field-average FF cards)
 - Force of Will / Counterspell / Mystical Tutor / Dig Through Time — the blue core.
+- Ash Barrens — stays: the single owned Reliquary Tower is committed to Iron Man
+  (2026-08-11 call), and Barrens' basic fetch fixes Esper pips on a 3-color base.
 - Rhystic Study — the draw engine.
 - Vito, Thorn of the Dusk Rose — the drain payoff (player-confirmed copy).
 - Blood Artist — drain on every death, fuels the commander.

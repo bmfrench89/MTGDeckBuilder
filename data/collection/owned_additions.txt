@@ -2,7 +2,7 @@
 # Format: "<qty> <card name>" per line. The tools auto-merge this on top of
 # collection.csv (see mtglib.load_collection). Player's word > export (rule #6).
 # Add new/post-cutoff pickups here instead of editing the raw export.
-1 Vito, Thorn of the Dusk Rose
-1 Force of Will
+# 2026-08-11: Vito and Force of Will removed — the fresh Sorted export now
+# carries both, so keeping them here would double-count.
 # 2026-08-11 player confirmed: owns 2x Cosmic Spider-Man; the export carries 1.
 1 Cosmic Spider-Man

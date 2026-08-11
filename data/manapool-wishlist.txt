@@ -1,52 +1,64 @@
-2 Ash Barrens
-2 Commander's Sphere
-2 Fabled Passage
+3 Rhystic Study
+2 Fellwar Stone
 2 Lightning Greaves
+2 Force of Will
+2 Frantic Search
+2 Kindred Discovery
+2 Nature's Lore
+2 Secluded Courtyard
 2 Solemn Simulacrum
-1 Terramorphic Expanse
-1 Evolving Wilds
-1 Fellwar Stone
-1 Relic of Legends
-1 Ambition's Cost
-1 Arcane Sanctum
-1 Archfiend of Depravity
-1 Beast Within
-1 Blasphemous Act
-1 Bojuka Bog
-1 Combustible Gearhulk
-1 Exsanguinate
+2 Unclaimed Territory
+1 Swords to Plowshares
+1 Thought Vessel
+1 Cultivate
 1 Farseek
-1 Generous Gift
-1 Hellkite Tyrant
-1 High Market
-1 Infernal Grasp
-1 Jungle Shrine
-1 Myriad Landscape
-1 Nature's Lore
-1 Night's Whisper
 1 Path to Exile
-1 Plaza of Heroes
+1 Reconnaissance Mission
+1 Relic of Legends
+1 Think Twice
+1 Arcane Denial
+1 Archmage Emeritus
+1 Dig Through Time
+1 Dispatch
+1 Generous Gift
+1 Iron Man, Armored Avenger
+1 Kid Loki
+1 Misdirection
+1 Mystic Monastery
+1 Mystic Remora
+1 Mystical Tutor
+1 Night's Whisper
+1 Professor Hulk
+1 Propaganda
+1 Roaming Throne
 1 Sakura-Tribe Elder
 1 Skullclamp
-1 Soul Shatter
+1 Sky Diamond
+1 Sublime Epiphany
 1 Sun Titan
-1 Tectonic Giant
-1 Terminate
-1 Toxic Deluge
-1 True Conviction
+1 Visions of Beyond
 1 Void Rend
-1 Extinction Event
-1 The Kingpin of Crime
-1 Torment of Hailfire
-1 Fiery Emancipation
-1 Sulfuric Vortex
-1 Underworld Dreams
-1 Manabarbs
-1 Painful Quandary
-1 Vicious Shadows
-1 Bedevil
-1 Bond of Agony
-1 Dreadbore
+1 Winged Words
+1 Sapphire Medallion
+1 Lyla, Holographic Assistant
+1 Dragonlord's Servant
+1 Dragonspeaker Shaman
+1 Drakuseth Maw of Flames
+1 Junji the Midnight Sky
+1 Savage Ventmaw
+1 Dragon's Hoard
+1 Crucible of Fire
+1 Sunscorch Regent
+1 Scourge of the Throne
+1 Vengeful Ancestor
+1 Korvold Fae-Cursed King
+1 Goldspan Dragon
+1 Utvara Hellkite
+1 Hellkite Charger
+1 Rite of the Dragoncaller
+1 Terror of the Peaks
+1 Old Gnawbone
+1 Tiamat
 1 Cyclonic Rift
 1 Esper Sentinel
 2 Smothering Tithe
@@ -55,6 +67,13 @@
 1 Drown in the Loch
 1 Anguished Unmaking
 1 Sceptre of Eternal Glory
+1 Curiosity
+1 Watery Grave
+1 Godless Shrine
+1 Painful Truths
+1 Hallowed Fountain
+1 Captain America, Super-Soldier
+2 Herald's Horn
 1 Sword of Feast and Famine
 1 Sword of Fire and Ice
 1 Buster Sword
@@ -62,10 +81,11 @@
 1 Sram, Senior Edificer
 1 Open the Armory
 1 Ardenn, Intrepid Archaeologist
+1 Cloud, Midgar Mercenary
+1 Forge Anew
 1 Superior Spider-Man
 1 Gwenom, Remorseless
 1 Kodama's Reach
-1 Herald's Horn
 1 Icon of Ancestry
 1 Vanquisher's Banner
 1 The World Tree
@@ -74,3 +94,16 @@
 1 Cavern of Souls
 1 Teferi's Protection
 1 Prismatic Vista
+1 Spider-Sense
+1 Arasta of the Endless Web
+1 Arachnogenesis
+1 Spider-Man 2099
+1 Peter Parker
+1 Mary Jane Watson
+1 Spider-Punk
+1 Spider-Ham, Peter Porker
+1 Spider Manifestation
+1 Spider-Woman, Stunning Savior
+1 Helm of the Host
+1 Demonic Consultation
+1 Exquisite Blood
