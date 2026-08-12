@@ -104,13 +104,17 @@ If the status line ever shows a failure: open a PythonAnywhere console and run
 If it shows **"synced — RECOVERED"**: the sync worked, code came down, and your
 in-app edits were parked on the named `server-rescue-<date>` branch on GitHub.
 Nothing is lost — tell a Claude session to merge that branch back into main.
+(Uncommitted app saves caught mid-sync ride a stash instead — restored
+automatically, or held in `git stash list` with a warning if they no longer
+apply cleanly.)
 
 ## 5. Failure modes, honestly
 
 | Failure | What you see | State of the repo |
 |---|---|---|
 | Push rejected (PAT expired) | warn status: push failed | Deck edits stay safely committed locally; renew the PAT, next sync delivers them. |
-| Rebase conflict (squash-merged PR rewrote files the server has local commits on — seen live 2026-08-11) | warn-styled "synced — RECOVERED" status naming the rescue branch | **Self-heals.** Local state is pushed to `server-rescue-<date>` FIRST, then the clone resets to upstream — edits are provably on GitHub before anything is discarded. A session merges the rescue branch back. Guarded by `test_script_recovers_from_a_squash_rewritten_upstream`. |
+| Rebase conflict (squash-merged PR rewrote files the server has local commits on — seen live 2026-08-11) | warn-styled "synced — RECOVERED" status naming the rescue branch | **Self-heals.** COMMITTED state is pushed to `server-rescue-<date>` FIRST, then the clone resets to upstream. Uncommitted work (an app save landing mid-sync) is parked in a stash BEFORE the pull and restored after — the 2026-08-12 fix; before it, such a save was destroyed by the reset. If the tree is somehow still dirty at self-heal time, the script refuses and takes the honest abort instead. Guarded by `test_script_recovers_from_a_squash_rewritten_upstream` and `test_uncommitted_work_outside_the_tracked_paths_survives_a_self_heal`. |
+| Stash pop conflicts after the sync (upstream changed the same file the app was writing) | warn line: work is SAFE in `git stash list` | The pop is undone rather than leaving conflict markers where the app would read them as card names; the stash entry survives. Apply it from a console. |
 | Rebase conflict AND the rescue push fails (dead PAT + conflict) | warn status: pull failed, rebase aborted | Clone restored to pre-pull state, local commit intact — nothing is ever reset that isn't already saved remotely. Resolve once from a console. |
 | Thread killed mid-run (reload/restart race) | stale "running" → shown as failed | Git operations are atomic-ish and idempotent — the next run picks up whatever finished. |
 | `bash`/git missing (Windows PC with `MTG_AUTO_SYNC=1`) | warn status immediately | Nothing ran. The feature targets the server; use `update.bat` locally. |

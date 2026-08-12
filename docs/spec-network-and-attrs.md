@@ -152,9 +152,11 @@ forever. Same conclusion, sharper teeth: a committed attrs file must be a path
 
 - [ ] Action writes `data/collection/collection_attrs.snapshot.csv`
       (committed; same `ATTRS_HEADER` columns — verified as exactly the 9 in
-      `carddb.py:57`; name-based enrichment). Verified committable: no
-      `.gitignore` pattern catches the new path (line 26 pins the exact
-      `collection_attrs.csv` string).
+      `carddb.py:57`; name-based enrichment). Committable once the TEMPORARY
+      `.gitignore` line for this exact path is removed — added 2026-08-12
+      after the stub incident (§6a), and removing it is the Action's first
+      step. The permanent ignore at line 26 pins only the private
+      `collection_attrs.csv` and does not catch the snapshot path.
 - [x] **No `carddb.py` change needed** — `--out` already exists
       (`carddb.py:558`, resolved at `:589`) and both `enrich()` and
       `enrich_api()` take an out path. The Action just passes
@@ -275,7 +277,8 @@ cards — see the prerequisite blockers.)
 - [ ] CI stdlib-only import check must still pass — no new imports.
 - [x] **CI verified safe, 2026-08-12:** a realistic 2,622-row file was placed
       at the new path and the FULL suite run — green; no test globs
-      `data/collection/`, and no `.gitignore` pattern catches the path.
+      `data/collection/`. (The only ignore matching the path is the TEMPORARY
+      line from §6a, removed when the Action lands.)
       *Unresolved oddity, logged not diagnosed:* in 2 of 4 runs the planted
       file was gone after pytest finished, unreproducible under bisection.
       Before merging, place the real file, run pytest three times, and `ls`
@@ -375,6 +378,44 @@ Implementation consequences:
       (a real collection is never >90% one type) and more than a handful of
       distinct `Scryfall` ids. Cheap, and it catches exactly this.
 
+## 7. Review status
+
+- **Grounding lane (2026-08-12): COMPLETE**, findings folded in above. It
+  killed the original §1 headline claim (server enrichment DOES exist, on
+  upload), found `carddb --out` already shipped, proved the shrinkage guard
+  was inherited-by-assumption rather than real, re-dated the wedge hazard to
+  the post-self-heal data-destruction symptom, and upgraded the loader from
+  either/or to layering. Every finding was re-verified by hand before edit.
+- **Red-team lanes A (races) + B (data correctness): COMPLETE 2026-08-12**,
+  rerun after the first attempt was interrupted. Findings folded into §3, §6a
+  and the new §8. They reproduced their claims with real git repos and
+  monkeypatched network calls rather than reasoning about them, which is why
+  §8 exists at all.
+  - **CLEARED, so nobody re-investigates:** `overlay_attrs` cannot conjure
+    phantom cards from a stale snapshot — it is match-only (`mtglib.py:328-330`,
+    verified empirically). The reverse direction degrades honestly. A total
+    network failure leaves the previous out file untouched. The new path is
+    genuinely committable. `owned_additions.txt` is tracked and sits beside the
+    snapshot so the runner merges it — **zero cards are stranded today** (its
+    one entry is already in the snapshot).
+  - **Killed my own guard design:** the row-count-vs-history floor was wrong in
+    both directions. Replaced with a resolution-rate check against the run's
+    own input (§3).
+- **Lane C (privacy / CI / allowlist): COMPLETE 2026-08-12.** It answered its
+  own headline question in the worst way: the `Scryfall` id column CAN encode
+  the player's exact printings, and the privacy argument §6.1 was approved on
+  is conditional rather than absolute (§3 PRIVACY). It also found the
+  header-only-file hazard the guard now covers, corrected this spec's claim
+  that no workflow test harness exists (one does, and it is the cheapest lock
+  on the privacy property), listed the real file:line set for the PC-only doc
+  sweep, and CLEARED CI — full suite green with a realistic 2,622-row file
+  present, no test globs `data/collection/`.
+- **All three lanes are now in.** Nothing in this spec is unexamined; the
+  open items are decisions and implementation, not unknowns. The one loose
+  thread is the unreproducible vanishing-file observation recorded in §3
+  Tests — logged deliberately as an oddity rather than dressed up as a defect
+  or quietly dropped.
+
 ## 8. Pre-existing bugs the red team surfaced (NOT caused by this spec)
 
 These are live in `main` today and were found while tracing what a third
@@ -423,40 +464,3 @@ anything in this spec ships.
    this session (§6a). Land the first commit via a normal PR, and have the
    sync handle dirty/untracked state explicitly.
 
-## 7. Review status
-
-- **Grounding lane (2026-08-12): COMPLETE**, findings folded in above. It
-  killed the original §1 headline claim (server enrichment DOES exist, on
-  upload), found `carddb --out` already shipped, proved the shrinkage guard
-  was inherited-by-assumption rather than real, re-dated the wedge hazard to
-  the post-self-heal data-destruction symptom, and upgraded the loader from
-  either/or to layering. Every finding was re-verified by hand before edit.
-- **Red-team lanes A (races) + B (data correctness): COMPLETE 2026-08-12**,
-  rerun after the first attempt was interrupted. Findings folded into §3, §6a
-  and the new §8. They reproduced their claims with real git repos and
-  monkeypatched network calls rather than reasoning about them, which is why
-  §8 exists at all.
-  - **CLEARED, so nobody re-investigates:** `overlay_attrs` cannot conjure
-    phantom cards from a stale snapshot — it is match-only (`mtglib.py:328-330`,
-    verified empirically). The reverse direction degrades honestly. A total
-    network failure leaves the previous out file untouched. The new path is
-    genuinely committable. `owned_additions.txt` is tracked and sits beside the
-    snapshot so the runner merges it — **zero cards are stranded today** (its
-    one entry is already in the snapshot).
-  - **Killed my own guard design:** the row-count-vs-history floor was wrong in
-    both directions. Replaced with a resolution-rate check against the run's
-    own input (§3).
-- **Lane C (privacy / CI / allowlist): COMPLETE 2026-08-12.** It answered its
-  own headline question in the worst way: the `Scryfall` id column CAN encode
-  the player's exact printings, and the privacy argument §6.1 was approved on
-  is conditional rather than absolute (§3 PRIVACY). It also found the
-  header-only-file hazard the guard now covers, corrected this spec's claim
-  that no workflow test harness exists (one does, and it is the cheapest lock
-  on the privacy property), listed the real file:line set for the PC-only doc
-  sweep, and CLEARED CI — full suite green with a realistic 2,622-row file
-  present, no test globs `data/collection/`.
-- **All three lanes are now in.** Nothing in this spec is unexamined; the
-  open items are decisions and implementation, not unknowns. The one loose
-  thread is the unreproducible vanishing-file observation recorded in §3
-  Tests — logged deliberately as an oddity rather than dressed up as a defect
-  or quietly dropped.

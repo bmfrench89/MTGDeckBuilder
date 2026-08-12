@@ -108,14 +108,18 @@ def test_upload_writes_the_nine_column_attrs_file(tmp_path, monkeypatch, fake_sc
     assert cells["Command Tower"][7] == "W U B R G"
 
 
-def test_upload_never_writes_the_tracked_snapshot(tmp_path, monkeypatch, fake_scryfall):
-    """The privacy line: a priced export goes to the gitignored CSV only."""
+def test_upload_never_writes_any_tracked_collection_path(tmp_path, monkeypatch, fake_scryfall):
+    """The privacy line: a priced export goes to the gitignored CSV only. Guards
+    every tracked path under data/collection/, including the attrs snapshot the
+    planned Action will commit (docs/spec-network-and-attrs.md §3) — the upload
+    route must keep writing the PRIVATE attrs file, never the committed one."""
     app, client = _app(tmp_path, monkeypatch)
-    snapshot = os.path.join(tmp_path, "data", "collection", "collection_snapshot.txt")
+    d = os.path.join(tmp_path, "data", "collection")
     client.post("/collection/upload",
                 data={"csv": (io.BytesIO(SMALL_CSV.encode()), "export.csv")},
                 content_type="multipart/form-data")
-    assert not os.path.exists(snapshot)
+    for tracked in ("collection_snapshot.txt", "collection_attrs.snapshot.csv"):
+        assert not os.path.exists(os.path.join(d, tracked)), tracked
 
 
 # ── /collection coverage tile ────────────────────────────────────────────────
