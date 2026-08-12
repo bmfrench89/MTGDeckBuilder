@@ -61,6 +61,12 @@ def no_network(monkeypatch):
     def boom(*a, **k):
         raise AssertionError("carddb tried to reach the network")
     monkeypatch.setattr(carddb.urllib.request, "urlopen", boom)
+    # The fuzzy layer's bare `except Exception` would swallow the booby-trap —
+    # a stray fuzzy fetch completed "normally" instead of failing the test
+    # (found by the 2026-08-12 implementation review). Trap it before the except.
+    monkeypatch.setattr(
+        carddb, "_fetch_named_fuzzy",
+        lambda n: pytest.fail(f"unexpected live fuzzy fetch for {n!r}"))
 
 
 @pytest.fixture
@@ -213,10 +219,13 @@ def test_stats_prints_the_produced_coverage_line(tmp_path, collection_csv,
     assert "produced known: 5/5" in printed
 
 
-def test_unmatched_cards_are_simply_absent_from_the_file(tmp_path, fake_scryfall):
+def test_unmatched_cards_are_simply_absent_from_the_file(tmp_path, fake_scryfall,
+                                                          monkeypatch):
     coll = tmp_path / "c.csv"
     coll.write_text("Quantity,Name\n1,Sol Ring\n1,Not A Real Card\n", encoding="utf-8")
     out = str(tmp_path / "attrs.csv")
+    # the fuzzy layer also misses — the card must STAY absent, not crash or resolve
+    monkeypatch.setattr(carddb, "_fetch_named_fuzzy", lambda n: None)
     matched, total, unmatched = carddb.enrich_api(str(coll), out, delay=0)
     assert (matched, total, unmatched) == (1, 2, ["Not A Real Card"])
     _, rows = _read(out)

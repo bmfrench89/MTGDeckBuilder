@@ -235,7 +235,7 @@ def _post_collection(identifiers, retries=4):
             wait = (5, 15, 30, 60)[min(attempt, 3)]
             print(f"  (Scryfall {e.code} — waiting {wait}s)", file=sys.stderr)
             time.sleep(wait)
-    return [], []
+    raise AssertionError("unreachable: the last attempt raises")  # one contract: exhaustion RAISES
 
 
 def _best_identifier(card):
@@ -303,6 +303,10 @@ def _fold_name(name):
     import unicodedata
     folded = unicodedata.normalize("NFKD", mtglib.front_face(name))
     folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    # Known, accepted casualty: a collection row named by a BACK face ("Coil and
+    # Catch") fuzzy-resolves to "Front // Back", whose front-face fold differs —
+    # rejected by design, surfaced by --min-match's unmatched list. Do not "fix"
+    # this toward accepting it; the guard's job is refusing substitutions.
     return "".join(ch for ch in folded.casefold() if ch.isalnum())
 
 
@@ -622,9 +626,10 @@ def main():
     ap.add_argument("--min-match", type=float, default=None, metavar="PCT",
                     help="fail (exit 3) if fewer than PCT%% of names resolve — the guard "
                          "for unattended runs, measured against THIS run's own input, "
-                         "never against history. Catches the 429-storm case where "
-                         "_post_collection gives up and the file would otherwise be "
-                         "written short with exit 0.")
+                         "never against history. The hazard is mass not_found on a "
+                         "clean 200 (unresolvable names written short with exit 0); a "
+                         "true 429/503 storm RAISES out of _post_collection and exits 2 "
+                         "before the out file is opened.")
     ap.add_argument("--no-ids", action="store_true",
                     help="omit the Scryfall id column (API path only) — for the "
                          "committed attrs snapshot, where an id could pin a printing.")
@@ -637,6 +642,9 @@ def main():
     if bool(args.verify) == bool(args.collection):
         ap.error("choose one mode: --collection <csv> to enrich, or --verify "
                  '"<card name>" (repeatable) to verify card text')
+    if (args.bulk or args.download_bulk) and (args.no_ids or args.min_match is not None):
+        ap.error("--no-ids/--min-match are API-path only — the bulk path would "
+                 "silently ignore them, which is worse than refusing")
 
     if args.verify:
         rows = verify_cards(args.verify, refresh=args.refresh)

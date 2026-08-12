@@ -36,6 +36,10 @@ permissions:
 # Two concurrent writers on one CSV either conflict or — reproduced 2026-08-12 —
 # line-merge into a hybrid file neither run generated. A private group would
 # only prevent the first.
+# One accepted quirk of sharing: GitHub keeps at most one PENDING run per
+# group, so a newly queued field run can supersede a pending attrs run (shown
+# grey/cancelled, not red). Attrs then just waits for its next cron/push/
+# dispatch — last week's committed file keeps serving in the meantime.
 concurrency:
   group: field-snapshots
   cancel-in-progress: false
@@ -108,7 +112,11 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           cp data/collection/collection_attrs.snapshot.csv /tmp/attrs-snapshot.csv
           for attempt in 1 2 3 4 5; do
-            git fetch origin main
+            if ! git fetch origin main; then
+              echo "fetch failed (attempt $attempt/5) — retrying"
+              sleep $((3 * attempt))
+              continue
+            fi
             git reset --hard origin/main
             cp /tmp/attrs-snapshot.csv data/collection/collection_attrs.snapshot.csv
             git add data/collection/collection_attrs.snapshot.csv

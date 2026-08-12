@@ -470,3 +470,13 @@ def test_script_serializes_across_processes_and_retries_the_push():
         "the lock must be taken before any git state changes"
     assert "push_ok=" in code and "git pull --rebase" in code.split("sync: pushing…")[1], \
         "the final push must rebase-and-retry, not fail on one lost race"
+
+
+def test_a_lock_contention_skip_does_not_consume_the_ttl(clean_env, monkeypatch):
+    """The flock skip exits 0 having done NOTHING — a console sync held the lock
+    and its outcome is never written to the status file. Recording the skip as
+    ok:True burned the day's TTL on a no-op (2026-08-12 implementation review)."""
+    _fake_script(monkeypatch, rc=0,
+                 out="sync: another sync is already running — skipping")
+    st = sync.run("auto")
+    assert st["ok"] is False, "a skip is not a successful sync"

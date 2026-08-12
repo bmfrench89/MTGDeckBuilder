@@ -85,7 +85,7 @@ def run(reason, reload_delay=0.0):
         before = _head()
         try:
             r = subprocess.run(["bash", SCRIPT], cwd=ROOT, capture_output=True,
-                               text=True, timeout=300,
+                               text=True, timeout=420,
                                env={**os.environ, "SYNC_SKIP_RELOAD": "1"})
             ok = r.returncode == 0
             # The last non-blank line is the script's own summary ("sync: done." /
@@ -94,6 +94,11 @@ def run(reason, reload_delay=0.0):
             detail = lines[-1] if lines else ""
         except Exception as e:                      # bash/git missing, timeout
             ok, detail = False, f"{type(e).__name__}: {e}"
+        # A lock-contention skip exits 0 having done NOTHING (a console sync held
+        # the flock) — recording it ok:True would burn the day's TTL on a no-op
+        # whose real work happened in a process that never writes this file.
+        if "another sync is already running" in detail:
+            ok = False
         # Independent of ok, deliberately: a pull-succeeded-push-failed run HAS
         # changed the code on disk, and skipping the reload leaves the app serving
         # the old code all day — the stale-serve bug found 2026-08-12. A total

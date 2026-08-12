@@ -59,6 +59,7 @@ def fake_scryfall(monkeypatch):
             (data.append(c) if c else not_found.append(ident))
         return data, not_found
     monkeypatch.setattr(carddb, "_post_collection", post)
+    monkeypatch.setattr(carddb, "_fetch_named_fuzzy", lambda n: None)
 
 
 def _app(tmp_path, monkeypatch, attrs_text=None, deck_file=None,
@@ -188,3 +189,28 @@ def test_packet_stays_quiet_when_every_land_is_enriched(tmp_path, monkeypatch):
     txt = _packet(tmp_path, monkeypatch, PACKET_ATTRS, "enriched")
     assert "sources:" in txt
     assert "counted by color IDENTITY" not in txt
+
+
+def test_tile_names_the_snapshot_source_when_only_it_exists(tmp_path, monkeypatch,
+                                                            fake_scryfall):
+    """A fresh clone served solely by the committed attrs snapshot must show the
+    tile ON and say which source is serving — it used to show OFF beside a full
+    coverage count, sending sessions off to hand-curate data they already had."""
+    app, client = _app(tmp_path, monkeypatch)
+    d = os.path.join(tmp_path, "data", "collection")
+    with open(os.path.join(d, "collection_attrs.snapshot.csv"), "w",
+              encoding="utf-8") as f:
+        f.write("Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags\n")
+    html = client.get("/collection").data.decode()
+    assert "committed snapshot" in html
+    assert "image ids" not in html, "no printing ids exist on the snapshot path"
+
+
+def test_tile_names_the_private_source_when_present(tmp_path, monkeypatch,
+                                                    fake_scryfall):
+    app, client = _app(tmp_path, monkeypatch)
+    d = os.path.join(tmp_path, "data", "collection")
+    with open(os.path.join(d, "collection_attrs.csv"), "w", encoding="utf-8") as f:
+        f.write("Name,Type\n")
+    html = client.get("/collection").data.decode()
+    assert "your own export" in html and "image ids" in html

@@ -51,8 +51,16 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   after; a conflicted restore stays parked in `git stash list` with a warning;
   a still-dirty tree refuses the self-heal entirely. The wider network/attrs
   plan (allowlist, committed attrs snapshot, remaining sync races) lives in
-  `docs/spec-network-and-attrs.md` — the live tracker, three review lanes folded
-  in, awaiting the Scryfall-column privacy call before the Action is built.
+  `docs/spec-network-and-attrs.md` — the live tracker. **Phase 2 SHIPPED
+  2026-08-12** (player approved dropping the Scryfall column): the
+  attrs-snapshot Action enriches the committed name-only snapshot into an
+  8-column `collection_attrs.snapshot.csv` on GitHub runners, five-guarded
+  (refuse-beside-private, `--min-match 95`, plausibility gate, shared
+  concurrency group, regenerate-not-rebase retry), with carddb's guarded fuzzy
+  (spelling repairs only, never substitutions), the sync push-retry/flock/TTL
+  hardening, and the goldfish + /collection consumers updated. First green run
+  pending merge; Phase 1 (the environment allowlist) remains the player's
+  five-minute flip and is NOT needed by the Action.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar
