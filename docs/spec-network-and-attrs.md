@@ -222,6 +222,13 @@ review subagent probing loader behaviour) was committed and pushed via
 Implementation consequences:
 - [ ] The Action is the **only** writer of this path, ever. Until it lands, the
       file must not exist in the repo.
+- [ ] **FIRST STEP of implementing the Action: delete the temporary
+      `data/collection/collection_attrs.snapshot.csv` line from `.gitignore`**
+      (added 2026-08-12 with a matching comment). It is there because the stub
+      kept regenerating as subagent scratch output; leaving it in place would
+      make the Action's commit step silently no-op, which is a worse failure
+      than the one it prevents. The `.gitignore` comment says the same thing —
+      both must be removed together.
 - [ ] The row-count guard (§3) is necessary but **not sufficient** — the stub
       had a perfect row count. Add a plausibility check the Action must pass
       before committing: e.g. the file must show a spread of `Type` values
