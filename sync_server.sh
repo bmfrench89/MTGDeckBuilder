@@ -49,6 +49,45 @@ else
   echo "sync: committed deck edits"
 fi
 
+# --- Park uncommitted work before anything can destroy it ----------------------
+# The self-heal below ends in `git reset --hard`, and `git branch -f` captures HEAD
+# ONLY — so anything uncommitted is absent from the rescue branch when the reset
+# runs, and is gone for good. Two real ways that bites:
+#   * the app saves a deck during the seconds this script spends in `git pull`,
+#     leaving an unstaged change to a tracked file (that also makes the pull itself
+#     fail with "cannot pull with rebase: You have unstaged changes" — and in THAT
+#     mode git aborts before fetching, so `@{u}` is stale too);
+#   * an untracked file sits where a new upstream file is about to land.
+# A stash ref survives both the rebase and the reset, so nothing uncommitted can
+# reach them. Both cases were verified unrecoverable before this guard existed.
+autostash=0
+if [ -n "$(git status --porcelain)" ]; then
+  if git stash push -u -q -m "sync-autostash $(date -u +%Y-%m-%dT%H:%M:%SZ)"; then
+    autostash=1
+    echo "sync: parked uncommitted work in a stash for the duration"
+  else
+    echo "sync: could not stash uncommitted work — aborting rather than risk it" >&2
+    exit 1
+  fi
+fi
+
+# Restore on EVERY exit path, including the failure ones `set -e` takes: a stash
+# left behind would look to the next run like a clean tree with missing edits.
+restore_autostash() {
+  [ "$autostash" = "1" ] || return 0
+  autostash=0
+  if git stash pop -q 2>/dev/null; then
+    echo "sync: restored uncommitted work"
+  else
+    # A conflicted pop writes conflict MARKERS into the working tree and keeps the
+    # stash entry. Markers in a deck file would be served to the app as if they were
+    # card names, so undo the pop and leave the work parked for a human instead.
+    git reset --hard -q HEAD 2>/dev/null || true
+    echo "sync: WARNING — uncommitted work did not re-apply cleanly; it is SAFE in \`git stash list\` — apply it from a console" >&2
+  fi
+}
+trap restore_autostash EXIT
+
 # Rebase BEFORE pushing: replays local deck commits on top of any new upstream code,
 # so a code update and a deck edit never race into a non-fast-forward rejection.
 # A conflict must not leave the clone mid-rebase (with `set -e`, every later run
@@ -64,9 +103,20 @@ if ! git pull --rebase; then
   # GitHub before a single byte is discarded; a session merges the rescue branch
   # back. If the rescue push itself fails (dead PAT, network), fall back to the
   # old honest abort: nothing is ever reset that isn't already saved remotely.
+  # Belt and braces: the stash above should have emptied the tree, so if anything
+  # uncommitted is STILL here the assumption behind this block is broken — take the
+  # honest abort rather than reset over state no rescue branch can hold.
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "sync: PULL FAILED with uncommitted changes still present — refusing to self-heal (nothing is discarded); resolve from a console" >&2
+    exit 1
+  fi
   rescue="server-rescue-$(date +%Y%m%d)"
   git branch -f "$rescue"
   if git push -f origin "$rescue"; then
+    # Re-fetch before trusting @{u}: the unstaged-changes failure mode aborts the
+    # pull BEFORE fetching, which would otherwise reset the clone to a stale
+    # upstream — discarding local work to land on an old commit.
+    git fetch origin || true
     git reset --hard "@{u}"
     echo "sync: RECOVERED — local edits parked on $rescue (pushed to GitHub); clone reset to upstream. A session should merge $rescue back."
   else

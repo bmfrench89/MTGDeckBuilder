@@ -263,9 +263,40 @@ def test_script_pushes_the_rescue_branch_before_resetting_anything():
     code = [ln for ln in _script_src().splitlines() if not ln.lstrip().startswith("#")]
     src = "\n".join(code)
     push = src.find('git push -f origin "$rescue"')
-    reset = src.find("reset --hard")
+    # Target the SELF-HEAL's reset by its argument, not the first `reset --hard`
+    # in the file. The autostash restore added 2026-08-12 contains its own
+    # `reset --hard HEAD` — undoing a conflicted stash pop, which discards nothing
+    # (the stash entry survives a failed pop) — and it sits earlier in the script,
+    # so a bare first-occurrence search now measures the wrong statement.
+    reset = src.find('reset --hard "@{u}"')
     assert push != -1 and reset != -1, "the rescue path must exist"
     assert push < reset, "reset before the rescue push would discard unsaved edits"
+
+
+def test_script_parks_uncommitted_work_before_it_can_be_reset_away():
+    """The self-heal's `git branch -f` captures HEAD only, so anything uncommitted
+    is NOT on the rescue branch when reset --hard runs. Verified destroyed before
+    the 2026-08-12 fix. A stash survives both the rebase and the reset."""
+    code = "\n".join(ln for ln in _script_src().splitlines()
+                     if not ln.lstrip().startswith("#"))
+    stash = code.find("git stash push -u")
+    pull = code.find("git pull --rebase")
+    reset = code.find('reset --hard "@{u}"')
+    assert stash != -1, "uncommitted work must be parked before the pull"
+    assert stash < pull < reset, "the stash must precede the pull and the reset"
+    assert "trap restore_autostash EXIT" in code, \
+        "the stash must be restored on every exit path, including set -e failures"
+    assert "git fetch origin" in code, \
+        "@{u} is stale when the pull aborts before fetching — re-fetch before reset"
+
+
+def test_script_refuses_to_self_heal_over_a_dirty_tree():
+    code = "\n".join(ln for ln in _script_src().splitlines()
+                     if not ln.lstrip().startswith("#"))
+    heal = code.find('git branch -f "$rescue"')
+    guard = code.find("refusing to self-heal")
+    assert guard != -1 and guard < heal, \
+        "a dirty tree must take the honest abort, never a reset no branch can hold"
 
 
 def _git_env(tmp_path):
@@ -340,3 +371,56 @@ def test_status_view_keeps_a_recovered_sync_visible(clean_env):
                                   "server-rescue-20260811 (pushed to GitHub)"})
     v = sync.status_view(now)
     assert v["cls"] == "warn" and "server-rescue-20260811" in v["text"]
+
+
+def test_uncommitted_work_outside_the_tracked_paths_survives_a_self_heal(tmp_path):
+    """The 2026-08-12 data-loss bug, end to end. The app saves a file the sync does
+    NOT stage (anything outside TRACKED_DATA) while the pull is failing. The old
+    script parked a rescue branch that could not contain it — `git branch -f` is
+    HEAD-only — then reset --hard over it. Reproduced as unrecoverable before the
+    fix: present in no branch, no stash, and not on disk."""
+    env = _git_env(tmp_path)
+
+    def g(cwd, *args):
+        r = subprocess.run(["git", *args], cwd=str(cwd), env=env,
+                           capture_output=True, text=True)
+        assert r.returncode == 0, f"git {args}: {r.stderr}"
+        return r.stdout
+
+    origin = tmp_path / "origin.git"
+    origin.mkdir()
+    g(origin, "init", "--bare", "--initial-branch=main", ".")
+    seed = tmp_path / "seed"
+    g(tmp_path, "clone", str(origin), "seed")
+    (seed / "data" / "decks").mkdir(parents=True)
+    (seed / "data" / "decks" / "a.txt").write_text("1 Foo\n", encoding="utf-8")
+    (seed / "app.py").write_text("v1\n", encoding="utf-8")   # tracked, NOT in TRACKED_DATA
+    (seed / "sync_server.sh").write_text(_script_src(), encoding="utf-8")
+    g(seed, "add", "-A")
+    g(seed, "commit", "-m", "seed")
+    g(seed, "push", "-u", "origin", "main")
+
+    server = tmp_path / "server"
+    g(tmp_path, "clone", str(origin), "server")
+
+    # Upstream rewrites the deck file (squash-merged PR) so the rebase will conflict…
+    (seed / "data" / "decks" / "a.txt").write_text("1 Bar\n", encoding="utf-8")
+    g(seed, "commit", "-am", "pr rewrite")
+    g(seed, "push")
+    # …the server has its own committed deck edit on that same file…
+    (server / "data" / "decks" / "a.txt").write_text("1 Baz\n", encoding="utf-8")
+    g(server, "add", "-A")
+    g(server, "commit", "-m", "server deck edit")
+    # …and the app writes an UNCOMMITTED file the sync never stages.
+    (server / "app.py").write_text("PRECIOUS-UNCOMMITTED\n", encoding="utf-8")
+
+    r = subprocess.run(["bash", "sync_server.sh"], cwd=str(server), env=env,
+                       capture_output=True, text=True)
+    out = r.stdout + r.stderr
+
+    on_disk = (server / "app.py").read_text(encoding="utf-8")
+    stashed = "PRECIOUS" in g(server, "stash", "list")
+    assert "PRECIOUS" in on_disk or stashed, (
+        "uncommitted work was destroyed by the self-heal — it must be restored to "
+        f"the tree or preserved in a stash. output:\n{out}"
+    )

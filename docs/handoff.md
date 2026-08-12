@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-11._
+_Last updated: 2026-08-12._
 
 ## Where the app runs
 
@@ -45,6 +45,14 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   player's phone). The script now parks local state on a PUSHED `server-rescue-<date>`
   branch before resetting to upstream; the status line shows "synced — RECOVERED"
   naming the branch, and **a session must merge that branch back** when it appears.
+  **Hardened 2026-08-12:** the rescue branch only ever held COMMITTED state — an
+  app save landing during the pull window was destroyed by the reset (reproduced,
+  then fixed). Uncommitted work is now stashed before the pull and restored
+  after; a conflicted restore stays parked in `git stash list` with a warning;
+  a still-dirty tree refuses the self-heal entirely. The wider network/attrs
+  plan (allowlist, committed attrs snapshot, remaining sync races) lives in
+  `docs/spec-network-and-attrs.md` — the live tracker, three review lanes folded
+  in, awaiting the Scryfall-column privacy call before the Action is built.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar

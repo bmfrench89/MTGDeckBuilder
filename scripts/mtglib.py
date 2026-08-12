@@ -354,13 +354,32 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
     return n
 
 
+# Attribute overlays, applied in THIS order — later files win per-column.
+#   collection_attrs.snapshot.csv — committed, name-derived, written ONLY by the
+#     attrs-snapshot Action. It is what gives a fresh clone (and every sandbox
+#     session) typed data; before it existed those started name-only.
+#   collection_attrs.csv — private, gitignored, written by carddb against the
+#     player's real export (exact printings). Authoritative where it speaks.
+# Order matters and is load-bearing: `overlay_attrs` writes a field only when the
+# incoming cell is non-empty, and keys Produced/Flags off the COLUMN's presence, so
+# layering snapshot-then-private keeps the private file authoritative while letting
+# an OLD private file (one written before enrichment learned Produced/Flags — the
+# shape on the player's machine today) keep the snapshot's production data instead
+# of silently erasing it. Choosing one file instead of layering was the first draft
+# of this and it lost exactly that data. See docs/spec-network-and-attrs.md §3.
+ATTRS_OVERLAYS = ("collection_attrs.snapshot.csv", "collection_attrs.csv")
+
+
 def load_collection(path: str) -> list:
     """Parse a collection file, then auto-merge sibling overlays if present:
       - `owned_additions.txt/.csv` — cards you confirmed you own but the export
         missed (player info outranks the export, grounding rule #6).
-      - `collection_attrs.csv` — card attributes (Type/MV/Colors) for the whole
-        collection, e.g. built by carddb.py from a Scryfall card database. This is
-        what turns on color/type/curve analysis across every deck."""
+      - the `ATTRS_OVERLAYS` files — card attributes (Type/MV/Colors/Produced/
+        Flags) for the whole collection, built by carddb.py. This is what turns on
+        color/type/curve analysis across every deck.
+
+    An attrs row whose name is not in the collection is skipped, never invented —
+    a stale snapshot listing sold cards adds nothing (see `overlay_attrs`)."""
     import os
     with open(path, encoding="utf-8") as f:
         cards = parse_collection(f.read())
@@ -370,10 +389,11 @@ def load_collection(path: str) -> list:
         if os.path.exists(ep):
             with open(ep, encoding="utf-8") as f:
                 merge_collection(cards, parse_collection(f.read()))
-    ap = os.path.join(d, "collection_attrs.csv")
-    if os.path.exists(ap):
-        with open(ap, encoding="utf-8") as f:
-            overlay_attrs(cards, f.read())
+    for attrs in ATTRS_OVERLAYS:
+        ap = os.path.join(d, attrs)
+        if os.path.exists(ap):
+            with open(ap, encoding="utf-8") as f:
+                overlay_attrs(cards, f.read())
     return cards
 
 

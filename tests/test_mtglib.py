@@ -284,3 +284,73 @@ def test_snow_covered_basics_look_like_lands_by_name():
     for b in ("Snow-Covered Island", "Snow-Covered Wastes", "Island"):
         assert mtglib._looks_like_land_by_name(b)
     assert not mtglib._looks_like_land_by_name("Snow Devil")   # a snow SPELL stays one
+
+
+# --------------------------------------------------------------------------- #
+# Layered attrs overlays (docs/spec-network-and-attrs.md §3)
+#
+# Two attrs files can be on disk: collection_attrs.snapshot.csv (committed,
+# name-derived, written by the attrs-snapshot Action so a fresh clone is not
+# name-only) and collection_attrs.csv (private, gitignored, exact printings).
+# They LAYER — snapshot first, private on top — rather than the private file
+# winning outright. The regression that motivated this: the player's real private
+# file is the old 7-column shape, so "private wins outright" threw away the
+# snapshot's Produced/Flags and put every surface back on the honesty-gated
+# fallback tier despite the data being right there on disk.
+# --------------------------------------------------------------------------- #
+def _with_layered_attrs(tmp_path, collection_file, snapshot_text=None,
+                        private_text=None, name="coll"):
+    import shutil
+    d = tmp_path / name
+    d.mkdir(exist_ok=True)
+    shutil.copy(collection_file, d / "collection.csv")
+    if snapshot_text is not None:
+        (d / "collection_attrs.snapshot.csv").write_text(snapshot_text,
+                                                         encoding="utf-8")
+    if private_text is not None:
+        (d / "collection_attrs.csv").write_text(private_text, encoding="utf-8")
+    return mtglib.index_by_name(mtglib.load_collection(str(d / "collection.csv")))
+
+
+def test_snapshot_attrs_alone_enrich_a_fresh_clone(tmp_path, collection_file):
+    # The whole point of the Action: no private file, but typed data anyway.
+    idx = _with_layered_attrs(tmp_path, collection_file, snapshot_text=ATTRS_9COL)
+    sol = mtglib.lookup(idx, "Sol Ring")
+    assert sol.types == ["Artifact"]
+    assert sol.produced == {"C"} and sol.flags == {"rock", "ramp", "mana2"}
+
+
+def test_no_attrs_files_leave_produced_unknown(tmp_path, collection_file):
+    # The honest degraded path must survive: unknown stays None, never set().
+    idx = _with_layered_attrs(tmp_path, collection_file)
+    assert mtglib.lookup(idx, "Sol Ring").produced is None
+
+
+def test_an_old_private_file_keeps_the_snapshots_produced_and_flags(
+        tmp_path, collection_file):
+    # THE regression this layering exists to prevent. The private 7-column file has
+    # no Produced/Flags columns at all, so it must not blank what the snapshot knew.
+    idx = _with_layered_attrs(tmp_path, collection_file,
+                              snapshot_text=ATTRS_9COL, private_text=ATTRS_7COL)
+    sol = mtglib.lookup(idx, "Sol Ring")
+    assert sol.produced == {"C"}, "an old private file erased snapshot production data"
+    assert sol.flags == {"rock", "ramp", "mana2"}
+
+
+def test_the_private_file_still_wins_where_it_speaks(tmp_path, collection_file):
+    # Layering must not demote the private file: its exact-printing Scryfall id and
+    # any non-empty cell override the name-derived snapshot.
+    private = ATTRS_7COL.replace("aaaa1111", "PRIVATE-EXACT-PRINTING")
+    idx = _with_layered_attrs(tmp_path, collection_file,
+                              snapshot_text=ATTRS_9COL, private_text=private)
+    assert mtglib.lookup(idx, "Sol Ring").scryfall_id == "PRIVATE-EXACT-PRINTING"
+
+
+def test_a_stale_snapshot_row_invents_no_card(tmp_path, collection_file):
+    # A snapshot listing a card the player has since sold must add nothing — the
+    # overlay skips unknown names rather than conjuring a Card (mtglib.overlay_attrs).
+    stale = ATTRS_9COL + "Sold Cardname That Is Not Owned,Creature,3,,{2}{G},,zzzz9999,,\n"
+    before = len(mtglib.load_collection(str(collection_file)))
+    idx = _with_layered_attrs(tmp_path, collection_file, snapshot_text=stale)
+    assert mtglib.lookup(idx, "Sold Cardname That Is Not Owned") is None
+    assert len({id(c) for c in idx.values()}) == before
