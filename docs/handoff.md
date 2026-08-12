@@ -153,8 +153,10 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   elsewhere).
 - **Six decks total, and every one is Bracket 3** (fresh-export scoring,
   2026-08-11 post-optimizer-sweep — the owner's "Bracket 3/4 where possible" aim
-  is MET across the board): Iron Man 73 · Y'shtola 73 · Cloud 61 · Team Leader
-  58 · Ur-Dragon 56 · Cosmic Spider-Man 54. No deck can reach B4 from the owned
+  is MET across the board — scores below are TYPED-data, 2026-08-12, the first
+  scoring on real curve/role counts): Y'shtola 78 · Iron Man 72 · Cloud 71 ·
+  Team Leader
+  69 · Cosmic Spider-Man 64 · Ur-Dragon 53. No deck can reach B4 from the owned
   pool (4 unique Game Changers owned, total). The server re-scores on the full
   enriched CSV after each sync — expect small number shifts, not bracket changes.
 - **Fresh collection export installed 2026-08-11** (Sorted CSV: 2,621 unique /
@@ -205,9 +207,11 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   six re-previews say "already aligned"), documented in each `.notes.md`, and
   the verified-role cards were added to `mtglib.py`'s curated DRAW/REMOVAL/WIPES
   lists so the power score can read them (full test suite green after). Post-
-  audit ranking: Y'shtola 73 · Iron Man 72 · Cap 58 · Cloud 58 · Cosmic 54 ·
-  Ur-Dragon 49 — Ur-Dragon's drop is a deliberate interaction-for-threats trade,
-  flagged with a rebuild path in its notes. Benched-with-reasons and the Hobbit
+  audit ranking on TYPED data (2026-08-12): Y'shtola 78 · Iron Man 72 · Cloud
+  71 · Cap 69 · Cosmic 64 · Ur-Dragon 53 — the name-only scores had
+  under-read Cloud/Cap/Cosmic by 10-13 points, and Ur-Dragon's
+  interaction-for-threats trade (rebuild path in its notes) costs ~5 real
+  points, not the 8 the name-only scorer showed. Benched-with-reasons and the Hobbit
   verdict (zero of 96 uniques beat an incumbent; Thorin/Thranduil/Gandalf/
   Radagast are future commander seeds) live in the audit notes sections.
 - **Deep-research re-review of the sleeper audit (2026-08-11, 12-agent web
@@ -336,32 +340,59 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-**1. The placement pass — CLEAR again (2026-08-11).** Placed and done:
-`Crop Rotation` → cloud-ex-soldier (the B2→B3 move), `Mana Drain` → the new
-iron-man-armored-avenger deck, `Smaug, Wicked Worm` → the-ur-dragon, Dark Ritual →
-yshtola, Hero's Blade + Metallic Mimic → team-leader. The review-reopened
-`Codsworth, Handy Helper` (its recorded home was the deleted first-avenger deck)
-was placed BY THE PLAYER into cloud-ex-soldier (equipment-matters robot in the
-Voltron shell, over 0%-field Priest of Titania), and the player also placed
-`Anti-Venom, Horrifying Healer` into cosmic-spider-man (over 0%-field Coastal
-Piracy) — both are manual adds, named in their decks' `.notes.md`, so the
-optimizer never cuts them. The principle stands: placing a new card should be a
-routine pass over every arrival — and deleting a deck should trigger the same
-pass over everything it releases.
-- **Cloud rebuild note:** cloud-ex-soldier is now a protected voltron build
-  (63/100, B3, `.notes.md` names the engine). A 2026-08-11 `optimize --apply` had
-  churned the kill package out for field-popular FF cards (the field builds Cloud
-  precon-adjacent); the rebuild restored it as a deliberate manual edit and kept the
-  optimizer's three genuine upgrades (Bastion Protector, Summoning Materia, Bonders'
-  Enclave). Its four unowned buylist cards left the 99 in the 2026-08-11 owned-only
-  migration (see the Current-data bullet): Buster Sword → Wrecking Ball Arm,
-  Sram → Bugenhagen, Forge Anew → Professor Hojo, Cloud Midgar Mercenary → Cid,
-  Freeflier Pilot — buy any of them and `.buylist.csv`'s Replaces says what to pull.
-Cloud's B3 is CONFIRMED (`power.py --rank` 2026-08-11: 63/100, Bracket 3 — every
-deck is B3 now). **Then generalize:** the recurring flow should be "new arrivals →
-per-deck verdict → place or dismiss". `deckcore.new_arrivals()` already produces the
-list and `deckcore.advise_card()` already produces the verdict — the missing piece is
-one screen that walks them (`docs/spec-repo-hardening.md` Phase 4 item 1).
+**0. Optimizer role-repair churn — THE next engineering session.**
+`docs/spec-optimizer-hardening.md` (2026-08-12 section) has the full finding:
+the first attrs snapshot armed the archetype-blind `ROLE_RANGE` template
+(iron-man's typed counts read counter:15 vs max 6) and the repair path ignores
+the ≥25-point field margin, so previews now propose cutting field-superior
+deliberate keeps (e.g. Wall Crawl 41% → Masked Meower 18%). **Do not run
+`--apply` / ⚡ / `refresh --optimize` until it lands.** Four decks carry
+notes-file churn guards for the first-round victims; the pass moves to new
+ones, so guards are a tourniquet, not the fix. Three fix directions are in the
+spec. Concrete exhibit if anyone doubts castability matters: Mana Drain's
+{U}{U} is on-curve castable ~35% in ur-dragon (manabase.py, typed) vs
+effectively always in iron-man — the template wanted it moved anyway.
+
+**1. Phase 1 network allowlist — the player's five-minute flip.**
+`docs/spec-network-and-attrs.md` §2: five hosts, then the verification
+checklist and the PC-only doc sweep (verified file:line list is in §2).
+Nothing else depends on it; every future sandbox session benefits.
+
+**2. Player physicals (unchanged, still worth doing):**
+   - Upload the fresh Sorted export via `/collection/upload` — the SERVER's
+     private CSV is still the pre-2026-08-11 one; sandboxes have typed data
+     now, so the hosted app is the last stale surface.
+   - ~6 spare basic Islands for iron-man (deck wants 29, export counts 23).
+
+**3. Standing card-placement plans (owned-only, decided, waiting on arrivals):**
+   - 2nd Mana Drain → yshtola, cutting **Misdirection** (the old plan said
+     Absorb, which has since become Wizard's Staff). Field 27/20/15 across
+     iron-man/ur-dragon/yshtola and the castability math keep copy #1 in
+     iron-man.
+   - 2nd Reliquary Tower → yshtola (46% field there; ~$3 — cheapest wishlist win).
+   - Commander shortlist ranked and grounded (see the sweep bullet above):
+     Helga and Hulk, Gamma Goliath are BUILD_NOW from owned cards whenever the
+     player wants a seventh deck.
+
+**4. Attrs-snapshot follow-ups (small, from the first live run):**
+   - Retry split-name misses by FRONT FACE through the guarded fuzzy — the 17
+     unmatched are all "Front // Back" names; the fold guard already compares
+     front faces (`spec-network-and-attrs.md` §7).
+   - The ~30-card flag audit (engine-season item below) got MORE load-bearing:
+     flags now ship to every clone via the committed snapshot.
+
+**1b. Placement principle (standing):** new arrivals → per-deck verdict →
+place or dismiss, per the ratified sleeper audit
+(`.claude/skills/mtg-deckbuilder/references/card-review-method.md`);
+`deckcore.new_arrivals()` + `advise_card()` compute it, and with the attrs
+snapshot live, `new_arrivals`' identity-matched `fits` now works in every
+sandbox. The one-screen walk of that flow remains open
+(`docs/spec-repo-hardening.md` Phase 4 item 1).
+- **Cloud rebuild note:** cloud-ex-soldier is a protected voltron build
+  (typed-data 71/100, B3, `.notes.md` names the engine and the 2026-08-12
+  churn guards). Buy any of its four buylisted cards and `.buylist.csv`'s
+  Replaces says what to pull (Forge Anew already arrived and was pulled in,
+  2026-08-11).
 
 2. **Repo hardening (2026-08-11 review): `docs/spec-repo-hardening.md`** — a
    37-agent adversarially-verified sweep produced a three-phase fix tracker
