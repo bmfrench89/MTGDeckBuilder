@@ -58,3 +58,12 @@ The deck mulligans well — Brainstorm/Frantic Search/Accumulated Knowledge dig.
   Torrential Gearhulk's ETB (flash back TWO instants), Sharding Sphinx thopters,
   and Iron Man's own draw trigger (2 counters per draw) at equip {3}.
 - Riddles in the Dark bonus: the rejected pile fills the yard for Dig Through Time.
+
+## Typed-data churn guard (2026-08-12 — do not cut)
+The typed-data preview proposed trading three deliberate keeps for ramp rocks:
+- Thunderclap Wyvern — flash flyer; the Favorable Winds / Gravitational Shift
+  subtheme needs its bodies.
+- Warden of Evos Isle — flyer, cost-reducer for the flyer suite, and a WIZARD:
+  a {1}-equip target for Wizard's Staff when Archmage is answered.
+- Tinker — the artifact toolbox line; a 14% field sorcery does not become
+  Sword of the Animist because the template counted rocks.

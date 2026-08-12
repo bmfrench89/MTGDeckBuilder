@@ -58,9 +58,15 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   (refuse-beside-private, `--min-match 95`, plausibility gate, shared
   concurrency group, regenerate-not-rebase retry), with carddb's guarded fuzzy
   (spelling repairs only, never substitutions), the sync push-retry/flock/TTL
-  hardening, and the goldfish + /collection consumers updated. First green run
-  pending merge; Phase 1 (the environment allowlist) remains the player's
-  five-minute flip and is NOT needed by the Action.
+  hardening, and the goldfish + /collection consumers updated. **First live run PASSED
+  2026-08-12** (99% resolution, all guards green, committed as `5fe3a16`) —
+  every clone now loads typed data, and power re-scored on it (yshtola 78).
+  ⚠ **Do not run the optimizer with `--apply`/⚡/`refresh --optimize` until
+  the typed-data role-repair churn filed in `docs/spec-optimizer-hardening.md`
+  is fixed** — the archetype-blind template now proposes cutting
+  field-superior deliberate keeps (four decks carry notes churn guards, but
+  the pass moves to new victims). Phase 1 (the environment allowlist) remains
+  the player's five-minute flip and is NOT needed by the Action.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar

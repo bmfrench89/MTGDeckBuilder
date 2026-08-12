@@ -67,3 +67,11 @@ double combat.
 - Bench find: Bloodforged Battle-Axe (owned, uncommitted) — snowballs axe copies
   on every connect, feeds All That Glitters/Forge Anew/Raubahn, and every extra
   equipped attacker is an extra Cloud draw. Candidate for the next audit pass.
+
+## Typed-data churn guard (2026-08-12 — do not cut)
+- Farseek — with the attrs snapshot live it fetches the TYPED duals (Festering
+  Thicket, Sheltered Thicket, Scattered Groves are Swamp/Forest/Plains-typed).
+  The optimizer proposed cutting it to RE-ADD Professor Hojo — the exact card
+  the player-ratified Forge Anew swap removed. Ramp does not become a creature
+  because the field likes the creature; Hojo stays out (see .changes.csv,
+  Source=manual-replace).

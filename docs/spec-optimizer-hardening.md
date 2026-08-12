@@ -118,3 +118,44 @@ per request, threaded through `_validate_add(idx=…)` and `advise_card(collecti
 - Deliberately unchanged: the optimizer still never cuts manual adds or
   notes-protected cards; `_tidy` still merges duplicate lines and re-files by
   role/type; the ≥`margin` guardrail keeps its meaning under the new units.
+
+
+## Typed-data role-repair churn (found 2026-08-12, first day of the attrs snapshot)
+
+**Status: OPEN — do not run `--apply`, the ⚡ button, or `refresh --optimize`
+until this lands.** The four affected decks carry notes-file churn guards for
+their first-round victims, but the pass just moves to new ones (verified:
+guard → re-preview → fresh field-superior cuts proposed).
+
+The first committed attrs snapshot gave every machine real role counts, and
+the optimizer's template logic — dormant on name-only data — woke up wrong.
+Evidence from the first typed previews (all owned-swap proposals, none
+applied): `Ganax, Astral Hunter (27%) → Mana Drain (20%)` in ur-dragon,
+`Wall Crawl (41%) → Masked Meower (18%)` in cosmic, `Snap (20%) → Wayfarer's
+Bauble (10%)` and `Clever Impersonator (20%) → Sword of the Animist (9%)` in
+iron-man — every one cuts a FIELD-SUPERIOR incumbent for a field-inferior
+role fill, inverting the ≥25-point anti-churn margin the field pass lives by.
+
+Root cause, two layers:
+1. **`ROLE_RANGE` is archetype-blind** (`optimize.py:43`: counter max 6, ramp
+   min 9). Iron-man is a draw-go control deck whose typed counts read
+   `counter: 15, ramp: 8` — by template that is nine excess counters and a
+   ramp hole; by the deck's ratified identity it is exactly correct. Every
+   control deck will read as "broken" to this template forever.
+2. **The repair path does not require field-inclusion gain**, so template
+   pressure overrides the field consensus the rest of the optimizer is built
+   on.
+
+Fix directions for the implementing session (pick after reading the pass):
+- Repair swaps must satisfy the same ≥25-point inclusion-gain margin as field
+  swaps (smallest change; kills every observed bad proposal), and/or
+- Templates become archetype-aware (the deck header's `Archetype:` line
+  exists and is unread here — a `control` archetype should widen counter max
+  and relax ramp min), and/or
+- Repair only fires on decks the player has NOT hand-ratified (e.g. skip when
+  `.changes.csv` shows recent `manual-replace` activity).
+
+Note the asymmetry that makes this urgent-ish but not urgent: nothing runs the
+optimizer automatically on a cadence — it fires on Build-Next save, ⚡, the
+skill's build step, and `refresh --optimize` only. The player's ⚡ finger is
+the exposure.
