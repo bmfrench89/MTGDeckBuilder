@@ -84,3 +84,12 @@ column says which placeholder to pull.
 - Spider-Punk gotchas (verified): 'can't be countered' is SYMMETRIC — it blanks
   our own Counterspell and Amazing Acrobatics' counter mode while he's out; his
   no-damage-prevention nonbos with the buylisted Arachnogenesis fog half.
+
+## Typed-data churn guard (2026-08-12 — do not cut)
+- Origin of Spider-Man (36% field) and Madame Web, Clairvoyant (38%) — audited
+  and deliberately kept; the typed-data preview proposed cutting both for
+  LOWER-field role-repair adds (18-21%), which is churn, not repair.
+- Viridescent Bog — the attrs snapshot revealed why it stays: it produces
+  {B}{G} with the mana2 flag (a two-mana land), strictly better than the
+  proposed Vibrant Cityscape, an Evolving Wilds clone this deck already cut
+  once for exactly that redundancy.

@@ -450,6 +450,23 @@ skip no longer consumes the sync TTL, subprocess timeout widened to 420s, tile
 tests added. Accepted NOTEs, documented only: the shared concurrency group can
 supersede a pending attrs run (grey, not red — waits for its next trigger).
 
+### First live run (2026-08-12): PASSED, all guards green
+
+Run #1 (workflow_dispatch, 90s): privacy assert passed; **2,604/2,621 resolved
+(99%)** over the 95% floor; the guarded fuzzy repaired 20 split-card names with
+zero substitutions; plausibility reported 7 types, top Creature 49%; committed
+and pushed first attempt (`5fe3a16`). The 17 unmatched are all full
+"Front // Back" names that even fuzzy rejects — they degrade honestly (deck
+lookups still resolve via front-face indexing). Follow-up for a future pass:
+retry split-name misses by their FRONT FACE via the same guarded fuzzy — the
+fold already compares front faces, so it stays substitution-proof. Downstream
+effects verified in-sandbox: zero "no type data" warnings, typed power scores
+(yshtola 78), oracle flags agreeing with every overlapping hand-curated role
+and contradicting none. One NEW issue was exposed and filed in
+`docs/spec-optimizer-hardening.md`: typed data armed the archetype-blind role
+template and the repair pass churns against field-superior incumbents — do not
+run the optimizer with `--apply`/⚡ until that lands.
+
 ## 8. Pre-existing bugs the red team surfaced (NOT caused by this spec)
 
 These are live in `main` today and were found while tracing what a third

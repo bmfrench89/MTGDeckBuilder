@@ -126,3 +126,17 @@ six — the buy-list turns it from a good 5-color pile into an actual tribal dec
   this session), Marang River Regent, Nova Hellkite, Vaevictis Asmadi, Decadent
   Dragon, Obsidian Charmaw x2, Dragonmaster Outcast, kicked Rite of Replication
   (the Miirym/Lathliss + Tempest/Scourge table-kill line), 2nd Sylvia.
+
+## Typed-data churn guard (2026-08-12 — do not cut)
+The first attrs snapshot changed the optimizer's template math, and its next
+preview proposed cutting five deliberate keeps for counterspells (including
+[shared] copies that would strip iron-man). The interaction question is SETTLED
+— field average ~4-5 slots, this deck runs ~9 — so these stay:
+- Selvala, Heart of the Wilds — oracle flags say it all: dork;draw;ramp,
+  produces WUBRG. The dragons ARE her power stat; she is this deck's best dork.
+- Ureni, the Song Unending — 8-MV Spirit Dragon top-end; eminence-discounted.
+- Broodcaller Scourge — 7-MV Dragon, tribal body (a migration substitute the
+  player ratified).
+- Llanowar Elves — the only T1 ramp play in the 99; 5c pip math still wants it.
+- Talisman of Progress — untapped rock; the proposed Negate is a worse slot in
+  a tap-out tribal deck.
