@@ -303,7 +303,16 @@ makes several of them **more likely to fire**, but every one can and should be
 fixed independently — and #1 is a data-loss bug that deserves fixing before
 anything in this spec ships.
 
-1. **`sync_server.sh`'s rescue self-heal destroys uncommitted work, and its
+1. ~~**`sync_server.sh`'s rescue self-heal destroys uncommitted work.**~~
+   **FIXED 2026-08-12** — stash-around-the-pull + re-fetch before trusting
+   `@{u}` + refuse-to-self-heal-when-dirty. Reproduced first in a scratch-repo
+   harness (both cases unrecoverable), then re-run after the fix: the tracked
+   case is preserved in the working tree, the untracked case lands safely in a
+   stash with a warning, and the two regression cases (the self-heal's original
+   job, and the clean happy path) still pass. Original diagnosis retained
+   below for context.
+
+   **`sync_server.sh`'s rescue self-heal destroys uncommitted work, and its
    safety comment is inverted.** `:64-66` claims "the push comes first — local
    edits are provably on GitHub before a single byte is discarded." True for
    *committed* edits. `git branch -f` (`:68`) captures HEAD only, so anything
