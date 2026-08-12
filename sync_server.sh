@@ -20,6 +20,20 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# One sync at a time, across PROCESSES. webapp/sync.py's threading.Lock is
+# per-process by its own comment, and the documented console usage ("run
+# ~/MTGDeckBuilder/sync_server.sh") guarantees a second process exists — two
+# add/commit/pull/reset sequences interleaving in one working tree is index.lock
+# roulette. flock serializes every entry point on one gitignored lock file; a
+# second caller exits 0 quietly rather than queueing (the running sync is doing
+# the same work it would).
+mkdir -p data/cache
+exec 9>"data/cache/sync.lock"
+if ! flock -n 9; then
+  echo "sync: another sync is already running — skipping"
+  exit 0
+fi
+
 # Exactly the paths the running app edits. Never `git add -A` — that would sweep in
 # generated dashboards, caches, and anything else written at runtime.
 # wishlist.md / manapool-wishlist.txt ARE runtime-edited (the ↻ Rebuild button runs
@@ -126,8 +140,28 @@ if ! git pull --rebase; then
   fi
 fi
 
+# Push with a bounded rebase-and-retry: three bots can push to main (this sync,
+# field-snapshots, attrs-snapshot), and a lost race used to cost a full day —
+# the push failed, the script exited 1, webapp/sync.py's TTL then refused to
+# retry until tomorrow while the app served the already-pulled code stale.
 echo "sync: pushing…"
-git push
+push_ok=0
+for attempt in 1 2 3 4 5; do
+  if git push; then
+    push_ok=1
+    break
+  fi
+  echo "sync: push rejected (attempt $attempt/5) — rebasing onto the winner and retrying"
+  sleep $((3 * attempt))
+  if ! git pull --rebase; then
+    git rebase --abort 2>/dev/null || true
+    break
+  fi
+done
+if [ "$push_ok" != "1" ]; then
+  echo "sync: PUSH FAILED after retries — local commits intact; next sync retries" >&2
+  exit 1
+fi
 
 echo
 echo "sync: done."
