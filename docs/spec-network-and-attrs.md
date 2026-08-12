@@ -58,12 +58,22 @@ Verification once flipped (Opus, one session):
 - [ ] `python3 scripts/rules.py 903.1 --refresh` → real CR, cited answer
 - [ ] `python3 scripts/rulings.py "Sol Ring"` → live rulings
 - [ ] `python3 scripts/edhrec.py` fetch for one commander → `source: live`
-- [ ] Then update the "PC-only" claims: CLAUDE.md (rules.py line in "The PC is
-      out of the loop" + Commands comment), `scripts/rules.py` docstring,
-      `.claude/skills/mtg-deckbuilder/SKILL.md` + `references/rules-reference.md`
-      and `references/tooling-and-data.md` — the degrade paths STAY (other
-      sandboxes exist); only the "player's PC only" phrasing changes to
-      "any environment whose policy allows wizards.com".
+- [ ] Also allowlist the Scryfall **bulk CDN host** if `--download-bulk` is
+      ever wanted: `carddb.py:84-92` fetches `entry["download_uri"]`, a host
+      returned at runtime that appears in no source literal. Resolve it at
+      flip time with
+      `python3 -c "import urllib.request,json;print(json.loads(urllib.request.urlopen('https://api.scryfall.com/bulk-data').read())['data'][0]['download_uri'])"`.
+      Not needed for the API path the Action uses.
+- [ ] Then update the "PC-only" claims. The original list here was incomplete
+      and misdescribed one file; the verified file:line list is: `CLAUDE.md:129`
+      and `:148-149`; `scripts/rules.py:28`;
+      `.claude/skills/mtg-deckbuilder/SKILL.md:259`;
+      `references/rules-reference.md:33`;
+      `references/tooling-and-data.md:1-3,15-16,48` (which contains no
+      "player's PC" string at all — its stale claims are about sandbox
+      blocking); `docs/codemap.md:126-138`, the deployment matrix at
+      `:141-151`, and `:226`; `docs/handoff.md:303`. The degrade paths STAY
+      (other sandboxes exist); only the "player's PC only" phrasing changes.
 
 ## 3. Phase 2 — attrs snapshot via GitHub Action (the real prize)
 
@@ -111,9 +121,19 @@ reached); results arrive via git.
     push origin main && exit 0; sleep $((3*i)); done` then fail loudly.
     `field-snapshots.yml:68-71` has no retry today and goes red on a lost
     race — see §8.
-  - (A total network failure is already safe — verified by monkeypatching
-    `_post_collection` to raise: `enrich_api` throws before the out file is
-    opened, so the previous file survives untouched.)
+  - **Absolute floor, not just a rate.** "A total network failure is already
+    safe" is true but names the wrong hazard: `_post_collection` *raises* on
+    `URLError` (verified — the previous file survives), but after exhausting
+    its 429/503 retries it **returns `[], []`** (`carddb.py:238`), and
+    `enrich_api` then opens the out file and writes a **header-only** CSV,
+    exiting 0. A rate-limited run would commit an empty file over a good one,
+    green. So require BOTH: the resolution rate above, AND a hard floor of
+    more than one data row — which also covers the very first run, when there
+    is no checked-out file to compare against. Fail red; never skip silently.
+  - Do **not** copy `field-snapshots.yml:44-58`'s `set +e` / `exit 0` wrapper.
+    That exists because a partial EDHREC fetch is still worth committing;
+    here it would swallow `carddb`'s non-zero exit — the one signal that
+    something went wrong.
 
 ### The wedge hazard, and why the file gets a NEW name
 
@@ -189,14 +209,49 @@ the first green run, and neither is visible in the output (exit 0 either way).
       hand-curating names — the exact waste §1 catalogues. Make `on` reflect
       either source, ideally naming which.
 
+### PRIVACY: the guarantee is conditional, and must be enforced
+
+**The "strictly less revealing" argument in §6.1 was wrong as originally
+written, and the owner's sign-off was given on it.** It is not the name-only
+*input* that keeps the player's printings out of the file — it is the *absence
+of the private sibling*. Mechanism, verified end to end by the 2026-08-12 red
+team:
+
+`load_collection` overlays `collection_attrs.csv` onto **any** collection path
+in that directory, including `collection_snapshot.txt` (`mtglib.py:373-376`);
+that overlay sets `card.scryfall_id` (`:344-345`); `_best_identifier` then
+submits `{"id": sid}` in preference to `{"name": …}` (`carddb.py:245-247`); and
+`carddb.py:292` writes that id straight into the output row. So **anyone who
+runs the Action's own command on a machine that has the private file — the
+server, the player's PC, or a session copy-pasting it to test — produces a file
+naming the exact printing of every card owned** (set + collector number). That
+is strictly MORE revealing than the committed name list, not less.
+
+On a GitHub runner the private file does not exist, so the property holds — but
+by accident of environment, which is not a guarantee. Enforce it:
+
+- [ ] The workflow asserts the sibling is absent before enriching:
+      `test ! -f data/collection/collection_attrs.csv || { echo '::error::private attrs sibling present — refusing to enrich'; exit 1; }`
+- [ ] **Strongly consider dropping the `Scryfall` column from the snapshot file
+      entirely.** Nothing in the analysis pipeline consumes it; the private
+      sibling still supplies exact ids on the machines that have it; and
+      card images are browser hotlinks that fall back to a self-correcting
+      by-name URL. Removing the column makes the privacy property
+      unconditional instead of enforced-by-guard — the strictly safer design.
+- [ ] Extend `tests/test_collection_produced.py:111`
+      (`test_upload_never_writes_the_tracked_snapshot`) to also assert
+      `/collection/upload` never writes `collection_attrs.snapshot.csv`, and
+      rename it to cover every tracked collection path.
+
 ### Known, accepted limitation
 
-Name-based enrichment resolves *a* printing, not the player's printing:
-`Scryfall` ids (→ card-image hotlinks) may show a different frame than the
-owned copy. Type/MV/Colors/Cost/Sub-types/Produced/Flags — everything the
-analysis pipeline consumes — are printing-independent (rare exceptions like
-alt-frame subtypes are noise). The private sibling file still wins wherever it
-exists, so the server/PC keep exact printings.
+Everything the analysis pipeline consumes is printing-invariant, confirmed
+column by column against `carddb.py:271-294`: MV from `cmc`, Colors from
+`color_identity`, Cost from `mana_cost`, Type from `type_line`, Produced and
+Flags from `oracle_flags`. **The one genuinely printing-dependent column is
+`Scryfall`** — see the privacy section above, which is the stronger reason to
+drop it. (Sub-types is invariant too, but is currently *wrong* for faces-only
+cards — see the prerequisite blockers.)
 
 ### Tests (offline, hermetic, as always)
 
@@ -205,9 +260,27 @@ exists, so the server/PC keep exact printings.
       per-column BUT a 7-column sibling keeps the snapshot's Produced/Flags**
       (the regression the layering exists to prevent); neither →
       `produced is None` degraded path intact (all in `tmp_path`).
-- [ ] `test_agents`-style guard not needed; workflow YAML gets the same
-      light-touch review as field-snapshots (no test harness for Actions).
+- [ ] **There IS a workflow test harness — this spec previously said there
+      wasn't.** `tests/test_card_flow.py:396-409`
+      (`test_snapshot_workflow_matches_the_cli_it_drives`) reads
+      `field-snapshots.yml` as text and asserts it drives the name-only
+      snapshot and nothing private. Copy it: add
+      `test_attrs_snapshot_workflow_is_name_only` asserting the new workflow
+      contains `collection_snapshot.txt`, does **not** contain the string
+      `collection.csv`, contains the `--out` snapshot path, the sibling-absence
+      check, the row floor, and `contents: write`. **This is the cheapest
+      available lock on the privacy guarantee** — it fails the suite if anyone
+      ever points the Action at the private CSV.
+- [ ] `goldfish.cache_key` invalidation case (see consumers above).
 - [ ] CI stdlib-only import check must still pass — no new imports.
+- [x] **CI verified safe, 2026-08-12:** a realistic 2,622-row file was placed
+      at the new path and the FULL suite run — green; no test globs
+      `data/collection/`, and no `.gitignore` pattern catches the path.
+      *Unresolved oddity, logged not diagnosed:* in 2 of 4 runs the planted
+      file was gone after pytest finished, unreproducible under bisection.
+      Before merging, place the real file, run pytest three times, and `ls`
+      after each; if it vanishes, bisect with `-p no:cacheprovider` and
+      `strace -e trace=unlink,unlinkat`. Do not assume it is benign.
 
 ### Follow-on effects to verify after first green run
 
@@ -243,12 +316,19 @@ curated-list differences.
 
 ## 6. Player decisions required before implementation
 
-1. **Commit derived card attributes?** `collection_attrs.snapshot.csv` holds
+1. **Commit derived card attributes?** — **APPROVED 2026-08-12, but the basis
+   was partly wrong and needs re-confirming.** As pitched: the file holds
    Name/Type/MV/Colors/Cost/Sub-types/Scryfall-id/Produced/Flags for names
-   already public in `collection_snapshot.txt`. No prices, no quantities, no
-   acquisition dates. Strictly less revealing than the snapshot it derives
-   from — but it is a new committed file derived from collection data, so the
-   privacy hard-line owner (you) signs off, not a session.
+   already public in `collection_snapshot.txt`; no prices, quantities or
+   dates; "strictly less revealing than the snapshot it derives from."
+   **That last clause does not hold unconditionally** — see the PRIVACY
+   subsection in §3. The `Scryfall` id column can carry the player's exact
+   printings whenever the file is generated on a machine holding the private
+   sibling, which is every machine except a clean CI runner. The approval
+   stands for the file as it will actually ship *if* the recommended
+   mitigation lands (drop the `Scryfall` column, plus the workflow's
+   sibling-absence guard); if the column is kept, the owner should
+   re-confirm knowing it can encode which physical printings are owned.
 2. **Flip the allowlist?** Phase 1 is entirely yours — sessions cannot change
    an environment's network policy.
 
@@ -366,8 +446,17 @@ anything in this spec ships.
   - **Killed my own guard design:** the row-count-vs-history floor was wrong in
     both directions. Replaced with a resolution-rate check against the run's
     own input (§3).
-- **Lane C (privacy / CI / allowlist completeness): still running.** Open until
-  it returns: whether the `Scryfall` id column reveals which *printing* the
-  player owns (the one thing that could complicate the already-granted §6.1
-  approval), whether any existing test breaks when the file exists in a clean
-  checkout, and every remaining file that still claims `rules.py` is PC-only.
+- **Lane C (privacy / CI / allowlist): COMPLETE 2026-08-12.** It answered its
+  own headline question in the worst way: the `Scryfall` id column CAN encode
+  the player's exact printings, and the privacy argument §6.1 was approved on
+  is conditional rather than absolute (§3 PRIVACY). It also found the
+  header-only-file hazard the guard now covers, corrected this spec's claim
+  that no workflow test harness exists (one does, and it is the cheapest lock
+  on the privacy property), listed the real file:line set for the PC-only doc
+  sweep, and CLEARED CI — full suite green with a realistic 2,622-row file
+  present, no test globs `data/collection/`.
+- **All three lanes are now in.** Nothing in this spec is unexamined; the
+  open items are decisions and implementation, not unknowns. The one loose
+  thread is the unreproducible vanishing-file observation recorded in §3
+  Tests — logged deliberately as an oddity rather than dressed up as a defect
+  or quietly dropped.
