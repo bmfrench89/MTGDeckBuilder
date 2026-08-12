@@ -25,16 +25,6 @@ build/
 # Derived card-attribute enrichment (regenerate with carddb.py from a Scryfall bulk file)
 data/collection/collection_attrs.csv
 
-# TEMPORARY — REMOVE THIS LINE when the attrs-snapshot Action lands.
-# This path is *meant* to be committed (docs/spec-network-and-attrs.md §3), but ONLY
-# ever written by that Action. It is ignored in the interim because the file keeps
-# reappearing as scratch output from review subagents, and on 2026-08-12 one such stub
-# (2,621 identical "Creature/MV 3/Elf" rows) was committed and made every deck read as
-# 100 cards at MV 3 with zero lands — silently, since the honesty labels only fire on
-# MISSING data, never on wrong data. Ignoring it is the cheap guard until the Action —
-# with the row-count AND plausibility checks in §6a — is the only writer.
-data/collection/collection_attrs.snapshot.csv
-
 # Scryfall bulk cache (large; auto-downloaded by carddb.py)
 data/collection/scryfall-*.json
 data/collection/scryfall-*.json.part

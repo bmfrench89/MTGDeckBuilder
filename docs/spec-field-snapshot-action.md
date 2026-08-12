@@ -84,7 +84,7 @@ not match the push trigger's path filter — and pushes made with the built-in
 | EDHREC blocks GitHub runner IPs (Cloudflare) | red run, "::error:: none fetchable" | Nothing changes — existing snapshots keep serving. Fallback: run `--snapshot-all` on the PC and push, exactly the pre-Action workflow. |
 | EDHREC changes its JSON shape | red/partial runs | Same — old snapshots keep serving. Fix the parser in `edhrec.py`; consumers are untouched (three-tier fallback is the interface). |
 | One commander 404s (renamed/misspelled header) | warning annotation, that file skipped | Other commanders refresh normally. |
-| A deck sync pushes to `main` mid-run | none | The commit step rebases before pushing. |
+| A deck sync pushes to `main` mid-run | none, usually | The rebase closes the CONFLICT window but not the PUSH window — a pusher landing in the second between rebase and push used to turn the run red with the week's snapshots uncommitted (found 2026-08-12, reproduced with real git). The commit step now retries the rebase-and-push up to 5 times. |
 | Snapshot data is somehow bad | — | `git revert` the refresh commit; the app can't crash on it (degrades to fit-only, tested). |
 
 **The first live run is the Cloudflare experiment.** It was dispatched manually the

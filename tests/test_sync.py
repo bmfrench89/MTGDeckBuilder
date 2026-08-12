@@ -92,13 +92,29 @@ def test_run_reloads_only_when_pull_moved_head(clean_env, monkeypatch):
     assert calls["touched"] == 1
 
 
-def test_run_failure_is_recorded_honestly_and_never_reloads(clean_env, monkeypatch):
+def test_run_failure_with_moved_head_still_reloads(clean_env, monkeypatch):
+    """Changed 2026-08-12, deliberately: rc!=0 with HEAD moved means the pull
+    SUCCEEDED and something later (the push race, a dead PAT) failed — the code
+    on disk is new, and skipping the reload served the OLD code all day. The
+    failure is still recorded honestly; only the reload decision follows what
+    actually happened to the working tree."""
     calls = _fake_script(monkeypatch, rc=1, heads=("aaa", "bbb"),
-                         err="sync: PULL FAILED — rebase aborted")
+                         err="sync: PUSH FAILED after retries")
     st = sync.run("manual")
     assert st["ok"] is False
+    assert st["pulled"] is True
+    assert calls["touched"] == 1, "new code on disk must be served, even on a failed run"
+
+
+def test_run_total_failure_never_reloads(clean_env, monkeypatch):
+    """The other half of the 2026-08-12 change: when the pull itself failed,
+    HEAD never moved and a reload would be pure noise."""
+    calls = _fake_script(monkeypatch, rc=1, heads=("aaa", "aaa"),
+                         err="sync: PULL FAILED — rebase aborted")
+    st = sync.run("manual")
+    assert st["ok"] is False and st["pulled"] is False
     assert "PULL FAILED" in st["detail"]
-    assert calls["touched"] == 0, "a failed run must not reload the app"
+    assert calls["touched"] == 0
 
 
 def test_run_survives_a_missing_bash(clean_env, monkeypatch):
@@ -142,6 +158,19 @@ def test_maybe_start_fires_once_then_respects_the_ttl(clean_env, monkeypatch):
     assert sync.maybe_start(now + 3600) is False, "synced an hour ago — stay quiet"
     assert sync.maybe_start(now + sync.TTL + 1) is True, "a day later it's due again"
     assert len(started) == 2
+
+
+def test_maybe_start_retries_after_a_failed_sync(clean_env, monkeypatch):
+    """A FAILED sync must not burn the day's TTL (2026-08-12): before this, one
+    lost push race left the app on stale code for 24 h with the fix one request
+    away. Only ok:True consumes the budget."""
+    monkeypatch.setenv("MTG_AUTO_SYNC", "1")
+    started = _thread_recorder(monkeypatch)
+    now = 1_000_000.0
+    sync._write_status({"when": now, "ok": False, "reason": "auto",
+                        "pulled": False, "detail": "sync: PUSH FAILED after retries"})
+    assert sync.maybe_start(now + 60) is True, "a failed sync retries on the next request"
+    assert len(started) == 1
 
 
 def test_maybe_start_wont_stack_on_a_live_run_but_ignores_a_dead_one(clean_env, monkeypatch):
@@ -329,6 +358,8 @@ def test_script_recovers_from_a_squash_rewritten_upstream(tmp_path):
     g(tmp_path, "clone", str(origin), "seed")
     (seed / "data" / "decks").mkdir(parents=True)
     (seed / "data" / "decks" / "a.txt").write_text("1 Foo\n", encoding="utf-8")
+    # mirror production: data/cache/ (the flock lock file lives there) is ignored
+    (seed / ".gitignore").write_text("data/cache/\n", encoding="utf-8")
     (seed / "sync_server.sh").write_text(_script_src(), encoding="utf-8")
     g(seed, "add", "-A")
     g(seed, "commit", "-m", "seed")
@@ -395,6 +426,7 @@ def test_uncommitted_work_outside_the_tracked_paths_survives_a_self_heal(tmp_pat
     (seed / "data" / "decks").mkdir(parents=True)
     (seed / "data" / "decks" / "a.txt").write_text("1 Foo\n", encoding="utf-8")
     (seed / "app.py").write_text("v1\n", encoding="utf-8")   # tracked, NOT in TRACKED_DATA
+    (seed / ".gitignore").write_text("data/cache/\n", encoding="utf-8")
     (seed / "sync_server.sh").write_text(_script_src(), encoding="utf-8")
     g(seed, "add", "-A")
     g(seed, "commit", "-m", "seed")
@@ -424,3 +456,27 @@ def test_uncommitted_work_outside_the_tracked_paths_survives_a_self_heal(tmp_pat
         "uncommitted work was destroyed by the self-heal — it must be restored to "
         f"the tree or preserved in a stash. output:\n{out}"
     )
+
+
+def test_script_serializes_across_processes_and_retries_the_push():
+    """2026-08-12 hardening: flock guards the whole script (webapp/sync.py's lock
+    is per-process by its own comment, and console usage guarantees a second
+    process), and the final push retries with a rebase between attempts instead
+    of losing a full day to a one-second race with the Actions bots."""
+    code = "\n".join(ln for ln in _script_src().splitlines()
+                     if not ln.lstrip().startswith("#"))
+    assert "flock -n 9" in code, "cross-process lock missing"
+    assert code.find("flock -n 9") < code.find("git add"), \
+        "the lock must be taken before any git state changes"
+    assert "push_ok=" in code and "git pull --rebase" in code.split("sync: pushing…")[1], \
+        "the final push must rebase-and-retry, not fail on one lost race"
+
+
+def test_a_lock_contention_skip_does_not_consume_the_ttl(clean_env, monkeypatch):
+    """The flock skip exits 0 having done NOTHING — a console sync held the lock
+    and its outcome is never written to the status file. Recording the skip as
+    ok:True burned the day's TTL on a no-op (2026-08-12 implementation review)."""
+    _fake_script(monkeypatch, rc=0,
+                 out="sync: another sync is already running — skipping")
+    st = sync.run("auto")
+    assert st["ok"] is False, "a skip is not a successful sync"

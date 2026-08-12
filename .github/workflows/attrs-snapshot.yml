@@ -1,0 +1,135 @@
+# Attrs snapshot — card attributes for the committed name-only collection,
+# enriched on GitHub's machines, delivered via git.
+#
+# Why this exists: collection_attrs.csv is private and server-local, so every
+# fresh clone and every sandbox session starts NAME-ONLY — no types, no mana
+# values, no production data — and each analysis surface degrades to its honest
+# fallback tier. This Action enriches the committed name-only snapshot into
+# data/collection/collection_attrs.snapshot.csv, which mtglib.load_collection
+# layers UNDER the private file (private wins per-column wherever it speaks).
+#
+# Design, guards and the incident that shaped them: docs/spec-network-and-attrs.md
+# (§3 for the guard rationale, §6a for the stub-file incident the plausibility
+# check exists to catch).
+#
+# Privacy: the input is the NAME-ONLY snapshot, the run asserts the private CSV
+# is absent, and --no-ids omits the Scryfall id column, so the committed file
+# can never encode which physical printing is owned. tests/test_card_flow.py's
+# workflow text-test locks all three properties.
+name: attrs-snapshot
+
+on:
+  schedule:
+    - cron: "41 9 * * 1"        # weekly, Monday 09:41 UTC — same day as
+                                # field-snapshots (09:23); the SHARED concurrency
+                                # group below serializes them regardless
+  push:
+    branches: [main]
+    paths: ["data/collection/collection_snapshot.txt"]  # fresh export → fresh attrs
+  workflow_dispatch: {}         # the "Run workflow" button — works from a phone
+
+permissions:
+  contents: write
+
+# Deliberately SHARING field-snapshots' group name: groups are repo-scoped
+# strings, so this one line serializes attrs-vs-attrs AND attrs-vs-field.
+# Two concurrent writers on one CSV either conflict or — reproduced 2026-08-12 —
+# line-merge into a hybrid file neither run generated. A private group would
+# only prevent the first.
+# One accepted quirk of sharing: GitHub keeps at most one PENDING run per
+# group, so a newly queued field run can supersede a pending attrs run (shown
+# grey/cancelled, not red). Attrs then just waits for its next cron/push/
+# dispatch — last week's committed file keeps serving in the meantime.
+concurrency:
+  group: field-snapshots
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # The committed file's privacy property is CONDITIONAL on this machine not
+      # holding the private export: with a sibling collection_attrs.csv present,
+      # load_collection would overlay exact-printing Scryfall ids onto the input
+      # and the by-id round would resolve exact printings. A runner never has the
+      # private file — this assert keeps that an invariant instead of an accident.
+      - name: Refuse to run beside the private collection
+        run: |
+          test ! -f data/collection/collection.csv || {
+            echo "::error::private collection.csv present on the runner — refusing"; exit 1; }
+          test ! -f data/collection/collection_attrs.csv || {
+            echo "::error::private attrs sibling present — refusing to enrich"; exit 1; }
+
+      # No `set +e` wrapper, on purpose (contrast field-snapshots.yml, where a
+      # partial EDHREC fetch is still worth committing): carddb's non-zero exit
+      # IS the signal. exit 2 = network/total failure, exit 3 = resolution rate
+      # below --min-match (e.g. the 429-storm case that otherwise writes a
+      # header-only file with exit 0). Rate is measured against THIS run's own
+      # input, so a legitimately smaller collection still passes.
+      - name: Enrich the name-only snapshot
+        run: |
+          python3 scripts/carddb.py \
+            --collection data/collection/collection_snapshot.txt \
+            --out data/collection/collection_attrs.snapshot.csv \
+            --min-match 95 --no-ids
+
+      # The stub that got committed on 2026-08-12 had a PERFECT row count —
+      # 2,621 identical "Creature / MV 3 / Elf" rows — so a size check alone
+      # proves nothing. A real collection is never >90% one Type and never a
+      # single Sub-type; refuse to commit anything that uniform.
+      - name: Plausibility gate
+        run: |
+          python3 - <<'EOF'
+          import csv, sys
+          from collections import Counter
+          rows = list(csv.DictReader(open(
+              "data/collection/collection_attrs.snapshot.csv", encoding="utf-8")))
+          if len(rows) < 2:
+              sys.exit("::error::attrs snapshot is empty/header-only — refusing")
+          types = Counter((r.get("Type") or "?") for r in rows)
+          top, top_n = types.most_common(1)[0]
+          if len(types) < 5 or top_n / len(rows) > 0.90:
+              sys.exit(f"::error::implausible Type spread ({dict(types)}) — "
+                       "matches the 2026-08-12 stub signature, refusing to commit")
+          print(f"plausible: {len(rows)} rows, {len(types)} types, "
+                f"top {top!r} at {100*top_n//len(rows)}%")
+          EOF
+
+      # Regenerate-not-rebase: this job rewrites ONE shared CSV, and a git
+      # rebase can line-merge two runs into a file neither produced (reproduced;
+      # see the spec). So on a lost push race the file is re-applied WHOLESALE
+      # onto the fresh upstream — the committed content is always exactly this
+      # run's output, and the guards above validated exactly these bytes.
+      - name: Commit if changed
+        run: |
+          git config user.name  "attrs-snapshot-bot"
+          git config user.email "actions@users.noreply.github.com"
+          cp data/collection/collection_attrs.snapshot.csv /tmp/attrs-snapshot.csv
+          for attempt in 1 2 3 4 5; do
+            if ! git fetch origin main; then
+              echo "fetch failed (attempt $attempt/5) — retrying"
+              sleep $((3 * attempt))
+              continue
+            fi
+            git reset --hard origin/main
+            cp /tmp/attrs-snapshot.csv data/collection/collection_attrs.snapshot.csv
+            git add data/collection/collection_attrs.snapshot.csv
+            if git diff --cached --quiet; then
+              echo "No attrs changes — nothing to commit."
+              exit 0
+            fi
+            git commit -m "Attrs snapshot: refresh from the name-only collection snapshot"
+            if git push origin main; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt/5) — regenerating onto the new tip"
+            sleep $((3 * attempt))
+          done
+          echo "::error::could not push after 5 attempts — another writer kept winning"
+          exit 1

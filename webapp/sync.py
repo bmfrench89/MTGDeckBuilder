@@ -85,7 +85,7 @@ def run(reason, reload_delay=0.0):
         before = _head()
         try:
             r = subprocess.run(["bash", SCRIPT], cwd=ROOT, capture_output=True,
-                               text=True, timeout=300,
+                               text=True, timeout=420,
                                env={**os.environ, "SYNC_SKIP_RELOAD": "1"})
             ok = r.returncode == 0
             # The last non-blank line is the script's own summary ("sync: done." /
@@ -94,7 +94,16 @@ def run(reason, reload_delay=0.0):
             detail = lines[-1] if lines else ""
         except Exception as e:                      # bash/git missing, timeout
             ok, detail = False, f"{type(e).__name__}: {e}"
-        pulled = ok and _head() != before
+        # A lock-contention skip exits 0 having done NOTHING (a console sync held
+        # the flock) — recording it ok:True would burn the day's TTL on a no-op
+        # whose real work happened in a process that never writes this file.
+        if "another sync is already running" in detail:
+            ok = False
+        # Independent of ok, deliberately: a pull-succeeded-push-failed run HAS
+        # changed the code on disk, and skipping the reload leaves the app serving
+        # the old code all day — the stale-serve bug found 2026-08-12. A total
+        # failure never moves HEAD, so this stays False exactly when it should.
+        pulled = _head() != before
         st = {"when": time.time(), "ok": ok, "reason": reason,
               "pulled": pulled, "detail": detail[-300:]}
         _write_status(st)
@@ -119,7 +128,11 @@ def maybe_start(now=None):
         age = now - st.get("when", 0)
         if st.get("detail") == "running" and age < STALE_RUNNING:
             return False
-        if st.get("ok") is not None and age < TTL:
+        # Only a SUCCESSFUL sync consumes the daily TTL. `ok is not None` here
+        # let one failed run (a lost push race, an expired PAT) burn the whole
+        # day's budget — the app then served stale code for up to 24 h with a
+        # fix one request away. A failure now retries on the next request.
+        if st.get("ok") and age < TTL:
             return False
     t = threading.Thread(target=run, args=("auto",), daemon=True)
     t.start()

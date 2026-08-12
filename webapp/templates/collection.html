@@ -7,8 +7,11 @@
 
 <div class="card mt-4" style="border-left:3px solid {{ '#3fb950' if carddb.on and carddb.pct >= 60 else '#d29922' }}">
   {% if carddb.on %}
-    <b class="good">Card DB: enriched</b> — {{ carddb.covered }}/{{ carddb.total }}
-    cards ({{ carddb.pct }}%) have real colors / types / mana value / image ids.
+    <b class="good">Card DB: enriched{% if carddb.source == 'snapshot' %}
+    (committed snapshot — name-resolved, no printing ids){% else %}
+    (your own export — exact printings){% endif %}</b> —
+    {{ carddb.covered }}/{{ carddb.total }}
+    cards ({{ carddb.pct }}%) have real colors / types / mana value{% if carddb.source != 'snapshot' %} / image ids{% endif %}.
     Curves, color scores, and card-fit scores use them across every deck.
     {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
     new cards — run <code>enrich.bat</code> again after a Scryfall update.</span>{% endif %}

@@ -66,9 +66,20 @@ jobs:
             exit 0
           fi
           git commit -m "Field snapshots: scheduled refresh"
-          # A deck sync or merge may have landed while we ran; rebase, then push.
-          git pull --rebase origin main
-          git push origin main
+          # A deck sync or merge may have landed while we ran. The rebase closes
+          # the CONFLICT window but not the PUSH window — a second pusher can win
+          # the race in the second between rebase and push, and a single attempt
+          # then goes red with the week's snapshots uncommitted. Bounded retry.
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin main; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt/5) — retrying"
+            sleep $((3 * attempt))
+          done
+          echo "::error::could not push after 5 attempts — another writer kept winning"
+          exit 1
 
       # The refresh step always exits 0 so partial successes commit; this step is
       # what makes a TOTAL failure (0 snapshots, e.g. runner IPs blocked) turn the

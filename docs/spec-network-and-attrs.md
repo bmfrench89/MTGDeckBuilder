@@ -1,9 +1,11 @@
 # Spec: Sandbox network unblocking + committed attrs snapshot
 
-**Status: DRAFT — awaiting player ratification of the two decisions in §6.**
-Written 2026-08-12 from the network review in session `ystola-deck-review`
-(PR #107/#108 era). Implementer: a future session ("Opus"). This file is the
-live tracker — tick boxes here, not in the handoff.
+**Status: Phase 2 IMPLEMENTED 2026-08-12** (player approved §6.1 with the
+Scryfall column dropped; awaiting the merge that gives the Action its first
+run). **Phase 1 (§2, the environment allowlist) remains open** — it is the
+player's flip and nothing in Phase 2 depends on it. Written 2026-08-12 from
+the network review in session `ystola-deck-review`. This file is the live
+tracker — tick boxes here, not in the handoff.
 
 ## 1. Why this exists
 
@@ -122,12 +124,12 @@ reached); results arrive via git.
     `field-snapshots.yml:68-71` has no retry today and goes red on a lost
     race — see §8.
   - **Absolute floor, not just a rate.** "A total network failure is already
-    safe" is true but names the wrong hazard: `_post_collection` *raises* on
-    `URLError` (verified — the previous file survives), but after exhausting
-    its 429/503 retries it **returns `[], []`** (`carddb.py:238`), and
-    `enrich_api` then opens the out file and writes a **header-only** CSV,
-    exiting 0. A rate-limited run would commit an empty file over a good one,
-    green. So require BOTH: the resolution rate above, AND a hard floor of
+    safe" is true but the hazard needed renaming twice: `_post_collection`
+    raises on `URLError` AND on 429/503 exhaustion (the implementation review
+    proved the old `return [], []` at the loop's end was dead code — it is now
+    an explicit assertion). The REAL header-only hazard is **mass `not_found`
+    on a clean 200** — unresolvable names written short with exit 0. So
+    require BOTH: the resolution rate above, AND a hard floor of
     more than one data row — which also covers the very first run, when there
     is no checked-out file to compare against. Fail red; never skip silently.
   - Do **not** copy `field-snapshots.yml:44-58`'s `set +e` / `exit 0` wrapper.
@@ -150,9 +152,10 @@ enrichment silently discarded on each sync and spawn rescue-branch churn
 forever. Same conclusion, sharper teeth: a committed attrs file must be a path
 **no runtime ever writes**:
 
-- [ ] Action writes `data/collection/collection_attrs.snapshot.csv`
-      (committed; same `ATTRS_HEADER` columns — verified as exactly the 9 in
-      `carddb.py:57`; name-based enrichment). Committable once the TEMPORARY
+- [x] Action writes `data/collection/collection_attrs.snapshot.csv`
+      (committed; **8 columns — `ATTRS_HEADER` minus `Scryfall`**, dropped per
+      the privacy mitigation via `--no-ids`; name-based enrichment).
+      `.github/workflows/attrs-snapshot.yml`, landed 2026-08-12. Committable once the TEMPORARY
       `.gitignore` line for this exact path is removed — added 2026-08-12
       after the stub incident (§6a), and removing it is the Action's first
       step. The permanent ignore at line 26 pins only the private
@@ -162,7 +165,7 @@ forever. Same conclusion, sharper teeth: a committed attrs file must be a path
       `enrich_api()` take an out path. The Action just passes
       `--out data/collection/collection_attrs.snapshot.csv`, leaving the
       private file's default untouched.
-- [ ] `mtglib.load_collection` **layers** both files rather than choosing:
+- [x] (landed in PR #109) `mtglib.load_collection` **layers** both files rather than choosing:
       overlay `collection_attrs.snapshot.csv` first when present, then the
       private sibling `collection_attrs.csv` on top. `overlay_attrs` applies
       per-column and keys `Produced`/`Flags` off column presence
@@ -178,7 +181,7 @@ forever. Same conclusion, sharper teeth: a committed attrs file must be a path
 Both found by the 2026-08-12 red team; both would put **wrong data in git** on
 the first green run, and neither is visible in the output (exit 0 either way).
 
-- [ ] **`enrich_api` silently drops unresolvable names.** `carddb.py:313` binds
+- [x] (fixed 2026-08-12, `tests/test_carddb_enrich.py`) **`enrich_api` silently drops unresolvable names.** `carddb.py:313` binds
       Scryfall's `not_found` list as `_nf` and never reads it; `:329-332` emits
       no row for a miss — omitted, not blank. The fuzzy retry that would catch
       apostrophe/em-dash/Universes-Beyond naming variants exists only in
@@ -186,7 +189,16 @@ the first green run, and neither is visible in the output (exit 0 either way).
       this drops exactly the cards the project most needs typed. Fix: share the
       fuzzy retry (`_fetch_named_fuzzy`, `carddb.py:441-450`) after round 2,
       and stop discarding `_nf` so the count feeds `--min-match`.
-- [ ] **Faces-only cards enrich with EMPTY Sub-types.** `carddb.py:280`
+      **Unattended-fuzzy guard (2026-08-12 revalidation):** `--verify` labels a
+      fuzzy hit `"fuzzy"` so a HUMAN judges it (`carddb.py:514`); the Action has
+      no human, and a fuzzy match can land on a different card entirely (the
+      warning `rulings.py` already carries). In `enrich_api`, accept a fuzzy hit
+      only when the resolved name normalizes to the queried name —
+      `_norm(front_face(hit)) == _norm(front_face(queried))` — i.e. fuzzy may
+      repair punctuation/diacritics/casing, never substitute a card. A hit that
+      fails the check counts as unmatched (feeds `--min-match`, listed on
+      stderr) rather than silently enriching the wrong card into git.
+- [x] (fixed 2026-08-12, one line + test) **Faces-only cards enrich with EMPTY Sub-types.** `carddb.py:280`
       computes a `card_faces` fallback for `type_line` (added after
       `Scavenger Regent // Exude Toxin` enriched with an empty Type) but
       `:290-291` passes the RAW object to `subtypes_of`, so adventure/omen/DFC
@@ -198,13 +210,14 @@ the first green run, and neither is visible in the output (exit 0 either way).
 
 ### Consumers that must learn about the new file
 
-- [ ] `goldfish.cache_key` (`goldfish.py:719-726`) stats only
+- [x] (fixed 2026-08-12 + invalidation test) `goldfish.cache_key` (`goldfish.py:719-726`) stats only
       `collection_attrs.csv`, so the snapshot's arrival does **not** invalidate
       the goldfish disk cache — the server would keep serving
       identity-approximation simulations, labelled as if enriched, until some
       other input changed. Add a `_stat` on the snapshot path; extend
       `test_goldfish`'s invalidation set.
-- [ ] `/collection`'s enrichment tile (`webapp/app.py:965-976`) keys "on" off
+- [x] (fixed 2026-08-12 + two tile tests; the tile now names its source)
+      `/collection`'s enrichment tile (`webapp/app.py:965-976`) keys "on" off
       the private file's existence alone, so a fresh clone served by the
       snapshot shows enrichment OFF beside a 2,621/2,621 coverage count. A
       session reading that concludes enrichment is unavailable and starts
@@ -232,15 +245,15 @@ is strictly MORE revealing than the committed name list, not less.
 On a GitHub runner the private file does not exist, so the property holds — but
 by accident of environment, which is not a guarantee. Enforce it:
 
-- [ ] The workflow asserts the sibling is absent before enriching:
+- [x] (in the YAML + locked by the workflow text-test) The workflow asserts the sibling is absent before enriching:
       `test ! -f data/collection/collection_attrs.csv || { echo '::error::private attrs sibling present — refusing to enrich'; exit 1; }`
-- [ ] **Strongly consider dropping the `Scryfall` column from the snapshot file
-      entirely.** Nothing in the analysis pipeline consumes it; the private
+- [x] (DONE — `--no-ids`, player-approved 2026-08-12) **Dropped the `Scryfall`
+      column from the snapshot file entirely.** Nothing in the analysis pipeline consumes it; the private
       sibling still supplies exact ids on the machines that have it; and
       card images are browser hotlinks that fall back to a self-correcting
       by-name URL. Removing the column makes the privacy property
       unconditional instead of enforced-by-guard — the strictly safer design.
-- [ ] Extend `tests/test_collection_produced.py:111`
+- [x] (landed in PR #109) Extend `tests/test_collection_produced.py:111`
       (`test_upload_never_writes_the_tracked_snapshot`) to also assert
       `/collection/upload` never writes `collection_attrs.snapshot.csv`, and
       rename it to cover every tracked collection path.
@@ -333,7 +346,8 @@ curated-list differences.
    sibling-absence guard); if the column is kept, the owner should
    re-confirm knowing it can encode which physical printings are owned.
 2. **Flip the allowlist?** Phase 1 is entirely yours — sessions cannot change
-   an environment's network policy.
+   an environment's network policy. *(Still open as of 2026-08-12 — the Action
+   does not need it; runners have open egress.)*
 
 Say yes to both and Phase 2 lands in one session — **smaller than first
 scoped**: workflow YAML (with the row-count guard) + the loader layering +
@@ -363,16 +377,17 @@ review subagent probing loader behaviour) was committed and pushed via
    (the known trap in CLAUDE.md, now demonstrated).
 
 Implementation consequences:
-- [ ] The Action is the **only** writer of this path, ever. Until it lands, the
-      file must not exist in the repo.
-- [ ] **FIRST STEP of implementing the Action: delete the temporary
+- [x] The Action is the **only** writer of this path (temporary gitignore
+      removed with the Action's landing, 2026-08-12).
+- [x] (DONE with the Action) **FIRST STEP of implementing the Action: delete the temporary
       `data/collection/collection_attrs.snapshot.csv` line from `.gitignore`**
       (added 2026-08-12 with a matching comment). It is there because the stub
       kept regenerating as subagent scratch output; leaving it in place would
       make the Action's commit step silently no-op, which is a worse failure
       than the one it prevents. The `.gitignore` comment says the same thing —
       both must be removed together.
-- [ ] The row-count guard (§3) is necessary but **not sufficient** — the stub
+- [x] (both live in the YAML: `--min-match 95` + the Type-spread gate)
+      The row-count guard (§3) is necessary but **not sufficient** — the stub
       had a perfect row count. Add a plausibility check the Action must pass
       before committing: e.g. the file must show a spread of `Type` values
       (a real collection is never >90% one type) and more than a handful of
@@ -416,6 +431,25 @@ Implementation consequences:
   Tests — logged deliberately as an oddity rather than dressed up as a defect
   or quietly dropped.
 
+### Implementation review (2026-08-12, two lanes over the full diff)
+
+No blockers. Every priority behavior was mutation-checked by the reviewers —
+each reverted in a scratch copy and caught by its test — the YAML's shell was
+executed step by step in checkout@v4-faithful throwaway repos (regenerate-
+retry loop walked through win/loss/five-loss branches; plausibility gate
+refused the stub signature verbatim), and the planted-snapshot vanishing-file
+oddity from §3 Tests resolved: four full-suite runs, file present after each.
+Its three FIX findings are folded in: the workflow text-test now asserts
+against comment-stripped code (its flag checks were mutation-proven satisfiable
+by comments), the no-network tripwire now traps the fuzzy layer (whose bare
+except swallowed the booby-trap), and this tracker's boxes are ticked. Accepted
+NOTEs, implemented: fetch-leg guard in the retry loop, the pending-supersede
+concurrency comment, bulk-path flag refusal (`--no-ids`/`--min-match` are
+API-only and now error instead of silently no-opping), the lock-contention
+skip no longer consumes the sync TTL, subprocess timeout widened to 420s, tile
+tests added. Accepted NOTEs, documented only: the shared concurrency group can
+supersede a pending attrs run (grey, not red — waits for its next trigger).
+
 ## 8. Pre-existing bugs the red team surfaced (NOT caused by this spec)
 
 These are live in `main` today and were found while tracing what a third
@@ -446,20 +480,21 @@ anything in this spec ships.
    hard-resets over it. Fix: refuse to self-heal when `git status --porcelain`
    is non-empty (fall back to the honest abort already at `:73-76`), and/or
    stash before the pull; re-fetch before trusting `@{u}`.
-2. **No push retry in `sync_server.sh` (`:79-80`).** A lost race costs a full
+2. ~~**No push retry in `sync_server.sh`.**~~ **FIXED 2026-08-12** (bounded rebase-and-retry; test-locked). Original: A lost race costs a full
    day of sync AND leaves the app serving stale code, because the pull already
    succeeded but the WSGI touch never runs. Bounded rebase-and-retry.
-3. **No cross-process lock on the sync.** `webapp/sync.py:28`'s lock is
+3. ~~**No cross-process lock on the sync.**~~ **FIXED 2026-08-12** (flock on gitignored data/cache/sync.lock; skip no longer consumes the TTL). Original: `webapp/sync.py:28`'s lock is
    per-process by its own comment, and `maybe_start` is a check-then-act on a
    status file. A console run during the auto-sync interleaves two
    `add`/`commit`/`pull --rebase`/`reset --hard` sequences in one working tree.
    `flock` at the top of `sync_server.sh`; `data/cache/` is already gitignored.
-4. **`field-snapshots.yml:68-71` has no push retry either** — one attempt, red
+4. ~~**`field-snapshots.yml` has no push retry either**~~ **FIXED 2026-08-12** (same bounded retry; its spec's failure table corrected). Original: — one attempt, red
    on a non-fast-forward, and nothing retries for 7 days. Its own spec
    (`docs/spec-field-snapshot-action.md:88`) claims a mid-run deck sync is
    harmless; the rebase closes the *conflict* window, not the *push* window.
 5. **First landing of the snapshot file breaks any clone holding an untracked
-   file at that path** — `git pull` refuses to overwrite it, which on the
+   file at that path** *(mitigated: the server now stashes untracked state
+   around the pull; sandbox clones should not keep scratch at that path)* — `git pull` refuses to overwrite it, which on the
    server escalates into the self-heal above. Note: this already happened in
    this session (§6a). Land the first commit via a normal PR, and have the
    sync handle dirty/untracked state explicitly.
