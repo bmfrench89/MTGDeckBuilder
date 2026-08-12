@@ -82,16 +82,38 @@ reached); results arrive via git.
     ~2,622 names ≈ ~35 batched `/cards/collection` POSTs — trivial load, keep
     the client's existing politeness delay.
   - Commits only on diff, as `attrs-snapshot-bot`; red only on total failure.
-  - **The shrinkage guard must be BUILT, not inherited** (2026-08-12 review
-    finding). `field-snapshots.yml` can rely on a bare commit-if-diff because
-    its guard lives in Python — `edhrec.save_snapshot` refuses to write
-    non-live data (`edhrec.py:200-206`). `carddb` has **no equivalent**: a run
-    where Scryfall is reachable but many names fail to resolve writes a short
-    file and exits 0, which a copied YAML would cheerfully commit over a good
-    one. Implement explicitly: compare the new file's row count against the
-    checked-out version and refuse to commit below ~90%, failing the run
-    instead. (A total network failure is already safe — `enrich_api` raises
-    before the out file is opened, so the previous file survives untouched.)
+  - **`concurrency: {group: field-snapshots, cancel-in-progress: false}` —
+    deliberately SHARING field-snapshots' group name.** Groups are repo-scoped
+    strings, so sharing serializes attrs-vs-attrs *and* attrs-vs-field in one
+    line. Its own private group would only fix the first. Red-team reproduced
+    the failure this prevents: two concurrent runs rewriting the same CSV
+    either conflict on rebase, or — worse — line-merge into a hybrid file
+    containing rows from two different runs that no guard ever validated.
+  - **The guard must be BUILT, not inherited, and the first draft of it here
+    was wrong twice over** (2026-08-12 red team). `field-snapshots.yml` can use
+    a bare commit-if-diff because its guard lives in Python
+    (`edhrec.save_snapshot` refuses non-live data). `carddb` has no equivalent.
+    The originally specced guard — new row count vs the checked-out file, ~90%
+    floor — fails both ways: it **permanently blocks a legitimate shrink**
+    (sell half the collection, regenerate the snapshot, and every future run
+    is refused because it compares against history), and it **misses the
+    failure it was written for** (the 2026-08-12 stub had a perfect row count).
+    Correct guard: **resolution rate against the run's own input, never
+    against history.** Add `--min-match PCT` to `carddb.py` and fail the run
+    when `matched / total` falls below it (~95). `carddb.py:334` already
+    returns `(len(resolved), len(coll), unmatched)` — the number is computed
+    and currently thrown away. Keep the §6a plausibility check too (the stub
+    would have passed a rate check as well, since it "resolved" everything).
+  - Guard placement: the rate check runs pre-commit, but a rebase can change
+    what actually lands. Either re-assert on the post-rebase file before
+    pushing, or regenerate after checkout so no merge is possible.
+  - Push retry: `for i in 1 2 3 4 5; do git pull --rebase origin main && git
+    push origin main && exit 0; sleep $((3*i)); done` then fail loudly.
+    `field-snapshots.yml:68-71` has no retry today and goes red on a lost
+    race — see §8.
+  - (A total network failure is already safe — verified by monkeypatching
+    `_post_collection` to raise: `enrich_api` throws before the out file is
+    opened, so the previous file survives untouched.)
 
 ### The wedge hazard, and why the file gets a NEW name
 
@@ -128,6 +150,44 @@ forever. Same conclusion, sharper teeth: a committed attrs file must be a path
       shape) no longer erases the snapshot's production data. Insert at
       `mtglib.py:373`, after the `owned_additions` merge, so merge order and
       the empty-vs-absent contract are untouched.
+
+### Prerequisites in `carddb.py` — land these BEFORE the Action
+
+Both found by the 2026-08-12 red team; both would put **wrong data in git** on
+the first green run, and neither is visible in the output (exit 0 either way).
+
+- [ ] **`enrich_api` silently drops unresolvable names.** `carddb.py:313` binds
+      Scryfall's `not_found` list as `_nf` and never reads it; `:329-332` emits
+      no row for a miss — omitted, not blank. The fuzzy retry that would catch
+      apostrophe/em-dash/Universes-Beyond naming variants exists only in
+      `--verify`. On a collection full of post-2025 Marvel/Hobbit/Avatar names
+      this drops exactly the cards the project most needs typed. Fix: share the
+      fuzzy retry (`_fetch_named_fuzzy`, `carddb.py:441-450`) after round 2,
+      and stop discarding `_nf` so the count feeds `--min-match`.
+- [ ] **Faces-only cards enrich with EMPTY Sub-types.** `carddb.py:280`
+      computes a `card_faces` fallback for `type_line` (added after
+      `Scavenger Regent // Exude Toxin` enriched with an empty Type) but
+      `:290-291` passes the RAW object to `subtypes_of`, so adventure/omen/DFC
+      cards land with no subtypes. `overlay_attrs` only writes non-empty cells,
+      so they stay `[]` — and subtypes are what tribal detection reads
+      (`analyze_collection --subtype Dragon`, `deck_fit`, `auto_build`). For a
+      dragon-tribal deck in this collection that is not academic. Fix is one
+      line: pass the already-computed `type_line` local. Add the hermetic test.
+
+### Consumers that must learn about the new file
+
+- [ ] `goldfish.cache_key` (`goldfish.py:719-726`) stats only
+      `collection_attrs.csv`, so the snapshot's arrival does **not** invalidate
+      the goldfish disk cache — the server would keep serving
+      identity-approximation simulations, labelled as if enriched, until some
+      other input changed. Add a `_stat` on the snapshot path; extend
+      `test_goldfish`'s invalidation set.
+- [ ] `/collection`'s enrichment tile (`webapp/app.py:965-976`) keys "on" off
+      the private file's existence alone, so a fresh clone served by the
+      snapshot shows enrichment OFF beside a 2,621/2,621 coverage count. A
+      session reading that concludes enrichment is unavailable and starts
+      hand-curating names — the exact waste §1 catalogues. Make `on` reflect
+      either source, ideally naming which.
 
 ### Known, accepted limitation
 
@@ -235,6 +295,45 @@ Implementation consequences:
       (a real collection is never >90% one type) and more than a handful of
       distinct `Scryfall` ids. Cheap, and it catches exactly this.
 
+## 8. Pre-existing bugs the red team surfaced (NOT caused by this spec)
+
+These are live in `main` today and were found while tracing what a third
+committer would collide with. They are listed here because this spec's Action
+makes several of them **more likely to fire**, but every one can and should be
+fixed independently — and #1 is a data-loss bug that deserves fixing before
+anything in this spec ships.
+
+1. **`sync_server.sh`'s rescue self-heal destroys uncommitted work, and its
+   safety comment is inverted.** `:64-66` claims "the push comes first — local
+   edits are provably on GitHub before a single byte is discarded." True for
+   *committed* edits. `git branch -f` (`:68`) captures HEAD only, so anything
+   in the working tree is **not** on the rescue branch when `:70` runs
+   `git reset --hard`. Concrete loss: the player saves a deck in the web app
+   during the seconds the sync spends in `git pull --rebase`; that unstaged
+   change to a tracked file makes the pull fail `128` — and the red team
+   confirmed the fetch never happens in that mode, so `@{u}` is *stale* too.
+   The self-heal then parks a rescue branch that does not contain the save and
+   hard-resets over it. Fix: refuse to self-heal when `git status --porcelain`
+   is non-empty (fall back to the honest abort already at `:73-76`), and/or
+   stash before the pull; re-fetch before trusting `@{u}`.
+2. **No push retry in `sync_server.sh` (`:79-80`).** A lost race costs a full
+   day of sync AND leaves the app serving stale code, because the pull already
+   succeeded but the WSGI touch never runs. Bounded rebase-and-retry.
+3. **No cross-process lock on the sync.** `webapp/sync.py:28`'s lock is
+   per-process by its own comment, and `maybe_start` is a check-then-act on a
+   status file. A console run during the auto-sync interleaves two
+   `add`/`commit`/`pull --rebase`/`reset --hard` sequences in one working tree.
+   `flock` at the top of `sync_server.sh`; `data/cache/` is already gitignored.
+4. **`field-snapshots.yml:68-71` has no push retry either** — one attempt, red
+   on a non-fast-forward, and nothing retries for 7 days. Its own spec
+   (`docs/spec-field-snapshot-action.md:88`) claims a mid-run deck sync is
+   harmless; the rebase closes the *conflict* window, not the *push* window.
+5. **First landing of the snapshot file breaks any clone holding an untracked
+   file at that path** — `git pull` refuses to overwrite it, which on the
+   server escalates into the self-heal above. Note: this already happened in
+   this session (§6a). Land the first commit via a normal PR, and have the
+   sync handle dirty/untracked state explicitly.
+
 ## 7. Review status
 
 - **Grounding lane (2026-08-12): COMPLETE**, findings folded in above. It
@@ -243,11 +342,23 @@ Implementation consequences:
   was inherited-by-assumption rather than real, re-dated the wedge hazard to
   the post-self-heal data-destruction symptom, and upgraded the loader from
   either/or to layering. Every finding was re-verified by hand before edit.
-- **Red-team lane: INTERRUPTED, never returned.** Still unexamined, and worth
-  a rerun before or during implementation: commit races between the three bots
-  that push to `main` (field-snapshots, attrs-snapshot, the server sync);
-  whether `overlay_attrs` on a stale snapshot can conjure phantom cards or
-  merely skips unknown names; `carddb`'s handling of names Scryfall cannot
-  resolve (Marvel/Hobbit oddities, `owned_additions` entries); and an
-  adversarial read of whether any `ATTRS_HEADER` column leaks more than the
-  already-committed name list.
+- **Red-team lanes A (races) + B (data correctness): COMPLETE 2026-08-12**,
+  rerun after the first attempt was interrupted. Findings folded into §3, §6a
+  and the new §8. They reproduced their claims with real git repos and
+  monkeypatched network calls rather than reasoning about them, which is why
+  §8 exists at all.
+  - **CLEARED, so nobody re-investigates:** `overlay_attrs` cannot conjure
+    phantom cards from a stale snapshot — it is match-only (`mtglib.py:328-330`,
+    verified empirically). The reverse direction degrades honestly. A total
+    network failure leaves the previous out file untouched. The new path is
+    genuinely committable. `owned_additions.txt` is tracked and sits beside the
+    snapshot so the runner merges it — **zero cards are stranded today** (its
+    one entry is already in the snapshot).
+  - **Killed my own guard design:** the row-count-vs-history floor was wrong in
+    both directions. Replaced with a resolution-rate check against the run's
+    own input (§3).
+- **Lane C (privacy / CI / allowlist completeness): still running.** Open until
+  it returns: whether the `Scryfall` id column reveals which *printing* the
+  player owns (the one thing that could complicate the already-granted §6.1
+  approval), whether any existing test breaks when the file exists in a clean
+  checkout, and every remaining file that still claims `rules.py` is PC-only.
