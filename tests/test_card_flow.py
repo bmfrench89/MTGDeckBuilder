@@ -432,3 +432,35 @@ def test_spellbook_degrades_on_a_corrupt_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(spellbook, "_post", boom)
     out = spellbook.find_my_combos(["Test Commander"], [("sol ring", 1)])
     assert out["error"] and out["present"] == [] and out["almost"] == []
+
+
+def test_attrs_snapshot_workflow_is_name_only_and_guarded():
+    """The committed attrs file's privacy property is enforced, not assumed
+    (docs/spec-network-and-attrs.md §3): the workflow may only read the
+    name-only snapshot, must refuse to run beside the private CSV, must omit
+    printing ids, and must carry the resolution-rate floor. This test is the
+    cheapest lock on all four — pointing the Action at the private collection
+    fails the suite before it can leak a byte."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    wf = open(os.path.join(root, ".github", "workflows",
+                           "attrs-snapshot.yml"), encoding="utf-8").read()
+    # The private CSV may be NAMED (the refuse-to-run guard names it to assert
+    # its absence) but must never be an INPUT: the only --collection argument
+    # is the name-only snapshot.
+    assert "--collection data/collection/collection_snapshot.txt" in wf
+    assert "--collection data/collection/collection.csv" not in wf, \
+        "the private collection CSV must never be the enrichment input"
+    assert "test ! -f data/collection/collection.csv" in wf, \
+        "the runner must refuse to run beside the private collection"
+    assert "--out data/collection/collection_attrs.snapshot.csv" in wf
+    assert "--no-ids" in wf, "printing ids must stay out of the committed file"
+    assert "--min-match" in wf, "the resolution-rate floor is not optional"
+    assert "test ! -f data/collection/collection_attrs.csv" in wf, \
+        "the sibling-absence guard is what makes the privacy property an invariant"
+    assert "contents: write" in wf
+    assert "group: field-snapshots" in wf, \
+        "the SHARED concurrency group is what serializes the three main-pushers"
+    code = "\n".join(ln for ln in wf.splitlines()
+                      if not ln.lstrip().startswith("#"))
+    assert "set +e" not in code, \
+        "carddb's non-zero exit is the failure signal — never swallow it"

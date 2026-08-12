@@ -968,8 +968,16 @@ def collection_view():
     # written before enrichment learned about produced_mana has full types and zero
     # production, and everything downstream then falls back to color identity.
     produced_n = sum(1 for c in coll if c.produced is not None)
+    snapshot_attrs_path = os.path.join(
+        ROOT, "data/collection/collection_attrs.snapshot.csv")
+    # Either source counts as "on" — a fresh clone served solely by the committed
+    # snapshot used to show the tile OFF beside a full coverage count, and a
+    # session reading that started hand-curating names it already had data for.
+    attrs_source = ("private" if os.path.exists(attrs_path) else
+                    "snapshot" if os.path.exists(snapshot_attrs_path) else None)
     carddb = {
-        "on": os.path.exists(attrs_path),
+        "on": attrs_source is not None,
+        "source": attrs_source,
         "covered": enriched_n,
         "total": len(coll),
         "pct": round(100 * enriched_n / len(coll)) if coll else 0,

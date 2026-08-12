@@ -722,6 +722,11 @@ def cache_key(deck_path, collection_path, games, seed, turns, mulligan):
         d = os.path.dirname(collection_path) or "."
         key["collection"] = _stat(collection_path)
         key["collection_attrs"] = _stat(os.path.join(d, "collection_attrs.csv"))
+        # The committed snapshot attrs overlay under the private file — a pulled
+        # refresh must invalidate cached sims, or the server keeps serving
+        # identity-approximation numbers labelled as enriched.
+        key["collection_attrs_snapshot"] = _stat(
+            os.path.join(d, "collection_attrs.snapshot.csv"))
     return key
 
 

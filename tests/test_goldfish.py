@@ -651,3 +651,25 @@ def test_a_companion_file_powers_the_enriched_model_end_to_end(tmp_path):
                                 cache_dir=str(tmp_path / "cache"))
     assert rep is not None and rep["model"] == "exact"
     assert rep["p_cast_by"]["1"] == 0.0        # every land enters tapped
+
+
+def test_a_new_snapshot_attrs_file_invalidates_the_cache(sim_deck, tmp_path,
+                                                         monkeypatch):
+    """The committed attrs snapshot (docs/spec-network-and-attrs.md §3) arrives
+    via `git pull`, not via any path the old cache key watched — a pulled refresh
+    left the server serving identity-approximation sims labelled as enriched."""
+    import os
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate
+    monkeypatch.setattr(goldfish, "simulate",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    goldfish.sim_for_deck(deck, coll, games=150, cache_dir=cdir,
+                          collection_path=coll)
+    snap = os.path.join(os.path.dirname(coll), "collection_attrs.snapshot.csv")
+    with open(snap, "w", encoding="utf-8") as f:
+        f.write("Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags\n")
+    goldfish.sim_for_deck(deck, coll, games=150, cache_dir=cdir,
+                          collection_path=coll)
+    assert len(calls) == 2, "the snapshot's arrival must miss the cache"
