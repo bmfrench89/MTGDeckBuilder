@@ -186,6 +186,15 @@ the first green run, and neither is visible in the output (exit 0 either way).
       this drops exactly the cards the project most needs typed. Fix: share the
       fuzzy retry (`_fetch_named_fuzzy`, `carddb.py:441-450`) after round 2,
       and stop discarding `_nf` so the count feeds `--min-match`.
+      **Unattended-fuzzy guard (2026-08-12 revalidation):** `--verify` labels a
+      fuzzy hit `"fuzzy"` so a HUMAN judges it (`carddb.py:514`); the Action has
+      no human, and a fuzzy match can land on a different card entirely (the
+      warning `rulings.py` already carries). In `enrich_api`, accept a fuzzy hit
+      only when the resolved name normalizes to the queried name —
+      `_norm(front_face(hit)) == _norm(front_face(queried))` — i.e. fuzzy may
+      repair punctuation/diacritics/casing, never substitute a card. A hit that
+      fails the check counts as unmatched (feeds `--min-match`, listed on
+      stderr) rather than silently enriching the wrong card into git.
 - [ ] **Faces-only cards enrich with EMPTY Sub-types.** `carddb.py:280`
       computes a `card_faces` fallback for `type_line` (added after
       `Scavenger Regent // Exude Toxin` enriched with an empty Type) but
