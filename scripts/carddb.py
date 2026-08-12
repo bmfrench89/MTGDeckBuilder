@@ -288,18 +288,44 @@ def _attrs_from_scryfall(c):
     # produces nothing" — the absence of the whole column is what means "unknown".
     produced = oracle_flags.produced_of(c)
     return {"type": primary_type(type_line),
-            "subtypes": subtypes_of(c.get("type_line", "")), "mv": mv,
+            "subtypes": subtypes_of(type_line), "mv": mv,
             "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or "",
             "produced": " ".join(p for p in "WUBRGC" if p in produced),
             "flags": ";".join(sorted(oracle_flags.derive_flags(c)))}
 
 
-def enrich_api(collection_path, out_path, delay=0.1, log=None):
+def _fold_name(name):
+    """Fold a card name for the unattended-fuzzy equality check: NFKD, drop
+    combining marks (Óin == Oin), casefold, keep alphanumerics only. Strong
+    enough to accept a pure spelling repair — diacritics, curly quotes, stray
+    punctuation — and nothing else. A fuzzy hit whose FOLD differs is a
+    different card, not a respelling."""
+    import unicodedata
+    folded = unicodedata.normalize("NFKD", mtglib.front_face(name))
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    return "".join(ch for ch in folded.casefold() if ch.isalnum())
+
+
+def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
+               include_ids=True):
     """Enrich via Scryfall's /cards/collection API — no ~40 MB bulk download.
-    ~1 request per 75 cards. Returns (matched, total, sorted unmatched names)."""
+    ~1 request per 75 cards. Returns (matched, total, sorted unmatched names).
+
+    `fuzzy`: after the exact rounds, retry each miss once through /cards/named
+    ?fuzzy= — but a hit counts ONLY if its folded name equals the query's
+    (`_fold_name`). --verify can hand a fuzzy resolution to a human labelled
+    "fuzzy"; this path is unattended and writes files other tools trust, so
+    fuzzy may repair spelling and may never substitute a card. Rejected hits
+    stay unmatched and are reported, never silently enriched.
+
+    `include_ids=False` omits the Scryfall id column (header and cells) — for
+    the COMMITTED attrs snapshot, where an id could pin a specific printing
+    (docs/spec-network-and-attrs.md §3 PRIVACY). Every id consumer already
+    handles the absent column; images fall back to by-name URLs."""
     log = log or (lambda *_a: None)
     coll = mtglib.load_collection(collection_path)
-    resolved = {}  # card.name -> attrs
+    resolved = {}       # card.name -> attrs
+    by_name_round1 = set()  # cards round 1 already submitted as {"name": …}
 
     def run(cards, ident_fn):
         submit, keymap = [], {}
@@ -307,6 +333,8 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None):
             ident, key = ident_fn(card)
             if ident is None:
                 continue
+            if "name" in ident:
+                by_name_round1.add(card.name)
             submit.append(ident)
             keymap.setdefault(key, card)
         for i in range(0, len(submit), _BATCH):
@@ -319,17 +347,44 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None):
             time.sleep(delay)
 
     run(coll, _best_identifier)  # round 1: exact printing where the export has it
-    missing = [c for c in coll if c.name not in resolved]
-    if missing:  # round 2: name fallback (e.g. ManaPool set code != Scryfall's)
+    # Round 2: name fallback (e.g. ManaPool set code != Scryfall's) — but only for
+    # cards round 1 submitted BY ID; a name that already missed as a name would
+    # just miss again, doubling every request on a name-only snapshot.
+    missing = [c for c in coll if c.name not in resolved
+               and c.name not in by_name_round1]
+    if missing:
         run(missing, lambda c: ({"name": c.name}, ("name", mtglib._norm(c.name))))
 
+    fuzzy_rejected = []
+    if fuzzy:
+        for card in [c for c in coll if c.name not in resolved]:
+            hit = _fetch_named_fuzzy(card.name)
+            time.sleep(delay)
+            if not hit or not hit.get("name"):
+                continue
+            if _fold_name(hit["name"]) == _fold_name(card.name):
+                resolved[card.name] = _attrs_from_scryfall(hit)
+                log(f"  …fuzzy-respelled: {card.name!r} -> {hit['name']!r}")
+            else:
+                fuzzy_rejected.append((card.name, hit["name"]))
+
+    header = list(ATTRS_HEADER)
+    id_col = header.index("Scryfall")
+    if not include_ids:
+        header.pop(id_col)
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(ATTRS_HEADER)
+        w.writerow(header)
         for card in sorted(coll, key=lambda c: c.name):
             a = resolved.get(card.name)
             if a:
-                w.writerow(_attrs_row(card, a))
+                row = _attrs_row(card, a)
+                if not include_ids:
+                    row.pop(id_col)
+                w.writerow(row)
+    for name, hit in fuzzy_rejected:
+        print(f"  fuzzy REJECTED (different card, kept unmatched): "
+              f"{name!r} -> {hit!r}", file=sys.stderr)
     unmatched = sorted(c.name for c in coll if c.name not in resolved)
     return len(resolved), len(coll), unmatched
 
@@ -564,6 +619,15 @@ def main():
                          "with --verify, ignore the 30-day cache and re-fetch.")
     ap.add_argument("--no-duckdb", action="store_true", help="bulk path only.")
     ap.add_argument("--stats", action="store_true", help="print a color/type breakdown after")
+    ap.add_argument("--min-match", type=float, default=None, metavar="PCT",
+                    help="fail (exit 3) if fewer than PCT%% of names resolve — the guard "
+                         "for unattended runs, measured against THIS run's own input, "
+                         "never against history. Catches the 429-storm case where "
+                         "_post_collection gives up and the file would otherwise be "
+                         "written short with exit 0.")
+    ap.add_argument("--no-ids", action="store_true",
+                    help="omit the Scryfall id column (API path only) — for the "
+                         "committed attrs snapshot, where an id could pin a printing.")
     args = ap.parse_args()
 
     # Exactly one mode. --collection stopped being argparse-required when --verify
@@ -597,10 +661,20 @@ def main():
             unmatched_n = total - matched
         else:
             print("enriching via Scryfall /cards/collection API (no bulk download)…")
-            matched, total, unmatched = enrich_api(args.collection, out, log=print)
+            matched, total, unmatched = enrich_api(args.collection, out, log=print,
+                                                   include_ids=not args.no_ids)
             print(f"Matched {matched}/{total} owned cards "
                   f"({round(100 * matched / total) if total else 0}%).")
             unmatched_n = len(unmatched)
+            if args.min_match is not None and total:
+                rate = 100 * matched / total
+                if rate < args.min_match:
+                    for n in unmatched:
+                        print(f"  UNMATCHED: {n}", file=sys.stderr)
+                    print(f"error: resolution rate {rate:.1f}% is below the "
+                          f"--min-match floor of {args.min_match:g}% — refusing to "
+                          "treat this output as a good enrichment.", file=sys.stderr)
+                    return 3
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
