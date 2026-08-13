@@ -165,6 +165,31 @@ def _auth_flags():
     return {"auth_enabled": bool(PASSWORD)}
 
 
+def _explain_block(explain, *keys):
+    """Render the ENGINE's own "what this means" notes as collapsible <details>.
+
+    The wording lives in `manabase.analyze()["explain"]`, never in the template — one
+    source of truth, so the CLI, the generated dashboard and this page cannot drift
+    into three different explanations of the same percentage."""
+    from markupsafe import Markup, escape
+    parts = []
+    for k in keys:
+        e = (explain or {}).get(k)
+        if not e:
+            continue
+        why = f"<p>{escape(e['why'])}</p>" if e.get("why") else ""
+        healthy = (f"<p class='muted fs-xs'>{escape(e['healthy'])}</p>"
+                   if e.get("healthy") else "")
+        parts.append(f"<details class='explain'><summary>{escape(e['what'])}</summary>"
+                     f"{why}{healthy}</details>")
+    return Markup("".join(parts))
+
+
+@app.context_processor
+def _explain_helper():
+    return {"explain": _explain_block}
+
+
 @app.before_request
 def _auto_sync():
     """Poor-man's cron: on the hosted server (where Scheduled Tasks are paid-only)

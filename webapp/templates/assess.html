@@ -61,6 +61,7 @@ It's a grounded read, not a verdict.</div>
       <div class="tile"><div class="val">{{ (lo.ge4_by_t4*100)|round|int }}%</div>
         <div class="lbl">4th land by T4</div></div>
     </div>
+    {{ explain(a.mana.explain, "keepable", "ge3_open", "ge4_by_t4") }}
     {% endif %}
     <div class="tablewrap">
       <table>
@@ -82,15 +83,16 @@ It's a grounded read, not a verdict.</div>
         </tbody>
       </table>
     </div>
+    {{ explain(a.mana.explain, "sources") }}
     {% if a.mana.risky %}
     <p class="mt-3"><b class="warn">Risky to cast on curve ({{ a.mana.risky_total }}):</b>
       <span class="muted fs-sm">{% for r in a.mana.risky %}<span class="cardlink"
         data-card="{{ r.name }}">{{ r.name }}</span> {{ (r.p*100)|round|int }}%{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+    {{ explain(a.mana.explain, "risky") }}
     {% endif %}
-    <p class="muted fs-xs mt-3">Exact hypergeometric odds, unconditional (not Karsten's
-    mulligan-adjusted figures). Sources approximate a permanent's output from its color
-    identity, which is rough for fetches and oddballs. Karsten's targets assume you want the
-    card castable <i>on curve</i> — a 5-colour deck will sit under them and still function.</p>
+    {# The caveats now sit WITH the numbers they qualify (the engine ships them), so
+       this page no longer carries its own hand-written footer that could drift. #}
+    {{ explain(a.mana.explain, "unconditional") }}
   {% else %}
     <p class="muted">Colored-source odds need card colors and mana costs. Run
     <code>enrich.bat</code> (or <code>scripts/carddb.py</code>) and this fills in.</p>

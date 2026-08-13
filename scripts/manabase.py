@@ -70,6 +70,59 @@ def color_odds(sources, deck=DECK):
             "ge2_by_t3": hypergeom_at_least(deck, sources, cards_seen(3), 2)}
 
 
+def _explain(lands, deck, basis):
+    """Plain-language notes for every stat this module reports."""
+    approx = (basis or {}).get("identity_lands", 0)
+    approx_note = (" Part of this rests on the color-IDENTITY approximation "
+                   f"({approx} land(s) counted that way, not by what they actually "
+                   "tap for) — enrich the collection to remove the guess."
+                   if approx else "")
+    return {
+        "keepable": {
+            "what": "How often your opening seven holds 2-5 lands.",
+            "why": "Hands outside that band are the ones you ship; a low number "
+                   "means you mulligan more than the deck can afford.",
+            "healthy": "Most Commander decks land around 80-85%. Well below that "
+                       "usually means too few lands, not bad luck.",
+        },
+        "ge3_open": {
+            "what": "Chance of three or more lands in the opening seven.",
+            "why": "Three lands is the floor for casting anything on curve without "
+                   "needing a perfect draw step.",
+            "healthy": "~55-65% at a normal 36-38 land count.",
+        },
+        "ge4_by_t4": {
+            "what": "Chance of having made a fourth land drop by turn four.",
+            "why": "Four mana on turn four is when most Commander decks' engines "
+                   "actually start; missing it is what a slow game feels like.",
+            "healthy": "~65-75%. Ramp is not counted here — only lands.",
+        },
+        "sources": {
+            "what": "How many cards in the deck can produce each color, against "
+                    "Frank Karsten's published targets for casting on curve.",
+            "why": "Colored SOURCES, not lands, are what makes a spell castable. A "
+                   "37-land deck can still be unable to cast its own commander.",
+            "healthy": "Karsten's targets are the guideline shown beside each color; "
+                       "under target means that color arrives late." + approx_note,
+        },
+        "risky": {
+            "what": "Cards whose colored pips you are unlikely to have by the turn "
+                    "their mana value says they should be castable.",
+            "why": "These are the cards that sit in your hand — the felt experience "
+                   "of a manabase problem, named card by card.",
+            "healthy": "A handful is normal; a long list of your key spells is not.",
+        },
+        "unconditional": {
+            "what": "These probabilities are UNCONDITIONAL.",
+            "why": "They do not model mulligan decisions, scry, or card selection — "
+                   "Karsten's published percentages are mulligan-adjusted and will "
+                   "read slightly higher than these.",
+            "healthy": "Treat them as a floor, and read the goldfish simulation "
+                       "beside them for sequenced play.",
+        },
+    }
+
+
 def analyze(rep, enriched, deck=DECK):
     """Consistency report from a deck_stats report (color_sources / pip_demand /
     double_pips / lands) + the enriched card list. Returns None-ish flags when the
@@ -118,6 +171,13 @@ def analyze(rep, enriched, deck=DECK):
 
     return {
         "have_colors": have_colors,
+        # Every number here travels with a plain-language note explaining what it is,
+        # why it matters, and what healthy looks like. Same contract as goldfish's
+        # screw/flood definitions: shipped as DATA from the engine, so the CLI, the
+        # dashboard and --json can never drift into three different explanations —
+        # and so the honesty caveats sit beside the number they qualify instead of
+        # in a footer nobody reads.
+        "explain": _explain(lands, deck, rep.get("color_sources_basis") or {}),
         # How the source counts were arrived at: {'produced_lands': n,
         # 'identity_lands': m}. Any identity_lands > 0 means part of this analysis
         # rests on the color-identity approximation the module docstring warns about.

@@ -263,3 +263,10 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
 }
 .flash-info { border-left-color: var(--accent); }
 .flash-warn { border-left-color: var(--warn); color: var(--warn); }
+
+/* Engine-supplied "what this means" notes. The text comes from the analysis
+   modules (manabase's explain dict, goldfish's definitions) so the app, the
+   generated dashboard and --json cannot drift; this is only the shell. */
+.explain { margin: var(--sp-2) 0; font-size: var(--fs-sm); }
+.explain > summary { cursor: pointer; color: var(--muted); }
+.explain > p { margin: var(--sp-1) 0 0; }

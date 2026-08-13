@@ -681,6 +681,24 @@ def add_commander_details(details, similar, idx, size="normal"):
     return details
 
 
+def explain_html(explain, *keys):
+    """Collapsible "what this means" notes, rendered from the ENGINE's own text.
+
+    The wording is data (`manabase.analyze()["explain"]`, `goldfish`'s `definitions`),
+    never prose hardcoded here — so the CLI, the dashboard and --json cannot drift
+    into three different explanations of the same number. Uses <details>, so it costs
+    no JS and prints expanded."""
+    parts = []
+    for k in keys:
+        e = (explain or {}).get(k)
+        if not e:
+            continue
+        parts.append(
+            f"<details class='explain'><summary>{esc(e['what'])}</summary>"
+            f"<p>{esc(e['why'])}</p><p class='muted'>{esc(e['healthy'])}</p></details>")
+    return "".join(parts)
+
+
 def manabase_html(mana):
     """Consistency & Manabase section from manabase.analyze(). Reuses existing
     dashboard classes (stat tiles / data table / notes) — no new CSS."""
@@ -692,6 +710,7 @@ def manabase_html(mana):
                 "Cost column. Then you get opening-hand odds, per-color source adequacy vs "
                 "Karsten's targets, and which cards are risky to cast on curve.</p>")
     out = []
+    ex = mana.get("explain") or {}
     lo = mana.get("land_odds")
     if lo:
         out.append("<div class='tiles'>"
@@ -699,6 +718,7 @@ def manabase_html(mana):
                    + stat_tile("3+ lands", f"{lo['ge3_open']*100:.0f}%", "opening 7")
                    + stat_tile("4th land by T4", f"{lo['ge4_by_t4']*100:.0f}%", "on the play")
                    + "</div>")
+        out.append(explain_html(ex, "keepable", "ge3_open", "ge4_by_t4"))
     rows = []
     for c in mana["colors"]:
         dbl = f" · P(2 by T3) {c['p_two_t3']*100:.0f}%" if c["double_pips"] else ""
@@ -711,14 +731,17 @@ def manabase_html(mana):
     out.append("<div class='tablewrap'><table class='data'><thead><tr><th>Color</th>"
                "<th>Sources</th><th>Karsten</th><th>Pip demand</th><th>P(&ge;1 opener)</th>"
                "<th></th></tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>")
+    out.append(explain_html(ex, "sources"))
     if mana["risky"]:
         items = "".join(f"<li><b>{esc(r['name'])}</b> (MV {r['mv']:g}, {r['pips']}×{r['color']}) — "
                         f"{r['p']*100:.0f}% to have the color on curve</li>" for r in mana["risky"])
         out.append(f"<h3>Risky to cast on curve <span class='count'>{mana['risky_total']}</span></h3>"
                    f"<ul class='notes'>{items}</ul>")
-    out.append("<p class='muted'>Exact hypergeometric odds (unconditional — a relative guide, not "
-               "Karsten's mulligan-adjusted %). Sources approximate a permanent's output from its "
-               "color identity.</p>")
+        out.append(explain_html(ex, "risky"))
+    # The "these are unconditional" caveat used to be a footer under everything. It is
+    # a property of the probabilities themselves, so it now sits with them as one more
+    # explainer — a caveat read after the numbers is a caveat that arrived too late.
+    out.append(explain_html(ex, "unconditional"))
     return "".join(out)
 
 
@@ -784,6 +807,13 @@ def goldfish_html(sim):
         out.append(stat_tile("Screwed", f"{sim['screw']*100:.0f}%", d.get("screw", "")))
     out.append(stat_tile("Flooded", f"{sim['flood']*100:.0f}%", d.get("flood", "")))
     out.append("</div>")
+    # The sim already ships its definitions as data; render them in the same
+    # collapsible shape the manabase explainers use so the whole tab reads one way.
+    out.append(explain_html(
+        {k: {"what": d.get(k, ""), "why": "", "healthy": ""}
+         for k in ("p_cast_by", "keepable_first7", "screw", "flood")
+         if d.get(k)},
+        "p_cast_by", "keepable_first7", "screw", "flood"))
     out.append(clock_html(sim))
 
     lands = sim.get("mean_lands_by_turn") or {}
@@ -1137,6 +1167,9 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .bracketline {{ display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap;
   margin-bottom:8px; }}
 .bnum {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2); }}
+.explain {{ margin:var(--sp-2) 0; font-size:var(--fs-sm); }}
+.explain > summary {{ cursor:pointer; color:var(--muted); }}
+.explain > p {{ margin:var(--sp-1) 0 0; }}
 .bracketform {{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap;
   margin-top:var(--sp-3); font-size:var(--fs-sm); }}
 .bracketform select, .bracketform button {{ font:inherit; padding:var(--sp-1) var(--sp-2);
@@ -1204,6 +1237,10 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   .tabs {{ display:none; }}
   .tabpanel {{ display:block !important; }}
   .ac {{ display:none; }}
+  /* An explainer collapsed on screen must still print: the caveat is part of the
+     number, and a printed page has no way to open a <details>. */
+  .explain > p {{ display:block !important; }}
+  .explain > summary {{ color:inherit; }}
 }}
 {add_card_css(t) if editable else ''}
 {modal_css}
