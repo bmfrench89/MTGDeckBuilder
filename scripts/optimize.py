@@ -118,6 +118,48 @@ def role_ranges_with_unknown(archetype=None):
     return ranges, unknown
 
 
+def card_value(name, ref, rep, ctx, refs, field):
+    """Deprecated shim — the scorer lives in `deck_fit.card_value` now.
+
+    Kept so nothing that imported it from here breaks; `deck_fit` is the right home
+    because the fit half of the blend is its own, and putting it there is what lets
+    build_dashboard rank cuts without importing this spoke."""
+    return deck_fit.card_value(name, ref, rep, ctx, refs, field)
+
+
+def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
+                   analysis=None):
+    """"If you must cut, start here" — the I/O wrapper around `deck_fit.cut_ranking`.
+
+    ADVISORY AND READ-ONLY: it writes nothing and proposes no replacement. This half
+    loads the deck and the field; the ranking itself is in deck_fit so the dashboard
+    can compute the same list from what it already has in hand.
+    """
+    import deckcore
+    a = analysis or deckcore.analyze_deck(deck_path, collection)
+    idx = idx or a["idx"]
+    rep, enriched = a["report"], a["enriched"]
+    stem = os.path.basename(deck_path)[:-4] if deck_path.endswith(".txt") \
+        else os.path.basename(deck_path)
+    commander = _commander_of(open(deck_path, encoding="utf-8").read())
+    refs = power.load_refs()
+    field = deck_fit.load_field(commander, idx) or {}
+    synergy = deck_fit.load_synergy(commander, idx) or {}
+    ctx = deck_fit.deck_context(deck_path, enriched, commander, field, synergy)
+    ranges, _unknown = role_ranges_with_unknown(ctx.get("archetype"))
+    prot = _protected(deck_path, commander)
+    prot = prot[0] if isinstance(prot, tuple) else prot
+    try:
+        manual = {mtglib._norm(n) for n in (deckcore.manual_adds(deck_path) or {})}
+    except Exception:
+        manual = set()
+    out = deck_fit.cut_ranking(enriched, rep, ctx, refs, field,
+                               protected=set(prot) | manual, ranges=ranges,
+                               cats=dict(rep.get("categories") or {}), limit=limit)
+    out.update({"stem": stem, "commander": commander})
+    return out
+
+
 def _display_name(k):
     """Readable casing for a normalized (lowercase) card key when EDHREC's proper
     casing isn't available. str.title() capitalizes after apostrophes — it wrote
@@ -355,10 +397,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # For an unowned candidate lookup fails -> fit 0 -> value == raw inclusion,
     # so buy-candidates rank exactly as before.
     def value_of(name, ref=None):
-        ref = ref or mtglib.lookup(idx, name)
-        inc = inc_of(name)
-        fit = deck_fit.assess_card(ref, rep, ctx, refs)["score"] if (ref and ref.types) else 0
-        return max(inc, (fit - 60) * 2)   # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
+        return card_value(name, mtglib.lookup(idx, name) if ref is None else ref,
+                          rep, ctx, refs, field)
 
     # ---- candidates to bring IN ---------------------------------------------------------
     # Ranked by how much the field plays them, then by availability:

@@ -533,6 +533,35 @@ price source reachable) — sanity-check before buying.</p>
 </script>"""
 
 
+def cuts_html(cuts):
+    """The Cuts panel — advisory, and it says so twice.
+
+    Ranked by the same value the optimizer uses, so the two never disagree about what
+    a card is worth. Protected cards are rendered greyed and labelled rather than
+    filtered out: the player asked "what do I cut", and silently dropping their own
+    protected picks would answer a different question."""
+    if not cuts or not cuts.get("rows"):
+        return ""
+    rows = []
+    for r in cuts["rows"]:
+        cls = " class='muted'" if r["protected"] else ""
+        role = r.get("role") or "—"
+        state = f" <span class='muted'>({r['role_state']})</span>" if r.get("role_state") else ""
+        rows.append(
+            f"<tr{cls}><td><a class='cardlink' data-card=\"{esc(r['name'])}\" "
+            f"data-key='{esc(mtglib._norm(r['name']))}'>{esc(r['name'])}</a></td>"
+            f"<td>{r['value']}</td><td>{esc(role)}{state}</td>"
+            f"<td>{esc(r['why'])}</td></tr>")
+    note = ""
+    if cuts.get("no_field"):
+        note = ("<p class='muted'>No EDHREC field data reachable — this ranking is "
+                "fit-only, so treat it as a much weaker signal than usual.</p>")
+    return ("<div class='tablewrap'><table class='data'><thead><tr>"
+            "<th>Card</th><th>Value</th><th>Role</th><th>Why it ranks low</th>"
+            "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
+            + note + f"<p class='muted'>{esc(cuts.get('advisory', ''))}</p>")
+
+
 def bracket_form(stem, editable, a):
     """The player's bracket setting — editable surface only.
 
@@ -947,7 +976,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
-                     dead=None, has_field=True, sim=None):
+                     dead=None, cuts=None, has_field=True, sim=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -978,6 +1007,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                  "</section>" if assessment else "")
     combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
                  if combos is not None else "")
+    cuts_sec = (f"<section><h2>If You Must Cut</h2>{cuts_html(cuts)}</section>"
+                if cuts and cuts.get("rows") else "")
     dead_sec = (f"<section><h2>Pulling the Least Weight</h2>"
                 f"{deadweight_html(dead, has_field)}</section>"
                 if dead is not None else "")
@@ -1013,7 +1044,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     tab_css, tabs = tabs_block([
         ("deck",  "Deck",  deck_sec + own_sec),
         ("mana",  "Mana",  curve_sec + pip_sec + mana_sec),
-        ("power", "Power", power_sec + combo_sec + dead_sec),
+        ("power", "Power", power_sec + combo_sec + dead_sec + cuts_sec),
         ("buy",   "Buy",   buy_sec),
         ("plan",  "Plan",  notes_sec),
         ("more",  "More",  sim_sec + shared_sec),
@@ -1362,12 +1393,27 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     except Exception:
         dead = None
 
+    # "What do I cut" — the most-asked deckbuilding question, answered with the
+    # optimizer's OWN value scorer (deck_fit.card_value) so the two surfaces can never
+    # disagree about what a card is worth. Advisory and read-only; protected cards are
+    # shown flagged rather than hidden.
+    cuts = None
+    try:
+        import optimize as _opt                  # local: role_ranges only, no cycle
+        ranges, _unk = _opt.role_ranges_with_unknown((ctx or {}).get("archetype"))
+        cuts = deck_fit.cut_ranking(
+            enriched, rep, ctx, refs, (ctx or {}).get("field") or {},
+            protected=prot, ranges=ranges,
+            cats=dict(rep.get("categories") or {}), limit=10)
+    except Exception:
+        cuts = None
+
     url_stem = os.path.splitext(os.path.basename(deck_path))[0]
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
                                  similar, details, combos, mana,
                                  editable=editable, stem=url_stem, missing=missing,
-                                 changes=changes, dead=dead,
+                                 changes=changes, dead=dead, cuts=cuts,
                                  has_field=bool((ctx or {}).get("field")), sim=sim)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,

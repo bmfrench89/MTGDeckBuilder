@@ -389,3 +389,67 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
                     "median": median, "mana_value": c.mana_value})
     out.sort(key=lambda r: r["score"])
     return out[:limit] if limit else out
+
+
+def card_value(name, ref, rep, ctx, refs, field):
+    """What one card is worth to THIS deck: `max(field %, (fit-60)x2)`.
+
+    The number BOTH sides of every optimizer swap are measured by, and the number the
+    Cuts surface ranks by. One scorer, two consumers — a second implementation would
+    drift, which is exactly what the codemap's card-knowledge-flow rule exists to
+    prevent. `optimize.card_value` is a shim onto this."""
+    inc = field.get(mtglib._norm(name), 0) if field else 0
+    fit = (assess_card(ref, rep, ctx, refs)["score"]
+           if (ref and ref.types) else 0)
+    return max(inc, (fit - 60) * 2)       # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
+
+
+def cut_ranking(enriched, rep, ctx, refs, field, protected=None, ranges=None,
+                cats=None, limit=12):
+    """"If you must cut, start here" — ranked ascending by the optimizer's own value.
+
+    ADVISORY AND READ-ONLY. It writes nothing, proposes no replacement, and is NOT a
+    cut list: it answers the single most-asked deckbuilding question with the deck's
+    own numbers and then stops. Pure — no file or network I/O — so the dashboard can
+    call it from what it already holds; `optimize.cut_candidates` is the I/O wrapper.
+
+    Protected cards (commander, basics, curated notes, `.notes.md` names, manual
+    picks) are INCLUDED and flagged, never filtered out. Hiding them would answer a
+    different question than the player asked; showing them as "your call, not the
+    tool's" respects the decision while staying honest that the arithmetic ranks them
+    low. Lands are skipped — the manabase pass owns those.
+    """
+    protected = protected or set()
+    ranges = ranges or {}
+    cats = cats or {}
+    rows = []
+    for c in enriched:
+        if c.is_land or not c.types:
+            continue
+        n = mtglib._norm(c.name)
+        keys = set(mtglib.name_keys(c.name))
+        val = card_value(c.name, c, rep, ctx, refs, field)
+        known = n in (field or {})
+        role = primary_role(c)
+        state = None
+        if role and role in ranges:
+            lo, hi = ranges[role]
+            have = cats.get(role, 0)
+            state = "surplus" if have > hi else "shortage" if have < lo else "in range"
+        is_prot = bool(keys & set(protected))
+        rows.append({
+            "name": c.name, "value": round(val),
+            "field": (field or {}).get(n), "field_known": known,
+            "role": role, "role_state": state, "protected": is_prot,
+            "why": ("protected — your call, not the tool's" if is_prot else
+                    ("the field has no opinion on this card" if not known else
+                     f"the field plays it in {(field or {}).get(n)}% of decks")),
+        })
+    rows.sort(key=lambda r: (r["value"], r["name"]))
+    return {
+        "rows": rows[:limit], "field_size": len(field or {}), "no_field": not field,
+        "advisory": ("A starting point for your judgment, not a cut list. Ranked by "
+                     "the same value the optimizer uses — max(field %, fit) — so a low "
+                     "number means 'nothing in this deck is asking for it', not 'this "
+                     "card is bad'."),
+    }

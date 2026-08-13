@@ -697,6 +697,24 @@ def _assess_packet(m):
     # Sequenced play — the questions the closed forms above structurally cannot answer.
     # Same cached helper the dashboard calls, so a coach and a page never disagree.
     sim = goldfish.sim_for_deck(m["path"], COLLECTION)
+    # "What do I cut" — the most-asked deckbuilding question, ranked by the same
+    # value the optimizer scores swaps with. Advisory: it names nothing to replace.
+    try:
+        cuts = optimize.cut_candidates(m["path"], COLLECTION, idx=idx, limit=10,
+                                       analysis=a)
+    except Exception:
+        cuts = None
+    if cuts and cuts.get("rows"):
+        L.append("-- IF YOU MUST CUT (advisory, ranked lowest value first) --")
+        for r in cuts["rows"]:
+            flag = " [PROTECTED]" if r["protected"] else ""
+            L.append(f"  {r['value']:>3}  {r['name']} — {r['why']}"
+                     f"{' · role ' + r['role'] + ' ' + r['role_state'] if r.get('role_state') else ''}"
+                     f"{flag}")
+        if cuts.get("no_field"):
+            L.append("  (no EDHREC field data — fit-only ranking, a weak signal)")
+        L.append(f"  {cuts['advisory']}")
+        L.append("")
     L.append("-- GOLDFISH SIMULATION (Monte Carlo, seeded) --")
     if sim is None:
         L.append("  unavailable — the simulation couldn't be run for this deck.\n")
