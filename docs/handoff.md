@@ -394,6 +394,16 @@ sandbox. The one-screen walk of that flow remains open
   Replaces says what to pull (Forge Anew already arrived and was pulled in,
   2026-08-11).
 
+1c. **Next-features research (2026-08-13): `docs/research-competitive-landscape.md`** —
+   a six-agent competitive-landscape sweep (deck builders, the AI-tool wave, playtest/
+   sim, brackets, collection tools, coaching/UX). Verdict: the app already holds the
+   market's most-demanded positions (owned-only building, copy-conflict tracking,
+   grounded AI, deck-aware math, optimizer restraint; `power.py` bracket rules confirmed
+   current) — the ranked build list is §4 there: goldfish "clock" mapped to the official
+   bracket turn anchors, a Rule-0 table card, declared-bracket compliance (advisory, with
+   a Scryfall `game_changer` sync check), a game log feeding tuning, a mulligan trainer.
+   Sequencing in §6; still gated behind open item 0 where optimizer-adjacent.
+
 2. **Repo hardening (2026-08-11 review): `docs/spec-repo-hardening.md`** — a
    37-agent adversarially-verified sweep produced a three-phase fix tracker
    (safety bugs, data hygiene, front-face/webapp/cache correctness) and the
