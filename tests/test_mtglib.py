@@ -179,9 +179,122 @@ def test_parse_flags_splits_on_semicolons_only():
     assert mtglib._parse_flags(None) == set()
 
 
+# --------------------------------------------------------------------------- #
+# Printed power (spec-table-ready Phase 1) — the input the goldfish clock needs.
+#
+# The file carries three states; the Card carries two, and BOTH of the collapsed
+# ones mean "do not count this creature's damage":
+#   column absent   -> Card.power is None   (never enriched)
+#   cell empty      -> Card.power is None   (enriched; the card has no power)
+#   cell '*'        -> Card.power is None   (verbatim in the file, unknowable here)
+#   cell '4'        -> Card.power == 4
+# The empty-vs-absent distinction stays REPRESENTABLE at the file layer — see
+# test_deck_attrs_csv_carries_power_and_keeps_absent_meaning_absent below, which
+# reads it through deckcore.load_attrs (None for absent, '' for empty).
+# --------------------------------------------------------------------------- #
+ATTRS_10COL = """\
+Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags,Power
+Serra Angel,Creature,5,W,{3}{W}{W},Angel,7777aaaa,,,4
+Sol Ring,Artifact,1,,{1},,aaaa1111,C,rock;ramp;mana2,
+Island,Land,0,,,Island,ffff6666,U,,
+"""
+
+
+def test_power_is_an_int_for_a_creature_and_none_for_a_noncreature(tmp_path,
+                                                                   collection_file):
+    idx = _with_attrs(tmp_path, collection_file, ATTRS_10COL)
+    assert mtglib.lookup(idx, "Serra Angel").power == 4
+    # Present column, EMPTY cell: enriched, and this card has no power at all.
+    assert mtglib.lookup(idx, "Sol Ring").power is None
+    assert mtglib.lookup(idx, "Island").power is None
+    # …and the rest of the row still applied, so this is a real overlay, not a skip.
+    assert mtglib.lookup(idx, "Sol Ring").produced == {"C"}
+
+
+ATTRS_9COL_ANGEL = """\
+Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags
+Serra Angel,Creature,5,W,{3}{W}{W},Angel,7777aaaa,,
+Sol Ring,Artifact,1,,{1},,aaaa1111,C,rock;ramp;mana2
+"""
+
+
+def test_power_is_unknown_when_the_column_is_absent(tmp_path, collection_file):
+    """The old-format 9-column file, overlaying a row that really is a creature:
+    Serra Angel is a 4/4 in real life, and this build must still answer 'unknown'
+    rather than invent it. Every column the file DOES carry still lands, so this is
+    the absent COLUMN talking, not a skipped row."""
+    idx = _with_attrs(tmp_path, collection_file, ATTRS_9COL_ANGEL)
+    angel = mtglib.lookup(idx, "Serra Angel")
+    assert angel.power is None
+    assert angel.mana_value == 5 and "Angel" in angel.subtypes
+    # The contrast, in one file: Produced is PRESENT and blank -> set() ("enriched,
+    # makes no mana"); Power is ABSENT -> None ("nobody has ever looked").
+    assert angel.produced == set()
+
+
+def test_a_newer_snapshot_power_survives_an_older_private_attrs_file(tmp_path,
+                                                                     collection_file):
+    """ATTRS_OVERLAYS layers snapshot-then-private, and the private file on the
+    player's machine is the OLD 9-column shape. The private file must not blank the
+    power the committed snapshot just supplied — the same data-loss trap the
+    Produced/Flags layering was built to avoid."""
+    import shutil
+    d = tmp_path / "coll"
+    d.mkdir(exist_ok=True)
+    shutil.copy(collection_file, d / "collection.csv")
+    (d / "collection_attrs.snapshot.csv").write_text(ATTRS_10COL, encoding="utf-8")
+    (d / "collection_attrs.csv").write_text(ATTRS_9COL_ANGEL, encoding="utf-8")
+    idx = mtglib.index_by_name(mtglib.load_collection(str(d / "collection.csv")))
+    assert mtglib.lookup(idx, "Serra Angel").power == 4
+
+
+def test_parse_power_reads_numbers_and_refuses_to_invent_them():
+    assert mtglib._parse_power("4") == 4
+    assert mtglib._parse_power(" 0 ") == 0          # a real 0/1 wall, not "unknown"
+    assert mtglib._parse_power("-1") == -1
+    assert mtglib._parse_power("2.5") == 2          # Un-set halves are still numbers
+    assert mtglib._parse_power("*") is None
+    assert mtglib._parse_power("1+*") is None
+    assert mtglib._parse_power("") is None
+    assert mtglib._parse_power(None) is None
+
+
+def test_deck_attrs_csv_carries_power_and_keeps_absent_meaning_absent(tmp_path):
+    """A deck-level `<stem>.attrs.csv` is what powers the model on a fresh clone
+    (same contract Produced/Flags have). This is also where the empty-vs-absent
+    distinction is directly observable: load_attrs preserves DictReader's None for
+    an absent column and '' for a present-but-blank cell."""
+    import deckcore
+    with_power = tmp_path / "a.attrs.csv"
+    with_power.write_text("Name,Type,MV,Colors,Produced,Flags,Power\n"
+                          "Serra Angel,Creature,5,W,,,4\n"
+                          "Tarmogoyf,Creature,2,G,,,*\n"
+                          "Sol Ring,Artifact,1,,C,rock,\n", encoding="utf-8")
+    attrs = deckcore.load_attrs(str(with_power))
+    assert attrs["serra angel"]["power"] == "4"
+    assert attrs["tarmogoyf"]["power"] == "*"       # verbatim, not swallowed
+    assert attrs["sol ring"]["power"] == ""         # PRESENT but empty
+
+    cards = [mtglib.Card(name=n) for n in ("Serra Angel", "Tarmogoyf", "Sol Ring")]
+    deckcore.apply_attrs(cards, attrs)
+    by = {c.name: c for c in cards}
+    assert by["Serra Angel"].power == 4
+    assert by["Tarmogoyf"].power is None            # non-numeric = unknown
+    assert by["Sol Ring"].power is None
+
+    no_power = tmp_path / "b.attrs.csv"
+    no_power.write_text("Name,Type,MV,Colors,Produced,Flags\n"
+                        "Serra Angel,Creature,5,W,,\n", encoding="utf-8")
+    absent = deckcore.load_attrs(str(no_power))
+    assert absent["serra angel"]["power"] is None   # ABSENT, and it reads differently
+    known = mtglib.Card(name="Serra Angel", power=4)
+    deckcore.apply_attrs([known], absent)
+    assert known.power == 4                         # absent never blanks what we knew
+
+
 def test_card_still_constructs_bare():
     c = mtglib.Card(name="Nothing Special")
-    assert c.produced is None and c.flags == set()
+    assert c.produced is None and c.flags == set() and c.power is None
 
 
 def test_two_cards_do_not_share_a_flags_set():

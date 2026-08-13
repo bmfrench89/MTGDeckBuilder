@@ -20,6 +20,34 @@ def _goldfish_cache_in_tmp(tmp_path_factory):
     goldfish.CACHE_DIR = str(tmp_path_factory.mktemp("goldfish-cache"))
 
 
+@pytest.fixture(autouse=True)
+def _no_network_and_no_real_cache(monkeypatch, tmp_path_factory):
+    """Hard-stop the network clients for EVERY test, and move their caches to tmp.
+
+    `optimize` reaches EDHREC through `deck_fit.load_field_lands` →
+    `edhrec.land_names` → `_fetch`, which `os.makedirs`es and writes into the
+    REAL `data/cache/edhrec/`. Individual tests were expected to monkeypatch
+    that, and mostly did not (1 of 17 call sites before this fixture): in this
+    sandbox the proxy blocks the fetch so it degrades to empty and the suite
+    passes, but on the player's PC or a GitHub runner the same suite would hit
+    EDHREC and write into the player's real `data/`. That is the hermetic rule
+    in CLAUDE.md, so it is enforced here once rather than trusted 17 times.
+
+    A test that WANTS field data still monkeypatches `deck_fit.load_field` /
+    `load_synergy` (the established pattern) — those are pure lookups this
+    fixture does not touch.
+    """
+    import edhrec
+    cache = tmp_path_factory.mktemp("edhrec-cache")
+    monkeypatch.setattr(edhrec, "CACHE_DIR", str(cache), raising=False)
+
+    def _blocked(*_a, **_kw):
+        raise AssertionError(
+            "a test tried to reach EDHREC over the network — monkeypatch "
+            "deck_fit.load_field / load_synergy (or edhrec.<fn>) instead")
+    monkeypatch.setattr(edhrec, "_fetch", _blocked, raising=False)
+
+
 DECK_TEXT = """\
 # Title: Test Deck
 # Commander: Test Commander

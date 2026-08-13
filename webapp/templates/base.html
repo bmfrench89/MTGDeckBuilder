@@ -33,6 +33,11 @@
   {% endif %}
 </nav>
 <div class="wrap">
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}<div class="flashes">
+    {% for cat, m in msgs %}<p class="flash flash-{{ cat }}">{{ m }}</p>{% endfor %}
+  </div>{% endif %}
+{% endwith %}
 {% block content %}{% endblock %}
 <footer>Local app · your collection stays on your machine · grounded by the MTG deckbuilder toolkit</footer>
 </div>

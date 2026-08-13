@@ -12,7 +12,12 @@ Design rules (learned from a pass that tried to cut Exsanguinate out of Y'shtola
   * Engine pieces are protected: the commander, basics, anything named in the deck's
     `.notes.md` game plan or in `card_notes.csv`, and anything the field itself plays.
   * Role counts (ramp / draw / removal / wipe / counter) must stay inside the template — a
-    swap that would push a role out of range is rejected.
+    swap that would push a role out of range is rejected. The template is ARCHETYPE-AWARE
+    (`role_ranges`): the deck's `# Archetype:` header widens it, because a draw-go control
+    deck running 15 counterspells is correct, not nine cards over budget.
+  * The field has a veto over role repair: a swap may never cut a card the field plays
+    MORE than the incoming one. Template pressure arrives through `value_of`'s fit blend
+    and can manufacture the margin on its own; the field consensus outranks it.
   * Incoming cards are ranked free (a spare copy) > shared (owned but committed to another
     deck) > buy (not owned). Sharing is ON by default: two decks in the same archetype
     legitimately want the same cards, and the player decides which one gets the physical
@@ -39,11 +44,78 @@ import deck_conflicts
 import deck_fit
 import power
 
-# Role template (deckbuilding-principles.md). (min, max) per 99.
+# Role template (deckbuilding-principles.md). (min, max) per 99. This is the DEFAULT —
+# what every deck used before 2026-08-13, and still what a deck with no (or an unknown)
+# `# Archetype:` header gets, unchanged.
 ROLE_RANGE = {"ramp": (9, 13), "draw": (8, 12), "removal": (8, 11),
               "wipe": (2, 5), "counter": (0, 6)}
+
+# Per-archetype widenings, keyed by the words that actually appear in the decks'
+# `# Archetype:` headers. Merged by WIDENING only (min(lo), max(hi)) — stacking two
+# archetype words can never make a deck's template stricter than the default, and an
+# unrecognised word contributes nothing.
+#
+# Why this exists (2026-08-12, first typed previews — spec-optimizer-hardening.md
+# "Typed-data role-repair churn"): the template was archetype-blind, so iron-man — a
+# draw-go control deck whose real counts are counter:15, ramp:8, wipe:0 — read as nine
+# excess counterspells plus a ramp hole plus a wrath hole. By its ratified identity it
+# is exactly correct. Every control deck read as "broken" to the single template, and
+# the pressure to "repair" it is what cut field-superior cards.
+#
+# TRAP: "counters" (captain-america) means +1/+1 COUNTERS, not counterspells. It is
+# deliberately absent from this table — mapping it to the `counter` role would widen a
+# tribal deck's counterspell allowance for a word about creature buffs.
+# The other header words in use — equipment, tribal-hero, tribal-spiders, lifegain —
+# need no delta: those decks already sit inside the default ranges.
+_ARCHETYPE_ROLE_RANGE = {
+    # Draw-go control: interaction IS the counterspell suite, so counters run long,
+    # sweepers and spot removal run short, and the deck leans on card draw over rocks.
+    "control": {"counter": (0, 18), "ramp": (6, 13), "draw": (8, 18),
+                "removal": (4, 11), "wipe": (0, 5)},
+    "draw-engine": {"draw": (8, 22)},      # a deck named for its draw engine
+    "artifacts": {"ramp": (9, 16)},        # mana rocks are artifacts; ramp count runs high
+    "go-wide": {"wipe": (0, 5)},           # a wrath kills YOUR board first
+    "tokens": {"wipe": (0, 5)},
+    "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
+    "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
+}
 LAND_TARGET = 37
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
+
+
+def role_ranges(archetype=None):
+    """The role template for a deck, widened by its `# Archetype:` words.
+
+    `archetype` is the already-parsed word list `deck_fit.deck_context` puts in
+    ctx["archetype"] — the header is read in exactly one place in this repo and this
+    function does not add a second parser. None / [] / unrecognised words -> the
+    default ROLE_RANGE, byte-identical to the pre-2026-08-13 behaviour.
+    """
+    ranges, _unknown = role_ranges_with_unknown(archetype)
+    return ranges
+
+
+def role_ranges_with_unknown(archetype=None):
+    """`role_ranges`, plus the archetype words that matched NO table entry.
+
+    The template is a LOOSENING — a wider band removes a barrier that was blocking
+    swaps — so a word the table does not recognise silently buys nothing. Reporting
+    the unmatched words is the honesty label for that: the run tells the player which
+    part of their `# Archetype:` line it did not understand, instead of leaving them
+    to assume it was applied. (A typo like `draw-go` or `counterspell-control` is the
+    realistic case; the deck header is hand-written.)
+    """
+    ranges, unknown = dict(ROLE_RANGE), []
+    for word in (archetype or []):
+        key = str(word).lower()
+        deltas = _ARCHETYPE_ROLE_RANGE.get(key)
+        if not deltas:
+            unknown.append(str(word))
+            continue
+        for role, (lo, hi) in deltas.items():
+            cur_lo, cur_hi = ranges.get(role, (lo, hi))
+            ranges[role] = (min(cur_lo, lo), max(cur_hi, hi))   # widen, never narrow
+    return ranges, unknown
 
 
 def _display_name(k):
@@ -261,6 +333,16 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     def inc_of(name):
         return field.get(mtglib._norm(name), 0)
 
+    def field_knows(name):
+        """True when the field actually HAS a row for this card.
+
+        `inc_of` folds "the field plays this in 0% of decks" and "the field has
+        never heard of this card" into the same 0. That is the empty-vs-absent
+        distinction CLAUDE.md calls load-bearing, and printing an absent value
+        as `0% field` is a measurement claim about data we do not have — so
+        every surface that shows an inclusion number asks this first."""
+        return mtglib._norm(name) in field
+
     def role_of(name):
         r = mtglib.lookup(idx, name)
         return deck_fit.primary_role(r) if r else None
@@ -354,7 +436,39 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         cuts.append((value_of(c.name, ref), inc_of(c.name), c.name))
     cuts.sort()                           # least valuable first
 
-    swaps, used_add, used_cut = [], set(), set()
+    # ---- the role-repair gate (2026-08-13) ----------------------------------------------
+    # There is no separate "repair" function to gate: role repair reaches this loop
+    # THROUGH `value_of`. deck_fit's Role-need component pays 30 points when a role sits
+    # below its target and 12 when it is over — an 18-point fit swing, which `value_of`
+    # doubles into as much as 36 points of value. That is more than the whole `margin`,
+    # so template pressure alone can manufacture a "clear upgrade" out of a card the
+    # field barely plays. Observed on the first typed previews (2026-08-12, none applied):
+    #   Ganax, Astral Hunter (27%) -> Mana Drain (20%)      · ur-dragon
+    #   Wall Crawl (41%)           -> Masked Meower (18%)   · cosmic
+    #   Snap (20%)                 -> Wayfarer's Bauble (10%)  · iron-man
+    #   Clever Impersonator (20%)  -> Sword of the Animist (9%) · iron-man
+    # Every one cuts a card the field plays MORE than the one arriving — the exact
+    # inversion the >=25-point anti-churn margin exists to prevent.
+    #
+    # So the field keeps a veto: `inc_add < inc_cut` is refused. Note this can ONLY bite
+    # on a fit-driven (i.e. repair-driven) swap. Where the field itself supplies the
+    # margin, value_of(add) == inc_add and value_of(cut) >= inc_cut, so clearing the
+    # margin already implies inc_add >= inc_cut + margin. A high-fit, low-inclusion
+    # upgrade over a card the field plays LESS is still allowed, unchanged.
+    #
+    # Fix direction 3 from the finding — "suppress repair on hand-ratified decks (recent
+    # Source=manual-replace in .changes.csv)" — was DELIBERATELY NOT TAKEN. This veto
+    # plus the archetype-aware template kill every observed proposal at the source, and a
+    # per-deck suppression rule would have made the optimizer's behaviour depend on edit
+    # history that the player can't see from the report.
+    #
+    # The deck's own template: default ranges, widened by its `# Archetype:` header.
+    ranges, archetype_unknown = role_ranges_with_unknown(ctx.get("archetype"))
+
+    # `swaps` keeps its 5-tuple shape (several consumers unpack it positionally);
+    # `swaps_detail` carries the SAME swaps with both units spelled out, so the field
+    # veto is auditable from a preview instead of taken on trust.
+    swaps, swaps_detail, used_add, used_cut = [], [], set(), set()
     for val_add, _rank, add_name, avail, inc_add in adds:
         if len(swaps) >= min(len(cuts), max_swaps):
             break
@@ -365,6 +479,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 continue
             if val_add - val_cut < margin:
                 continue                  # not a clear enough upgrade, like-for-like units
+            if inc_add < inc_cut:
+                continue                  # role repair may not overrule the field (above)
             cut_role = role_of(cut_name)
             # keep role counts inside the template
             trial = dict(cats)
@@ -373,7 +489,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if add_role:
                 trial[add_role] = trial.get(add_role, 0) + 1
             ok = True
-            for role, (lo, hi) in ROLE_RANGE.items():
+            for role, (lo, hi) in ranges.items():
                 if role in (cut_role, add_role) and not (lo <= trial.get(role, 0) <= hi):
                     ok = False
                     break
@@ -381,6 +497,16 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 continue
             cats = trial
             swaps.append((cut_name, val_cut, add_name, inc_add, avail))
+            swaps_detail.append({"cut": cut_name, "cut_value": val_cut, "cut_inc": inc_cut,
+                                 "add": add_name, "add_value": val_add, "add_inc": inc_add,
+                                 "avail": avail,
+                                 # absent field data is NOT a measured 0% — see
+                                 # `field_knows`. A swap where the field has no
+                                 # row for the cut card was decided by FIT alone
+                                 # (role repair), and the preview must say so
+                                 # rather than implying the field endorsed it.
+                                 "cut_field_known": field_knows(cut_name),
+                                 "add_field_known": field_knows(add_name)})
             used_cut.add(ck)
             used_add.add(mtglib._norm(add_name))
             break
@@ -413,7 +539,9 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     if not field:
         return {"stem": stem, "commander": commander, "swaps": swaps,
                 "land_swaps": [], "buy_swaps": [], "field_size": 0, "risers": risers,
-                "untyped": untyped}
+                "untyped": untyped, "archetype": list(ctx.get("archetype") or []),
+                "archetype_unknown": archetype_unknown,
+                "role_ranges": ranges, "swaps_detail": swaps_detail}
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
@@ -473,6 +601,9 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_cut or ck in used_buy or val_add - val_cut < margin:
                 continue
+            if inc_add < inc_cut:
+                continue     # same field veto as the owned pass: "buy this 9% card to
+                             # replace your 20% card" is bad advice, not a shopping list
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "spell"))
             used_buy.add(ck)
             used_buy_add |= akeys
@@ -492,7 +623,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
               "land_swaps": land_swaps, "buy_swaps": buy_swaps,
-              "field_size": len(field), "risers": risers, "untyped": untyped}
+              "field_size": len(field), "risers": risers, "untyped": untyped,
+              "archetype": list(ctx.get("archetype") or []),
+              "archetype_unknown": archetype_unknown, "role_ranges": ranges,
+              "swaps_detail": swaps_detail}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
@@ -828,14 +962,44 @@ def main():
                      owned_only=args.owned_only, include_buys=not args.no_buys,
                      buy_threshold=args.buy_threshold)
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
+        widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()
+                   if rng != ROLE_RANGE.get(role)}
+        if widened:
+            # Say which template judged this deck: a control deck's counter count is
+            # only "excess" against the default template, and the number changes with
+            # the header. Same rule as every other honesty label — beside the number.
+            print("   template: widened by archetype "
+                  f"({' '.join(r.get('archetype') or [])}) -> "
+                  + ", ".join(f"{role} {lo}-{hi}" for role, (lo, hi) in sorted(widened.items())))
+        if r.get("archetype_unknown"):
+            # The label fires on the IGNORED input too, not only on success — an
+            # unmapped word buys nothing and the player should not have to guess
+            # which half of their header was understood.
+            print(f"   note: archetype word(s) not recognised, no widening applied: "
+                  f"{', '.join(r['archetype_unknown'])}")
         if r.get("untyped"):
             print(f"   note: {r['untyped']} deck cards have no type data — the land/spell "
                   f"split falls back to the deck's own sections, then name heuristics")
         if not r["swaps"] and not r["land_swaps"]:
             print("   already aligned with the field — no changes")
-        for cut, ic, add, ia, avail in r["swaps"]:
-            tag = " [shared]" if avail == "share" else ""   # buys never reach swaps
-            print(f"   {ic:>3}% {cut:32} ->  {ia:>3}% {add}{tag}")
+        for sw in r.get("swaps_detail") or []:
+            tag = " [shared]" if sw["avail"] == "share" else ""   # buys never reach swaps
+            # BOTH units, both sides. The old line printed the cut's `value_of` blend and
+            # the add's raw field % with the same bare "%", which is what made the
+            # 2026-08-12 previews read as field inversions ("Ganax, Astral Hunter (27%)"
+            # was its VALUE, not its field %) — and the field veto is only auditable
+            # from a preview if the two field numbers sit side by side.
+            # "no field data" is printed as such — `inc_of` returns 0 both for a
+            # card the field plays in 0% of decks and for one it has never seen,
+            # and only the first of those is a measurement.
+            cf = (f"{sw['cut_inc']:>3}% field" if sw.get("cut_field_known", True)
+                  else "no field data")
+            af = (f"{sw['add_inc']}% field" if sw.get("add_field_known", True)
+                  else "no field data")
+            fit_only = "  [fit-driven: the field has no opinion on the cut]" \
+                if not sw.get("cut_field_known", True) else ""
+            print(f"   {sw['cut']:32} ({cf}, value {sw['cut_value']:>3})"
+                  f"  ->  {sw['add']} ({af}){tag}{fit_only}")
         for old, new, avail in r["land_swaps"]:
             tag = " [shared]" if avail == "share" else ""
             print(f"   land  {old:32} ->  {new}{tag}")

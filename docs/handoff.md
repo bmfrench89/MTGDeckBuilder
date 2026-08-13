@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-12._
+_Last updated: 2026-08-13._
 
 ## Where the app runs
 
@@ -61,12 +61,11 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   hardening, and the goldfish + /collection consumers updated. **First live run PASSED
   2026-08-12** (99% resolution, all guards green, committed as `5fe3a16`) —
   every clone now loads typed data, and power re-scored on it (yshtola 78).
-  ⚠ **Do not run the optimizer with `--apply`/⚡/`refresh --optimize` until
-  the typed-data role-repair churn filed in `docs/spec-optimizer-hardening.md`
-  is fixed** — the archetype-blind template now proposes cutting
-  field-superior deliberate keeps (four decks carry notes churn guards, but
-  the pass moves to new victims). Phase 1 (the environment allowlist) remains
-  the player's five-minute flip and is NOT needed by the Action.
+  ⚠ **The role-repair churn is FIXED in code (2026-08-13, Phase 8) but the
+  `--apply`/⚡/`refresh --optimize` freeze stays until one live preview run
+  confirms it against the full private CSV — see open item 0.** Phase 1 (the
+  environment allowlist) remains the player's five-minute flip and is NOT
+  needed by the Action.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar
@@ -90,8 +89,10 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   power-list tags (Game Changer, Tutor, …) now show in card details on both
   surfaces via `deckcore.load_power_tags`. The migration fixed real misfiles
   (Rhystic Study and Lightning Greaves sat under "Lands" in ur-dragon). ~15 cards
-  across the decks sit in explicit `Unsorted` sections pending enrichment — the
-  server can re-run deck_sections after a sync to resolve them. **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
+  **All `Unsorted` sections are GONE as of 2026-08-13** (Phase 0): the typed
+  attrs snapshot resolved every one, and the server now re-runs the regroup
+  itself after a sync that brings fresh attrs (skipping any deck with
+  in-section comments, which a regroup would drop). **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
   commander block (annotated name + stray duplicate line) — cleaned; Ezekiel
   Sims, Spider-Totem (24% field) in over 0%-field Tome of Legends (freeing an
   over-committed copy); Thriving Isle added as the 100th card. Ownership
@@ -340,7 +341,23 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Open items
 
-**0. Optimizer role-repair churn — THE next engineering session.**
+**0. Optimizer role-repair churn — FIXED IN CODE 2026-08-13, freeze lifts on one
+live run.** Phase 8 of `docs/spec-table-ready.md` landed both mandatory fixes:
+the **field veto** (a swap may never cut a card the field plays MORE than the
+incoming one — template pressure arrives through `value_of`'s fit blend and can
+manufacture the 25-point margin on its own, which is what all four recorded
+proposals did) and an **archetype-aware role template** (`optimize.role_ranges`
+reads the deck's `# Archetype:` header, so iron-man's counter:15 is correct
+rather than nine over budget). A sandbox preview on the committed snapshot shows
+all four recorded proposals gone and no field inversions anywhere. **The freeze
+is not formally lifted until `optimize --all` runs as a preview against the full
+private CSV on the player's PC or a GitHub runner** — that is the acceptance step
+still owed; until then keep hands off `--apply` / ⚡ / `refresh --optimize`.
+Honest limit found during review: `deck_fit.FIT_TARGETS` is still archetype-blind,
+so the fit *score* keeps generating repair pressure — the accept filter and the
+field veto now contain it, but the pressure itself is untouched.
+
+**0b. The original finding, for reference.**
 `docs/spec-optimizer-hardening.md` (2026-08-12 section) has the full finding:
 the first attrs snapshot armed the archetype-blind `ROLE_RANGE` template
 (iron-man's typed counts read counter:15 vs max 6) and the repair path ignores
@@ -393,6 +410,23 @@ sandbox. The one-screen walk of that flow remains open
   churn guards). Buy any of its four buylisted cards and `.buylist.csv`'s
   Replaces says what to pull (Forge Anew already arrived and was pulled in,
   2026-08-11).
+
+1b-season. **The "Table-Ready" season is UNDERWAY (2026-08-13):
+   `docs/spec-table-ready.md` — APPROVED by the player and the live tracker.**
+   Twelve phases from the competitive-landscape research plus player direction.
+   **Landed so far: Phase 8** (optimizer gate — see open item 0), **Phase 0**
+   (deck hygiene: all six decks regrouped on typed data, Y'shtola's White
+   Auracite/Risky Shortcut misfiles and its split `1 Plains`/`3 Plains` pair
+   fixed, `Unsorted` gone repo-wide, the regroup idempotent; the app's add AND
+   Replace paths can no longer manufacture split basics; the server
+   auto-regroups after a sync, skipping decks with in-section comments) and
+   **Phase 1** (enrichment carries a `Power` column — appended after `Flags`,
+   empty-vs-absent preserved, and propagated through `deck_stats`'s explicit
+   Card rebuild, which is the only way a Card field reaches deck-level
+   analysis). Suite 507 → 583, offline, exit 0. **Next up: Phase 2, the goldfish
+   clock** — the flagship, and the reason Phase 1 exists. Remaining phases and
+   the binding §0 execution contract are in the spec; the 4-player pod simulator
+   is specced and BACKLOGGED in `docs/spec-pod-simulation.md`.
 
 1c. **Next-features research (2026-08-13): `docs/research-competitive-landscape.md`** —
    a six-agent competitive-landscape sweep (deck builders, the AI-tool wave, playtest/

@@ -1,5 +1,7 @@
 """The optimizer rewrites real deck files, so the invariants matter more than the picks:
 card count preserved, no cards invented or lost by the tidy pass, sections kept."""
+import pytest
+
 import optimize
 import mtglib
 
@@ -717,3 +719,337 @@ def test_snow_covered_basics_are_never_cut_and_count_as_basics(tmp_path, monkeyp
     assert optimize.singleton_violations(str(deck)) == []
     # and they are lands/basics to the engine, not spells
     assert mtglib._looks_like_land_by_name("Snow-Covered Island")
+
+
+# --------------------------------------------------------------------------- #
+# Phase 8 — the typed-data role-repair churn (docs/spec-optimizer-hardening.md,
+# "Typed-data role-repair churn", found 2026-08-12).
+#
+# Role repair has no function of its own: it reaches the swap gate THROUGH
+# `value_of`, because deck_fit's Role-need component pays 30 points to a card that
+# fills a shortfall and 12 to one that is depth — an 18-point fit swing that
+# `value_of` doubles into up to 36 points of value, more than the whole margin.
+# These tests fix the fit score directly (the same monkeypatch discipline the field
+# tests above use) so the arithmetic is exact rather than approximate: the candidate
+# scores 95 -> value 70, everything else scores 40 -> value falls back to raw field
+# inclusion. That reproduces "template pressure manufactured the margin" precisely.
+# --------------------------------------------------------------------------- #
+
+_REPAIR_TYPES = {
+    "Ganax, Astral Hunter": "Creature", "Mana Drain": "Instant",
+    "Wall Crawl": "Enchantment", "Masked Meower": "Creature",
+    "Snap": "Instant", "Wayfarer's Bauble": "Artifact",
+    "Clever Impersonator": "Creature", "Sword of the Animist": "Artifact",
+}
+
+# The four proposals recorded on the first typed previews (none applied):
+# (incumbent, its field %, candidate, its field %). Every one cuts a card the field
+# plays MORE for a card it plays LESS.
+RECORDED_CHURN = [
+    ("Ganax, Astral Hunter", 27, "Mana Drain", 20),          # ur-dragon
+    ("Wall Crawl", 41, "Masked Meower", 18),                 # cosmic-spider-man
+    ("Snap", 20, "Wayfarer's Bauble", 10),                   # iron-man
+    ("Clever Impersonator", 20, "Sword of the Animist", 9),  # iron-man
+]
+
+
+def _repair_setup(tmp_path, monkeypatch, incumbent, candidate, field, archetype=""):
+    """A hermetic two-card field: the deck holds `incumbent`, the collection also has a
+    free copy of `candidate`, and `candidate` is the card the fit engine loves.
+
+    Identities are left blank so the four cases differ ONLY in their recorded field
+    percentages — colour legality is a separate gate with its own tests.
+    """
+    import deck_fit
+    import deckcore
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,"
+            "Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Test Commander,4,W U,W U,{2}{W}{U},Legendary Creature,Human Wizard,rare,g7,1.00",
+            "12,Island,0,,,,Land,Island,common,f6,0.10"]
+    for i, n in enumerate((incumbent, candidate)):
+        rows.append(f'1,"{n}",2,,,{{2}},{_REPAIR_TYPES.get(n, "Creature")},,rare,x{i},1.00')
+    # Nine mana rocks so the deck sits INSIDE the ramp band (9-13). Two of the four
+    # recorded candidates are ramp; without them the role template would reject those
+    # swaps on its own and the test would prove nothing about the field veto. They are
+    # 50%-inclusion cards, so they are never the cheapest cut and never cuttable
+    # themselves (70 - 50 < the 25-point margin).
+    attrs = ["Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags"]
+    rock_lines, field = [], dict(field)
+    for i in range(9):
+        rows.append(f"1,Mana Rock {i},2,,,{{2}},Artifact,,common,mr{i},0.50")
+        attrs.append(f"Mana Rock {i},Artifact,2,,{{2}},,mr{i},,rock")
+        rock_lines.append(f"1 Mana Rock {i}")
+        field[f"mana rock {i}"] = 50
+    cpath = tmp_path / "collection.csv"
+    cpath.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    (tmp_path / "collection_attrs.csv").write_text("\n".join(attrs) + "\n", encoding="utf-8")
+
+    head = f"# Archetype: {archetype}\n" if archetype else ""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n" + head +
+                    "\n# --- Commander ---\n1 Test Commander\n"
+                    f"\n# --- Main ---\n1 {incumbent}\n" + "\n".join(rock_lines) + "\n"
+                    "\n# --- Lands ---\n12 Island\n", encoding="utf-8")
+
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: dict(field))
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {})
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {})
+    hot = mtglib._norm(candidate)
+    monkeypatch.setattr(deck_fit, "assess_card", lambda card, *a, **k: {
+        "score": 95 if mtglib._norm(card.name) == hot else 40,
+        "band": "x", "reasons": [], "context": "", "role": None, "nameonly": False})
+    coll = mtglib.load_collection(str(cpath))
+    return coll, mtglib.index_by_name(coll), str(deck)
+
+
+def _adds_for(report):
+    return [(cut, add) for cut, _v, add, _i, _a in report["swaps"]]
+
+
+@pytest.mark.parametrize("incumbent,inc_high,candidate,inc_low", RECORDED_CHURN)
+def test_role_repair_never_cuts_a_field_superior_incumbent(
+        tmp_path, monkeypatch, incumbent, inc_high, candidate, inc_low):
+    """Each of the four recorded bad proposals, by name and by percentage.
+
+    The candidate clears the >=25-point value margin on fit alone (value 70 vs the
+    incumbent's 20-41), so the ONLY thing that can stop it is the field veto — and the
+    control case below proves the role template isn't what's stopping it either."""
+    coll, idx, deck = _repair_setup(
+        tmp_path, monkeypatch, incumbent, candidate,
+        {mtglib._norm(incumbent): inc_high, mtglib._norm(candidate): inc_low})
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert _adds_for(r) == [], (
+        f"{incumbent} ({inc_high}%) must not be cut for {candidate} ({inc_low}%)")
+    assert r["buy_swaps"] == []
+
+
+@pytest.mark.parametrize("incumbent,inc_high,candidate,inc_low", RECORDED_CHURN)
+def test_the_same_swap_goes_through_when_the_field_agrees(
+        tmp_path, monkeypatch, incumbent, inc_high, candidate, inc_low):
+    """The control for the test above: identical deck, identical fit scores, only the
+    two field percentages exchanged. The swap is now field-supported and must still
+    happen — which proves the four blocks are the field veto and not the role template
+    or the margin quietly refusing everything."""
+    coll, idx, deck = _repair_setup(
+        tmp_path, monkeypatch, incumbent, candidate,
+        {mtglib._norm(incumbent): inc_low, mtglib._norm(candidate): inc_high})
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert _adds_for(r) == [(incumbent, candidate)]
+
+
+def test_a_genuine_role_hole_is_still_repaired(tmp_path, monkeypatch):
+    """The fix must not be "disable repair". A deck one board wipe below the template
+    minimum, a filler creature the field never plays, and a wipe the field DOES play:
+    the swap is still proposed, and it is the role template that makes it legal
+    (wipe 1 -> 2 lands inside the 2-5 range)."""
+    import deck_fit
+    import deckcore
+    (tmp_path / "collection.csv").write_text(
+        "Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET\n"
+        "1,Test Commander,4,W U,W U,{2}{W}{U},Legendary Creature,Human Wizard,rare,g7,1.00\n"
+        "1,Filler Creature,3,W,W,{2}{W},Creature,Human,common,fc1,0.10\n"
+        "1,Deck Wrath,4,W,W,{3}{W},Sorcery,,rare,dw1,1.00\n"
+        "1,Better Wrath,4,W,W,{3}{W},Sorcery,,rare,bw1,1.00\n"
+        "12,Island,0,,,,Land,Island,common,f6,0.10\n", encoding="utf-8")
+    # oracle-derived flags give both wraths the `wipe` role (mtglib.FLAG_ROLES)
+    (tmp_path / "collection_attrs.csv").write_text(
+        "Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags\n"
+        "Deck Wrath,Sorcery,4,W,{3}{W},,dw1,,wipe\n"
+        "Better Wrath,Sorcery,4,W,{3}{W},,bw1,,wipe\n", encoding="utf-8")
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
+                    "# --- Commander ---\n1 Test Commander\n\n"
+                    "# --- Main ---\n1 Filler Creature\n1 Deck Wrath\n\n"
+                    "# --- Lands ---\n12 Island\n", encoding="utf-8")
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {"better wrath": 30})
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {})
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {})
+    monkeypatch.setattr(deck_fit, "assess_card", lambda card, *a, **k: {
+        "score": 95 if mtglib._norm(card.name) == "better wrath" else 40,
+        "band": "x", "reasons": [], "context": "", "role": None, "nameonly": False})
+    coll = mtglib.load_collection(str(tmp_path / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    # the shortfall is real: one wipe against a 2-5 template
+    a = deckcore.analyze_deck(str(deck), coll)
+    assert a["report"]["categories"].get("wipe") == 1 < optimize.ROLE_RANGE["wipe"][0]
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), apply=False)
+    assert _adds_for(r) == [("Filler Creature", "Better Wrath")]
+
+
+# ---- fix 2: the template reads the deck's own `# Archetype:` header ---------------
+
+def test_default_role_ranges_are_unchanged_for_unknown_archetypes():
+    """The default is exactly today's template — a deck with no header, an empty
+    header, or a word the table doesn't know behaves identically to before."""
+    assert optimize.role_ranges() == optimize.ROLE_RANGE
+    assert optimize.role_ranges([]) == optimize.ROLE_RANGE
+    assert optimize.role_ranges(["equipment", "tribal-hero", "lifegain"]) == optimize.ROLE_RANGE
+    # "counters" is +1/+1 counters (captain-america), NOT counterspells
+    assert optimize.role_ranges(["counters"])["counter"] == optimize.ROLE_RANGE["counter"]
+
+
+def test_a_control_deck_running_fifteen_counterspells_is_not_over_budget():
+    """iron-man: `# Archetype: artifacts draw-engine control`, typed counts counter:15
+    and ramp:8. Against the blind template that is nine excess counters plus a ramp
+    hole; against its own identity it is exactly correct."""
+    lo, hi = optimize.ROLE_RANGE["counter"]
+    assert not (lo <= 15 <= hi), "the default template is what called 15 counters excess"
+    ranges = optimize.role_ranges(["artifacts", "draw-engine", "control"])
+    lo, hi = ranges["counter"]
+    assert lo <= 15 <= hi
+    assert ranges["ramp"][0] <= 8, "a draw-go deck's 8 ramp pieces are not a hole"
+    # widening only: no archetype word may make a range STRICTER than the default
+    for role, (dlo, dhi) in optimize.ROLE_RANGE.items():
+        rlo, rhi = ranges[role]
+        assert rlo <= dlo and rhi >= dhi
+
+
+def _counter_deck(tmp_path, monkeypatch, archetype):
+    """A deck sitting at counter:15 — nine over the default template — with one
+    field-superior counterspell available and one filler creature to cut."""
+    import deck_fit
+    import deckcore
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,"
+            "Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Test Commander,4,W U,W U,{2}{W}{U},Legendary Creature,Human Wizard,rare,g7,1.00",
+            "1,Filler Creature,3,W,W,{2}{W},Creature,Human,common,fc1,0.10",
+            "1,Field Counter,2,U,U,{1}{U},Instant,,rare,fk1,1.00",
+            "12,Island,0,,,,Land,Island,common,f6,0.10"]
+    attrs = ["Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags",
+             "Field Counter,Instant,2,U,{1}{U},,fk1,,counter"]
+    # The 15 incumbents are 50%-inclusion cards: cheaper-to-cut than nothing, but the
+    # margin protects them, so "Filler Creature" is the only real cut and the counter
+    # count can only go UP — which is exactly what the blind template forbids.
+    lines, field = [], {"field counter": 60}
+    for i in range(15):
+        rows.append(f"1,Deck Counter {i},2,U,U,{{1}}{{U}},Instant,,common,dc{i},0.10")
+        attrs.append(f"Deck Counter {i},Instant,2,U,{{1}}{{U}},,dc{i},,counter")
+        lines.append(f"1 Deck Counter {i}")
+        field[f"deck counter {i}"] = 50
+    (tmp_path / "collection.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    (tmp_path / "collection_attrs.csv").write_text("\n".join(attrs) + "\n", encoding="utf-8")
+    head = f"# Archetype: {archetype}\n" if archetype else ""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n" + head +
+                    "\n# --- Commander ---\n1 Test Commander\n"
+                    "\n# --- Main ---\n1 Filler Creature\n" + "\n".join(lines) + "\n"
+                    "\n# --- Lands ---\n12 Island\n", encoding="utf-8")
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: dict(field))
+    monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {})
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {})
+    monkeypatch.setattr(deck_fit, "assess_card", lambda card, *a, **k: {
+        "score": 40, "band": "x", "reasons": [], "context": "",
+        "role": None, "nameonly": False})
+    coll = mtglib.load_collection(str(tmp_path / "collection.csv"))
+    return coll, mtglib.index_by_name(coll), str(deck)
+
+
+def test_the_control_template_unfreezes_a_counter_heavy_deck(tmp_path, monkeypatch):
+    """End to end: at counter:15 the blind template rejects every counterspell swap
+    (16 is out of 0-6), so a 60%-inclusion counter the deck should obviously run is
+    refused. Under the deck's own `control` archetype the same swap goes through."""
+    import deckcore
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, "artifacts draw-engine control")
+    a = deckcore.analyze_deck(deck, coll)
+    assert a["report"]["categories"].get("counter") == 15
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert _adds_for(r) == [("Filler Creature", "Field Counter")]
+
+
+def test_the_same_deck_without_an_archetype_keeps_the_default_template(tmp_path, monkeypatch):
+    """The other half of the pair — the default template is untouched, so a header-less
+    deck behaves exactly as it did before this change."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, "")
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert _adds_for(r) == []
+
+
+def test_optimizer_is_idempotent_with_typed_attrs_and_an_archetype(tmp_path, monkeypatch):
+    """Idempotency re-proven on the inputs that broke it: real role counts from a typed
+    attrs file plus an archetype-widened template. The first pass applies its swap; the
+    second must find nothing and leave the file byte-identical."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, "artifacts draw-engine control")
+    r1 = optimize.optimize(deck, coll, idx, str(tmp_path), apply=True)
+    assert r1["swaps"], "the first pass should have something to do"
+    after_first = open(deck, encoding="utf-8").read()
+    coll = mtglib.load_collection(str(tmp_path / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    r2 = optimize.optimize(deck, coll, idx, str(tmp_path), apply=True)
+    assert not r2["swaps"] and not r2["land_swaps"], "second run must find nothing to do"
+    assert open(deck, encoding="utf-8").read() == after_first
+    assert optimize.singleton_violations(deck) == []
+
+
+def test_swaps_detail_reports_both_units_for_both_sides(tmp_path, monkeypatch):
+    """The 2026-08-12 finding was written off a preview that printed the cut's
+    `value_of` blend and the add's raw field % with the same bare "%", so a swap that
+    was NOT a field inversion read as one. `swaps_detail` carries both numbers for
+    both sides, which is also what makes "zero field-inferior cut proposals" checkable
+    from a preview instead of taken on trust."""
+    incumbent, candidate = RECORDED_CHURN[1][0], RECORDED_CHURN[1][2]
+    coll, idx, deck = _repair_setup(
+        tmp_path, monkeypatch, incumbent, candidate,
+        {mtglib._norm(incumbent): 18, mtglib._norm(candidate): 41})
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert len(r["swaps_detail"]) == len(r["swaps"]) == 1
+    d = r["swaps_detail"][0]
+    assert (d["cut"], d["cut_inc"], d["add"], d["add_inc"]) == (incumbent, 18, candidate, 41)
+    assert d["add_inc"] >= d["cut_inc"], "the field veto holds for every reported swap"
+    # the 5-tuple shape other consumers unpack positionally is unchanged
+    assert r["swaps"][0] == (incumbent, d["cut_value"], candidate, 41, "free")
+
+
+# --- The archetype table is a LOOSENING, so it is tested in the loosening direction ---
+#
+# Widening a role band does not "stop a deck reading as broken" — the range check is a
+# permission filter on the trial state, so a wider band REMOVES a barrier that was
+# blocking swaps. Every other archetype test asserts the permissive direction is
+# desirable (a counter-heavy control deck should be allowed to improve its counters);
+# these two pin the cost of that permission, so a future widening cannot quietly buy
+# extra churn without a test changing.
+
+def test_widening_a_floor_permits_a_swap_the_default_template_refused(tmp_path, monkeypatch):
+    """The honest statement of what `control` buys: a deck at wipe:0 is frozen under
+    the default floor of 2 and unfrozen under the archetype table. Same deck, same
+    field, same fit — only the archetype header differs."""
+    import optimize
+    field = {"weak wipe": 10, "field wrath": 60}
+    c1, i1, d1 = _repair_setup(tmp_path, monkeypatch, "Weak Wipe", "Field Wrath", field)
+    r_blind = optimize.optimize(d1, c1, i1, str(tmp_path), apply=False)
+    b = tmp_path / "b"; b.mkdir()
+    c2, i2, d2 = _repair_setup(b, monkeypatch, "Weak Wipe", "Field Wrath",
+                               field, archetype="control")
+    r_wide = optimize.optimize(d2, c2, i2, str(b), apply=False)
+    # The point of the test is the DIFFERENCE, and that the difference is attributable
+    # to the template rather than to the field (both runs see the same field).
+    assert len(r_wide["swaps"]) >= len(r_blind["swaps"])
+    if len(r_wide["swaps"]) > len(r_blind["swaps"]):
+        assert r_wide["role_ranges"]["wipe"][0] < optimize.ROLE_RANGE["wipe"][0], (
+            "the extra swap must come from a widened FLOOR, not from anything else")
+
+
+def test_a_widened_template_still_cannot_overrule_the_field(tmp_path, monkeypatch):
+    """The guard that makes the loosening safe: widening removes a role barrier, it
+    does NOT remove the field veto. A field-inferior candidate stays refused even when
+    the archetype table would happily accept its role."""
+    import optimize
+    # Field-INFERIOR candidate (18 vs 41) in a role `control` widens.
+    coll, idx, deck = _repair_setup(tmp_path, monkeypatch, "Wall Crawl", "Masked Meower",
+                                    {"wall crawl": 41, "masked meower": 18},
+                                    archetype="control aristocrats voltron")
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert not any(s[0] == "Wall Crawl" for s in r["swaps"]), (
+        "a widened band must not become a way around the field veto")
+
+
+def test_an_unrecognized_archetype_word_is_reported_not_silently_ignored(tmp_path, monkeypatch):
+    """Honesty label: an archetype word with no table entry contributes nothing, and
+    the run says so rather than leaving the player to assume it was understood."""
+    import optimize
+    coll, idx, deck = _repair_setup(tmp_path, monkeypatch, "Weak Wipe", "Field Wrath",
+                                    {"weak wipe": 10, "field wrath": 60},
+                                    archetype="control draw-go-tempo-nonsense")
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert "draw-go-tempo-nonsense" in (r.get("archetype_unknown") or []), (
+        "an unmapped archetype word must be surfaced")
+    assert "control" not in (r.get("archetype_unknown") or [])

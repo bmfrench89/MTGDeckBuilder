@@ -120,6 +120,26 @@ def oracle_text_of(c):
     return " // ".join(f.get("oracle_text", "") or "" for f in fs) if fs else ""
 
 
+def power_of(c):
+    """The FRONT face's printed power, VERBATIM, or "" when the card has none.
+
+    Same face-selection path everything else here uses: Scryfall puts `power` on the
+    card for single-faced layouts and only on the faces for DFC/split/adventure, so
+    the card-level value is the authority and `card_faces[0]` is the fallback — never
+    a `split("//")` (the `SP//dr` bug class).
+
+    Returned verbatim on purpose, `*` and `1+*` included: this is what `carddb` writes
+    into the `Power` column, and a consumer that cannot read it must call it UNKNOWN
+    rather than silently substituting a number. "" is a real answer ("this card has no
+    power at all" — every noncreature); the absence of the whole column is what means
+    "unknown" (`mtglib.Card.power`, same None-vs-empty contract as `produced`)."""
+    p = c.get("power")
+    if p is None:
+        fs = c.get("card_faces") or []
+        p = fs[0].get("power") if fs else None
+    return "" if p is None else str(p).strip()
+
+
 def produced_of(c):
     """set of WUBRGC letters this card can add to a mana pool.
 

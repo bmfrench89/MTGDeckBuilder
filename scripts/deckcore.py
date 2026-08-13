@@ -184,16 +184,19 @@ def pinned_elsewhere(stem, pins=None):
 
 
 def load_attrs(path):
-    """Optional name -> {type, mv, colors, produced, flags} map, so a deck can carry
-    its own card data without the full collection CSV.
+    """Optional name -> {type, mv, colors, produced, flags, power} map, so a deck can
+    carry its own card data without the full collection CSV.
 
-    `Name,Type,MV,Colors[,Produced,Flags]` — the two optional columns are the same
-    contract `collection_attrs.csv` uses (spec-engine-upgrades §4.2), and the
-    **empty-vs-absent rule is load-bearing** here too. `csv.DictReader` hands back
-    `None` for a column that isn't in the header and `''` for a present-but-blank
-    cell, and this map preserves exactly that: `None` stays None so `apply_attrs`
-    leaves `Card.produced` alone (unknown → every consumer falls back and says so),
-    while `''` parses to an empty set (enriched, produces nothing — Maze of Ith).
+    `Name,Type,MV,Colors[,Produced,Flags,Power]` — the three optional columns are the
+    same contract `collection_attrs.csv` uses (spec-engine-upgrades §4.2;
+    spec-table-ready Phase 1 for Power), and the **empty-vs-absent rule is
+    load-bearing** here too. `csv.DictReader` hands back `None` for a column that
+    isn't in the header and `''` for a present-but-blank cell, and this map preserves
+    exactly that: `None` stays None so `apply_attrs` leaves `Card.produced` alone
+    (unknown → every consumer falls back and says so), while `''` parses to an empty
+    set (enriched, produces nothing — Maze of Ith). `Power` is carried the same way,
+    verbatim (`*` included) — `mtglib._parse_power` is what turns it into an int or
+    an honest None.
     Unlike `mtglib.overlay_attrs` these keys are EXACT-CASE, matching the header
     `carddb.py` writes. Headers here are not aliased."""
     if not (path and os.path.exists(path)):
@@ -211,6 +214,7 @@ def load_attrs(path):
                 "colors": (r.get("Colors") or "").strip(),
                 "produced": r.get("Produced"),      # None = column absent, keep it
                 "flags": r.get("Flags"),
+                "power": r.get("Power"),            # verbatim; '*' stays '*'
             }
     return out
 
@@ -255,11 +259,15 @@ def load_card_notes(path=None, include_generated=True):
 
 def apply_attrs(enriched, attrs):
     """Overlay type/MV/colors — and, when the companion carries them, the
-    production-aware `Produced`/`Flags` — onto enriched deck cards.
+    production-aware `Produced`/`Flags` and the printed `Power` — onto enriched deck
+    cards.
 
-    A deck-level `.attrs.csv` is what makes the enriched mana model reachable on a
-    fresh clone that only has the name-only snapshot. Absent columns are left
-    untouched (`produced` stays None), never overwritten with an empty set."""
+    A deck-level `.attrs.csv` is what makes the enriched mana model (and the goldfish
+    clock) reachable on a fresh clone that only has the name-only snapshot. Absent
+    columns are left untouched (`produced` stays None), never overwritten with an
+    empty set. Power goes further and only writes a value it could actually parse: a
+    blank or `*` cell leaves whatever the collection already knew, because for power
+    there is no "known to be nothing" number to overwrite it with."""
     if not attrs:
         return 0
     n = 0
@@ -278,6 +286,10 @@ def apply_attrs(enriched, attrs):
             c.produced = mtglib._parse_produced(a["produced"])
         if a.get("flags") is not None:
             c.flags = mtglib._parse_flags(a["flags"])
+        if a.get("power") is not None:
+            p = mtglib._parse_power(a["power"])
+            if p is not None:
+                c.power = p
     return n
 
 

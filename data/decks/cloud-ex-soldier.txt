@@ -117,5 +117,3 @@
 8 Forest
 2 Mountain
 3 Plains
-
-# --- Unsorted (type unknown — enrich and re-run deck_sections) ---

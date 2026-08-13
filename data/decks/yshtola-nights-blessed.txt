@@ -17,19 +17,20 @@
 1 Blood Artist
 1 Baleful Strix
 1 Murderous Rider
-1 White Auracite
 1 Archmage Emeritus
 1 Emet-Selch of the Third Seat
 1 Fandaniel, Telophoroi Ascian
 1 Vito, Thorn of the Dusk Rose
 1 Alphinaud Leveilleur
-1 Risky Shortcut
 1 Sun Titan
 1 Papalymo Totolymo
 1 Lyse Hext
 1 G'raha Tia, Scion Reborn
 1 Solemn Simulacrum
 1 Krile Baldesion
+1 Tataru Taru
+1 Hermes, Overseer of Elpis
+1 Alisaie Leveilleur
 
 # --- Instants ---
 1 Mystical Tutor
@@ -47,9 +48,10 @@
 1 Dark Ritual
 1 Frantic Search
 1 Transpose
-1 Circle of Power
 
 # --- Sorceries ---
+1 Risky Shortcut
+1 Circle of Power
 1 Exsanguinate
 1 Syphon Mind
 1 Toxic Deluge
@@ -59,6 +61,7 @@
 1 Night's Whisper
 
 # --- Artifacts ---
+1 White Auracite
 1 Talisman of Progress
 1 Sol Ring
 1 Commander's Sphere
@@ -71,6 +74,7 @@
 1 Archaeomancer's Map
 1 Relic of Legends
 1 Wizard's Staff
+1 Dancer's Chakrams
 
 # --- Enchantments ---
 1 Authority of the Consuls
@@ -78,6 +82,7 @@
 1 Bastion of Remembrance
 1 Propaganda
 1 Observed Stasis
+1 Eye of Nidhogg
 
 # --- Lands ---
 1 Contaminated Aquifer
@@ -106,14 +111,6 @@
 1 Demolition Field
 
 # --- Basics ---
-1 Plains
+4 Plains
 5 Island
-3 Plains
 5 Swamp
-
-# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 Eye of Nidhogg
-1 Tataru Taru
-1 Hermes, Overseer of Elpis
-1 Dancer's Chakrams
-1 Alisaie Leveilleur

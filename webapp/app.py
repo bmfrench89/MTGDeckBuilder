@@ -20,8 +20,8 @@ import sys
 import time
 from datetime import timedelta
 
-from flask import (Flask, Response, abort, jsonify, redirect, render_template,
-                   request, send_from_directory, session, url_for)
+from flask import (Flask, Response, abort, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, session, url_for)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -330,7 +330,23 @@ def _insert_deck_card(path, lines, name, section=None):
     """Insert `1 <name>` as the LAST card of `section`, leaving every other byte of the
     file untouched — same contract as remove/replace (quantities, comments, and section
     headers all survive). Falls back to after the final card line if the section isn't
-    found, so a stale section name can never drop the card on the floor."""
+    found, so a stale section name can never drop the card on the floor.
+
+    A second copy of a BASIC land increments the card's existing line instead of
+    appending a twin (`3 Plains` -> `4 Plains`). Appending was how Y'shtola's
+    Basics ended up holding `1 Plains` and `3 Plains` as separate lines: legal,
+    but the page reads as two entries for one card. Only basics merge — a
+    nonbasic twin is a singleton illegality `optimize.singleton_violations`
+    reports right after this write, and rolling it into `2 <card>` would tuck the
+    evidence out of sight.
+
+    The basic search is deliberately FILE-WIDE, not section-scoped: a basic land
+    belongs on exactly one line of a deck file, and scoping the search to the
+    requested section produced a cross-section split (`2 Plains` under Lands plus
+    a fresh `1 Plains` under Basics) that nothing downstream merges — the server's
+    auto-regroup only fires on decks with an `Unsorted` section, so such a split
+    would live forever.
+    """
     want = (section or "").strip().lower()
     start = None
     if want:
@@ -343,13 +359,25 @@ def _insert_deck_card(path, lines, name, section=None):
         last = [i for i, l in enumerate(lines) if l.strip() and not l.strip().startswith("#")]
         at = (last[-1] + 1) if last else len(lines)
     else:
-        at = start + 1
-        for j in range(start + 1, len(lines)):
+        stop = next((j for j in range(start + 1, len(lines)) if _section_label(lines[j])),
+                    len(lines))
+        cards = [j for j in range(start + 1, stop)
+                 if lines[j].strip() and not lines[j].strip().startswith("#")]
+        at = (cards[-1] + 1) if cards else start + 1
+    if mtglib.is_basic(name):
+        key = mtglib._norm(name)
+        for j in range(len(lines)):
             s = lines[j].strip()
-            if _section_label(lines[j]):
-                break
-            if s and not s.startswith("#"):
-                at = j + 1
+            if not s or s.startswith("#"):
+                continue
+            m = mtglib._QTY_RE.match(s)   # the ONE qty-line parser ('1x Name' included)
+            qty, cardname = (int(m.group(1)), m.group(2)) if m else (1, s)
+            if mtglib._norm(cardname) == key:
+                indent = lines[j][:len(lines[j]) - len(lines[j].lstrip())]
+                lines[j] = f"{indent}{qty + 1} {cardname}"
+                with open(path, "w", encoding="utf-8", newline="\n") as f:
+                    f.write("\n".join(lines))
+                return True
     lines.insert(at, f"1 {name}")
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
@@ -363,6 +391,16 @@ def _edit_deck_card(path, action, name, replacement=None, section=None):
     lines = open(path, encoding="utf-8").read().split("\n")
     if action == "add":
         return _insert_deck_card(path, lines, name, section)
+    if action == "replace" and replacement and mtglib.is_basic(replacement):
+        # Replacing a card WITH a basic must not write `1 Plains` at the outgoing
+        # card's slot: that is simultaneously the split-line bug (a second Plains
+        # line) and the misfile bug (a basic sitting under Lands/Creatures) — and
+        # it comes from the very flow that misfiled White Auracite and Risky
+        # Shortcut. Drop the outgoing line, then merge into the basic's own line.
+        dropped = _edit_deck_card(path, "remove", name)
+        lines = open(path, encoding="utf-8").read().split("\n")
+        _insert_deck_card(path, lines, replacement, section="Basics")
+        return dropped
     out, changed = [], False
     for ln in lines:
         s = ln.strip()
@@ -893,9 +931,39 @@ def build_deck_save(commander):
         r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
+        _flash_optimize(r)
     except Exception:
         pass                      # offline / EDHREC down: keep the un-tuned draft
     return redirect(url_for("deck", stem=stem))
+
+
+def _flash_optimize(r):
+    """Say what the optimizer did, and under WHICH template, on the web surface.
+
+    The CLI has printed the archetype-widened role template since 2026-08-13, but
+    the ⚡ button is where the player's finger actually is — and a widened template
+    is a LOOSENING (it permits swaps the default refused), so the surface that
+    triggers it is the one that must disclose it. Invariant 10: on every surface.
+    """
+    if not r:
+        return
+    n = len(r.get("swaps") or []) + len(r.get("land_swaps") or [])
+    flash(f"Optimizer: {n} change(s) applied." if n else
+          "Optimizer: already aligned with the field — no changes.", "info")
+    widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()
+               if rng != optimize.ROLE_RANGE.get(role)}
+    if widened:
+        flash("Judged under an archetype-widened role template ("
+              + " ".join(r.get("archetype") or []) + "): "
+              + ", ".join(f"{k} {lo}-{hi}" for k, (lo, hi) in sorted(widened.items()))
+              + ".", "info")
+    if r.get("archetype_unknown"):
+        flash("Archetype word(s) not recognised, no widening applied: "
+              + ", ".join(r["archetype_unknown"]) + ".", "warn")
+    if r.get("illegal"):
+        flash("!! ILLEGAL after optimize: "
+              + ", ".join(f"{q}x {n2}" for q, n2 in r["illegal"])
+              + " — Commander allows one copy.", "warn")
 
 
 @app.route("/deck/<stem>/optimize", methods=["POST"])
@@ -909,6 +977,7 @@ def deck_optimize(stem):
         r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
+        _flash_optimize(r)
     except Exception:
         pass
     return redirect(url_for("deck", stem=stem))

@@ -2,8 +2,8 @@
 """Scryfall card data for this collection — two modes, one client.
 
 **Enrichment** (`--collection`) fills in card attributes (colors / type / mana value /
-what it taps for / oracle-derived flags / Scryfall id) — the fix for the "name-only
-export" limitation.
+what it taps for / oracle-derived flags / printed power / Scryfall id) — the fix for
+the "name-only export" limitation.
 
 Default: Scryfall's /cards/collection API — ~1 request per 75 cards, no download.
 It resolves each owned card by its exact printing (set + collector number, or a
@@ -50,12 +50,22 @@ import urllib.request
 import mtglib
 import oracle_flags
 
-# collection_attrs.csv, in order. Produced/Flags were APPENDED after Scryfall so an
-# attrs file written by an older build still loads (mtglib reads columns by header
-# name and ignores the ones it doesn't know) and an older build still reads a new
-# file. An absent Produced column means "unknown", not "produces nothing".
+# collection_attrs.csv, in order. Produced/Flags were APPENDED after Scryfall, and
+# Power after Flags, so an attrs file written by an older build still loads (mtglib
+# reads columns by header name and ignores the ones it doesn't know) and an older
+# build still reads a new file. An absent Produced column means "unknown", not
+# "produces nothing".
+# `Power` is the FRONT face's PRINTED power, verbatim — `*` / `1+*` are stored as
+# written and every consumer treats a non-numeric value as UNKNOWN rather than
+# guessing a number. The same empty-vs-absent rule is load-bearing here:
+#   empty cell    = enriched, and this card has no power (every noncreature).
+#   absent column = unknown. Consumers (the goldfish clock) must say so — "enrich
+#                   to unlock", never a clock computed off zeros.
+# NO Toughness column, deliberately (2026-08-13, spec-table-ready Phase 1): nothing
+# in scope reads it — the goldfish sim has no blockers — and an unread column is a
+# column that silently rots. Add it the day something actually consumes it.
 ATTRS_HEADER = ["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall",
-                "Produced", "Flags"]
+                "Produced", "Flags", "Power"]
 
 BULK_LIST_URL = "https://api.scryfall.com/bulk-data"
 # Scryfall asks API clients to send a descriptive User-Agent and an Accept header.
@@ -133,23 +143,37 @@ def _loads(v):
 
 
 def _rows_duckdb(bulk_path):
-    """Yield Scryfall-shaped card dicts. produced_mana / oracle_text / card_faces are
-    selected alongside the original columns so the bulk path derives exactly the same
-    Produced/Flags the API path does. The SELECT stays inside build_index's existing
-    try/except fallback: CI has no duckdb, and a schema drift here must degrade to the
-    stdlib reader rather than fail the run."""
+    """Return an iterator of Scryfall-shaped card dicts. produced_mana / oracle_text /
+    card_faces / power are selected alongside the original columns so the bulk path
+    derives exactly the same Produced/Flags/Power the API path does.
+
+    NOT a generator function, deliberately. `build_index` wraps this call in a
+    try/except that falls back to the stdlib JSON reader — CI has no duckdb, and a
+    schema drift here must degrade rather than fail the run. As a generator the
+    `import duckdb` and `con.execute` ran lazily on the FIRST iteration, i.e. outside
+    that try, so the documented fallback never fired: `build_index(..., use_duckdb=True)`
+    raised ModuleNotFoundError instead of printing the fallback message. Doing the
+    import and the query eagerly here is what makes the guard real. `fetchall()` was
+    already eager, so this costs no extra memory."""
     import duckdb
     con = duckdb.connect()
     q = ("SELECT name, color_identity, type_line, cmc, mana_cost, id, "
-         "produced_mana, oracle_text, to_json(card_faces) "
+         "produced_mana, oracle_text, to_json(card_faces), power "
          f"FROM read_json_auto('{bulk_path}', maximum_object_size=100000000) "
          "WHERE name IS NOT NULL")
-    for name, ci, type_line, cmc, cost, sid, prod, otext, faces in con.execute(q).fetchall():
-        yield {"name": name, "color_identity": list(ci or []), "type_line": type_line,
-               "cmc": cmc, "mana_cost": cost, "id": sid,
-               "produced_mana": list(prod or []), "oracle_text": otext or "",
-               "card_faces": _loads(faces)}
+    fetched = con.execute(q).fetchall()
     con.close()
+
+    def _gen():
+        for (name, ci, type_line, cmc, cost, sid, prod, otext, faces,
+                power) in fetched:
+            yield {"name": name, "color_identity": list(ci or []), "type_line": type_line,
+                   "cmc": cmc, "mana_cost": cost, "id": sid,
+                   "produced_mana": list(prod or []), "oracle_text": otext or "",
+                   # None stays None: power_of falls back to the front FACE for DFCs,
+                   # where the card-level column is null.
+                   "card_faces": _loads(faces), "power": power}
+    return _gen()
 
 
 def _rows_json(bulk_path):
@@ -189,7 +213,7 @@ def _attrs_row(card, a):
     """One collection_attrs.csv row, in ATTRS_HEADER order."""
     return [card.name, a["type"], a["mv"], a["colors"], a["cost"],
             a.get("subtypes", ""), a.get("id", ""),
-            a.get("produced", ""), a.get("flags", "")]
+            a.get("produced", ""), a.get("flags", ""), a.get("power", "")]
 
 
 def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
@@ -291,7 +315,10 @@ def _attrs_from_scryfall(c):
             "subtypes": subtypes_of(type_line), "mv": mv,
             "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or "",
             "produced": " ".join(p for p in "WUBRGC" if p in produced),
-            "flags": ";".join(sorted(oracle_flags.derive_flags(c)))}
+            "flags": ";".join(sorted(oracle_flags.derive_flags(c))),
+            # Front face, verbatim — see oracle_flags.power_of. "" for a noncreature
+            # is the real answer; only the absent COLUMN means "unknown".
+            "power": oracle_flags.power_of(c)}
 
 
 def _fold_name(name):

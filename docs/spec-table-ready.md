@@ -1,8 +1,8 @@
 # Spec — The "Table-Ready" Season
 
-**Status: ☐ DRAFT v2 — awaiting player approval. DO NOT START IMPLEMENTATION until the
-player has approved this spec in chat.** (Player instruction 2026-08-13: "check with me
-first before starting.")
+**Status: ◐ APPROVED by the player 2026-08-13 and IN PROGRESS.** Phases 8, 0 and 1 have
+landed (see the ticks below); the rest are unstarted. Execution order and the §0
+contract still bind every remaining phase.
 
 **Source:** the competitive-landscape research (`research-competitive-landscape.md` §4)
 plus player direction 2026-08-13, two rounds: *(round 1)* goldfish clock, Rule-0 card,
@@ -67,7 +67,7 @@ Two player-visible bugs on the Y'shtola dashboard, both confirmed in
 `data/decks/yshtola-nights-blessed.txt`, same root-cause family: **the deck file's
 sections are the display**, and two write paths put lines where they don't belong.
 
-- ☐ **0a. Re-run `deck_sections.py --all --apply` on the typed snapshot.** White
+- ☑ **0a. Re-run `deck_sections.py --all --apply` on the typed snapshot.** White
   Auracite (Artifact) and Risky Shortcut (Sorcery) sit in *Creatures* (lines 20, 26)
   because the card-panel Replace flow inserts the incoming card at the outgoing card's
   slot, and name-only data couldn't type them out. The committed attrs snapshot (live
@@ -76,7 +76,7 @@ sections are the display**, and two write paths put lines where they don't belon
   Tataru/Hermes/Alisaie=Creature, Dancer's Chakrams=Artifact). One idempotent regroup
   fixes all six decks. Verify: no `Unsorted` section remains; 100 cards per deck;
   `singleton_violations` clean; regroup re-run is a no-op.
-- ☐ **0b. Merge duplicate same-name lines within a section.** `Basics` holds `1 Plains`
+- ☑ **0b. Merge duplicate same-name lines within a section.** `Basics` holds `1 Plains`
   (line 109) and `3 Plains` (line 111) — the 2026-08-11 migration appended "a 4th
   Plains" as a new line, and that path never ran `optimize._tidy` (which *does* merge
   duplicate lines — reuse its semantics, don't invent new ones). Fix in two layers:
@@ -87,11 +87,27 @@ sections are the display**, and two write paths put lines where they don't belon
   (`/deck/<stem>/add`, buylist-arrival pulls) increment an existing same-section line
   instead of appending a twin. Tests: split basics survive a regroup merged with
   quantities intact; `test_deck_edit` guarantees still hold.
-- ☐ **0c. Auto-resolve Unsorted after server enrichment** (pulled forward from
+- ☑ **0c. Auto-resolve Unsorted after server enrichment** (pulled forward from
   `spec-repo-hardening.md` Phase 4 item 9, since 0a makes it recurring): after a sync
   that refreshes attrs, the server re-runs the regroup so future Unsorted sections
   drain without a session. Hook: `webapp/sync.py`'s post-pull step; regroup only decks
   whose Unsorted section is non-empty; log, never fail the sync on a regroup error.
+- ☑ **Post-review remediation (2026-08-13):** the regroup summary is **no longer folded
+  into `detail`** — appending it pushed the word `RECOVERED` out of the 300-char tail
+  that `status_view` keys the rescue-branch warning off, so a self-heal rendered plain
+  green with the "a session must merge this branch back" homework invisible
+  (reproduced end to end). `recovered` is now a stored boolean and the regroup renders
+  from its own field. The unattended regroup **skips decks with in-section comments**
+  (`has_section_comments`) rather than eating prose a player hand-wrote, which is
+  CLAUDE.md invariant 7 applied to a path nobody is watching, and `has_unsorted` also
+  catches `UnicodeDecodeError` (a `ValueError`, not an `OSError`) so an unreadable file
+  is not reported as a *failed regroup* that never ran. The card-panel **Replace** flow
+  no longer manufactures the very bugs this phase fixes: replacing a card *with* a
+  basic used to write `1 Plains` at the outgoing card's slot — a basic under Lands
+  **and** a second Plains line — so it now drops the outgoing line and merges into the
+  basic's own line, and the basic search is file-wide (a basic belongs on exactly one
+  line; a section-scoped search produced a cross-section split the Unsorted-only
+  auto-regroup would never drain).
 
 ## Phase 1 — Enrichment carries creature Power (small-medium; prerequisite for 2)
 
@@ -99,20 +115,33 @@ The goldfish clock needs to know how hard the board hits. Verified: neither
 `collection_attrs.csv` nor the snapshot carries power (header:
 `Name,Type,MV,Colors,Cost,Sub-types[,Scryfall],Produced,Flags`).
 
-- ☐ `carddb.py` appends a **`Power`** column in both API and bulk paths (the pinned
+- ☑ `carddb.py` appends a **`Power`** column in both API and bulk paths (the pinned
   header list is at `carddb.py:58`; append after `Flags` so older files still load —
   same back-compat shape Produced/Flags used). Printed power; `*`/non-numeric stored
   verbatim, treated as unknown by consumers. **Empty-vs-absent rule stated in the
   header comment:** empty = "not a creature / no power"; absent column = "unknown —
   clock unavailable, say so."
-- ☐ `mtglib.Card` gains `power` (int | None); `deckcore.load_attrs`/`apply_attrs` and
+- ☑ `mtglib.Card` gains `power` (int | None); `deckcore.load_attrs`/`apply_attrs` and
   deck `.attrs.csv` carry it (exact-case column, same as `Produced`/`Flags`); the
   attrs-snapshot Action regenerates with the new column (its five guards unchanged —
   see `spec-network-and-attrs.md`).
-- ☐ Face-aware: front face's power via the same face-selection path `oracle_flags`
+- ☑ Face-aware: front face's power via the same face-selection path `oracle_flags`
   uses. **No toughness column** — nothing in scope consumes it (goldfishing has no
   blockers); add it the day something does.
-- ☐ Tests extend `test_carddb.py` (header round-trip) and `test_mtglib.py` (overlay).
+- ☑ Tests extend `test_carddb.py` (header round-trip) and `test_mtglib.py` (overlay).
+- ☑ **Post-review remediation (2026-08-13):** `deck_stats.py`'s explicit Card rebuild
+  now copies `power` — without it the column was **inert end to end** (that list is the
+  only way a Card field reaches deck-level analysis, so Phase 2 would have read `None`
+  for every creature). `_parse_power` no longer drops a real `0` through
+  `str(value or "")`, and no longer crashes on `inf`/`nan` (`float()` accepts them and
+  `int()` then raises `OverflowError`) — a parser on `load_collection`'s hot path
+  against hand-editable files must degrade to unknown, never take down the load.
+  `_rows_duckdb` became a non-generator so `build_index`'s documented duckdb fallback
+  actually fires (as a generator the `import duckdb` ran lazily *outside* the try, and
+  the call raised `ModuleNotFoundError` instead of degrading). The attrs-snapshot Action
+  is **not** triggered by `carddb.py`/`oracle_flags.py` edits — a full ~2,600-card
+  enrichment per docstring change, contending on the shared concurrency group, is not
+  worth it; use the dispatch button or Monday's cron.
 
 ## Phase 2 — The goldfish clock (flagship; medium-large)
 
@@ -266,21 +295,30 @@ reads as nine excess), and the repair path ignores the ≥25-point field-margin 
 template pressure cuts field-superior keeps (observed: Wall Crawl 41% → Masked Meower
 18%, and three more, all recorded there).
 
-- ☐ **Fix direction 1 (mandatory):** repair swaps must satisfy the same ≥25-point
+- ☑ **Fix direction 1 (mandatory):** repair swaps must satisfy the same ≥25-point
   `value_of()` margin as field swaps — kills every observed bad proposal by
   construction.
-- ☐ **Fix direction 2 (mandatory):** templates become archetype-aware. The deck header
+- ☑ **Fix direction 2 (mandatory):** templates become archetype-aware. The deck header
   `# Archetype:` exists and is unread here — parse it; a `control` archetype widens
   the counter max and relaxes the ramp min; define the per-archetype deltas as a small
   table beside `ROLE_RANGE` with the default = today's ranges. Only archetype words
   actually present in the six decks' headers need mappings; unknown words = default.
-- ☐ **Fix direction 3 (explicitly skipped):** suppressing repair on hand-ratified
+- ☑ **Fix direction 3 (explicitly skipped):** suppressing repair on hand-ratified
   decks — the margin gate makes it redundant; record the skip here so it reads as a
   decision.
-- ☐ Tests (`test_optimize.py`, monkeypatched-field pattern): each of the four recorded
+- ☑ Tests (`test_optimize.py`, monkeypatched-field pattern): each of the four recorded
   bad proposals dies; a genuine role hole (low-value filler, template shortfall,
   margin-clearing candidate) still repairs; idempotency re-proven with typed attrs
   present.
+- ☑ **Post-review remediation (2026-08-13, from the adversarial verification pass):**
+  the archetype table is a *loosening*, so it gained tests in the loosening direction
+  (a widened floor permitting a swap the default refused; a widened band still not
+  overruling the field veto); `field_knows()` separates "the field plays this 0% of the
+  time" from "the field has no row for this card" and the preview prints `no field
+  data` + `[fit-driven]` instead of claiming a measured `0% field`; unmatched
+  `# Archetype:` words are reported (`archetype_unknown`) rather than silently buying
+  nothing; and the ⚡/Build-Next routes now flash which template judged the deck, since
+  a loosening must be disclosed on the surface that triggers it (invariant 10).
 - ☐ **Acceptance, live (GitHub runner or player PC — not a sandbox):** `optimize --all`
   preview on real field data across all six decks → zero field-inferior cut proposals;
   the four notes-file churn guards from 2026-08-12 become redundant (leave them in
