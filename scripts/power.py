@@ -123,6 +123,25 @@ def read_declared_bracket(deck_path):
     return int(m.group(1)) if m else None
 
 
+def with_declared(assessment, declared):
+    """Re-stamp an already-computed assessment with the player's bracket setting.
+
+    `deckcore.analyze_cards` scores cards and has no deck PATH, so it cannot read the
+    header; `analyze_deck` does. Rather than thread a second argument through the
+    shared pipeline, the setting is applied here — the detected verdict and every
+    reason are left exactly as computed, which is the whole contract."""
+    if not assessment:
+        return assessment
+    d = declared if declared in (1, 2, 3, 4, 5) else None
+    detected = assessment.get("bracket_detected", assessment.get("bracket"))
+    assessment["bracket_declared"] = d
+    assessment["bracket_effective"] = d if d else detected
+    assessment["bracket_effective_name"] = BRACKET_NAMES.get(
+        d if d else detected, assessment.get("bracket_name", ""))
+    assessment["bracket_mismatch"] = bool(d and d != detected)
+    return assessment
+
+
 def assess(enriched, rep, refs, declared=None):
     cats = rep["categories"]
     interaction = cats.get("removal", 0) + cats.get("counter", 0) + cats.get("wipe", 0)

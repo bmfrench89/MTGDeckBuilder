@@ -414,6 +414,7 @@ def analyze_deck(deck_path, collection, refs=None):
     {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}."""
     import deck_stats
     import combo_detector
+    import power
     coll = collection if isinstance(collection, list) else mtglib.load_collection(collection)
     idx = mtglib.index_by_name(coll)
     with open(deck_path, encoding="utf-8") as f:
@@ -427,6 +428,10 @@ def analyze_deck(deck_path, collection, refs=None):
         combos = combo_detector.for_deck(deck_path, idx)
     except Exception:
         combos = None
+    # The player's `# Bracket:` header lives in the deck FILE, which analyze_cards
+    # never sees — stamp it here so every consumer of this pipeline (dashboard,
+    # assess packet, table card) shows the setting beside the detected verdict.
+    power.with_declared(core["assessment"], power.read_declared_bracket(deck_path))
     return {"coll": coll, "idx": idx, "deck": deck, "enriched": enriched,
             "missing": missing, "attrs": attrs, "report": core["report"],
             "assessment": core["assessment"], "mana": core["mana"], "combos": combos}

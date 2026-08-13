@@ -203,6 +203,9 @@ def deck_meta(stem):
         "title": _hdr(text, "Title") or _hdr(text, "Commander") or stem,
         "commander": re.split(r"\s{2,}|\(", _hdr(text, "Commander"))[0].strip(),
         "theme": _hdr(text, "Theme", "default"),
+        # Read for the Rule-0 table card's identity line; both are optional headers.
+        "colors": _hdr(text, "Colors"),
+        "archetype": _hdr(text, "Archetype"),
     }
 
 
@@ -918,6 +921,77 @@ def deck_assess_page(stem):
     return render_template("assess.html", meta=m, a=a, pool=pool, roles=roles,
                            cats=a["report"].get("categories", {}),
                            field_decks=field_decks, sim=sim, page="decks")
+
+
+def _plan_lines(m, a):
+    """The deck's game plan, and an honest label for where it came from.
+
+    The player's own `.notes.md` is the truth when it exists; otherwise a plain
+    role-count summary stands in, LABELLED as derived so nobody reads a heuristic as
+    the author's intent. Returns (lines, source)."""
+    stem = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
+    notes = deckcore.load_notes(f"{stem}.notes.md")
+    if notes:
+        out = []
+        for raw in notes.splitlines():
+            s = raw.strip().lstrip("#").strip()
+            if not s or s.startswith("<!--"):
+                continue
+            out.append(s.lstrip("-* ").strip())
+            if len(out) >= 6:
+                break
+        if out:
+            return out, "your notes"
+    cats = (a.get("report") or {}).get("categories", {})
+    sig = (a.get("assessment") or {}).get("signals", {})
+    derived = [f"{cats.get('ramp', 0)} ramp · {cats.get('draw', 0)} draw · "
+               f"{sig.get('interaction', 0)} interaction pieces",
+               f"{(a.get('report') or {}).get('lands', 0)} lands, "
+               f"average mana value {sig.get('avg_mv', '—')}"]
+    return derived, "derived from role counts — no .notes.md for this deck"
+
+
+@app.route("/deck/<stem>/table-card")
+def deck_table_card(stem):
+    """The Rule-0 table card: one screen you can hand across the table.
+
+    Every fact comes from the same engines the dashboard uses (codemap's
+    card-knowledge-flow rule — nothing is re-derived here). Bracket 1's Game Changer
+    exception literally requires cards be "discussed pregame" and WotC frames the
+    bracket as a conversation aid, so this is the artifact the system asks for and no
+    surveyed tool generates. Degrades honestly: a source that isn't reachable is named
+    as unavailable rather than silently omitted."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    coll, idx = collection_index()
+    a = deckcore.analyze_deck(m["path"], coll)
+    assessment = a.get("assessment")
+    sig = (assessment or {}).get("signals", {})
+
+    combos_present, combos_near, combo_note = [], 0, None
+    try:
+        sb = spellbook.combos_for_deck(m["path"])
+        if sb and not sb.get("error"):
+            combos_present = [c.get("name") or ", ".join(c.get("pieces", []))
+                              for c in (sb.get("complete") or [])][:6]
+            combos_near = len(sb.get("near") or [])
+        else:
+            combo_note = "combo data unavailable offline — showing local combos only"
+    except Exception:
+        combo_note = "combo data unavailable offline — showing local combos only"
+    local = a.get("combos") or {}
+    if not combos_present and local.get("complete"):
+        combos_present = [c["name"] for c in local["complete"]][:6]
+
+    sim = goldfish.sim_for_deck(m["path"], coll, collection_path=COLLECTION)
+    clock = (sim or {}).get("clock")
+    plan, plan_source = _plan_lines(m, a)
+    return render_template("table_card.html", meta=m, a=a, assessment=assessment,
+                           sig=sig, combos_present=combos_present,
+                           combos_near=combos_near, combo_note=combo_note,
+                           clock=clock, defs=(sim or {}).get("definitions", {}),
+                           plan=plan, plan_source=plan_source, page="decks")
 
 
 @app.route("/deck/<stem>/assess.txt")
