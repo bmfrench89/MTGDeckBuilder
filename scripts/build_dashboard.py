@@ -655,6 +655,43 @@ def manabase_html(mana):
     return "".join(out)
 
 
+def clock_html(sim):
+    """The goldfish CLOCK — how fast this deck presents lethal, uncontested.
+
+    Since WotC's Oct-2025 rework the brackets are defined by expected game length, so
+    this is the one analytic that speaks the bracket system's own units. It is
+    rendered as EVIDENCE beside power.py's card-count bracket, never as a
+    reclassification — and every caveat the engine ships (combat-only, understated for
+    drain decks, no data) is printed with it, because a confident wrong number is
+    worse than an absent one."""
+    clk = (sim or {}).get("clock")
+    if not clk:
+        return ""
+    d = (sim.get("definitions") or {})
+    out = []
+    if clk.get("median_first_kill") is not None:
+        out.append("<div class='tiles'>")
+        out.append(stat_tile("Presents lethal", f"T{clk['median_first_kill']:g}",
+                             d.get("first_kill", "")))
+        if clk.get("median_table_kill") is not None:
+            out.append(stat_tile("Whole table", f"T{clk['median_table_kill']:g}",
+                                 d.get("table_kill", "")))
+        by = clk.get("p_first_kill_by") or {}
+        if "6" in by:
+            out.append(stat_tile("Lethal by T6", f"{by['6']*100:.0f}%",
+                                 d.get("first_kill", "")))
+        out.append("</div>")
+        if clk.get("bracket_hint"):
+            out.append(f"<p class='muted'>Clock consistent with the <b>Bracket "
+                       f"{clk['bracket_hint']}</b> expectation. "
+                       f"{esc(d.get('clock_bracket', ''))}</p>")
+    if clk.get("note"):
+        out.append(f"<p class='warn'>{esc(clk['note'])}</p>")
+    if not out:
+        return ""
+    return ("<h3>Clock <span class='count'>uncontested</span></h3>" + "".join(out))
+
+
 def goldfish_html(sim):
     """Goldfish Monte Carlo section from `goldfish.sim_for_deck()`. Same classes as
     manabase_html (stat tiles / data table / notes) — no new CSS.
@@ -680,6 +717,7 @@ def goldfish_html(sim):
         out.append(stat_tile("Screwed", f"{sim['screw']*100:.0f}%", d.get("screw", "")))
     out.append(stat_tile("Flooded", f"{sim['flood']*100:.0f}%", d.get("flood", "")))
     out.append("</div>")
+    out.append(clock_html(sim))
 
     lands = sim.get("mean_lands_by_turn") or {}
     if lands:

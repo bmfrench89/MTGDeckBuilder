@@ -68,6 +68,20 @@ FLOOD_TURN = 6          # "flooded" is judged by the end of this turn
 FLOOD_LANDS = 9         # ...having seen at least this many lands
 NO_DATA_LIMIT = 0.25    # >25% unknown nonlands and we report a note, not numbers
 
+# ---- the clock (Phase 2 of spec-table-ready.md). Since WotC's October 2025 rework
+# the official brackets are defined by how early you'd be satisfied a game ends
+# (B2 ~ turn 8+, B3 ~ turn 6+, B4 ~ turn 4+), so "what turn does this deck present
+# lethal" is the number the bracket system itself asks for.
+OPP_LIFE = 40           # a Commander opponent's starting life
+OPPONENTS = 3           # a four-player pod is you plus three
+CMD_DMG = 21            # commander damage kills one player on its own
+CLOCK_UNKNOWN_LIMIT = 0.25   # >25% of cast creatures with no printed power -> no clock
+BRACKET_CLOCK = [(4, 4), (6, 3), (8, 2)]   # (median first kill <= turn, bracket)
+
+# Report-shape version. `cache_key` includes it, so adding a field to the payload
+# invalidates every cached sim instead of serving old entries that silently lack it.
+REPORT_SCHEMA = 2
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
 
@@ -89,6 +103,14 @@ DEFINITIONS = {
     "mean_lands_by_turn": "Average lands in play after the land drop on turn N.",
     "cards": "Per card: how often it got cast at all, and how much later than its "
              "mana value it actually landed.",
+    "first_kill": f"Turn this deck's UNBLOCKED board has dealt {OPP_LIFE} damage to "
+                  f"one opponent (or {CMD_DMG} commander damage) — 'presents lethal'. "
+                  "Combat damage only; nobody blocks, removes or gains life.",
+    "table_kill": f"Turn cumulative combat damage reaches {OPP_LIFE * OPPONENTS} — "
+                  f"enough for all {OPPONENTS} opponents, if it were assignable.",
+    "clock_bracket": "The bracket whose expected game length matches this median "
+                     "(WotC Oct-2025: B4 ~ turn 4+, B3 ~ turn 6+, B2 ~ turn 8+). "
+                     "Evidence beside the card-count bracket, never a reclassification.",
 }
 
 
@@ -98,15 +120,21 @@ DEFINITIONS = {
 class SimCard:
     """One physical copy, compiled. Immutable; shared across games and both A/B arms."""
     __slots__ = ("name", "key", "mv", "pips", "generic", "is_land", "produces",
-                 "amount", "etb_tapped", "is_producer", "castable", "model")
+                 "amount", "etb_tapped", "is_producer", "castable", "model",
+                 "is_creature", "power")
 
     def __init__(self, name, key, mv, pips, generic, is_land, produces, amount,
-                 etb_tapped, is_producer, castable, model):
+                 etb_tapped, is_producer, castable, model,
+                 is_creature=False, power=None):
         self.name, self.key, self.mv = name, key, mv
         self.pips, self.generic = pips, generic
         self.is_land, self.produces, self.amount = is_land, produces, amount
         self.etb_tapped, self.is_producer = etb_tapped, is_producer
         self.castable, self.model = castable, model
+        # The clock inputs. `power is None` on a creature means "we do not know how
+        # hard this hits" — it never attacks and it counts toward the coverage gate
+        # that decides whether a clock is reported at all.
+        self.is_creature, self.power = is_creature, power
 
     def __repr__(self):                                    # pragma: no cover - debug
         return f"<SimCard {self.name} mv={self.mv} model={self.model}>"
@@ -204,10 +232,13 @@ def compile_card(card):
             generic = int(card.mana_value)     # attrs with an MV but no Cost column
         castable = model != "none"
 
+    is_creature = bool(card.types) and any(t.lower() == "creature" for t in card.types)
     return SimCard(name=card.name, key=mtglib._norm(card.name), mv=card.mana_value,
                    pips=pips, generic=generic, is_land=is_land, produces=produces,
                    amount=amount, etb_tapped=etb, is_producer=is_producer,
-                   castable=castable, model=model)
+                   castable=castable, model=model,
+                   is_creature=is_creature,
+                   power=card.power if is_creature else None)
 
 
 def compile_deck(enriched, commander_name=""):
@@ -390,8 +421,34 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     draws = 0
     flood_seen = 0
 
+    # ---- clock state. `board` is (SimCard, turn_it_entered) for every creature the
+    # sim actually cast; a creature attacks from the turn AFTER it lands (summoning
+    # sickness) and every turn thereafter, unblocked, for its printed power. Damage
+    # is cumulative and uncontested — see `_assumptions`.
+    board = []
+    dmg = 0                     # total combat damage dealt
+    cmd_dmg = 0                 # of which the commander dealt (the 21 rule)
+    first_kill = None           # cumulative >= 40, or 21 commander damage
+    table_kill = None           # cumulative >= 120 (three 40-life opponents)
+    unknown_power_casts = 0     # creatures cast whose power we do not know
+
     for t in range(1, turns + 1):
         lands_at_start[t] = len(in_play)
+        # Combat happens BEFORE this turn's land drop and casts: a creature cast on
+        # turn N attacks on turn N+1, so the damage credited to turn t comes from the
+        # board as it stood at the end of turn t-1.
+        if board:
+            swing = sum(sc.power for sc, entered in board
+                        if entered < t and sc.power is not None)
+            if swing:
+                dmg += swing
+                cmd_dmg += sum(sc.power for sc, entered in board
+                               if entered < t and sc.power is not None
+                               and sc is commander)
+                if first_kill is None and (dmg >= OPP_LIFE or cmd_dmg >= CMD_DMG):
+                    first_kill = t
+                if table_kill is None and dmg >= OPP_LIFE * OPPONENTS:
+                    table_kill = t
         if (t > 1 or not on_play) and draws < len(rest):
             c = rest[draws]
             draws += 1
@@ -422,6 +479,10 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
             rem = _pay(commander.pips, commander.generic, units)
             if rem is not None:
                 commander_turn, units = t, rem
+                if commander.is_creature:
+                    board.append((commander, t))
+                    if commander.power is None:
+                        unknown_power_casts += 1
         # ONE pass, highest mana value first. No restart-after-a-cast is needed:
         # paying for something only ever removes mana, so a card that couldn't be paid
         # for a moment ago can't become payable later in the same turn.
@@ -438,6 +499,10 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
             cast_any = True
             if sc.is_producer:
                 producers.append((sc, t))
+            if sc.is_creature:
+                board.append((sc, t))
+                if sc.power is None:
+                    unknown_power_casts += 1
             if sc.key not in cast_turn:
                 cast_turn[sc.key] = t
             if not units:
@@ -450,7 +515,10 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     return {"first7_lands": first7_lands, "mulls": mulls,
             "commander_turn": commander_turn, "cast_turn": cast_turn,
             "lands_by_turn": lands_by_turn, "lands_at_start": lands_at_start,
-            "seen_by_turn": seen_by_turn, "lands_seen_flood": flood_seen}
+            "seen_by_turn": seen_by_turn, "lands_seen_flood": flood_seen,
+            "first_kill": first_kill, "table_kill": table_kill,
+            "damage": dmg, "unknown_power_casts": unknown_power_casts,
+            "creature_casts": len(board)}
 
 
 # --------------------------------------------------------------------------- #
@@ -483,8 +551,11 @@ def _assumptions(compiled, mulligan, on_play, games):
              "mixed": "mixed: enriched where the collection has been enriched, "
                       "color identity elsewhere"}[compiled["model"]]
     out = [
-        "Goldfish: no opponent, no interaction, no combat. This measures whether the "
-        "deck's own machine turns over, nothing about how it fares at a table.",
+        "Goldfish: no opponent and no interaction. The CLOCK adds unblocked combat "
+        "on top of that — creatures attack every turn after they land, for printed "
+        "power, and nobody blocks, removes, counters or gains life. It measures "
+        "whether the deck's own machine turns over and how fast that machine would "
+        "kill if left completely alone, nothing about how it fares at a table.",
         (f"London mulligan, keep {KEEP_LANDS[0]}-{KEEP_LANDS[1]} lands, floor "
          f"{HAND - MULL_FLOOR} (at most {MULL_FLOOR} mulligans); bottoming takes "
          f"lands beyond {BOTTOM_KEEP_LANDS} first, then the highest mana values.")
@@ -541,6 +612,107 @@ def _card_rows(compiled, records, games, turns):
     return rows
 
 
+def _median(xs):
+    """Median of a list, or None. Kept local — the sim imports no stats module."""
+    s = sorted(xs)
+    n = len(s)
+    if not n:
+        return None
+    mid = n // 2
+    return float(s[mid]) if n % 2 else (s[mid - 1] + s[mid]) / 2.0
+
+
+def _drain_names(compiled):
+    """Cards whose damage the clock CANNOT see: noncombat damage and lifeloss.
+
+    Named from the oracle-derived flags and a small phrase list rather than guessed
+    from the type line, because the point is to be honest about a specific known
+    blind spot (Exsanguinate, Blood Artist, Vito) rather than to hedge everything."""
+    out = []
+    for sc in compiled["library"] + ([compiled["commander"]]
+                                     if compiled["commander"] else []):
+        n = sc.name.lower()
+        if any(w in n for w in ("exsanguinate", "blood artist", "vito",
+                                "bastion of remembrance", "gray merchant",
+                                "torment of hailfire", "debt to the deathless")):
+            out.append(sc.name)
+    return sorted(set(out))
+
+
+def _clock(compiled, records, games, turns):
+    """How fast this deck presents lethal, uncontested.
+
+    The honest shape of this number matters more than the number. It counts COMBAT
+    damage from creatures the sim actually cast, with nobody blocking, removing,
+    countering or gaining life — so it is an upper bound on speed for a creature deck
+    and a SEVERE UNDERSTATEMENT for a deck that wins by drain, burn, mill or an
+    alternate wincon. Both facts ship in the payload; no surface may print the number
+    without them.
+    """
+    if not games:
+        return None
+    unknown = sum(r["unknown_power_casts"] for r in records)
+    # Coverage is judged over the creatures the sim actually CAST, not the whole
+    # library: a deck can hold ten unknown-power creatures it never reaches, and
+    # refusing a clock over cards that never hit the battlefield would be the wrong
+    # kind of caution. `damage` being 0 across the board with unknown casts present
+    # is the real "no data" signal.
+    total_creature_casts = sum(r["creature_casts"] for r in records)
+    frac_unknown = (unknown / total_creature_casts) if total_creature_casts else 0.0
+
+    firsts = [r["first_kill"] for r in records if r["first_kill"] is not None]
+    tables = [r["table_kill"] for r in records if r["table_kill"] is not None]
+    have = total_creature_casts > 0 and frac_unknown <= CLOCK_UNKNOWN_LIMIT
+
+    out = {
+        "have_data": have,
+        "unknown_power_fraction": round(frac_unknown, 3),
+        "creature_casts_per_game": round(total_creature_casts / games, 2),
+        "kill_rate": round(len(firsts) / games, 4),
+        "table_kill_rate": round(len(tables) / games, 4),
+        "median_first_kill": _median(firsts),
+        "median_table_kill": _median(tables),
+        "mean_damage_by_turn_end": round(_mean([r["damage"] for r in records]), 1),
+        "p_first_kill_by": {str(t): round(sum(1 for x in firsts if x <= t) / games, 4)
+                            for t in (4, 6, 8) if t <= turns},
+        "horizon": turns,
+        "combat_only": True,
+        "noncombat_sources": _drain_names(compiled),
+        "note": None,
+        "bracket_hint": None,
+    }
+    if not have:
+        out["note"] = (
+            "No clock: this deck's creatures have no printed power in the data "
+            f"({int(round(frac_unknown * 100))}% of casts unknown). Re-run enrichment "
+            "(carddb.py) to unlock it." if total_creature_casts else
+            "No clock: the sim never cast a creature, so there is no board to attack "
+            "with. A deck that wins another way needs a different measure.")
+        return out
+    # A median only exists if at least half the games got there; below that the
+    # honest statement is the rate, not a median drawn from the fast tail.
+    if out["median_first_kill"] is None or out["kill_rate"] < 0.5:
+        out["median_first_kill"] = None
+        out["note"] = (f"Lethal presented in only {out['kill_rate'] * 100:.0f}% of "
+                       f"games within {turns} turns — too few for a median. The rate "
+                       "is the honest number here.")
+    else:
+        m = out["median_first_kill"]
+        for turn_cap, bracket in BRACKET_CLOCK:
+            if m <= turn_cap:
+                out["bracket_hint"] = bracket
+                break
+        else:
+            out["bracket_hint"] = 2
+    if out["noncombat_sources"]:
+        out["note"] = ((out["note"] + " ") if out["note"] else "") + (
+            "UNDERSTATED: this deck also wins with noncombat damage/drain "
+            f"({', '.join(out['noncombat_sources'][:4])}"
+            f"{'…' if len(out['noncombat_sources']) > 4 else ''}), which the clock "
+            "does not model.")
+    return out
+
+
 def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
              on_play=True, seeds=None, _records=False):
     """Run the sim and return the report (§6.2). Same inputs -> identical report.
@@ -587,6 +759,7 @@ def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
                                                     for r in records]), 2)
                                for t in range(1, turns + 1)},
         "cards": _card_rows(compiled, records, games, turns),
+        "clock": _clock(compiled, records, games, turns),
         "definitions": dict(DEFINITIONS),
         "assumptions": _assumptions(compiled, mulligan, on_play, games),
         "note": None,
@@ -604,7 +777,11 @@ def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
 # A/B over common random numbers
 # --------------------------------------------------------------------------- #
 AB_METRICS = ("commander_by_t4", "commander_by_t6", "keepable", "screw", "flood",
-              "lands_t4")
+              "lands_t4",
+              # The clock rides the same paired games for free: "does this swap make
+              # the deck faster" measured over identical shuffles. LOWER is better for
+              # first_kill_turn, which is the only metric here where that is true.
+              "first_kill_turn", "damage_dealt")
 Z95 = 1.96
 
 
@@ -619,7 +796,26 @@ def _per_game(record):
                  else 0.0,
         "flood": 1.0 if record["lands_seen_flood"] >= FLOOD_LANDS else 0.0,
         "lands_t4": float(record["lands_by_turn"].get(4, 0)),
+        # Clock metrics ride the SAME paired games, so "did this swap speed up the
+        # kill" is measured against identical shuffles rather than against luck.
+        # A game that never presents lethal contributes its horizon, not a None —
+        # dropping it would compare the two arms on different game sets and silently
+        # break the pairing the confidence interval depends on.
+        "first_kill_turn": _censored_kill(record),
+        "damage_dealt": float(record["damage"]),
     }
+
+
+def _censored_kill(record):
+    """First-kill turn for A/B, with non-kills CENSORED at one turn past the horizon.
+
+    A game that never presents lethal has no kill turn, but dropping it would compare
+    the two arms on different sets of games — which silently breaks the common-random-
+    numbers pairing the confidence interval rests on. Censoring keeps every game in
+    both arms and makes the metric read the right direction (lower = faster)."""
+    horizon = max(record["lands_by_turn"]) if record["lands_by_turn"] else 0
+    return float(record["first_kill"] if record["first_kill"] is not None
+                 else horizon + 1)
 
 
 def _stdev(xs, mean):
@@ -717,7 +913,10 @@ def cache_key(deck_path, collection_path, games, seed, turns, mulligan):
     to skip; it is recorded in the payload and checked on read instead."""
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     key = {"deck": _stat(deck_path), "deck_attrs": _stat(f"{stem}.attrs.csv"),
-           "games": games, "seed": seed, "turns": turns, "mulligan": bool(mulligan)}
+           "games": games, "seed": seed, "turns": turns, "mulligan": bool(mulligan),
+           # Bump when the REPORT SHAPE changes, or a cache written by an older build
+           # is served forever without the new fields (the clock landed 2026-08-13).
+           "schema": REPORT_SCHEMA}
     if collection_path:
         d = os.path.dirname(collection_path) or "."
         key["collection"] = _stat(collection_path)
@@ -833,6 +1032,25 @@ def print_report(rep):
           f"flood {_pct(rep['flood'])} ({rep['definitions']['flood']})")
     print("Lands in play: " + " · ".join(f"T{t} {v}" for t, v
                                          in rep["mean_lands_by_turn"].items()))
+    clk = rep.get("clock")
+    if clk:
+        print("\nCLOCK — how fast this deck presents lethal, uncontested:")
+        if clk["median_first_kill"] is not None:
+            print(f"   first kill  median T{clk['median_first_kill']:g}  "
+                  f"({rep['definitions']['first_kill']})")
+            print("   " + " · ".join(f"by T{t} {_pct(p)}"
+                                     for t, p in clk["p_first_kill_by"].items()))
+            if clk["median_table_kill"] is not None:
+                print(f"   table kill  median T{clk['median_table_kill']:g}  "
+                      f"({rep['definitions']['table_kill']})")
+            else:
+                print(f"   table kill  not reached within {clk['horizon']} turns "
+                      f"({_pct(clk['table_kill_rate'])} of games)")
+            if clk["bracket_hint"]:
+                print(f"   -> consistent with the Bracket {clk['bracket_hint']} "
+                      f"expectation. {rep['definitions']['clock_bracket']}")
+        if clk["note"]:
+            print(f"   [!] {clk['note']}")
     worst = [c for c in rep["cards"] if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0]
     if worst:
         print(f"\nWorst-sequenced cards ({rep['definitions']['cards']}):")

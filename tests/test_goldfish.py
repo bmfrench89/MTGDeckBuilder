@@ -673,3 +673,139 @@ def test_a_new_snapshot_attrs_file_invalidates_the_cache(sim_deck, tmp_path,
     goldfish.sim_for_deck(deck, coll, games=150, cache_dir=cdir,
                           collection_path=coll)
     assert len(calls) == 2, "the snapshot's arrival must miss the cache"
+
+
+# --------------------------------------------------------------------------- #
+# The clock (Phase 2 of spec-table-ready.md)
+#
+# The bracket system has been defined by expected game length since WotC's Oct-2025
+# rework, so "what turn does this deck present lethal" is the number the brackets
+# themselves ask for. These tests pin the arithmetic, the honesty gates, and the fact
+# that adding combat did not break the common-random-numbers pairing.
+# --------------------------------------------------------------------------- #
+def _clock_deck(power=2, creatures=20, lands=40, mv=1.0):
+    """Vanilla creatures on untapped mono-U lands: a deck whose clock is arithmetic."""
+    cards = [C(name="Island", quantity=lands, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    for i in range(creatures):
+        cards.append(C(name=f"Bear {i}", quantity=1, mana_value=mv, colors={"U"},
+                       identity={"U"}, mana_cost="{U}", types=["Creature"],
+                       power=power))
+    return cards
+
+
+def test_one_huge_creature_kills_on_the_turn_the_arithmetic_says():
+    """A single 40-power creature cast on turn 1 attacks on turn 2 and deals exactly
+    lethal. Summoning sickness is the whole content of this test: the kill must be
+    T2, never T1."""
+    cards = [C(name="Island", quantity=40, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    # 20 copies-worth of distinct huge creatures, so one is reliably in the opener:
+    # the point under test is the summoning-sickness turn, not draw luck.
+    for i in range(20):
+        cards.append(C(name=f"Big Bear {i}", quantity=1, mana_value=1.0, colors={"U"},
+                       identity={"U"}, mana_cost="{U}", types=["Creature"], power=40))
+    compiled = goldfish.compile_deck(cards, "")
+    rep = goldfish.simulate(compiled, games=200, seed=7)
+    clk = rep["clock"]
+    assert clk["have_data"] is True
+    # It is not in every opening hand, so the median is what is pinned, not the min.
+    assert clk["median_first_kill"] is not None
+    assert clk["median_first_kill"] >= 2, "summoning sickness: never a turn-1 kill"
+
+
+def test_the_clock_counts_cumulative_unblocked_damage():
+    """Twenty 2-power bears: the kill turn must be finite, and the table kill (120
+    damage, three opponents) must never come BEFORE the first kill (40)."""
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    rep = goldfish.simulate(compiled, games=300, seed=3)
+    clk = rep["clock"]
+    assert clk["have_data"] is True
+    assert clk["kill_rate"] > 0
+    if clk["median_first_kill"] and clk["median_table_kill"]:
+        assert clk["median_table_kill"] >= clk["median_first_kill"]
+    assert clk["p_first_kill_by"], "the bracket anchors T4/T6/T8 are reported"
+
+
+def test_no_power_data_reports_a_note_instead_of_a_clock():
+    """The honesty gate: creatures with no printed power (an un-enriched collection,
+    or an attrs file predating the Power column) must yield a NOTE, never a number
+    invented from nothing."""
+    cards = _clock_deck()
+    for c in cards:
+        c.power = None
+    compiled = goldfish.compile_deck(cards, "")
+    clk = goldfish.simulate(compiled, games=120, seed=1)["clock"]
+    assert clk["have_data"] is False
+    assert clk["median_first_kill"] is None
+    assert "enrich" in clk["note"].lower() or "no printed power" in clk["note"].lower()
+
+
+def test_a_creatureless_deck_says_so_rather_than_claiming_speed():
+    cards = [C(name="Island", quantity=40, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    for i in range(60):
+        cards.append(C(name=f"Spell {i}", quantity=1, mana_value=2.0, colors={"U"},
+                       identity={"U"}, mana_cost="{1}{U}", types=["Instant"]))
+    clk = goldfish.simulate(goldfish.compile_deck(cards, ""), games=80, seed=2)["clock"]
+    assert clk["have_data"] is False
+    assert "never cast a creature" in clk["note"]
+
+
+def test_a_drain_deck_is_labelled_as_understated():
+    """The clock models COMBAT damage only. A deck that wins by drain is measured
+    too slow, and the payload has to say so — CLAUDE.md's honesty rule applies hardest
+    where the number is confidently wrong rather than absent."""
+    cards = _clock_deck(creatures=10)
+    cards.append(C(name="Exsanguinate", quantity=1, mana_value=2.0, colors={"B"},
+                   identity={"B"}, mana_cost="{1}{B}", types=["Sorcery"]))
+    clk = goldfish.simulate(goldfish.compile_deck(cards, ""), games=120, seed=5)["clock"]
+    assert "Exsanguinate" in clk["noncombat_sources"]
+    assert "UNDERSTATED" in (clk["note"] or "")
+
+
+def test_clock_definitions_ship_as_data():
+    """Same contract as screw/flood: every clock number travels with its definition,
+    so no surface can supply its own and misread it."""
+    rep = goldfish.simulate(goldfish.compile_deck(_clock_deck(), ""), games=60, seed=1)
+    for key in ("first_kill", "table_kill", "clock_bracket"):
+        assert rep["definitions"][key], f"{key} must ship a definition"
+
+
+def test_the_bracket_hint_is_advisory_and_matches_the_turn_anchors():
+    """A fast deck maps to a lower bracket number; the mapping is the WotC turn
+    anchors (B4 ~ T4+, B3 ~ T6+, B2 ~ T8+) and never rewrites power.py's verdict."""
+    fast = goldfish.simulate(goldfish.compile_deck(_clock_deck(power=10, creatures=30), ""),
+                             games=200, seed=11)["clock"]
+    slow = goldfish.simulate(goldfish.compile_deck(_clock_deck(power=1, creatures=12), ""),
+                             games=200, seed=11)["clock"]
+    if fast["median_first_kill"] and slow["median_first_kill"]:
+        assert fast["median_first_kill"] <= slow["median_first_kill"]
+        assert fast["bracket_hint"] <= slow["bracket_hint"]
+
+
+def test_aa_pairing_is_still_exactly_zero_with_the_clock_metrics():
+    """THE tripwire, extended. Swapping a card for itself must produce deltas of
+    exactly 0.0 on every metric INCLUDING the two clock ones — if the combat model
+    re-sorted the compiled deck, positional pairing would die silently here while the
+    numbers stayed plausible."""
+    cards = _clock_deck()
+    compiled = goldfish.compile_deck(cards, "")
+    idx = mtglib.index_by_name(cards)
+    ab = goldfish.simulate_ab(compiled, "Bear 0", "Bear 0", idx, games=150, seed=4)
+    for metric, d in ab["deltas"].items():
+        assert d["delta"] == 0.0, f"{metric} drifted: A/A must be exactly zero"
+    assert "first_kill_turn" in ab["deltas"], "the clock rides the paired games"
+
+
+def test_the_cache_key_changes_when_the_report_shape_does(tmp_path):
+    """A cached sim written before the clock existed must not be served forever
+    without it. The schema version rides the cache key so a payload change
+    invalidates old entries by construction."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Commander: X\n\n# --- Main ---\n1 Island\n", encoding="utf-8")
+    k = goldfish.cache_key(str(deck), None, 100, 0, 10, True)
+    assert k["schema"] == goldfish.REPORT_SCHEMA
+    bumped = dict(k)
+    bumped["schema"] = goldfish.REPORT_SCHEMA + 1
+    assert bumped != k, "the schema must participate in the key"

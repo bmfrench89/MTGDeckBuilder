@@ -717,6 +717,20 @@ def _assess_packet(m):
         L.append("  lands in play: " +
                  " · ".join(f"T{t} {v}" for t, v in
                             list(sim["mean_lands_by_turn"].items())[:8]))
+        clk = sim.get("clock") or {}
+        if clk.get("median_first_kill") is not None:
+            L.append(f"  CLOCK: presents lethal median T{clk['median_first_kill']:g} "
+                     + " · ".join(f"by T{t} {v*100:.0f}%"
+                                  for t, v in (clk.get("p_first_kill_by") or {}).items())
+                     + f"   [{d['first_kill']}]")
+            if clk.get("median_table_kill") is not None:
+                L.append(f"  CLOCK: whole table median T{clk['median_table_kill']:g} "
+                         f"  [{d['table_kill']}]")
+            if clk.get("bracket_hint"):
+                L.append(f"  CLOCK: consistent with the Bracket {clk['bracket_hint']} "
+                         f"expectation  [{d['clock_bracket']}]")
+        if clk.get("note"):
+            L.append(f"  CLOCK: {clk['note']}")
         worst = [c for c in sim["cards"]
                  if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0][:5]
         if worst:
