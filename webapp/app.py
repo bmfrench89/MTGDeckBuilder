@@ -915,6 +915,65 @@ def deck_bracket(stem):
     return redirect(url_for("deck", stem=stem) + "#tab-power")
 
 
+@app.route("/pins")
+def pins_page():
+    """Every reserved copy in one place, with one-tap move.
+
+    Pinning was already enforced (auto_build's pool, the optimizer's cuts and adds);
+    what was missing was somewhere to SEE the reservations and change them without
+    hunting through six deck pages. Moving a pin is one action here rather than
+    unpin-then-find-the-other-deck-then-repin, because cards shift between decks
+    constantly and friction there is what makes people stop pinning at all."""
+    pins = deckcore.load_pins()
+    coll, idx = collection_index()
+    decks = list_decks()
+    by_stem = {d["stem"]: d for d in decks}
+    # Which decks actually RUN each pinned card — a pin pointing at a deck that no
+    # longer runs the card is the stale state this page exists to surface.
+    runs = {}
+    for d in decks:
+        try:
+            for c in mtglib.parse_deck(open(d["path"], encoding="utf-8").read()):
+                for k in mtglib.name_keys(c.name):
+                    runs.setdefault(k, set()).add(d["stem"])
+        except OSError:
+            continue
+    rows = []
+    for key, stem in sorted(pins.items()):
+        ref = mtglib.lookup(idx, key)
+        in_decks = sorted(runs.get(key, set()))
+        rows.append({
+            "key": key,
+            "name": ref.name if ref else key,
+            "deck": stem,
+            "deck_title": (by_stem.get(stem) or {}).get("title", stem),
+            "owned": ref.quantity if ref else 0,
+            "in_decks": in_decks,
+            "stale": stem not in in_decks,      # pinned to a deck that doesn't run it
+            "contested": len(in_decks) > (ref.quantity if ref else 0),
+        })
+    return render_template("pins.html", rows=rows, decks=decks, page="pins")
+
+
+@app.route("/pins/move", methods=["POST"])
+def pins_move():
+    """Move a pin to another deck, or release it — one action, not two."""
+    key = (request.form.get("card") or "").strip()
+    target = (request.form.get("deck") or "").strip()
+    if key:
+        pins = deckcore.load_pins()
+        k = mtglib._norm(key)
+        if target in ("", "none"):
+            pins.pop(k, None)
+            flash(f"Released the pin on {key} — every deck can use that copy again.",
+                  "info")
+        else:
+            pins[k] = target                    # one deck per card: this MOVES it
+            flash(f"{key} is now reserved for {target}.", "info")
+        deckcore.save_pins(pins)
+    return redirect(url_for("pins_page"))
+
+
 @app.route("/deck/<stem>/delete", methods=["POST"])
 def deck_delete(stem):
     """Delete a deck and its companion files. Git keeps the history, so this is
@@ -1299,7 +1358,11 @@ def api_edhrec(commander):
     """EDHREC community staples for a commander, cross-referenced with the collection:
     owned (add) vs missing (buy). Cached to disk; degrades to an error payload."""
     _, idx = collection_index()
-    return jsonify(edhrec.recommendations(commander, idx))
+    # Pass the pins so a staple whose only copy is reserved for another deck is
+    # LABELLED rather than silently offered as available.
+    return jsonify(edhrec.recommendations(
+        commander, idx, pins=deckcore.load_pins(),
+        for_stem=request.args.get("for") or None))
 
 
 @app.route("/api/combos/build/<path:commander>")

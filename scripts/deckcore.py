@@ -148,13 +148,17 @@ def manual_adds(path, days=NEW_CARD_DAYS):
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
 
 
-def load_pins(path=PINS):
+def load_pins(path=None):
     """{normalized card: deck stem} — cards you've reserved for a specific deck.
 
     When you own ONE copy of a card that three decks want, the arithmetic can't decide
     which deck gets the physical card. A pin is you deciding: that copy belongs to this
     deck, and the other decks must treat it as unavailable no matter how well it scores.
     """
+    # Resolved at CALL time, not bound as a default: `path=PINS` captured the module
+    # constant at import, so redirecting PINS (a test pointing at tmp_path, or any
+    # future per-instance path) silently kept writing the real file.
+    path = path or PINS
     if not os.path.exists(path):
         return {}
     out = {}
@@ -167,8 +171,9 @@ def load_pins(path=PINS):
     return out
 
 
-def save_pins(pins, path=PINS):
+def save_pins(pins, path=None):
     """Write the pin map back. One deck per card — pinning elsewhere moves it."""
+    path = path or PINS                    # call-time, same reason as load_pins
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)

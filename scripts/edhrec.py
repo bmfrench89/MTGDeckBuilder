@@ -78,10 +78,31 @@ def _inclusion(cv):
     return round(100 * nd / pot) if (nd and pot) else None
 
 
-def recommendations(commander, coll_index, ttl=CACHE_TTL):
+def _pinned_elsewhere(name, pins, for_stem):
+    """The deck a copy of `name` is reserved for, when that deck is not this one.
+
+    Front-face aware: a pin recorded under either spelling of a split card must be
+    found (the ` // ` trap). Returns None when nothing is pinned or the pin is this
+    deck's own — a card reserved HERE is available here."""
+    if not pins:
+        return None
+    for k in mtglib.name_keys(name):
+        owner = pins.get(k)
+        if owner and owner != for_stem:
+            return owner
+    return None
+
+
+def recommendations(commander, coll_index, ttl=CACHE_TTL, pins=None, for_stem=None):
     """Grounded EDHREC recommendations for `commander`, cross-referenced with the
     collection. Returns owned/missing headline lists (by inclusion) + per-section detail.
-    On any failure returns the same shape with an `error` string and empty lists."""
+    On any failure returns the same shape with an `error` string and empty lists.
+
+    `pins` is `deckcore.load_pins()` ({card key -> deck stem}) and `for_stem` the deck
+    being built. A card whose physical copy is reserved for ANOTHER deck gets
+    `pinned_to` set: it is still listed (hiding it would leave the player wondering
+    where a staple went) but every surface can now say WHY it isn't really available.
+    Passed in rather than loaded here so this engine keeps its single hub import."""
     slug = slugify(commander)
     base = {"commander": commander, "slug": slug,
             "url": "https://edhrec.com/commanders/" + slug}
@@ -101,7 +122,8 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
                 card = {"name": name,
                         "inclusion": snap.get("inclusion", {}).get(k),
                         "synergy": snap.get("synergy", {}).get(k, 0),
-                        "owned": bool(ref), "qty": ref.quantity if ref else 0}
+                        "owned": bool(ref), "qty": ref.quantity if ref else 0,
+                        "pinned_to": _pinned_elsewhere(name, pins, for_stem)}
                 cards.append(card)
                 if k not in seen and not _is_basic(name):
                     seen.add(k)
@@ -126,7 +148,8 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL):
             ref = mtglib.lookup(coll_index, name)
             card = {"name": name, "inclusion": _inclusion(cv),
                     "synergy": round((cv.get("synergy") or 0) * 100),
-                    "owned": bool(ref), "qty": ref.quantity if ref else 0}
+                    "owned": bool(ref), "qty": ref.quantity if ref else 0,
+                    "pinned_to": _pinned_elsewhere(name, pins, for_stem)}
             cards.append(card)
             k = mtglib._norm(name)
             if header not in _SKIP_SECTIONS and k not in seen and not _is_basic(name):

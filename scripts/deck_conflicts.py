@@ -35,6 +35,16 @@ def deck_label(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
+def _pin_of(name, pins):
+    """Which deck (if any) holds a pin on this card — front-face aware."""
+    if not pins:
+        return None
+    for k in mtglib.name_keys(name):
+        if pins.get(k):
+            return pins[k]
+    return None
+
+
 def scan(decks_dir, collection_index, skip=None):
     """Return {card_name: {'owned':n, 'total':n, 'decks':{deck:qty}}} for cards
     committed across decks, and the raw per-deck usage. `skip` (a deck stem) omits that
@@ -69,9 +79,14 @@ def scan(decks_dir, collection_index, skip=None):
     return usage
 
 
-def conflicts(usage, focus_deck=None):
+def conflicts(usage, focus_deck=None, pins=None):
     """A conflict = total committed across decks exceeds owned copies.
-    If focus_deck given, only conflicts that include that deck."""
+    If focus_deck given, only conflicts that include that deck.
+
+    `pins` ({card key -> deck stem}, from `deckcore.load_pins`) is optional: when
+    supplied, each row names the deck that already holds the physical copy. A
+    shortfall and a pin are the same story told twice, and reporting them apart is
+    what made the two look unrelated."""
     out = []
     for name, u in usage.items():
         if u["total"] <= u["owned"]:
@@ -87,6 +102,10 @@ def conflicts(usage, focus_deck=None):
             "price": u.get("price"),
             "buy_cost": round(short * u["price"], 2) if u.get("price") else None,
             "decks": dict(sorted(u["decks"].items())),
+            # A shortfall and a pin are the same story told twice — the pin says
+            # which deck already WON the physical copy. Naming it here stops the two
+            # reports from reading as unrelated facts.
+            "pinned_to": _pin_of(name, pins),
         })
     out.sort(key=lambda c: (-c["short"], -c["committed"], c["card"]))
     return out
@@ -126,6 +145,8 @@ def buy_doubles_report(conf):
         each = f"${c['price']:.2f}" if c["price"] is not None else "—"
         tot = f"${c['buy_cost']:.2f}" if c["buy_cost"] is not None else "—"
         where = ", ".join(c["decks"])
+        if c.get("pinned_to"):
+            where += f"  [1 copy pinned to {c['pinned_to']}]"
         print(f"  {c['short']:<5}{c['card']:<28}{each:>8}{tot:>9}   {where}")
     print("  " + "-" * 72)
     n = sum(c["short"] for c in conf)
