@@ -1096,6 +1096,68 @@ def deck_table_card(stem):
                            plan=plan, plan_source=plan_source, page="decks")
 
 
+@app.route("/deck/<stem>/mulligan")
+def deck_mulligan(stem):
+    """Mulligan practice on the deck's REAL hands.
+
+    The 2025-26 trainers that exist are deck-generic and online-only; this deals from
+    the actual compiled list, so the hands are the ones the player will really see.
+    The sim's verdict is shown AFTER the call with the reasoning behind it, and it is
+    framed as a heuristic to compare against rather than a correct answer — the rule
+    reads land counts, not card quality, and the page says so."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    return render_template("mulligan.html", meta=m, page="decks")
+
+
+@app.route("/api/deck/<stem>/hand")
+def api_deck_hand(stem):
+    """One seeded opening hand plus the sim's verdict and its reasoning.
+
+    Seeded by an explicit `seed` so a hand is reproducible (and so a test can pin
+    one); the page draws a fresh seed per hand."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    try:
+        seed = int(request.args.get("seed") or 0)
+    except ValueError:
+        seed = 0
+    mulls = max(0, min(goldfish.MULL_FLOOR, int(request.args.get("mulls") or 0)))
+    coll, _idx = collection_index()
+    try:
+        compiled, _idx2 = goldfish.load_for_ab(m["path"], coll,
+                                               collection_path=COLLECTION)
+    except Exception:
+        compiled = None
+    if not compiled:
+        return jsonify({"error": "could not compile this deck"}), 200
+    if not compiled or not compiled.get("library"):
+        return jsonify({"error": "no library to draw from"}), 200
+
+    import random as _random
+    lib = list(compiled["library"])
+    _random.Random(seed).shuffle(lib)
+    hand = lib[:goldfish.HAND]
+    verdict = goldfish.keep_verdict(hand, mulls=mulls, mulligan=True)
+    lands = [c.name for c in hand if c.is_land]
+    spells = [{"name": c.name, "mv": c.mv} for c in hand if not c.is_land]
+    colors = sorted({p for c in hand if c.is_land for p in (c.produces or ())})
+    ramp = [c.name for c in hand if not c.is_land and c.is_producer]
+    return jsonify({
+        "hand": [{"name": c.name, "land": c.is_land, "mv": c.mv} for c in hand],
+        "lands": lands, "spells": spells, "colors": colors, "ramp": ramp,
+        "mulls": mulls, "floor": goldfish.HAND - goldfish.MULL_FLOOR,
+        "verdict": verdict,
+        "band": list(goldfish.KEEP_LANDS),
+        "caveat": ("The sim's rule counts LANDS, not card quality — it cannot see that "
+                   "your two spells are both uncastable, or that one of them is a "
+                   "tutor. Disagreeing with it is often correct."),
+        "have_data": bool(compiled.get("have_data", True)),
+    })
+
+
 @app.route("/deck/<stem>/assess.txt")
 def deck_assess(stem):
     m = deck_meta(stem)
@@ -1392,12 +1454,46 @@ def mobile():
                            port=int(os.environ.get("MTG_PORT", "5000")), page="mobile")
 
 
+def _asset_version():
+    """A cache-busting version derived from the code itself.
+
+    The service worker's cache name was hand-pinned (`mtgdb-v1`), so every shipped
+    change to a cached asset needed someone to remember to bump it — and forgetting
+    means an installed phone keeps serving the old CSS/JS with no way for the player
+    to tell. Derived from the current git HEAD where available, else the newest mtime
+    across the shell files, so it moves on its own."""
+    try:
+        head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True, timeout=5)
+        if head.returncode == 0 and head.stdout.strip():
+            return head.stdout.strip()
+    except Exception:
+        pass
+    newest = 0
+    for d in (os.path.join(ROOT, "webapp", "static"),
+              os.path.join(ROOT, "scripts", "assets")):
+        try:
+            for f in os.listdir(d):
+                newest = max(newest, int(os.path.getmtime(os.path.join(d, f))))
+        except OSError:
+            continue
+    return str(newest)
+
+
 @app.route("/sw.js")
 def service_worker():
     """Served from the root, not /static/, because a service worker can only control
-    pages at or below its own path — at /static/sw.js it could never manage the app."""
-    return send_from_directory(os.path.join(ROOT, "webapp", "static"), "sw.js",
-                               mimetype="application/javascript")
+    pages at or below its own path — at /static/sw.js it could never manage the app.
+
+    The cache VERSION is substituted at serve time from `_asset_version()`: a stale
+    installed worker is invisible to the player, so this must not depend on anyone
+    remembering to edit a constant."""
+    path = os.path.join(ROOT, "webapp", "static", "sw.js")
+    with open(path, encoding="utf-8") as f:
+        js = f.read()
+    js = js.replace("__ASSET_VERSION__", _asset_version())
+    return Response(js, mimetype="application/javascript",
+                    headers={"Cache-Control": "no-cache"})
 
 
 @app.route("/static/tokens.css")

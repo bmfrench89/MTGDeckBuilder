@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+{#
+  Mulligan practice on this deck's real hands.
+
+  Call keep or ship BEFORE the verdict appears — seeing the sim's answer first would
+  train you to agree with a heuristic rather than to read a hand. The verdict is
+  framed as something to compare against: it counts lands, not card quality, so
+  disagreeing with it is frequently correct and the page says so out loud.
+
+  Session stats live in localStorage only: private, offline, no server state.
+#}
+<h1>Mulligan trainer — {{ meta.title }}</h1>
+<p class="muted">Real hands from this deck. Decide first, then compare with the
+  simulator's rule. Your agreement rate is kept on this device only.</p>
+
+<div class="card mull">
+  <div id="hand" class="mull-hand muted">Dealing…</div>
+
+  <div id="ask" class="mull-actions" hidden>
+    <button id="keep" type="button">Keep</button>
+    <button id="ship" type="button">Mulligan</button>
+    <span id="mullstate" class="muted"></span>
+  </div>
+
+  <div id="reveal" hidden>
+    <p id="verdict"></p>
+    <p id="why" class="muted"></p>
+    <details class="explain"><summary>What this rule can and can't see</summary>
+      <p id="caveat" class="muted"></p></details>
+    <button id="next" type="button">Next hand</button>
+  </div>
+
+  <p class="muted fs-xs" id="stats"></p>
+</div>
+
+<style>
+.mull-hand { display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-4); }
+.mull-card { padding:var(--sp-2) var(--sp-3); border-radius:var(--r-sm);
+  background:rgba(255,255,255,.06); font-size:var(--fs-sm); }
+.mull-card.land { border-left:3px solid var(--accent); }
+.mull-actions { display:flex; gap:var(--sp-2); align-items:center; }
+.mull button { font:inherit; padding:var(--sp-2) var(--sp-4); border-radius:var(--r-sm);
+  border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06);
+  color:inherit; cursor:pointer; }
+.agree { color:var(--accent); }
+.disagree { color:var(--gold); }
+</style>
+
+<script>
+(function () {
+  var STEM = {{ meta.stem|tojson }};
+  var KEY = "mull-stats:" + STEM;
+  var cur = null, mulls = 0;
+
+  function stats() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {n: 0, agree: 0}; }
+    catch (e) { return {n: 0, agree: 0}; }
+  }
+  function showStats() {
+    var s = stats();
+    document.getElementById("stats").textContent = s.n
+      ? s.n + " hand(s) this device · you and the sim agreed on "
+        + Math.round(100 * s.agree / s.n) + "%"
+      : "";
+  }
+  function deal() {
+    document.getElementById("reveal").hidden = true;
+    document.getElementById("ask").hidden = true;
+    document.getElementById("hand").textContent = "Dealing…";
+    var seed = Math.floor(Math.random() * 1e9);
+    fetch("/api/deck/" + encodeURIComponent(STEM) + "/hand?seed=" + seed
+          + "&mulls=" + mulls)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { document.getElementById("hand").textContent = d.error; return; }
+        cur = d;
+        document.getElementById("hand").innerHTML = d.hand.map(function (c) {
+          return "<span class='mull-card" + (c.land ? " land" : "") + "'>"
+            + c.name.replace(/</g, "&lt;")
+            + (c.land ? "" : " <span class='muted'>" + (c.mv == null ? "" : c.mv) + "</span>")
+            + "</span>";
+        }).join("");
+        document.getElementById("mullstate").textContent =
+          mulls ? "after " + mulls + " mulligan(s) — you would keep " + (7 - mulls)
+                : "opening seven";
+        document.getElementById("ask").hidden = false;
+      });
+  }
+  function answer(playerKeeps) {
+    if (!cur) return;
+    var simKeeps = cur.verdict.keep;
+    var agreed = playerKeeps === simKeeps;
+    var s = stats();
+    s.n += 1; if (agreed) s.agree += 1;
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+    document.getElementById("verdict").innerHTML =
+      "<b class='" + (agreed ? "agree" : "disagree") + "'>"
+      + (agreed ? "You and the sim agree" : "The sim disagrees") + "</b> — it would "
+      + (simKeeps ? "KEEP" : "SHIP") + " this hand.";
+    document.getElementById("why").textContent = cur.verdict.why
+      + ". Lands: " + cur.lands.length + " (" + (cur.colors.join("") || "no colors")
+      + ")" + (cur.ramp.length ? " · ramp in hand: " + cur.ramp.join(", ") : "");
+    document.getElementById("caveat").textContent = cur.caveat;
+    document.getElementById("ask").hidden = true;
+    document.getElementById("reveal").hidden = false;
+    showStats();
+    // Shipping walks the London floor down, exactly as the sim does.
+    mulls = playerKeeps ? 0 : Math.min(mulls + 1, cur.floor ? 7 - cur.floor : 2);
+  }
+  document.getElementById("keep").addEventListener("click", function () { answer(true); });
+  document.getElementById("ship").addEventListener("click", function () { answer(false); });
+  document.getElementById("next").addEventListener("click", deal);
+  showStats(); deal();
+})();
+</script>
+{% endblock %}

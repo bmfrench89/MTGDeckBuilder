@@ -58,3 +58,22 @@ def test_icon_generator_is_reproducible_and_dependency_free():
     src = open(os.path.join(ROOT, "scripts", "make_icons.py"), encoding="utf-8").read()
     for banned in ("import PIL", "from PIL", "cairosvg", "import numpy"):
         assert banned not in src, f"icon generator must stay stdlib-only ({banned})"
+
+
+def test_the_service_worker_cache_version_is_derived_not_hand_pinned():
+    """A stale installed service worker is invisible to the player — they see old CSS
+    and JS with no symptom to report. The version must therefore move on its own
+    rather than depend on someone remembering to edit a constant."""
+    import app as appmod
+    appmod.app.config["TESTING"] = True
+    old = appmod.PASSWORD
+    appmod.PASSWORD = None
+    try:
+        body = appmod.app.test_client().get("/sw.js").get_data(as_text=True)
+    finally:
+        appmod.PASSWORD = old
+    assert "__ASSET_VERSION__" not in body, "the placeholder must be substituted"
+    m = re.search(r"const VERSION = '([^']+)'", body)
+    assert m, "the worker must declare a cache version"
+    assert m.group(1) not in ("mtgdb-", "mtgdb-v1"), (
+        "the hand-pinned constant is exactly what this replaces")

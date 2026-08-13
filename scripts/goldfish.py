@@ -393,6 +393,32 @@ def _pick_land(hand, have_colors):
 # --------------------------------------------------------------------------- #
 # One game
 # --------------------------------------------------------------------------- #
+def keep_verdict(hand, mulls=0, mulligan=True):
+    """Would the sim keep this hand? -> {"keep": bool, "lands": n, "why": str}.
+
+    The rule `play_game` uses, exposed as a function so the mulligan trainer and the
+    simulation can never disagree about what "keepable" means. Deliberately simple and
+    honest about it: land count inside a band, plus the London floor. It does not read
+    the cards' quality, so it is a heuristic to compare yourself against, not an
+    oracle — every surface that shows it says so."""
+    n = sum(1 for c in hand if c.is_land)
+    lo, hi = KEEP_LANDS
+    if not mulligan:
+        return {"keep": True, "lands": n, "why": "mulligans disabled"}
+    if mulls >= MULL_FLOOR:
+        return {"keep": True, "lands": n,
+                "why": f"at the London floor ({HAND - MULL_FLOOR} cards) — this hand "
+                       "is kept whatever it holds"}
+    if n < lo:
+        return {"keep": False, "lands": n,
+                "why": f"{n} land(s): below the {lo}-land floor, so the sim ships it"}
+    if n > hi:
+        return {"keep": False, "lands": n,
+                "why": f"{n} lands: above the {hi}-land ceiling — flood risk"}
+    return {"keep": True, "lands": n,
+            "why": f"{n} lands, inside the keepable band of {lo}-{hi}"}
+
+
 def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True):
     """Play one goldfish game. Returns the per-game record the aggregator folds up."""
     lib = list(library)
@@ -402,9 +428,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     mulls = 0
     while True:
         hand, rest = lib[:HAND], lib[HAND:]
-        n_lands = sum(1 for c in hand if c.is_land)
-        if (not mulligan or mulls >= MULL_FLOOR
-                or KEEP_LANDS[0] <= n_lands <= KEEP_LANDS[1]):
+        if keep_verdict(hand, mulls, mulligan)["keep"]:
             break
         mulls += 1
         rnd.shuffle(lib)

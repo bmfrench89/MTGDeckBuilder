@@ -11,7 +11,11 @@
        instead of a browser error nobody can act on.
    Scryfall card images are left entirely alone: the browser's own HTTP cache already
    handles them, and they're on a CDN. */
-const VERSION = 'mtgdb-v1';
+/* Substituted at serve time by app.py's `_asset_version()` (git HEAD, else the
+   newest asset mtime). Hand-pinning this was a standing known-deferred bug: a
+   forgotten bump leaves an installed phone serving stale assets silently. The
+   literal below is only the fallback for opening this file directly. */
+const VERSION = 'mtgdb-__ASSET_VERSION__';
 const SHELL = [
   '/static/app.css',
   '/static/tokens.css',
