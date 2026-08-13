@@ -822,6 +822,53 @@ def deck_pin(stem):
     return redirect(url_for("deck", stem=stem))
 
 
+def _set_deck_header(path, key, value):
+    """Set (or clear) one `# Key: value` header line, preserving everything else.
+
+    Header lines live above the first section marker. An existing key is rewritten in
+    place; a new one is appended to the header block, never dropped after a section
+    header where the parser would stop seeing it."""
+    lines = open(path, encoding="utf-8").read().split("\n")
+    pat = re.compile(rf"^#\s*{re.escape(key)}\s*:", re.IGNORECASE)
+    first_section = next((i for i, ln in enumerate(lines)
+                          if deckcore.section_label(ln) is not None), len(lines))
+    at = next((i for i in range(first_section) if pat.match(lines[i].strip())), None)
+    if value is None:
+        if at is not None:
+            lines.pop(at)
+    elif at is not None:
+        lines[at] = f"# {key}: {value}"
+    else:
+        insert = first_section
+        while insert > 0 and not lines[insert - 1].strip():
+            insert -= 1                       # keep the blank line before the section
+        lines.insert(insert, f"# {key}: {value}")
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines))
+
+
+@app.route("/deck/<stem>/bracket", methods=["POST"])
+def deck_bracket(stem):
+    """Record the player's own bracket for this deck (or clear it).
+
+    The detected bracket is a card-count estimate and stays visible either way —
+    brackets 1 and 5 are defined by INTENT rather than contents (Exhibition is "not
+    built to win", cEDH is metagame-tuned), which no card scan can see. This header
+    records that intent; it never silences the evidence."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    raw = (request.form.get("bracket") or "").strip()
+    if raw in ("1", "2", "3", "4", "5"):
+        _set_deck_header(m["path"], "Bracket", raw)
+        flash(f"Bracket set to {raw} for this deck. The detected bracket is still "
+              "shown beside it.", "info")
+    elif raw in ("", "auto"):
+        _set_deck_header(m["path"], "Bracket", None)
+        flash("Bracket setting cleared — showing the detected bracket only.", "info")
+    return redirect(url_for("deck", stem=stem) + "#tab-power")
+
+
 @app.route("/deck/<stem>/delete", methods=["POST"])
 def deck_delete(stem):
     """Delete a deck and its companion files. Git keeps the history, so this is

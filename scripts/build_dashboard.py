@@ -533,6 +533,31 @@ price source reachable) — sanity-check before buying.</p>
 </script>"""
 
 
+def bracket_form(stem, editable, a):
+    """The player's bracket setting — editable surface only.
+
+    A generated (CLI) dashboard is a snapshot with nowhere to POST, so it gets
+    nothing; the app's saved-deck page gets a select that writes the deck's
+    `# Bracket:` header. Auto is a real option, not the absence of one: clearing
+    the setting returns the deck to the detected verdict."""
+    if not editable or not a:
+        return ""
+    cur = a.get("bracket_declared")
+    opts = ["<option value='auto'%s>Auto (detected)</option>"
+            % ("" if cur else " selected")]
+    for n in (1, 2, 3, 4, 5):
+        opts.append("<option value='%d'%s>%d — %s</option>"
+                    % (n, " selected" if cur == n else "", n,
+                       esc(power.BRACKET_NAMES.get(n, ""))))
+    return (f"<form class='bracketform' method='post' "
+            f"action='/deck/{esc(stem)}/bracket'>"
+            f"<label for='bset'>Your bracket</label>"
+            f"<select id='bset' name='bracket'>{''.join(opts)}</select>"
+            f"<button type='submit'>Save</button>"
+            f"<span class='muted'>Records intent — brackets 1 and 5 are defined by "
+            f"it. The detected bracket stays visible either way.</span></form>")
+
+
 def power_html(a):
     reasons = "".join(f"<li>{esc(r)}</li>" for r in a["bracket_reasons"])
     bars = []
@@ -547,11 +572,24 @@ def power_html(a):
             f"<td class='pwrbar'><span style='width:{pct:.0f}%'></span></td>"
             f"<td class='pwrnum'>{c['score']:g}/{c['weight']} "
             f"<span class='muted'>· {esc(c['detail'])}</span></td></tr>")
+    # The player's `# Bracket:` setting headlines when present; the DETECTED verdict
+    # is printed beside it whenever they disagree. Both, always — the header records
+    # intent (brackets 1 and 5 are defined by intent, not contents), it does not
+    # silence the card evidence.
+    eff = a.get("bracket_effective", a["bracket"])
+    eff_name = a.get("bracket_effective_name", a["bracket_name"])
+    declared_tag = ("<span class='muted'>your setting</span>"
+                    if a.get("bracket_declared") else "")
+    mismatch = (f"<p class='muted'>Detected <b>Bracket {a['bracket_detected']}</b> "
+                f"({esc(a.get('bracket_detected_name', ''))}) from the card signals "
+                f"below — your setting is what this deck reports.</p>"
+                if a.get("bracket_mismatch") else "")
     return (
-        f"<div class='bracketline'><span class='bnum'>Bracket {a['bracket']}</span>"
-        f"<span class='bname'>{esc(a['bracket_name'])}</span>"
+        f"<div class='bracketline'><span class='bnum'>Bracket {eff}</span>"
+        f"<span class='bname'>{esc(eff_name)}</span>{declared_tag}"
         f"<span class='pscore'>{a['power']}<span class='muted'>/100 · "
         f"{esc(a['tier'])}</span></span></div>"
+        + mismatch +
         f"<ul class='notes'>{reasons}</ul>"
         "<div class='tablewrap'><table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table></div>"
         "<p class='muted'>Bracket follows WotC's Commander Bracket system; the "
@@ -923,8 +961,11 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     if rep.get("deck_value") is not None:
         tiles.append(stat_tile("Value", f"${rep['deck_value']:,.0f}", "market est"))
     if assessment:
-        tiles.append(stat_tile("Bracket", assessment["bracket"],
-                               assessment["bracket_name"]))
+        tiles.append(stat_tile(
+            "Bracket", assessment.get("bracket_effective", assessment["bracket"]),
+            (assessment.get("bracket_effective_name", assessment["bracket_name"])
+             + (f" · your setting (detected {assessment['bracket_detected']})"
+                if assessment.get("bracket_mismatch") else ""))))
         tiles.append(stat_tile("Power", f"{assessment['power']}",
                                f"/100 · {assessment['tier']}"))
     tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
@@ -933,6 +974,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     tiles = "".join(tiles)
 
     power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
+                 f"{bracket_form(stem, editable, assessment)}"
                  "</section>" if assessment else "")
     combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
                  if combos is not None else "")
@@ -1064,6 +1106,11 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .bracketline {{ display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap;
   margin-bottom:8px; }}
 .bnum {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2); }}
+.bracketform {{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap;
+  margin-top:var(--sp-3); font-size:var(--fs-sm); }}
+.bracketform select, .bracketform button {{ font:inherit; padding:var(--sp-1) var(--sp-2);
+  border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06); color:inherit; }}
 .bname {{ color:var(--gold); font-family:{t['head']}; text-transform:uppercase;
   letter-spacing:1.5px; font-size:var(--fs-xs); }}
 .pscore {{ margin-left:auto; font-family:{t['display']}; font-size:var(--fs-2xl);
