@@ -324,7 +324,10 @@ def deck_header(text, key, default=""):
     """
     pat = _HDR_RE_CACHE.get(key)
     if pat is None:
-        pat = re.compile(rf"^#[ \t]*(?:{key})[ \t]*:[ \t]*(.*?)[ \t]*$",
+        # [ \t\r]* before $: text read in binary or over the wire keeps its \r
+        # under MULTILINE ($ sits before \n, after \r) — a value must never carry
+        # a carriage return the old lazy readers happened to strip.
+        pat = re.compile(rf"^#[ \t]*(?:{key})[ \t]*:[ \t]*(.*?)[ \t\r]*$",
                          re.MULTILINE | re.IGNORECASE)
         _HDR_RE_CACHE[key] = pat
     m = pat.search(text or "")

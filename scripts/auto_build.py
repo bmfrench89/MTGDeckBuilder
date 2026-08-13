@@ -23,7 +23,7 @@ import card_image
 import deckcore
 
 DECK_SIZE = 100                 # incl. the commander
-LAND_TARGET = 37
+LAND_TARGET = deckcore.LAND_TARGET   # THE land target — no independent copy
 # (role, target) in fill priority order. These are AIM POINTS, a different question
 # from deckcore.ROLE_RANGE's acceptance bands — how many to PUT IN a fresh build vs.
 # what counts as broken in an existing one. Each quota must sit INSIDE the canonical

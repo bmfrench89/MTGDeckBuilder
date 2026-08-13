@@ -120,10 +120,13 @@ def read_declared_bracket(deck_path):
     except (OSError, UnicodeDecodeError):
         return None
     v = mtglib.deck_header(head, "Bracket").strip()
-    # Bounded exactly as before: 9, "banana" and an EMPTY header are all "no
-    # setting". The old regex's \s* crossed the newline, so an empty header above
-    # a `1 Sol Ring` line read a phantom Bracket 1.
-    return int(v) if re.fullmatch(r"[1-5]", v) else None
+    # A LEADING digit with a word boundary: accepts a hand-annotated
+    # "# Bracket: 3 (upgraded)" as 3 (the old regex did too, and a fullmatch
+    # silently dropped it), rejects "35" (no boundary between the digits) and
+    # "banana"/9/empty. The old \s* also crossed the newline, so an EMPTY header
+    # above a "1 Sol Ring" line read a phantom Bracket 1 — deck_header fixed that.
+    m = re.match(r"([1-5])\b", v)
+    return int(m.group(1)) if m else None
 
 
 def with_declared(assessment, declared):

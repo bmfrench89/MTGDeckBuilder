@@ -83,31 +83,42 @@ def test_deck_stats_targets_derive_from_the_canonical_table():
     assert deck_stats.TARGETS["lands"] == deckcore.LAND_RANGE
 
 
+# One curated-list probe per role, so primary_role() resolves each without mocks.
+_ROLE_PROBE = {
+    "ramp": ("Sol Ring", ["Artifact"]),
+    "draw": ("Night's Whisper", ["Sorcery"]),
+    "removal": ("Swords to Plowshares", ["Instant"]),
+    "wipe": ("Toxic Deluge", ["Sorcery"]),
+    "counter": ("Counterspell", ["Instant"]),
+}
+
+
 def test_the_scorer_and_the_filter_read_the_same_bands():
-    """The drift this phase kills: for every role and every archetype in the table,
+    """The drift this phase kills: for EVERY role and EVERY archetype in the table,
     the fit scorer's shortage/healthy/depth verdict must flip at exactly the bounds
-    the optimizer's accept filter uses."""
+    the optimizer's accept filter uses. (An earlier draft of this test skipped every
+    role but counter — whose floor is 0, so its shortage branch never even ran; a
+    verifier caught the vacuity, hence the per-role curated probes.)"""
+    checked_shortage = 0
     for arch in [None] + [[w] for w in deckcore._ARCHETYPE_ROLE_RANGE]:
         ranges = deckcore.role_ranges(arch)
         for role, (lo, hi) in ranges.items():
-            probe = _card("Probe", ["Instant"])
-            # force primary_role by patching classify via a role-typed fake is heavy;
-            # instead check the band arithmetic through the public component:
-            for cur, want in ((max(0, lo - 1), deck_fit.ROLE_PTS_SHORTAGE if lo > 0
-                               else deck_fit.ROLE_PTS_HEALTHY),
-                              (lo, deck_fit.ROLE_PTS_HEALTHY),
-                              (hi, deck_fit.ROLE_PTS_HEALTHY),
-                              (hi + 1, deck_fit.ROLE_PTS_DEPTH)):
-                ctx = _ctx(arch)
-                rep = {"categories": {role: cur}}
-                # Counterspell classifies as counter; use role-specific fakes only
-                # for the counter role, and trust the arithmetic for the rest —
-                # _role_component reads (role, cur) through one code path.
-                if role != "counter":
-                    continue
-                pts, _, _ = deck_fit._role_component(
-                    _card("Counterspell", ["Instant"]), rep, None, ctx)
-                assert pts == want, (role, arch, cur)
+            name, types = _ROLE_PROBE[role]
+            probe = _card(name, types)
+            assert deck_fit.primary_role(probe) == role, f"probe drifted: {name}"
+            cases = [(lo, deck_fit.ROLE_PTS_HEALTHY),
+                     (hi, deck_fit.ROLE_PTS_HEALTHY),
+                     (hi + 1, deck_fit.ROLE_PTS_DEPTH)]
+            if lo > 0:
+                cases.append((lo - 1, deck_fit.ROLE_PTS_SHORTAGE))
+            for cur, want in cases:
+                pts, got_role, _ = deck_fit._role_component(
+                    probe, {"categories": {role: cur}}, None, _ctx(arch))
+                assert got_role == role
+                assert pts == want, (role, arch, cur, pts)
+                if want == deck_fit.ROLE_PTS_SHORTAGE:
+                    checked_shortage += 1
+    assert checked_shortage >= 4, "the shortage branch must actually be exercised"
 
 
 # --------------------------------------------------------------------------- #
@@ -245,3 +256,54 @@ def test_the_optimizer_holds_a_removed_card_and_reports_it(tmp_path, monkeypatch
         "an 80%-field card the player removed by hand must stay out")
     holds = r["manual_holds"]
     assert holds and holds[0]["name"] == "Counterspell" and holds[0]["inc"] == 80
+
+
+def test_same_day_add_then_remove_resolves_to_the_removal(tmp_path):
+    """The append-only CSV's row order IS the chronology. Date-only comparison broke
+    'newest player action wins' for a card tried and removed the same afternoon —
+    yshtola's Painful Truths, live (added row N, removed row N+1, same date)."""
+    ch = tmp_path / "d.changes.csv"
+    ch.write_text("Card,Added,Replaced,Source\n"
+                  "Painful Truths,2026-08-11,Read the Bones,manual-replace\n"
+                  "Read the Bones,2026-08-11,Painful Truths,manual-replace\n",
+                  encoding="utf-8")
+    held = deckcore.manual_removals(str(ch))
+    assert "painful truths" in held, "the later ROW is the newer action"
+    assert "read the bones" not in held, "re-added by the later row"
+
+
+def test_legacy_bare_manual_source_rows_create_holds(tmp_path):
+    """Live data carries `Source=manual` rows (cloud's Codsworth swap). A prefix
+    check covers them; an exact tuple silently skipped them — the Hojo mechanism
+    waiting on field drift."""
+    ch = tmp_path / "d.changes.csv"
+    ch.write_text("Card,Added,Replaced,Source\n"
+                  "Codsworth,2026-08-10,Priest of Titania,manual\n", encoding="utf-8")
+    assert "priest of titania" in deckcore.manual_removals(str(ch))
+
+
+def test_a_bare_panel_remove_is_logged_and_held(tmp_path, monkeypatch,
+                                                collection_file):
+    """The verifier's top finding: only the Replace flow logged, so a card removed
+    with the plain Remove button was invisible to the never-re-add rule — the same
+    mechanism through the other button."""
+    import app as appmod
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "d.txt").write_text(
+        "# Title: T\n# Commander: Test Commander\n\n"
+        "# --- Main ---\n1 Counterspell\n1 Sol Ring\n", encoding="utf-8")
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", collection_file)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    appmod.app.config["TESTING"] = True
+    client = appmod.app.test_client()
+    r = client.post("/deck/d/card", data={"action": "remove", "name": "Counterspell"})
+    assert r.status_code in (302, 303)
+    text = (decks / "d.txt").read_text(encoding="utf-8")
+    assert "Counterspell" not in text
+    held = deckcore.manual_removals(str(decks / "d.changes.csv"))
+    assert "counterspell" in held, "a bare Remove is a decision too"
+    # and the log row must NOT pollute the manual-adds advisory (empty Card column)
+    assert all(row["key"] != "" for row in
+               deckcore.manual_adds(str(decks / "d.changes.csv")))

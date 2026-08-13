@@ -328,7 +328,8 @@ def assess_card(card, rep, ctx, refs, section_label=None):
     theme_pts, theme_det = _theme_component(card, ctx)
     reasons = [
         {"label": "Color fit", "pts": color_pts, "max": 25, "detail": color_det},
-        {"label": "Role need", "pts": role_pts, "max": 30, "detail": role_det},
+        {"label": "Role need", "pts": role_pts, "max": ROLE_PTS_SHORTAGE,
+         "detail": role_det},
         {"label": "Curve", "pts": curve_pts, "max": 15, "detail": curve_det},
         {"label": "Power", "pts": stap_pts, "max": 15, "detail": stap_det},
         {"label": "Theme", "pts": theme_pts, "max": 15, "detail": theme_det},

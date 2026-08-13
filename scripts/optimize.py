@@ -432,13 +432,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         cuts.append((value_of(c.name, ref), inc_of(c.name), c.name))
     cuts.sort()                           # least valuable first
 
-    # ---- the role-repair gate (2026-08-13) ----------------------------------------------
+    # ---- the role-repair gate (2026-08-13; recalibrated same day) -----------------------
     # There is no separate "repair" function to gate: role repair reaches this loop
-    # THROUGH `value_of`. deck_fit's Role-need component pays 30 points when a role sits
-    # below its target and 12 when it is over — an 18-point fit swing, which `value_of`
-    # doubles into as much as 36 points of value. That is more than the whole `margin`,
-    # so template pressure alone can manufacture a "clear upgrade" out of a card the
-    # field barely plays. Observed on the first typed previews (2026-08-12, none applied):
+    # THROUGH `value_of`. deck_fit's Role-need component pays ROLE_PTS_SHORTAGE (26)
+    # below target and ROLE_PTS_DEPTH (14) over — a 12-point swing `value_of` doubles
+    # to 24, deliberately ONE POINT UNDER the default margin (the Phase-12 cap; a
+    # tripwire test pins spread*2 < margin). So today template pressure alone cannot
+    # manufacture a swap. Under the ORIGINAL 30/12 points it could — an 18-point swing
+    # doubled to 36 — which is how the first typed previews (2026-08-12, none applied)
+    # produced these:
     #   Ganax, Astral Hunter (27%) -> Mana Drain (20%)      · ur-dragon
     #   Wall Crawl (41%)           -> Masked Meower (18%)   · cosmic
     #   Snap (20%)                 -> Wayfarer's Bauble (10%)  · iron-man

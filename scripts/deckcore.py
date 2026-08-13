@@ -131,7 +131,15 @@ def load_changes(path, days=NEW_CARD_DAYS):
     return out
 
 
-MANUAL_SOURCES = ("manual-add", "manual-replace")
+MANUAL_SOURCES = ("manual-add", "manual-replace", "manual-remove")
+
+
+def _is_manual(source):
+    """Any player-decided source. PREFIX match, not tuple membership: live data
+    carries legacy `Source=manual` rows (cloud's Codsworth swap, cosmic's
+    Anti-Venom swap) that an exact tuple silently skipped — the Hojo mechanism
+    waiting on field drift, for rows whose only defect is a spelling."""
+    return (source or "").strip().startswith("manual")
 
 
 def manual_adds(path, days=NEW_CARD_DAYS):
@@ -141,7 +149,7 @@ def manual_adds(path, days=NEW_CARD_DAYS):
     "the tool did this" from "the player decided this" — the distinction the advisor
     exists to respect."""
     rows = [dict(v, key=k) for k, v in load_changes(path, days).items()
-            if v.get("source") in MANUAL_SOURCES]
+            if _is_manual(v.get("source"))]
     return sorted(rows, key=lambda r: r["days_ago"])
 
 
@@ -164,22 +172,27 @@ def manual_removals(path):
         return {}
     removed, readded = {}, {}
     with open(path, encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            if (r.get("Source") or "").strip() not in MANUAL_SOURCES:
+        for i, r in enumerate(csv.DictReader(f)):
+            if not _is_manual(r.get("Source")):
                 continue
-            date = (r.get("Added") or "").strip()
+            # The file is APPEND-ONLY, so (date, row index) is the actual
+            # chronology — date alone ties on same-day sequences, and a same-day
+            # add-then-remove (a card the player tried for one afternoon) must
+            # resolve to the REMOVAL, its newest action.
+            seq = ((r.get("Added") or "").strip(), i)
             out_name = (r.get("Replaced") or "").strip()
             in_name = (r.get("Card") or "").strip()
             if out_name:
                 for k in mtglib.name_keys(out_name):
-                    if date >= removed.get(k, {}).get("date", ""):
-                        removed[k] = {"name": out_name, "date": date}
+                    if seq >= removed.get(k, {}).get("seq", ("", -1)):
+                        removed[k] = {"name": out_name, "date": seq[0], "seq": seq}
             if in_name:
                 for k in mtglib.name_keys(in_name):
-                    if date >= readded.get(k, ""):
-                        readded[k] = date
-    return {k: v for k, v in removed.items()
-            if readded.get(k, "") < v["date"] or k not in readded}
+                    if seq >= readded.get(k, ("", -1)):
+                        readded[k] = seq
+    return {k: {"name": v["name"], "date": v["date"]}
+            for k, v in removed.items()
+            if readded.get(k, ("", -1)) < v["seq"]}
 
 
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")

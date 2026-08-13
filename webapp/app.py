@@ -545,6 +545,15 @@ def deck_card(stem):
             if action == "replace" and replacement:
                 _log_manual_change(m["path"], replacement, replaced=name,
                                    source="manual-replace")
+            elif action == "remove":
+                # A bare Remove is as much a player decision as a Replace, and the
+                # never-re-add rule reads the LOG — unlogged, the optimizer could
+                # re-propose the exact card through this button (the Hojo
+                # mechanism through the other flow). Card column stays empty:
+                # nothing came in, and load_changes skips empty-Card rows so the
+                # NEW badge and manual-adds advisory are untouched.
+                _log_manual_change(m["path"], "", replaced=name,
+                                   source="manual-remove")
     return redirect(url_for("deck", stem=stem))
 
 
@@ -729,6 +738,18 @@ def _assess_packet(m):
                                        analysis=a)
     except Exception:
         cuts = None
+    try:
+        _opt_prev = optimize.optimize(m["path"], a["coll"], idx, DECKS_DIR,
+                                      apply=False)
+        holds = _opt_prev.get("manual_holds") or []
+    except Exception:
+        holds = []
+    if holds:
+        L.append("-- HELD (your removals, standing) --")
+        for h in sorted(holds, key=lambda x: -x["inc"])[:6]:
+            L.append(f"  {h['name']} ({h['inc']}% field) — removed by hand "
+                     f"{h['removed']}; the optimizer will not re-propose it")
+        L.append("")
     if cuts and cuts.get("rows"):
         L.append("-- IF YOU MUST CUT (advisory, ranked lowest value first) --")
         for r in cuts["rows"]:
@@ -1301,6 +1322,14 @@ def _flash_optimize(r):
     if r.get("archetype_unknown"):
         flash("Archetype word(s) not recognised, no widening applied: "
               + ", ".join(r["archetype_unknown"]) + ".", "warn")
+    for h in sorted(r.get("manual_holds") or [], key=lambda x: -x["inc"])[:3]:
+        # The CLI has printed these since the rule landed; the ⚡ button — where
+        # the player's finger actually is — must too. Withholding a 69%-field
+        # card with zero disclosure would violate the rule's own contract:
+        # decision durable, evidence VISIBLE.
+        flash(f"Held: {h['name']} ({h['inc']}% field) — you removed it by hand on "
+              f"{h['removed']}, so it is not re-proposed. Add it back yourself if "
+              "you've changed your mind.", "info")
     if r.get("illegal"):
         flash("!! ILLEGAL after optimize: "
               + ", ".join(f"{q}x {n2}" for q, n2 in r["illegal"])
