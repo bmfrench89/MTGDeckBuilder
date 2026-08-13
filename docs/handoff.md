@@ -411,22 +411,52 @@ sandbox. The one-screen walk of that flow remains open
   Replaces says what to pull (Forge Anew already arrived and was pulled in,
   2026-08-11).
 
-1b-season. **The "Table-Ready" season is UNDERWAY (2026-08-13):
-   `docs/spec-table-ready.md` — APPROVED by the player and the live tracker.**
-   Twelve phases from the competitive-landscape research plus player direction.
-   **Landed so far: Phase 8** (optimizer gate — see open item 0), **Phase 0**
-   (deck hygiene: all six decks regrouped on typed data, Y'shtola's White
-   Auracite/Risky Shortcut misfiles and its split `1 Plains`/`3 Plains` pair
-   fixed, `Unsorted` gone repo-wide, the regroup idempotent; the app's add AND
-   Replace paths can no longer manufacture split basics; the server
-   auto-regroups after a sync, skipping decks with in-section comments) and
-   **Phase 1** (enrichment carries a `Power` column — appended after `Flags`,
-   empty-vs-absent preserved, and propagated through `deck_stats`'s explicit
-   Card rebuild, which is the only way a Card field reaches deck-level
-   analysis). Suite 507 → 583, offline, exit 0. **Next up: Phase 2, the goldfish
-   clock** — the flagship, and the reason Phase 1 exists. Remaining phases and
-   the binding §0 execution contract are in the spec; the 4-player pod simulator
-   is specced and BACKLOGGED in `docs/spec-pod-simulation.md`.
+1b-season. **The "Table-Ready" season SHIPPED COMPLETE (2026-08-13):
+   `docs/spec-table-ready.md`.** Twelve phases from the competitive-landscape
+   research plus player direction. Suite **507 → 602**, offline, exit 0;
+   `scripts/` still stdlib-only.
+   - **Phase 8** optimizer gate: archetype-aware `ROLE_RANGE` + a **field veto**
+     (a swap may never cut a card the field plays more than the incoming one).
+     See open item 0 — the freeze lifts on one live preview run.
+   - **Phase 0** deck hygiene: all six decks regrouped on typed data (Y'shtola's
+     misfiles and its split Plains pair fixed, `Unsorted` gone repo-wide,
+     idempotent); the add AND Replace paths can no longer manufacture split
+     basics; the server auto-regroups after a sync, skipping decks with
+     in-section comments.
+   - **Phase 1** a `Power` column through enrichment → `Card.power` → the clock.
+   - **Phase 2 (flagship)** the **goldfish clock**: median turn this deck
+     presents lethal, mapped onto the brackets' own turn anchors. Combat-only
+     and labelled UNDERSTATED for drain decks; no clock at all without power
+     data. `--ab` now reports clock deltas over the same paired games.
+   - **Phase 3** `# Bracket:` header — your setting headlines, the detected
+     verdict and reasons always stay visible. `recertify.yml` gained a Game
+     Changers diff against Scryfall's `is:gamechanger` (the canonical list).
+   - **Phase 4** the **Rule-0 table card** (`/deck/<stem>/table-card`): one
+     phone/print screen — bracket, Game Changers, MLD/extra turns/combos, clock,
+     game plan, with its source labelled.
+   - **Phase 5** the **mulligan trainer** (`/deck/<stem>/mulligan`): real hands,
+     your call first, then the sim's verdict; `goldfish.keep_verdict` is now the
+     one shared rule. Stats in localStorage.
+   - **Phase 6** **pins v2**: EDHREC/Build-Next label a card reserved elsewhere,
+     `/pins` manages every reservation with one-tap move, conflict rows name the
+     pin. (Found: `load_pins`/`save_pins` bound their path as a default arg, so
+     tests wrote the REAL pins.csv — fixed.)
+   - **Phase 7** **Mana-tab explainers** shipped as data from `manabase.analyze`,
+     with the honesty caveats moved beside the numbers they qualify.
+   - **Phase 9** the **cut surface** ("If You Must Cut"), ranked by the
+     optimizer's own `deck_fit.card_value`; protected cards shown flagged, never
+     hidden; writes nothing.
+   - **Phase 10** **phantom disruption** (`--disruption standard`, EXPERIMENT):
+     a wipe, periodic removal and commander tax on a SECOND RNG stream, so the
+     A/A-exact-zero tripwire still reads 0.0. Off by default and byte-identical
+     when off; CLI/assess only.
+   - **Phase 11** gap sweep: Buy-tab rows are panel-clickable, shift-click a
+     replacement candidate to simulate the swap first, `carddb --audit-flags`
+     closes the standing flag-audit item, and **sw.js's cache version is derived
+     from git HEAD** instead of hand-pinned.
+   The 4-player pod simulator is specced and BACKLOGGED in
+   `docs/spec-pod-simulation.md` (three tiers costed; Forge-on-a-runner is the
+   cheap experiment if it is ever promoted).
 
 1c. **Next-features research (2026-08-13): `docs/research-competitive-landscape.md`** —
    a six-agent competitive-landscape sweep (deck builders, the AI-tool wave, playtest/

@@ -484,12 +484,20 @@ def buylist_html(rows):
         pstr = f"${p:,.2f}" if p is not None else "—"
         src_tag = {"combo": " <span class='tier'>from Combo Watch</span>",
                    "decklist": " <span class='tier'>in decklist</span>"}.get(r.get("source"), "")
-        repl = (f"<span class='repl'>replace:</span> {esc(r['replaces'])}"
+        repl = ((f"<span class='repl'>replace:</span> "
+                 f"<a class='cardlink' data-card=\"{esc(r['replaces'])}\" "
+                 f"data-key='{esc(mtglib._norm(r['replaces']))}'>"
+                 f"{esc(r['replaces'])}</a>")
                 if r["replaces"] else "<span class='muted'>new add</span>") + src_tag
         tier = f"<span class='tier'>{esc(r['tier'])}</span>" if r["tier"] else ""
         body.append(
             f"<tr class='buyrow' data-price='{dp:.2f}'>"
-            f"<td class='bc'>{esc(r['card'])} {tier}</td>"
+            # Panel-clickable, including cards NOT in the deck (combo pieces, buy
+            # targets): the inlined panel carries details only for deck cards, but the
+            # click path falls back to a live Scryfall lookup, so a plain-text row was
+            # a dead end for exactly the cards a Buy tab is about.
+            f"<td class='bc'><a class='cardlink' data-card=\"{esc(r['card'])}\" "
+            f"data-key='{esc(mtglib._norm(r['card']))}'>{esc(r['card'])}</a> {tier}</td>"
             f"<td class='bp'>{pstr}</td>"
             f"<td>{repl}</td>"
             f"<td class='br'>{esc(r['reason'])}</td></tr>")

@@ -627,6 +627,48 @@ def print_verified(rows, out=print):
         out("")
 
 
+def audit_flags(collection, n=30, as_json=False, seed=0):
+    """Sample N enriched cards and show what was DERIVED for each.
+
+    Closes the standing "~30-card flag audit" acceptance item. It exists because of an
+    asymmetry the honesty labels cannot cover: they fire when data is ABSENT, never
+    when a derived value is WRONG — and since `classify()` began reading `Card.flags`,
+    one bad regex hit miscategorises a card in every role count downstream (power,
+    the dashboard, the optimizer's role guardrails). A human reading thirty rows is
+    the only detector for that.
+
+    Deterministic by seed so a re-run shows the same sample and a fix can be checked.
+    """
+    import random as _random
+    coll = mtglib.load_collection(collection or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "data", "collection",
+        "collection_snapshot.txt"))
+    enriched = [c for c in coll if c.produced is not None or c.flags]
+    if not enriched:
+        print("No enriched cards found — run enrichment first (carddb.py --collection …).",
+              file=sys.stderr)
+        return 1
+    sample = _random.Random(seed).sample(enriched, min(n, len(enriched)))
+    sample.sort(key=lambda c: c.name.lower())
+    rows = [{"name": c.name, "type": c.primary_type,
+             "produced": "".join(sorted(c.produced or ())) or "-",
+             "flags": ";".join(sorted(c.flags or ())) or "-",
+             "power": c.power if c.power is not None else "-",
+             "roles": ";".join(sorted(mtglib.classify(c))) or "-"} for c in sample]
+    if as_json:
+        print(json.dumps(rows, indent=2))
+        return 0
+    print(f"FLAG AUDIT — {len(rows)} of {len(enriched)} enriched cards (seed {seed})")
+    print("Read each row against the real card. A WRONG flag is invisible to every "
+          "honesty label in the repo.\n")
+    print(f"  {'Card':<32}{'Type':<12}{'Prod':<7}{'Pwr':<5}{'Flags':<28}Roles")
+    print("  " + "-" * 100)
+    for r in rows:
+        print(f"  {r['name'][:31]:<32}{r['type'][:11]:<12}{r['produced']:<7}"
+              f"{str(r['power']):<5}{r['flags'][:27]:<28}{r['roles']}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="Scryfall card data, two modes. ENRICH the collection with "
@@ -657,10 +699,19 @@ def main():
                          "clean 200 (unresolvable names written short with exit 0); a "
                          "true 429/503 storm RAISES out of _post_collection and exits 2 "
                          "before the out file is opened.")
+    ap.add_argument("--audit-flags", type=int, nargs="?", const=30, metavar="N",
+                    help="sample N enriched cards and print name / type / produced / "
+                         "flags / power for eyeballing. The ONLY guard against a WRONG "
+                         "derived flag: the honesty labels fire when data is absent, "
+                         "never when it is wrong, and flags feed classify() and so "
+                         "every role count downstream.")
     ap.add_argument("--no-ids", action="store_true",
                     help="omit the Scryfall id column (API path only) — for the "
                          "committed attrs snapshot, where an id could pin a printing.")
     args = ap.parse_args()
+
+    if args.audit_flags:
+        return audit_flags(args.collection, args.audit_flags, as_json=args.json)
 
     # Exactly one mode. --collection stopped being argparse-required when --verify
     # arrived, so this check is what still makes enrichment demand it — enrich.bat and

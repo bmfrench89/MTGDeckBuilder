@@ -1158,6 +1158,43 @@ def api_deck_hand(stem):
     })
 
 
+@app.route("/api/deck/<stem>/ab")
+def api_deck_ab(stem):
+    """Paired A/B for a proposed swap — "what does this change actually do?"
+
+    The engine has measured swaps over common random numbers since the goldfish
+    landed, but only from the CLI; the Replace flow is where the player is actually
+    choosing. Advisory and non-blocking: the panel shows it beside the button and the
+    edit proceeds whatever this says (or fails to say)."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    out_name = (request.args.get("out") or "").strip()
+    in_name = (request.args.get("in") or "").strip()
+    if not out_name or not in_name:
+        return jsonify({"error": "need out= and in="}), 200
+    coll, _idx = collection_index()
+    try:
+        compiled, idx = goldfish.load_for_ab(m["path"], coll,
+                                             collection_path=COLLECTION)
+        if not compiled:
+            return jsonify({"error": "simulation unavailable"}), 200
+        # Fewer games than a CLI run: this is inline in a click, and the paired
+        # design means even a short run separates a real change from noise.
+        ab = goldfish.simulate_ab(compiled, out_name, in_name, idx, games=400, seed=0)
+    except Exception:
+        return jsonify({"error": "simulation unavailable"}), 200
+    if ab.get("error"):
+        return jsonify({"error": ab["error"]}), 200
+    keep = ("commander_by_t4", "commander_by_t6", "first_kill_turn", "screw")
+    return jsonify({
+        "out": ab["out"], "in": ab["in"], "games": ab["games"],
+        "deltas": {k: v for k, v in ab["deltas"].items() if k in keep},
+        "note": ("Paired over identical shuffles, so this measures the swap rather "
+                 "than luck. Only starred rows cleared their confidence interval."),
+    })
+
+
 @app.route("/deck/<stem>/assess.txt")
 def deck_assess(stem):
     m = deck_meta(stem)
