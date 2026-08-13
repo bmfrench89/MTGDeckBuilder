@@ -63,7 +63,7 @@ def built_commanders(decks_dir):
             text = open(path, encoding="utf-8").read()
         except OSError:
             continue
-        m = re.search(r"^#\s*Commander\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         if m:
             name = re.split(r"\s{2,}|\(", m.group(1))[0].strip()
             out[mtglib._norm(name)] = os.path.splitext(os.path.basename(path))[0]

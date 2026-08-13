@@ -369,10 +369,10 @@ if __name__ == "__main__":
         commanders = []
         if args.snapshot_all:
             for pth in sorted(_glob.glob(os.path.join(args.decks_dir, "*.txt"))):
-                m = re.search(r"^#\s*Commander\s*:\s*(.+)$",
-                              open(pth, encoding="utf-8").read(), re.M | re.I)
-                if m:
-                    c = re.split(r"\s{2,}|\(", m.group(1))[0].strip()
+                v = mtglib.deck_header(open(pth, encoding="utf-8").read(),
+                                       "Commander")
+                if v:
+                    c = re.split(r"\s{2,}|\(", v)[0].strip()
                     if c and c not in commanders:
                         commanders.append(c)
         else:

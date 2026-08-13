@@ -171,7 +171,7 @@ def main():
     wanted, commanders = {}, {}
     for dp in sorted(glob.glob(os.path.join(args.decks_dir, "*.txt"))):
         text = open(dp, encoding="utf-8").read()
-        m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         cmd = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
         if cmd:
             commanders[cmd] = True

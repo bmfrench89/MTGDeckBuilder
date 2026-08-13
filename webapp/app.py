@@ -214,7 +214,7 @@ def _err(e):  # friendly message instead of a bare stack trace
 # Helpers
 # --------------------------------------------------------------------------- #
 def _hdr(text, key, default=""):
-    m = re.search(rf"^#\s*{key}\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+    m = re.match(r"(.+)", mtglib.deck_header(text, key))
     return m.group(1).strip() if m else default
 
 
@@ -1014,9 +1014,14 @@ def deck_assess_page(stem):
         field_decks = None if rec.get("error") else rec.get("sample_decks")
     except Exception:
         pass
-    roles = [("ramp", "Ramp", 9, 13), ("draw", "Card draw", 8, 12),
-             ("removal", "Removal", 8, 11), ("wipe", "Wipes", 2, 5),
-             ("counter", "Counters", 0, 6), ("land", "Lands", 35, 38)]
+    # Derived from THE template (deckcore), archetype-aware for THIS deck — this was
+    # a fourth hand-copied role table, and it disagreed with the other three.
+    arch = deckcore.archetype_words(open(m["path"], encoding="utf-8").read())
+    rr = deckcore.role_ranges(arch)
+    labels = [("ramp", "Ramp"), ("draw", "Card draw"), ("removal", "Removal"),
+              ("wipe", "Wipes"), ("counter", "Counters")]
+    roles = [(k, lbl, rr[k][0], rr[k][1]) for k, lbl in labels]
+    roles.append(("land", "Lands", deckcore.LAND_RANGE[0], deckcore.LAND_RANGE[1]))
     # Shares the dashboard's disk cache, so visiting both pages after a deck edit
     # costs ONE simulation in total, not one per surface.
     sim = goldfish.sim_for_deck(m["path"], coll, collection_path=COLLECTION)

@@ -302,6 +302,35 @@ def _parse_csv(text: str) -> list:
 
 _QTY_RE = re.compile(r"^\s*(\d+)\s*[xX]?\s+(.*\S)\s*$")
 
+_HDR_RE_CACHE = {}
+
+
+def deck_header(text, key, default=""):
+    """THE `# Key: value` deck-header parser — every consumer calls this, none
+    carries its own regex. Same rule as `_QTY_RE` and `deckcore.section_label`, and
+    for the same reason: sixteen hand-rolled copies of this pattern existed across
+    thirteen files, and every one shared the same latent bug.
+
+    The bug: `:\\s*(.+)$` under re.MULTILINE. `\\s` matches a NEWLINE, so an EMPTY
+    header absorbed the whole next line as its value — ur-dragon's blank
+    `# Archetype: ` parsed as `['#', 'source:', 'auto-generated', …]` in live data,
+    and an empty `# Bracket:` sitting above `1 Sol Ring` would have read a phantom
+    "Bracket 1". Hence `[ \\t]*`, which stops at the line end, and `(.*?)` so an
+    empty value stays on ITS line and falls through to `default` instead of the
+    engine scanning onward for a luckier match.
+
+    `key` is a small REGEX FRAGMENT, not a literal — callers pass "Colors?" to
+    accept both spellings. All callers are in-repo; don't feed it user input.
+    """
+    pat = _HDR_RE_CACHE.get(key)
+    if pat is None:
+        pat = re.compile(rf"^#[ \t]*(?:{key})[ \t]*:[ \t]*(.*?)[ \t]*$",
+                         re.MULTILINE | re.IGNORECASE)
+        _HDR_RE_CACHE[key] = pat
+    m = pat.search(text or "")
+    v = m.group(1) if m else ""
+    return v if v else default
+
 
 def _parse_namelist(text: str) -> list:
     cards = {}

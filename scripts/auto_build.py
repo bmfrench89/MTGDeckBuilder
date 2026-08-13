@@ -24,8 +24,11 @@ import deckcore
 
 DECK_SIZE = 100                 # incl. the commander
 LAND_TARGET = 37
-# (role, target) in fill priority order — matches deck_fit.FIT_TARGETS / the
-# Command Zone + 8x8 templates (see the spec).
+# (role, target) in fill priority order. These are AIM POINTS, a different question
+# from deckcore.ROLE_RANGE's acceptance bands — how many to PUT IN a fresh build vs.
+# what counts as broken in an existing one. Each quota must sit INSIDE the canonical
+# band (a tripwire test enforces it), but the exact aim within the band is this
+# builder's own call, so no formula derives one from the other.
 ROLE_QUOTA = [("ramp", 11), ("draw", 10), ("removal", 9), ("wipe", 3), ("counter", 4)]
 _BASIC = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
 ROLE_LABEL = {"ramp": "Ramp", "draw": "Card advantage", "removal": "Removal",

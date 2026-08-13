@@ -557,8 +557,12 @@ def test_add_ranking_prefers_fit_blended_value_over_raw_inclusion(tmp_path, coll
 
 def test_margin_gate_compares_value_to_value(tmp_path, collection_file, monkeypatch):
     """A swap that clears the margin on VALUE but not on raw inclusion must happen:
-    Counterspell at 20% inclusion but ~92 fit (blend 64) against a near-zero-value
-    cut, margin 40. The old gate (raw inclusion minus value) refused this."""
+    Counterspell at 20% inclusion but ~84 fit (blend 48) against a value-12 cut,
+    margin 30. The old gate (raw inclusion minus value) refused this: 20-12=8 < 30.
+    (Margin recalibrated 40->30 for the Phase-12 rescore: the canonical counter band
+    is 0-6, so a 0-counter deck reads HEALTHY, not shortage — Counterspell's fit is
+    honestly lower now. The discriminating power is intact: value 36 >= 30 passes,
+    raw inclusion 20 < 30 would still refuse.)"""
     deck = tmp_path / "d.txt"
     deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n\n"
                     "# --- Creatures ---\n1 Serra Angel\n\n"
@@ -568,7 +572,7 @@ def test_margin_gate_compares_value_to_value(tmp_path, collection_file, monkeypa
     monkeypatch.setattr(deck_fit, "load_synergy", lambda *a, **k: {"counterspell": 69})
     coll = mtglib.load_collection(collection_file)
     idx = mtglib.index_by_name(coll)
-    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=40)
+    r = optimize.optimize(str(deck), coll, idx, str(tmp_path), margin=30)
     assert any(add == "Counterspell" for _c, _v, add, _i, _a in r["swaps"]), \
         "the value-based gate should let a high-fit low-inclusion upgrade through"
 

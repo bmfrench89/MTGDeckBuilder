@@ -1081,7 +1081,7 @@ def sim_for_deck(deck_path, collection, games=DEFAULT_GAMES, seed=0, turns=TURNS
         enriched, _missing = deck_stats.analyze(deck, idx)
         dstem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
         deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{dstem}.attrs.csv"))
-        m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
         compiled = compile_deck(enriched, commander)
         rep = simulate(compiled, games=games, seed=seed, turns=turns, mulligan=mulligan)
@@ -1113,7 +1113,7 @@ def load_for_ab(deck_path, collection, collection_path=None):
         enriched, _missing = deck_stats.analyze(mtglib.parse_deck(text), idx)
         dstem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
         deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{dstem}.attrs.csv"))
-        m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
         return compile_deck(enriched, commander), idx
     except Exception:

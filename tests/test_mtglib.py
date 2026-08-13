@@ -467,3 +467,50 @@ def test_a_stale_snapshot_row_invents_no_card(tmp_path, collection_file):
     idx = _with_layered_attrs(tmp_path, collection_file, snapshot_text=stale)
     assert mtglib.lookup(idx, "Sold Cardname That Is Not Owned") is None
     assert len({id(c) for c in idx.values()}) == before
+
+
+# --------------------------------------------------------------------------- #
+# deck_header — THE `# Key: value` parser (Phase 12). Sixteen hand-rolled copies
+# of this regex existed across thirteen files, every one with the same latent
+# bug: `\s*` after the colon crosses the NEWLINE under re.MULTILINE, so an empty
+# header absorbed the whole next line as its value.
+# --------------------------------------------------------------------------- #
+def test_deck_header_reads_a_normal_header():
+    text = "# Title: T\n# Commander: Y'shtola, Night's Blessed\n"
+    assert mtglib.deck_header(text, "Commander") == "Y'shtola, Night's Blessed"
+    assert mtglib.deck_header(text, "commander") == "Y'shtola, Night's Blessed"
+
+
+def test_an_empty_header_never_absorbs_the_next_line():
+    """The live bug: ur-dragon's blank `# Archetype: ` parsed as
+    `['#', 'source:', 'auto-generated', ...]` because \\s* ate the newline."""
+    text = "# Archetype: \n# Source: auto-generated draft (scripts/auto_build.py)\n"
+    assert mtglib.deck_header(text, "Archetype") == ""
+    assert mtglib.deck_header(text, "Archetype", default="x") == "x"
+
+
+def test_an_empty_bracket_header_cannot_read_a_phantom_bracket():
+    """The nastiest instance: `# Bracket:` above `1 Sol Ring` — the old \\s* crossed
+    the newline and [1-5] matched the quantity digit, declaring a Bracket 1."""
+    import power
+    import os, tempfile
+    text = "# Title: T\n# Bracket:\n\n# --- Main ---\n1 Sol Ring\n"
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, "x.txt")
+        open(p, "w", encoding="utf-8").write(text)
+        assert power.read_declared_bracket(p) is None
+
+
+def test_missing_header_returns_the_default():
+    assert mtglib.deck_header("# Title: T\n", "Bracket") == ""
+    assert mtglib.deck_header("", "Commander", default="none") == "none"
+    assert mtglib.deck_header(None, "Commander") == ""
+
+
+def test_key_is_a_regex_fragment_for_spelling_variants():
+    assert mtglib.deck_header("# Color: W U\n", "Colors?") == "W U"
+    assert mtglib.deck_header("# Colors: W U\n", "Colors?") == "W U"
+
+
+def test_trailing_whitespace_is_stripped_but_inner_spaces_survive():
+    assert mtglib.deck_header("# Theme:  dark  souls  \n", "Theme") == "dark  souls"

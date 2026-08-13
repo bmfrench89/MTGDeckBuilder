@@ -119,8 +119,11 @@ def read_declared_bracket(deck_path):
             head = f.read()
     except (OSError, UnicodeDecodeError):
         return None
-    m = re.search(r"^#\s*Bracket\s*:\s*([1-5])\b", head, re.MULTILINE | re.IGNORECASE)
-    return int(m.group(1)) if m else None
+    v = mtglib.deck_header(head, "Bracket").strip()
+    # Bounded exactly as before: 9, "banana" and an EMPTY header are all "no
+    # setting". The old regex's \s* crossed the newline, so an empty header above
+    # a `1 Sol Ring` line read a phantom Bracket 1.
+    return int(v) if re.fullmatch(r"[1-5]", v) else None
 
 
 def with_declared(assessment, declared):

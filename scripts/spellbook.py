@@ -79,7 +79,7 @@ def find_my_combos(commanders, main, ttl=CACHE_TTL):
 
 
 def _commander_of(text):
-    m = re.search(r"^#\s*Commander\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+    m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
     return re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
 
 

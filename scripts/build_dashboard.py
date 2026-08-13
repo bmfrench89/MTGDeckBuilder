@@ -1444,8 +1444,10 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     # shown flagged rather than hidden.
     cuts = None
     try:
-        import optimize as _opt                  # local: role_ranges only, no cycle
-        ranges, _unk = _opt.role_ranges_with_unknown((ctx or {}).get("archetype"))
+        # ctx already carries the archetype-aware template (deck_context computes it
+        # once) — no spoke-imports-spoke reach into optimize needed since Phase 12.
+        ranges = (ctx or {}).get("role_ranges") or deckcore.role_ranges(
+            (ctx or {}).get("archetype"))
         cuts = deck_fit.cut_ranking(
             enriched, rep, ctx, refs, (ctx or {}).get("field") or {},
             protected=prot, ranges=ranges,

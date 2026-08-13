@@ -145,6 +145,43 @@ def manual_adds(path, days=NEW_CARD_DAYS):
     return sorted(rows, key=lambda r: r["days_ago"])
 
 
+def manual_removals(path):
+    """Cards the PLAYER took OUT by hand — {norm: {"name", "date"}} — no time window.
+
+    The symmetric rule to "never cut a manual add", added when its absence bit in
+    live data (2026-08-13): the player pulled Professor Hojo from cloud on
+    2026-08-11 (Source=manual-replace, recorded), and the very next rescore
+    proposed re-adding him over a different victim. Notes-file churn guards name
+    the VICTIM, so the pass just moves to a new one — "a tourniquet, not the fix"
+    (spec-optimizer-hardening.md's own words). The decision the player actually
+    made was about HOJO, and this reads that decision straight from the log.
+
+    Deliberately unwindowed — a removal is a decision, not a cooldown — and lifted
+    the moment a manual row RE-ADDS the card on the same or a later date: the
+    newest player action wins, which is the same rule the whole advisor lives by.
+    """
+    if not (path and os.path.exists(path)):
+        return {}
+    removed, readded = {}, {}
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if (r.get("Source") or "").strip() not in MANUAL_SOURCES:
+                continue
+            date = (r.get("Added") or "").strip()
+            out_name = (r.get("Replaced") or "").strip()
+            in_name = (r.get("Card") or "").strip()
+            if out_name:
+                for k in mtglib.name_keys(out_name):
+                    if date >= removed.get(k, {}).get("date", ""):
+                        removed[k] = {"name": out_name, "date": date}
+            if in_name:
+                for k in mtglib.name_keys(in_name):
+                    if date >= readded.get(k, ""):
+                        readded[k] = date
+    return {k: v for k, v in removed.items()
+            if readded.get(k, "") < v["date"] or k not in readded}
+
+
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
 
 
@@ -186,6 +223,98 @@ def pinned_elsewhere(stem, pins=None):
     """Normalized cards reserved for a deck OTHER than `stem` — off-limits to it."""
     pins = load_pins() if pins is None else pins
     return {c for c, d in pins.items() if d != stem}
+
+
+# --------------------------------------------------------------------------- #
+# THE role template (Phase 12 of spec-table-ready.md). One table, one widener —
+# every consumer imports these. Five independent copies used to exist
+# (optimize.ROLE_RANGE, deck_fit.FIT_TARGETS, deck_stats.TARGETS,
+# auto_build.ROLE_QUOTA's comment, a webapp hardcode) and they DISAGREED: measured
+# on the six real decks, 17 of 30 role judgments differed between the fit scorer
+# and the optimizer's filter, so the card panel pushed counterspells into a
+# voltron deck while the optimizer correctly refused them. Copies of a judgment
+# are not independent judges — they're drift. (`optimize.ROLE_RANGE` etc. remain
+# as shims so existing imports and tests keep working.)
+# --------------------------------------------------------------------------- #
+
+# (min, max) acceptable count per 99 (deckbuilding-principles.md). The DEFAULT —
+# what a deck with no (or an unknown) `# Archetype:` header gets.
+ROLE_RANGE = {"ramp": (9, 13), "draw": (8, 12), "removal": (8, 11),
+              "wipe": (2, 5), "counter": (0, 6)}
+LAND_RANGE = (36, 38)
+LAND_TARGET = 37
+
+# Per-archetype widenings, keyed by the words that actually appear in the decks'
+# `# Archetype:` headers. Merged by WIDENING only (min(lo), max(hi)) — stacking two
+# archetype words can never make a deck's template stricter than the default, and an
+# unrecognised word contributes nothing (and is REPORTED, never silently ignored).
+#
+# Why this exists (2026-08-12, spec-optimizer-hardening.md "Typed-data role-repair
+# churn"): the template was archetype-blind, so iron-man — a draw-go control deck
+# whose real counts are counter:15, ramp:8, wipe:0 — read as nine excess
+# counterspells plus a ramp hole plus a wrath hole. By its ratified identity it is
+# exactly correct.
+#
+# TRAP: "counters" (captain-america) means +1/+1 COUNTERS, not counterspells. It is
+# deliberately absent from this table — mapping it to the `counter` role would widen
+# a tribal deck's counterspell allowance for a word about creature buffs.
+# The other header words in use — equipment, tribal-hero, tribal-spiders, lifegain —
+# need no delta: those decks already sit inside the default ranges.
+_ARCHETYPE_ROLE_RANGE = {
+    # Draw-go control: interaction IS the counterspell suite, so counters run long,
+    # sweepers and spot removal run short, and the deck leans on card draw over rocks.
+    "control": {"counter": (0, 18), "ramp": (6, 13), "draw": (8, 18),
+                "removal": (4, 11), "wipe": (0, 5)},
+    "draw-engine": {"draw": (8, 22)},      # a deck named for its draw engine
+    "artifacts": {"ramp": (9, 16)},        # mana rocks are artifacts; ramp runs high
+    "go-wide": {"wipe": (0, 5)},           # a wrath kills YOUR board first
+    "tokens": {"wipe": (0, 5)},
+    "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
+    "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
+}
+
+
+def archetype_words(text):
+    """Deck-file text (or a bare header value) -> the archetype word list.
+
+    THE tokenizer for `# Archetype:` — the words `role_ranges` keys on. Three
+    hand-rolled copies of this split appeared within one session of each other,
+    which is exactly how the header-regex drift started; one function, everywhere."""
+    v = text if ("\n" not in (text or "") and ":" not in (text or "")) else \
+        mtglib.deck_header(text, "Archetype")
+    return [w for w in re.split(r"[,\s/]+", (v or "").lower().strip()) if w]
+
+
+def role_ranges(archetype=None):
+    """The role template for a deck, widened by its `# Archetype:` words.
+
+    `archetype` is the already-parsed word list `deck_fit.deck_context` puts in
+    ctx["archetype"] — the header is read by `mtglib.deck_header` in exactly one
+    place; this function does not add a second parser. None / [] / unrecognised
+    words -> the default ROLE_RANGE, byte-identical to the archetype-blind days."""
+    ranges, _unknown = role_ranges_with_unknown(archetype)
+    return ranges
+
+
+def role_ranges_with_unknown(archetype=None):
+    """`role_ranges`, plus the archetype words that matched NO table entry.
+
+    The template is a LOOSENING — a wider band removes a barrier that was blocking
+    swaps — so a word the table does not recognise silently buys nothing. Reporting
+    the unmatched words is the honesty label for that: the run tells the player
+    which part of their `# Archetype:` line it did not understand, instead of
+    leaving them to assume it was applied."""
+    ranges, unknown = dict(ROLE_RANGE), []
+    for word in (archetype or []):
+        key = str(word).lower()
+        deltas = _ARCHETYPE_ROLE_RANGE.get(key)
+        if not deltas:
+            unknown.append(str(word))
+            continue
+        for role, (lo, hi) in deltas.items():
+            cur_lo, cur_hi = ranges.get(role, (lo, hi))
+            ranges[role] = (min(cur_lo, lo), max(cur_hi, hi))   # widen, never narrow
+    return ranges, unknown
 
 
 def load_attrs(path):
@@ -469,9 +598,8 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
     if card is None:
         return None
     if not commander:
-        m = re.search(r"^#\s*Commander:\s*(.+)$", open(deck_path, encoding="utf-8").read(),
-                      re.M | re.I)
-        commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
+        v = mtglib.deck_header(open(deck_path, encoding="utf-8").read(), "Commander")
+        commander = re.split(r"\s{2,}|\(", v)[0].strip() if v else ""
     refs = refs or power.load_refs()
     if ctx is None:
         field = deck_fit.load_field(commander, idx) if commander else {}
@@ -569,7 +697,7 @@ def new_arrivals(coll, decks_dir, days=30, now=None, limit=12):
         text = open(p, encoding="utf-8").read()
         for c in mtglib.parse_deck(text):
             in_decks |= mtglib.name_keys(c.name)
-        m = re.search(r"^#\s*Colors:\s*(.+)$", text, re.M)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Colors?"))
         ids = set((m.group(1) if m else "").replace(",", " ").upper().split())
         deck_ids[os.path.splitext(os.path.basename(p))[0]] = ids
     out = []

@@ -402,6 +402,61 @@ folded here because each intersects this season's surfaces. (The rest of
 
 ---
 
+## Phase 12 — Fit single-sourcing (the season's coda; player-approved 2026-08-13)
+
+The honest limit Phase 8 left standing — `deck_fit.FIT_TARGETS` archetype-blind, the
+fit score still generating the repair pressure the field veto merely contains — plus
+the pattern question the player brought from their GCP agents class: weight
+disagreements, judge, human-in-the-loop. Resolution: ACCIDENTAL disagreements are
+eliminated (copies are drift, not judges), ESSENTIAL ones are surfaced with
+provenance to the standing final judge — the player.
+
+- ☑ **`mtglib.deck_header`** — THE `# Key: value` parser. Seventeen hand-rolled
+  copies across thirteen files shared one latent bug: `\s*` after the colon crosses
+  the newline under re.MULTILINE, so an EMPTY header absorbed the next line.
+  Live damage found: ur-dragon's blank `# Archetype: ` parsed as
+  `['#', 'source:', 'auto-generated', …]`, and an empty `# Bracket:` above
+  `1 Sol Ring` would have read a phantom Bracket 1. `deckcore.archetype_words` is
+  the one tokenizer (three copies of the split appeared within a single session —
+  caught and consolidated the same day).
+- ☑ **One role template, in the hub.** `deckcore.ROLE_RANGE` + the archetype table +
+  `role_ranges*` + `LAND_RANGE`/`LAND_TARGET` moved from `optimize` (shims remain).
+  Five disagreeing copies existed — optimize, deck_fit.FIT_TARGETS (removed),
+  deck_stats.TARGETS (now derived), auto_build.ROLE_QUOTA (aim points, tripwire-
+  checked inside the bands), a webapp hardcode (now derived, archetype-aware) —
+  and 17 of 30 role judgments differed on the six real decks, so the card panel
+  pushed counterspells into a voltron deck the optimizer refused them for.
+  deck_stats' CLI flags and the assess page are archetype-aware now too.
+- ☑ **The swing cap.** Role points 26/22/14 (was 30/22/12): the shortage-depth
+  spread ×2 = 24 < the optimizer's 25 margin, so template pressure ALONE can never
+  buy a swap — a role hole repairs only with real fit or field support behind it.
+  Tripwire test reads the margin off `optimize.optimize`'s signature; widening the
+  spread is a design change that requires changing that test knowingly.
+  `dead_weight` now exempts cards whose role sits at a shortage/healthy count — the
+  old inflated bonus kept them above the median by luck; a deck's only counterspell
+  is load-bearing by definition, not by arithmetic accident.
+- ☑ **Disagreement surfaced, never resolved silently.** The template and the field
+  are genuinely independent voters, so the fit detail now says "template wants the
+  role — though the field plays this one in 4% of decks here" (and the endorse
+  direction for depth). Absent field row = NO claim (empty-vs-absent). Widened
+  bands are labelled `[band widened by archetype]`.
+- ☑ **Never re-add a manual removal** (`deckcore.manual_removals` →
+  `optimize.manual_holds`) — the symmetric rule to "never cut a manual add", added
+  when its absence bit in live data: the rescore proposed re-adding Professor Hojo
+  (pulled by hand from cloud 2026-08-11, recorded in `.changes.csv`) over a fresh
+  victim — the notes churn guards name VICTIMS, so the pass moves to new ones
+  ("a tourniquet, not the fix", the spec's own words — now structurally fixed).
+  Unwindowed (a removal is a decision, not a cooldown); a later manual re-add lifts
+  the hold; blocked candidates are REPORTED with their field evidence
+  ("held: Professor Hojo (69% field) — you removed it by hand…"), never silently
+  dropped. Decision durable, evidence visible, player stays the judge.
+- ☑ Before/after on all six decks: power scores and brackets unchanged; iron-man's
+  four residual fit-driven proposals die; cloud/cosmic/cap/yshtola/ur-dragon stay
+  at zero swaps (cloud gains the reported Hojo hold); yshtola's commander and draw
+  engines leave the cut list; test recalibrated: `test_margin_gate` margin 40 → 30
+  (the scenario's numbers assumed the inflated scoring; discriminating power
+  preserved: value 36 ≥ 30 passes, raw inclusion 20 < 30 would still refuse).
+
 ## Backlogged, specced elsewhere
 
 - **4-player pod simulation** → `docs/spec-pod-simulation.md` — status BACKLOG by

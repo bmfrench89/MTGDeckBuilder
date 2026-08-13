@@ -44,78 +44,15 @@ import deck_conflicts
 import deck_fit
 import power
 
-# Role template (deckbuilding-principles.md). (min, max) per 99. This is the DEFAULT —
-# what every deck used before 2026-08-13, and still what a deck with no (or an unknown)
-# `# Archetype:` header gets, unchanged.
-ROLE_RANGE = {"ramp": (9, 13), "draw": (8, 12), "removal": (8, 11),
-              "wipe": (2, 5), "counter": (0, 6)}
-
-# Per-archetype widenings, keyed by the words that actually appear in the decks'
-# `# Archetype:` headers. Merged by WIDENING only (min(lo), max(hi)) — stacking two
-# archetype words can never make a deck's template stricter than the default, and an
-# unrecognised word contributes nothing.
-#
-# Why this exists (2026-08-12, first typed previews — spec-optimizer-hardening.md
-# "Typed-data role-repair churn"): the template was archetype-blind, so iron-man — a
-# draw-go control deck whose real counts are counter:15, ramp:8, wipe:0 — read as nine
-# excess counterspells plus a ramp hole plus a wrath hole. By its ratified identity it
-# is exactly correct. Every control deck read as "broken" to the single template, and
-# the pressure to "repair" it is what cut field-superior cards.
-#
-# TRAP: "counters" (captain-america) means +1/+1 COUNTERS, not counterspells. It is
-# deliberately absent from this table — mapping it to the `counter` role would widen a
-# tribal deck's counterspell allowance for a word about creature buffs.
-# The other header words in use — equipment, tribal-hero, tribal-spiders, lifegain —
-# need no delta: those decks already sit inside the default ranges.
-_ARCHETYPE_ROLE_RANGE = {
-    # Draw-go control: interaction IS the counterspell suite, so counters run long,
-    # sweepers and spot removal run short, and the deck leans on card draw over rocks.
-    "control": {"counter": (0, 18), "ramp": (6, 13), "draw": (8, 18),
-                "removal": (4, 11), "wipe": (0, 5)},
-    "draw-engine": {"draw": (8, 22)},      # a deck named for its draw engine
-    "artifacts": {"ramp": (9, 16)},        # mana rocks are artifacts; ramp count runs high
-    "go-wide": {"wipe": (0, 5)},           # a wrath kills YOUR board first
-    "tokens": {"wipe": (0, 5)},
-    "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
-    "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
-}
-LAND_TARGET = 37
+# The role template LIVES IN deckcore now (Phase 12) — one table, one widener,
+# every consumer. These module attributes are SHIMS kept so existing imports,
+# tests and the webapp keep working; do not add numbers here.
+ROLE_RANGE = deckcore.ROLE_RANGE
+_ARCHETYPE_ROLE_RANGE = deckcore._ARCHETYPE_ROLE_RANGE
+role_ranges = deckcore.role_ranges
+role_ranges_with_unknown = deckcore.role_ranges_with_unknown
+LAND_TARGET = deckcore.LAND_TARGET
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
-
-
-def role_ranges(archetype=None):
-    """The role template for a deck, widened by its `# Archetype:` words.
-
-    `archetype` is the already-parsed word list `deck_fit.deck_context` puts in
-    ctx["archetype"] — the header is read in exactly one place in this repo and this
-    function does not add a second parser. None / [] / unrecognised words -> the
-    default ROLE_RANGE, byte-identical to the pre-2026-08-13 behaviour.
-    """
-    ranges, _unknown = role_ranges_with_unknown(archetype)
-    return ranges
-
-
-def role_ranges_with_unknown(archetype=None):
-    """`role_ranges`, plus the archetype words that matched NO table entry.
-
-    The template is a LOOSENING — a wider band removes a barrier that was blocking
-    swaps — so a word the table does not recognise silently buys nothing. Reporting
-    the unmatched words is the honesty label for that: the run tells the player which
-    part of their `# Archetype:` line it did not understand, instead of leaving them
-    to assume it was applied. (A typo like `draw-go` or `counterspell-control` is the
-    realistic case; the deck header is hand-written.)
-    """
-    ranges, unknown = dict(ROLE_RANGE), []
-    for word in (archetype or []):
-        key = str(word).lower()
-        deltas = _ARCHETYPE_ROLE_RANGE.get(key)
-        if not deltas:
-            unknown.append(str(word))
-            continue
-        for role, (lo, hi) in deltas.items():
-            cur_lo, cur_hi = ranges.get(role, (lo, hi))
-            ranges[role] = (min(cur_lo, lo), max(cur_hi, hi))   # widen, never narrow
-    return ranges, unknown
 
 
 def card_value(name, ref, rep, ctx, refs, field):
@@ -168,8 +105,8 @@ def _display_name(k):
 
 
 def _commander_of(text):
-    m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
-    return re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
+    v = mtglib.deck_header(text, "Commander")
+    return re.split(r"\s{2,}|\(", v)[0].strip() if v else ""
 
 
 def _protected(deck_path, commander):
@@ -419,9 +356,28 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # an empty set and the name heuristic carries on alone.
     field_lands = deck_fit.load_field_lands(commander, idx)
 
+    # ---- the player's own removals are decisions, not cooldowns (2026-08-13) ----
+    # "Never cut a manual add" has a symmetric rule: never RE-ADD a manual removal.
+    # Its absence bit in live data: the player pulled Professor Hojo from cloud on
+    # 2026-08-11 (recorded, Source=manual-replace), and the next rescore proposed
+    # re-adding him over a fresh victim — the notes-file churn guards name the
+    # VICTIM, so the pass just moved to a new one. The decision the player made was
+    # about HOJO; `deckcore.manual_removals` reads it straight from the log, and a
+    # later manual re-add lifts the hold (newest player action wins). Blocked
+    # candidates are REPORTED (`manual_holds`), never silently dropped — the field
+    # evidence stays visible, the decision stays the player's.
+    removed_by_hand = deckcore.manual_removals(
+        os.path.splitext(deck_path)[0] + ".changes.csv")
+    manual_holds = []
+
     adds, land_adds, buy_adds, buy_land_adds = [], [], [], []
     for k, inc in field.items():
         if k in in_deck or mtglib.is_basic(k) or inc <= 0 or k in reserved:
+            continue
+        if k in removed_by_hand:
+            hold = removed_by_hand[k]
+            manual_holds.append({"name": hold["name"], "inc": inc,
+                                 "removed": hold["date"]})
             continue
         ref = mtglib.lookup(idx, k)
         if ref is None:
@@ -580,7 +536,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         return {"stem": stem, "commander": commander, "swaps": swaps,
                 "land_swaps": [], "buy_swaps": [], "field_size": 0, "risers": risers,
                 "untyped": untyped, "archetype": list(ctx.get("archetype") or []),
-                "archetype_unknown": archetype_unknown,
+                "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
                 "role_ranges": ranges, "swaps_detail": swaps_detail}
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
@@ -665,8 +621,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
               "land_swaps": land_swaps, "buy_swaps": buy_swaps,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
-              "archetype_unknown": archetype_unknown, "role_ranges": ranges,
-              "swaps_detail": swaps_detail}
+              "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
+              "role_ranges": ranges, "swaps_detail": swaps_detail}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
@@ -1011,6 +967,10 @@ def main():
             print("   template: widened by archetype "
                   f"({' '.join(r.get('archetype') or [])}) -> "
                   + ", ".join(f"{role} {lo}-{hi}" for role, (lo, hi) in sorted(widened.items())))
+        for h in sorted(r.get("manual_holds") or [], key=lambda x: -x["inc"])[:5]:
+            print(f"   held: {h['name']} ({h['inc']}% field) — you removed it by hand "
+                  f"on {h['removed']}; not re-proposing. Add it back yourself if "
+                  f"you've changed your mind.")
         if r.get("archetype_unknown"):
             # The label fires on the IGNORED input too, not only on success — an
             # unmapped word buys nothing and the player should not have to guess

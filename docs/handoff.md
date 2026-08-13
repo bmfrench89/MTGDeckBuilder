@@ -353,9 +353,16 @@ all four recorded proposals gone and no field inversions anywhere. **The freeze
 is not formally lifted until `optimize --all` runs as a preview against the full
 private CSV on the player's PC or a GitHub runner** — that is the acceptance step
 still owed; until then keep hands off `--apply` / ⚡ / `refresh --optimize`.
-Honest limit found during review: `deck_fit.FIT_TARGETS` is still archetype-blind,
-so the fit *score* keeps generating repair pressure — the accept filter and the
-field veto now contain it, but the pressure itself is untouched.
+~~Honest limit found during review: `deck_fit.FIT_TARGETS` is still
+archetype-blind~~ **RESOLVED 2026-08-13 (Phase 12):** the fit scorer now reads
+THE archetype-aware template from `deckcore` (one table, five copies killed), the
+role-point swing is capped below the margin (spread ×2 = 24 < 25, tripwire-
+tested) so template pressure alone can never buy a swap, and a NEW symmetric
+protection landed: the optimizer never re-adds a card the player manually
+removed (`deckcore.manual_removals` → reported `manual_holds`; found live when
+the rescore proposed re-adding Professor Hojo to cloud). Also: `mtglib.deck_header`
+replaced 17 hand-rolled header regexes sharing a newline-crossing bug — ur-dragon's
+empty `# Archetype:` header was parsing as garbage in live data.
 
 **0b. The original finding, for reference.**
 `docs/spec-optimizer-hardening.md` (2026-08-12 section) has the full finding:

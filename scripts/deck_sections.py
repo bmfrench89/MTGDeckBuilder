@@ -100,9 +100,9 @@ def parse_file(path):
                 continue
             if cur is None:
                 header.append(line)
-                cm = re.match(r"#\s*Commander:\s*(.+?)\s*$", line)
-                if cm:
-                    commander = cm.group(1)
+                cv = mtglib.deck_header(line, "Commander")
+                if cv:
+                    commander = cv
             # non-header comment lines inside sections are dropped by a regroup;
             # keep deck prose in the header block or .notes.md instead.
     while header and not header[-1].strip():
