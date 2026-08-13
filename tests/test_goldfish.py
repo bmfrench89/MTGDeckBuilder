@@ -809,3 +809,61 @@ def test_the_cache_key_changes_when_the_report_shape_does(tmp_path):
     bumped = dict(k)
     bumped["schema"] = goldfish.REPORT_SCHEMA + 1
     assert bumped != k, "the schema must participate in the key"
+
+
+# --------------------------------------------------------------------------- #
+# Phantom disruption (Phase 10, EXPERIMENT)
+#
+# The gate on this whole feature: it must not perturb the common-random-numbers
+# pairing. Disruption draws from a SECOND Random seeded off the same per-game seed,
+# so both A/B arms face identical opponents and the shuffle stream is untouched.
+# --------------------------------------------------------------------------- #
+def test_disruption_off_is_byte_identical():
+    """`--disruption none` must be the pure goldfish, not 'the same numbers roughly'."""
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    a = goldfish.simulate(compiled, games=200, seed=9)
+    b = goldfish.simulate(compiled, games=200, seed=9, disruption=None)
+    a.pop("disruption", None); b.pop("disruption", None)
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_disruption_is_deterministic_per_seed():
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    d = goldfish.DISRUPTION["standard"]
+    a = goldfish.simulate(compiled, games=150, seed=4, disruption=d)
+    b = goldfish.simulate(compiled, games=150, seed=4, disruption=d)
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_disruption_actually_slows_the_deck_down():
+    """If the phantom opponents changed nothing, the experiment would be theatre."""
+    compiled = goldfish.compile_deck(_clock_deck(power=3, creatures=30), "")
+    clean = goldfish.simulate(compiled, games=300, seed=6)["clock"]
+    hit = goldfish.simulate(compiled, games=300, seed=6,
+                            disruption=goldfish.DISRUPTION["standard"])["clock"]
+    assert hit["kill_rate"] <= clean["kill_rate"]
+    assert hit["mean_damage_by_turn_end"] < clean["mean_damage_by_turn_end"]
+
+
+def test_the_disruption_report_ships_its_definition_and_caveat():
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    rep = goldfish.simulate(compiled, games=100, seed=2,
+                            disruption=goldfish.DISRUPTION["standard"])
+    d = rep["disruption"]
+    assert d["definition"] and d["caveat"]
+    assert "not a simulation of them" in d["caveat"], (
+        "an approximation of opponents must never read as a win rate")
+    assert goldfish.simulate(compiled, games=50, seed=2)["disruption"] is None
+
+
+def test_aa_pairing_is_exactly_zero_WITH_disruption_on():
+    """THE gate for Phase 10. Disruption must draw from its own stream — if it
+    consumed from the shuffle Random, both arms would face different games and this
+    would drift off zero while the numbers still looked plausible."""
+    cards = _clock_deck()
+    compiled = goldfish.compile_deck(cards, "")
+    idx = mtglib.index_by_name(cards)
+    ab = goldfish.simulate_ab(compiled, "Bear 0", "Bear 0", idx, games=150, seed=4,
+                              disruption=goldfish.DISRUPTION["standard"])
+    for metric, d in ab["deltas"].items():
+        assert d["delta"] == 0.0, f"{metric} drifted under disruption"

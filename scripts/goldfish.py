@@ -78,6 +78,22 @@ CMD_DMG = 21            # commander damage kills one player on its own
 CLOCK_UNKNOWN_LIMIT = 0.25   # >25% of cast creatures with no printed power -> no clock
 BRACKET_CLOCK = [(4, 4), (6, 3), (8, 2)]   # (median first kill <= turn, bracket)
 
+# ---- phantom disruption (Phase 10, EXPERIMENT). The research is clear that the
+# demand for "an opponent" is really demand for a cheap APPROXIMATION of being
+# interacted with — Playgroup.gg's phantom opponents wipe and counter on a timer;
+# Krarkaplayer models a pod as inert 160 life. This is that, and nothing more: a
+# seeded event schedule, off by default, whose whole job is answering "how does this
+# deck rebuild?" — the question a pure goldfish structurally cannot reach.
+DISRUPTION = {
+    "none": None,
+    "standard": {
+        "wipe_turns": (5, 6),   # one board wipe, on a turn drawn from this range
+        "removal_every": 3,     # spot removal on the biggest creature every N turns
+        "removal_from": 3,      # ...starting here
+        "commander_tax": 2,     # recasting the commander costs {2} more each time
+    },
+}
+
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
 REPORT_SCHEMA = 2
@@ -419,8 +435,14 @@ def keep_verdict(hand, mulls=0, mulligan=True):
             "why": f"{n} lands, inside the keepable band of {lo}-{hi}"}
 
 
-def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True):
-    """Play one goldfish game. Returns the per-game record the aggregator folds up."""
+def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
+              disruption=None, drnd=None):
+    """Play one goldfish game. Returns the per-game record the aggregator folds up.
+
+    `disruption` is a DISRUPTION schedule (None = the pure goldfish, byte-identical to
+    before). `drnd` is a SEPARATE Random: disruption must not consume from the shuffle
+    stream, or turning it on would change which cards are drawn and the A/B pairing
+    would compare two different sets of games while still printing plausible numbers."""
     lib = list(library)
     rnd.shuffle(lib)
     first7_lands = sum(1 for c in lib[:HAND] if c.is_land)
@@ -450,6 +472,15 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     # sickness) and every turn thereafter, unblocked, for its printed power. Damage
     # is cumulative and uncontested — see `_assumptions`.
     board = []
+    wipe_turn = None
+    if disruption:
+        lo, hi = disruption["wipe_turns"]
+        # Drawn from the DISRUPTION stream, never `rnd` — see the docstring.
+        wipe_turn = (drnd or random.Random(0)).randint(lo, hi)
+    wiped, removed, recasts = 0, 0, 0
+    # Counted separately from `board`, which disruption empties — the clock's coverage
+    # gate asks "how many creatures did this deck CAST", not "how many survived".
+    creature_casts = 0
     dmg = 0                     # total combat damage dealt
     cmd_dmg = 0                 # of which the commander dealt (the 21 rule)
     first_kill = None           # cumulative >= 40, or 21 commander damage
@@ -458,6 +489,22 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
 
     for t in range(1, turns + 1):
         lands_at_start[t] = len(in_play)
+        if disruption:
+            # Opponents act at the START of your turn, before you attack: a wipe you
+            # walked into removes the board that would have swung.
+            if wipe_turn == t and board:
+                wiped += 1
+                if commander is not None and any(sc is commander for sc, _ in board):
+                    recasts += 1          # it goes back to the command zone
+                board = []
+            elif (t >= disruption["removal_from"] and board
+                  and (t - disruption["removal_from"]) % disruption["removal_every"] == 0):
+                # Kill the biggest thing — the play a real opponent makes.
+                board.sort(key=lambda b: -((b[0].power or 0)))
+                gone = board.pop(0)
+                removed += 1
+                if commander is not None and gone[0] is commander:
+                    recasts += 1
         # Combat happens BEFORE this turn's land drop and casts: a creature cast on
         # turn N attacks on turn N+1, so the damage credited to turn t comes from the
         # board as it stood at the end of turn t-1.
@@ -505,6 +552,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
                 commander_turn, units = t, rem
                 if commander.is_creature:
                     board.append((commander, t))
+                    creature_casts += 1
                     if commander.power is None:
                         unknown_power_casts += 1
         # ONE pass, highest mana value first. No restart-after-a-cast is needed:
@@ -525,6 +573,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
                 producers.append((sc, t))
             if sc.is_creature:
                 board.append((sc, t))
+                creature_casts += 1
                 if sc.power is None:
                     unknown_power_casts += 1
             if sc.key not in cast_turn:
@@ -542,7 +591,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
             "seen_by_turn": seen_by_turn, "lands_seen_flood": flood_seen,
             "first_kill": first_kill, "table_kill": table_kill,
             "damage": dmg, "unknown_power_casts": unknown_power_casts,
-            "creature_casts": len(board)}
+            "creature_casts": creature_casts,
+            "wiped": wiped, "removed": removed, "recasts": recasts}
 
 
 # --------------------------------------------------------------------------- #
@@ -556,9 +606,14 @@ def _game_seeds(seed, games):
     return [master.getrandbits(64) for _ in range(games)]
 
 
-def _run(compiled, seeds, turns, mulligan, on_play):
+def _run(compiled, seeds, turns, mulligan, on_play, disruption=None):
     commander, library = compiled["commander"], compiled["library"]
-    return [play_game(random.Random(s), commander, library, turns, mulligan, on_play)
+    # The disruption stream is seeded from the SAME per-game seed but as its own
+    # Random: identical games face identical disruption in both A/B arms, and turning
+    # it on cannot perturb the shuffle.
+    return [play_game(random.Random(s), commander, library, turns, mulligan, on_play,
+                      disruption=disruption,
+                      drnd=random.Random(s ^ 0x5EED))
             for s in seeds]
 
 
@@ -737,15 +792,45 @@ def _clock(compiled, records, games, turns):
     return out
 
 
+def _disruption_report(records, games, disruption):
+    """What the phantom opponents did, and how the deck coped. None when off.
+
+    EXPERIMENT (Phase 10). The schedule is a crude stand-in for real opponents — it
+    does not counter spells, does not respond to what you are doing, and never targets
+    anything but the biggest creature. It answers one question a pure goldfish
+    structurally cannot: after a wipe, does this deck come back?"""
+    if not disruption or not games:
+        return None
+    wiped = sum(r["wiped"] for r in records)
+    removed = sum(r["removed"] for r in records)
+    recasts = sum(r["recasts"] for r in records)
+    return {
+        "profile": "standard",
+        "wipes_per_game": round(wiped / games, 2),
+        "removal_per_game": round(removed / games, 2),
+        "commander_recasts_per_game": round(recasts / games, 2),
+        "definition": (f"One board wipe on a turn drawn from "
+                       f"{disruption['wipe_turns'][0]}-{disruption['wipe_turns'][1]}, "
+                       f"spot removal on the biggest creature every "
+                       f"{disruption['removal_every']} turns from turn "
+                       f"{disruption['removal_from']}, and the commander returning to "
+                       f"the command zone when it is hit."),
+        "caveat": ("A crude stand-in for opponents, not a simulation of them: it never "
+                   "counters a spell, never reacts to what you are doing, and always "
+                   "kills the biggest creature. Read it as 'can this deck rebuild', "
+                   "not as a win rate."),
+    }
+
+
 def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
-             on_play=True, seeds=None, _records=False):
+             on_play=True, seeds=None, _records=False, disruption=None):
     """Run the sim and return the report (§6.2). Same inputs -> identical report.
 
     `seeds` lets an A/B run replay the exact same games in both arms (common random
     numbers). `_records` additionally returns the per-game records the pairing needs."""
     seeds = seeds if seeds is not None else _game_seeds(seed, games)
     games = len(seeds)
-    records = _run(compiled, seeds, turns, mulligan, on_play)
+    records = _run(compiled, seeds, turns, mulligan, on_play, disruption)
 
     cmd_turns = [r["commander_turn"] for r in records if r["commander_turn"] is not None]
     p_cast_by, cum = {}, 0
@@ -784,6 +869,7 @@ def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
                                for t in range(1, turns + 1)},
         "cards": _card_rows(compiled, records, games, turns),
         "clock": _clock(compiled, records, games, turns),
+        "disruption": _disruption_report(records, games, disruption),
         "definitions": dict(DEFINITIONS),
         "assumptions": _assumptions(compiled, mulligan, on_play, games),
         "note": None,
@@ -849,7 +935,7 @@ def _stdev(xs, mean):
 
 
 def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
-                turns=TURNS, mulligan=True, on_play=True):
+                turns=TURNS, mulligan=True, on_play=True, disruption=None):
     """Swap ONE card and re-run the identical games — common random numbers.
 
     Arm B replaces the outgoing card's compiled entries **at the same library
@@ -887,10 +973,14 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
     comp_b = _recount(dict(compiled, library=lib_b))
 
     seeds = _game_seeds(seed, games)
+    # Both arms get the SAME disruption schedule (it is seeded off the same per-game
+    # seed, on its own stream), so an A/B under disruption still measures the swap.
     rep_a, rec_a = simulate(compiled, seeds=seeds, seed=seed, turns=turns,
-                            mulligan=mulligan, on_play=on_play, _records=True)
+                            mulligan=mulligan, on_play=on_play, _records=True,
+                            disruption=disruption)
     rep_b, rec_b = simulate(comp_b, seeds=seeds, seed=seed, turns=turns,
-                            mulligan=mulligan, on_play=on_play, _records=True)
+                            mulligan=mulligan, on_play=on_play, _records=True,
+                            disruption=disruption)
 
     deltas = {}
     n = len(seeds)
@@ -1083,6 +1173,13 @@ def print_report(rep):
                     else f"first cast T{c['mean_first_cast']} "
                          f"({c['delta']:+g} vs MV {c['mv']:g})")
             print(f"  {c['name']:<34} cast {_pct(c['cast_rate']):>4} · {when}")
+    dis = rep.get("disruption")
+    if dis:
+        print(f"\nPHANTOM DISRUPTION ({dis['profile']}) — EXPERIMENT:")
+        print(f"   {dis['wipes_per_game']} wipe(s) · {dis['removal_per_game']} removal "
+              f"· {dis['commander_recasts_per_game']} commander recast(s) per game")
+        print(f"   {dis['definition']}")
+        print(f"   [!] {dis['caveat']}")
     print("\nAssumptions:")
     for a in rep["assumptions"]:
         print(f"  · {a}")
@@ -1119,6 +1216,10 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--ab", metavar='"Out Card=In Card"',
                     help="swap one card and re-run the identical games")
+    ap.add_argument("--disruption", choices=sorted(DISRUPTION), default="none",
+                    help="EXPERIMENT: face phantom opponents (a wipe, periodic "
+                         "removal, commander tax) to see how the deck rebuilds. "
+                         "Off by default; 'none' is byte-identical to no flag.")
     args = ap.parse_args(argv)
 
     for path in (args.deck, args.collection):
@@ -1141,7 +1242,8 @@ def main(argv=None):
                   "loaded and enriched.")
             return 1
         ab = simulate_ab(compiled, out_name, in_name, idx, games=args.games,
-                         seed=args.seed, turns=args.turns, mulligan=mull)
+                         seed=args.seed, turns=args.turns, mulligan=mull,
+                         disruption=DISRUPTION[args.disruption])
         if ab.get("error"):
             print(ab["error"])
             return 1
@@ -1151,8 +1253,18 @@ def main(argv=None):
             print_ab(ab)
         return 0
 
-    rep = sim_for_deck(args.deck, args.collection, games=args.games, seed=args.seed,
-                       turns=args.turns, mulligan=mull, cache=not args.no_cache)
+    # Disruption is an experiment run from the CLI on purpose: it never reaches the
+    # cached surface path, so a dashboard can't start quietly showing disrupted
+    # numbers as if they were the goldfish ones.
+    if args.disruption != "none":
+        compiled, _idx = load_for_ab(args.deck, args.collection)
+        rep = (simulate(compiled, games=args.games, seed=args.seed, turns=args.turns,
+                        mulligan=mull, disruption=DISRUPTION[args.disruption])
+               if compiled else None)
+    else:
+        rep = sim_for_deck(args.deck, args.collection, games=args.games,
+                           seed=args.seed, turns=args.turns, mulligan=mull,
+                           cache=not args.no_cache)
     if rep is None:
         print("Goldfish simulation unavailable — the deck or collection couldn't be "
               "loaded and enriched. Check the paths, or enrich with scripts/carddb.py.")
