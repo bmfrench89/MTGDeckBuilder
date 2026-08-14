@@ -114,7 +114,21 @@ def build_report(deck_cards, enriched, missing, coll_index):
     # A deck card that isn't in the collection keeps produced=None, so a list with
     # any unowned land can never report a purely produced basis — by design.
     sources = Counter()
-    basis = {"produced_lands": 0, "identity_lands": 0}
+    restricted = Counter()
+    basis = {"produced_lands": 0, "identity_lands": 0,
+             # The restriction split (2026-08-14, spec-mana-intelligence Phase B).
+             # `restricted_lands` counts VERIFIED spend-restricted lands (the
+             # `mana-restricted` flag at vocabulary v2+) — their letters move to
+             # `color_sources_restricted` because "add one mana of any color,
+             # spend only on the chosen type" is not a source for most of the
+             # deck; counting it was an overcount, and this is the subtraction.
+             # `restriction_unknown_lands` counts lands whose flags predate the
+             # vocabulary (flags_ver 1): unknown is not restricted and not
+             # verified-clean, so they count exactly as before and the label
+             # downstream says the split is incomplete. Both keys are ALWAYS
+             # present — the shape pin requires legacy and enriched reports to
+             # have identical shape.
+             "restricted_lands": 0, "restriction_unknown_lands": 0}
     for c in lands:
         if c.produced is not None:
             prod = {p for p in c.produced if p in "WUBRG"}
@@ -122,6 +136,13 @@ def build_report(deck_cards, enriched, missing, coll_index):
         else:
             prod = c.colors or c.identity
             basis["identity_lands"] += c.quantity
+        if "mana-restricted" in c.flags and c.flags_ver >= 2:
+            basis["restricted_lands"] += c.quantity
+            for color in prod:
+                restricted[color] += c.quantity
+            continue
+        if c.flags_ver < 2:
+            basis["restriction_unknown_lands"] += c.quantity
         for color in prod:
             sources[color] += c.quantity
 
@@ -138,6 +159,10 @@ def build_report(deck_cards, enriched, missing, coll_index):
         "pip_demand": {k: round(v, 1) for k, v in pips.items()} if have_cost else None,
         "double_pips": dict(double) if have_cost else None,
         "color_sources": dict(sources) if sources else None,
+        # Always a dict ({} when nothing is restricted): the shape pin asserts
+        # identical report shape on enriched and legacy bases, so this key may
+        # never be conditional.
+        "color_sources_restricted": dict(restricted),
         "color_sources_basis": basis,
         "missing_from_collection": [m.name for m in missing],
         "quantity_problems": owned_enough(deck_cards, coll_index),
@@ -198,6 +223,15 @@ def print_report(rep, ranges=None):
             print(f"  [!] {approx} land(s) counted by color IDENTITY, not actual "
                   "production — sources are an approximation for those. Enrich the "
                   "collection (scripts/carddb.py) to count what they really tap for.")
+        restr = (rep.get("color_sources_basis") or {}).get("restricted_lands", 0)
+        if restr:
+            print(f"  [!] {restr} land(s) make spend-restricted mana — counted "
+                  "apart from the sources above (add them back for spells that "
+                  "match their restriction).")
+        unk = (rep.get("color_sources_basis") or {}).get("restriction_unknown_lands", 0)
+        if unk:
+            print(f"  [~] {unk} land(s) enriched before the restriction vocabulary "
+                  "— restriction status unknown, counted as unrestricted.")
 
     if not rep["have_cost"]:
         print("\n[!] No mana-cost data (name-only collection). Curve and pip "

@@ -120,7 +120,118 @@ def _explain(lands, deck, basis):
             "healthy": "Treat them as a floor, and read the goldfish simulation "
                        "beside them for sequenced play.",
         },
+        "restricted": {
+            "what": "Lands whose mana carries a spend restriction ('the chosen "
+                    "creature type only', 'Dragon spells only').",
+            "why": "They are real sources for spells that match and nothing for "
+                   "the rest of the deck — counting them with the others "
+                   "overstated every colour they touch.",
+            "healthy": "Counted separately, shown as '+N restricted' beside each "
+                       "colour: for the spells that match, add them back in.",
+        },
+        "fetch": {
+            "what": "Every card that searches your library for lands, with the "
+                    "number of legal targets its search has in THIS deck.",
+            "why": "A fetcher is only as good as what it can find — Wood Elves "
+                   "with no typed Forests left is a body, not ramp.",
+            "healthy": f"At least {FETCH_THIN} targets per fetcher; 'thin' means "
+                       "an early fetch can drain the pool, 'none' means the "
+                       "search can only whiff.",
+        },
     }
+
+
+
+# --------------------------------------------------------------------------- #
+# Fetch-target census (spec-mana-intelligence Phase B2)
+# --------------------------------------------------------------------------- #
+# Below this many targets a fetcher is "thin" — enough that an early fetch plus
+# a drawn copy can drain the pool. Zero is "none": a search that can only whiff.
+FETCH_THIN = 3
+
+_BASIC_TYPES = ("Plains", "Island", "Swamp", "Mountain", "Forest")
+
+
+def _land_types(card):
+    """The basic land types a deck land carries, lowercased. Subtypes are the
+    primary source (the collection CSV / attrs snapshot carry them for basics and
+    typed duals alike); a basic identified by name is its own type by rule — the
+    same name-level fact `mtglib.is_basic` already trusts repo-wide."""
+    tys = {t.lower() for t in (card.subtypes or []) if t in _BASIC_TYPES}
+    if not tys and mtglib.is_basic(card.name):
+        low = card.name.lower().replace("snow-covered ", "")
+        if low.capitalize() in _BASIC_TYPES:
+            tys = {low}
+    return tys
+
+
+def _targets_of(fetcher, tokens, deck_lands):
+    """The deck lands `fetcher` could actually find — a UNION across its tokens.
+    The fetcher is never its own target."""
+    hits = []
+    for land, qty in deck_lands:
+        if land is fetcher:
+            continue
+        tys = _land_types(land)
+        basic = mtglib.is_basic(land.name)
+        for tok in tokens:
+            if (tok == "fetch:land"
+                    or (tok == "fetch:basic" and basic)
+                    or (tok.startswith("fetch:basic-") and basic
+                        and tok[len("fetch:basic-"):] in tys)
+                    or (tok.startswith("fetch:")
+                        and not tok.startswith("fetch:basic")
+                        and tok != "fetch:land"
+                        and tok[len("fetch:"):] in tys)):
+                hits.append((land.name, qty))
+                break
+    return hits
+
+
+def fetch_census(enriched):
+    """Every fetcher in the deck, with the number of legal targets its search has
+    HERE — the question "does Wood Elves have Forests to find in this 99".
+
+    Returns {"rows": [...], "total_fetchers": int, "unknown": None|str}.
+    `total_fetchers` sums quantities, not rows. `unknown` is the honesty gate:
+
+      * "pre-vocabulary" — no card in the deck carries vocabulary-v2 flags, so
+        fetchers are INVISIBLE, not absent. Rows are empty and every surface
+        must say "re-enrich to unlock", never render a confident zero.
+      * "no-subtype-data" — the census counted what it could, but >=1 nonbasic
+        land has no type data at all (`not card.types`, the same has-type-data
+        proxy the optimizer's pass ownership uses). NOT keyed on empty
+        subtypes: plenty of genuinely enriched lands (Unclaimed Territory) have
+        no basic land type, and reading that as missing data would fire a
+        caveat forever on a healthy deck.
+    """
+    if not any(c.flags_ver >= 2 for c in enriched):
+        return {"rows": [], "total_fetchers": 0, "unknown": "pre-vocabulary"}
+    deck_lands = [(c, c.quantity) for c in enriched if c.is_land]
+    rows, total = [], 0
+    any_typed = False
+    for c in enriched:
+        tokens = sorted(f for f in c.flags if f.startswith("fetch:"))
+        if not tokens:
+            continue
+        any_typed = any_typed or any(t not in ("fetch:land", "fetch:basic")
+                                     for t in tokens)
+        hits = _targets_of(c, tokens, deck_lands)
+        n = sum(q for _, q in hits)
+        rows.append({
+            "name": c.name, "qty": c.quantity, "spec": tokens,
+            "targets": n,
+            # cap+total convention, same as risky/risky_total: at most 6 names,
+            # the int carries the truth.
+            "target_names": [nm for nm, _ in hits[:6]],
+            "state": "none" if n == 0 else "thin" if n < FETCH_THIN else "ok",
+        })
+        total += c.quantity
+    unknown = None
+    if any_typed and any(c.is_land and not c.types for c in enriched):
+        unknown = "no-subtype-data"
+    rows.sort(key=lambda r: (r["targets"], r["name"]))
+    return {"rows": rows, "total_fetchers": total, "unknown": unknown}
 
 
 def analyze(rep, enriched, deck=DECK):
@@ -128,6 +239,7 @@ def analyze(rep, enriched, deck=DECK):
     double_pips / lands) + the enriched card list. Returns None-ish flags when the
     color/cost data isn't available."""
     sources = rep.get("color_sources") or {}
+    restricted_src = rep.get("color_sources_restricted") or {}
     demand = rep.get("pip_demand") or {}
     doubles = rep.get("double_pips") or {}
     lands = rep.get("lands") or 0
@@ -145,6 +257,11 @@ def analyze(rep, enriched, deck=DECK):
         ok = src >= target
         colors.append({
             "color": col, "sources": src, "demand": round(dem, 1), "double_pips": dbl,
+            # Spend-restricted sources of this color, counted apart (Phase B1):
+            # they are real mana for spells that match their restriction and
+            # nothing for the rest, so they may not inflate `sources` — but
+            # hiding them would be its own lie. Always present, 0 when none.
+            "restricted": restricted_src.get(col, 0),
             "p_open": round(odds["ge1_open"], 2), "p_two_t3": round(odds["ge2_by_t3"], 2),
             "karsten_target": target, "status": "ok" if ok else "low",
         })
@@ -187,6 +304,9 @@ def analyze(rep, enriched, deck=DECK):
         "colors": colors,
         "risky": risky[:12],
         "risky_total": len(risky),
+        # The fetch-target census (Phase B2): every fetcher with the number of
+        # legal targets its search has in THIS deck, plus the honesty gate.
+        "fetch": fetch_census(enriched),
     }
 
 
@@ -220,7 +340,8 @@ if __name__ == "__main__":
     print("\nColor sources vs demand (Karsten target · P>=1 opener):")
     for c in a["colors"]:
         flag = "  <-- LOW" if c["status"] == "low" else ""
-        print(f"  {c['color']}: {c['sources']:>2} src · demand {c['demand']:>4} · "
+        restr = f" (+{c['restricted']} restricted)" if c.get("restricted") else ""
+        print(f"  {c['color']}: {c['sources']:>2} src{restr} · demand {c['demand']:>4} · "
               f"target ~{c['karsten_target']} · P {c['p_open']*100:>3.0f}%"
               + (f" · P(>=2 by t3) {c['p_two_t3']*100:.0f}%" if c['double_pips'] else "") + flag)
     approx = (a.get("basis") or {}).get("identity_lands", 0)
@@ -228,6 +349,34 @@ if __name__ == "__main__":
         print(f"  [!] {approx} land(s) counted by color IDENTITY, not actual "
               "production — an approximation. Enrich the collection "
               "(scripts/carddb.py) for what they really tap for.")
+    restr_n = (a.get("basis") or {}).get("restricted_lands", 0)
+    if restr_n:
+        print(f"  [!] {restr_n} land(s) make spend-restricted mana ('the chosen "
+              "type only') — counted apart, not in the source numbers above. "
+              "For spells that match the restriction, add them back in.")
+    unk = (a.get("basis") or {}).get("restriction_unknown_lands", 0)
+    if unk:
+        print(f"  [~] {unk} land(s) enriched before the restriction vocabulary "
+              "(FlagsVer < 2) — restriction status unknown, counted as "
+              "unrestricted. Re-enrich to verify.")
+
+    fetch = a.get("fetch") or {}
+    if fetch.get("unknown") == "pre-vocabulary":
+        print("\nFetch census: unavailable — enrichment predates the fetch "
+              "vocabulary. Re-enrich the collection (scripts/carddb.py) to unlock.")
+    elif fetch.get("rows"):
+        print(f"\nFetch census ({fetch['total_fetchers']} fetcher(s) — what can "
+              "each search actually FIND here?):")
+        for r in fetch["rows"]:
+            names = ", ".join(r["target_names"])
+            more = r["targets"] - len(r["target_names"])
+            if more > 0:
+                names += f", +{more} more"
+            state = {"none": "  <-- NO TARGETS", "thin": "  <-- THIN"}.get(r["state"], "")
+            print(f"  {r['name']}: {r['targets']} target(s){state}"
+                  + (f" — {names}" if names else ""))
+        if fetch.get("unknown") == "no-subtype-data":
+            print("  [~] counts may be low: some land(s) here have no type data.")
     if a["risky"]:
         print(f"\n{a['risky_total']} card(s) risky to cast on curve (lowest first):")
         for r in a["risky"]:

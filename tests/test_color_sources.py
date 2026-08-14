@@ -73,7 +73,12 @@ def test_production_beats_identity_when_it_is_known(enriched):
     sources — it taps for {C}. Counting identity credited two colors it can't make."""
     rep, _ = enriched
     assert rep["color_sources"] == {"U": 8}
-    assert rep["color_sources_basis"] == {"produced_lands": 9, "identity_lands": 0}
+    # restriction_unknown_lands == 9: this fixture's attrs file predates FlagsVer,
+    # so every land is vocabulary v1 — enriched for production, unknown for
+    # restriction. Unknown is not restricted and not verified-clean.
+    assert rep["color_sources_basis"] == {"produced_lands": 9, "identity_lands": 0,
+                                          "restricted_lands": 0,
+                                          "restriction_unknown_lands": 9}
 
 
 def test_without_the_column_it_falls_back_to_identity_and_says_so(legacy):
@@ -96,7 +101,9 @@ def test_an_empty_produced_cell_still_counts_as_a_produced_basis(tmp_path):
                                    "Vault of the Archangel,Land,0,W B,,,v0001,,")
     rep, _ = _report(tmp_path, attrs, name="empty")
     assert rep["color_sources"] == {"U": 8}
-    assert rep["color_sources_basis"] == {"produced_lands": 9, "identity_lands": 0}
+    assert rep["color_sources_basis"] == {"produced_lands": 9, "identity_lands": 0,
+                                          "restricted_lands": 0,
+                                          "restriction_unknown_lands": 9}
 
 
 def test_a_mixed_attrs_file_splits_the_buckets(tmp_path):
@@ -104,7 +111,9 @@ def test_a_mixed_attrs_file_splits_the_buckets(tmp_path):
     attrs = "\n".join(ln for ln in ATTRS_ENRICHED.splitlines()
                       if not ln.startswith("Vault")) + "\n"
     rep, _ = _report(tmp_path, attrs, name="mixed")
-    assert rep["color_sources_basis"] == {"produced_lands": 8, "identity_lands": 1}
+    assert rep["color_sources_basis"] == {"produced_lands": 8, "identity_lands": 1,
+                                          "restricted_lands": 0,
+                                          "restriction_unknown_lands": 9}
     assert rep["color_sources"] == {"U": 8, "W": 1, "B": 1}
 
 
@@ -124,7 +133,9 @@ def test_the_json_report_gains_exactly_one_key(enriched, legacy):
              "double_pips", "color_sources", "missing_from_collection",
              "quantity_problems", "have_mv", "have_cost", "deck_value",
              "priced_cards"}
-    assert set(rep) - pre_a == {"color_sources_basis"}
+    # Two deliberate additions since pre_a: the basis split (Phase A of the
+    # color-sources work) and the restricted pool (spec-mana-intelligence B1).
+    assert set(rep) - pre_a == {"color_sources_basis", "color_sources_restricted"}
     assert pre_a - set(rep) == set()
     json.dumps(rep)                       # --json must still serialize
     assert set(legacy[0]) == set(rep)     # same shape on both bases
