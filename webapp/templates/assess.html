@@ -71,7 +71,7 @@ It's a grounded read, not a verdict.</div>
         {% for c in a.mana.colors %}
           <tr>
             <td><b>{{ c.color }}</b></td>
-            <td>{{ c.sources }}</td>
+            <td>{{ c.sources }}{% if c.restricted %} <span class="muted fs-xs">(+{{ c.restricted }} restricted)</span>{% endif %}</td>
             <td class="muted">~{{ c.karsten_target }}</td>
             <td>{{ c.demand }}{% if c.double_pips %} <span class="muted">· {{ c.double_pips }} double</span>{% endif %}</td>
             <td>{{ (c.p_open*100)|round|int }}%{% if c.double_pips %}
@@ -84,6 +84,39 @@ It's a grounded read, not a verdict.</div>
       </table>
     </div>
     {{ explain(a.mana.explain, "sources") }}
+    {% if a.mana.basis.restricted_lands %}{{ explain(a.mana.explain, "restricted") }}{% endif %}
+    {% if a.mana.basis.restriction_unknown_lands %}
+      <p class="muted fs-xs">~ {{ a.mana.basis.restriction_unknown_lands }} land(s) enriched before the
+      restriction vocabulary — restriction status unknown, counted as unrestricted.</p>
+    {% endif %}
+    {% if a.mana.fetch.unknown == 'pre-vocabulary' %}
+      <p class="muted"><b>Fetch census:</b> unavailable — enrichment predates the fetch
+      vocabulary. Re-enrich to see what each fetcher can find here.</p>
+    {% elif a.mana.fetch.rows %}
+      <h3 class="mt-3">Fetch census ({{ a.mana.fetch.total_fetchers }})</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Fetcher</th><th>Finds</th><th>Targets</th><th>In this deck</th><th></th></tr></thead>
+          <tbody>
+          {% for r in a.mana.fetch.rows %}
+            <tr>
+              <td><span class="cardlink" data-card="{{ r.name }}">{{ r.name }}</span></td>
+              <td class="muted fs-xs">{% for t in r.spec %}{{ t[6:] }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+              <td>{{ r.targets }}</td>
+              <td class="muted fs-xs">{{ r.target_names|join(', ') }}{% if r.targets > r.target_names|length %}, +{{ r.targets - r.target_names|length }} more{% endif %}</td>
+              <td>{% if r.state == 'none' %}<span class="warn">⚠ no targets</span>
+                  {% elif r.state == 'thin' %}<span class="warn">thin</span>
+                  {% else %}<span class="good">✓</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if a.mana.fetch.unknown == 'no-subtype-data' %}
+        <p class="muted fs-xs">~ counts may be low: some land(s) here have no type data.</p>
+      {% endif %}
+      {{ explain(a.mana.explain, "fetch") }}
+    {% endif %}
     {% if a.mana.risky %}
     <p class="mt-3"><b class="warn">Risky to cast on curve ({{ a.mana.risky_total }}):</b>
       <span class="muted fs-sm">{% for r in a.mana.risky %}<span class="cardlink"

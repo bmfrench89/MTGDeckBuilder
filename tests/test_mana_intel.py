@@ -29,17 +29,18 @@ def _land(name, subtypes=(), qty=1, flags=frozenset(), ver=2, produced=None):
 
 URDRAGON_MINI = [
     C(name="Wood Elves", types=["Creature"], flags={"ramp", "fetch:forest"},
-      flags_ver=2),
-    C(name="Farseek", types=["Sorcery"], flags_ver=2,
+      flags_ver=2, mana_cost="{2}{G}", mana_value=3.0),
+    C(name="Farseek", types=["Sorcery"], flags_ver=2, mana_cost="{1}{G}",
+      mana_value=2.0,
       flags={"ramp", "fetch:plains", "fetch:island", "fetch:swamp",
              "fetch:mountain"}),
-    C(name="Nissa's Pilgrimage", types=["Sorcery"],
-      flags={"ramp", "fetch:basic-forest"}, flags_ver=2),
-    _land("Forest", ["Forest"], qty=2),
-    _land("Sheltered Thicket", ["Mountain", "Forest"]),
-    _land("Scattered Groves", ["Forest", "Plains"]),
-    _land("Mountain", ["Mountain"], qty=4),
-    _land("Command Tower"),
+    C(name="Nissa's Pilgrimage", types=["Sorcery"], mana_cost="{2}{G}",
+      mana_value=3.0, flags={"ramp", "fetch:basic-forest"}, flags_ver=2),
+    _land("Forest", ["Forest"], qty=2, produced={"G"}),
+    _land("Sheltered Thicket", ["Mountain", "Forest"], produced={"G", "R"}),
+    _land("Scattered Groves", ["Forest", "Plains"], produced={"G", "W"}),
+    _land("Mountain", ["Mountain"], qty=4, produced={"R"}),
+    _land("Command Tower", produced=set("WUBRG")),
 ]
 
 
@@ -199,3 +200,98 @@ def test_analyze_ships_census_and_restricted_and_serializes():
     assert all("restricted" in row for row in a["colors"])
     assert "restricted" in a["explain"] and "fetch" in a["explain"]
     json.dumps(a)
+
+
+# --------------------------------------------------------------------------- #
+# Phase C — the census renders on every surface mana already renders on
+# --------------------------------------------------------------------------- #
+ATTRS_V2_SURFACE = """\
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,2
+Island,Land,0,U,,Island,U,,,2
+Counterspell,Instant,2,U,{U}{U},,,counter,,2
+Serra Angel,Creature,5,W,{3}{W}{W},Angel,,fetch:forest;ramp,4,2
+"""
+
+SURFACE_DECK = """\
+# Title: T
+# Commander: Test Commander
+# Colors: W U
+
+# --- Commander ---
+1 Test Commander
+
+# --- Main ---
+1 Serra Angel
+1 Sol Ring
+1 Counterspell
+
+# --- Lands ---
+10 Island
+"""
+
+
+def _surface_files(tmp_path):
+    import shutil, os
+    from conftest import COLLECTION_CSV
+    d = tmp_path / "sf"
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text(COLLECTION_CSV, encoding="utf-8")
+    (d / "collection_attrs.csv").write_text(ATTRS_V2_SURFACE, encoding="utf-8")
+    (d / "deck.txt").write_text(SURFACE_DECK, encoding="utf-8")
+    return str(d / "deck.txt"), str(d / "collection.csv")
+
+
+def test_dashboard_mana_tab_carries_census_and_panel_note(tmp_path):
+    """One renderer serves the app deck page and the CLI dashboard, so this test
+    covers both. Serra Angel is a pretend Forest-fetcher in a Forestless deck:
+    the census must call it out, and the panel payload must carry the note on
+    the card itself."""
+    import build_dashboard as bd
+    deck, coll = _surface_files(tmp_path)
+    h = bd.generate(deck, coll, title="T", commander="Test Commander",
+                    sim=None)["dashboard"]
+    assert "Fetch census" in h
+    assert "no targets" in h
+    assert "mcfetch" in h, "the panel's census element must exist in the markup"
+    import re
+    assert re.search(r'"fetch":\s*{"targets":\s*0', h.replace("'", '"')) or \
+        '"fetch": {"targets": 0, "state": "none"}' in h
+
+
+def test_pre_vocabulary_dashboard_refuses_instead_of_zeroing(tmp_path):
+    import build_dashboard as bd
+    deck, coll = _surface_files(tmp_path)
+    import os
+    attrs = os.path.join(os.path.dirname(coll), "collection_attrs.csv")
+    open(attrs, "w", encoding="utf-8").write(
+        ATTRS_V2_SURFACE.replace(",FlagsVer", "").replace(",,2\n", ",,\n")
+        .replace(",4,2\n", ",4,\n"))
+    h = bd.generate(deck, coll, title="T", commander="Test Commander",
+                    sim=None)["dashboard"]
+    assert "enrichment predates the fetch vocabulary" in h
+    assert "no targets" not in h, "a confident zero on pre-vocabulary data is a lie"
+
+
+def test_assess_page_and_packet_carry_the_census(tmp_path, monkeypatch):
+    import sys
+    sys.modules.pop("app", None)
+    deck, coll = _surface_files(tmp_path)
+    import shutil, os
+    decks = tmp_path / "decks"
+    decks.mkdir(exist_ok=True)
+    shutil.copy(deck, decks / "deck.txt")
+    import app as appmod
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", coll)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    appmod.app.config["TESTING"] = True
+    client = appmod.app.test_client()
+
+    page = client.get("/deck/deck/assess").get_data(as_text=True)
+    assert "Fetch census" in page
+    assert "no targets" in page
+
+    packet = client.get("/deck/deck/assess.txt?raw=1").get_data(as_text=True)
+    assert "FETCH CENSUS" in packet
+    assert "Serra Angel: 0 target(s) <-- NO TARGETS" in packet

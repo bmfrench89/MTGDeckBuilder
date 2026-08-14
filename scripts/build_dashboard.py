@@ -236,11 +236,16 @@ def _edhrec_alts(commander, idx):
 
 
 def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
-                       refs=None, staples=None, size="normal", edhrec_alts=None):
+                       refs=None, staples=None, size="normal", edhrec_alts=None,
+                       fetch=None):
     """Per-card payload for the click-to-enlarge panel: enlarged image, a grounded
     generic 'why it works' blurb, a deck-specific fit score + how-it-fits line, and
     alternatives / stronger options tagged owned/buy."""
     en = {mtglib._norm(c.name): c for c in enriched}
+    # Per-fetcher census rows (manabase.fetch_census), keyed for the panel note:
+    # "5 legal targets in this deck" belongs on the card that does the searching.
+    fetch_rows = {mtglib._norm(r["name"]): r
+                  for r in ((fetch or {}).get("rows") or [])}
     in_deck = set(en.keys())
     section_of = {}
     for label, cards in sections:
@@ -311,6 +316,10 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
             details[k] = {"name": name, "full": full, "role": role,
                           "section": section, "type": known_type, "mv": known_mv,
                           "why": note["why"] if note else "", "fit": fit, "alts": alts}
+            fr = fetch_rows.get(k)
+            if fr:
+                details[k]["fetch"] = {"targets": fr["targets"],
+                                       "state": fr["state"]}
     return details
 
 
@@ -732,8 +741,10 @@ def manabase_html(mana):
         dbl = f" · P(2 by T3) {c['p_two_t3']*100:.0f}%" if c["double_pips"] else ""
         flag = ("<span class='warnbox'>⚠ under target</span>" if c["status"] == "low"
                 else "<span class='ok'>✓</span>")
+        restr = (f" <span class='muted'>(+{c['restricted']} restricted)</span>"
+                 if c.get("restricted") else "")
         rows.append(f"<tr class='{'warn' if c['status']=='low' else ''}'><td>{c['color']}</td>"
-                    f"<td>{c['sources']}</td><td>~{c['karsten_target']}</td>"
+                    f"<td>{c['sources']}{restr}</td><td>~{c['karsten_target']}</td>"
                     f"<td>{c['demand']}{' · dbl ' + str(c['double_pips']) if c['double_pips'] else ''}</td>"
                     f"<td>{c['p_open']*100:.0f}%{dbl}</td><td>{flag}</td></tr>")
     out.append("<div class='tablewrap'><table class='data'><thead><tr><th>Color</th>"
@@ -746,6 +757,49 @@ def manabase_html(mana):
         out.append(f"<h3>Risky to cast on curve <span class='count'>{mana['risky_total']}</span></h3>"
                    f"<ul class='notes'>{items}</ul>")
         out.append(explain_html(ex, "risky"))
+    basis = mana.get("basis") or {}
+    if basis.get("restricted_lands"):
+        out.append(explain_html(ex, "restricted"))
+    if basis.get("restriction_unknown_lands"):
+        out.append(f"<p class='muted'>~ {basis['restriction_unknown_lands']} land(s) "
+                   "enriched before the restriction vocabulary — restriction status "
+                   "unknown, counted as unrestricted. Re-enrich to verify.</p>")
+
+    # Fetch census (spec-mana-intelligence Phase C). One renderer serves the app
+    # deck page AND the CLI dashboard; the census either renders its rows or says
+    # exactly why it can't — never a confident zero on pre-vocabulary data.
+    fetch = mana.get("fetch") or {}
+    if fetch.get("unknown") == "pre-vocabulary":
+        out.append("<h3>Fetch census</h3><p class='muted'>Unavailable — this "
+                   "collection's enrichment predates the fetch vocabulary. "
+                   "Re-enrich (Card DB) to see what each fetcher can find here.</p>")
+    elif fetch.get("rows"):
+        frows = []
+        for r in fetch["rows"]:
+            chip = {"none": "<span class='warnbox'>⚠ no targets</span>",
+                    "thin": "<span class='warnbox'>thin</span>"}.get(
+                        r["state"], "<span class='ok'>✓</span>")
+            names = esc(", ".join(r["target_names"]))
+            more = r["targets"] - len(r["target_names"])
+            if more > 0:
+                names += f", +{more} more"
+            spec = esc(", ".join(t[len("fetch:"):] for t in r["spec"]))
+            frows.append(
+                f"<tr class='{'warn' if r['state'] != 'ok' else ''}'>"
+                f"<td><span class='cardlink' data-card='{esc(r['name'])}' "
+                f"data-key='{esc(r['name'])}'>{esc(r['name'])}</span></td>"
+                f"<td>{spec}</td><td>{r['targets']}</td>"
+                f"<td class='muted'>{names}</td><td>{chip}</td></tr>")
+        out.append(f"<h3>Fetch census <span class='count'>{fetch['total_fetchers']}</span></h3>"
+                   "<div class='tablewrap'><table class='data'><thead><tr>"
+                   "<th>Fetcher</th><th>Finds</th><th>Targets</th><th>In this deck</th>"
+                   "<th></th></tr></thead><tbody>" + "".join(frows)
+                   + "</tbody></table></div>")
+        if fetch.get("unknown") == "no-subtype-data":
+            out.append("<p class='muted'>~ counts may be low: some land(s) here "
+                       "have no type data.</p>")
+        out.append(explain_html(ex, "fetch"))
+
     # The "these are unconditional" caveat used to be a footer under everything. It is
     # a property of the probabilities themselves, so it now sits with them as one more
     # explainer — a caveat read after the numbers is a caveat that arrived too late.
@@ -1394,7 +1448,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         staples = deck_fit.load_role_staples()
         details = build_card_details(sections, enriched, idx, load_card_notes(),
                                      rep=rep, ctx=ctx, refs=refs, staples=staples,
-                                     edhrec_alts=_edhrec_alts(commander, idx))
+                                     edhrec_alts=_edhrec_alts(commander, idx),
+                                     fetch=(mana or {}).get("fetch"))
     except Exception:
         details = None
     if similar:

@@ -758,11 +758,30 @@ def _assess_packet(m):
             L.append(f"  keepable hand {lo['keepable']*100:.0f}% · ≥3 lands opener "
                      f"{lo['ge3_open']*100:.0f}% · 4th land by T4 {lo['ge4_by_t4']*100:.0f}%")
         for c in mana["colors"]:
-            L.append(f"  {c['color']}: {c['sources']} sources (Karsten ~{c['karsten_target']}) · "
+            restr = f" (+{c['restricted']} restricted)" if c.get("restricted") else ""
+            L.append(f"  {c['color']}: {c['sources']} sources{restr} (Karsten ~{c['karsten_target']}) · "
                      f"P(≥1 opener) {c['p_open']*100:.0f}% · {c['status']}")
+        mb = mana.get("basis") or {}
+        if mb.get("restricted_lands"):
+            L.append(f"  ({mb['restricted_lands']} land(s) make spend-restricted mana — "
+                     "counted apart; add back for spells that match)")
+        if mb.get("restriction_unknown_lands"):
+            L.append(f"  (~{mb['restriction_unknown_lands']} land(s) pre-vocabulary — "
+                     "restriction unknown, counted as unrestricted)")
         if mana["risky"]:
             L.append("  risky to cast on curve: " +
                      ", ".join(f"{r['name']} {r['p']*100:.0f}%" for r in mana["risky"]))
+        fetch = mana.get("fetch") or {}
+        if fetch.get("unknown") == "pre-vocabulary":
+            L.append("  fetch census: unavailable — enrichment predates the fetch "
+                     "vocabulary (re-enrich to unlock)")
+        elif fetch.get("rows"):
+            L.append("-- FETCH CENSUS (what can each search actually find HERE?) --")
+            for r in fetch["rows"]:
+                state = {"none": " <-- NO TARGETS", "thin": " <-- THIN"}.get(r["state"], "")
+                L.append(f"  {r['name']}: {r['targets']} target(s){state}")
+            if fetch.get("unknown") == "no-subtype-data":
+                L.append("  (~ counts may be low: some lands here have no type data)")
         L.append("")
     elif mana is not None:
         L.append("-- CONSISTENCY -- (name-only collection: enrich for colored-source math)\n")
