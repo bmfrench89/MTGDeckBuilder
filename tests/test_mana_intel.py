@@ -295,3 +295,86 @@ def test_assess_page_and_packet_carry_the_census(tmp_path, monkeypatch):
     packet = client.get("/deck/deck/assess.txt?raw=1").get_data(as_text=True)
     assert "FETCH CENSUS" in packet
     assert "Serra Angel: 0 target(s) <-- NO TARGETS" in packet
+
+
+# --------------------------------------------------------------------------- #
+# Phase D — the standing Mana-health advisory
+# --------------------------------------------------------------------------- #
+def test_banner_fires_for_a_stranded_fetcher_and_not_for_a_healthy_deck(tmp_path):
+    import build_dashboard as bd
+    deck, coll = _surface_files(tmp_path)
+    h = bd.generate(deck, coll, title="T", commander="Test Commander",
+                    sim=None)["dashboard"]
+    assert "Mana health" in h and "Serra Angel has 0 fetch targets" in h
+    assert "⚠ Mana" in h, "the tab label carries the text-only chip"
+
+    # Same deck, fetcher healthy: give it Forests to find.
+    import os
+    attrs = os.path.join(os.path.dirname(coll), "collection_attrs.csv")
+    with open(attrs, "a", encoding="utf-8") as f:
+        f.write("Forest,Land,0,G,,Forest,G,,,2\n")
+    with open(deck, "a", encoding="utf-8") as f:
+        f.write("3 Forest\n")
+    h2 = bd.generate(deck, coll, title="T", commander="Test Commander",
+                     sim=None)["dashboard"]
+    # The fetcher finding is gone. The banner itself may legitimately remain:
+    # this 13-land toy deck is under the 36-land floor, and saying so is the
+    # OTHER thing the advisory is for.
+    assert "Serra Angel has 0 fetch targets" not in h2
+    assert "lands (template floor" in h2
+
+
+def test_a_manual_edit_reevaluates_the_banner_on_the_next_render(tmp_path,
+                                                                 monkeypatch):
+    """The player's actual question — "how would this work when I sub out cards
+    manually?" Answered: the banner is computed at render time from the memoized
+    analysis, so the panel's own reload shows the new state. No optimizer, no
+    stored state, no flash that lands on a page that can't show it."""
+    import sys, shutil
+    sys.modules.pop("app", None)
+    deck, coll = _surface_files(tmp_path)
+    import os
+    attrs = os.path.join(os.path.dirname(coll), "collection_attrs.csv")
+    with open(attrs, "a", encoding="utf-8") as f:
+        f.write("Forest,Land,0,G,,Forest,G,,,2\n")
+    decks = tmp_path / "decks"
+    decks.mkdir(exist_ok=True)
+    with open(deck, encoding="utf-8") as f:
+        text = f.read()
+    (decks / "deck.txt").write_text(text + "3 Forest\n", encoding="utf-8")
+
+    import app as appmod
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", coll)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    appmod.app.config["TESTING"] = True
+    client = appmod.app.test_client()
+
+    before = client.get("/deck/deck").get_data(as_text=True)
+    assert "0 fetch targets" not in before, "healthy while the Forests are in"
+
+    # The player cuts their Forests by hand through the deck editor.
+    client.post("/deck/deck/edit", data={"content": text})
+    after = client.get("/deck/deck").get_data(as_text=True)
+    assert "Serra Angel has 0 fetch targets" in after, \
+        "the very next page load re-evaluates — no optimizer involved"
+
+
+def test_add_route_carries_the_mana_note(tmp_path, monkeypatch):
+    import sys, shutil, json as _json
+    sys.modules.pop("app", None)
+    deck, coll = _surface_files(tmp_path)
+    decks = tmp_path / "decks"
+    decks.mkdir(exist_ok=True)
+    shutil.copy(deck, decks / "deck.txt")
+    import app as appmod
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", coll)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    appmod.app.config["TESTING"] = True
+    client = appmod.app.test_client()
+    # Serra Angel is already in the deck — advise on it via the read-only twin.
+    r = _json.loads(client.get("/api/deck/deck/advise?name=Serra+Angel")
+                    .get_data(as_text=True))
+    v = r.get("verdict") or r
+    assert "0 legal target(s)" in (v.get("mana_note") or ""), v

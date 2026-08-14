@@ -679,12 +679,33 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
                                             load_role_staples_safe())
     except Exception:
         alts = []
-    return {"name": card.name, "score": fit["score"], "band": fit["band"],
-            "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
-            "in_deck": bool(mtglib.name_keys(card.name) & in_deck),
-            "has_field": bool(field),
-            "field_pct": field.get(mtglib._norm(card.name)) if field else None,
-            "alternatives": alts[:3]}
+    out = {"name": card.name, "score": fit["score"], "band": fit["band"],
+           "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
+           "in_deck": bool(mtglib.name_keys(card.name) & in_deck),
+           "has_field": bool(field),
+           "field_pct": field.get(mtglib._norm(card.name)) if field else None,
+           "alternatives": alts[:3]}
+    # The census note at the moment of the add (spec-mana-intelligence Phase D):
+    # a fetcher with thin/no targets deserves a word RIGHT NOW, while the player
+    # is deciding, not after they hunt through the Mana tab. Computed here — this
+    # function already owns the verdict shape and has the analysis in hand; the
+    # route stays dumb. Advice only: nothing blocks the add.
+    if card.flags_ver >= 2 and any(f.startswith("fetch:") for f in card.flags):
+        try:
+            import manabase
+            probe = [c for c in enriched
+                     if mtglib._norm(c.name) != mtglib._norm(card.name)] + [card]
+            row = next((r for r in manabase.fetch_census(probe)["rows"]
+                        if r["name"] == card.name), None)
+            if row and row["state"] != "ok":
+                out["mana_note"] = (
+                    f"{card.name} can fetch {row['targets']} legal target(s) in "
+                    f"this deck"
+                    + (" — nothing to find" if row["state"] == "none" else
+                       " — thin; an early fetch can drain the pool"))
+        except Exception:
+            pass                     # advice must never break the add
+    return out
 
 
 def load_role_staples_safe():
