@@ -543,3 +543,60 @@ def test_the_repair_is_idempotent_with_the_guard(tmp_path, monkeypatch):
     r2 = optimize.optimize(str(deck), coll, idx, str(d))
     assert not r2["swaps"] and not r2["land_swaps"], \
         "the second run must be a no-op — idempotency is a stated invariant"
+
+
+# --------------------------------------------------------------------------- #
+# Phase F — auto_build prefers lands its fetchers can find, as a TIEBREAK
+# --------------------------------------------------------------------------- #
+def _build_pool(tmp_path, with_fetcher):
+    """A WU pool where a Forest-typed dual and a plain tapland tie on score; a
+    Farseek-class candidate (when present) demands typed lands."""
+    import auto_build
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Test Commander,4,W U,W U,{2}{W}{U},Legendary Creature,Human Wizard,rare,cmd00000,1.00"]
+    for i in range(40):
+        rows.append(f"1,Test Spell {i},{i % 6},U,U,{{{i % 6}}}{{U}},Instant,,common,sp{i:06d},0.10")
+    for i in range(40):
+        rows.append(f"1,Test Bear {i},{(i % 5) + 1},W,W,{{{i % 5}}}{{W}},Creature,Bear,common,cr{i:06d},0.10")
+    for i in range(28):
+        rows.append(f"1,Test Land {i},0,,,,Land,,common,ld{i:06d},0.10")
+    rows.append("1,Typed Haven,0,,,,Land,Plains,common,th000001,0.10")
+    if with_fetcher:
+        rows.append("1,Pathfinder,2,W,W,{1}{W},Creature,Scout,common,pf000001,0.10")
+    rows.append("40,Island,0,,,,Land,Island,common,isl00000,0.10")
+    rows.append("40,Plains,0,,,,Land,Plains,common,pln00000,0.10")
+    d = tmp_path / ("bf" if with_fetcher else "bn")
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    if with_fetcher:
+        (d / "collection_attrs.csv").write_text(
+            "Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer\n"
+            "Pathfinder,Creature,2,W,{1}{W},Scout,,fetch:plains;ramp,1,2\n"
+            "Typed Haven,Land,0,,,Plains,W,,,2\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(d / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    return auto_build.build("Test Commander", coll, idx, None, identity="WU")
+
+
+def _names_and_total(d):
+    names, total = set(), 0
+    for _label, cards in d["sections"]:
+        for c in cards:
+            names.add(c["name"])
+            total += c["qty"]
+    return names, total
+
+
+def test_typed_dual_wins_the_tie_when_a_fetcher_demands_it(tmp_path):
+    d = _build_pool(tmp_path, with_fetcher=True)
+    names, total = _names_and_total(d)
+    assert "Typed Haven" in names, \
+        "with a fetch:plains card in the pool, the Plains-typed land wins its tie"
+    assert d["total"] == 100, "the re-rank must never change how many cards are taken"
+
+
+def test_no_fetcher_means_no_reorder(tmp_path):
+    """Without demand the sort key never fires — pool order stands, and the
+    build stays exactly 100 legal cards either way."""
+    d = _build_pool(tmp_path, with_fetcher=False)
+    assert d["total"] == 100

@@ -182,7 +182,36 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     ncol = max(1, len(identity))
     basics_target = max(6, round(LAND_TARGET * (0.42 - 0.04 * (ncol - 1))))
     nonbasic_cap = LAND_TARGET - basics_target
-    for c in [x for x in cands if x["is_land"]]:
+    # Fetchable-first re-rank (spec-mana-intelligence Phase F). The pool's typed
+    # fetchers — land fetchers in this sublist plus the nonland candidates that
+    # will plausibly fill the spell budget (lands are picked BEFORE spells, so
+    # "the deck's fetchers" can only be a projection of the sorted pool) — demand
+    # basic land types; a candidate land carrying a demanded type wins ties.
+    # A stable-sort TIEBREAK below equal scores, deliberately: this is in the
+    # take loop and NOT in deck_fit.assess_card, whose score feeds card_value ->
+    # the optimizer's swap values and the Cuts ranking. It reorders the sublist
+    # and never changes how many lands are taken. Basics are excluded here
+    # explicitly — only sort-stability kept 40x Island out of the "nonbasic"
+    # pass when no decks_dir constrains the pool.
+    land_pool = [x for x in cands if x["is_land"]
+                 and not mtglib.is_basic(x["card"].name)]
+    demanded_types = set()
+    projection = land_pool + [x for x in cands if not x["is_land"]][:DECK_SIZE]
+    for x in projection:
+        ref = x["card"]
+        if ref.flags_ver < 2:
+            continue
+        for tok in ref.flags:
+            if tok.startswith("fetch:basic-"):
+                demanded_types.add(tok[len("fetch:basic-"):])
+            elif tok.startswith("fetch:") and tok not in ("fetch:basic", "fetch:land"):
+                demanded_types.add(tok[len("fetch:"):])
+    if demanded_types:
+        def _fetchable(x):
+            sub = {t.lower() for t in (x["card"].subtypes or [])}
+            return 1 if sub & demanded_types else 0
+        land_pool.sort(key=lambda x: (-x["score"], -_fetchable(x)))
+    for c in land_pool:
         if sum(1 for x in chosen if x["is_land"]) >= nonbasic_cap:
             break
         take(c)
