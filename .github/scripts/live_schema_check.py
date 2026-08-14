@@ -40,13 +40,25 @@ EXPECT = [
     ("Hallowed Fountain",               {"W", "U"},                {"etb-tapped-cond"}),
     ("Maze of Ith",                     set(),                     set()),
     ("Divination",                      set(),                     {"draw"}),
-    ("Cultivate",                       set(),                     {"ramp"}),
+    ("Cultivate",                       set(),                     {"ramp", "fetch:basic"}),
     # the three A-F tokens against real wordings
     ("Swords to Plowshares",            set(),                     {"removal"}),
     ("Banishing Light",                 set(),                     {"removal"}),
     ("Damnation",                       set(),                     {"wipe"}),
     ("Toxic Deluge",                    set(),                     {"wipe"}),
     ("Counterspell",                    set(),                     {"counter"}),
+    # v2 fetch/restriction tokens against real wordings. The typed class is the
+    # reason the vocabulary grew: the v1 search regex needs the literal word
+    # "land", and "island" does not match `\bland`, so every one of these read
+    # as flagless until 2026-08-14.
+    ("Wood Elves",                      set(),                     {"ramp", "fetch:forest"}),
+    ("Farseek",                         set(),                     {"ramp", "fetch:plains",
+                                                                    "fetch:island", "fetch:swamp",
+                                                                    "fetch:mountain"}),
+    ("Evolving Wilds",                  set(),                     {"ramp", "fetch:basic"}),
+    ("Expedition Map",                  set(),                     {"fetch:land"}),
+    ("Demonic Tutor",                   set(),                     set()),
+    ("Unclaimed Territory",             {"W", "U", "B", "R", "G", "C"}, {"mana-restricted"}),
 ]
 
 

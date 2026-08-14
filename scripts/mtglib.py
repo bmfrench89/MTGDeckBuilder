@@ -7,7 +7,9 @@ heuristics and mana-cost math the other scripts share.
 Grounding note: category classification (ramp/draw/removal/wipe) is a HEURISTIC.
 It reads, in this order: curated name lists, then the oracle-derived flags
 `carddb` writes via `oracle_flags` (consulted only where the curated lists are
-silent), then card types. It is a starting point, not gospel. Always eyeball the
+silent), then card types. `oracle_flags`' v2 tokens (`fetch:*`,
+`mana-restricted`) map to NO role on purpose — see `FLAG_ROLES` — so growing the
+vocabulary cannot move a category count. It is a starting point, not gospel. Always eyeball the
 output and verify uncertain cards (see the skill's grounding-rules.md).
 """
 
@@ -52,6 +54,13 @@ class Card:
     #   set()   = enriched, and this card really produces no mana (Maze of Ith).
     produced: Optional[set] = None
     flags: set = field(default_factory=set)   # see oracle_flags for the vocabulary
+    # Which oracle_flags vocabulary produced `flags`. Flags are the STORAGE (no
+    # oracle text is kept at rest), so without this a file enriched before a token
+    # existed is indistinguishable from one where the token genuinely doesn't
+    # apply — "no mana-restricted token" would read as "verified unrestricted".
+    # 1 = pre-v2 / unknown; it is always written together with `flags`, never
+    # separately (see overlay_attrs).
+    flags_ver: int = 1
     # Printed power of the FRONT face, as a number — the input the goldfish clock
     # needs to know how hard a board hits. Three file states collapse into two here,
     # and consumers must handle both as UNKNOWN:
@@ -153,6 +162,15 @@ def _parse_power(value) -> Optional[int]:
         return int(float(s))          # '2.5' — a real number, just not an integer
     except (ValueError, OverflowError):
         return None
+
+
+def _parse_flags_ver(value):
+    """The `FlagsVer` cell as an int, defaulting to 1 (pre-v2 / unknown). Anything
+    unreadable is 1: an unparseable version is not a version."""
+    try:
+        return max(1, int(str(value).strip()))
+    except (TypeError, ValueError):
+        return 1
 
 
 def _parse_flags(value: str) -> set:
@@ -396,6 +414,7 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
     c_sid = _header_index(fn, "scryfall", "scryfall id", "id")
     c_prod = _header_index(fn, "produced", "produced mana")
     c_flags = _header_index(fn, "flags")
+    c_fver = _header_index(fn, "flagsver", "flags_ver", "flags version")
     c_power = _header_index(fn, "power")
     idx = index_by_name(cards)
     n = 0
@@ -426,7 +445,16 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
         if c_prod:
             card.produced = _parse_produced(row.get(c_prod))
         if c_flags:
+            # Flags and their VERSION are one write, never two. ATTRS_OVERLAYS
+            # layers snapshot-then-private and this branch overwrites `flags`
+            # whenever the later file has the column — so if the version were
+            # left alone here, a freshly regenerated snapshot (v2) overlaid by a
+            # not-yet-re-enriched private file (v1 tokens, no FlagsVer column)
+            # would leave v1 flags wearing a v2 label. That is the exact silent
+            # lie the version exists to prevent, so an absent FlagsVer column
+            # RESETS to 1 rather than keeping whatever a previous layer said.
             card.flags = _parse_flags(row.get(c_flags))
+            card.flags_ver = _parse_flags_ver(row.get(c_fver)) if c_fver else 1
         # Power is keyed off the CELL, not the column: unlike produced there is no
         # "known to be nothing" integer, so an empty cell and an absent column both
         # read back as None. Writing None over an already-known power would be the

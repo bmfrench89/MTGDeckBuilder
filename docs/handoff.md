@@ -369,30 +369,110 @@ these before touching the analysis path:
   network attempt on **every deck-page view** (315 ms measured, 25 s ceiling). A
   failure is now remembered for five minutes — never served as data.
 
+## Mana intelligence (`docs/spec-mana-intelligence.md` — **Phases A–G ALL SHIPPED 2026-08-14**)
+
+**The rollout legs are the only open items, and they are data, not code (H2):**
+
+1. **Dispatch the attrs-snapshot Action** (workflow_dispatch button, or wait for
+   Monday's cron) — regenerates the committed snapshot with v2 flags + FlagsVer.
+2. **Re-enrich the server's private CSV** — a PythonAnywhere console
+   `python3 scripts/carddb.py --collection data/collection/collection.csv`, or a
+   fresh `/collection/upload`. **Leg 2 is not optional if leg 1 ran**: the stale
+   private file's Flags column overwrites the snapshot's per card (the overlay
+   trap the FlagsVer coupling rule guards — v1 flags then correctly read as v1).
+
+Until both legs: every surface shows pre-vocabulary labels ("fetch census
+unavailable — re-enrich to unlock"), numbers unchanged. After both: run H3's
+acceptance — `manabase.py --deck data/decks/the-ur-dragon.txt --collection
+data/collection/collection.csv` should show Wood Elves with 5 targets, Farseek
+~10, a restricted bucket ≥3 (count what enrichment finds), and per-color sources
+LOWER than the current 17/15/15/21/17 — then `carddb.py --audit-flags` and
+eyeball ~30 rows. The goldfish REPORT_SCHEMA bump (2→3) means the first view of
+each deck after deploy re-simulates once.
+
+What shipped (details in the spec + commit messages):
+
+Born from the player's ur-dragon question ("why Wood Elves with only 2 Forests?"
+— the deck has 5 Forest cards, but nothing could say so). The spec was
+adversarially verified by three lenses before implementation; Phase A is on the
+branch:
+
+- **Vocabulary v2** (`oracle_flags`): `fetch:land` / `fetch:basic` /
+  `fetch:<type>` / `fetch:basic-<type>` / `mana-restricted`, read from the
+  search CLAUSE — Demonic Tutor stays silent, Krosan Verge unions two types,
+  Expedition Map fetches without being ramp. This fixed a live miss: the v1
+  regex needs the literal word "land" and `"island"` doesn't match `\bland`, so
+  Farseek / Nature's Lore / Wood Elves carried NO flags at all (Wood Elves not
+  even `ramp`).
+- **`FlagsVer`** (11th attrs column = `oracle_flags.VOCAB_VERSION`): flags and
+  their version are ONE write — a Flags column arriving without FlagsVer resets
+  the card to version 1. Mutation-proved against the real rollout window (v2
+  snapshot under a stale private CSV must not read as verified-unrestricted).
+- **Proven inert**: 0/2,621 cards change classify() roles, 0/6 decks change
+  power/bracket/categories. v2 tokens map to no `FLAG_ROLES` entry on purpose.
+- **B: the census + restricted split** — `manabase.fetch_census` ("Wood Elves:
+  N targets in THIS deck"), spend-restricted lands out of the Karsten pool into
+  their own bucket; pre-vocabulary data degrades to today's numbers + labels.
+- **C: five surfaces** — dashboard Mana tab (= the app deck page), assess page,
+  Build-Next, assess packet, manabase CLI; the card panel shows "Fetches: N
+  legal target(s)" on the fetcher itself.
+- **D: the standing Mana-health banner** — computed at render time from the
+  memoized analysis, so every manual edit re-evaluates on the panel's own
+  reload; ur-dragon shows "33 lands (floor 36)", the other five decks show
+  nothing. `advise_card` adds a `mana_note` at add-time for thin/no-target
+  fetchers.
+- **E: the optimizer cannot strand a fetcher** — a running ledger across both
+  land passes + the buy pairing (refusals reported as `land_guard`/CLI/⚡
+  flash); basics repair is pip-proportional via the shared
+  `deckcore.basics_by_demand` (round-robin gone); inert on pre-vocabulary data
+  (all six real-deck previews byte-identical).
+- **F: auto_build tie-breaks toward fetchable lands** (take-loop only — never
+  in `assess_card`, whose score feeds the optimizer); basics can no longer leak
+  into the nonbasic pass.
+- **G: the goldfish admits fetch effects are unmodeled** (assumptions line
+  naming the cards) — REPORT_SCHEMA 2→3.
+
 ## Open items
 
-**0. Optimizer role-repair churn — FIXED IN CODE 2026-08-13, freeze lifts on one
-live run.** Phase 8 of `docs/spec-table-ready.md` landed both mandatory fixes:
-the **field veto** (a swap may never cut a card the field plays MORE than the
-incoming one — template pressure arrives through `value_of`'s fit blend and can
-manufacture the 25-point margin on its own, which is what all four recorded
-proposals did) and an **archetype-aware role template** (`optimize.role_ranges`
-reads the deck's `# Archetype:` header, so iron-man's counter:15 is correct
-rather than nine over budget). A sandbox preview on the committed snapshot shows
-all four recorded proposals gone and no field inversions anywhere. **The freeze
-is not formally lifted until `optimize --all` runs as a preview against the full
-private CSV on the player's PC or a GitHub runner** — that is the acceptance step
-still owed; until then keep hands off `--apply` / ⚡ / `refresh --optimize`.
-~~Honest limit found during review: `deck_fit.FIT_TARGETS` is still
-archetype-blind~~ **RESOLVED 2026-08-13 (Phase 12):** the fit scorer now reads
-THE archetype-aware template from `deckcore` (one table, five copies killed), the
-role-point swing is capped below the margin (spread ×2 = 24 < 25, tripwire-
-tested) so template pressure alone can never buy a swap, and a NEW symmetric
-protection landed: the optimizer never re-adds a card the player manually
-removed (`deckcore.manual_removals` → reported `manual_holds`; found live when
-the rescore proposed re-adding Professor Hojo to cloud). Also: `mtglib.deck_header`
-replaced 17 hand-rolled header regexes sharing a newline-crossing bug — ur-dragon's
-empty `# Archetype:` header was parsing as garbage in live data.
+**0. Optimizer role-repair churn — FREEZE LIFTED 2026-08-14.** The acceptance
+step is done: `optimize.py --all` ran as a preview against the **full private
+CSV** from a PythonAnywhere Bash console. All six decks returned **"already
+aligned with the field — no changes"** — zero swaps proposed anywhere, so an
+`--apply` would have written nothing. Every `buy` line was field-superior
+(Herald's Horn 83% over Visions of Beyond 0%, Curiosity 63% over Misdirection
+13%, Tiamat 68% over Reconnaissance Mission 0%, …), and all six expected
+`manual_holds` fired: Hojo, Vibrant Cityscape, Nature's Lore, Frantic Search,
+Laboratory Maniac, Absorb. **`--apply` / ⚡ / `refresh --optimize` are cleared for
+use.** The CLAUDE.md top-25-overlap check governs the first real `--apply`.
+
+Phase 8's fixes are what got it there: the **field veto** (a swap may never cut a
+card the field plays MORE than the incoming one) and an **archetype-aware role
+template** (`role_ranges` reads the deck's `# Archetype:` header, so iron-man's
+counter:15 is correct rather than nine over budget). Phase 12 added the fit
+scorer reading THE same template, the role-point swing capped below the margin
+(spread ×2 = 24 < 25, tripwire-tested), and the symmetric never-re-add rule.
+
+**The run found three live bugs that no sandbox preview could have — keep this in
+mind before trusting a snapshot-only result again:**
+
+1. **The field veto guarded what the optimizer DID, not what it ADVISED.**
+   cosmic-spider-man offered Sun-Spider (25%) and Spider-Man, To the Rescue (29%)
+   as "1 pt short of auto-swap" over **Wall Crawl (41%)** — the exact card and
+   inversion the original churn finding was about. The tool refused the swap, then
+   recommended the player make it by hand. The riser gate now applies the same
+   `inc_add >= inc_cut` comparison. One rule, both surfaces.
+2. **The Cuts surface never protected manual adds.** `cut_candidates` passed the
+   deck `.txt` to `deckcore.manual_adds` (which wants the `.changes.csv`) and
+   iterated its list-of-rows as if it were a dict of names. Neither fault could
+   raise, so the protected set was silently **always empty** and hand-picked cards
+   were ranked with no "your call, not the tool's" flag. Note the second half:
+   `cut_candidates`'s `stem` is a BASENAME for report labelling, so the companion
+   path needs its own full-path stem or the lookup goes relative to cwd.
+3. **The manual-adds advisory listed cards no longer in the deck.**
+   `.changes.csv` is append-only, so y'shtola's Painful Truths — added and
+   reverted the same day — was still printed under "the optimizer never cuts
+   these", as "(no opinion — not resolvable in the collection)". Filtered to
+   cards actually in the 99.
 
 **0b. The original finding, for reference.**
 `docs/spec-optimizer-hardening.md` (2026-08-12 section) has the full finding:

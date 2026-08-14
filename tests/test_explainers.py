@@ -12,8 +12,11 @@ import manabase
 
 def test_the_engine_ships_an_explainer_for_every_stat_it_reports():
     ex = manabase._explain(37, 99, {})
+    # This list is extended BY HAND when the engine gains a stat — nothing
+    # auto-discovers a new key, which is exactly why forgetting one here means
+    # an unexplained number ships silently (spec-mana-intelligence B2).
     for key in ("keepable", "ge3_open", "ge4_by_t4", "sources", "risky",
-                "unconditional"):
+                "unconditional", "restricted", "fetch"):
         assert key in ex, f"{key} has a number but no explanation"
         for part in ("what", "why", "healthy"):
             assert ex[key][part].strip(), f"{key}.{part} must not be empty"

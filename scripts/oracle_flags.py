@@ -18,6 +18,13 @@ word, and human verification always win. Consumers must honour the None-vs-empty
 contract on `mtglib.Card.produced`: `None` means "not enriched — fall back and say
 so", `set()` means "enriched, and it really produces no mana" (Maze of Ith).
 
+**Vocabulary version.** `VOCAB_VERSION` is written into every enriched row's
+`FlagsVer` column, because flags are the storage — there is no oracle text at
+rest, so a file enriched before a token existed is otherwise indistinguishable
+from one where the token genuinely does not apply. Consumers that would
+otherwise read "no `mana-restricted` token" as "verified unrestricted" MUST
+check the version first and say "unknown" below it. Bump on any change here.
+
 v1 flag vocabulary (docs/spec-engine-upgrades.md §4.2):
 
 ===================  ========================================================
@@ -41,6 +48,36 @@ v1 flag vocabulary (docs/spec-engine-upgrades.md §4.2):
                      creature or enchantment that counters still counters.
 ===================  ========================================================
 
+v2 additions (2026-08-14, `docs/spec-mana-intelligence.md` Phase A — amends the
+§4.2 contract):
+
+======================  =====================================================
+`fetch:land`            searches for a land card, no type or basic qualifier
+                        (Sylvan Scrying, Expedition Map)
+`fetch:basic`           searches for a **basic** land card (Cultivate,
+                        Rampant Growth, Evolving Wilds)
+`fetch:<type>`          searches for a named basic land TYPE — `plains`,
+                        `island`, `swamp`, `mountain`, `forest`. A typed
+                        nonbasic satisfies it: Wood Elves (`fetch:forest`)
+                        finds Scattered Groves. Farseek emits four.
+`fetch:basic-<type>`    …the same, but the clause says *basic*, so only a
+                        basic qualifies (Nissa's Pilgrimage)
+`mana-restricted`       a face whose mana carries "spend this mana only …"
+                        (Unclaimed Territory, Cavern of Souls). Scryfall's
+                        `produced_mana` lists every colour such a land makes
+                        and says nothing about the restriction, so without
+                        this token a consumer counts it as a full rainbow
+                        source — an OVERCOUNT, not a gap.
+======================  =====================================================
+
+Multiple `fetch:` tokens on one card are a UNION of what it can find (Krosan
+Verge: `fetch:forest` + `fetch:plains`). `mana-restricted` deliberately carries
+no payload: the restriction's scope ("the chosen type", "Dragon spells") is not
+knowable from the text, so consumers count restricted sources in their own
+bucket and say what that means rather than guessing at it. Neither family maps
+to a `classify()` role — see `mtglib.FLAG_ROLES`, which they are absent from on
+purpose, so role counts, power scores and optimizer guardrails do not move.
+
 Known limits, stated rather than hidden: variable production ("add {B} for each
 Swamp you control") counts as one; hybrid/phyrexian symbols in an Add clause count
 as one mana each; ramp sorceries that make treasure are not `ramp`. And the
@@ -58,6 +95,8 @@ import re
 
 COLORS = "WUBRGC"
 
+VOCAB_VERSION = 2          # bump on ANY change to the vocabulary above
+
 # "enters tapped" (post-Foundations) and "enters the battlefield tapped" (older
 # printings) are the same event. Centralized here so a future rewording is one edit.
 _ETB_TAPPED_RE = re.compile(r"enters (?:the battlefield )?tapped")
@@ -69,7 +108,26 @@ _QUALIFIERS = ("unless", "you may pay", "if ")
 _TAP_ADD_RE = re.compile(r"\{t\}[^:]*:\s*add ")
 
 # The Cultivate / Farseek text class: fetch a land straight onto the battlefield.
+# NOTE the `\bland` word boundary: "island" does NOT match it, which is why the
+# whole TYPED-fetch class (Farseek, Nature's Lore, Wood Elves — "a Plains,
+# Island, Swamp, or Mountain card", "a Forest card") carried no flags at all
+# until v2. `_SEARCH_CLAUSE_RE` below is the general form that finds them.
 _SEARCH_LAND_RE = re.compile(r"search your library for [^.]*\bland")
+
+# v2 fetch vocabulary. The clause is captured to the sentence end (the same
+# scoping every other rule here uses) and then read for what it is allowed to
+# find. Two searches in one sentence (Krosan Verge: "a Forest card and a Plains
+# card") are one clause naming two types — the tokens are a UNION, so that is
+# exactly right.
+_SEARCH_CLAUSE_RE = re.compile(r"search(?:es)? your library for ([^.]*)")
+_BASIC_TYPES = ("plains", "island", "swamp", "mountain", "forest")
+_BASIC_RE = re.compile(r"\bbasic\b")
+_LAND_WORD_RE = re.compile(r"\bland\b")
+# "spend this mana only …" — Unclaimed Territory, Cavern of Souls, Haven of the
+# Spirit Dragon. Scryfall's produced_mana lists every colour such a land can
+# make, with no hint of the restriction, so this token is the ONLY way a
+# consumer can tell a rainbow land from a rainbow-for-one-tribe land.
+_SPEND_ONLY_RE = re.compile(r"spend this mana only")
 
 # gen_card_notes.py:54's proven draw pattern, widened to the third-person "draws"
 # so the opponent/each-player guard below is actually load-bearing.
@@ -172,8 +230,38 @@ def _mana_added(text):
     return best
 
 
+def _fetch_tokens(text):
+    """`fetch:*` tokens for one face's text — what its library search can find.
+
+    The rules, in the order they resolve, because "basic" and a type name can
+    both appear in one clause:
+
+      * a named basic land TYPE wins over the generic word "land" — "a basic
+        Forest card" is `fetch:basic-forest`, not `fetch:basic`, because a
+        Forest-typed dual does NOT satisfy it;
+      * a type name with no "basic" is `fetch:<type>` — a typed dual DOES
+        satisfy it (Wood Elves finds Scattered Groves);
+      * no type name, but the word "land": `fetch:basic` when the clause says
+        basic, else `fetch:land`.
+
+    "Search your library for a card" (Demonic Tutor) names neither and yields
+    nothing, which is the point of reading the clause rather than the verb.
+    Snow-covered and Wastes are out of scope; snow basics are basics and are
+    covered by `fetch:basic`."""
+    out = set()
+    for clause in _SEARCH_CLAUSE_RE.findall(text):
+        basic = bool(_BASIC_RE.search(clause))
+        types = [ty for ty in _BASIC_TYPES
+                 if re.search(rf"\b{ty}\b", clause)]
+        if types:
+            out |= {f"fetch:basic-{ty}" if basic else f"fetch:{ty}" for ty in types}
+        elif _LAND_WORD_RE.search(clause):
+            out.add("fetch:basic" if basic else "fetch:land")
+    return out
+
+
 def derive_flags(c):
-    """set[str] of v1 vocabulary tokens for a Scryfall card object (see module doc)."""
+    """set[str] of vocabulary tokens for a Scryfall card object (see module doc)."""
     flags = set()
     amount = 1
     for type_line, text in faces(c):
@@ -199,8 +287,21 @@ def derive_flags(c):
                 flags.add("rock")
             if "creature" in tl:
                 flags.add("dork")
-        if _SEARCH_LAND_RE.search(t) and "onto the battlefield" in t:
+        # Fetch: what can this card's library search actually FIND? Not gated on
+        # the searcher's type or the destination — "does this have targets" is
+        # the same question for a fetchland, Wood Elves and Expedition Map, and
+        # the census that consumes these tokens asks exactly that.
+        fetched = _fetch_tokens(t)
+        flags |= fetched
+        # `ramp` kept its v1 meaning (a land, onto the battlefield) and gains the
+        # typed class it always should have covered: `_SEARCH_LAND_RE` needs the
+        # literal word "land", so Farseek and Wood Elves were never ramp here.
+        if (_SEARCH_LAND_RE.search(t) or fetched) and "onto the battlefield" in t:
             flags.add("ramp")
+        # Spend restriction. A land face is the case that matters downstream, but
+        # the token is honest wherever the clause appears.
+        if _SPEND_ONLY_RE.search(t):
+            flags.add("mana-restricted")
 
         for m in _DRAW_RE.finditer(t):
             before = t[:m.start()]

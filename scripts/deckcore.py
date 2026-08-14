@@ -361,7 +361,7 @@ def load_attrs(path):
                 "mv": mv,
                 "colors": (r.get("Colors") or "").strip(),
                 "produced": r.get("Produced"),      # None = column absent, keep it
-                "flags": r.get("Flags"),
+                "flags": r.get("Flags"), "flags_ver": r.get("FlagsVer"),
                 "power": r.get("Power"),            # verbatim; '*' stays '*'
             }
     return out
@@ -433,7 +433,13 @@ def apply_attrs(enriched, attrs):
         if a.get("produced") is not None:
             c.produced = mtglib._parse_produced(a["produced"])
         if a.get("flags") is not None:
+            # Same one-write rule as mtglib.overlay_attrs: a deck companion that
+            # supplies Flags without a FlagsVer supplies v1 flags, and saying so
+            # is what keeps "no restriction token" from reading as "verified
+            # unrestricted" on a file written before the token existed.
             c.flags = mtglib._parse_flags(a["flags"])
+            c.flags_ver = (mtglib._parse_flags_ver(a.get("flags_ver"))
+                           if a.get("flags_ver") is not None else 1)
         if a.get("power") is not None:
             p = mtglib._parse_power(a["power"])
             if p is not None:
@@ -492,6 +498,63 @@ def load_power_tags(refdir=None):
 # bucketer, shared by deck_sections.py (migration/regroup) and auto_build
 # (future decks), so the two can never drift.
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Basics apportionment — ONE way of deciding which basic land types a deck
+# wants, shared by auto_build (initial fill) and optimize's basics repair
+# (which round-robined alphabetically until spec-mana-intelligence Phase E:
+# in a WUB deck, B always got the first repaired basic regardless of pips).
+# The two callers keep their own COUNT formulas on purpose (auto_build floors
+# at 6 against LAND_TARGET; optimize scales to the actual land count) — only
+# the split is single-sourced.
+# --------------------------------------------------------------------------- #
+BASIC_OF_COLOR = {"W": "Plains", "U": "Island", "B": "Swamp",
+                  "R": "Mountain", "G": "Forest"}
+
+
+def basics_split(n, identity):
+    """Even split of n basics across the identity, deterministic order."""
+    out = {}
+    colors = sorted(identity) if identity else []
+    if not colors or n <= 0:
+        return out
+    base, extra = divmod(n, len(colors))
+    for i, col in enumerate(colors):
+        out[BASIC_OF_COLOR[col]] = base + (1 if i < extra else 0)
+    return {k: v for k, v in out.items() if v}
+
+
+def basics_by_demand(n, identity, cards):
+    """Split n basics across the identity's colors weighted by the colored-pip
+    demand of `cards` — a blue-heavy deck gets more Islands. Largest-remainder
+    rounding, every demanded color floored at one source, deterministic
+    throughout (idempotency is a stated optimizer invariant). Falls back to the
+    even split when mana costs aren't known (name-only)."""
+    colors = sorted(identity) if identity else []
+    if not colors or n <= 0:
+        return {}
+    demand = {c: 0.0 for c in colors}
+    for card in cards:
+        if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
+            continue
+        for col, pips in mtglib.pip_counts(card.mana_cost).items():
+            if col in demand:
+                demand[col] += pips
+    tot = sum(demand.values())
+    if tot <= 0:
+        return basics_split(n, identity)
+    raw = {c: n * demand[c] / tot for c in colors}
+    alloc = {c: int(raw[c]) for c in colors}
+    for c in sorted(colors, key=lambda c: -(raw[c] - int(raw[c])))[:n - sum(alloc.values())]:
+        alloc[c] += 1
+    for c in colors:                     # every demanded color gets >=1 source
+        if demand[c] > 0 and alloc[c] == 0:
+            donor = max(colors, key=lambda x: alloc[x])
+            if alloc[donor] > 1:
+                alloc[donor] -= 1
+                alloc[c] = 1
+    return {BASIC_OF_COLOR[c]: v for c, v in alloc.items() if v > 0}
+
+
 TYPE_SECTION_ORDER = ("Creatures", "Instants", "Sorceries", "Artifacts",
                       "Enchantments", "Planeswalkers", "Battles", "Lands", "Basics")
 BASIC_LAND_NAMES = {"plains", "island", "swamp", "mountain", "forest", "wastes",
@@ -673,12 +736,33 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
                                             load_role_staples_safe())
     except Exception:
         alts = []
-    return {"name": card.name, "score": fit["score"], "band": fit["band"],
-            "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
-            "in_deck": bool(mtglib.name_keys(card.name) & in_deck),
-            "has_field": bool(field),
-            "field_pct": field.get(mtglib._norm(card.name)) if field else None,
-            "alternatives": alts[:3]}
+    out = {"name": card.name, "score": fit["score"], "band": fit["band"],
+           "reasons": fit["reasons"], "context": fit["context"], "role": fit["role"],
+           "in_deck": bool(mtglib.name_keys(card.name) & in_deck),
+           "has_field": bool(field),
+           "field_pct": field.get(mtglib._norm(card.name)) if field else None,
+           "alternatives": alts[:3]}
+    # The census note at the moment of the add (spec-mana-intelligence Phase D):
+    # a fetcher with thin/no targets deserves a word RIGHT NOW, while the player
+    # is deciding, not after they hunt through the Mana tab. Computed here — this
+    # function already owns the verdict shape and has the analysis in hand; the
+    # route stays dumb. Advice only: nothing blocks the add.
+    if card.flags_ver >= 2 and any(f.startswith("fetch:") for f in card.flags):
+        try:
+            import manabase
+            probe = [c for c in enriched
+                     if mtglib._norm(c.name) != mtglib._norm(card.name)] + [card]
+            row = next((r for r in manabase.fetch_census(probe)["rows"]
+                        if r["name"] == card.name), None)
+            if row and row["state"] != "ok":
+                out["mana_note"] = (
+                    f"{card.name} can fetch {row['targets']} legal target(s) in "
+                    f"this deck"
+                    + (" — nothing to find" if row["state"] == "none" else
+                       " — thin; an early fetch can drain the pool"))
+        except Exception:
+            pass                     # advice must never break the add
+    return out
 
 
 def load_role_staples_safe():

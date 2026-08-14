@@ -136,3 +136,71 @@ def test_risers_capture_gate_suppressed_upgrades_without_acting(tmp_path, monkey
     z = next(z for z in r["risers"] if z["add"] == "New Hotness")
     assert z["over"] == "Weak Incumbent" and 0 < z["gap"] < 25
     assert p.read_text(encoding="utf-8") == before, "advisory means nothing was written"
+
+
+# The field veto applies to what the tool ADVISES, not only to what it DOES.
+RISER_INVERSION_COLL = (
+    "Quantity,Name,Identities,Types\n"
+    "1,Test Commander,W U,Legendary Creature\n"
+    "1,Strong Incumbent,U,Instant\n"     # 41% field — a deliberate keep
+    "1,Field Inferior,U,Instant\n"       # 25% field — scores higher on FIT
+)
+
+RISER_INVERSION_DECK = """\
+# Title: R2
+# Commander: Test Commander
+# Colors: W U
+
+# --- Commander ---
+1 Test Commander
+
+# --- Spells ---
+1 Strong Incumbent
+"""
+
+
+def test_risers_never_offer_a_field_inferior_card(tmp_path, monkeypatch):
+    """Regression, found by the Phase 8 acceptance run against the real collection
+    (2026-08-14): the field veto guarded the swap loop and not the riser list, so
+    cosmic-spider-man's preview offered Sun-Spider (25%) and Spider-Man, To the
+    Rescue (29%) as "1 pt short of auto-swap" over Wall Crawl (41%) — the exact
+    card and the exact inversion the original churn finding was about.
+
+    The optimizer refused to make that swap and then recommended the player make
+    it by hand. Advice the tool would not take itself is worse than no advice, so
+    the riser gate applies `inc_add >= inc_cut`, the same comparison the swap loop
+    uses. One rule, both surfaces.
+
+    The setup is the shape that produced the live line: the incumbent is the
+    LOWEST-value open cut (so risers are measured over it), and the incoming card
+    beats it on fit by less than the margin (so it lands in the riser path rather
+    than being taken as a swap — which would make this test vacuous by excluding
+    it through `used_add` instead of through the veto)."""
+    d = tmp_path / "decks"
+    d.mkdir()
+    p = d / "riser2.txt"
+    p.write_text(RISER_INVERSION_DECK, encoding="utf-8")
+    coll = mtglib.parse_collection(RISER_INVERSION_COLL)
+    idx = mtglib.index_by_name(coll)
+
+    field = {"strong incumbent": 41, "field inferior": 25}
+    monkeypatch.setattr(optimize.deck_fit, "load_field", lambda *a, **k: field)
+    monkeypatch.setattr(optimize.deck_fit, "load_synergy", lambda *a, **k: {})
+    # value_of = max(field %, (fit-60)*2): incumbent 41, incoming 50 — a 9-point
+    # gain, under the 25-point margin, so the margin gate suppresses the swap and
+    # the riser list is what would surface it.
+    scores = {"Field Inferior": 85, "Strong Incumbent": 50}
+    monkeypatch.setattr(optimize.deck_fit, "assess_card",
+                        lambda card, *a, **k: {"score": scores.get(card.name, 0)})
+
+    r = optimize.optimize(str(p), coll, idx, str(d))
+    assert not any(s[0] == "Strong Incumbent" for s in r["swaps"]), \
+        "precondition: the swap loop's veto already refuses this cut"
+    offered = {z["add"]: z for z in r["risers"]}
+    assert "Field Inferior" not in offered, (
+        "the riser list offered a 25%-field card over a 41%-field incumbent — the "
+        "field veto must cover advice, not only applied swaps")
+    for z in r["risers"]:
+        assert z["add_inc"] >= z["over_inc"], (
+            f"riser {z['add']} ({z['add_inc']}%) is field-inferior to "
+            f"{z['over']} ({z['over_inc']}%)")

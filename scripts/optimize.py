@@ -86,8 +86,23 @@ def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
     ranges, _unknown = role_ranges_with_unknown(ctx.get("archetype"))
     prot = _protected(deck_path, commander)
     prot = prot[0] if isinstance(prot, tuple) else prot
+    # The player's own picks, flagged rather than hidden (see cut_ranking's docstring).
+    #
+    # This was silently a no-op until the Phase 8 acceptance run (2026-08-14) went
+    # looking. TWO faults, neither of which could raise: `manual_adds` wants the
+    # `.changes.csv`, and was handed the deck `.txt` — `csv.DictReader` over a deck
+    # file finds no `Card` column and returns nothing at all; and it returns a LIST OF
+    # ROWS, so iterating it yields dicts, which `_norm` would choke on inside a bare
+    # `except`. Either alone empties the set. The result was a Cuts surface that
+    # ranked hand-added cards with no "your call, not the tool's" flag on them —
+    # exactly the protection Phase 9 was written to provide. Match on `name_keys`,
+    # like every other membership test here (the ` // ` trap).
+    # NB `stem` above is a BASENAME (it labels the report); the companion file needs
+    # the full path, or this reads a changes.csv relative to the process's cwd.
+    path_stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        manual = {mtglib._norm(n) for n in (deckcore.manual_adds(deck_path) or {})}
+        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv")
+                  for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
     out = deck_fit.cut_ranking(enriched, rep, ctx, refs, field,
@@ -515,6 +530,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # blocked). Surface those, never act on them: owned with a free copy, would beat the
     # deck's current weakest cut, just not by enough to swap automatically. The player
     # decides; a manual add is then protected forever.
+    #
+    # `inc_add >= inc_cut` is THE SAME field veto the swap loop applies, and it belongs
+    # here for the same reason. Found by the Phase 8 acceptance run against the real
+    # collection (2026-08-14): the veto was guarding what the optimizer DOES and not what
+    # it ADVISES, so cosmic-spider-man's preview offered Sun-Spider (25%) and Spider-Man,
+    # To the Rescue (29%) as "1 pt short of auto-swap" over Wall Crawl (41%) — the exact
+    # card, and the exact inversion, the whole churn finding was about. The machine
+    # refused the swap and then recommended the player make it by hand. Advice the tool
+    # would not take itself is worse than no advice.
     risers = []
     open_cuts = [t for t in cuts if mtglib._norm(t[2]) not in used_cut]
     if open_cuts:
@@ -525,7 +549,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if avail != "free" or mtglib._norm(add_name) in used_add:
                 continue
             gap = val_add - val_cut
-            if 0 < gap < margin and inc_add >= 20:
+            if 0 < gap < margin and inc_add >= 20 and inc_add >= inc_cut:
                 risers.append({"add": add_name, "add_inc": inc_add,
                                "over": cut_name, "over_inc": inc_cut,
                                "gap": round(gap)})
@@ -540,6 +564,79 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 "untyped": untyped, "archetype": list(ctx.get("archetype") or []),
                 "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
                 "role_ranges": ranges, "swaps_detail": swaps_detail}
+
+    # ---- the fetch ledger (spec-mana-intelligence Phase E) ------------------------------
+    # Both land passes and the buy pairing consult ONE running ledger, because they
+    # share victims through used_land: pass 1 can schedule the cut of one Swamp-typed
+    # land and pass 2 the conversion of the other in the same run, each individually
+    # "leaving one". `type_counts` tracks copies of each basic land type in the deck;
+    # `demanded[type]` counts fetcher CARDS whose fetch:* tokens want it — an accepted
+    # cut of a fetcher retracts its demand, so a stale demand can't block cuts of
+    # lands nobody can fetch any more. A land with no type data skips the guard (it is
+    # already in the `untyped` honesty count — never guess, the Hidden Lair rule).
+    import manabase as _mb
+    type_counts, demanded, fetcher_of = {}, {}, {}
+    for c in deck:
+        ref = mtglib.lookup(idx, c.name)
+        if ref is None:
+            continue
+        # Types are counted regardless of flag vocabulary — subtypes aren't
+        # versioned, only flag TRUST is. Gating the counts on flags_ver would
+        # undercount types on a mixed-enrichment collection and over-block.
+        if ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) + c.quantity
+        if ref.flags_ver < 2:
+            continue                      # v1 flags: no fetch demand to trust
+        for tok in ref.flags:
+            ty = None
+            if tok.startswith("fetch:basic-"):
+                ty = tok[len("fetch:basic-"):]
+            elif tok.startswith("fetch:") and tok not in ("fetch:basic", "fetch:land"):
+                ty = tok[len("fetch:"):]
+            if ty:
+                demanded[ty] = demanded.get(ty, 0) + 1
+                fetcher_of.setdefault(ty, []).append(ref.name)
+
+    land_guard = []
+
+    def _guard_blocks(cut_name):
+        """The types this cut would strand, with the fetchers that need them —
+        or an empty list if the cut is safe / unknowable."""
+        ref = mtglib.lookup(idx, cut_name)
+        if ref is None or not ref.has_type_data:
+            return []                     # unknown types: report via `untyped`, never guess
+        deck_qty = next((c.quantity for c in deck
+                         if mtglib.name_keys(c.name) & mtglib.name_keys(cut_name)), 1)
+        out = []
+        for ty in _mb._land_types(ref):
+            if demanded.get(ty, 0) > 0 and type_counts.get(ty, 0) - deck_qty <= 0:
+                out.append((ty, fetcher_of.get(ty, [])))
+        return out
+
+    def _ledger_cut(cut_name):
+        """Record an ACCEPTED cut: its land types leave the pool, and — if the cut
+        card was itself a fetcher — its demand goes with it."""
+        ref = mtglib.lookup(idx, cut_name)
+        if ref is None:
+            return
+        deck_qty = next((c.quantity for c in deck
+                         if mtglib.name_keys(c.name) & mtglib.name_keys(cut_name)), 1)
+        if ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) - deck_qty
+        for tok in ref.flags:
+            ty = (tok[len("fetch:basic-"):] if tok.startswith("fetch:basic-") else
+                  tok[len("fetch:"):] if tok.startswith("fetch:")
+                  and tok not in ("fetch:basic", "fetch:land") else None)
+            if ty and demanded.get(ty, 0) > 0:
+                demanded[ty] -= 1
+
+    def _ledger_add(add_name):
+        ref = mtglib.lookup(idx, add_name)
+        if ref is not None and ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) + 1
 
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
@@ -558,9 +655,17 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_land or inc_add - inc_cut < margin:
                 continue
+            blocked = _guard_blocks(cut_name)
+            if blocked:
+                for ty, who in blocked:
+                    land_guard.append({"kept": cut_name, "type": ty, "for": who})
+                used_land.add(ck)         # held for its type — not offered to pass 2
+                continue                  # try the next weak land for this add
             land_swaps.append((cut_name, add_name, avail))
             used_land.add(ck)
             used_land_add |= akeys
+            _ledger_cut(cut_name)
+            _ledger_add(add_name)
             break
 
     # ---- manabase pass 2: run basics (98-99% inclusion in every archetype) --------------
@@ -570,21 +675,58 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     if n_basic < want_basic:
         worst = [(i, n) for i, n in weak_lands if mtglib._norm(n) not in used_land]
         need = want_basic - n_basic
-        colors = sorted(identity) or ["C"]
-        cname = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
-        i = 0
+        # Which basic types does the deck actually WANT? Pip-proportional via THE
+        # shared split (deckcore.basics_by_demand) over the deck's nonland cards —
+        # the alphabetical round-robin this replaces gave B the first repaired
+        # basic in every B deck regardless of pips. Deficit = desired minus what
+        # is already sleeved; ties break toward fetch-demanded types, then name,
+        # so the choice is deterministic and a second run still no-ops.
+        nonland_refs = [mtglib.lookup(idx, c.name) for c in deck
+                        if not is_land_in_deck(c.name)]
+        desired = deckcore.basics_by_demand(want_basic, identity,
+                                            [r for r in nonland_refs if r])
+        have_basics = {}
+        for c in lands:
+            if mtglib.is_basic(c.name):
+                base = c.name.replace("Snow-Covered ", "")
+                have_basics[base] = have_basics.get(base, 0) + c.quantity
+        deficit = {b: desired.get(b, 0) - have_basics.get(b, 0)
+                   for b in set(desired) | set(have_basics)}
+        _type_of_basic = {v: k for k, v in deckcore.BASIC_OF_COLOR.items()}
+
+        def _next_basic():
+            pool = sorted(deficit.items(),
+                          key=lambda kv: (-kv[1],
+                                          0 if kv[0].lower() in demanded else 1,
+                                          kv[0]))
+            for name, d in pool:
+                if d > 0:
+                    return name
+            return deckcore.BASIC_OF_COLOR.get((sorted(identity) or ["C"])[0], "Wastes")
+
         for inc_l, land in worst:
             if need <= 0:
                 break
             if inc_l >= 40:               # a genuinely-played fixing land: keep it
                 continue
+            blocked = _guard_blocks(land)
+            if blocked:
+                for ty, who in blocked:
+                    land_guard.append({"kept": land, "type": ty, "for": who})
+                used_land.add(mtglib._norm(land))
+                continue
+            incoming = _next_basic()
             # 3-tuple like every other land swap: consumers (record_changes, the
             # CLI printer) unpack (old, new, avail); the 2-tuple crashed them AFTER
             # _write had already rewritten the deck. Basics are always "free".
-            land_swaps.append((land, cname.get(colors[i % len(colors)], "Wastes"), "free"))
+            land_swaps.append((land, incoming, "free"))
             used_land.add(mtglib._norm(land))   # else the buy-land pairing can set a
-            i += 1                              # Replaces target this run just removed
-            need -= 1
+            need -= 1                           # Replaces target this run just removed
+            deficit[incoming] = deficit.get(incoming, 0) - 1
+            _ledger_cut(land)
+            ity = incoming.lower()
+            if ity in ("plains", "island", "swamp", "mountain", "forest"):
+                type_counts[ity] = type_counts.get(ity, 0) + 1
 
     # ---- buys: recommended, never written into the 99 -----------------------------------
     # Each buy pairs one-to-one with a card that STAYS in the deck (a cut the owned
@@ -614,13 +756,18 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_land or ck in used_buy or inc_add - inc_cut < margin:
                 continue
+            if _guard_blocks(cut_name):
+                # Advice the tool would not take itself is worse than none (the
+                # riser-veto lesson, 2026-08-14): a Replaces target the land
+                # passes refused to cut may not be recommended for pulling either.
+                continue
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "land"))
             used_buy.add(ck)
             used_buy_add |= akeys
             break
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "buy_swaps": buy_swaps,
+              "land_swaps": land_swaps, "buy_swaps": buy_swaps, "land_guard": land_guard,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
               "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
@@ -892,6 +1039,21 @@ def manual_adds_review(deck_path, coll):
         rows = deckcore.manual_adds(f"{stem}.changes.csv")
     except Exception:
         return []
+    # Only cards STILL IN the deck. `.changes.csv` is append-only history, so a card
+    # the player added and then took back out remains a manual-add row forever — and
+    # this list is headed "the optimizer never cuts these", which is a claim about a
+    # card that is not there to cut. Found by the Phase 8 acceptance run (2026-08-14):
+    # y'shtola listed Painful Truths, added and reverted the same day (rows 17-18 of
+    # its log), rendered as "(no opinion — not resolvable in the collection)" because
+    # it is also unowned. Two confusing statements about a card the deck does not run.
+    try:
+        in_deck = set()
+        for c in mtglib.parse_deck(open(deck_path, encoding="utf-8").read()):
+            in_deck |= mtglib.name_keys(c.name)
+        rows = [r for r in rows
+                if mtglib.name_keys(r.get("name") or r.get("key") or "") & in_deck]
+    except OSError:
+        pass                     # unreadable deck: report the rows rather than none
     if not rows:
         return []
     out = ["   manual adds (advisory — the optimizer never cuts these):"]
@@ -973,6 +1135,10 @@ def main():
             print(f"   held: {h['name']} ({h['inc']}% field) — you removed it by hand "
                   f"on {h['removed']}; not re-proposing. Add it back yourself if "
                   f"you've changed your mind.")
+        for g in r.get("land_guard") or []:
+            who = ", ".join(g["for"][:3]) or "a fetcher"
+            print(f"   ~ kept {g['kept']}: last {g['type'].capitalize()}-typed "
+                  f"land for {who}")
         if r.get("archetype_unknown"):
             # The label fires on the IGNORED input too, not only on success — an
             # unmapped word buys nothing and the player should not have to guess

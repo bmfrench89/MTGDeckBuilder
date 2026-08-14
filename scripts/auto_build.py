@@ -65,48 +65,15 @@ def _color_legal(card, identity):
     return cid <= identity
 
 
-def _basics_split(n, identity):
-    out = {}
-    colors = sorted(identity) if identity else []
-    if not colors or n <= 0:
-        return out
-    base, extra = divmod(n, len(colors))
-    for i, col in enumerate(colors):
-        out[_BASIC[col]] = base + (1 if i < extra else 0)
-    return {k: v for k, v in out.items() if v}
+# THE split lives in deckcore (shared with optimize's basics repair) — these
+# shims keep auto_build's public surface and tests unchanged.
+_basics_split = deckcore.basics_split
 
 
 _BASIC_COLOR = {v: k for k, v in _BASIC.items()}   # "Plains" -> "W", ...
 
 
-def _basics_by_demand(n, identity, cards):
-    """Split n basics across the identity's colors weighted by the colored-pip
-    demand of the chosen nonland cards — so a blue-heavy deck gets more Islands.
-    Falls back to an even split when card mana costs aren't known (name-only)."""
-    colors = sorted(identity) if identity else []
-    if not colors or n <= 0:
-        return {}
-    demand = {c: 0.0 for c in colors}
-    for card in cards:
-        if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
-            continue
-        for col, pips in mtglib.pip_counts(card.mana_cost).items():
-            if col in demand:
-                demand[col] += pips
-    tot = sum(demand.values())
-    if tot <= 0:
-        return _basics_split(n, identity)
-    raw = {c: n * demand[c] / tot for c in colors}
-    alloc = {c: int(raw[c]) for c in colors}
-    for c in sorted(colors, key=lambda c: -(raw[c] - int(raw[c])))[:n - sum(alloc.values())]:
-        alloc[c] += 1
-    for c in colors:                     # every demanded color gets >=1 source
-        if demand[c] > 0 and alloc[c] == 0:
-            donor = max(colors, key=lambda x: alloc[x])
-            if alloc[donor] > 1:
-                alloc[donor] -= 1
-                alloc[c] = 1
-    return {_BASIC[c]: v for c, v in alloc.items() if v > 0}
+_basics_by_demand = deckcore.basics_by_demand
 
 
 _TRIBAL_MIN = 12  # owned in-color members before a tribal build is honest (grounding rule #2)
@@ -215,7 +182,36 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     ncol = max(1, len(identity))
     basics_target = max(6, round(LAND_TARGET * (0.42 - 0.04 * (ncol - 1))))
     nonbasic_cap = LAND_TARGET - basics_target
-    for c in [x for x in cands if x["is_land"]]:
+    # Fetchable-first re-rank (spec-mana-intelligence Phase F). The pool's typed
+    # fetchers — land fetchers in this sublist plus the nonland candidates that
+    # will plausibly fill the spell budget (lands are picked BEFORE spells, so
+    # "the deck's fetchers" can only be a projection of the sorted pool) — demand
+    # basic land types; a candidate land carrying a demanded type wins ties.
+    # A stable-sort TIEBREAK below equal scores, deliberately: this is in the
+    # take loop and NOT in deck_fit.assess_card, whose score feeds card_value ->
+    # the optimizer's swap values and the Cuts ranking. It reorders the sublist
+    # and never changes how many lands are taken. Basics are excluded here
+    # explicitly — only sort-stability kept 40x Island out of the "nonbasic"
+    # pass when no decks_dir constrains the pool.
+    land_pool = [x for x in cands if x["is_land"]
+                 and not mtglib.is_basic(x["card"].name)]
+    demanded_types = set()
+    projection = land_pool + [x for x in cands if not x["is_land"]][:DECK_SIZE]
+    for x in projection:
+        ref = x["card"]
+        if ref.flags_ver < 2:
+            continue
+        for tok in ref.flags:
+            if tok.startswith("fetch:basic-"):
+                demanded_types.add(tok[len("fetch:basic-"):])
+            elif tok.startswith("fetch:") and tok not in ("fetch:basic", "fetch:land"):
+                demanded_types.add(tok[len("fetch:"):])
+    if demanded_types:
+        def _fetchable(x):
+            sub = {t.lower() for t in (x["card"].subtypes or [])}
+            return 1 if sub & demanded_types else 0
+        land_pool.sort(key=lambda x: (-x["score"], -_fetchable(x)))
+    for c in land_pool:
         if sum(1 for x in chosen if x["is_land"]) >= nonbasic_cap:
             break
         take(c)

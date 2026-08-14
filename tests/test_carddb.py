@@ -101,19 +101,24 @@ def _read(path):
 
 
 # ── the pinned header ────────────────────────────────────────────────────────
-def test_header_is_the_ten_pinned_columns_in_order(tmp_path, collection_csv,
-                                                   fake_scryfall):
+def test_header_is_the_eleven_pinned_columns_in_order(tmp_path, collection_csv,
+                                                      fake_scryfall):
     out = str(tmp_path / "attrs.csv")
     carddb.enrich_api(collection_csv, out, delay=0)
     header, _ = _read(out)
     assert header == ["Name", "Type", "MV", "Colors", "Cost", "Sub-types",
-                      "Scryfall", "Produced", "Flags", "Power"]
+                      "Scryfall", "Produced", "Flags", "Power", "FlagsVer"]
     # New columns come strictly AFTER the ones older readers know, so a file written
     # by this build still loads in an older one and vice versa. Power (2026-08-13)
     # is appended after Flags for exactly the reason Produced/Flags came after
     # Scryfall — the whole back-compat story is positional-append + read-by-name.
     assert header[:7] == carddb.ATTRS_HEADER[:7]
-    assert header[-1] == "Power"
+    # FlagsVer (2026-08-14) is appended after Power for the same reason Power came
+    # after Flags. It is the one column that describes ANOTHER column: without it a
+    # file enriched before a flag token existed is indistinguishable from one where
+    # the token genuinely doesn't apply.
+    assert header[-1] == "FlagsVer"
+    assert header[-2] == "Power"
 
 
 def test_bulk_path_writes_the_same_header(tmp_path, collection_csv):
@@ -239,6 +244,11 @@ def test_round_trip_into_load_collection(tmp_path, collection_csv, fake_scryfall
     maze = mtglib.lookup(idx, "Maze of Ith")
     assert maze.produced == set() and maze.produced is not None   # enriched, produces none
     assert mtglib.lookup(idx, "Azorius Guildgate").flags == {"etb-tapped"}
+    # FlagsVer rides the same trip: written as the current VOCAB_VERSION, read back
+    # onto Card.flags_ver. This is what lets a consumer tell "verified — no
+    # restriction token applies" from "enriched before the token existed".
+    import oracle_flags
+    assert mtglib.lookup(idx, "Sol Ring").flags_ver == oracle_flags.VOCAB_VERSION
     # Power survives the same trip: a real int for the creature, None for the cards
     # that have no power at all.
     assert mtglib.lookup(idx, "Llanowar Elves").power == 1

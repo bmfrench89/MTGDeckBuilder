@@ -21,7 +21,10 @@ no others):
     (Maze of Ith). Conflating the two turns Maze of Ith into a producer, or a whole
     un-enriched deck into a zero-mana one, and the honesty label never fires.
   * `Card.flags` — `etb-tapped`, `etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`,
-    `mana2`/`mana3`.
+    `mana2`/`mana3`. The v2 tokens (`fetch:*`, `mana-restricted`) are deliberately
+    NOT read here: fetch effects are not modeled at all, and a spend restriction
+    would need `_pay` to know which spell it is paying for. Both are inert —
+    `compile_card` reads the flag set by explicit membership only.
 
 Two documented deviations from the closed forms, both deliberate:
   * **Pips are compiled here, not by `mtglib.pip_counts`.** That function splits one
@@ -97,7 +100,7 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 2
+REPORT_SCHEMA = 3
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
@@ -268,8 +271,17 @@ def compile_deck(enriched, commander_name=""):
     printing plausible numbers."""
     cmd_keys = mtglib.name_keys(commander_name) if commander_name else frozenset()
     commander, library = None, []
+    # DATA-ONLY: the names of nonland cards whose flags say they search for
+    # lands. SimCard deliberately carries no flags slot, so this is recorded at
+    # compile time for _assumptions' honesty line — the sim does NOT model fetch
+    # effects, and an enriched Wood Elves is otherwise indistinguishable from
+    # Counterspell by the time _assumptions sees it. Never consulted by game
+    # logic; simulate_ab adjusts it for arm B by name.
+    fetch_flagged = []
     for card in enriched:
         sc = compile_card(card)
+        if not sc.is_land and any(f.startswith("fetch:") for f in (card.flags or ())):
+            fetch_flagged.append(card.name)
         for _ in range(max(1, int(card.quantity or 1))):
             if commander is None and cmd_keys and (mtglib.name_keys(card.name) & cmd_keys):
                 commander = sc                 # starts in the command zone
@@ -277,6 +289,7 @@ def compile_deck(enriched, commander_name=""):
             library.append(sc)
 
     return _recount({"commander": commander, "library": library,
+                     "fetch_flagged": fetch_flagged,
                      "commander_name": commander.name if commander else None})
 
 
@@ -624,6 +637,17 @@ def _mean(xs):
 
 def _assumptions(compiled, mulligan, on_play, games):
     cov = compiled["coverage"]
+    # Fetch effects are structurally unmodeled (REPORT_SCHEMA 3, 2026-08-14):
+    # an enriched fetchland compiles to produces==set() and is skipped by
+    # _mana_units — a dead land that eats a land drop — and a fetch creature or
+    # sorcery finds nothing. Enrichment therefore makes such cards WORSE in this
+    # sim (an un-enriched Wood Elves at least modeled as an identity-tier dork).
+    # Saying so beside the numbers is the whole honesty framework; hiding a
+    # known-wrong model behind labels that only fire on ABSENT data was the
+    # blind spot.
+    dead_fetch_lands = sorted({sc.name for sc in compiled["library"]
+                               if sc.is_land and sc.model == "exact"
+                               and not sc.produces})
     label = {"exact": "production-aware (enriched: each permanent taps for what "
                       "Scryfall says it taps for)",
              "identity": "COLOR-IDENTITY FALLBACK — an approximation, the same bias "
@@ -658,6 +682,20 @@ def _assumptions(compiled, mulligan, on_play, games):
         out.append(f"[!] {cov['identity']} card(s) modeled from color IDENTITY, not "
                    "actual production. Enrich the collection (scripts/carddb.py) for "
                    "what they really tap for.")
+    fetchers = compiled.get("fetch_flagged") or []
+    if dead_fetch_lands or fetchers:
+        bits = []
+        if dead_fetch_lands:
+            bits.append(f"fetchlands ({', '.join(dead_fetch_lands[:3])}"
+                        + (", …" if len(dead_fetch_lands) > 3 else "")
+                        + ") add no mana here — they compile as lands that "
+                          "produce nothing")
+        if fetchers:
+            bits.append(f"fetch spells/creatures ({', '.join(sorted(fetchers)[:3])}"
+                        + (", …" if len(fetchers) > 3 else "")
+                        + ") find no lands")
+        out.append("[!] Fetch effects are NOT modeled: " + "; ".join(bits) + ". "
+                   "Their numbers here understate them.")
     return out
 
 
@@ -971,7 +1009,11 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
     lib_b = list(library)
     for i in positions:
         lib_b[i] = incoming
-    comp_b = _recount(dict(compiled, library=lib_b))
+    ff_b = [n for n in (compiled.get("fetch_flagged") or ())
+            if not (mtglib.name_keys(n) & keys)]
+    if not incoming.is_land and any(f.startswith("fetch:") for f in (ref.flags or ())):
+        ff_b.append(ref.name)
+    comp_b = _recount(dict(compiled, library=lib_b, fetch_flagged=ff_b))
 
     seeds = _game_seeds(seed, games)
     # Both arms get the SAME disruption schedule (it is seeded off the same per-game

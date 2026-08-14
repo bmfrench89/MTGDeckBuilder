@@ -2,9 +2,14 @@
 
 **Status: ☑ ALL PHASES SHIPPED 2026-08-13** (approved by the player the same day).
 Suite 507 → 602, offline, exit 0; `scripts/` still imports stdlib-only.
-**One acceptance step remains and it is network-gated, not code:** Phase 8's live
-`optimize --all` preview against the full private CSV (a GitHub runner or the player's
-PC). Until that runs, the `--apply` / ⚡ / `refresh --optimize` freeze stays in force.
+**The acceptance step is DONE — freeze LIFTED 2026-08-14.** Phase 8's live
+`optimize --all` preview ran against the full private CSV from a PythonAnywhere Bash
+console: all six decks "already aligned with the field — no changes", every buy
+field-superior, all six `manual_holds` firing. `--apply` / ⚡ / `refresh --optimize`
+are cleared. The run also found three live bugs a snapshot preview could not have
+(the field veto missing from the ADVISORY riser list, the Cuts surface silently never
+protecting manual adds, and the manual-adds advisory listing cards no longer in the
+deck) — all fixed, see `docs/handoff.md` open item 0.
 
 **Source:** the competitive-landscape research (`research-competitive-landscape.md` §4)
 plus player direction 2026-08-13, two rounds: *(round 1)* goldfish clock, Rule-0 card,

@@ -89,12 +89,16 @@ enrich the collection (Card DB) for a sharper build.</span>{% endif %}
     {% endif %}
     <div class="tablewrap"><table><thead><tr><th>Color</th><th>Sources</th><th>Karsten</th><th>Pip demand</th><th>P(≥1 opener)</th><th></th></tr></thead><tbody>
     {% for c in d.mana.colors %}
-      <tr><td>{{ c.color }}</td><td>{{ c.sources }}</td><td class="muted">~{{ c.karsten_target }}</td>
+      <tr><td>{{ c.color }}</td><td>{{ c.sources }}{% if c.restricted %} <span class="muted">(+{{ c.restricted }} restr.)</span>{% endif %}</td><td class="muted">~{{ c.karsten_target }}</td>
         <td>{{ c.demand }}{% if c.double_pips %} · dbl {{ c.double_pips }}{% endif %}</td>
         <td>{{ (c.p_open*100)|round|int }}%{% if c.double_pips %} · <span class="muted">2 by T3 {{ (c.p_two_t3*100)|round|int }}%</span>{% endif %}</td>
         <td>{% if c.status=='low' %}<span class="warn">⚠ under target</span>{% else %}<span class="good">✓</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody></table></div>
+    {% if d.mana.fetch and d.mana.fetch.rows %}
+    <p class="mt-3 fs-xs"><b>Fetch census:</b>
+    <span class="muted">{% for r in d.mana.fetch.rows %}{{ r.name }} → {{ r.targets }} target(s){% if r.state != 'ok' %} ({{ r.state }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+    {% endif %}
     {% if d.mana.risky %}
     <p class="mt-3 fs-xs"><b class="warn">Risky to cast on curve ({{ d.mana.risky_total }}):</b>
     <span class="muted">{% for r in d.mana.risky %}{{ r.name }} ({{ (r.p*100)|round|int }}%){% if not loop.last %}, {% endif %}{% endfor %}</span></p>

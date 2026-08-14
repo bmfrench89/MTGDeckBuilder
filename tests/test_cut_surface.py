@@ -89,3 +89,96 @@ def test_it_writes_nothing(collection_file, tmp_path):
     before = open(p, encoding="utf-8").read()
     optimize.cut_candidates(p, collection_file, limit=5)
     assert open(p, encoding="utf-8").read() == before
+
+
+def test_hand_added_cards_reach_the_ranking_as_protected(collection_file, tmp_path):
+    """The end-to-end wiring, not just `cut_ranking`'s parameter.
+
+    `cut_candidates` builds the protected set that the test above passes in by
+    hand — and it was building an EMPTY one. Two faults, neither able to raise:
+    `deckcore.manual_adds` wants the `.changes.csv` and was handed the deck
+    `.txt` (a DictReader over a deck file finds no `Card` column and yields
+    nothing), and it returns a list of ROWS, so iterating it yields dicts that
+    `_norm` would choke on inside a bare `except`. Either one alone empties the
+    set, so the Cuts surface ranked hand-picked cards with no "your call, not the
+    tool's" flag — the exact protection this phase was written to provide.
+
+    Found by the Phase 8 acceptance run against the real collection (2026-08-14),
+    where y'shtola's hand-added Wizard's Staff came back unflagged."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n"
+                    "\n# --- Commander ---\n1 Test Commander\n"
+                    "\n# --- Main ---\n1 Sol Ring\n1 Counterspell\n"
+                    "1 Swords to Plowshares\n1 Serra Angel\n"
+                    "\n# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import datetime
+    today = datetime.date.today().isoformat()
+    (tmp_path / "d.changes.csv").write_text(
+        "Card,Added,Replaced,Source\n"
+        f"Serra Angel,{today},,manual-add\n", encoding="utf-8")
+
+    # Prove the flag comes from the MANUAL path and not from curated notes, or the
+    # test would pass on a card `_protected` already covers and prove nothing.
+    prot, _notes = optimize._protected(str(deck), "Test Commander")
+    assert mtglib._norm("Serra Angel") not in prot, \
+        "precondition: nothing else protects this card"
+
+    out = optimize.cut_candidates(str(deck), collection_file, limit=20)
+    by_name = {r["name"]: r for r in out["rows"]}
+    assert by_name["Serra Angel"]["protected"] is True, \
+        "a hand-added card must reach the ranking flagged, not bare"
+    assert "your call" in by_name["Serra Angel"]["why"]
+
+
+def test_the_changes_log_is_read_from_the_deck_directory(collection_file, tmp_path,
+                                                         monkeypatch):
+    """The companion path must be the deck's FULL stem. `cut_candidates` keeps a
+    BASENAME stem for labelling the report, and reusing it here would read a
+    changes.csv relative to the process's working directory — which happens to
+    work when you run the CLI from the repo root and silently stops working
+    anywhere else (the web app, a cron job, a console in $HOME)."""
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    deck = decks / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n"
+                    "\n# --- Commander ---\n1 Test Commander\n"
+                    "\n# --- Main ---\n1 Sol Ring\n1 Serra Angel\n"
+                    "\n# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import datetime
+    today = datetime.date.today().isoformat()
+    (decks / "d.changes.csv").write_text(
+        "Card,Added,Replaced,Source\n"
+        f"Serra Angel,{today},,manual-add\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)          # cwd is NOT the deck's directory
+    out = optimize.cut_candidates(str(deck), collection_file, limit=20)
+    row = next(r for r in out["rows"] if r["name"] == "Serra Angel")
+    assert row["protected"] is True, \
+        "the changes.csv was looked up relative to cwd instead of the deck"
+
+
+def test_manual_adds_review_skips_cards_no_longer_in_the_deck(collection_file, tmp_path):
+    """`.changes.csv` is append-only history. A card the player added and then took
+    back out stays a manual-add row forever, and this list is headed "the optimizer
+    never cuts these" — a claim about a card that is not there to cut.
+
+    Live case (2026-08-14): y'shtola's log adds Painful Truths and then replaces it
+    back out with Read the Bones, same day, rows 17-18. The advisory printed
+    "Painful Truths  (no opinion — not resolvable in the collection)" — two
+    confusing statements about a card the deck does not run."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Title: T\n# Commander: Test Commander\n# Colors: W U\n"
+                    "\n# --- Commander ---\n1 Test Commander\n"
+                    "\n# --- Main ---\n1 Sol Ring\n1 Serra Angel\n"
+                    "\n# --- Lands ---\n10 Island\n", encoding="utf-8")
+    import datetime
+    today = datetime.date.today().isoformat()
+    (tmp_path / "d.changes.csv").write_text(
+        "Card,Added,Replaced,Source\n"
+        f"Reverted Pick,{today},Serra Angel,manual-replace\n"
+        f"Serra Angel,{today},Reverted Pick,manual-replace\n", encoding="utf-8")
+
+    lines = "\n".join(optimize.manual_adds_review(str(deck), collection_file))
+    assert "Reverted Pick" not in lines, \
+        "a card that was added and taken back out is not a card the deck runs"
+    assert "Serra Angel" in lines, "the card that stayed must still be reported"

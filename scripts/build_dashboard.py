@@ -236,11 +236,16 @@ def _edhrec_alts(commander, idx):
 
 
 def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
-                       refs=None, staples=None, size="normal", edhrec_alts=None):
+                       refs=None, staples=None, size="normal", edhrec_alts=None,
+                       fetch=None):
     """Per-card payload for the click-to-enlarge panel: enlarged image, a grounded
     generic 'why it works' blurb, a deck-specific fit score + how-it-fits line, and
     alternatives / stronger options tagged owned/buy."""
     en = {mtglib._norm(c.name): c for c in enriched}
+    # Per-fetcher census rows (manabase.fetch_census), keyed for the panel note:
+    # "5 legal targets in this deck" belongs on the card that does the searching.
+    fetch_rows = {mtglib._norm(r["name"]): r
+                  for r in ((fetch or {}).get("rows") or [])}
     in_deck = set(en.keys())
     section_of = {}
     for label, cards in sections:
@@ -311,6 +316,10 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
             details[k] = {"name": name, "full": full, "role": role,
                           "section": section, "type": known_type, "mv": known_mv,
                           "why": note["why"] if note else "", "fit": fit, "alts": alts}
+            fr = fetch_rows.get(k)
+            if fr:
+                details[k]["fetch"] = {"targets": fr["targets"],
+                                       "state": fr["state"]}
     return details
 
 
@@ -707,6 +716,33 @@ def explain_html(explain, *keys):
     return "".join(parts)
 
 
+def mana_health(mana, rep):
+    """The standing Mana-health advisory (spec-mana-intelligence Phase D).
+
+    Computed at render time from the SAME memoized analysis the page already
+    holds, so every manual edit re-evaluates it on the reload the card panel
+    already performs — idempotent, always current, no state carried between
+    requests, and never a trigger for the optimizer. Returns a list of short
+    finding strings (possibly empty); the renderer shows the top two.
+
+    Fires on: a fetcher with ZERO targets (census state 'none'), and on a
+    below-floor land count combined with any post-restriction LOW colour —
+    each a fact the player can act on, not a vibe."""
+    if not mana:
+        return []
+    findings = []
+    for r in ((mana.get("fetch") or {}).get("rows") or []):
+        if r["state"] == "none":
+            findings.append(f"{r['name']} has 0 fetch targets")
+    lands = (rep or {}).get("lands") or 0
+    lo_floor = deckcore.LAND_RANGE[0]
+    low = [c["color"] for c in (mana.get("colors") or []) if c["status"] == "low"]
+    if lands and lands < lo_floor and low:
+        findings.append(f"{lands} lands (template floor {lo_floor}) and "
+                        f"{'/'.join(low)} under Karsten targets")
+    return findings
+
+
 def manabase_html(mana):
     """Consistency & Manabase section from manabase.analyze(). Reuses existing
     dashboard classes (stat tiles / data table / notes) — no new CSS."""
@@ -732,8 +768,10 @@ def manabase_html(mana):
         dbl = f" · P(2 by T3) {c['p_two_t3']*100:.0f}%" if c["double_pips"] else ""
         flag = ("<span class='warnbox'>⚠ under target</span>" if c["status"] == "low"
                 else "<span class='ok'>✓</span>")
+        restr = (f" <span class='muted'>(+{c['restricted']} restricted)</span>"
+                 if c.get("restricted") else "")
         rows.append(f"<tr class='{'warn' if c['status']=='low' else ''}'><td>{c['color']}</td>"
-                    f"<td>{c['sources']}</td><td>~{c['karsten_target']}</td>"
+                    f"<td>{c['sources']}{restr}</td><td>~{c['karsten_target']}</td>"
                     f"<td>{c['demand']}{' · dbl ' + str(c['double_pips']) if c['double_pips'] else ''}</td>"
                     f"<td>{c['p_open']*100:.0f}%{dbl}</td><td>{flag}</td></tr>")
     out.append("<div class='tablewrap'><table class='data'><thead><tr><th>Color</th>"
@@ -746,6 +784,49 @@ def manabase_html(mana):
         out.append(f"<h3>Risky to cast on curve <span class='count'>{mana['risky_total']}</span></h3>"
                    f"<ul class='notes'>{items}</ul>")
         out.append(explain_html(ex, "risky"))
+    basis = mana.get("basis") or {}
+    if basis.get("restricted_lands"):
+        out.append(explain_html(ex, "restricted"))
+    if basis.get("restriction_unknown_lands"):
+        out.append(f"<p class='muted'>~ {basis['restriction_unknown_lands']} land(s) "
+                   "enriched before the restriction vocabulary — restriction status "
+                   "unknown, counted as unrestricted. Re-enrich to verify.</p>")
+
+    # Fetch census (spec-mana-intelligence Phase C). One renderer serves the app
+    # deck page AND the CLI dashboard; the census either renders its rows or says
+    # exactly why it can't — never a confident zero on pre-vocabulary data.
+    fetch = mana.get("fetch") or {}
+    if fetch.get("unknown") == "pre-vocabulary":
+        out.append("<h3>Fetch census</h3><p class='muted'>Unavailable — this "
+                   "collection's enrichment predates the fetch vocabulary. "
+                   "Re-enrich (Card DB) to see what each fetcher can find here.</p>")
+    elif fetch.get("rows"):
+        frows = []
+        for r in fetch["rows"]:
+            chip = {"none": "<span class='warnbox'>⚠ no targets</span>",
+                    "thin": "<span class='warnbox'>thin</span>"}.get(
+                        r["state"], "<span class='ok'>✓</span>")
+            names = esc(", ".join(r["target_names"]))
+            more = r["targets"] - len(r["target_names"])
+            if more > 0:
+                names += f", +{more} more"
+            spec = esc(", ".join(t[len("fetch:"):] for t in r["spec"]))
+            frows.append(
+                f"<tr class='{'warn' if r['state'] != 'ok' else ''}'>"
+                f"<td><span class='cardlink' data-card='{esc(r['name'])}' "
+                f"data-key='{esc(r['name'])}'>{esc(r['name'])}</span></td>"
+                f"<td>{spec}</td><td>{r['targets']}</td>"
+                f"<td class='muted'>{names}</td><td>{chip}</td></tr>")
+        out.append(f"<h3>Fetch census <span class='count'>{fetch['total_fetchers']}</span></h3>"
+                   "<div class='tablewrap'><table class='data'><thead><tr>"
+                   "<th>Fetcher</th><th>Finds</th><th>Targets</th><th>In this deck</th>"
+                   "<th></th></tr></thead><tbody>" + "".join(frows)
+                   + "</tbody></table></div>")
+        if fetch.get("unknown") == "no-subtype-data":
+            out.append("<p class='muted'>~ counts may be low: some land(s) here "
+                       "have no type data.</p>")
+        out.append(explain_html(ex, "fetch"))
+
     # The "these are unconditional" caveat used to be a footer under everything. It is
     # a property of the probabilities themselves, so it now sits with them as one more
     # explainer — a caveat read after the numbers is a caveat that arrived too late.
@@ -1077,11 +1158,23 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     curve_sec = (f"<section><h2>Mana Curve (MV Spread)</h2>{curve_svg(rep['curve'], t)}"
                  f"{curve_note(enriched)}</section>")
 
+    # The Mana-health advisory: text-only chip in the tab label (tabs_block
+    # escapes label markup) + a one-line warn strip above the tiles. Advisory,
+    # never an action — the optimizer is not involved and manual edits stand.
+    health = mana_health(mana, rep)
+    mana_label = "⚠ Mana" if health else "Mana"
+    health_strip = ""
+    if health:
+        shown = " · ".join(esc(h) for h in health[:2])
+        more = f" · +{len(health) - 2} more" if len(health) > 2 else ""
+        health_strip = (f"<div class='banner warn'><b>⚠ Mana health:</b> {shown}{more}"
+                        " — see the Mana tab.</div>")
+
     # Grouping is presentation only — every section's generator is untouched, and the
     # order inside each tab matches the old top-to-bottom page order.
     tab_css, tabs = tabs_block([
         ("deck",  "Deck",  deck_sec + own_sec),
-        ("mana",  "Mana",  curve_sec + pip_sec + mana_sec),
+        ("mana",  mana_label,  curve_sec + pip_sec + mana_sec),
         ("power", "Power", power_sec + combo_sec + dead_sec + cuts_sec),
         ("buy",   "Buy",   buy_sec),
         ("plan",  "Plan",  notes_sec),
@@ -1139,6 +1232,9 @@ tr.warn td {{ color:var(--warn); }}
 .ok {{ color:var(--accent2); font-weight:600; }}
 .warnbox {{ color:var(--warn); }}
 .warnbox ul {{ margin:var(--sp-2) 0 0; padding-left:18px; }}
+.banner.warn {{ background:color-mix(in srgb, var(--warn) 12%, transparent);
+  border:1px solid var(--warn); border-radius:var(--r-md);
+  padding:var(--sp-2) var(--sp-4); margin:0 0 var(--sp-4); font-size:var(--fs-sm); }}
 .muted {{ color:var(--muted); }}
 h3 {{ font-family:{t['head']}; color:var(--gold); margin:var(--sp-4) 0 var(--sp-2);
   border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:4px; }}
@@ -1258,6 +1354,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   <div class="sub">{esc(subtitle)}</div>
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
 </header>
+{health_strip}
 <div class="tiles">{tiles}</div>
 {tabs}
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
@@ -1394,7 +1491,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         staples = deck_fit.load_role_staples()
         details = build_card_details(sections, enriched, idx, load_card_notes(),
                                      rep=rep, ctx=ctx, refs=refs, staples=staples,
-                                     edhrec_alts=_edhrec_alts(commander, idx))
+                                     edhrec_alts=_edhrec_alts(commander, idx),
+                                     fetch=(mana or {}).get("fetch"))
     except Exception:
         details = None
     if similar:

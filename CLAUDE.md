@@ -247,10 +247,15 @@ each applying optimizer run; the dashboard badges anything from the last 14 days
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks
 color/type/tribe/curve/pip analysis; the name-only snapshot answers ownership only.
 `collection_attrs.csv` (written by `carddb.py`) is
-`Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags` — `Produced` is
-space-joined WUBRGC letters for what the card actually taps for, `Flags` is `;`-joined
-oracle-derived tokens (`oracle_flags.py`'s vocabulary: `etb-tapped`,
-`etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`). **The
+`Name,Type,MV,Colors,Cost,Sub-types,Scryfall,Produced,Flags,Power,FlagsVer` —
+`Produced` is space-joined WUBRGC letters for what the card actually taps for,
+`Flags` is `;`-joined oracle-derived tokens (`oracle_flags.py`'s vocabulary —
+v1: `etb-tapped`, `etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`,
+`mana2`/`mana3`, `removal`, `wipe`, `counter`; v2 adds `fetch:*` and
+`mana-restricted`), `Power` is the front face's printed power verbatim, and
+`FlagsVer` is the vocabulary version that produced the Flags cell — flags and
+their version are ONE write, so a file whose Flags column arrives without a
+FlagsVer reads as version 1 (pre-v2), never as verified-current. **The
 empty-vs-absent rule is load-bearing:** an *empty cell* means enriched and produces
 nothing (Maze of Ith → `Card.produced == set()`), while an *absent column* means
 unknown (`Card.produced is None`) and every consumer must fall back to color identity

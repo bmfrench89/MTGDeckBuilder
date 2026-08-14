@@ -111,7 +111,8 @@ jobs:
           if len(rows) < 2:
               sys.exit("::error::attrs snapshot is empty/header-only — refusing")
           missing = [c for c in ("Name", "Type", "MV", "Colors", "Cost",
-                                 "Sub-types", "Produced", "Flags", "Power")
+                                 "Sub-types", "Produced", "Flags", "Power",
+                                 "FlagsVer")
                      if c not in cols]
           if missing:
               sys.exit(f"::error::attrs snapshot is missing {missing} — an older "

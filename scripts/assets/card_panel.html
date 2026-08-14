@@ -30,6 +30,7 @@
           <div class="cm-chips"><span id="cm-tl" class="cm-chip tl" hidden></span>
             <span id="cm-secchip" class="cm-chip sec" hidden></span></div>
           <div id="cm-banner" class="cm-banner" hidden></div>
+          <div id="mcfetch" class="cm-imgmeta" hidden></div>
           <div id="cm-fit" class="cm-sec" hidden>
             <div class="cm-h">Fit for this deck</div>
             <div class="cm-fithead"><span id="cm-fitband" class="cm-fitband"></span>
@@ -164,6 +165,20 @@
   function keyOf(d){ return d.name; }
 
   function fillFit(d){
+    if(d.fetch){
+      // The census note, on the card that does the searching: "N legal targets
+      // in this deck". States mirror the Mana tab (ok / thin / none).
+      var fnote=document.getElementById('mcfetch');
+      if(fnote){
+        var st=d.fetch.state==='none'?' — NO TARGETS':(d.fetch.state==='thin'?' — thin':'');
+        fnote.textContent='Fetches: '+d.fetch.targets+' legal target(s) in this deck'+st;
+        fnote.style.color=(d.fetch.state==='ok'?'':'var(--warn, #d29922)');
+        fnote.hidden=false;
+      }
+    } else {
+      var fnote2=document.getElementById('mcfetch');
+      if(fnote2){ fnote2.hidden=true; }
+    }
     if(d.fit){
       fb.textContent=d.fit.band;
       fs.innerHTML=d.fit.score+'<small>/100 fit</small>';
