@@ -319,6 +319,35 @@ handoff edit rides the next session instead if the sync won't carry it).
 
 ---
 
+## Addendum — the network clients on the render path (not in the original spec)
+
+Found by profiling the real routes after Phases 1–3, and by far the largest
+remaining cost. Both clients cached *successes* and never *failures*, so an
+unreachable service was paid for on every single request:
+
+| Client | Cost per warm request | Why it matters here |
+|---|---|---|
+| `spellbook.find_my_combos` | 315 ms × 1 per dashboard render | Ceiling is the 25 s socket timeout when a connection hangs rather than refuses |
+| `edhrec._fetch` | 950 ms × **3 per deck page** | EDHREC is **permanently** unreachable from the hosted app (free-tier allowlist) — these calls can *never* succeed there |
+
+Both now remember a failure for `FAIL_TTL` (5 min) via the same `_cooling()`
+shape, and both clear the marker on the first success. The failure is remembered,
+never **served as data**: spellbook still returns the empty error payload callers
+already label "combo data unavailable", and edhrec still raises so its
+three-tier read (live → disk cache → committed snapshot) falls through to the
+snapshot exactly as before. No honesty label changed; the wait did.
+
+**Measured end to end, through the Flask test client** (sandbox, name-only
+snapshot):
+
+| Route | Before | After |
+|---|---|---|
+| `/deck/<stem>` | 1633 ms | **61 ms** |
+| `/deck/<stem>/assess` | 673 ms | **21 ms** |
+| `/` (leaderboard) | 103 ms | **36 ms** |
+
+---
+
 ## Acceptance (spec-level)
 
 - A warm second render of any deck page parses the collection **zero** times

@@ -70,6 +70,11 @@ def _no_network_and_no_real_cache(monkeypatch, tmp_path_factory):
         raise AssertionError(
             "a test tried to reach EDHREC over the network — monkeypatch "
             "deck_fit.load_field / load_synergy (or edhrec.<fn>) instead")
+    # The real function stays reachable under a second name, for the one test that
+    # is ABOUT `_fetch` itself (the failure-cooldown guard). It monkeypatches
+    # `urllib.request.urlopen` instead, so it is still offline — it just needs the
+    # function this fixture is standing in front of.
+    monkeypatch.setattr(edhrec, "_fetch_unblocked", edhrec._fetch, raising=False)
     monkeypatch.setattr(edhrec, "_fetch", _blocked, raising=False)
 
 

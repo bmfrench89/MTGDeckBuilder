@@ -24,6 +24,15 @@ BASE = "https://json.edhrec.com/pages/commanders/%s.json"
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "edhrec")
 CACHE_TTL = 7 * 24 * 3600  # a week — inclusion rates drift slowly
+# How long an UNREACHABLE EDHREC is remembered, so the hot path stops paying for a
+# call that cannot succeed. This matters more here than anywhere else in the repo:
+# EDHREC is **permanently** unreachable from the hosted app (PythonAnywhere's free
+# tier allowlists documented public APIs only, and EDHREC's internal JSON is not
+# one), and a single deck-page render calls `recommendations` THREE times. Measured
+# in a proxied sandbox: 950 ms of a warm render, three doomed round trips, every
+# view. The three-tier read (live → disk cache → committed snapshot) is unchanged —
+# this only makes tier 1 fail fast so tiers 2 and 3 are reached immediately.
+FAIL_TTL = 300
 _HEADERS = {"User-Agent": "MTGDeckBuilder/1.0 (personal collection tool)",
             "Accept": "application/json"}
 
@@ -47,8 +56,29 @@ def slugify(name):
     return n or "commander"
 
 
-def _fetch(slug, ttl=CACHE_TTL):
-    """Return the parsed EDHREC page for a slug, using a disk cache within `ttl`."""
+def _cooling(path, fail_ttl):
+    """The recorded failure for this slug, if it is still fresh — else None.
+
+    Same shape as `spellbook._cooling`; the two network clients on the render path
+    remember an outage the same way on purpose."""
+    try:
+        if (time.time() - os.path.getmtime(path)) < fail_ttl:
+            with open(path, encoding="utf-8") as f:
+                return f.read().strip() or "unavailable"
+    except OSError:
+        pass
+    return None
+
+
+def _fetch(slug, ttl=CACHE_TTL, fail_ttl=FAIL_TTL):
+    """Return the parsed EDHREC page for a slug, using a disk cache within `ttl`.
+
+    Raises on an unreachable EDHREC — callers catch it and fall through to the
+    committed snapshot. A recent failure is REMEMBERED for `fail_ttl` and re-raised
+    without touching the network, so an outage (or a host that can never reach
+    EDHREC at all) costs one attempt per cooldown instead of one per call. The
+    failure is never stored as data: nothing here can return an empty page as
+    though it were a real one."""
     os.makedirs(CACHE_DIR, exist_ok=True)
     cache = os.path.join(CACHE_DIR, slug + ".json")
     if os.path.exists(cache) and (time.time() - os.path.getmtime(cache)) < ttl:
@@ -58,13 +88,31 @@ def _fetch(slug, ttl=CACHE_TTL):
         except Exception:
             pass    # corrupt-but-fresh cache = miss; refetch instead of pinning the
                     # snapshot fallback for the whole TTL
+    fail = os.path.join(CACHE_DIR, slug + ".fail")
+    remembered = _cooling(fail, fail_ttl)
+    if remembered:
+        raise OSError(f"EDHREC unreachable (remembered {fail_ttl}s): {remembered}")
     req = urllib.request.Request(BASE % slug, headers=_HEADERS)
-    with urllib.request.urlopen(req, timeout=25) as r:
-        data = json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            data = json.loads(r.read())
+    except Exception as e:
+        try:
+            tmp = fail + ".part"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(f"{type(e).__name__}: {e}"[:200])
+            os.replace(tmp, fail)
+        except OSError:
+            pass                    # a read-only cache dir costs speed, not truth
+        raise
     tmp = cache + ".part"                      # atomic, like carddb/rulings/rules
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f)
     os.replace(tmp, cache)
+    try:
+        os.remove(fail)             # reachable again — stop replaying the outage
+    except OSError:
+        pass
     return data
 
 

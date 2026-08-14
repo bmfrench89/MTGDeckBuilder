@@ -503,3 +503,47 @@ def test_attrs_snapshot_workflow_is_name_only_and_guarded():
         "the SHARED concurrency group is what serializes the three main-pushers"
     assert "set +e" not in code, \
         "carddb's non-zero exit is the failure signal — never swallow it"
+
+
+def test_edhrec_failure_is_remembered_for_a_cooldown(tmp_path, monkeypatch):
+    """The hot path's worst case. EDHREC is PERMANENTLY unreachable from the
+    hosted app (free-tier allowlist — see the codemap's deployment matrix), and a
+    single deck-page render calls `recommendations` three times. Every one of
+    those was a fresh doomed round trip: 950 ms of a warm render, measured, on
+    every view, on a host where it can never succeed.
+
+    The three-tier read (live → disk cache → committed snapshot) is unchanged —
+    remembering the failure only makes tier 1 fail fast so tiers 2 and 3 are
+    reached immediately. Nothing here ever stores an empty page as if it were
+    real data."""
+    import edhrec
+    import urllib.request
+    monkeypatch.setattr(edhrec, "CACHE_DIR", str(tmp_path))
+    calls = []
+
+    def boom(*a, **k):
+        calls.append(1)
+        raise OSError("egress blocked")
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    fetch = edhrec._fetch_unblocked          # see the conftest fixture's note
+    for _ in range(3):
+        with pytest.raises(OSError):
+            fetch("test-commander")
+    assert len(calls) == 1, "three calls made three doomed network attempts"
+
+    payload = {"container": {"json_dict": {"cardlists": []}}}
+
+    class _Resp:
+        def read(self):
+            return json.dumps(payload).encode()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: _Resp())
+    got = fetch("test-commander", fail_ttl=0)              # cooldown lapsed
+    assert got == payload
+    assert not os.path.exists(str(tmp_path / "test-commander.fail")), \
+        "a reachable EDHREC must clear the marker, not wait it out"
