@@ -274,7 +274,9 @@ def test_same_mtime_same_size_edit_is_not_served_stale(tmp_path, monkeypatch):
 
     This is the test that justifies those calls existing; delete them and it
     fails."""
-    import webapp.app as appmod
+    import app as appmod        # conftest puts webapp/ on the path — the repo's
+                                # one import form for it (`webapp.app` resolves
+                                # locally as a namespace package and NOT on CI)
     p = tmp_path / "collection.csv"
     from conftest import COLLECTION_CSV
     p.write_text(COLLECTION_CSV, encoding="utf-8")
@@ -297,7 +299,7 @@ def test_same_mtime_same_size_edit_is_not_served_stale(tmp_path, monkeypatch):
 def test_post_requests_drop_the_cache(tmp_path, monkeypatch):
     """The backstop: a write route someone forgets to annotate still cannot serve
     stale analysis past the end of its own request."""
-    import webapp.app as appmod
+    import app as appmod
     memo.get(("sentinel",), lambda: 1)
     client = appmod.app.test_client()
     with appmod.app.test_request_context("/", method="POST"):
