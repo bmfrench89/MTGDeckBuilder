@@ -565,6 +565,79 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
                 "role_ranges": ranges, "swaps_detail": swaps_detail}
 
+    # ---- the fetch ledger (spec-mana-intelligence Phase E) ------------------------------
+    # Both land passes and the buy pairing consult ONE running ledger, because they
+    # share victims through used_land: pass 1 can schedule the cut of one Swamp-typed
+    # land and pass 2 the conversion of the other in the same run, each individually
+    # "leaving one". `type_counts` tracks copies of each basic land type in the deck;
+    # `demanded[type]` counts fetcher CARDS whose fetch:* tokens want it — an accepted
+    # cut of a fetcher retracts its demand, so a stale demand can't block cuts of
+    # lands nobody can fetch any more. A land with no type data skips the guard (it is
+    # already in the `untyped` honesty count — never guess, the Hidden Lair rule).
+    import manabase as _mb
+    type_counts, demanded, fetcher_of = {}, {}, {}
+    for c in deck:
+        ref = mtglib.lookup(idx, c.name)
+        if ref is None:
+            continue
+        # Types are counted regardless of flag vocabulary — subtypes aren't
+        # versioned, only flag TRUST is. Gating the counts on flags_ver would
+        # undercount types on a mixed-enrichment collection and over-block.
+        if ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) + c.quantity
+        if ref.flags_ver < 2:
+            continue                      # v1 flags: no fetch demand to trust
+        for tok in ref.flags:
+            ty = None
+            if tok.startswith("fetch:basic-"):
+                ty = tok[len("fetch:basic-"):]
+            elif tok.startswith("fetch:") and tok not in ("fetch:basic", "fetch:land"):
+                ty = tok[len("fetch:"):]
+            if ty:
+                demanded[ty] = demanded.get(ty, 0) + 1
+                fetcher_of.setdefault(ty, []).append(ref.name)
+
+    land_guard = []
+
+    def _guard_blocks(cut_name):
+        """The types this cut would strand, with the fetchers that need them —
+        or an empty list if the cut is safe / unknowable."""
+        ref = mtglib.lookup(idx, cut_name)
+        if ref is None or not ref.has_type_data:
+            return []                     # unknown types: report via `untyped`, never guess
+        deck_qty = next((c.quantity for c in deck
+                         if mtglib.name_keys(c.name) & mtglib.name_keys(cut_name)), 1)
+        out = []
+        for ty in _mb._land_types(ref):
+            if demanded.get(ty, 0) > 0 and type_counts.get(ty, 0) - deck_qty <= 0:
+                out.append((ty, fetcher_of.get(ty, [])))
+        return out
+
+    def _ledger_cut(cut_name):
+        """Record an ACCEPTED cut: its land types leave the pool, and — if the cut
+        card was itself a fetcher — its demand goes with it."""
+        ref = mtglib.lookup(idx, cut_name)
+        if ref is None:
+            return
+        deck_qty = next((c.quantity for c in deck
+                         if mtglib.name_keys(c.name) & mtglib.name_keys(cut_name)), 1)
+        if ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) - deck_qty
+        for tok in ref.flags:
+            ty = (tok[len("fetch:basic-"):] if tok.startswith("fetch:basic-") else
+                  tok[len("fetch:"):] if tok.startswith("fetch:")
+                  and tok not in ("fetch:basic", "fetch:land") else None)
+            if ty and demanded.get(ty, 0) > 0:
+                demanded[ty] -= 1
+
+    def _ledger_add(add_name):
+        ref = mtglib.lookup(idx, add_name)
+        if ref is not None and ref.is_land and ref.has_type_data:
+            for ty in _mb._land_types(ref):
+                type_counts[ty] = type_counts.get(ty, 0) + 1
+
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
                         if not mtglib.is_basic(c.name)
@@ -582,9 +655,17 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_land or inc_add - inc_cut < margin:
                 continue
+            blocked = _guard_blocks(cut_name)
+            if blocked:
+                for ty, who in blocked:
+                    land_guard.append({"kept": cut_name, "type": ty, "for": who})
+                used_land.add(ck)         # held for its type — not offered to pass 2
+                continue                  # try the next weak land for this add
             land_swaps.append((cut_name, add_name, avail))
             used_land.add(ck)
             used_land_add |= akeys
+            _ledger_cut(cut_name)
+            _ledger_add(add_name)
             break
 
     # ---- manabase pass 2: run basics (98-99% inclusion in every archetype) --------------
@@ -594,21 +675,58 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     if n_basic < want_basic:
         worst = [(i, n) for i, n in weak_lands if mtglib._norm(n) not in used_land]
         need = want_basic - n_basic
-        colors = sorted(identity) or ["C"]
-        cname = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
-        i = 0
+        # Which basic types does the deck actually WANT? Pip-proportional via THE
+        # shared split (deckcore.basics_by_demand) over the deck's nonland cards —
+        # the alphabetical round-robin this replaces gave B the first repaired
+        # basic in every B deck regardless of pips. Deficit = desired minus what
+        # is already sleeved; ties break toward fetch-demanded types, then name,
+        # so the choice is deterministic and a second run still no-ops.
+        nonland_refs = [mtglib.lookup(idx, c.name) for c in deck
+                        if not is_land_in_deck(c.name)]
+        desired = deckcore.basics_by_demand(want_basic, identity,
+                                            [r for r in nonland_refs if r])
+        have_basics = {}
+        for c in lands:
+            if mtglib.is_basic(c.name):
+                base = c.name.replace("Snow-Covered ", "")
+                have_basics[base] = have_basics.get(base, 0) + c.quantity
+        deficit = {b: desired.get(b, 0) - have_basics.get(b, 0)
+                   for b in set(desired) | set(have_basics)}
+        _type_of_basic = {v: k for k, v in deckcore.BASIC_OF_COLOR.items()}
+
+        def _next_basic():
+            pool = sorted(deficit.items(),
+                          key=lambda kv: (-kv[1],
+                                          0 if kv[0].lower() in demanded else 1,
+                                          kv[0]))
+            for name, d in pool:
+                if d > 0:
+                    return name
+            return deckcore.BASIC_OF_COLOR.get((sorted(identity) or ["C"])[0], "Wastes")
+
         for inc_l, land in worst:
             if need <= 0:
                 break
             if inc_l >= 40:               # a genuinely-played fixing land: keep it
                 continue
+            blocked = _guard_blocks(land)
+            if blocked:
+                for ty, who in blocked:
+                    land_guard.append({"kept": land, "type": ty, "for": who})
+                used_land.add(mtglib._norm(land))
+                continue
+            incoming = _next_basic()
             # 3-tuple like every other land swap: consumers (record_changes, the
             # CLI printer) unpack (old, new, avail); the 2-tuple crashed them AFTER
             # _write had already rewritten the deck. Basics are always "free".
-            land_swaps.append((land, cname.get(colors[i % len(colors)], "Wastes"), "free"))
+            land_swaps.append((land, incoming, "free"))
             used_land.add(mtglib._norm(land))   # else the buy-land pairing can set a
-            i += 1                              # Replaces target this run just removed
-            need -= 1
+            need -= 1                           # Replaces target this run just removed
+            deficit[incoming] = deficit.get(incoming, 0) - 1
+            _ledger_cut(land)
+            ity = incoming.lower()
+            if ity in ("plains", "island", "swamp", "mountain", "forest"):
+                type_counts[ity] = type_counts.get(ity, 0) + 1
 
     # ---- buys: recommended, never written into the 99 -----------------------------------
     # Each buy pairs one-to-one with a card that STAYS in the deck (a cut the owned
@@ -638,13 +756,18 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             ck = mtglib._norm(cut_name)
             if ck in used_land or ck in used_buy or inc_add - inc_cut < margin:
                 continue
+            if _guard_blocks(cut_name):
+                # Advice the tool would not take itself is worse than none (the
+                # riser-veto lesson, 2026-08-14): a Replaces target the land
+                # passes refused to cut may not be recommended for pulling either.
+                continue
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "land"))
             used_buy.add(ck)
             used_buy_add |= akeys
             break
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "buy_swaps": buy_swaps,
+              "land_swaps": land_swaps, "buy_swaps": buy_swaps, "land_guard": land_guard,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
               "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
@@ -1012,6 +1135,10 @@ def main():
             print(f"   held: {h['name']} ({h['inc']}% field) — you removed it by hand "
                   f"on {h['removed']}; not re-proposing. Add it back yourself if "
                   f"you've changed your mind.")
+        for g in r.get("land_guard") or []:
+            who = ", ".join(g["for"][:3]) or "a fetcher"
+            print(f"   ~ kept {g['kept']}: last {g['type'].capitalize()}-typed "
+                  f"land for {who}")
         if r.get("archetype_unknown"):
             # The label fires on the IGNORED input too, not only on success — an
             # unmapped word buys nothing and the player should not have to guess

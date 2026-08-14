@@ -378,3 +378,168 @@ def test_add_route_carries_the_mana_note(tmp_path, monkeypatch):
                     .get_data(as_text=True))
     v = r.get("verdict") or r
     assert "0 legal target(s)" in (v.get("mana_note") or ""), v
+
+
+# --------------------------------------------------------------------------- #
+# Phase E — the optimizer may not strand a fetcher (running ledger, both passes)
+# --------------------------------------------------------------------------- #
+GUARD_COLL = """\
+Quantity,Name,Identities,Types,Sub-types
+1,Test Commander,W B,Legendary Creature,
+1,Farseek Analog,W B,Sorcery,
+1,Weak Swamp Dual A,W B,Land,Swamp
+1,Weak Swamp Dual B,W B,Land,Swamp
+1,Hot Land One,W B,Land,
+1,Hot Land Two,W B,Land,
+1,Filler,W B,Instant,
+"""
+
+GUARD_ATTRS = """\
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Farseek Analog,Sorcery,2,B,{1}{B},,,fetch:swamp;ramp,,2
+Weak Swamp Dual A,Land,0,,,Swamp,W B,,,2
+Weak Swamp Dual B,Land,0,,,Swamp,W B,,,2
+Hot Land One,Land,0,,,,W B,,,2
+Hot Land Two,Land,0,,,,W B,,,2
+"""
+
+GUARD_DECK = """\
+# Title: G
+# Commander: Test Commander
+# Colors: W B
+
+# --- Commander ---
+1 Test Commander
+
+# --- Spells ---
+1 Farseek Analog
+1 Filler
+
+# --- Lands ---
+1 Weak Swamp Dual A
+1 Weak Swamp Dual B
+"""
+
+
+def _guard_run(tmp_path, monkeypatch, deck_text=GUARD_DECK, margin=25):
+    import optimize, deck_fit
+    d = tmp_path / "g"
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text(GUARD_COLL, encoding="utf-8")
+    (d / "collection_attrs.csv").write_text(GUARD_ATTRS, encoding="utf-8")
+    deck = d / "deck.txt"
+    deck.write_text(deck_text, encoding="utf-8")
+    coll = mtglib.load_collection(str(d / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    # Both Swamp duals are field-zeros; both Hot Lands clear the margin over
+    # them. Without the ledger, pass 1 takes dual A and pass 2 (or a second
+    # pass-1 add) takes dual B — each individually "leaving one".
+    field = {"weak swamp dual a": 0, "weak swamp dual b": 0,
+             "hot land one": 60, "hot land two": 60, "farseek analog": 50,
+             "filler": 10}
+    monkeypatch.setattr(optimize.deck_fit, "load_field", lambda *a, **k: field)
+    monkeypatch.setattr(optimize.deck_fit, "load_field_lands",
+                        lambda *a, **k: {"hot land one", "hot land two"})
+    monkeypatch.setattr(optimize.deck_fit, "load_synergy", lambda *a, **k: {})
+    return optimize.optimize(str(deck), coll, idx, str(d), margin=margin)
+
+
+def test_the_ledger_spans_passes_one_swap_allowed_one_refused(tmp_path, monkeypatch):
+    """THE two-Swamp case. Cutting one Swamp-typed dual is fine (one remains);
+    cutting the second would strand Farseek Analog. A per-swap check against the
+    ORIGINAL deck would allow both — each individually 'leaves one'."""
+    r = _guard_run(tmp_path, monkeypatch)
+    cut_names = [c for c, _a, _v in r["land_swaps"]]
+    swamps_cut = [c for c in cut_names if "Swamp Dual" in c]
+    assert len(swamps_cut) == 1, (
+        f"exactly one Swamp dual may go; got {swamps_cut} — the ledger must "
+        "carry pass 1's cut into the next check")
+    assert r["land_guard"], "the refusal must be REPORTED, not silent"
+    g = r["land_guard"][0]
+    assert g["type"] == "swamp" and "Farseek Analog" in g["for"]
+
+
+def test_the_guard_is_inert_without_v2_fetch_data(tmp_path, monkeypatch):
+    """Pre-vocabulary flags carry no trustable demand: both duals may be cut,
+    exactly as before the guard existed."""
+    global GUARD_ATTRS
+    old = GUARD_ATTRS
+    try:
+        GUARD_ATTRS = old.replace(",FlagsVer", "").replace(",,2\n", ",,\n") \
+                         .replace("fetch:swamp;ramp,,2", "ramp,,")
+        r = _guard_run(tmp_path, monkeypatch)
+        assert not r["land_guard"]
+    finally:
+        GUARD_ATTRS = old
+
+
+def test_buy_pairing_obeys_the_same_guard(tmp_path, monkeypatch):
+    """Advice the tool would not take itself is worse than none: a Replaces
+    target the land passes refused to cut may not be recommended for pulling.
+
+    Built so ONLY the buy-pairing's own guard stands in the way (a first draft
+    passed with the guard deleted, because pass 1's refusal had already parked
+    the land in used_land): no owned land upgrades exist, and enough off-type
+    basics that basics repair never runs — the buy pairing is the first and
+    only pass to reach the deck's lone Swamp-typed land."""
+    import optimize
+    d = tmp_path / "bg"
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text(
+        "Quantity,Name,Identities,Types,Sub-types\n"
+        "1,Test Commander,W B,Legendary Creature,\n"
+        "1,Farseek Analog,W B,Sorcery,\n"
+        "1,Lone Swamp Dual,W B,Land,Swamp\n"
+        "4,Plains,W,Land,Plains\n"
+        "1,Filler,W B,Instant,\n", encoding="utf-8")
+    (d / "collection_attrs.csv").write_text(
+        "Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer\n"
+        "Farseek Analog,Sorcery,2,B,{1}{B},,,fetch:swamp;ramp,,2\n"
+        "Lone Swamp Dual,Land,0,,,Swamp,W B,,,2\n", encoding="utf-8")
+    deck = d / "deck.txt"
+    deck.write_text(
+        "# Title: BG\n# Commander: Test Commander\n# Colors: W B\n\n"
+        "# --- Commander ---\n1 Test Commander\n\n"
+        "# --- Spells ---\n1 Farseek Analog\n1 Filler\n\n"
+        "# --- Lands ---\n1 Lone Swamp Dual\n4 Plains\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(d / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    field = {"lone swamp dual": 0, "unowned hot land": 60,
+             "farseek analog": 50, "filler": 10}
+    monkeypatch.setattr(optimize.deck_fit, "load_field", lambda *a, **k: field)
+    monkeypatch.setattr(optimize.deck_fit, "load_field_lands",
+                        lambda *a, **k: {"unowned hot land"})
+    monkeypatch.setattr(optimize.deck_fit, "load_synergy", lambda *a, **k: {})
+    r = optimize.optimize(str(deck), coll, idx, str(d))
+    land_buys = [b for b in r["buy_swaps"] if b[4] == "land"]
+    assert not any(b[0] == "Lone Swamp Dual" for b in land_buys), (
+        "the buylist named the deck's only Swamp-typed land as the Replaces "
+        "target while a fetch:swamp card is in the 99 — advice must obey the "
+        "same guard the write passes obey")
+
+
+def test_the_repair_is_idempotent_with_the_guard(tmp_path, monkeypatch):
+    """Apply once, run again: the second run proposes nothing. The stated
+    optimizer invariant, preserved through the ledger and the pip-proportional
+    chooser (both deterministic)."""
+    import optimize, deck_fit
+    d = tmp_path / "g"
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text(GUARD_COLL, encoding="utf-8")
+    (d / "collection_attrs.csv").write_text(GUARD_ATTRS, encoding="utf-8")
+    deck = d / "deck.txt"
+    deck.write_text(GUARD_DECK, encoding="utf-8")
+    coll = mtglib.load_collection(str(d / "collection.csv"))
+    idx = mtglib.index_by_name(coll)
+    field = {"weak swamp dual a": 0, "weak swamp dual b": 0,
+             "hot land one": 60, "hot land two": 60, "farseek analog": 50,
+             "filler": 10}
+    monkeypatch.setattr(optimize.deck_fit, "load_field", lambda *a, **k: field)
+    monkeypatch.setattr(optimize.deck_fit, "load_field_lands",
+                        lambda *a, **k: {"hot land one", "hot land two"})
+    monkeypatch.setattr(optimize.deck_fit, "load_synergy", lambda *a, **k: {})
+    r1 = optimize.optimize(str(deck), coll, idx, str(d), apply=True)
+    assert r1["land_swaps"], "precondition: the first run does something"
+    r2 = optimize.optimize(str(deck), coll, idx, str(d))
+    assert not r2["swaps"] and not r2["land_swaps"], \
+        "the second run must be a no-op — idempotency is a stated invariant"

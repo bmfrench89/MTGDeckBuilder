@@ -1396,6 +1396,10 @@ def _flash_optimize(r):
         flash(f"Held: {h['name']} ({h['inc']}% field) — you removed it by hand on "
               f"{h['removed']}, so it is not re-proposed. Add it back yourself if "
               "you've changed your mind.", "info")
+    for g in (r.get("land_guard") or [])[:3]:
+        who = ", ".join(g["for"][:2]) or "a fetcher"
+        flash(f"Kept {g['kept']}: the last {g['type'].capitalize()}-typed land — "
+              f"{who} would have nothing to fetch.", "info")
     if r.get("illegal"):
         flash("!! ILLEGAL after optimize: "
               + ", ".join(f"{q}x {n2}" for q, n2 in r["illegal"])

@@ -65,48 +65,15 @@ def _color_legal(card, identity):
     return cid <= identity
 
 
-def _basics_split(n, identity):
-    out = {}
-    colors = sorted(identity) if identity else []
-    if not colors or n <= 0:
-        return out
-    base, extra = divmod(n, len(colors))
-    for i, col in enumerate(colors):
-        out[_BASIC[col]] = base + (1 if i < extra else 0)
-    return {k: v for k, v in out.items() if v}
+# THE split lives in deckcore (shared with optimize's basics repair) — these
+# shims keep auto_build's public surface and tests unchanged.
+_basics_split = deckcore.basics_split
 
 
 _BASIC_COLOR = {v: k for k, v in _BASIC.items()}   # "Plains" -> "W", ...
 
 
-def _basics_by_demand(n, identity, cards):
-    """Split n basics across the identity's colors weighted by the colored-pip
-    demand of the chosen nonland cards — so a blue-heavy deck gets more Islands.
-    Falls back to an even split when card mana costs aren't known (name-only)."""
-    colors = sorted(identity) if identity else []
-    if not colors or n <= 0:
-        return {}
-    demand = {c: 0.0 for c in colors}
-    for card in cards:
-        if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
-            continue
-        for col, pips in mtglib.pip_counts(card.mana_cost).items():
-            if col in demand:
-                demand[col] += pips
-    tot = sum(demand.values())
-    if tot <= 0:
-        return _basics_split(n, identity)
-    raw = {c: n * demand[c] / tot for c in colors}
-    alloc = {c: int(raw[c]) for c in colors}
-    for c in sorted(colors, key=lambda c: -(raw[c] - int(raw[c])))[:n - sum(alloc.values())]:
-        alloc[c] += 1
-    for c in colors:                     # every demanded color gets >=1 source
-        if demand[c] > 0 and alloc[c] == 0:
-            donor = max(colors, key=lambda x: alloc[x])
-            if alloc[donor] > 1:
-                alloc[donor] -= 1
-                alloc[c] = 1
-    return {_BASIC[c]: v for c, v in alloc.items() if v > 0}
+_basics_by_demand = deckcore.basics_by_demand
 
 
 _TRIBAL_MIN = 12  # owned in-color members before a tribal build is honest (grounding rule #2)

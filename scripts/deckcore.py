@@ -498,6 +498,63 @@ def load_power_tags(refdir=None):
 # bucketer, shared by deck_sections.py (migration/regroup) and auto_build
 # (future decks), so the two can never drift.
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Basics apportionment — ONE way of deciding which basic land types a deck
+# wants, shared by auto_build (initial fill) and optimize's basics repair
+# (which round-robined alphabetically until spec-mana-intelligence Phase E:
+# in a WUB deck, B always got the first repaired basic regardless of pips).
+# The two callers keep their own COUNT formulas on purpose (auto_build floors
+# at 6 against LAND_TARGET; optimize scales to the actual land count) — only
+# the split is single-sourced.
+# --------------------------------------------------------------------------- #
+BASIC_OF_COLOR = {"W": "Plains", "U": "Island", "B": "Swamp",
+                  "R": "Mountain", "G": "Forest"}
+
+
+def basics_split(n, identity):
+    """Even split of n basics across the identity, deterministic order."""
+    out = {}
+    colors = sorted(identity) if identity else []
+    if not colors or n <= 0:
+        return out
+    base, extra = divmod(n, len(colors))
+    for i, col in enumerate(colors):
+        out[BASIC_OF_COLOR[col]] = base + (1 if i < extra else 0)
+    return {k: v for k, v in out.items() if v}
+
+
+def basics_by_demand(n, identity, cards):
+    """Split n basics across the identity's colors weighted by the colored-pip
+    demand of `cards` — a blue-heavy deck gets more Islands. Largest-remainder
+    rounding, every demanded color floored at one source, deterministic
+    throughout (idempotency is a stated optimizer invariant). Falls back to the
+    even split when mana costs aren't known (name-only)."""
+    colors = sorted(identity) if identity else []
+    if not colors or n <= 0:
+        return {}
+    demand = {c: 0.0 for c in colors}
+    for card in cards:
+        if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
+            continue
+        for col, pips in mtglib.pip_counts(card.mana_cost).items():
+            if col in demand:
+                demand[col] += pips
+    tot = sum(demand.values())
+    if tot <= 0:
+        return basics_split(n, identity)
+    raw = {c: n * demand[c] / tot for c in colors}
+    alloc = {c: int(raw[c]) for c in colors}
+    for c in sorted(colors, key=lambda c: -(raw[c] - int(raw[c])))[:n - sum(alloc.values())]:
+        alloc[c] += 1
+    for c in colors:                     # every demanded color gets >=1 source
+        if demand[c] > 0 and alloc[c] == 0:
+            donor = max(colors, key=lambda x: alloc[x])
+            if alloc[donor] > 1:
+                alloc[donor] -= 1
+                alloc[c] = 1
+    return {BASIC_OF_COLOR[c]: v for c, v in alloc.items() if v > 0}
+
+
 TYPE_SECTION_ORDER = ("Creatures", "Instants", "Sorceries", "Artifacts",
                       "Enchantments", "Planeswalkers", "Battles", "Lands", "Basics")
 BASIC_LAND_NAMES = {"plains", "island", "swamp", "mountain", "forest", "wastes",
