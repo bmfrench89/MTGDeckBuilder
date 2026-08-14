@@ -446,6 +446,102 @@ def test_the_cache_writes_only_where_it_was_told(sim_deck, tmp_path):
     assert [p.name for p in cdir.iterdir()] == ["simdeck.json"]
 
 
+# --------------------------------------------------------------------------- #
+# ab_for_deck — the same disk cache, for the swap the Replace flow previews
+# --------------------------------------------------------------------------- #
+def test_ab_for_deck_caches_the_second_identical_swap(sim_deck, tmp_path, monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    first = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                                 games=120, cache_dir=cdir)
+    second = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                                  games=120, cache_dir=cdir)
+    assert len(calls) == 1, "the repeat shift-click must be a file read"
+    assert first == second
+    assert [p.name for p in (tmp_path / "cache").iterdir()][0].startswith("ab-simdeck-")
+
+
+def test_ab_cache_key_separates_swaps_and_normalizes_names(sim_deck, tmp_path,
+                                                           monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Counterspell",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2, "a different incoming card is a different question"
+    goldfish.ab_for_deck(deck, coll, "  serra   angel ", "swords to plowshares",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2, "casing and whitespace are not a different question"
+
+
+def test_ab_errors_are_never_cached(sim_deck, tmp_path, monkeypatch):
+    """A refusal is cheap to recompute; a wrong one that outlives its cause is
+    not. Pinning 'can't resolve that name' to disk would survive the player
+    adding the card to their collection five seconds later."""
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    bad = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Definitely Not A Card",
+                               games=60, cache_dir=cdir)
+    assert bad["error"] and "resolve" in bad["error"]
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Definitely Not A Card",
+                         games=60, cache_dir=cdir)
+    assert len(calls) == 2, "the refusal must be recomputed, not replayed from disk"
+    assert not os.path.isdir(cdir) or not list((tmp_path / "cache").iterdir())
+
+
+def test_ab_deck_edit_invalidates_the_cached_swap(sim_deck, tmp_path, monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    with open(deck, "a", encoding="utf-8") as f:
+        f.write("1 Llanowar Elves\n")
+    os.utime(deck, (0, 10 ** 9))
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2
+
+
+def test_ab_a_a_stays_exactly_zero_through_the_cache(sim_deck, tmp_path):
+    """The CRN tripwire, re-armed on the cached path. A cache that reordered,
+    rounded or partially re-ran anything would show up as a non-zero delta on a
+    swap of a card for itself — and the numbers would still look plausible."""
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    first = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Serra Angel",
+                                 games=150, seed=4, cache_dir=cdir)
+    second = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Serra Angel",
+                                  games=150, seed=4, cache_dir=cdir)
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+    for run in (first, second):
+        for m, d in run["deltas"].items():
+            assert d["delta"] == 0.0, m
+            assert d["ci"] == 0.0, m
+
+
+def test_ab_for_deck_returns_none_instead_of_raising(tmp_path, collection_file):
+    assert goldfish.ab_for_deck(str(tmp_path / "nope.txt"), collection_file,
+                                "A", "B", games=10,
+                                cache_dir=str(tmp_path / "c")) is None
+
+
 def test_cli_smoke(sim_deck, tmp_path, capsys, monkeypatch):
     deck, coll = sim_deck
     monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "cache"))
@@ -867,3 +963,41 @@ def test_aa_pairing_is_exactly_zero_WITH_disruption_on():
                               disruption=goldfish.DISRUPTION["standard"])
     for metric, d in ab["deltas"].items():
         assert d["delta"] == 0.0, f"{metric} drifted under disruption"
+
+
+# --------------------------------------------------------------------------- #
+# The Replace flow's endpoint — the surface the cache exists for
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def ab_client(tmp_path, monkeypatch, collection_file):
+    import app as appmod
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "d.txt").write_text(DECK, encoding="utf-8")
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", collection_file)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "abcache"))
+    appmod.app.config["TESTING"] = True
+    return appmod.app.test_client()
+
+
+def test_the_ab_endpoint_serves_the_second_click_from_disk(ab_client, monkeypatch):
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    url = "/api/deck/d/ab?out=Serra+Angel&in=Swords+to+Plowshares"
+    first = json.loads(ab_client.get(url).get_data(as_text=True))
+    second = json.loads(ab_client.get(url).get_data(as_text=True))
+    assert "error" not in first, first
+    assert first == second
+    assert len(calls) == 1, "the repeat shift-click ran 800 games again"
+    assert first["out"] == "Serra Angel" and first["in"] == "Swords to Plowshares"
+    assert "commander_by_t4" in first["deltas"]
+
+
+def test_the_ab_endpoint_still_refuses_a_name_it_cannot_resolve(ab_client):
+    r = json.loads(ab_client.get(
+        "/api/deck/d/ab?out=Serra+Angel&in=Definitely+Not+A+Card").get_data(as_text=True))
+    assert "resolve" in r["error"], "a refusal must survive the cached path"

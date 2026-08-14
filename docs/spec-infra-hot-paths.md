@@ -1,7 +1,7 @@
 # Spec — Infrastructure: Hot Paths & Background Work
 
 **Status: APPROVED by the player 2026-08-14 ("review the spec and begin").**
-Phase 1 ☑ shipped · Phase 2 ☐ · Phase 3 ☐ · Phase 4 = player decision (open) ·
+Phase 1 ☑ shipped · Phase 2 ☑ shipped · Phase 3 ☐ · Phase 4 = player decision (open) ·
 Appendix runbook = ops, runnable once PR #113 merges and the server syncs.
 
 **Why this exists (measured, 2026-08-13, in-session):** the Table-Ready season moved
@@ -181,7 +181,19 @@ memo.MAX_ENTRIES = 32           # oldest-inserted evicted past this (a dict is
 
 ---
 
-## Phase 2 — Disk-cache the A/B simulation (small)
+## Phase 2 — Disk-cache the A/B simulation ☑ SHIPPED 2026-08-14
+
+**Result:** `goldfish.ab_for_deck()` — the repeat shift-click is a file read
+(115 ms → 0 ms on a real deck at 200 games). The CLI's `--ab` goes through the
+same wrapper, so `--no-cache` governs both surfaces from one place. Both guards
+mutation-proved: deleting `not rep.get("error")` from the write condition fails
+`test_ab_errors_are_never_cached`; dropping the swap out of the key fails
+`test_ab_cache_key_separates_swaps_and_normalizes_names`. Suite 647 → 655.
+
+Added beyond the spec's list: the endpoint itself had **no route-level test at
+all**, so the wiring change had nothing holding it. `test_the_ab_endpoint_serves_
+the_second_click_from_disk` and `..._still_refuses_a_name_it_cannot_resolve` now
+cover it.
 
 **Goal:** the Replace-flow preview (`/api/deck/<stem>/ab`, shift-click) and repeat
 CLI `--ab` runs hit disk instead of re-running 800 games on shared CPU.

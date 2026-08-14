@@ -1245,14 +1245,15 @@ def api_deck_ab(stem):
         return jsonify({"error": "need out= and in="}), 200
     coll, _idx = collection_index()
     try:
-        compiled, idx = goldfish.load_for_ab(m["path"], coll,
-                                             collection_path=COLLECTION)
-        if not compiled:
-            return jsonify({"error": "simulation unavailable"}), 200
         # Fewer games than a CLI run: this is inline in a click, and the paired
         # design means even a short run separates a real change from noise.
-        ab = goldfish.simulate_ab(compiled, out_name, in_name, idx, games=400, seed=0)
+        # Disk-cached on the same key `sim_for_deck` uses plus the swap itself, so
+        # looking at the same proposed swap twice costs a file read, not 800 games.
+        ab = goldfish.ab_for_deck(m["path"], coll, out_name, in_name, games=400,
+                                  seed=0, collection_path=COLLECTION)
     except Exception:
+        return jsonify({"error": "simulation unavailable"}), 200
+    if not ab:
         return jsonify({"error": "simulation unavailable"}), 200
     if ab.get("error"):
         return jsonify({"error": ab["error"]}), 200

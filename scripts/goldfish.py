@@ -44,6 +44,7 @@ Every number is a simulated frequency under the assumptions the report ships in
 `report['assumptions']`. Render those assumptions wherever you render the numbers.
 """
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -1099,6 +1100,72 @@ def sim_for_deck(deck_path, collection, games=DEFAULT_GAMES, seed=0, turns=TURNS
         return None
 
 
+def ab_for_deck(deck_path, collection, out_name, in_name, *, games=DEFAULT_GAMES,
+                seed=0, turns=TURNS, mulligan=True, collection_path=None,
+                disruption=None, cache=True, cache_dir=None):
+    """`simulate_ab` for a SAVED deck, behind the same disk cache `sim_for_deck` uses.
+
+    The Replace flow runs this on a shift-click, inline in the request: 400 games ×
+    two arms on shared CPU, every time, for a swap the player is very likely to look
+    at twice while deciding. The sim is seeded-deterministic, so re-running it is
+    pure cost — the second look should be a file read.
+
+    Returns `simulate_ab`'s full payload, or None if the deck can't be compiled.
+
+    **Errors are never cached.** `simulate_ab` refuses unresolvable or duplicate
+    names with an `{'error': …}` payload, and pinning that to disk would make a
+    typo — or a card added to the collection five seconds later — stick for as
+    long as the entry lived. A refusal is cheap to recompute; a wrong one that
+    outlives its cause is not.
+
+    No eviction, matching `sim_for_deck`: entries are small JSON in a gitignored
+    cache dir, and they self-expire the moment the deck, its attrs, the collection
+    or the report schema change."""
+    try:
+        if collection_path is None and isinstance(collection, str):
+            collection_path = collection
+        key = dict(cache_key(deck_path, collection_path, games, seed, turns, mulligan),
+                   # The swap itself, normalized the way every name comparison in this
+                   # repo is — 'sol ring' and 'Sol  Ring' are the same A/B, and a
+                   # front-face alias must not open a second entry for one swap.
+                   out=mtglib._norm(mtglib.front_face(out_name)),
+                   **{"in": mtglib._norm(mtglib.front_face(in_name))},
+                   # The API never passes disruption today; keying it now means the
+                   # day it does, old entries miss instead of lying.
+                   disruption=disruption)
+        cdir = cache_dir if cache_dir is not None else CACHE_DIR
+        stem = os.path.splitext(os.path.basename(deck_path))[0]
+        digest = hashlib.sha1(json.dumps(key, sort_keys=True,
+                                         default=str).encode()).hexdigest()[:16]
+        cpath = os.path.join(cdir, f"ab-{stem}-{digest}.json")
+        if cache:
+            try:
+                with open(cpath, encoding="utf-8") as f:
+                    blob = json.load(f)
+                if blob.get("key") == key and blob.get("report"):
+                    return blob["report"]
+            except (OSError, ValueError):
+                pass
+
+        compiled, idx = load_for_ab(deck_path, collection, collection_path)
+        if not compiled:
+            return None
+        rep = simulate_ab(compiled, out_name, in_name, idx, games=games, seed=seed,
+                          turns=turns, mulligan=mulligan, disruption=disruption)
+        if cache and rep and not rep.get("error"):
+            try:
+                os.makedirs(cdir, exist_ok=True)
+                tmp = cpath + ".part"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump({"key": key, "report": rep}, f)
+                os.replace(tmp, cpath)
+            except OSError:
+                pass                   # a read-only cache dir is not a failed sim
+        return rep
+    except Exception:
+        return None
+
+
 def load_for_ab(deck_path, collection, collection_path=None):
     """(compiled, idx) for an A/B run — the same load `sim_for_deck` does, without the
     cache (an A/B is never the hot path). Returns (None, None) on failure."""
@@ -1236,14 +1303,14 @@ def main(argv=None):
             print('error: --ab wants "Out Card=In Card"', file=sys.stderr)
             return 2
         out_name, in_name = (s.strip() for s in args.ab.split("=", 1))
-        compiled, idx = load_for_ab(args.deck, args.collection)
-        if compiled is None:
+        ab = ab_for_deck(args.deck, args.collection, out_name, in_name,
+                         games=args.games, seed=args.seed, turns=args.turns,
+                         mulligan=mull, disruption=DISRUPTION[args.disruption],
+                         cache=not args.no_cache)
+        if ab is None:
             print("Goldfish A/B unavailable — the deck or collection couldn't be "
                   "loaded and enriched.")
             return 1
-        ab = simulate_ab(compiled, out_name, in_name, idx, games=args.games,
-                         seed=args.seed, turns=args.turns, mulligan=mull,
-                         disruption=DISRUPTION[args.disruption])
         if ab.get("error"):
             print(ab["error"])
             return 1
