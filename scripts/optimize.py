@@ -86,8 +86,23 @@ def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
     ranges, _unknown = role_ranges_with_unknown(ctx.get("archetype"))
     prot = _protected(deck_path, commander)
     prot = prot[0] if isinstance(prot, tuple) else prot
+    # The player's own picks, flagged rather than hidden (see cut_ranking's docstring).
+    #
+    # This was silently a no-op until the Phase 8 acceptance run (2026-08-14) went
+    # looking. TWO faults, neither of which could raise: `manual_adds` wants the
+    # `.changes.csv`, and was handed the deck `.txt` — `csv.DictReader` over a deck
+    # file finds no `Card` column and returns nothing at all; and it returns a LIST OF
+    # ROWS, so iterating it yields dicts, which `_norm` would choke on inside a bare
+    # `except`. Either alone empties the set. The result was a Cuts surface that
+    # ranked hand-added cards with no "your call, not the tool's" flag on them —
+    # exactly the protection Phase 9 was written to provide. Match on `name_keys`,
+    # like every other membership test here (the ` // ` trap).
+    # NB `stem` above is a BASENAME (it labels the report); the companion file needs
+    # the full path, or this reads a changes.csv relative to the process's cwd.
+    path_stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        manual = {mtglib._norm(n) for n in (deckcore.manual_adds(deck_path) or {})}
+        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv")
+                  for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
     out = deck_fit.cut_ranking(enriched, rep, ctx, refs, field,
@@ -901,6 +916,21 @@ def manual_adds_review(deck_path, coll):
         rows = deckcore.manual_adds(f"{stem}.changes.csv")
     except Exception:
         return []
+    # Only cards STILL IN the deck. `.changes.csv` is append-only history, so a card
+    # the player added and then took back out remains a manual-add row forever — and
+    # this list is headed "the optimizer never cuts these", which is a claim about a
+    # card that is not there to cut. Found by the Phase 8 acceptance run (2026-08-14):
+    # y'shtola listed Painful Truths, added and reverted the same day (rows 17-18 of
+    # its log), rendered as "(no opinion — not resolvable in the collection)" because
+    # it is also unowned. Two confusing statements about a card the deck does not run.
+    try:
+        in_deck = set()
+        for c in mtglib.parse_deck(open(deck_path, encoding="utf-8").read()):
+            in_deck |= mtglib.name_keys(c.name)
+        rows = [r for r in rows
+                if mtglib.name_keys(r.get("name") or r.get("key") or "") & in_deck]
+    except OSError:
+        pass                     # unreadable deck: report the rows rather than none
     if not rows:
         return []
     out = ["   manual adds (advisory — the optimizer never cuts these):"]
