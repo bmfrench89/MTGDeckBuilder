@@ -515,6 +515,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # blocked). Surface those, never act on them: owned with a free copy, would beat the
     # deck's current weakest cut, just not by enough to swap automatically. The player
     # decides; a manual add is then protected forever.
+    #
+    # `inc_add >= inc_cut` is THE SAME field veto the swap loop applies, and it belongs
+    # here for the same reason. Found by the Phase 8 acceptance run against the real
+    # collection (2026-08-14): the veto was guarding what the optimizer DOES and not what
+    # it ADVISES, so cosmic-spider-man's preview offered Sun-Spider (25%) and Spider-Man,
+    # To the Rescue (29%) as "1 pt short of auto-swap" over Wall Crawl (41%) — the exact
+    # card, and the exact inversion, the whole churn finding was about. The machine
+    # refused the swap and then recommended the player make it by hand. Advice the tool
+    # would not take itself is worse than no advice.
     risers = []
     open_cuts = [t for t in cuts if mtglib._norm(t[2]) not in used_cut]
     if open_cuts:
@@ -525,7 +534,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if avail != "free" or mtglib._norm(add_name) in used_add:
                 continue
             gap = val_add - val_cut
-            if 0 < gap < margin and inc_add >= 20:
+            if 0 < gap < margin and inc_add >= 20 and inc_add >= inc_cut:
                 risers.append({"add": add_name, "add_inc": inc_add,
                                "over": cut_name, "over_inc": inc_cut,
                                "gap": round(gap)})
