@@ -600,3 +600,65 @@ def test_no_fetcher_means_no_reorder(tmp_path):
     build stays exactly 100 legal cards either way."""
     d = _build_pool(tmp_path, with_fetcher=False)
     assert d["total"] == 100
+
+
+# --------------------------------------------------------------------------- #
+# Phase G — the sim admits fetch effects are unmodeled (schema 3)
+# --------------------------------------------------------------------------- #
+def test_goldfish_admits_fetch_effects_are_unmodeled():
+    """Enriched fetchlands are dead lands in the sim, and enrichment makes Wood
+    Elves WORSE (a working identity-tier dork becomes a zero-mana body). The
+    honesty framework fires on absent data; this was known-WRONG data with no
+    label — the assumptions line closes that blind spot."""
+    import goldfish
+    cards = [
+        C(name="Wood Elves", quantity=1, mana_value=3.0, mana_cost="{2}{G}",
+          types=["Creature"], produced=set(),
+          flags={"ramp", "fetch:forest"}, flags_ver=2, power=1),
+        C(name="Evolving Wilds", quantity=1, mana_value=0.0, types=["Land"],
+          produced=set(), flags={"ramp", "fetch:basic"}, flags_ver=2),
+        C(name="Forest", quantity=35, mana_value=0.0, types=["Land"],
+          produced={"G"}),
+    ]
+    rep = goldfish.simulate(goldfish.compile_deck(cards), games=40, seed=1)
+    line = next((a for a in rep["assumptions"] if "Fetch effects" in a), "")
+    assert "Evolving Wilds" in line and "Wood Elves" in line
+
+    clean = [C(name="Forest", quantity=37, mana_value=0.0, types=["Land"],
+               produced={"G"}),
+             C(name="Bear", quantity=1, mana_value=2.0, mana_cost="{1}{G}",
+               types=["Creature"], produced=set(), power=2)]
+    rep2 = goldfish.simulate(goldfish.compile_deck(clean), games=40, seed=1)
+    assert not any("Fetch effects" in a for a in rep2["assumptions"]), \
+        "no fetchers, no label — the line must not become boilerplate"
+
+
+def test_schema_bump_ships_with_the_assumptions_change():
+    """Assumptions text is part of the cached report; without the bump, cached
+    decks keep the old list until an unrelated mtime change."""
+    import goldfish
+    assert goldfish.REPORT_SCHEMA == 3
+
+
+def test_ab_arm_b_adjusts_the_fetch_flagged_list():
+    """simulate_ab's arm B copies the compiled dict — the data-only key must
+    track the swap, or arm B's assumptions describe arm A's deck."""
+    import goldfish
+    cards = [
+        C(name="Wood Elves", quantity=1, mana_value=3.0, mana_cost="{2}{G}",
+          types=["Creature"], produced=set(),
+          flags={"ramp", "fetch:forest"}, flags_ver=2, power=1),
+        C(name="Forest", quantity=36, mana_value=0.0, types=["Land"],
+          produced={"G"}),
+    ]
+    coll = cards + [C(name="Vanilla Bear", quantity=1, mana_value=3.0,
+                      mana_cost="{2}{G}", types=["Creature"], produced=set(),
+                      power=2, flags_ver=2)]
+    idx = mtglib.index_by_name(coll)
+    comp = goldfish.compile_deck(cards)
+    ab = goldfish.simulate_ab(comp, "Wood Elves", "Vanilla Bear", idx,
+                              games=40, seed=2)
+    assert "error" not in ab
+    assert any("Fetch effects" in a for a in ab["a"]["assumptions"])
+    assert not any("Fetch effects" in a for a in ab["b"]["assumptions"]), \
+        "arm B swapped the only fetcher out — its label must go with it"
