@@ -1,7 +1,8 @@
 # Spec — Infrastructure: Hot Paths & Background Work
 
-**Status: ☐ DRAFT — awaiting player approval. DO NOT START IMPLEMENTATION until the
-player has approved this spec in chat.**
+**Status: APPROVED by the player 2026-08-14 ("review the spec and begin").**
+Phase 1 ☑ shipped · Phase 2 ☐ · Phase 3 ☐ · Phase 4 = player decision (open) ·
+Appendix runbook = ops, runnable once PR #113 merges and the server syncs.
 
 **Why this exists (measured, 2026-08-13, in-session):** the Table-Ready season moved
 the app from "render precomputed things" to "run engines inline per request," and the
@@ -45,7 +46,37 @@ reinterpret.
 
 ---
 
-## Phase 1 — Process-level memo cache for the analysis pipeline (small-medium)
+## Phase 1 — Process-level memo cache for the analysis pipeline ☑ SHIPPED 2026-08-14
+
+**Result, measured on the real six decks:** a warm dashboard render of
+`the-ur-dragon` went **377 ms → 25 ms** (cold, after `memo.invalidate()`: 70 ms).
+All six decks render **byte-identical** warm vs cold. Suite 628 → 647, exit 0.
+
+**Two deviations, both recorded here per §0:**
+
+1. **One PR, not one-per-phase.** The session is confined to the standing feature
+   branch `claude/mtg-deckbuilder-research-jlpn7o` (PR #113); opening a branch per
+   phase was not authorized. Each phase is one substantial commit on that branch
+   instead, which preserves the reviewable unit without inventing branches.
+2. **The biggest measured win was not in this spec.** Profiling a *warm* render
+   showed 318 ms of 377 ms was a blocking `urlopen` to Commander Spellbook — the
+   client cached successes for a week and failures for nothing, so an unreachable
+   CSB cost a fresh network attempt on **every deck-page view** (ceiling: the 25 s
+   socket timeout when a connection hangs rather than refuses). Fixed in the same
+   spirit as the rest of the phase: `spellbook.FAIL_TTL` (5 min) remembers the
+   failure — never serves it as data — so an outage costs one attempt per cooldown
+   and a recovered service is picked up as soon as it lapses. Without this, the
+   memo cache alone would have moved a 377 ms render to ~330 ms and the phase's
+   acceptance criterion would have been technically met and practically pointless.
+
+**Also worth knowing for Phase 2/3:** the tripwire the spec asked for (two renders
+byte-identical) was **mutation-proved insufficient** — a consumer scribbling on a
+borrowed `Card.quantity` sails straight past it, because that field never reaches
+the HTML. `tests/test_memo.py` therefore carries BOTH: the byte-identical render
+*and* `test_consumers_do_not_mutate_the_shared_analysis`, which fingerprints the
+cached objects themselves (every `Card` field, `report`, `assessment`, `mana`)
+across render + optimizer preview + cut ranking + `advise_card`. Injecting a real
+mutator into `build_dashboard` fails the second test and not the first.
 
 **Goal:** a repeat request against unchanged files never re-parses the collection or
 re-runs a deck analysis. Highest win-per-effort in the repo.

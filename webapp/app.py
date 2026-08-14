@@ -26,6 +26,7 @@ from flask import (Flask, Response, abort, flash, jsonify, redirect,
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
+import memo
 import mtglib
 import deck_stats
 import power
@@ -246,8 +247,40 @@ def _glob_txt(d):
 
 
 def collection_index():
+    """The collection + its name index. `load_collection` is memoized on the
+    mtimes of every file it reads, so the repeat calls this function makes across
+    a request (and across requests) cost one dict build, not a 54 ms re-parse.
+    The index itself is rebuilt per call deliberately — it is milliseconds, and a
+    shared dict is one more object callers could mutate."""
     coll = mtglib.load_collection(COLLECTION)
     return coll, mtglib.index_by_name(coll)
+
+
+def _invalidate(stem=None):
+    """Drop memoized analysis after a write. `stem` narrows it to one deck's
+    entries; no argument drops everything (a collection-level change).
+
+    Called explicitly from every write path rather than left to the mtime keys
+    alone: mtime granularity is a filesystem property, and the card panel writes
+    a deck and then redirects straight into a re-render — a same-second,
+    same-size edit (swapping a card for an equal-length name) is a real way to
+    serve the previous analysis. Deck STEMS appear in every key that read that
+    deck, which is what makes the substring match precise here."""
+    memo.invalidate(stem)
+
+
+@app.after_request
+def _invalidate_after_write(resp):
+    """Backstop: any state-changing request drops the whole memo.
+
+    The targeted `_invalidate` calls above are the ones that matter (they fire
+    *during* the request, before anything re-reads). This exists so that adding a
+    new write route and forgetting the call degrades to "one extra 50 ms rebuild"
+    instead of "serves stale analysis until the process restarts". Every read
+    path in this app is a GET, so the cost is bounded to genuine writes."""
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        memo.invalidate()
+    return resp
 
 
 # --------------------------------------------------------------------------- #
@@ -344,6 +377,7 @@ def deck_edit(stem):
         text = request.form.get("content", "")
         with open(m["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(text.replace("\r\n", "\n"))
+        _invalidate(stem)
         return redirect(url_for("deck", stem=stem))
     content = open(m["path"], encoding="utf-8").read()
     return render_template("edit.html", meta=m, content=content, page="decks")
@@ -554,6 +588,7 @@ def deck_card(stem):
                 # NEW badge and manual-adds advisory are untouched.
                 _log_manual_change(m["path"], "", replaced=name,
                                    source="manual-remove")
+            _invalidate(stem)
     return redirect(url_for("deck", stem=stem))
 
 
@@ -576,6 +611,8 @@ def deck_add(stem):
         return jsonify({"ok": False, "error": err}), 400
     _edit_deck_card(m["path"], "add", card.name, section=section)
     _log_manual_change(m["path"], card.name, source="manual-add")
+    _invalidate(stem)                   # the deck changed — drop it before the
+                                        # singleton check and the advise below
     illegal = []
     try:
         illegal = optimize.singleton_violations(m["path"])
@@ -928,10 +965,12 @@ def deck_bracket(stem):
     raw = (request.form.get("bracket") or "").strip()
     if raw in ("1", "2", "3", "4", "5"):
         _set_deck_header(m["path"], "Bracket", raw)
+        _invalidate(stem)
         flash(f"Bracket set to {raw} for this deck. The detected bracket is still "
               "shown beside it.", "info")
     elif raw in ("", "auto"):
         _set_deck_header(m["path"], "Bracket", None)
+        _invalidate(stem)
         flash("Bracket setting cleared — showing the detected bracket only.", "info")
     return redirect(url_for("deck", stem=stem) + "#tab-power")
 
@@ -1013,6 +1052,11 @@ def deck_delete(stem):
     left = {c: d for c, d in pins.items() if d != stem}
     if len(left) != len(pins):
         deckcore.save_pins(left)
+    # The deck's files are gone; its cached analysis would outlive it. (Pin
+    # writes need no invalidation of their own — `analyze_deck` never reads pins;
+    # they reach the optimizer through `pinned_elsewhere` and the dashboard
+    # through its own `load_pins` call, neither of which is memoized.)
+    _invalidate(stem)
     return redirect(url_for("index"))
 
 
@@ -1296,6 +1340,7 @@ def build_deck_save(commander):
         _flash_optimize(r)
     except Exception:
         pass                      # offline / EDHREC down: keep the un-tuned draft
+    _invalidate(stem)             # a brand-new deck, and an optimizer pass over it
     return redirect(url_for("deck", stem=stem))
 
 
@@ -1350,6 +1395,7 @@ def deck_optimize(stem):
         _flash_optimize(r)
     except Exception:
         pass
+    _invalidate(stem)                   # an applying run rewrote the 99
     return redirect(url_for("deck", stem=stem))
 
 
@@ -1439,6 +1485,7 @@ def collection_add():
             if header_needed:
                 f.write("# Player-confirmed ownership not in the export yet.\n")
             f.write(f"{qty} {name}\n")
+        _invalidate()             # owned_additions feeds EVERY deck's analysis
     return redirect(url_for("collection_view"))
 
 
@@ -1452,11 +1499,13 @@ def collection_upload():
         global COLLECTION
         f.save(COLLECTION_CSV)
         COLLECTION = COLLECTION_CSV
+        _invalidate()             # a whole new collection — nothing cached survives
         try:
             import carddb
             carddb.enrich_api(COLLECTION_CSV, COLLECTION_ATTRS)
         except Exception:
             pass  # best-effort — the raw collection still loads without attributes
+        _invalidate()             # …and again: enrichment rewrote the attrs overlay
     return redirect(url_for("collection_view"))
 
 

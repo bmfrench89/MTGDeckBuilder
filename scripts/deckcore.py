@@ -16,6 +16,7 @@ import csv
 import os
 import re
 
+import memo
 import mtglib
 
 
@@ -554,11 +555,54 @@ def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None):
     return {"report": rep, "assessment": assessment, "mana": mana}
 
 
+def _reference_key():
+    """A fingerprint of the whole reference directory — ~20 `stat` calls.
+
+    `analyze_deck`'s answer depends on curated knowledge it never takes as an
+    argument: `game_changers.txt` moves a bracket, `combos.csv` moves the Combo
+    Watch, `card_notes.csv` moves the details. Keying only on the deck and the
+    collection would cache an answer straight through a reference edit, which is
+    exactly the kind of silent staleness this repo does not tolerate."""
+    try:
+        paths = sorted(e.path for e in os.scandir(REF_DIR)
+                       if e.is_file() and e.name.endswith((".txt", ".csv")))
+    except OSError:
+        return ()
+    return memo.stat_key(*paths)
+
+
 def analyze_deck(deck_path, collection, refs=None):
     """Load + enrich a saved deck and run the whole analysis pipeline once — the
     single source of truth for the dashboard, the assessment packet, etc.
     `collection` may be a file path or an already-loaded list[Card]. Returns
-    {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}."""
+    {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}.
+
+    **Memoized** on the deck file, its `.attrs.csv`/`.notes.md` companions, the
+    collection's own input set, and the reference directory — but only when the
+    inputs can be fingerprinted. An already-loaded `collection` list and a
+    caller-supplied `refs` both bypass the cache entirely: neither can be
+    fingerprinted, and a caller who preloaded has already paid the price the
+    cache exists to avoid.
+
+    **What comes back on a hit is shared.** The outer dict is copied per call, so
+    adding a top-level key is safe; everything inside it — `coll`, `idx`,
+    `enriched`, `report`, `assessment` — is the same object every other caller
+    holds and must be treated as read-only. `tests/test_memo.py`'s
+    byte-identical-render tripwire is what keeps that true."""
+    if isinstance(collection, str) and refs is None:
+        stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+        key = ("deckcore.analyze_deck",
+               memo.stat_key(deck_path, f"{stem}.attrs.csv", f"{stem}.notes.md",
+                             *mtglib.collection_inputs(collection)),
+               _reference_key())
+        # Shallow copy per hit: callers that stash an extra top-level key (the
+        # dashboard's `sim`, a route's own bookkeeping) then cannot leak it into
+        # the next caller's analysis. The VALUES stay shared — see the docstring.
+        return dict(memo.get(key, lambda: _analyze_deck(deck_path, collection, refs)))
+    return _analyze_deck(deck_path, collection, refs)
+
+
+def _analyze_deck(deck_path, collection, refs=None):
     import deck_stats
     import combo_detector
     import power

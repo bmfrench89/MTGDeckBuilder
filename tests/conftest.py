@@ -21,6 +21,22 @@ def _goldfish_cache_in_tmp(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
+def _clean_memo():
+    """Start (and leave) every test with an empty analysis memo.
+
+    `memo` is process-global by design — that is what makes it work across
+    requests in one web-app worker. In a test process it would also carry state
+    across tests, so a suite that passes in file order could fail in isolation
+    (or vice versa), which is exactly the kind of ghost this repo's hermetic rule
+    exists to prevent. `tests/test_memo.py` opts back in explicitly by populating
+    it inside a single test."""
+    import memo
+    memo.invalidate()
+    yield
+    memo.invalidate()
+
+
+@pytest.fixture(autouse=True)
 def _no_network_and_no_real_cache(monkeypatch, tmp_path_factory):
     """Hard-stop the network clients for EVERY test, and move their caches to tmp.
 

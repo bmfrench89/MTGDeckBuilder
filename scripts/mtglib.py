@@ -15,9 +15,13 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Optional
+
+import memo                    # the one repo import a hub makes, and it points
+                               # DOWN: memo imports nothing from here (or anywhere)
 
 
 # --------------------------------------------------------------------------- #
@@ -452,6 +456,21 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
 ATTRS_OVERLAYS = ("collection_attrs.snapshot.csv", "collection_attrs.csv")
 
 
+# Every file `load_collection` may read, relative to the collection's own
+# directory. This list IS the cache key — a file that the loader reads but this
+# tuple omits would let an edit to it serve stale forever, so the two must be
+# changed together (`tests/test_memo.py` pins the overlays against exactly this).
+COLLECTION_INPUTS = ("owned_additions.txt", "owned_additions.csv") + ATTRS_OVERLAYS
+
+
+def collection_inputs(path: str) -> list:
+    """Absolute-ish paths of every file `load_collection(path)` reads, present or
+    not. Missing ones matter: they key as `(path, None)` so their later creation
+    invalidates the cached load rather than being ignored until the next edit."""
+    d = os.path.dirname(path) or "."
+    return [path] + [os.path.join(d, x) for x in COLLECTION_INPUTS]
+
+
 def load_collection(path: str) -> list:
     """Parse a collection file, then auto-merge sibling overlays if present:
       - `owned_additions.txt/.csv` — cards you confirmed you own but the export
@@ -461,8 +480,20 @@ def load_collection(path: str) -> list:
         color/type/curve analysis across every deck.
 
     An attrs row whose name is not in the collection is skipped, never invented —
-    a stale snapshot listing sold cards adds nothing (see `overlay_attrs`)."""
-    import os
+    a stale snapshot listing sold cards adds nothing (see `overlay_attrs`).
+
+    Memoized on the mtimes of ALL of those inputs, not just `path`: the overlays
+    are what a sync or an enrichment run rewrites, and keying on the base file
+    alone would serve a pre-enrichment collection for the rest of the process's
+    life. **The returned list is shared** — every caller gets the same `Card`
+    objects, so nothing may mutate them (the audit that established nothing does
+    is in `docs/spec-infra-hot-paths.md` §1b; `apply_attrs` is safe because
+    `deck_stats.analyze` hands it fresh merged copies, never these)."""
+    return memo.get(("mtglib.load_collection", memo.stat_key(*collection_inputs(path))),
+                    lambda: _load_collection(path))
+
+
+def _load_collection(path: str) -> list:
     with open(path, encoding="utf-8") as f:
         cards = parse_collection(f.read())
     d = os.path.dirname(path) or "."

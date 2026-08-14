@@ -178,6 +178,21 @@ def run(reason, reload_delay=0.0):
         # the old code all day — the stale-serve bug found 2026-08-12. A total
         # failure never moves HEAD, so this stays False exactly when it should.
         pulled = _head() != before
+        if pulled:
+            # A pull rewrites decks, collection attrs and reference lists under a
+            # live process. The memo cache keys on mtimes and would notice, but
+            # git can restore a file with a size and a coarse mtime that match —
+            # and this is the one code path that changes many files at once with
+            # nobody watching. Say it outright instead of trusting stat().
+            try:
+                import sys as _sys
+                scripts = os.path.join(ROOT, "scripts")
+                if scripts not in _sys.path:
+                    _sys.path.insert(0, scripts)
+                import memo
+                memo.invalidate()
+            except Exception:
+                pass                  # a cache miss is never worth failing a sync
         # Post-pull hygiene: a pull can bring fresh collection attrs down, which
         # is exactly when a deck's Unsorted section becomes resolvable. Wrapped
         # whole — a regroup error is reported in the status line, never allowed

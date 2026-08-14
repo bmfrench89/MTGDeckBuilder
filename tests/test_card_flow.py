@@ -434,6 +434,42 @@ def test_spellbook_degrades_on_a_corrupt_cache(tmp_path, monkeypatch):
     assert out["error"] and out["present"] == [] and out["almost"] == []
 
 
+def test_spellbook_failure_is_remembered_for_a_cooldown(tmp_path, monkeypatch):
+    """An unreachable CSB used to cost a fresh network attempt on EVERY deck-page
+    view: successes cached for a week, failures for nothing. Profiling a warm
+    render made it the single biggest cost in the request (315 ms proxied; the
+    ceiling is the 25 s socket timeout when a connection hangs rather than
+    refuses). The failure is remembered — never served as data — so an outage
+    costs one attempt per FAIL_TTL, and a recovered service is picked up as soon
+    as the cooldown lapses."""
+    import spellbook
+    monkeypatch.setattr(spellbook, "CACHE_DIR", str(tmp_path))
+    calls = []
+
+    def boom(*a, **k):
+        calls.append(1)
+        raise OSError("egress blocked")
+    monkeypatch.setattr(spellbook, "_post", boom)
+
+    first = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)])
+    second = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)])
+    assert len(calls) == 1, "the second call must not re-attempt the network"
+    assert first["error"] and second["error"], "the error payload is unchanged"
+    assert second["present"] == [] and second["almost"] == []
+    assert second.get("cooldown") is True
+
+    # Cooldown lapsed → try again, and a success clears the marker for good.
+    monkeypatch.setattr(spellbook, "_post",
+                        lambda *a, **k: {"results": {"identity": "WU", "included": [],
+                                                     "almostIncluded": []}})
+    ok = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)], fail_ttl=0)
+    assert ok["error"] is None and ok["identity"] == "WU"
+    import hashlib as _h
+    key = _h.sha1(("Cmd" + "#" + "Sol Ring").encode()).hexdigest()[:16]
+    assert not os.path.exists(str(tmp_path / f"{key}.fail")), \
+        "a success must clear the failure marker, not leave it to expire"
+
+
 def test_attrs_snapshot_workflow_is_name_only_and_guarded():
     """The committed attrs file's privacy property is enforced, not assumed
     (docs/spec-network-and-attrs.md §3): the workflow may only read the

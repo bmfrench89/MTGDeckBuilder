@@ -6,7 +6,8 @@ toward. Companion to [research-roadmap.md](research-roadmap.md) (vision) and
 
 ## Shape in one line
 
-Two **hubs** (`mtglib` = data, `deckcore` = analysis) feed a ring of stdlib **analysis
+Two **hubs** (`mtglib` = data, `deckcore` = analysis) — memoized on file identity by
+`memo`, which sits below them and imports nothing — feed a ring of stdlib **analysis
 engines**, which feed **presentation spokes** (`build_dashboard`, `card_api`,
 `auto_build`), consumed by the **Flask web app**, the **CLIs**, and the **coaching skill**.
 
@@ -15,6 +16,7 @@ engines**, which feed **presentation spokes** (`build_dashboard`, `card_api`,
 ```mermaid
 flowchart TB
   subgraph HUBS["🎯 Hubs — foundation (stdlib + each other only)"]
+    memo["memo<br/>file-identity memo cache (below the hubs)<br/>get / stat_key / invalidate · one lock"]
     mtglib["<b>mtglib</b><br/>Card model · deck/collection parsing<br/>classify (roles) · pip math · load_collection"]
     deckcore["<b>deckcore</b><br/>shared helpers: attrs / notes / sections / buylist<br/>card-notes KB · role labels<br/>analyze_deck() → one pipeline for every consumer"]
   end
@@ -48,6 +50,8 @@ flowchart TB
     skill["mtg-deckbuilder skill<br/>(build · analyze · COACH)"]
   end
 
+  memo --> mtglib
+  memo --> deckcore
   mtglib --> deckcore
   mtglib --> ENGINES
   skill -. "rules Q&A: retrieve → read → cite" .-> crules
@@ -172,7 +176,8 @@ inclusion rates drift slowly (the live cache TTL is a week).
 
 | Module | Role | Depends on |
 |---|---|---|
-| **mtglib** | Data hub: `Card`, parsing, `classify` (curated lists → `Card.flags` → types, in that precedence), pip math, `load_collection` (+ attrs/additions overlay); reads all major collection-app CSV formats via header aliases (`docs/collection-formats.md`) | — |
+| memo | Below-the-hubs memo cache: `get(key_parts, build)` keyed on `stat_key()` file identity (`(path, mtime_ns, size)`, `(path, None)` for missing), `invalidate(substr)`, `MAX_ENTRIES` oldest-first eviction, one `threading.Lock`. Backs `mtglib.load_collection` (keyed on ALL merged inputs, not just the CSV) and `deckcore.analyze_deck` (deck + companions + collection + a reference-directory fingerprint). **Cached values are shared and must be treated as frozen** — `tests/test_memo.py` fingerprints the cached objects across every consumer to prove nothing scribbles on them. Unfingerprintable inputs (a preloaded collection list, caller-supplied `refs`) bypass the cache rather than risk a stale answer | — (`os`, `threading`; imports nothing in-repo, so the hubs can import it) |
+| **mtglib** | Data hub: `Card`, parsing, `classify` (curated lists → `Card.flags` → types, in that precedence), pip math, `load_collection` (+ attrs/additions overlay, **memoized on every file it merges** — `collection_inputs()` IS that key); reads all major collection-app CSV formats via header aliases (`docs/collection-formats.md`) | memo |
 | **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()`; `advise_card()` (per-card verdict), `manual_adds()` / **`manual_removals()`** (Source=manual-* — the add side protects from cuts, the removal side blocks re-adds), `buy_signals()` (the merged Buy view), `section_label()`/`real_section_labels()`; **THE role template** (`ROLE_RANGE` + archetype table + `role_ranges*` + `LAND_RANGE` + `archetype_words` — one table every consumer reads; five disagreeing copies existed) | mtglib |
 | deck_stats | curve, colored-pip demand vs sources, role counts, ownership | mtglib |
 | power | WotC bracket (1–5, estimated) + 0–100 power score. Reads the deck's optional **`# Bracket:`** header (`read_declared_bracket` / `with_declared`): the player's setting headlines, `bracket` keeps meaning DETECTED, and the reasons never disappear | mtglib, deck_stats, combo_detector, deckcore |
@@ -195,7 +200,7 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
 | **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply`. The role template is **archetype-aware** (`role_ranges` reads the deck's `# Archetype:` header — a control deck's 15 counterspells are correct, not nine over budget; unmatched words are reported, never silently ignored) and the **field has a veto over role repair**: a swap may never cut a card the field plays MORE than the incoming one, because template pressure arrives through `value_of`'s fit blend and can manufacture the 25-point margin on its own | mtglib, deckcore, deck_fit, deck_conflicts, power |
-| spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully | mtglib |
+| spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully — and **degrades cheaply**: a failure is remembered for `FAIL_TTL` (5 min) so an unreachable CSB costs one attempt per cooldown instead of one per deck-page view (it was 315 ms of every warm render, ceiling 25 s when a connection hangs). The remembered failure is never served AS data — callers still get the empty error payload they already label | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
 ## Web app (`webapp/`)

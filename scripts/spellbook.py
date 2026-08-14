@@ -23,6 +23,16 @@ API = "https://backend.commanderspellbook.com/find-my-combos"
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "spellbook")
 CACHE_TTL = 7 * 24 * 3600
+# How long a FAILURE is remembered. Successes cache for a week; failures used to
+# cache for nothing at all, which meant an unreachable CSB cost a fresh network
+# attempt on every single deck-page view — measured at 315 ms per render in a
+# proxied sandbox, and bounded only by the 25 s socket timeout on a host where
+# the connection hangs instead of refusing. Five minutes is short enough that a
+# recovered service is picked up almost immediately, and long enough that a
+# service outage stops taxing every page. The failure is remembered, never
+# SERVED as data: the payload returned is still the empty error shape callers
+# already label as "combo data unavailable".
+FAIL_TTL = 300
 _HEADERS = {"User-Agent": "MTGDeckBuilder/1.0 (personal collection tool)",
             "Accept": "application/json", "Content-Type": "application/json"}
 
@@ -46,23 +56,54 @@ def _combo(c):
     }
 
 
-def find_my_combos(commanders, main, ttl=CACHE_TTL):
+def _cooling(path, fail_ttl):
+    """The recorded failure for this key, if it is still fresh. Returns the error
+    string to replay, or None when it is time to try the network again."""
+    try:
+        if (time.time() - os.path.getmtime(path)) < fail_ttl:
+            with open(path, encoding="utf-8") as f:
+                return f.read().strip() or "unavailable"
+    except OSError:
+        pass
+    return None
+
+
+def find_my_combos(commanders, main, ttl=CACHE_TTL, fail_ttl=FAIL_TTL):
     """POST the deck to CSB. Returns {present, almost, identity} (or an error payload).
-    `main` is a list of (name, quantity). Cached by the (commanders, cards) signature."""
+    `main` is a list of (name, quantity). Cached by the (commanders, cards) signature.
+
+    Failures are remembered for `fail_ttl` seconds (see FAIL_TTL) so a service
+    outage costs one attempt per five minutes instead of one per page view."""
     sig = "|".join(sorted(commanders)) + "#" + "|".join(sorted(n for n, _ in main))
     key = hashlib.sha1(sig.encode()).hexdigest()[:16]
     os.makedirs(CACHE_DIR, exist_ok=True)
     cache = os.path.join(CACHE_DIR, key + ".json")
+    fail = os.path.join(CACHE_DIR, key + ".fail")
     if os.path.exists(cache) and (time.time() - os.path.getmtime(cache)) < ttl:
         try:
             with open(cache, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass          # corrupt cache = cache miss, never a crash (degrade contract)
+    cooled = _cooling(fail, fail_ttl)
+    if cooled:
+        return {"error": cooled, "present": [], "almost": [], "identity": None,
+                "cooldown": True}
     try:
         j = _post(commanders, main)
     except Exception as e:
+        try:
+            tmp = fail + ".part"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(str(e)[:200])
+            os.replace(tmp, fail)
+        except OSError:
+            pass          # a read-only cache dir costs speed, never correctness
         return {"error": str(e), "present": [], "almost": [], "identity": None}
+    try:
+        os.remove(fail)   # the service is back — stop replaying its last bad day
+    except OSError:
+        pass
     res = j.get("results", {})
     out = {
         "identity": res.get("identity"),
