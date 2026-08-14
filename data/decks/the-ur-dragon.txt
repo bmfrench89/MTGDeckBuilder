@@ -9,8 +9,6 @@
 
 # --- Creatures ---
 1 Savage Ventmaw
-1 Llanowar Elves
-1 Selvala, Heart of the Wilds
 1 Smaug, Wicked Worm
 1 Ureni, the Song Unending
 1 Dragonlord Dromoka
@@ -67,7 +65,6 @@
 1 Sol Ring
 1 Thought Vessel
 1 Fellwar Stone
-1 Talisman of Progress
 1 Roaming Throne
 1 Lightning Greaves
 1 Chromatic Lantern
@@ -107,6 +104,9 @@
 1 Deserted Beach
 1 Sheltered Thicket
 1 Scattered Groves
+1 Wooded Ridgeline
+1 Canopy Vista
+1 Turbulent Fen
 
 # --- Basics ---
 2 Forest
