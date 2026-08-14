@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-13._
+_Last updated: 2026-08-14._
 
 ## Where the app runs
 
@@ -338,6 +338,33 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   `\s`-excluding class truncated at — `--refresh` reported "no link found" with the link in
   plain sight. Fixed (span the space, percent-encode before fetching) and pinned by a test
   against the real 2026 page shape.
+
+## Performance & background work (`docs/spec-infra-hot-paths.md`, Phases 1–3 shipped 2026-08-14)
+
+The app now runs engines inline per request, so three things were made cheap. Know
+these before touching the analysis path:
+
+- **`scripts/memo.py`** memoizes `mtglib.load_collection` and `deckcore.analyze_deck`
+  on **file identity** (`(path, mtime_ns, size)` per input; `(path, None)` for a
+  missing file, so creating it invalidates). A warm dashboard render of the-ur-dragon
+  went 377 ms → 25 ms. **The cached values are SHARED — treat them as frozen.**
+  `analyze_deck` copies only the outer dict; `coll`, `idx`, `enriched`, `report` and
+  `assessment` are the same objects every caller holds. `tests/test_memo.py`
+  fingerprints them across every consumer, and a real mutator injected into
+  `build_dashboard` fails that test — if it ever fails, find the mutator, don't relax
+  the assertion. Unfingerprintable inputs (a preloaded collection list,
+  caller-supplied `refs`) bypass the cache by design. Every webapp write path calls
+  `_invalidate(stem)`, and an `after_request` backstop drops the cache on any
+  state-changing method.
+- **`goldfish.ab_for_deck`** disk-caches the paired A/B behind the Replace flow's
+  shift-click (and the CLI's `--ab`). Errors are never cached.
+- **`webapp/enrich_bg.py`** runs post-upload Scryfall enrichment in a daemon thread —
+  same pattern as `sync.py`, including the *interrupted* status a reload-killed thread
+  gets instead of a permanent spinner. `carddb.write_attrs_csv` made the attrs write
+  atomic for every caller.
+- **`spellbook.FAIL_TTL`**: an unreachable Commander Spellbook used to cost a fresh
+  network attempt on **every deck-page view** (315 ms measured, 25 s ceiling). A
+  failure is now remembered for five minutes — never served as data.
 
 ## Open items
 

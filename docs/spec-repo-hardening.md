@@ -107,7 +107,11 @@ speculative. Tick boxes as items land; this file is the tracker.
    deck_sections in the sync path once types land.
 10. [ ] **Card-panel Rules tab** (medium) — rulings + curated trap notes.
 
-Known-but-deferred (documented, not scheduled): PWA service-worker cache version is
-hand-pinned (`sw.js` `mtgdb-v1`) so installed phones can hold stale assets; and
-`/collection/upload` runs full enrichment synchronously in-request (host timeout risk) —
-both need a deploy-side decision before code changes.
+Known-but-deferred: **both of these have since been closed.** The PWA
+service-worker cache version stopped being hand-pinned in Phase 11 of
+`spec-table-ready.md` (`sw.js` now derives it from git HEAD via `_asset_version()`,
+so every deploy bumps it). `/collection/upload`'s synchronous in-request
+enrichment — the host-timeout risk — moved to a background daemon thread in
+Phase 3 of `spec-infra-hot-paths.md` (`webapp/enrich_bg.py`, the `sync.py`
+pattern; the attrs write became atomic inside `carddb` so every caller inherits
+it).

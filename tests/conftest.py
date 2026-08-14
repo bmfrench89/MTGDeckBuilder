@@ -20,6 +20,15 @@ def _goldfish_cache_in_tmp(tmp_path_factory):
     goldfish.CACHE_DIR = str(tmp_path_factory.mktemp("goldfish-cache"))
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _enrich_status_in_tmp(tmp_path_factory):
+    """Same hermetic rule for the background-enrichment status file: any test that
+    exercises `/collection/upload` starts a real (fake-enrich) run, and its status
+    JSON would otherwise land in the player's real `data/cache/`."""
+    import enrich_bg
+    enrich_bg.STATUS = str(tmp_path_factory.mktemp("enrich") / "enrich_status.json")
+
+
 @pytest.fixture(autouse=True)
 def _clean_memo():
     """Start (and leave) every test with an empty analysis memo.

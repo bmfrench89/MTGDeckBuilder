@@ -1,7 +1,7 @@
 # Spec — Infrastructure: Hot Paths & Background Work
 
 **Status: APPROVED by the player 2026-08-14 ("review the spec and begin").**
-Phase 1 ☑ shipped · Phase 2 ☑ shipped · Phase 3 ☐ · Phase 4 = player decision (open) ·
+Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ — all shipped 2026-08-14 · Phase 4 = PLAYER DECISION (open) ·
 Appendix runbook = ops, runnable once PR #113 merges and the server syncs.
 
 **Why this exists (measured, 2026-08-13, in-session):** the Table-Ready season moved
@@ -221,7 +221,28 @@ CLI `--ab` runs hit disk instead of re-running 800 games on shared CPU.
 
 ---
 
-## Phase 3 — Background upload enrichment (small-medium)
+## Phase 3 — Background upload enrichment ☑ SHIPPED 2026-08-14
+
+**Result:** `/collection/upload` returns immediately; `webapp/enrich_bg.py` runs
+`carddb.enrich_api` in a daemon thread and `/collection` renders its status
+(running / done *n/total matched* / error / **interrupted**). The standing
+known-deferred item in `spec-repo-hardening.md` is closed there too — as is the
+other one on that line, since Phase 11 already made `sw.js` derive its cache
+version from git HEAD.
+
+`carddb`'s writer was **not** atomic, so it was fixed in carddb rather than
+wrapped here: `write_attrs_csv` (tmp + `os.replace`) now serves both the API and
+bulk paths, and `test_both_enrichment_paths_use_the_atomic_writer` fails if a
+future edit re-opens the destination directly. Mutation-proved: reverting the
+write to a plain `open(…, "w")` fails `test_attrs_are_written_atomically`, which
+reads the file from inside the write and asserts a reader only ever sees the old
+complete version.
+
+One test outside this file had to change: `test_upload_writes_the_nine_column_
+attrs_file` asserted a synchronous round trip. It now waits on the status file —
+testing the real backgrounded path rather than a shortcut production no longer
+takes. A session-scoped conftest fixture redirects `enrich_bg.STATUS` into tmp,
+the same hermetic rule the goldfish cache follows.
 
 **Goal:** `/collection/upload` returns immediately; enrichment runs in a daemon
 thread; the player sees honest progress. Closes the standing known-deferred item.

@@ -48,6 +48,7 @@ import optimize
 import goldfish
 
 import sync
+import enrich_bg
 
 
 def _txt(text, filename):
@@ -1473,7 +1474,8 @@ def collection_view():
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
-                           carddb=carddb, cards=cards, types=types, page="collection")
+                           carddb=carddb, cards=cards, types=types,
+                           enrich_status=enrich_bg.status_view(), page="collection")
 
 
 @app.route("/collection/add", methods=["POST"])
@@ -1492,21 +1494,21 @@ def collection_add():
 
 @app.route("/collection/upload", methods=["POST"])
 def collection_upload():
+    """Save the uploaded export, then enrich it in the BACKGROUND.
+
+    Enrichment is ~1 Scryfall request per 75 cards — minutes for a real
+    collection. Running it inline held the browser open for the whole of that and
+    spent one request's worth of a shared CPU quota on it; on this host that is a
+    timeout, not a slow page. The upload itself is unchanged and deliberately
+    untouched: it writes the PRIVATE, gitignored CSV and never the tracked
+    name-only snapshot (that separation closed a real leak — see CLAUDE.md)."""
     f = request.files.get("csv")
     if f and f.filename:
-        # Save to the private, gitignored CSV — never the tracked snapshot (a priced
-        # export must not land in a public repo). Then enrich the whole collection so
-        # colors / types / mana value / image ids are ready and the analytics light up.
         global COLLECTION
         f.save(COLLECTION_CSV)
         COLLECTION = COLLECTION_CSV
         _invalidate()             # a whole new collection — nothing cached survives
-        try:
-            import carddb
-            carddb.enrich_api(COLLECTION_CSV, COLLECTION_ATTRS)
-        except Exception:
-            pass  # best-effort — the raw collection still loads without attributes
-        _invalidate()             # …and again: enrichment rewrote the attrs overlay
+        flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
     return redirect(url_for("collection_view"))
 
 

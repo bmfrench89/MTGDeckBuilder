@@ -1,11 +1,12 @@
 """The web app's two production-aware surfaces: the /collection coverage tile and the
 coaching packet's honesty note — plus the upload round trip.
 
-The upload test exists because `/collection/upload` wraps its inline enrichment in a
-bare `except Exception: pass`. That is the right call for a best-effort enrich (the
-raw collection still loads without attributes), but it also means a derivation bug
-would write a silently truncated attrs file and nothing would ever say so. This test
-is the thing that says so.
+The upload test exists because enrichment is best-effort by design: the raw
+collection still loads without attributes, so a derivation bug would write a
+silently truncated attrs file and nothing would ever say so. This test is the
+thing that says so. Since the enrichment moved into a background thread
+(`webapp/enrich_bg.py`) it also waits on that thread's status file — the failure
+it guards against is unchanged, but the work now finishes after the redirect.
 
 Nothing here touches the player's real data/: ROOT, COLLECTION_CSV and
 COLLECTION_ATTRS are all pointed into tmp_path, and Scryfall is monkeypatched.
@@ -14,6 +15,7 @@ import csv
 import io
 import os
 import sys
+import time
 
 import pytest
 
@@ -100,6 +102,16 @@ def test_upload_writes_the_nine_column_attrs_file(tmp_path, monkeypatch, fake_sc
                     data={"csv": (io.BytesIO(SMALL_CSV.encode()), "export.csv")},
                     content_type="multipart/form-data")
     assert r.status_code in (302, 303)
+    # Enrichment moved off the request into a daemon thread (webapp/enrich_bg.py),
+    # so the round trip this test asserts now completes shortly AFTER the redirect.
+    # Waiting on the status file tests the real backgrounded path rather than a
+    # synchronous shortcut that production no longer takes.
+    import enrich_bg
+    for _ in range(500):
+        if (enrich_bg.status() or {}).get("state") in ("done", "error"):
+            break
+        time.sleep(0.01)
+    assert (enrich_bg.status() or {}).get("state") == "done", enrich_bg.status()
     with open(app.COLLECTION_ATTRS, encoding="utf-8", newline="") as f:
         rows = list(csv.reader(f))
     assert rows[0] == carddb.ATTRS_HEADER

@@ -216,19 +216,39 @@ def _attrs_row(card, a):
             a.get("produced", ""), a.get("flags", ""), a.get("power", "")]
 
 
+def write_attrs_csv(out_path, header, rows):
+    """Write an attrs CSV **atomically** — tmp file in the same directory, then
+    `os.replace`.
+
+    Both enrichment paths go through here, and the reason is not tidiness. A run
+    over 2,621 cards takes minutes, and since Phase 3 it can run in a background
+    thread while the app serves pages; a plain `open(…, "w")` truncates the real
+    file for the whole of that. Any reader in the window — a page render, a
+    goldfish sim, `load_collection` on another request — would parse a
+    half-written collection and report the missing half as *unenriched*, which
+    is a wrong answer wearing an honest label. `os.replace` is atomic on POSIX
+    and on Windows, so a reader sees either the old file or the new one."""
+    tmp = out_path + ".part"
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        for row in rows:
+            w.writerow(row)
+    os.replace(tmp, out_path)
+
+
 def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     coll = mtglib.load_collection(collection_path)
     index = build_index(bulk_path, use_duckdb)
     matched = 0
-    with open(out_path, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(ATTRS_HEADER)
-        for card in sorted(coll, key=lambda c: c.name):
-            a = index.get(mtglib._norm(card.name))
-            if not a:
-                continue
-            matched += 1
-            w.writerow(_attrs_row(card, a))
+    rows = []
+    for card in sorted(coll, key=lambda c: c.name):
+        a = index.get(mtglib._norm(card.name))
+        if not a:
+            continue
+        matched += 1
+        rows.append(_attrs_row(card, a))
+    write_attrs_csv(out_path, ATTRS_HEADER, rows)
     return matched, len(coll), len(index)
 
 
@@ -403,16 +423,15 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
     id_col = header.index("Scryfall")
     if not include_ids:
         header.pop(id_col)
-    with open(out_path, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(header)
-        for card in sorted(coll, key=lambda c: c.name):
-            a = resolved.get(card.name)
-            if a:
-                row = _attrs_row(card, a)
-                if not include_ids:
-                    row.pop(id_col)
-                w.writerow(row)
+    rows = []
+    for card in sorted(coll, key=lambda c: c.name):
+        a = resolved.get(card.name)
+        if a:
+            row = _attrs_row(card, a)
+            if not include_ids:
+                row.pop(id_col)
+            rows.append(row)
+    write_attrs_csv(out_path, header, rows)
     for name, hit in fuzzy_rejected:
         print(f"  fuzzy REJECTED (different card, kept unmatched): "
               f"{name!r} -> {hit!r}", file=sys.stderr)

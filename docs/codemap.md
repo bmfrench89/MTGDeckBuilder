@@ -222,7 +222,18 @@ turns/combos, clock, game plan — phone and print) · **`/deck/<stem>/mulligan`
 `/api/deck/<stem>/hand` (keep/ship practice on the deck's real hands, verdict from
 `goldfish.keep_verdict`) · **`/pins`** + `/pins/move` (every reserved copy, one-tap
 move) · `/deck/<stem>/bracket` (the player's bracket setting)
-· `/api/deck/<stem>/ab` (paired swap preview behind shift-click in the card panel).
+· `/api/deck/<stem>/ab` (paired swap preview behind shift-click in the card panel —
+**disk-cached** by `goldfish.ab_for_deck`, so the second look at a swap is a file read).
+
+**Background work — two modules, one pattern.** `sync.py` (daily git sync) and
+`enrich_bg.py` (collection enrichment after an upload) both use: a daemon thread, a
+JSON status file under `data/cache/`, an already-running guard, and a **stale-status
+honesty rule** — PythonAnywhere kills daemon threads on app reload, so a `running`
+entry past its TTL renders as *interrupted*, never as a spinner that never stops.
+Copy that pattern rather than inventing a third. `/collection/upload` returns
+immediately and the attrs file is written atomically inside `carddb`
+(`write_attrs_csv`: tmp + `os.replace`), so a page render during a minutes-long
+enrichment sees the old complete file or the new one — never half of one.
 
 ## The coaching skill (`.claude/skills/mtg-deckbuilder/`)
 
