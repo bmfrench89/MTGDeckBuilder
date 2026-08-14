@@ -369,6 +369,34 @@ these before touching the analysis path:
   network attempt on **every deck-page view** (315 ms measured, 25 s ceiling). A
   failure is now remembered for five minutes — never served as data.
 
+## Mana intelligence (`docs/spec-mana-intelligence.md` — Phase A ☑ shipped 2026-08-14, B–H specced)
+
+Born from the player's ur-dragon question ("why Wood Elves with only 2 Forests?"
+— the deck has 5 Forest cards, but nothing could say so). The spec was
+adversarially verified by three lenses before implementation; Phase A is on the
+branch:
+
+- **Vocabulary v2** (`oracle_flags`): `fetch:land` / `fetch:basic` /
+  `fetch:<type>` / `fetch:basic-<type>` / `mana-restricted`, read from the
+  search CLAUSE — Demonic Tutor stays silent, Krosan Verge unions two types,
+  Expedition Map fetches without being ramp. This fixed a live miss: the v1
+  regex needs the literal word "land" and `"island"` doesn't match `\bland`, so
+  Farseek / Nature's Lore / Wood Elves carried NO flags at all (Wood Elves not
+  even `ramp`).
+- **`FlagsVer`** (11th attrs column = `oracle_flags.VOCAB_VERSION`): flags and
+  their version are ONE write — a Flags column arriving without FlagsVer resets
+  the card to version 1. Mutation-proved against the real rollout window (v2
+  snapshot under a stale private CSV must not read as verified-unrestricted).
+- **Proven inert**: 0/2,621 cards change classify() roles, 0/6 decks change
+  power/bracket/categories. v2 tokens map to no `FLAG_ROLES` entry on purpose.
+- **Nothing lights up until re-enrichment** (flags are the storage): after the
+  next merge, dispatch the attrs-snapshot Action (leg 1) and re-enrich the
+  server's private CSV (leg 2 — console `carddb.py` run or a fresh upload).
+  Until then every surface shows pre-vocabulary honesty labels. Phases B–H
+  (census, restricted Karsten split, surfaces, banner, optimizer guards,
+  auto_build weighting, goldfish label, rollout) are specced with binding
+  shapes — start at Phase B per the spec's checkpoint note.
+
 ## Open items
 
 **0. Optimizer role-repair churn — FREEZE LIFTED 2026-08-14.** The acceptance

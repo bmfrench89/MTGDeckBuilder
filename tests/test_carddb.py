@@ -244,6 +244,11 @@ def test_round_trip_into_load_collection(tmp_path, collection_csv, fake_scryfall
     maze = mtglib.lookup(idx, "Maze of Ith")
     assert maze.produced == set() and maze.produced is not None   # enriched, produces none
     assert mtglib.lookup(idx, "Azorius Guildgate").flags == {"etb-tapped"}
+    # FlagsVer rides the same trip: written as the current VOCAB_VERSION, read back
+    # onto Card.flags_ver. This is what lets a consumer tell "verified — no
+    # restriction token applies" from "enriched before the token existed".
+    import oracle_flags
+    assert mtglib.lookup(idx, "Sol Ring").flags_ver == oracle_flags.VOCAB_VERSION
     # Power survives the same trip: a real int for the creature, None for the cards
     # that have no power at all.
     assert mtglib.lookup(idx, "Llanowar Elves").power == 1

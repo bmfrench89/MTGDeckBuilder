@@ -105,6 +105,14 @@ A/B deltas "in the card advisor"; v1 puts A/B in the CLI instead (§6, cut list)
 
 This section is the single source of truth both workstreams reference.
 
+> **AMENDED 2026-08-14** (`docs/spec-mana-intelligence.md` Phase A): the
+> vocabulary gained `fetch:*` and `mana-restricted`, and every attrs row now
+> carries `FlagsVer` (= `oracle_flags.VOCAB_VERSION`) so a pre-amendment file is
+> detectable instead of reading as verified-current. The v1 tokens below are
+> UNCHANGED — `test_the_new_tokens_do_not_disturb_the_mana_vocabulary` pins
+> that — and the sim consumes exactly the same tokens it did before (the v2
+> tokens are deliberately inert in goldfish).
+
 - **`Card.produced: Optional[set]`** — `None` = unknown (consumers take their
   labeled fallback); **`set()` = enriched and known to produce no mana** (e.g.
   Maze of Ith). This None-vs-empty distinction is load-bearing; any code path

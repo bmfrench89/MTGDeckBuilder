@@ -433,3 +433,18 @@ def test_new_tokens_map_to_no_classify_role():
     for token in ("fetch:land", "fetch:basic", "fetch:forest",
                   "fetch:basic-forest", "mana-restricted"):
         assert token not in mtglib.FLAG_ROLES
+
+
+def test_v2_tokens_are_inert_in_classify_for_uncurated_cards():
+    """The end-to-end inertness claim, durable. A card no curated list knows,
+    carrying only v2 tokens, must classify exactly as it would without them —
+    the type fallback for a creature, the land short-circuit for a land. (The
+    live before/after proof at ship time diffed all 2,621 snapshot cards and 6
+    decks; this is the piece of it that survives as a test.)"""
+    import mtglib
+    c = mtglib.Card(name="Uncurated Scout", types=["Creature"],
+                    flags={"fetch:forest"}, flags_ver=2)
+    assert mtglib.classify(c) == {"creature"}
+    land = mtglib.Card(name="Uncurated Grove", types=["Land"],
+                       flags={"fetch:basic", "mana-restricted"}, flags_ver=2)
+    assert mtglib.classify(land) == {"land"}
