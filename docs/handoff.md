@@ -20,7 +20,10 @@ _Last updated: 2026-08-14._
   is a Flask *route* serving `scripts/assets/tokens.css`; a directory mapping would
   shadow it and silently 404 the shared design tokens. `tests/test_deploy.py` guards this.
 - **Keepalive:** free web apps need "Run until 3 months from today" clicked every ~3
-  months. Missing it sleeps the app; no data is lost.
+  months. Missing it sleeps the app; no data is lost. **The paid tier was offered
+  and declined 2026-08-14** (`spec-infra-hot-paths.md` Phase 4): the free tier
+  stays, this keepalive stays, and the in-app sync thread stays instead of a
+  Scheduled Task. Don't re-propose it unless one of those actually starts hurting.
 
 ## The automation loop (all legs verified on real events)
 

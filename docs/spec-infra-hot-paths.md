@@ -1,7 +1,7 @@
 # Spec — Infrastructure: Hot Paths & Background Work
 
 **Status: APPROVED by the player 2026-08-14 ("review the spec and begin").**
-Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ — all shipped 2026-08-14 · Phase 4 = PLAYER DECISION (open) ·
+Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ — all shipped 2026-08-14 · Phase 4 = DECLINED by the player 2026-08-14 ·
 Appendix runbook = ops, runnable once PR #113 merges and the server syncs.
 
 **Why this exists (measured, 2026-08-13, in-session):** the Table-Ready season moved
@@ -282,7 +282,17 @@ thread; the player sees honest progress. Closes the standing known-deferred item
 
 ---
 
-## Phase 4 — Host tier (PLAYER DECISION — no code until decided)
+## Phase 4 — Host tier ☒ DECLINED 2026-08-14 ("not buying the $5 tier")
+
+Nothing changes and nothing was written. The free tier stays, and so do the three
+hacks it costs: the quarterly "Run until 3 months from today" keepalive, the
+in-app poor-man's-cron sync thread (`MTG_AUTO_SYNC`, `webapp/sync.py`) instead of
+a real Scheduled Task, and CPU-quota headroom as the constraint on inline sims.
+Phases 1–3 plus the network-cooldown addendum cut a warm deck page from 1633 ms
+to 61 ms, which is what makes that comfortable. Revisit only if the keepalive or
+the sync thread starts costing real trouble. The original reasoning follows.
+
+---
 
 The free tier works and everything above keeps it comfortable. The $5 Hacker plan
 erases three standing hacks: the quarterly "Run until 3 months" keepalive, the
