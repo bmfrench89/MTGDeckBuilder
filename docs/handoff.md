@@ -85,6 +85,37 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Current data (season closed 2026-08-10)
 
+- **NEW DECK 2026-08-14: `bruce-banner-incredible-hulk` — Temur (U/R/G), Bracket 3,
+  power 71/100.** Built for the player's *brother*, whose card it is — the commander is
+  deliberately NOT in the collection, so `deck_stats` reporting one card "not owned" is
+  correct, not a defect. **The trap this deck exists to document: Bruce Banner costs
+  `{U}`.** The `{2}{R}{R}{G}{G}` printed on the card is the *transform* cost, so the
+  color identity is **Temur, not Gruul** — a Gruul build would have been the wrong deck
+  entirely. Oracle text came from the player's photographs (grounding rule #6) because
+  Scryfall, EDHREC, Card Kingdom and Draftsim are ALL egress-blocked in the sandbox
+  (`carddb.py --verify` → UNVERIFIED, proxy 403); `WebSearch` still resolves and
+  corroborated the `{U}` front-face cost across three independent sources.
+  Engine: flip to an 8/8 reach/trample, then damage him **while he is attacking** —
+  Enrage untaps him and adds a combat phase. Pingers are Prodigal Sorcerer, Thornwind
+  Faeries and Brash Taunter (fight your own Hulk: he takes 1, the indestructible Taunter
+  takes 8 and throws it at a face); Roaming Throne naming **Hero** doubles every Enrage
+  trigger. Built from the **uncommitted** pool so it sleeves standalone without pulling
+  cards out of the player's six decks. Two exclusions are deliberate and documented in
+  the deck's `.notes.md`: **Lightning Greaves** (shroud would stop you targeting your own
+  Hulk — Swiftfoot Boots/Champion's Helm grant hexproof instead, which does not) and
+  **Basilisk Collar** (deathtouch on a Tim kills your own commander). `combo_detector`
+  flags Godo + Helm of the Host as infinite combats; Helm is unowned and is buylisted
+  under an explicit "Bracket 4 — DO NOT ADD" tier alongside Caltrops and Aggravated
+  Assault. **Still owed by the loop:** there is no `data/reference/field/bruce-banner*.json`
+  yet, so `optimize.py` saw **0 field cards** and correctly no-opped, and the EDHREC
+  top-25 overlap check could NOT be run. The merge should trigger the field-snapshot
+  Action; the next session should re-run optimize + the overlap check on real field data.
+  `Bruce Banner // The Incredible Hulk` was added to `data/reference/commanders.csv`
+  (G R U, `voltron counters ramp`) — note `auto_build.py`'s CLI has **no `--identity`
+  flag** despite SKILL.md documenting an `identity=` syntax; `build()` takes the kwarg but
+  nothing exposes it, so an unknown commander auto-builds as colorless until it is added
+  to `commanders.csv`.
+
 - **Deck sections are now EDHREC-style TYPE sections (2026-08-11)** — Commander /
   Creatures / Instants / Sorceries / Artifacts / Enchantments / Lands / Basics —
   across all decks, kept by the new `scripts/deck_sections.py` (idempotent;
