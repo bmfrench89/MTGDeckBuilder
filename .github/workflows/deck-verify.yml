@@ -1,0 +1,152 @@
+# deck-verify — run the two NETWORK-dependent grounding steps on a GitHub runner.
+#
+# Why this exists: a sandboxed Claude Code session has no route to Scryfall or
+# EDHREC (the egress proxy answers 403 to CONNECT), so `carddb.py --verify`
+# returns UNVERIFIED and `optimize.py` sees 0 field cards. Those are exactly the
+# checks that keep this project honest, so they cannot just be skipped — and
+# "run it on the player's PC" is the thing CLAUDE.md tells us not to do.
+# GitHub's runners have unrestricted internet, so they run here instead.
+#
+# How this differs from field-snapshots.yml, and why it is a SEPARATE file:
+# field-snapshots.yml ends in a hardcoded `git pull --rebase origin main` +
+# `git push origin main`. Dispatching THAT on a feature branch would rebase the
+# branch's own commits onto main and push them there — a silent merge with no
+# review. This workflow only ever pushes back to the ref it ran on
+# (`HEAD:${{ github.ref_name }}`), so it is safe to run from a working branch.
+# field-snapshots.yml stays the scheduled main-branch job; this is the on-demand
+# one a session drives while a deck is still in review.
+#
+# It runs on PUSH to a working branch on purpose: `workflow_dispatch` is only
+# dispatchable once the file is on the DEFAULT branch, which is no help to the
+# session that is writing the workflow in the first place. Pushing the branch
+# triggers it, and the dispatch inputs stay for later manual runs.
+name: deck-verify
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "data/decks/*.txt"
+      - "data/reference/verify-queue.txt"
+      - ".github/workflows/deck-verify.yml"
+  workflow_dispatch:
+    inputs:
+      commander:
+        description: "Commander to snapshot (exact deck-header name). Blank = every commander in data/decks."
+        required: false
+        default: ""
+      cards:
+        description: "Cards to verify, separated by ' | '. Blank = read data/reference/verify-queue.txt."
+        required: false
+        default: ""
+      commit:
+        description: "Commit the field snapshot back to this branch"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deck-verify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Stdlib-only by design (CLAUDE.md: scripts/ takes no third-party deps),
+      # so there is deliberately no pip install step here.
+
+      # Verbatim oracle text for every card the sandbox could not confirm. The
+      # LOG is the deliverable — a session reads it back with get_job_logs — and
+      # the JSON goes to an artifact so nothing depends on log formatting.
+      - name: Verify card oracle text
+        id: verify
+        run: |
+          set -euo pipefail
+          if [ -n "${CARDS_INPUT}" ]; then
+            printf '%s' "${CARDS_INPUT}" | tr '|' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' \
+              | grep -v '^$' > /tmp/names.txt
+            echo "source: workflow_dispatch input"
+          elif [ -f data/reference/verify-queue.txt ]; then
+            grep -v '^[[:space:]]*#' data/reference/verify-queue.txt \
+              | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' > /tmp/names.txt
+            echo "source: data/reference/verify-queue.txt"
+          else
+            : > /tmp/names.txt
+          fi
+          count=$(wc -l < /tmp/names.txt)
+          echo "Verifying ${count} card(s) against Scryfall"
+          if [ "${count}" -eq 0 ]; then exit 0; fi
+          ARGS=()
+          while IFS= read -r n; do ARGS+=(--verify "$n"); done < /tmp/names.txt
+          echo "===== VERBATIM ORACLE TEXT ====="
+          set +e
+          python3 scripts/carddb.py "${ARGS[@]}"
+          python3 scripts/carddb.py "${ARGS[@]}" --json > verify-results.json
+          set -e
+          echo "===== END VERBATIM ORACLE TEXT ====="
+        env:
+          CARDS_INPUT: ${{ inputs.cards }}
+
+      # EDHREC inclusion/synergy. Without it optimize.py has no field to tune
+      # against and the top-25 overlap check cannot run at all.
+      - name: Snapshot the commander's field
+        run: |
+          set +e
+          if [ -n "${COMMANDER}" ]; then
+            python3 scripts/edhrec.py "${COMMANDER}" --snapshot \
+              --collection data/collection/collection_snapshot.txt
+          else
+            python3 scripts/edhrec.py --snapshot-all \
+              --collection data/collection/collection_snapshot.txt
+          fi
+          if [ $? -ne 0 ]; then
+            echo "::warning::EDHREC snapshot reported a failure — see the log above"
+          fi
+          echo "===== FIELD SNAPSHOTS ON DISK ====="
+          ls -la data/reference/field/ || true
+          exit 0
+        env:
+          COMMANDER: ${{ inputs.commander }}
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deck-verify-results
+          path: |
+            verify-results.json
+            data/reference/field/
+          if-no-files-found: warn
+
+      # Push ONLY to the branch this ran on. Never to main — see the header
+      # comment; that distinction is the whole reason this file is separate.
+      - name: Commit the snapshot back to this branch
+        if: github.event_name == 'push' || inputs.commit
+        run: |
+          git config user.name  "deck-verify-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/reference/field/
+          if git diff --cached --quiet; then
+            echo "No snapshot changes — nothing to commit."
+            exit 0
+          fi
+          git commit -m "Field snapshots: deck-verify run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${{ github.ref_name }}"; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt/3) — rebasing and retrying"
+            git pull --rebase origin "${{ github.ref_name }}" || true
+            sleep $((3 * attempt))
+          done
+          echo "::error::could not push the snapshot after 3 attempts"
+          exit 1
