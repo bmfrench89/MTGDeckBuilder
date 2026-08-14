@@ -9,15 +9,30 @@ grounded answer exposed a class of blindness, not one bad card:
 
 - The deck actually has **5 Forest cards** (2 basics + 3 typed duals) — but no tool
   can say so. Nothing links a fetcher to its targets.
-- **Farseek has NO flags in the committed snapshot.** Its text — "a Plains, Island,
-  Swamp, or Mountain card" — never contains the word "land", so the existing
-  `_SEARCH_LAND_RE` misses the entire typed-fetch class. This is a live miss, not a
-  granularity gap.
-- **Unclaimed Territory is enriched as `Produced='W U B R G C'`, Flags empty** — a
-  full Karsten source of every color, though its mana can only cast creatures of
-  the chosen type. Four dragons-only lands in ur-dragon inflate every color count
-  for every non-dragon spell, in `deck_stats`, `manabase`, AND the goldfish sim.
-  This is an **overcount to be subtracted**, not missing data to be filled.
+- **The typed-fetch class is invisible today — verified against the committed
+  snapshot, not inferred.** `_SEARCH_LAND_RE` is `search your library for [^.]*\bland`,
+  and `\b` means "island" does not match it (tested directly). Live rows:
+
+  ```
+  Farseek,Sorcery,2,G,{1}{G},,,          <- no flags
+  Nature's Lore,Sorcery,2,G,{1}{G},,,    <- no flags
+  Wood Elves,Creature,3,G,{2}{G},Elf;Scout,,   <- no flags, not even `ramp`
+  Cultivate,Sorcery,3,G,{2}{G},,,ramp    <- says "basic land", so it hits
+  ```
+
+  Every typed fetcher in the collection is flagless. The miss is broader than a
+  granularity gap: Wood Elves does not even register as ramp.
+- **Rainbow-looking lands are overcounted.** Five ur-dragon lands are enriched as
+  `Produced='W U B R G C'` with empty Flags — Unclaimed Territory, Secluded
+  Courtyard, Haven of the Spirit Dragon, Maelstrom of the Spirit Dragon, Study
+  Hall — so each counts as a full source of all five colors in `deck_stats`,
+  `manabase`, and the goldfish sim. At least some of them can only spend that
+  mana on a chosen/creature type. This is an **overcount to be subtracted**, not
+  missing data to be filled.
+  **Which of the five are genuinely restricted is UNVERIFIED here** — Scryfall is
+  unreachable from the sandbox, and this repo does not guess oracle text. The
+  implementer derives it from the real text at enrichment time; H3's acceptance
+  says "count what enrichment finds", never a forced number.
 - The optimizer's basics repair converts low-inclusion typed duals into basics
   **round-robin by alphabetical identity letter** (optimize.py:597-611) — no pip
   awareness, no subtype awareness. It can convert the deck's only Forest-typed
@@ -122,18 +137,43 @@ So the vocabulary version rides the existing mechanism by BECOMING a column:
 
 - `oracle_flags.VOCAB_VERSION = 2` (module constant, documented in the contract
   table; bump on any future vocabulary change).
-- `carddb.ATTRS_HEADER` appends **`FlagsVer`** strictly LAST (after `Power` —
-  positional pins in `tests/test_carddb.py:104-116` and
-  `tests/test_collection_produced.py:117-121` require append-at-end; the
-  `--no-ids` path pops `Scryfall` by name-derived index and is unaffected).
-  Every written row carries the integer.
-- `mtglib.Card` gains `flags_ver: int = 1`. `overlay_attrs` sets it from the
-  column when present (absent column ⇒ stays 1 — the pre-vocabulary shape,
-  exactly the produced-None pattern one level up). `deck_stats.analyze`'s
-  explicit Card copy list gains `flags_ver=ref.flags_ver` — **the codemap calls
-  that list "the ONLY route a Card attribute takes to deck-level analysis"; a
-  field omitted there is silently invisible everywhere** (this bit the Power
-  column once already).
+- `carddb.ATTRS_HEADER` appends **`FlagsVer`** strictly LAST, after `Power`
+  (append-at-end is the repo's whole back-compat story: positional-append +
+  read-by-name). Every written row carries the integer. The `--no-ids` path pops
+  `Scryfall` by name-derived index and is unaffected.
+  **This is NOT a free append — it breaks a pin that must be updated in the same
+  commit:** `tests/test_carddb.py::test_header_is_the_ten_pinned_columns_in_order`
+  asserts the exact ten-name list AND `header[-1] == "Power"` (verified at
+  test_carddb.py:109-116). Update it to the eleven-column list, change the tail
+  pin to `header[-1] == "FlagsVer"` / `header[-2] == "Power"`, and rename the
+  test. `tests/test_collection_produced.py:117-121` compares against
+  `carddb.ATTRS_HEADER` itself and its `[7]`/`[8]` index checks survive
+  append-at-end untouched.
+- `mtglib.Card` gains `flags_ver: int = 1`. **The version must be written by the
+  SAME file-application that writes the flags** — this is the phase's subtlest
+  rule and two independent reviewers found the same hole in the naive version:
+
+  > `ATTRS_OVERLAYS` layers snapshot-then-private (mtglib.py:456) and
+  > overwrites `card.flags` whenever the LATER file has a Flags column
+  > (mtglib.py:428-429). In the exact window H2 creates — snapshot regenerated
+  > by Monday's cron (leg 1), private CSV not yet re-enriched (leg 2) — the
+  > snapshot sets `flags_ver=2`, then the stale private file overwrites `flags`
+  > with v1 tokens while `flags_ver` **stays 2**. Unclaimed Territory would then
+  > read as *verified unrestricted at v2* while carrying v1 flags: precisely the
+  > silent lie A2 exists to prevent, produced by A2 itself.
+
+  So in `overlay_attrs` (and `deckcore.apply_attrs`): whenever a file's Flags
+  column is applied to a card, set `flags_ver` from THAT file's `FlagsVer` cell
+  if the column is present, and otherwise **reset it to 1** — the writing file's
+  implied vocabulary. Flags and their version are one write, never two.
+  **Test:** a v2 snapshot layered under a FlagsVer-less private file yields
+  `flags_ver == 1`, not 2.
+- `deck_stats.analyze`'s explicit Card copy list gains `flags_ver=ref.flags_ver`
+  — **the codemap calls that list "the ONLY route a Card attribute takes to
+  deck-level analysis"; a field omitted there is silently invisible everywhere**
+  (this bit the Power column once already). `mtglib.Card(...)` is constructed
+  with keyword arguments at both sites (mtglib.py:276, deck_stats.py:51), so a
+  new defaulted dataclass field is safe.
 - Deck-level `.attrs.csv` does NOT gain the column (those companions don't even
   carry Sub-types; the census runs on collection-level enrichment, and the
   fresh-clone story rests on the committed snapshot — see H2).
@@ -145,13 +185,16 @@ So the vocabulary version rides the existing mechanism by BECOMING a column:
 ### A3. Tests and contract updates (this phase's blast radius, enumerated)
 
 - **Fix the `ramp` miss the same way, deliberately:** `_SEARCH_LAND_RE` requires
-  the literal word "land" (`\bland` — and "Island" does NOT match it: no word
-  boundary before the substring), so Farseek-class typed fetches that put a
-  land onto the battlefield have never earned `ramp`. New rule: when any
-  `fetch:*` token fires AND "onto the battlefield" appears in the same clause,
-  also emit `ramp`. Farseek is curated RAMP by name so classify() never noticed
-  — but uncurated typed fetchers were invisible to the flag layer. This is a
-  one-line consequence of the typed regex, not a separate feature.
+  the literal word "land" (`\bland`; "island" does NOT match — verified by
+  running the compiled pattern against the four wordings), so no typed fetcher
+  has ever earned `ramp` — Farseek, Nature's Lore and Wood Elves are all
+  flagless in the committed snapshot. New rule: when any `fetch:*` token fires
+  AND "onto the battlefield" appears in the same face's clause, also emit
+  `ramp`. Those three are curated RAMP by name (mtglib.py:638-641) so
+  `classify()` never noticed, but any UNCURATED typed fetcher is invisible to
+  the flag layer today. This is a one-line consequence of the typed regex, not
+  a separate feature — and it means `test_carddb`-style round-trip fixtures for
+  those cards change flags from `''` to a real set.
 - `tests/test_oracle_flags.py` asserts EXACT set equality throughout. Update
   deliberately: `CULTIVATE` becomes `{'ramp', 'fetch:basic'}`. Add fixtures with
   real oracle wordings: FARSEEK (`ramp` + its four typed tokens — battlefield
@@ -161,8 +204,10 @@ So the vocabulary version rides the existing mechanism by BECOMING a column:
   `produced_of` still all six letters — the token OVERRIDES nothing at
   derivation time), EXPEDITION_MAP (`fetch:land`, no `ramp` — to-hand
   destination), HOUR_OF_PROMISE (`fetch:land`, `ramp`). Sol Ring / Guildgate /
-  Command Tower / Maze of Ith pins must come out UNCHANGED
-  (`test_the_new_tokens_do_not_disturb_the_mana_vocabulary` is the tripwire).
+  Command Tower / Maze of Ith pins must come out UNCHANGED. **Write a NEW test**
+  `test_the_new_tokens_do_not_disturb_the_mana_vocabulary` asserting exactly
+  that (it does not exist yet — the current pins are separate per-card tests at
+  test_oracle_flags.py:75, :178); it is the tripwire for the whole phase.
 - `.github/scripts/live_schema_check.py`'s hardcoded EXPECT list: update
   Cultivate's entry and add the new fixture cards. **This fails at the next
   manual recertify run, not in CI — do it in the same commit or it is a time
@@ -200,11 +245,20 @@ change, mirroring the `color_sources_basis` pattern commit-for-commit:
   verified-clean; it is unknown, and the label downstream says so.** (This is
   the empty-vs-absent rule applied one level up.)
 - Quantities, not rows (`c.quantity` — the existing loop already does this).
-- `tests/test_color_sources.py::test_the_json_report_gains_exactly_one_key`
-  pins build_report's key set in BOTH directions — extend its `pre_a` set
-  deliberately (that is the test doing its job). Everything must stay
-  `json.dumps`-able: **lists, never sets** (auto_build `--json` dumps the whole
-  mana payload).
+- **Shape decision, binding:** `rep['color_sources_restricted']` and BOTH new
+  basis keys are **always present** (empty dict / `0` on legacy data). The
+  alternative — present-only-when-nonzero — breaks
+  `test_color_sources.py:130`'s `set(legacy[0]) == set(rep)` same-shape-on-both-
+  bases pin, and makes every consumer write `.get()` guards.
+- **Test blast radius (larger than one key-set pin — enumerate it or the commit
+  is red):** `test_the_json_report_gains_exactly_one_key`'s `pre_a` set AND the
+  three EXACT-dict-equality basis assertions at `tests/test_color_sources.py:76`,
+  `:99`, `:107` (`== {"produced_lands": 9, "identity_lands": 0}` etc., all
+  verified). Every existing fixture's attrs CSV lacks a FlagsVer column, so
+  after A2 every land is `flags_ver == 1` and the unconditional
+  `restriction_unknown_lands` bump changes the basis dict in all three.
+  Everything must stay `json.dumps`-able: **lists, never sets** (auto_build
+  `--json` dumps the whole mana payload).
 - Expected consequence, stated so nobody "fixes" it: **Karsten source counts
   DROP on decks running Territory-class lands** once re-enriched, and some
   `ok` statuses flip to `low`. That is the correction working. The ur-dragon
@@ -291,8 +345,12 @@ rule on day one:
    between `@media print` and its first 200/400 chars
    (test_dashboard.py:98-102, test_explainers.py:66-69), and nothing inside the
    3000-char window after 'Worst-sequenced cards' (test_dashboard.py:185-188 —
-   different tab, but stay aware). Card links in dashboard HTML use
-   `.cardlink[data-key]`, NOT `[data-card]` (the two-surfaces panel trap).
+   different tab, but stay aware). Card links: emit **both** `data-card` and
+   `data-key`, which is what every existing `.cardlink` does
+   (build_dashboard.py:488-500, :559, :841; test_dashboard.py:188 asserts both
+   are present) — the dashboard panel binds `[data-key]` and the app panel
+   binds `[data-card]`, and matching the sibling markup keeps one convention
+   instead of two.
 2. **`webapp/templates/assess.html`** — hand-rendered Karsten table gains the
    restricted column + a census block; every new `<table>` needs `tablewrap`
    within 200 chars before it (test_assess_page.py:52-56).
@@ -335,9 +393,10 @@ flash and NOT a diff:
   **every manual edit re-evaluates it automatically on the reload the panel
   already performs** — idempotent, always current, no state carried between
   requests. Cap it: one line, top 2 findings + "+N more".
-- The Mana tab's label gets a small warn chip under the same condition (the
-  `tabs_block` labels are plain strings — keep the chip inside the label text,
-  no new assets).
+- The Mana tab's label gets a warn marker under the same condition. **Text
+  only** — `tabs_block` renders `<label …>{esc(lab)}</label>`
+  (build_dashboard.py:957), so any `<span class='chip'>` markup would render as
+  literal escaped text. Use a character: `"⚠ Mana"`.
 - `deck_add`'s JSON verdict gains an optional `"mana_note"` string when the
   added card is a fetcher with `thin`/`none` targets — the panel already
   renders verdict JSON, so the note appears at the moment of the add.
@@ -444,12 +503,23 @@ a `_pay` redesign + data SimCard doesn't carry; fetch modeling touches the draw
 stream, RNG-stream separation, file-order CRN pairing, and the cards_seen
 convergence invariant — four silent-failure modes at once). v1 ships exactly:
 
-- An `_assumptions()` line when the compiled deck contains enriched
-  `produces==set()` lands or `fetch:`-flagged nonland cards: "fetch effects are
-  not modeled: fetchlands add no mana here, and fetch creatures/sorceries don't
-  find lands." (Enriched fetchlands are ALREADY dead lands in the sim, and
-  enrichment makes Wood Elves strictly WORSE — a working identity-fallback dork
-  becomes a zero-mana body. The label stops that from being a silent surprise.)
+- An `_assumptions()` line when the deck contains enriched `produces==set()`
+  lands or `fetch:`-flagged nonland cards: "fetch effects are not modeled:
+  fetchlands add no mana here, and fetch creatures/sorceries don't find lands."
+  (Enriched fetchlands are ALREADY dead lands in the sim, and enrichment makes
+  Wood Elves strictly WORSE — a working identity-fallback dork becomes a
+  zero-mana body. The label stops that from being a silent surprise.)
+  **Mechanism, because the naive version is not computable:** `_assumptions`
+  receives only `compiled`, and `SimCard` has NO flags slot — `compile_card`
+  reads `card.flags` for amount/etb/rock/dork and drops them
+  (goldfish.py:139-141, :210). The land half is derivable (`is_land` +
+  `model=='exact'` + empty `produces`); the fetch-flagged-nonland half is not.
+  So `compile_deck` records a **data-only** key on the compiled dict —
+  `compiled['fetch_flagged'] = [names]` — populated where it already inspects
+  each card. No SimCard slot, no game logic, no reordering (the file-order CRN
+  pairing must not move). Note `recompute_model` (goldfish.py:284) cannot
+  rederive it, so any path that rebuilds a compiled dict must carry the key
+  forward — check `simulate_ab`'s arm-B construction.
 - **`REPORT_SCHEMA` 2 → 3 in the same commit** — assumptions text is part of
   the cached report; without the bump, cached decks keep the old list until an
   unrelated mtime change. One bump, batched with nothing else pending; it
