@@ -7,7 +7,9 @@ heuristics and mana-cost math the other scripts share.
 Grounding note: category classification (ramp/draw/removal/wipe) is a HEURISTIC.
 It reads, in this order: curated name lists, then the oracle-derived flags
 `carddb` writes via `oracle_flags` (consulted only where the curated lists are
-silent), then card types. It is a starting point, not gospel. Always eyeball the
+silent), then card types. `oracle_flags`' v2 tokens (`fetch:*`,
+`mana-restricted`) map to NO role on purpose — see `FLAG_ROLES` — so growing the
+vocabulary cannot move a category count. It is a starting point, not gospel. Always eyeball the
 output and verify uncertain cards (see the skill's grounding-rules.md).
 """
 

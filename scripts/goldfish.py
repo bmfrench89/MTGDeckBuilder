@@ -21,7 +21,10 @@ no others):
     (Maze of Ith). Conflating the two turns Maze of Ith into a producer, or a whole
     un-enriched deck into a zero-mana one, and the honesty label never fires.
   * `Card.flags` — `etb-tapped`, `etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`,
-    `mana2`/`mana3`.
+    `mana2`/`mana3`. The v2 tokens (`fetch:*`, `mana-restricted`) are deliberately
+    NOT read here: fetch effects are not modeled at all, and a spend restriction
+    would need `_pay` to know which spell it is paying for. Both are inert —
+    `compile_card` reads the flag set by explicit membership only.
 
 Two documented deviations from the closed forms, both deliberate:
   * **Pips are compiled here, not by `mtglib.pip_counts`.** That function splits one

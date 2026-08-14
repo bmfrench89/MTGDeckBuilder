@@ -689,7 +689,7 @@ def audit_flags(collection, n=30, as_json=False, seed=0):
     print("  " + "-" * 100)
     for r in rows:
         print(f"  {r['name'][:31]:<32}{r['type'][:11]:<12}{r['produced']:<7}"
-              f"{str(r['power']):<5}{r['flags'][:27]:<28}{r['roles']}")
+              f"{str(r['power']):<5}{r['flags'][:48]:<49}{r['roles']}")
     return 0
 
 

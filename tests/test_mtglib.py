@@ -514,3 +514,79 @@ def test_key_is_a_regex_fragment_for_spelling_variants():
 
 def test_trailing_whitespace_is_stripped_but_inner_spaces_survive():
     assert mtglib.deck_header("# Theme:  dark  souls  \n", "Theme") == "dark  souls"
+
+
+# --------------------------------------------------------------------------- #
+# FlagsVer — flags and their VERSION are one write, never two
+# --------------------------------------------------------------------------- #
+ATTRS_V2 = """\
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Unclaimed Territory,Land,0,,,,W U B R G C,mana-restricted,,2
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,2
+"""
+
+# The shape of the player's real private file during the rollout window: it HAS a
+# Flags column (every carddb since Produced/Flags landed writes one) but predates
+# FlagsVer, so its tokens are v1 — no mana-restricted, whatever the card says.
+ATTRS_V1_PRIVATE = """\
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power
+Unclaimed Territory,Land,0,,,,W U B R G C,,
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,
+"""
+
+
+COLL_WITH_TERRITORY = """\
+Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity
+1,Unclaimed Territory,0,,,,Land,,rare
+1,Sol Ring,1,,,{1},Artifact,,uncommon
+"""
+
+
+def _layered(tmp_path, name, snapshot_text=None, private_text=None):
+    """A collection that actually CONTAINS the cards under test — `overlay_attrs`
+    skips attrs rows for cards the collection doesn't have (it never invents a
+    card), so the shared fixture can't carry Unclaimed Territory."""
+    d = tmp_path / name
+    d.mkdir(exist_ok=True)
+    (d / "collection.csv").write_text(COLL_WITH_TERRITORY, encoding="utf-8")
+    if snapshot_text is not None:
+        (d / "collection_attrs.snapshot.csv").write_text(snapshot_text,
+                                                         encoding="utf-8")
+    if private_text is not None:
+        (d / "collection_attrs.csv").write_text(private_text, encoding="utf-8")
+    return mtglib.index_by_name(mtglib.load_collection(str(d / "collection.csv")))
+
+
+def test_a_stale_private_file_cannot_wear_the_snapshots_version(tmp_path):
+    """The rollout window this repo will actually be in, and the silent lie the
+    version column exists to prevent.
+
+    Leg 1 (the attrs-snapshot Action) regenerates the committed snapshot at v2.
+    Leg 2 (a console re-enrichment of the private CSV) has not run yet. The
+    overlay layers snapshot-then-private and overwrites `flags` whenever the
+    later file has a Flags column — so if the version were left alone here,
+    Unclaimed Territory would end up carrying the private file's v1 flags (no
+    `mana-restricted`) while reporting flags_ver=2. Every consumer would then read
+    it as VERIFIED unrestricted and count it as a full source of five colours,
+    with no honesty label anywhere. Absent FlagsVer therefore RESETS to 1."""
+    coll = _layered(tmp_path, "stale", snapshot_text=ATTRS_V2,
+                    private_text=ATTRS_V1_PRIVATE)
+    ut = mtglib.lookup(coll, "Unclaimed Territory")
+    assert ut is not None
+    assert ut.flags == set(), "the private file's flags won, as the overlay dictates"
+    assert ut.flags_ver == 1, (
+        "v1 flags must not wear the snapshot's v2 label — flags and their "
+        "version are one write")
+
+
+def test_a_v2_file_reports_its_version(tmp_path):
+    coll = _layered(tmp_path, "fresh", snapshot_text=ATTRS_V2)
+    ut = mtglib.lookup(coll, "Unclaimed Territory")
+    assert ut.flags == {"mana-restricted"} and ut.flags_ver == 2
+
+
+def test_no_attrs_at_all_is_version_one(tmp_path):
+    """No enrichment is pre-vocabulary by definition — the same default a card
+    constructed from a bare decklist carries."""
+    coll = _layered(tmp_path, "bare")
+    assert mtglib.lookup(coll, "Sol Ring").flags_ver == 1

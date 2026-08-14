@@ -64,8 +64,20 @@ in CLAUDE.md's Data formats section (it is load-bearing in three places below) �
 **Execution order:** A → B → C → D; E and F independently after B; G any time;
 H (rollout) last. One commit per phase on the assigned feature branch (same
 deviation from one-PR-per-phase as `spec-infra-hot-paths.md` recorded: sessions
-are confined to their assigned branch). Suite green at every commit (baseline:
-**672 tests, exit 0**), offline/hermetic, `scripts/` stdlib-only.
+are confined to their assigned branch). Suite green at every commit,
+offline/hermetic, `scripts/` stdlib-only.
+
+**CHECKPOINT — Phase A is already SHIPPED (2026-08-14).** The vocabulary, the
+`FlagsVer` column and its coupling rule, the enrichment/overlay plumbing, the
+recertify `EXPECT` rows, the attrs-snapshot gate column, the widened audit
+display and the docstring updates are all on the branch, with tests. **Baseline
+is now 684 tests, exit 0** — start at Phase B. Phase A's own acceptance is met
+and was proven rather than asserted: stashing the change and diffing showed 0 of
+2,621 cards changing `classify()` roles and 0 of 6 decks changing power, bracket
+or category counts. Two pins were updated deliberately (the eleven-column header
+test; Cultivate's exact flag set), and the coupling rule is mutation-proved —
+reverting it yields Unclaimed Territory with `flags=set(), flags_ver=2`, the
+verified-unrestricted lie.
 
 **Rules of engagement:** every number a surface shows carries its honesty label
 when derived from absent or pre-vocabulary data; label-don't-hide; never guess a
@@ -190,7 +202,9 @@ So the vocabulary version rides the existing mechanism by BECOMING a column:
   has ever earned `ramp` — Farseek, Nature's Lore and Wood Elves are all
   flagless in the committed snapshot. New rule: when any `fetch:*` token fires
   AND "onto the battlefield" appears in the same face's clause, also emit
-  `ramp`. Those three are curated RAMP by name (mtglib.py:638-641) so
+  `ramp`. Scope it per FACE, matching the v1 rule it extends (`"onto the
+  battlefield" in t`), not per clause. Those three are curated RAMP by name
+  (mtglib.py:638-641) so
   `classify()` never noticed, but any UNCURATED typed fetcher is invisible to
   the flag layer today. This is a one-line consequence of the typed regex, not
   a separate feature — and it means `test_carddb`-style round-trip fixtures for
@@ -245,11 +259,17 @@ change, mirroring the `color_sources_basis` pattern commit-for-commit:
   verified-clean; it is unknown, and the label downstream says so.** (This is
   the empty-vs-absent rule applied one level up.)
 - Quantities, not rows (`c.quantity` — the existing loop already does this).
-- **Shape decision, binding:** `rep['color_sources_restricted']` and BOTH new
-  basis keys are **always present** (empty dict / `0` on legacy data). The
-  alternative — present-only-when-nonzero — breaks
-  `test_color_sources.py:130`'s `set(legacy[0]) == set(rep)` same-shape-on-both-
-  bases pin, and makes every consumer write `.get()` guards.
+- **Shape decisions, all binding** (the shape pin asserts both directions AND
+  identical shape on enriched vs legacy bases, so "present only when nonzero"
+  fails it):
+  * `rep['color_sources_restricted']` — ALWAYS present, `{}` when nothing is
+    restricted; both new basis keys always present, `0` on legacy data.
+  * each `colors[]` row's `'restricted'` — always present, `0` when none.
+  * `fetch['total_fetchers']` — the SUM OF QUANTITIES, not a row count (a deck
+    can run two copies of a fetcher; the census counts copies everywhere else).
+  * each census row's `'target_names'` — a list of **at most 6** names; the
+    row's `'targets'` int carries the true total, the same cap+total convention
+    `analyze()['risky']` / `['risky_total']` already uses.
 - **Test blast radius (larger than one key-set pin — enumerate it or the commit
   is red):** `test_the_json_report_gains_exactly_one_key`'s `pre_a` set AND the
   three EXACT-dict-equality basis assertions at `tests/test_color_sources.py:76`,
@@ -400,6 +420,10 @@ flash and NOT a diff:
 - `deck_add`'s JSON verdict gains an optional `"mana_note"` string when the
   added card is a fetcher with `thin`/`none` targets — the panel already
   renders verdict JSON, so the note appears at the moment of the add.
+  **Compute it in `deckcore.advise_card`**, which already loads the deck and the
+  collection and already owns the verdict shape; the route stays dumb (it has no
+  analysis in hand after `_invalidate`, and re-deriving one there would pay for
+  a second pipeline run).
 - `LAND_RANGE` comes from deckcore. `build_dashboard` already imports deckcore
   (spoke→hub, legal). Do NOT add the floor check to manabase unless you also
   add the deckcore import there — precedent exists (deck_stats imports deckcore
@@ -545,8 +569,12 @@ possible **because** of A2's FlagsVer gate. State this in the PR body.
 
 1. **Committed snapshot:** the attrs-snapshot Action deliberately does NOT
    trigger on carddb/oracle_flags edits — after merge, trigger
-   `workflow_dispatch` manually (or wait for Monday's cron). The gate must
-   already know `FlagsVer` (A2) or the run fails. This is what lights up fresh
+   `workflow_dispatch` manually (or wait for Monday's cron). The gate's required-column list must gain
+   `FlagsVer` — **not** because an un-updated gate would block the new snapshot
+   (it only exits on columns that are MISSING; extra ones pass), but for the
+   opposite direction: once `FlagsVer` is required, a runner still on an old
+   carddb REFUSES to commit a pre-vocabulary snapshot instead of doing it
+   silently. This is what lights up fresh
    clones and sandboxes. (The committed snapshot is currently one generation
    behind ALREADY — 8 columns, no Power — live proof consumers tolerate old
    shapes indefinitely; the dispatch also heals that.)
