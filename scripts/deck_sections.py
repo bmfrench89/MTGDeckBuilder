@@ -15,6 +15,11 @@ already sat in (a card under "Equipment" is an artifact; under "Lands" a land);
 anything else lands in an explicit "Unsorted" section rather than being
 guessed — enrich and re-run to resolve it.
 
+Duplicate lines for the SAME BASIC land landing in the same section are merged
+(`1 Plains` + `3 Plains` -> `4 Plains`, first position kept) — a nonbasic
+duplicate is left alone on purpose: that's a singleton illegality
+`optimize.singleton_violations` reports, and merging would hide it.
+
 The header comment block and `# Key: value` lines are preserved verbatim.
 Idempotent: running it twice changes nothing.
 
@@ -41,6 +46,30 @@ SECTION_HINTS = (("basic", "Basics"), ("land", "Lands"), ("creature", "Creatures
 # Card lines are parsed with mtglib's ONE qty-line parser plus parse_deck's bare-name
 # fallback. A local `^(\d+)\s+` regex once dropped `1x Name` and bare-name lines —
 # forms mtglib.parse_deck accepts — so a regroup --apply silently DELETED those cards.
+
+
+def _place(rows, seen, qty, name):
+    """Append `(qty, name)` to a section's rows, merging BASIC-land duplicates.
+
+    Same merging semantics as `optimize._tidy` (sum quantities, keep the first
+    line's position and spelling) — deliberately reused rather than reinvented,
+    but narrowed: only what `mtglib.is_basic` accepts is merged. A duplicate
+    line for a NONBASIC is a singleton illegality that
+    `optimize.singleton_violations` reports; collapsing it into `2 Sol Ring`
+    here would tidy the evidence into a tidier-looking illegality instead of
+    leaving it where the violation report and the player can see it.
+
+    Why basics need this: the 2026-08-11 buy migration appended "a 4th Plains"
+    as a NEW line beside an existing `3 Plains`, and that path never ran
+    `_tidy`. Two Plains lines are legal but wrong on the page."""
+    if mtglib.is_basic(name):
+        key = mtglib._norm(name)
+        i = seen.get(key)
+        if i is not None:
+            rows[i] = (rows[i][0] + qty, rows[i][1])
+            return
+        seen[key] = len(rows)
+    rows.append((qty, name))
 
 
 def _hint(label):
@@ -71,14 +100,57 @@ def parse_file(path):
                 continue
             if cur is None:
                 header.append(line)
-                cm = re.match(r"#\s*Commander:\s*(.+?)\s*$", line)
-                if cm:
-                    commander = cm.group(1)
+                cv = mtglib.deck_header(line, "Commander")
+                if cv:
+                    commander = cv
             # non-header comment lines inside sections are dropped by a regroup;
             # keep deck prose in the header block or .notes.md instead.
     while header and not header[-1].strip():
         header.pop()
     return header, commander, entries
+
+
+def has_unsorted(path):
+    """True when this deck file currently has a non-empty `Unsorted` section.
+
+    The cheap filter for the post-sync auto-regroup (webapp/sync.py): once the
+    server has enriched attrs, only the decks still carrying unsorted cards need
+    rewriting — every other deck is already in shape and must not be churned."""
+    try:
+        _hdr, _cmd, entries = parse_file(path)
+    except (OSError, UnicodeDecodeError):
+        # OSError = missing/unreadable; UnicodeDecodeError (a ValueError, NOT an
+        # OSError) = a deck file with invalid UTF-8. Either way the answer is
+        # "nothing to regroup here" — an unreadable file must not be reported as
+        # a *failed regroup* when no regroup was ever attempted.
+        return False
+    return any((label or "").strip().lower().startswith("unsorted")
+               for label, _q, _n in entries)
+
+
+def has_section_comments(path):
+    """True when this deck file has a comment line INSIDE a section.
+
+    `parse_file` drops those on a regroup (documented above). That is an
+    acceptable cost for a deliberate CLI run, but the post-sync auto-regroup
+    fires unattended against files the player can hand-edit in the app — and
+    CLAUDE.md's edit contract says comment lines survive. `webapp/sync.py` uses
+    this to SKIP such a deck rather than silently eat its prose.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return False
+    in_section = False
+    for line in lines:
+        if deckcore.section_label(line) is not None:
+            in_section = True
+            continue
+        s = line.strip()
+        if in_section and s.startswith("#"):
+            return True
+    return False
 
 
 def regroup(path, collection_path):
@@ -90,8 +162,9 @@ def regroup(path, collection_path):
 
     buckets = {s: [] for s in deckcore.TYPE_SECTION_ORDER}
     buckets[UNSORTED] = []
+    seen = {s: {} for s in buckets}       # section -> basic name key -> row index
     commander_line = None
-    hinted = unknown = 0
+    hinted = unknown = merged = 0
     for old_label, qty, name in entries:
         if commander and mtglib._norm(name) == mtglib._norm(commander):
             commander_line = (qty, name)
@@ -112,7 +185,10 @@ def regroup(path, collection_path):
             else:
                 section = UNSORTED
                 unknown += 1
-        buckets[section].append((qty, name))
+        before = len(buckets[section])
+        _place(buckets[section], seen[section], qty, name)
+        if len(buckets[section]) == before:
+            merged += 1
 
     out = list(header)
     if commander_line:                    # never INVENT a commander line the file
@@ -130,6 +206,7 @@ def regroup(path, collection_path):
     total = (commander_line[0] if commander_line else 0) + \
         sum(q for rows in buckets.values() for q, _ in rows)
     return text, {"total": total, "hinted": hinted, "unsorted": unknown,
+                  "merged": merged,
                   "unsorted_names": [n for _, n in buckets[UNSORTED]]}
 
 
@@ -152,7 +229,8 @@ def main(argv=None):
             with open(path, "w", encoding="utf-8") as f:
                 f.write(text)
         line = (f"{tag} {os.path.basename(path)}: {st['total']} cards, "
-                f"{st['hinted']} typed by section hint, {st['unsorted']} unsorted")
+                f"{st['hinted']} typed by section hint, {st['unsorted']} unsorted, "
+                f"{st['merged']} duplicate basic line(s) merged")
         if st["unsorted_names"]:
             line += " (" + ", ".join(st["unsorted_names"]) + ")"
         print(line)

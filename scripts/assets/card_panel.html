@@ -67,8 +67,10 @@
               <button id="cm-pin" type="button" class="cm-editbtn ghost"
                 title="Reserve your copy for this deck">&#128204; Pin to this deck</button>
             </div>
+            <div id="cm-ab" class="cm-hint" hidden></div>
             <div id="cm-replacebox" hidden>
-              <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection:</p>
+              <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection.
+                <b>Shift-click</b> any candidate to simulate the swap first (paired games, no edit).</p>
               <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection&hellip;" autocomplete="off">
               <div id="cm-searchres" class="cm-searchres"></div>
             </div>
@@ -197,7 +199,9 @@
         if(a.upgrade){var up=document.createElement('span');up.className='up';up.textContent='upgrade';cap.appendChild(up);}
         if(a.why){var w=document.createElement('span');w.className='altwhy';w.textContent=a.why;cap.appendChild(w);}
         if(EDITABLE){ fig.style.cursor='pointer'; fig.title='Swap '+a.n+' into this deck';
-          (function(name){ fig.addEventListener('click',function(){ editCard('replace', name); }); })(a.n); }
+          (function(name){ fig.addEventListener('click',function(e){
+            if(e.shiftKey){ abPreview(curKey, name); return; }
+            editCard('replace', name); }); })(a.n); }
         fig.appendChild(im); fig.appendChild(cap); al.appendChild(fig);
       });
       aw.hidden=false;
@@ -228,6 +232,32 @@
   var ew=document.getElementById('cm-editwrap'), rb=document.getElementById('cm-replacebox'),
       shd=document.getElementById('cm-shared'), sr=document.getElementById('cm-searchres'),
       si=document.getElementById('cm-search');
+  function abPreview(outName, inName){
+    // Advisory: what does this swap actually do to the deck's consistency and clock,
+    // measured over identical shuffles? Never blocks the edit — a failure or a slow
+    // answer just means no line appears.
+    var box=document.getElementById('cm-ab'); if(!box) return;
+    box.hidden=false; box.textContent='Simulating the swap\u2026';
+    fetch('/api/deck/'+encodeURIComponent(STEM)+'/ab?out='+encodeURIComponent(outName)
+          +'&in='+encodeURIComponent(inName))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.error){ box.hidden=true; return; }
+        var LAB={commander_by_t4:'commander by T4', commander_by_t6:'commander by T6',
+                 first_kill_turn:'turns to lethal', screw:'mana screw'};
+        var parts=[];
+        Object.keys(d.deltas||{}).forEach(function(k){
+          var x=d.deltas[k]; if(!x) return;
+          var sign=(x.delta>0?'+':'');
+          parts.push((LAB[k]||k)+' '+sign+x.delta.toFixed(2)+(x.significant?' *':''));
+        });
+        box.textContent = parts.length
+          ? 'Swap effect ('+d.games+' paired games): '+parts.join(' \u00b7 ')
+          : '';
+        if(!parts.length) box.hidden=true;
+      })
+      .catch(function(){ box.hidden=true; });
+  }
   function editCard(action, replacement){
     if(!EDITABLE || !curKey) return;
     if(action==='remove' && !confirm('Remove '+curKey+' from this deck?')) return;
@@ -283,7 +313,9 @@
             (list||[]).forEach(function(it){
               var b=document.createElement('button'); b.type='button'; b.className='cm-searchitem';
               b.textContent=it.name+(it.qty>1?(' \u00d7'+it.qty):'');
-              (function(nm){ b.addEventListener('click',function(){ editCard('replace', nm); }); })(it.name);
+              (function(nm){ b.addEventListener('click',function(e){
+                if(e.shiftKey){ abPreview(curKey, nm); return; }
+                editCard('replace', nm); }); })(it.name);
               sr.appendChild(b);
             });
             if(!list || !list.length) sr.innerHTML='<span class="cm-hint">No owned card matches.</span>';

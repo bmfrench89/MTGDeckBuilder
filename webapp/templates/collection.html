@@ -32,6 +32,12 @@
     <code>python scripts/carddb.py --collection &lt;your.csv&gt;</code>) once to pull real
     colors / types / mana value from Scryfall for your whole collection.
   {% endif %}
+  {% if enrich_status %}
+    {# Background enrichment (webapp/enrich_bg.py). "interrupted" is a real state,
+       not an error: PythonAnywhere kills daemon threads on app reload, and saying
+       "running" forever would be a lie with a spinner on it. #}
+    <div class="fs-xs mt-2"><span class="{{ enrich_status.cls }}">{{ enrich_status.text }}</span></div>
+  {% endif %}
 </div>
 
 <div class="grid mb-4">

@@ -57,6 +57,7 @@
 1 Spider-Punk
 1 Anti-Venom, Horrifying Healer
 1 Sensational Spider-Man
+1 Radioactive Spider
 
 # --- Instants ---
 1 Grow Extra Arms
@@ -119,6 +120,3 @@
 4 Island
 4 Swamp
 4 Mountain
-
-# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 Radioactive Spider

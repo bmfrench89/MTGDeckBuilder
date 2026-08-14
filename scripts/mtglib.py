@@ -15,9 +15,13 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Optional
+
+import memo                    # the one repo import a hub makes, and it points
+                               # DOWN: memo imports nothing from here (or anywhere)
 
 
 # --------------------------------------------------------------------------- #
@@ -48,6 +52,16 @@ class Card:
     #   set()   = enriched, and this card really produces no mana (Maze of Ith).
     produced: Optional[set] = None
     flags: set = field(default_factory=set)   # see oracle_flags for the vocabulary
+    # Printed power of the FRONT face, as a number — the input the goldfish clock
+    # needs to know how hard a board hits. Three file states collapse into two here,
+    # and consumers must handle both as UNKNOWN:
+    #   int   = a real printed power (0 included).
+    #   None  = unknown OR not a creature. The `Power` column absent (never
+    #           enriched), an empty cell (noncreature — no power at all), and a
+    #           non-numeric printed power ('*', '1+*', stored verbatim in the file)
+    #           all land here. A creature whose power is None is a card the clock
+    #           cannot count — it must be reported, not treated as 0.
+    power: Optional[int] = None
 
     @property
     def is_land(self) -> bool:
@@ -110,6 +124,35 @@ def _parse_produced(value: str) -> set:
         if len(tok) == 1 and tok in "WUBRGC":
             out.add(tok)
     return out
+
+
+def _parse_power(value) -> Optional[int]:
+    """Parse a `Power` cell into an int, or None when it isn't a plain number.
+
+    Scryfall prints power verbatim and plenty of it isn't a number — `*`, `1+*`,
+    `∞`, `?`. Those are stored in the file EXACTLY as printed (nothing is lost) and
+    read back as None here, because the honest answer to "how hard does it hit" for
+    a `*` creature is "that depends", not a made-up integer. `'2.5'` (Un-set halves)
+    truncates toward zero rather than being dropped — it is still a real number.
+    An empty cell is None too: a noncreature has no power to read."""
+    # NOT `value or ""`: a real power of 0 is falsy, and 0 is a genuine answer
+    # (every 0-power creature — Ornithopter, Blood Artist). Only None means
+    # "no cell".
+    s = "" if value is None else str(value).strip()
+    if not s:
+        return None
+    try:
+        return int(s)
+    except ValueError:
+        pass
+    try:
+        # `int(float(s))` also has to survive 'inf'/'nan', which float() accepts
+        # and int() then refuses with OverflowError/ValueError. This parser sits
+        # on load_collection's hot path against hand-editable files, so a typo
+        # must read as unknown, never take down the whole collection load.
+        return int(float(s))          # '2.5' — a real number, just not an integer
+    except (ValueError, OverflowError):
+        return None
 
 
 def _parse_flags(value: str) -> set:
@@ -263,6 +306,38 @@ def _parse_csv(text: str) -> list:
 
 _QTY_RE = re.compile(r"^\s*(\d+)\s*[xX]?\s+(.*\S)\s*$")
 
+_HDR_RE_CACHE = {}
+
+
+def deck_header(text, key, default=""):
+    """THE `# Key: value` deck-header parser — every consumer calls this, none
+    carries its own regex. Same rule as `_QTY_RE` and `deckcore.section_label`, and
+    for the same reason: sixteen hand-rolled copies of this pattern existed across
+    thirteen files, and every one shared the same latent bug.
+
+    The bug: `:\\s*(.+)$` under re.MULTILINE. `\\s` matches a NEWLINE, so an EMPTY
+    header absorbed the whole next line as its value — ur-dragon's blank
+    `# Archetype: ` parsed as `['#', 'source:', 'auto-generated', …]` in live data,
+    and an empty `# Bracket:` sitting above `1 Sol Ring` would have read a phantom
+    "Bracket 1". Hence `[ \\t]*`, which stops at the line end, and `(.*?)` so an
+    empty value stays on ITS line and falls through to `default` instead of the
+    engine scanning onward for a luckier match.
+
+    `key` is a small REGEX FRAGMENT, not a literal — callers pass "Colors?" to
+    accept both spellings. All callers are in-repo; don't feed it user input.
+    """
+    pat = _HDR_RE_CACHE.get(key)
+    if pat is None:
+        # [ \t\r]* before $: text read in binary or over the wire keeps its \r
+        # under MULTILINE ($ sits before \n, after \r) — a value must never carry
+        # a carriage return the old lazy readers happened to strip.
+        pat = re.compile(rf"^#[ \t]*(?:{key})[ \t]*:[ \t]*(.*?)[ \t\r]*$",
+                         re.MULTILINE | re.IGNORECASE)
+        _HDR_RE_CACHE[key] = pat
+    m = pat.search(text or "")
+    v = m.group(1) if m else ""
+    return v if v else default
+
 
 def _parse_namelist(text: str) -> list:
     cards = {}
@@ -321,6 +396,7 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
     c_sid = _header_index(fn, "scryfall", "scryfall id", "id")
     c_prod = _header_index(fn, "produced", "produced mana")
     c_flags = _header_index(fn, "flags")
+    c_power = _header_index(fn, "power")
     idx = index_by_name(cards)
     n = 0
     for row in reader:
@@ -351,6 +427,16 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
             card.produced = _parse_produced(row.get(c_prod))
         if c_flags:
             card.flags = _parse_flags(row.get(c_flags))
+        # Power is keyed off the CELL, not the column: unlike produced there is no
+        # "known to be nothing" integer, so an empty cell and an absent column both
+        # read back as None. Writing None over an already-known power would be the
+        # real bug here — the snapshot-then-private overlay order (ATTRS_OVERLAYS)
+        # layers an OLD private file over a newer snapshot, and blanking on an
+        # absent column would erase exactly the data the snapshot just supplied.
+        if c_power:
+            p = _parse_power(row.get(c_power))
+            if p is not None:
+                card.power = p
     return n
 
 
@@ -370,17 +456,44 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
 ATTRS_OVERLAYS = ("collection_attrs.snapshot.csv", "collection_attrs.csv")
 
 
+# Every file `load_collection` may read, relative to the collection's own
+# directory. This list IS the cache key — a file that the loader reads but this
+# tuple omits would let an edit to it serve stale forever, so the two must be
+# changed together (`tests/test_memo.py` pins the overlays against exactly this).
+COLLECTION_INPUTS = ("owned_additions.txt", "owned_additions.csv") + ATTRS_OVERLAYS
+
+
+def collection_inputs(path: str) -> list:
+    """Absolute-ish paths of every file `load_collection(path)` reads, present or
+    not. Missing ones matter: they key as `(path, None)` so their later creation
+    invalidates the cached load rather than being ignored until the next edit."""
+    d = os.path.dirname(path) or "."
+    return [path] + [os.path.join(d, x) for x in COLLECTION_INPUTS]
+
+
 def load_collection(path: str) -> list:
     """Parse a collection file, then auto-merge sibling overlays if present:
       - `owned_additions.txt/.csv` — cards you confirmed you own but the export
         missed (player info outranks the export, grounding rule #6).
       - the `ATTRS_OVERLAYS` files — card attributes (Type/MV/Colors/Produced/
-        Flags) for the whole collection, built by carddb.py. This is what turns on
+        Flags/Power) for the whole collection, built by carddb.py. This turns on
         color/type/curve analysis across every deck.
 
     An attrs row whose name is not in the collection is skipped, never invented —
-    a stale snapshot listing sold cards adds nothing (see `overlay_attrs`)."""
-    import os
+    a stale snapshot listing sold cards adds nothing (see `overlay_attrs`).
+
+    Memoized on the mtimes of ALL of those inputs, not just `path`: the overlays
+    are what a sync or an enrichment run rewrites, and keying on the base file
+    alone would serve a pre-enrichment collection for the rest of the process's
+    life. **The returned list is shared** — every caller gets the same `Card`
+    objects, so nothing may mutate them (the audit that established nothing does
+    is in `docs/spec-infra-hot-paths.md` §1b; `apply_attrs` is safe because
+    `deck_stats.analyze` hands it fresh merged copies, never these)."""
+    return memo.get(("mtglib.load_collection", memo.stat_key(*collection_inputs(path))),
+                    lambda: _load_collection(path))
+
+
+def _load_collection(path: str) -> list:
     with open(path, encoding="utf-8") as f:
         cards = parse_collection(f.read())
     d = os.path.dirname(path) or "."

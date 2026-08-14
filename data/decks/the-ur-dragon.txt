@@ -42,6 +42,8 @@
 1 Atsushi, the Blazing Sky
 1 Ao, the Dawn Sky
 1 Wood Elves
+1 Sarkhan, Soul Aflame
+1 Dragonspeaker Shaman
 
 # --- Instants ---
 1 Assassin's Trophy
@@ -79,6 +81,7 @@
 1 Dragon Tempest
 1 Rhythm of the Wild
 1 Rhystic Study
+1 Call the Spirit Dragons
 
 # --- Lands ---
 1 Command Tower
@@ -111,8 +114,3 @@
 4 Mountain
 1 Plains
 1 Swamp
-
-# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 Sarkhan, Soul Aflame
-1 Call the Spirit Dragons
-1 Dragonspeaker Shaman

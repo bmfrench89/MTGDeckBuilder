@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def header(text, key, default=""):
-    m = re.search(rf"^#\s*{key}\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+    m = re.match(r"(.+)", mtglib.deck_header(text, key))
     return m.group(1).strip() if m else default
 
 

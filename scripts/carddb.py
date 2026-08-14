@@ -2,8 +2,8 @@
 """Scryfall card data for this collection — two modes, one client.
 
 **Enrichment** (`--collection`) fills in card attributes (colors / type / mana value /
-what it taps for / oracle-derived flags / Scryfall id) — the fix for the "name-only
-export" limitation.
+what it taps for / oracle-derived flags / printed power / Scryfall id) — the fix for
+the "name-only export" limitation.
 
 Default: Scryfall's /cards/collection API — ~1 request per 75 cards, no download.
 It resolves each owned card by its exact printing (set + collector number, or a
@@ -50,12 +50,22 @@ import urllib.request
 import mtglib
 import oracle_flags
 
-# collection_attrs.csv, in order. Produced/Flags were APPENDED after Scryfall so an
-# attrs file written by an older build still loads (mtglib reads columns by header
-# name and ignores the ones it doesn't know) and an older build still reads a new
-# file. An absent Produced column means "unknown", not "produces nothing".
+# collection_attrs.csv, in order. Produced/Flags were APPENDED after Scryfall, and
+# Power after Flags, so an attrs file written by an older build still loads (mtglib
+# reads columns by header name and ignores the ones it doesn't know) and an older
+# build still reads a new file. An absent Produced column means "unknown", not
+# "produces nothing".
+# `Power` is the FRONT face's PRINTED power, verbatim — `*` / `1+*` are stored as
+# written and every consumer treats a non-numeric value as UNKNOWN rather than
+# guessing a number. The same empty-vs-absent rule is load-bearing here:
+#   empty cell    = enriched, and this card has no power (every noncreature).
+#   absent column = unknown. Consumers (the goldfish clock) must say so — "enrich
+#                   to unlock", never a clock computed off zeros.
+# NO Toughness column, deliberately (2026-08-13, spec-table-ready Phase 1): nothing
+# in scope reads it — the goldfish sim has no blockers — and an unread column is a
+# column that silently rots. Add it the day something actually consumes it.
 ATTRS_HEADER = ["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall",
-                "Produced", "Flags"]
+                "Produced", "Flags", "Power"]
 
 BULK_LIST_URL = "https://api.scryfall.com/bulk-data"
 # Scryfall asks API clients to send a descriptive User-Agent and an Accept header.
@@ -133,23 +143,37 @@ def _loads(v):
 
 
 def _rows_duckdb(bulk_path):
-    """Yield Scryfall-shaped card dicts. produced_mana / oracle_text / card_faces are
-    selected alongside the original columns so the bulk path derives exactly the same
-    Produced/Flags the API path does. The SELECT stays inside build_index's existing
-    try/except fallback: CI has no duckdb, and a schema drift here must degrade to the
-    stdlib reader rather than fail the run."""
+    """Return an iterator of Scryfall-shaped card dicts. produced_mana / oracle_text /
+    card_faces / power are selected alongside the original columns so the bulk path
+    derives exactly the same Produced/Flags/Power the API path does.
+
+    NOT a generator function, deliberately. `build_index` wraps this call in a
+    try/except that falls back to the stdlib JSON reader — CI has no duckdb, and a
+    schema drift here must degrade rather than fail the run. As a generator the
+    `import duckdb` and `con.execute` ran lazily on the FIRST iteration, i.e. outside
+    that try, so the documented fallback never fired: `build_index(..., use_duckdb=True)`
+    raised ModuleNotFoundError instead of printing the fallback message. Doing the
+    import and the query eagerly here is what makes the guard real. `fetchall()` was
+    already eager, so this costs no extra memory."""
     import duckdb
     con = duckdb.connect()
     q = ("SELECT name, color_identity, type_line, cmc, mana_cost, id, "
-         "produced_mana, oracle_text, to_json(card_faces) "
+         "produced_mana, oracle_text, to_json(card_faces), power "
          f"FROM read_json_auto('{bulk_path}', maximum_object_size=100000000) "
          "WHERE name IS NOT NULL")
-    for name, ci, type_line, cmc, cost, sid, prod, otext, faces in con.execute(q).fetchall():
-        yield {"name": name, "color_identity": list(ci or []), "type_line": type_line,
-               "cmc": cmc, "mana_cost": cost, "id": sid,
-               "produced_mana": list(prod or []), "oracle_text": otext or "",
-               "card_faces": _loads(faces)}
+    fetched = con.execute(q).fetchall()
     con.close()
+
+    def _gen():
+        for (name, ci, type_line, cmc, cost, sid, prod, otext, faces,
+                power) in fetched:
+            yield {"name": name, "color_identity": list(ci or []), "type_line": type_line,
+                   "cmc": cmc, "mana_cost": cost, "id": sid,
+                   "produced_mana": list(prod or []), "oracle_text": otext or "",
+                   # None stays None: power_of falls back to the front FACE for DFCs,
+                   # where the card-level column is null.
+                   "card_faces": _loads(faces), "power": power}
+    return _gen()
 
 
 def _rows_json(bulk_path):
@@ -189,22 +213,42 @@ def _attrs_row(card, a):
     """One collection_attrs.csv row, in ATTRS_HEADER order."""
     return [card.name, a["type"], a["mv"], a["colors"], a["cost"],
             a.get("subtypes", ""), a.get("id", ""),
-            a.get("produced", ""), a.get("flags", "")]
+            a.get("produced", ""), a.get("flags", ""), a.get("power", "")]
+
+
+def write_attrs_csv(out_path, header, rows):
+    """Write an attrs CSV **atomically** — tmp file in the same directory, then
+    `os.replace`.
+
+    Both enrichment paths go through here, and the reason is not tidiness. A run
+    over 2,621 cards takes minutes, and since Phase 3 it can run in a background
+    thread while the app serves pages; a plain `open(…, "w")` truncates the real
+    file for the whole of that. Any reader in the window — a page render, a
+    goldfish sim, `load_collection` on another request — would parse a
+    half-written collection and report the missing half as *unenriched*, which
+    is a wrong answer wearing an honest label. `os.replace` is atomic on POSIX
+    and on Windows, so a reader sees either the old file or the new one."""
+    tmp = out_path + ".part"
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        for row in rows:
+            w.writerow(row)
+    os.replace(tmp, out_path)
 
 
 def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
     coll = mtglib.load_collection(collection_path)
     index = build_index(bulk_path, use_duckdb)
     matched = 0
-    with open(out_path, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(ATTRS_HEADER)
-        for card in sorted(coll, key=lambda c: c.name):
-            a = index.get(mtglib._norm(card.name))
-            if not a:
-                continue
-            matched += 1
-            w.writerow(_attrs_row(card, a))
+    rows = []
+    for card in sorted(coll, key=lambda c: c.name):
+        a = index.get(mtglib._norm(card.name))
+        if not a:
+            continue
+        matched += 1
+        rows.append(_attrs_row(card, a))
+    write_attrs_csv(out_path, ATTRS_HEADER, rows)
     return matched, len(coll), len(index)
 
 
@@ -291,7 +335,10 @@ def _attrs_from_scryfall(c):
             "subtypes": subtypes_of(type_line), "mv": mv,
             "colors": " ".join(ci), "cost": cost, "id": c.get("id", "") or "",
             "produced": " ".join(p for p in "WUBRGC" if p in produced),
-            "flags": ";".join(sorted(oracle_flags.derive_flags(c)))}
+            "flags": ";".join(sorted(oracle_flags.derive_flags(c))),
+            # Front face, verbatim — see oracle_flags.power_of. "" for a noncreature
+            # is the real answer; only the absent COLUMN means "unknown".
+            "power": oracle_flags.power_of(c)}
 
 
 def _fold_name(name):
@@ -376,16 +423,15 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
     id_col = header.index("Scryfall")
     if not include_ids:
         header.pop(id_col)
-    with open(out_path, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(header)
-        for card in sorted(coll, key=lambda c: c.name):
-            a = resolved.get(card.name)
-            if a:
-                row = _attrs_row(card, a)
-                if not include_ids:
-                    row.pop(id_col)
-                w.writerow(row)
+    rows = []
+    for card in sorted(coll, key=lambda c: c.name):
+        a = resolved.get(card.name)
+        if a:
+            row = _attrs_row(card, a)
+            if not include_ids:
+                row.pop(id_col)
+            rows.append(row)
+    write_attrs_csv(out_path, header, rows)
     for name, hit in fuzzy_rejected:
         print(f"  fuzzy REJECTED (different card, kept unmatched): "
               f"{name!r} -> {hit!r}", file=sys.stderr)
@@ -600,6 +646,48 @@ def print_verified(rows, out=print):
         out("")
 
 
+def audit_flags(collection, n=30, as_json=False, seed=0):
+    """Sample N enriched cards and show what was DERIVED for each.
+
+    Closes the standing "~30-card flag audit" acceptance item. It exists because of an
+    asymmetry the honesty labels cannot cover: they fire when data is ABSENT, never
+    when a derived value is WRONG — and since `classify()` began reading `Card.flags`,
+    one bad regex hit miscategorises a card in every role count downstream (power,
+    the dashboard, the optimizer's role guardrails). A human reading thirty rows is
+    the only detector for that.
+
+    Deterministic by seed so a re-run shows the same sample and a fix can be checked.
+    """
+    import random as _random
+    coll = mtglib.load_collection(collection or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "data", "collection",
+        "collection_snapshot.txt"))
+    enriched = [c for c in coll if c.produced is not None or c.flags]
+    if not enriched:
+        print("No enriched cards found — run enrichment first (carddb.py --collection …).",
+              file=sys.stderr)
+        return 1
+    sample = _random.Random(seed).sample(enriched, min(n, len(enriched)))
+    sample.sort(key=lambda c: c.name.lower())
+    rows = [{"name": c.name, "type": c.primary_type,
+             "produced": "".join(sorted(c.produced or ())) or "-",
+             "flags": ";".join(sorted(c.flags or ())) or "-",
+             "power": c.power if c.power is not None else "-",
+             "roles": ";".join(sorted(mtglib.classify(c))) or "-"} for c in sample]
+    if as_json:
+        print(json.dumps(rows, indent=2))
+        return 0
+    print(f"FLAG AUDIT — {len(rows)} of {len(enriched)} enriched cards (seed {seed})")
+    print("Read each row against the real card. A WRONG flag is invisible to every "
+          "honesty label in the repo.\n")
+    print(f"  {'Card':<32}{'Type':<12}{'Prod':<7}{'Pwr':<5}{'Flags':<28}Roles")
+    print("  " + "-" * 100)
+    for r in rows:
+        print(f"  {r['name'][:31]:<32}{r['type'][:11]:<12}{r['produced']:<7}"
+              f"{str(r['power']):<5}{r['flags'][:27]:<28}{r['roles']}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="Scryfall card data, two modes. ENRICH the collection with "
@@ -630,10 +718,19 @@ def main():
                          "clean 200 (unresolvable names written short with exit 0); a "
                          "true 429/503 storm RAISES out of _post_collection and exits 2 "
                          "before the out file is opened.")
+    ap.add_argument("--audit-flags", type=int, nargs="?", const=30, metavar="N",
+                    help="sample N enriched cards and print name / type / produced / "
+                         "flags / power for eyeballing. The ONLY guard against a WRONG "
+                         "derived flag: the honesty labels fire when data is absent, "
+                         "never when it is wrong, and flags feed classify() and so "
+                         "every role count downstream.")
     ap.add_argument("--no-ids", action="store_true",
                     help="omit the Scryfall id column (API path only) — for the "
                          "committed attrs snapshot, where an id could pin a printing.")
     args = ap.parse_args()
+
+    if args.audit_flags:
+        return audit_flags(args.collection, args.audit_flags, as_json=args.json)
 
     # Exactly one mode. --collection stopped being argparse-required when --verify
     # arrived, so this check is what still makes enrichment demand it — enrich.bat and

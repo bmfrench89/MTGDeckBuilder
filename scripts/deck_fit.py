@@ -13,15 +13,17 @@ import os
 import re
 
 import mtglib
+import deckcore
 
 REF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        "..", "data", "reference")
 
-# Soft target counts per role (matches deck_stats.TARGETS, plus counters/lands).
-FIT_TARGETS = {
-    "ramp": (10, 12), "draw": (10, 12), "removal": (8, 10),
-    "wipe": (3, 5), "counter": (3, 8), "land": (36, 38),
-}
+# The role template lives in deckcore (Phase 12): ONE table, archetype-aware,
+# shared with the optimizer's accept filter so the scorer and the filter can never
+# disagree about whether a deck is short on a role. The old FIT_TARGETS here was an
+# independent copy with different numbers — measured on the six real decks, 17 of
+# 30 role judgments disagreed with the optimizer, so this scorer pushed
+# counterspells into a voltron deck the optimizer correctly refused them for.
 _ROLE_PRIORITY = ["ramp", "draw", "removal", "wipe", "counter", "land"]
 
 # The player already grouped the deck by function via `# --- Label ---` headers.
@@ -111,15 +113,16 @@ def deck_context(deck_path, enriched, commander="", field=None, synergy=None):
     try:
         with open(deck_path, encoding="utf-8") as f:
             head = f.read()
-        m = re.search(r"^#\s*Colors?\s*:\s*(.+)$", head, re.MULTILINE | re.IGNORECASE)
-        if m:
-            ident = set(re.sub(r"[^WUBRG]", "", m.group(1).upper()))
-        a = re.search(r"^#\s*Archetype\s*:\s*(.+)$", head, re.MULTILINE | re.IGNORECASE)
-        if a:
-            archetype = [w for w in re.split(r"[,\s/]+", a.group(1).lower().strip()) if w]
-        t = re.search(r"^#\s*Theme\s*:\s*(.+)$", head, re.MULTILINE | re.IGNORECASE)
+        # One parser for every header (mtglib.deck_header) — the hand-rolled copies
+        # this replaced shared the newline-crossing bug that made ur-dragon's empty
+        # `# Archetype: ` swallow the next line as its archetype.
+        c = mtglib.deck_header(head, "Colors?")
+        if c:
+            ident = set(re.sub(r"[^WUBRG]", "", c.upper()))
+        archetype = deckcore.archetype_words(head)
+        t = mtglib.deck_header(head, "Theme")
         if t:
-            theme = t.group(1).strip().lower()
+            theme = t.strip().lower()
     except OSError:
         pass
     if not ident:  # fall back to the union of known card identities
@@ -136,9 +139,15 @@ def deck_context(deck_path, enriched, commander="", field=None, synergy=None):
         name, n = subs.most_common(1)[0]
         if n >= 5:
             tribal = name
+    ranges, unknown = deckcore.role_ranges_with_unknown(archetype)
     return {"identity": ident, "archetype": archetype, "theme": theme,
             "tribal": tribal, "commander": commander, "field": field or {},
-            "synergy": synergy or {}}
+            "synergy": synergy or {},
+            # The archetype-aware role template, computed ONCE per deck. Every
+            # assess_card call reads it from here; "land" rides along so the one
+            # lookup table answers every role.
+            "role_ranges": dict(ranges, land=deckcore.LAND_RANGE),
+            "archetype_unknown": unknown}
 
 
 def primary_role(card):
@@ -164,7 +173,18 @@ def _color_component(card, ident):
     return 2, f"needs {outside} — outside this deck's identity"
 
 
-def _role_component(card, rep, section_label=None):
+# Role points. The SPREAD is load-bearing, not just the values: value_of doubles a
+# fit difference into swap value, so (shortage - depth) * 2 must stay UNDER the
+# optimizer's 25-point margin — otherwise template pressure alone can buy a swap
+# with no field or quality support behind it, which is the 2026-08-12 churn
+# mechanism. 26/22/14 caps the pure-role swing at 24. A tripwire test pins this;
+# widening the spread past the margin is a design change, not a tuning knob.
+ROLE_PTS_SHORTAGE = 26
+ROLE_PTS_HEALTHY = 22
+ROLE_PTS_DEPTH = 14
+
+
+def _role_component(card, rep, section_label=None, ctx=None):
     role = primary_role(card)
     hint = section_role(section_label)
     used_section = False
@@ -172,14 +192,43 @@ def _role_component(card, rep, section_label=None):
         role, used_section = hint, True  # trust the player's own grouping
     cats = rep.get("categories", {})
     src = f" (from your '{section_label.strip()}' section)" if used_section else ""
-    if role in FIT_TARGETS:
-        lo, hi = FIT_TARGETS[role]
+    ctx = ctx or {}
+    ranges = ctx.get("role_ranges") or dict(deckcore.ROLE_RANGE,
+                                            land=deckcore.LAND_RANGE)
+    widened = ranges.get(role) != dict(deckcore.ROLE_RANGE,
+                                       land=deckcore.LAND_RANGE).get(role)
+    wtag = " [band widened by archetype]" if widened else ""
+
+    # Template-vs-field disagreement, surfaced per CARD with data we actually
+    # have. The template and the field are genuinely independent voters (theory
+    # vs. what real decks do), so when they pull apart the honest move is to show
+    # both with provenance and let the player judge — never to resolve silently.
+    # Absent field data stays silent: no row is NOT a measured 0%.
+    def _field_note(shortage):
+        pct = (ctx.get("field") or {}).get(mtglib._norm(card.name))
+        if pct is None:
+            return ""
+        if shortage and pct < 10:
+            return (f" — though the field plays this one in {pct}% of decks here: "
+                    "the template wants the role, not necessarily this card")
+        if not shortage and pct >= 25:
+            return f" — and the field endorses this copy ({pct}% of decks)"
+        return ""
+
+    if role in ranges:
+        lo, hi = ranges[role]
         cur = cats.get(role, 0)
         if cur < lo:
-            return 30, role, f"a {role} card{src}; deck targets {lo}-{hi} — helps fill that"
+            return (ROLE_PTS_SHORTAGE, role,
+                    f"a {role} card{src}; deck targets {lo}-{hi}{wtag} — helps fill "
+                    f"that{_field_note(True)}")
         if cur <= hi:
-            return 22, role, f"a {role} card{src}; deck has a healthy {cur} ({lo}-{hi} target)"
-        return 12, role, f"a {role} card{src}; deck already runs {cur} (>{hi}) — this is depth"
+            return (ROLE_PTS_HEALTHY, role,
+                    f"a {role} card{src}; deck has a healthy {cur} "
+                    f"({lo}-{hi} target{wtag})")
+        return (ROLE_PTS_DEPTH, role,
+                f"a {role} card{src}; deck already runs {cur} (>{hi}{wtag}) — this "
+                f"is depth{_field_note(False)}")
     if role == "creature" or (hint == "creature"):
         return 18, "creature", "a creature the deck plays for its body or ability"
     return 16, "support", "a support piece — exact role not auto-detected from this list"
@@ -273,13 +322,14 @@ def band_for(score):
 
 def assess_card(card, rep, ctx, refs, section_label=None):
     color_pts, color_det = _color_component(card, ctx["identity"])
-    role_pts, role, role_det = _role_component(card, rep, section_label)
+    role_pts, role, role_det = _role_component(card, rep, section_label, ctx)
     curve_pts, curve_det = _curve_component(card, refs)
     stap_pts, stap_det = _staple_component(card, refs, ctx)
     theme_pts, theme_det = _theme_component(card, ctx)
     reasons = [
         {"label": "Color fit", "pts": color_pts, "max": 25, "detail": color_det},
-        {"label": "Role need", "pts": role_pts, "max": 30, "detail": role_det},
+        {"label": "Role need", "pts": role_pts, "max": ROLE_PTS_SHORTAGE,
+         "detail": role_det},
         {"label": "Curve", "pts": curve_pts, "max": 15, "detail": curve_det},
         {"label": "Power", "pts": stap_pts, "max": 15, "detail": stap_det},
         {"label": "Theme", "pts": theme_pts, "max": 15, "detail": theme_det},
@@ -373,14 +423,21 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
     for c, fit, pts in scored:
         if pts.get("Theme", 0) > 7 or pts.get("Power", 0) > 7:
             continue                      # has a theme tie or real muscle — not dead
+        if pts.get("Role need", 0) >= ROLE_PTS_HEALTHY:
+            # Serving a role at a SHORTAGE or HEALTHY count is, by definition, a
+            # job — a deck's only counterspell is load-bearing even when its raw
+            # score sits below the median. Explicit since Phase 12: the old
+            # inflated shortage bonus (30) kept such cards above the median by
+            # accident, and narrowing the swing exposed that the median test alone
+            # was doing this work by luck, not by design. Depth cards
+            # (over-target) stay flaggable — those ARE the passenger candidates.
+            continue
         if fit["score"] >= median:
             continue                      # at or above this deck's own middle
         why = []
-        # _role_component's scale: 30 = fills a shortage · 22 = contributes to a role
-        # at a healthy count · 18 = generic creature body · 16 = role not detected ·
-        # 12 = over-target depth. Only 30 and 22 mean the card is doing a role job the
-        # deck wants, so the reason fires at <=18. (An earlier <=10 was dead code — no
-        # role path scores that low — so this reason never rendered at all.)
+        # _role_component's scale: 26 = fills a shortage · 22 = a role at a
+        # healthy count (both excluded above) · 18 = generic creature body ·
+        # 16 = role not detected · 14 = over-target depth.
         if pts.get("Role need", 0) <= 18:
             why.append("fills no role the deck is short on")
         why += ["no theme tie", "not a staple here"]
@@ -389,3 +446,67 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
                     "median": median, "mana_value": c.mana_value})
     out.sort(key=lambda r: r["score"])
     return out[:limit] if limit else out
+
+
+def card_value(name, ref, rep, ctx, refs, field):
+    """What one card is worth to THIS deck: `max(field %, (fit-60)x2)`.
+
+    The number BOTH sides of every optimizer swap are measured by, and the number the
+    Cuts surface ranks by. One scorer, two consumers — a second implementation would
+    drift, which is exactly what the codemap's card-knowledge-flow rule exists to
+    prevent. `optimize.card_value` is a shim onto this."""
+    inc = field.get(mtglib._norm(name), 0) if field else 0
+    fit = (assess_card(ref, rep, ctx, refs)["score"]
+           if (ref and ref.types) else 0)
+    return max(inc, (fit - 60) * 2)       # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
+
+
+def cut_ranking(enriched, rep, ctx, refs, field, protected=None, ranges=None,
+                cats=None, limit=12):
+    """"If you must cut, start here" — ranked ascending by the optimizer's own value.
+
+    ADVISORY AND READ-ONLY. It writes nothing, proposes no replacement, and is NOT a
+    cut list: it answers the single most-asked deckbuilding question with the deck's
+    own numbers and then stops. Pure — no file or network I/O — so the dashboard can
+    call it from what it already holds; `optimize.cut_candidates` is the I/O wrapper.
+
+    Protected cards (commander, basics, curated notes, `.notes.md` names, manual
+    picks) are INCLUDED and flagged, never filtered out. Hiding them would answer a
+    different question than the player asked; showing them as "your call, not the
+    tool's" respects the decision while staying honest that the arithmetic ranks them
+    low. Lands are skipped — the manabase pass owns those.
+    """
+    protected = protected or set()
+    ranges = ranges or {}
+    cats = cats or {}
+    rows = []
+    for c in enriched:
+        if c.is_land or not c.types:
+            continue
+        n = mtglib._norm(c.name)
+        keys = set(mtglib.name_keys(c.name))
+        val = card_value(c.name, c, rep, ctx, refs, field)
+        known = n in (field or {})
+        role = primary_role(c)
+        state = None
+        if role and role in ranges:
+            lo, hi = ranges[role]
+            have = cats.get(role, 0)
+            state = "surplus" if have > hi else "shortage" if have < lo else "in range"
+        is_prot = bool(keys & set(protected))
+        rows.append({
+            "name": c.name, "value": round(val),
+            "field": (field or {}).get(n), "field_known": known,
+            "role": role, "role_state": state, "protected": is_prot,
+            "why": ("protected — your call, not the tool's" if is_prot else
+                    ("the field has no opinion on this card" if not known else
+                     f"the field plays it in {(field or {}).get(n)}% of decks")),
+        })
+    rows.sort(key=lambda r: (r["value"], r["name"]))
+    return {
+        "rows": rows[:limit], "field_size": len(field or {}), "no_field": not field,
+        "advisory": ("A starting point for your judgment, not a cut list. Ranked by "
+                     "the same value the optimizer uses — max(field %, fit) — so a low "
+                     "number means 'nothing in this deck is asking for it', not 'this "
+                     "card is bad'."),
+    }

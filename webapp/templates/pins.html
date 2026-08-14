@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+{#
+  Every reserved physical copy, and what it costs.
+
+  A pin is the player deciding which deck gets the one card they own. Enforcement
+  already existed everywhere it matters; this page exists so the decisions are
+  visible and cheap to change — moving a pin is ONE action, because cards shift
+  between decks constantly and friction is what makes people stop pinning.
+#}
+<h1>Pinned cards</h1>
+<p class="muted">A pin reserves your physical copy for one deck. Every other deck
+  treats it as unavailable — the auto-builder won't use it, and the optimizer won't
+  add it elsewhere or cut it from here.</p>
+
+{% if not rows %}
+  <p class="muted">No pins yet. Pin a card from its panel on any deck page when two
+    decks want the same physical copy.</p>
+{% else %}
+<div class="tablewrap">
+<table class="data">
+  <thead><tr><th>Card</th><th>Reserved for</th><th>Owned</th><th>Also in</th>
+    <th>Move / release</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a class="cardlink" data-card="{{ r.name }}">{{ r.name }}</a>
+        {% if r.stale %}<span class="tag alert" title="This deck doesn't run the card
+          any more — the pin is holding a copy nothing is using">stale</span>{% endif %}
+        {% if r.contested %}<span class="tag buy" title="More decks run this than you
+          own copies of">contested</span>{% endif %}</td>
+      <td>{{ r.deck_title }}</td>
+      <td>{{ r.owned }}</td>
+      <td class="muted">{{ r.in_decks|join(", ") if r.in_decks else "—" }}</td>
+      <td>
+        <form method="post" action="{{ url_for('pins_move') }}" class="pinmove">
+          <input type="hidden" name="card" value="{{ r.name }}">
+          <select name="deck" aria-label="Move {{ r.name }} to">
+            {% for d in decks %}
+              <option value="{{ d.stem }}" {% if d.stem == r.deck %}selected{% endif %}>
+                {{ d.title }}</option>
+            {% endfor %}
+            <option value="none">— release the pin —</option>
+          </select>
+          <button type="submit">Apply</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+<style>
+.pinmove { display:flex; gap:var(--sp-2); align-items:center; }
+.pinmove select, .pinmove button { font:inherit; padding:var(--sp-1) var(--sp-2);
+  border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06); color:inherit; }
+</style>
+{% endblock %}

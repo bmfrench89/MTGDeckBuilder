@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-12._
+_Last updated: 2026-08-14._
 
 ## Where the app runs
 
@@ -20,7 +20,10 @@ _Last updated: 2026-08-12._
   is a Flask *route* serving `scripts/assets/tokens.css`; a directory mapping would
   shadow it and silently 404 the shared design tokens. `tests/test_deploy.py` guards this.
 - **Keepalive:** free web apps need "Run until 3 months from today" clicked every ~3
-  months. Missing it sleeps the app; no data is lost.
+  months. Missing it sleeps the app; no data is lost. **The paid tier was offered
+  and declined 2026-08-14** (`spec-infra-hot-paths.md` Phase 4): the free tier
+  stays, this keepalive stays, and the in-app sync thread stays instead of a
+  Scheduled Task. Don't re-propose it unless one of those actually starts hurting.
 
 ## The automation loop (all legs verified on real events)
 
@@ -61,12 +64,11 @@ GitHub Action (weekly + on deck pushes + manual)          the hosted app (daily,
   hardening, and the goldfish + /collection consumers updated. **First live run PASSED
   2026-08-12** (99% resolution, all guards green, committed as `5fe3a16`) —
   every clone now loads typed data, and power re-scored on it (yshtola 78).
-  ⚠ **Do not run the optimizer with `--apply`/⚡/`refresh --optimize` until
-  the typed-data role-repair churn filed in `docs/spec-optimizer-hardening.md`
-  is fixed** — the archetype-blind template now proposes cutting
-  field-superior deliberate keeps (four decks carry notes churn guards, but
-  the pass moves to new victims). Phase 1 (the environment allowlist) remains
-  the player's five-minute flip and is NOT needed by the Action.
+  ⚠ **The role-repair churn is FIXED in code (2026-08-13, Phase 8) but the
+  `--apply`/⚡/`refresh --optimize` freeze stays until one live preview run
+  confirms it against the full private CSV — see open item 0.** Phase 1 (the
+  environment allowlist) remains the player's five-minute flip and is NOT
+  needed by the Action.
 - **Push credentials:** a fine-grained GitHub PAT (Contents: read/write, this repo
   only) lives in the server clone's remote URL. Fine-grained PATs **expire** — when
   pushes start failing, mint a new one and re-run `git remote set-url` (a calendar
@@ -90,8 +92,10 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   power-list tags (Game Changer, Tutor, …) now show in card details on both
   surfaces via `deckcore.load_power_tags`. The migration fixed real misfiles
   (Rhystic Study and Lightning Greaves sat under "Lands" in ur-dragon). ~15 cards
-  across the decks sit in explicit `Unsorted` sections pending enrichment — the
-  server can re-run deck_sections after a sync to resolve them. **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
+  **All `Unsorted` sections are GONE as of 2026-08-13** (Phase 0): the typed
+  attrs snapshot resolved every one, and the server now re-runs the regroup
+  itself after a sync that brings fresh attrs (skipping any deck with
+  in-section comments, which a regroup would drop). **cosmic-spider-man repaired 2026-08-11**: the 99-card mystery was a corrupted
   commander block (annotated name + stray duplicate line) — cleaned; Ezekiel
   Sims, Spider-Totem (24% field) in over 0%-field Tome of Legends (freeing an
   over-committed copy); Thriving Isle added as the 100th card. Ownership
@@ -338,9 +342,59 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   plain sight. Fixed (span the space, percent-encode before fetching) and pinned by a test
   against the real 2026 page shape.
 
+## Performance & background work (`docs/spec-infra-hot-paths.md`, Phases 1–3 shipped 2026-08-14)
+
+The app now runs engines inline per request, so three things were made cheap. Know
+these before touching the analysis path:
+
+- **`scripts/memo.py`** memoizes `mtglib.load_collection` and `deckcore.analyze_deck`
+  on **file identity** (`(path, mtime_ns, size)` per input; `(path, None)` for a
+  missing file, so creating it invalidates). A warm dashboard render of the-ur-dragon
+  went 377 ms → 25 ms. **The cached values are SHARED — treat them as frozen.**
+  `analyze_deck` copies only the outer dict; `coll`, `idx`, `enriched`, `report` and
+  `assessment` are the same objects every caller holds. `tests/test_memo.py`
+  fingerprints them across every consumer, and a real mutator injected into
+  `build_dashboard` fails that test — if it ever fails, find the mutator, don't relax
+  the assertion. Unfingerprintable inputs (a preloaded collection list,
+  caller-supplied `refs`) bypass the cache by design. Every webapp write path calls
+  `_invalidate(stem)`, and an `after_request` backstop drops the cache on any
+  state-changing method.
+- **`goldfish.ab_for_deck`** disk-caches the paired A/B behind the Replace flow's
+  shift-click (and the CLI's `--ab`). Errors are never cached.
+- **`webapp/enrich_bg.py`** runs post-upload Scryfall enrichment in a daemon thread —
+  same pattern as `sync.py`, including the *interrupted* status a reload-killed thread
+  gets instead of a permanent spinner. `carddb.write_attrs_csv` made the attrs write
+  atomic for every caller.
+- **`spellbook.FAIL_TTL`**: an unreachable Commander Spellbook used to cost a fresh
+  network attempt on **every deck-page view** (315 ms measured, 25 s ceiling). A
+  failure is now remembered for five minutes — never served as data.
+
 ## Open items
 
-**0. Optimizer role-repair churn — THE next engineering session.**
+**0. Optimizer role-repair churn — FIXED IN CODE 2026-08-13, freeze lifts on one
+live run.** Phase 8 of `docs/spec-table-ready.md` landed both mandatory fixes:
+the **field veto** (a swap may never cut a card the field plays MORE than the
+incoming one — template pressure arrives through `value_of`'s fit blend and can
+manufacture the 25-point margin on its own, which is what all four recorded
+proposals did) and an **archetype-aware role template** (`optimize.role_ranges`
+reads the deck's `# Archetype:` header, so iron-man's counter:15 is correct
+rather than nine over budget). A sandbox preview on the committed snapshot shows
+all four recorded proposals gone and no field inversions anywhere. **The freeze
+is not formally lifted until `optimize --all` runs as a preview against the full
+private CSV on the player's PC or a GitHub runner** — that is the acceptance step
+still owed; until then keep hands off `--apply` / ⚡ / `refresh --optimize`.
+~~Honest limit found during review: `deck_fit.FIT_TARGETS` is still
+archetype-blind~~ **RESOLVED 2026-08-13 (Phase 12):** the fit scorer now reads
+THE archetype-aware template from `deckcore` (one table, five copies killed), the
+role-point swing is capped below the margin (spread ×2 = 24 < 25, tripwire-
+tested) so template pressure alone can never buy a swap, and a NEW symmetric
+protection landed: the optimizer never re-adds a card the player manually
+removed (`deckcore.manual_removals` → reported `manual_holds`; found live when
+the rescore proposed re-adding Professor Hojo to cloud). Also: `mtglib.deck_header`
+replaced 17 hand-rolled header regexes sharing a newline-crossing bug — ur-dragon's
+empty `# Archetype:` header was parsing as garbage in live data.
+
+**0b. The original finding, for reference.**
 `docs/spec-optimizer-hardening.md` (2026-08-12 section) has the full finding:
 the first attrs snapshot armed the archetype-blind `ROLE_RANGE` template
 (iron-man's typed counts read counter:15 vs max 6) and the repair path ignores
@@ -393,6 +447,63 @@ sandbox. The one-screen walk of that flow remains open
   churn guards). Buy any of its four buylisted cards and `.buylist.csv`'s
   Replaces says what to pull (Forge Anew already arrived and was pulled in,
   2026-08-11).
+
+1b-season. **The "Table-Ready" season SHIPPED COMPLETE (2026-08-13):
+   `docs/spec-table-ready.md`.** Twelve phases from the competitive-landscape
+   research plus player direction. Suite **507 → 602**, offline, exit 0;
+   `scripts/` still stdlib-only.
+   - **Phase 8** optimizer gate: archetype-aware `ROLE_RANGE` + a **field veto**
+     (a swap may never cut a card the field plays more than the incoming one).
+     See open item 0 — the freeze lifts on one live preview run.
+   - **Phase 0** deck hygiene: all six decks regrouped on typed data (Y'shtola's
+     misfiles and its split Plains pair fixed, `Unsorted` gone repo-wide,
+     idempotent); the add AND Replace paths can no longer manufacture split
+     basics; the server auto-regroups after a sync, skipping decks with
+     in-section comments.
+   - **Phase 1** a `Power` column through enrichment → `Card.power` → the clock.
+   - **Phase 2 (flagship)** the **goldfish clock**: median turn this deck
+     presents lethal, mapped onto the brackets' own turn anchors. Combat-only
+     and labelled UNDERSTATED for drain decks; no clock at all without power
+     data. `--ab` now reports clock deltas over the same paired games.
+   - **Phase 3** `# Bracket:` header — your setting headlines, the detected
+     verdict and reasons always stay visible. `recertify.yml` gained a Game
+     Changers diff against Scryfall's `is:gamechanger` (the canonical list).
+   - **Phase 4** the **Rule-0 table card** (`/deck/<stem>/table-card`): one
+     phone/print screen — bracket, Game Changers, MLD/extra turns/combos, clock,
+     game plan, with its source labelled.
+   - **Phase 5** the **mulligan trainer** (`/deck/<stem>/mulligan`): real hands,
+     your call first, then the sim's verdict; `goldfish.keep_verdict` is now the
+     one shared rule. Stats in localStorage.
+   - **Phase 6** **pins v2**: EDHREC/Build-Next label a card reserved elsewhere,
+     `/pins` manages every reservation with one-tap move, conflict rows name the
+     pin. (Found: `load_pins`/`save_pins` bound their path as a default arg, so
+     tests wrote the REAL pins.csv — fixed.)
+   - **Phase 7** **Mana-tab explainers** shipped as data from `manabase.analyze`,
+     with the honesty caveats moved beside the numbers they qualify.
+   - **Phase 9** the **cut surface** ("If You Must Cut"), ranked by the
+     optimizer's own `deck_fit.card_value`; protected cards shown flagged, never
+     hidden; writes nothing.
+   - **Phase 10** **phantom disruption** (`--disruption standard`, EXPERIMENT):
+     a wipe, periodic removal and commander tax on a SECOND RNG stream, so the
+     A/A-exact-zero tripwire still reads 0.0. Off by default and byte-identical
+     when off; CLI/assess only.
+   - **Phase 11** gap sweep: Buy-tab rows are panel-clickable, shift-click a
+     replacement candidate to simulate the swap first, `carddb --audit-flags`
+     closes the standing flag-audit item, and **sw.js's cache version is derived
+     from git HEAD** instead of hand-pinned.
+   The 4-player pod simulator is specced and BACKLOGGED in
+   `docs/spec-pod-simulation.md` (three tiers costed; Forge-on-a-runner is the
+   cheap experiment if it is ever promoted).
+
+1c. **Next-features research (2026-08-13): `docs/research-competitive-landscape.md`** —
+   a six-agent competitive-landscape sweep (deck builders, the AI-tool wave, playtest/
+   sim, brackets, collection tools, coaching/UX). Verdict: the app already holds the
+   market's most-demanded positions (owned-only building, copy-conflict tracking,
+   grounded AI, deck-aware math, optimizer restraint; `power.py` bracket rules confirmed
+   current) — the ranked build list is §4 there: goldfish "clock" mapped to the official
+   bracket turn anchors, a Rule-0 table card, declared-bracket compliance (advisory, with
+   a Scryfall `game_changer` sync check), a game log feeding tuning, a mulligan trainer.
+   Sequencing in §6; still gated behind open item 0 where optimizer-adjacent.
 
 2. **Repo hardening (2026-08-11 review): `docs/spec-repo-hardening.md`** — a
    37-agent adversarially-verified sweep produced a three-phase fix tracker

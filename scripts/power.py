@@ -20,6 +20,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 
 import mtglib
@@ -101,7 +102,53 @@ def clamp01(x):
     return max(0.0, min(1.0, x))
 
 
-def assess(enriched, rep, refs):
+BRACKET_NAMES = {1: "Exhibition", 2: "Core", 3: "Upgraded", 4: "Optimized",
+                 5: "cEDH"}
+
+
+def read_declared_bracket(deck_path):
+    """The player's own `# Bracket: <1-5>` header, or None.
+
+    The detected bracket is a card-count estimate; the PLAYER knows their deck's
+    intent, and brackets 1 and 5 are defined by intent rather than by contents at all
+    (WotC: Exhibition is "not built to win", cEDH is metagame-tuned). So the header is
+    a setting, not an override of the evidence: `assess` reports it BESIDE the
+    detected verdict and every surface shows both whenever they differ."""
+    try:
+        with open(deck_path, encoding="utf-8") as f:
+            head = f.read()
+    except (OSError, UnicodeDecodeError):
+        return None
+    v = mtglib.deck_header(head, "Bracket").strip()
+    # A LEADING digit with a word boundary: accepts a hand-annotated
+    # "# Bracket: 3 (upgraded)" as 3 (the old regex did too, and a fullmatch
+    # silently dropped it), rejects "35" (no boundary between the digits) and
+    # "banana"/9/empty. The old \s* also crossed the newline, so an EMPTY header
+    # above a "1 Sol Ring" line read a phantom Bracket 1 — deck_header fixed that.
+    m = re.match(r"([1-5])\b", v)
+    return int(m.group(1)) if m else None
+
+
+def with_declared(assessment, declared):
+    """Re-stamp an already-computed assessment with the player's bracket setting.
+
+    `deckcore.analyze_cards` scores cards and has no deck PATH, so it cannot read the
+    header; `analyze_deck` does. Rather than thread a second argument through the
+    shared pipeline, the setting is applied here — the detected verdict and every
+    reason are left exactly as computed, which is the whole contract."""
+    if not assessment:
+        return assessment
+    d = declared if declared in (1, 2, 3, 4, 5) else None
+    detected = assessment.get("bracket_detected", assessment.get("bracket"))
+    assessment["bracket_declared"] = d
+    assessment["bracket_effective"] = d if d else detected
+    assessment["bracket_effective_name"] = BRACKET_NAMES.get(
+        d if d else detected, assessment.get("bracket_name", ""))
+    assessment["bracket_mismatch"] = bool(d and d != detected)
+    return assessment
+
+
+def assess(enriched, rep, refs, declared=None):
     cats = rep["categories"]
     interaction = cats.get("removal", 0) + cats.get("counter", 0) + cats.get("wipe", 0)
     ramp = cats.get("ramp", 0)
@@ -195,8 +242,17 @@ def assess(enriched, rep, refs):
     tier = ("Casual" if power < 32 else "Focused" if power < 55
             else "Optimized" if power < 75 else "High / cEDH")
 
+    # `bracket` deliberately stays the DETECTED number so every existing consumer
+    # (ranking, dashboards, the optimizer's reporting) keeps its meaning. The player's
+    # setting travels beside it, and `bracket_effective` is what a surface headlines.
+    effective = declared if declared in (1, 2, 3, 4, 5) else bracket
     return {
         "bracket": bracket, "bracket_name": name, "bracket_reasons": reasons,
+        "bracket_detected": bracket, "bracket_detected_name": name,
+        "bracket_declared": declared if declared in (1, 2, 3, 4, 5) else None,
+        "bracket_effective": effective,
+        "bracket_effective_name": BRACKET_NAMES.get(effective, name),
+        "bracket_mismatch": bool(declared in (1, 2, 3, 4, 5) and declared != bracket),
         "power": power, "tier": tier, "components": comps,
         "signals": {
             "game_changers": gc, "tutors": tutors, "fast_mana": fast,
@@ -217,14 +273,25 @@ def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT):
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = deck_stats.build_report(deck, enriched, missing, coll_index)
-    return assess(enriched, rep, load_refs(ref_dir))
+    return assess(enriched, rep, load_refs(ref_dir),
+                  declared=read_declared_bracket(deck_path))
 
 
 def print_one(deck_path, res):
     print("=" * 60)
     print(f"POWER & BRACKET — {os.path.basename(deck_path)}")
     print("=" * 60)
-    print(f"Bracket {res['bracket']} — {res['bracket_name']}")
+    if res.get("bracket_declared"):
+        print(f"Bracket {res['bracket_effective']} — "
+              f"{res['bracket_effective_name']}   (your setting)")
+        if res.get("bracket_mismatch"):
+            # Both, always: the setting wins the headline, the evidence never
+            # disappears. Hiding the detected verdict would make the header a way to
+            # silence the analysis rather than to record intent.
+            print(f"    detected {res['bracket_detected']} — "
+                  f"{res['bracket_detected_name']}, from the card signals below")
+    else:
+        print(f"Bracket {res['bracket']} — {res['bracket_name']}")
     for r in res["bracket_reasons"]:
         print(f"    · {r}")
     print(f"\nPower score: {res['power']}/100  ({res['tier']})")
@@ -264,7 +331,11 @@ def main():
         print("  " + "-" * 66)
         for i, (d, r) in enumerate(results, 1):
             name = os.path.basename(d)[:-4]
-            b = f"{r['bracket']} {r['bracket_name']}"
+            # The player's setting leads; a disagreeing detection is shown, never
+            # dropped — "(det 4)" is small but it is the evidence.
+            b = f"{r['bracket_effective']} {r['bracket_effective_name']}"
+            if r.get("bracket_mismatch"):
+                b += f" (det {r['bracket_detected']})"
             print(f"  {i:<3}{name:<28}{b:<20}{r['power']:>4}/100  {r['tier']}")
         return 0
 

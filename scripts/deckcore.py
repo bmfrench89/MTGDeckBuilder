@@ -16,6 +16,7 @@ import csv
 import os
 import re
 
+import memo
 import mtglib
 
 
@@ -131,7 +132,15 @@ def load_changes(path, days=NEW_CARD_DAYS):
     return out
 
 
-MANUAL_SOURCES = ("manual-add", "manual-replace")
+MANUAL_SOURCES = ("manual-add", "manual-replace", "manual-remove")
+
+
+def _is_manual(source):
+    """Any player-decided source. PREFIX match, not tuple membership: live data
+    carries legacy `Source=manual` rows (cloud's Codsworth swap, cosmic's
+    Anti-Venom swap) that an exact tuple silently skipped — the Hojo mechanism
+    waiting on field drift, for rows whose only defect is a spelling."""
+    return (source or "").strip().startswith("manual")
 
 
 def manual_adds(path, days=NEW_CARD_DAYS):
@@ -141,20 +150,66 @@ def manual_adds(path, days=NEW_CARD_DAYS):
     "the tool did this" from "the player decided this" — the distinction the advisor
     exists to respect."""
     rows = [dict(v, key=k) for k, v in load_changes(path, days).items()
-            if v.get("source") in MANUAL_SOURCES]
+            if _is_manual(v.get("source"))]
     return sorted(rows, key=lambda r: r["days_ago"])
+
+
+def manual_removals(path):
+    """Cards the PLAYER took OUT by hand — {norm: {"name", "date"}} — no time window.
+
+    The symmetric rule to "never cut a manual add", added when its absence bit in
+    live data (2026-08-13): the player pulled Professor Hojo from cloud on
+    2026-08-11 (Source=manual-replace, recorded), and the very next rescore
+    proposed re-adding him over a different victim. Notes-file churn guards name
+    the VICTIM, so the pass just moves to a new one — "a tourniquet, not the fix"
+    (spec-optimizer-hardening.md's own words). The decision the player actually
+    made was about HOJO, and this reads that decision straight from the log.
+
+    Deliberately unwindowed — a removal is a decision, not a cooldown — and lifted
+    the moment a manual row RE-ADDS the card on the same or a later date: the
+    newest player action wins, which is the same rule the whole advisor lives by.
+    """
+    if not (path and os.path.exists(path)):
+        return {}
+    removed, readded = {}, {}
+    with open(path, encoding="utf-8") as f:
+        for i, r in enumerate(csv.DictReader(f)):
+            if not _is_manual(r.get("Source")):
+                continue
+            # The file is APPEND-ONLY, so (date, row index) is the actual
+            # chronology — date alone ties on same-day sequences, and a same-day
+            # add-then-remove (a card the player tried for one afternoon) must
+            # resolve to the REMOVAL, its newest action.
+            seq = ((r.get("Added") or "").strip(), i)
+            out_name = (r.get("Replaced") or "").strip()
+            in_name = (r.get("Card") or "").strip()
+            if out_name:
+                for k in mtglib.name_keys(out_name):
+                    if seq >= removed.get(k, {}).get("seq", ("", -1)):
+                        removed[k] = {"name": out_name, "date": seq[0], "seq": seq}
+            if in_name:
+                for k in mtglib.name_keys(in_name):
+                    if seq >= readded.get(k, ("", -1)):
+                        readded[k] = seq
+    return {k: {"name": v["name"], "date": v["date"]}
+            for k, v in removed.items()
+            if readded.get(k, ("", -1)) < v["seq"]}
 
 
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
 
 
-def load_pins(path=PINS):
+def load_pins(path=None):
     """{normalized card: deck stem} — cards you've reserved for a specific deck.
 
     When you own ONE copy of a card that three decks want, the arithmetic can't decide
     which deck gets the physical card. A pin is you deciding: that copy belongs to this
     deck, and the other decks must treat it as unavailable no matter how well it scores.
     """
+    # Resolved at CALL time, not bound as a default: `path=PINS` captured the module
+    # constant at import, so redirecting PINS (a test pointing at tmp_path, or any
+    # future per-instance path) silently kept writing the real file.
+    path = path or PINS
     if not os.path.exists(path):
         return {}
     out = {}
@@ -167,8 +222,9 @@ def load_pins(path=PINS):
     return out
 
 
-def save_pins(pins, path=PINS):
+def save_pins(pins, path=None):
     """Write the pin map back. One deck per card — pinning elsewhere moves it."""
+    path = path or PINS                    # call-time, same reason as load_pins
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
@@ -183,17 +239,112 @@ def pinned_elsewhere(stem, pins=None):
     return {c for c, d in pins.items() if d != stem}
 
 
-def load_attrs(path):
-    """Optional name -> {type, mv, colors, produced, flags} map, so a deck can carry
-    its own card data without the full collection CSV.
+# --------------------------------------------------------------------------- #
+# THE role template (Phase 12 of spec-table-ready.md). One table, one widener —
+# every consumer imports these. Five independent copies used to exist
+# (optimize.ROLE_RANGE, deck_fit.FIT_TARGETS, deck_stats.TARGETS,
+# auto_build.ROLE_QUOTA's comment, a webapp hardcode) and they DISAGREED: measured
+# on the six real decks, 17 of 30 role judgments differed between the fit scorer
+# and the optimizer's filter, so the card panel pushed counterspells into a
+# voltron deck while the optimizer correctly refused them. Copies of a judgment
+# are not independent judges — they're drift. (`optimize.ROLE_RANGE` etc. remain
+# as shims so existing imports and tests keep working.)
+# --------------------------------------------------------------------------- #
 
-    `Name,Type,MV,Colors[,Produced,Flags]` — the two optional columns are the same
-    contract `collection_attrs.csv` uses (spec-engine-upgrades §4.2), and the
-    **empty-vs-absent rule is load-bearing** here too. `csv.DictReader` hands back
-    `None` for a column that isn't in the header and `''` for a present-but-blank
-    cell, and this map preserves exactly that: `None` stays None so `apply_attrs`
-    leaves `Card.produced` alone (unknown → every consumer falls back and says so),
-    while `''` parses to an empty set (enriched, produces nothing — Maze of Ith).
+# (min, max) acceptable count per 99 (deckbuilding-principles.md). The DEFAULT —
+# what a deck with no (or an unknown) `# Archetype:` header gets.
+ROLE_RANGE = {"ramp": (9, 13), "draw": (8, 12), "removal": (8, 11),
+              "wipe": (2, 5), "counter": (0, 6)}
+LAND_RANGE = (36, 38)
+LAND_TARGET = 37
+
+# Per-archetype widenings, keyed by the words that actually appear in the decks'
+# `# Archetype:` headers. Merged by WIDENING only (min(lo), max(hi)) — stacking two
+# archetype words can never make a deck's template stricter than the default, and an
+# unrecognised word contributes nothing (and is REPORTED, never silently ignored).
+#
+# Why this exists (2026-08-12, spec-optimizer-hardening.md "Typed-data role-repair
+# churn"): the template was archetype-blind, so iron-man — a draw-go control deck
+# whose real counts are counter:15, ramp:8, wipe:0 — read as nine excess
+# counterspells plus a ramp hole plus a wrath hole. By its ratified identity it is
+# exactly correct.
+#
+# TRAP: "counters" (captain-america) means +1/+1 COUNTERS, not counterspells. It is
+# deliberately absent from this table — mapping it to the `counter` role would widen
+# a tribal deck's counterspell allowance for a word about creature buffs.
+# The other header words in use — equipment, tribal-hero, tribal-spiders, lifegain —
+# need no delta: those decks already sit inside the default ranges.
+_ARCHETYPE_ROLE_RANGE = {
+    # Draw-go control: interaction IS the counterspell suite, so counters run long,
+    # sweepers and spot removal run short, and the deck leans on card draw over rocks.
+    "control": {"counter": (0, 18), "ramp": (6, 13), "draw": (8, 18),
+                "removal": (4, 11), "wipe": (0, 5)},
+    "draw-engine": {"draw": (8, 22)},      # a deck named for its draw engine
+    "artifacts": {"ramp": (9, 16)},        # mana rocks are artifacts; ramp runs high
+    "go-wide": {"wipe": (0, 5)},           # a wrath kills YOUR board first
+    "tokens": {"wipe": (0, 5)},
+    "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
+    "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
+}
+
+
+def archetype_words(text):
+    """Deck-file text (or a bare header value) -> the archetype word list.
+
+    THE tokenizer for `# Archetype:` — the words `role_ranges` keys on. Three
+    hand-rolled copies of this split appeared within one session of each other,
+    which is exactly how the header-regex drift started; one function, everywhere."""
+    v = text if ("\n" not in (text or "") and ":" not in (text or "")) else \
+        mtglib.deck_header(text, "Archetype")
+    return [w for w in re.split(r"[,\s/]+", (v or "").lower().strip()) if w]
+
+
+def role_ranges(archetype=None):
+    """The role template for a deck, widened by its `# Archetype:` words.
+
+    `archetype` is the already-parsed word list `deck_fit.deck_context` puts in
+    ctx["archetype"] — the header is read by `mtglib.deck_header` in exactly one
+    place; this function does not add a second parser. None / [] / unrecognised
+    words -> the default ROLE_RANGE, byte-identical to the archetype-blind days."""
+    ranges, _unknown = role_ranges_with_unknown(archetype)
+    return ranges
+
+
+def role_ranges_with_unknown(archetype=None):
+    """`role_ranges`, plus the archetype words that matched NO table entry.
+
+    The template is a LOOSENING — a wider band removes a barrier that was blocking
+    swaps — so a word the table does not recognise silently buys nothing. Reporting
+    the unmatched words is the honesty label for that: the run tells the player
+    which part of their `# Archetype:` line it did not understand, instead of
+    leaving them to assume it was applied."""
+    ranges, unknown = dict(ROLE_RANGE), []
+    for word in (archetype or []):
+        key = str(word).lower()
+        deltas = _ARCHETYPE_ROLE_RANGE.get(key)
+        if not deltas:
+            unknown.append(str(word))
+            continue
+        for role, (lo, hi) in deltas.items():
+            cur_lo, cur_hi = ranges.get(role, (lo, hi))
+            ranges[role] = (min(cur_lo, lo), max(cur_hi, hi))   # widen, never narrow
+    return ranges, unknown
+
+
+def load_attrs(path):
+    """Optional name -> {type, mv, colors, produced, flags, power} map, so a deck can
+    carry its own card data without the full collection CSV.
+
+    `Name,Type,MV,Colors[,Produced,Flags,Power]` — the three optional columns are the
+    same contract `collection_attrs.csv` uses (spec-engine-upgrades §4.2;
+    spec-table-ready Phase 1 for Power), and the **empty-vs-absent rule is
+    load-bearing** here too. `csv.DictReader` hands back `None` for a column that
+    isn't in the header and `''` for a present-but-blank cell, and this map preserves
+    exactly that: `None` stays None so `apply_attrs` leaves `Card.produced` alone
+    (unknown → every consumer falls back and says so), while `''` parses to an empty
+    set (enriched, produces nothing — Maze of Ith). `Power` is carried the same way,
+    verbatim (`*` included) — `mtglib._parse_power` is what turns it into an int or
+    an honest None.
     Unlike `mtglib.overlay_attrs` these keys are EXACT-CASE, matching the header
     `carddb.py` writes. Headers here are not aliased."""
     if not (path and os.path.exists(path)):
@@ -211,6 +362,7 @@ def load_attrs(path):
                 "colors": (r.get("Colors") or "").strip(),
                 "produced": r.get("Produced"),      # None = column absent, keep it
                 "flags": r.get("Flags"),
+                "power": r.get("Power"),            # verbatim; '*' stays '*'
             }
     return out
 
@@ -255,11 +407,15 @@ def load_card_notes(path=None, include_generated=True):
 
 def apply_attrs(enriched, attrs):
     """Overlay type/MV/colors — and, when the companion carries them, the
-    production-aware `Produced`/`Flags` — onto enriched deck cards.
+    production-aware `Produced`/`Flags` and the printed `Power` — onto enriched deck
+    cards.
 
-    A deck-level `.attrs.csv` is what makes the enriched mana model reachable on a
-    fresh clone that only has the name-only snapshot. Absent columns are left
-    untouched (`produced` stays None), never overwritten with an empty set."""
+    A deck-level `.attrs.csv` is what makes the enriched mana model (and the goldfish
+    clock) reachable on a fresh clone that only has the name-only snapshot. Absent
+    columns are left untouched (`produced` stays None), never overwritten with an
+    empty set. Power goes further and only writes a value it could actually parse: a
+    blank or `*` cell leaves whatever the collection already knew, because for power
+    there is no "known to be nothing" number to overwrite it with."""
     if not attrs:
         return 0
     n = 0
@@ -278,6 +434,10 @@ def apply_attrs(enriched, attrs):
             c.produced = mtglib._parse_produced(a["produced"])
         if a.get("flags") is not None:
             c.flags = mtglib._parse_flags(a["flags"])
+        if a.get("power") is not None:
+            p = mtglib._parse_power(a["power"])
+            if p is not None:
+                c.power = p
     return n
 
 
@@ -395,13 +555,57 @@ def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None):
     return {"report": rep, "assessment": assessment, "mana": mana}
 
 
+def _reference_key():
+    """A fingerprint of the whole reference directory — ~20 `stat` calls.
+
+    `analyze_deck`'s answer depends on curated knowledge it never takes as an
+    argument: `game_changers.txt` moves a bracket, `combos.csv` moves the Combo
+    Watch, `card_notes.csv` moves the details. Keying only on the deck and the
+    collection would cache an answer straight through a reference edit, which is
+    exactly the kind of silent staleness this repo does not tolerate."""
+    try:
+        paths = sorted(e.path for e in os.scandir(REF_DIR)
+                       if e.is_file() and e.name.endswith((".txt", ".csv")))
+    except OSError:
+        return ()
+    return memo.stat_key(*paths)
+
+
 def analyze_deck(deck_path, collection, refs=None):
     """Load + enrich a saved deck and run the whole analysis pipeline once — the
     single source of truth for the dashboard, the assessment packet, etc.
     `collection` may be a file path or an already-loaded list[Card]. Returns
-    {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}."""
+    {coll, idx, deck, enriched, missing, attrs, report, assessment, mana, combos}.
+
+    **Memoized** on the deck file, its `.attrs.csv`/`.notes.md` companions, the
+    collection's own input set, and the reference directory — but only when the
+    inputs can be fingerprinted. An already-loaded `collection` list and a
+    caller-supplied `refs` both bypass the cache entirely: neither can be
+    fingerprinted, and a caller who preloaded has already paid the price the
+    cache exists to avoid.
+
+    **What comes back on a hit is shared.** The outer dict is copied per call, so
+    adding a top-level key is safe; everything inside it — `coll`, `idx`,
+    `enriched`, `report`, `assessment` — is the same object every other caller
+    holds and must be treated as read-only. `tests/test_memo.py`'s
+    byte-identical-render tripwire is what keeps that true."""
+    if isinstance(collection, str) and refs is None:
+        stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+        key = ("deckcore.analyze_deck",
+               memo.stat_key(deck_path, f"{stem}.attrs.csv", f"{stem}.notes.md",
+                             *mtglib.collection_inputs(collection)),
+               _reference_key())
+        # Shallow copy per hit: callers that stash an extra top-level key (the
+        # dashboard's `sim`, a route's own bookkeeping) then cannot leak it into
+        # the next caller's analysis. The VALUES stay shared — see the docstring.
+        return dict(memo.get(key, lambda: _analyze_deck(deck_path, collection, refs)))
+    return _analyze_deck(deck_path, collection, refs)
+
+
+def _analyze_deck(deck_path, collection, refs=None):
     import deck_stats
     import combo_detector
+    import power
     coll = collection if isinstance(collection, list) else mtglib.load_collection(collection)
     idx = mtglib.index_by_name(coll)
     with open(deck_path, encoding="utf-8") as f:
@@ -415,6 +619,10 @@ def analyze_deck(deck_path, collection, refs=None):
         combos = combo_detector.for_deck(deck_path, idx)
     except Exception:
         combos = None
+    # The player's `# Bracket:` header lives in the deck FILE, which analyze_cards
+    # never sees — stamp it here so every consumer of this pipeline (dashboard,
+    # assess packet, table card) shows the setting beside the detected verdict.
+    power.with_declared(core["assessment"], power.read_declared_bracket(deck_path))
     return {"coll": coll, "idx": idx, "deck": deck, "enriched": enriched,
             "missing": missing, "attrs": attrs, "report": core["report"],
             "assessment": core["assessment"], "mana": core["mana"], "combos": combos}
@@ -447,9 +655,8 @@ def advise_card(deck_path, collection, name, section=None, commander="", analysi
     if card is None:
         return None
     if not commander:
-        m = re.search(r"^#\s*Commander:\s*(.+)$", open(deck_path, encoding="utf-8").read(),
-                      re.M | re.I)
-        commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
+        v = mtglib.deck_header(open(deck_path, encoding="utf-8").read(), "Commander")
+        commander = re.split(r"\s{2,}|\(", v)[0].strip() if v else ""
     refs = refs or power.load_refs()
     if ctx is None:
         field = deck_fit.load_field(commander, idx) if commander else {}
@@ -547,7 +754,7 @@ def new_arrivals(coll, decks_dir, days=30, now=None, limit=12):
         text = open(p, encoding="utf-8").read()
         for c in mtglib.parse_deck(text):
             in_decks |= mtglib.name_keys(c.name)
-        m = re.search(r"^#\s*Colors:\s*(.+)$", text, re.M)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Colors?"))
         ids = set((m.group(1) if m else "").replace(",", " ").upper().split())
         deck_ids[os.path.splitext(os.path.basename(p))[0]] = ids
     out = []

@@ -33,6 +33,7 @@
 1 Silver Sable, Mercenary Leader
 1 Captain Mar-Vell, Space-Born
 1 Thor, Asgard's Avenger
+1 War Machine, Avenging Arsenal
 
 # --- Instants ---
 1 Visions of Beyond
@@ -44,12 +45,12 @@
 1 Essence Scatter
 1 Memory Lapse
 1 Arcane Denial
-1 West Coast Expansion
 1 Methods of the Mighty
 1 Heroic Sacrifice
-1 Raise the Palisade
 
 # --- Sorceries ---
+1 West Coast Expansion
+1 Raise the Palisade
 1 Rip Apart
 1 Austere Command
 
@@ -65,11 +66,11 @@
 1 Relic of Legends
 1 Fellwar Stone
 1 Tome of Legends
-1 Avengers Assemble!
 1 Door of Destinies
 1 Mjölnir, Hammer of Thor
 
 # --- Enchantments ---
+1 Avengers Assemble!
 1 Mystic Remora
 1 Rhystic Study
 1 Kindred Discovery
@@ -108,6 +109,3 @@
 5 Mountain
 4 Island
 4 Plains
-
-# --- Unsorted (type unknown — enrich and re-run deck_sections) ---
-1 War Machine, Avenging Arsenal

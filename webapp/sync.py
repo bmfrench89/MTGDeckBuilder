@@ -58,6 +58,80 @@ def _touch_wsgi():
         pass
 
 
+def _collection_path():
+    """The collection the post-pull regroup reads types from.
+
+    Same precedence as the app's `_default_collection` (env → private CSV →
+    committed name-only snapshot), re-derived here rather than imported because
+    `app` imports THIS module — importing back would be a cycle. The snapshot
+    fallback still types cards, since `mtglib.load_collection` merges
+    `collection_attrs.snapshot.csv` beside it."""
+    env = os.environ.get("MTG_COLLECTION")
+    if env:
+        return env
+    csv_path = os.path.join(ROOT, "data", "collection", "collection.csv")
+    if os.path.exists(csv_path):
+        return csv_path
+    return os.path.join(ROOT, "data", "collection", "collection_snapshot.txt")
+
+
+def regroup_unsorted(decks_dir=None, collection=None):
+    """Re-file decks that still carry an `Unsorted` section, after a pull.
+
+    The pull is also how fresh `collection_attrs` reach the server, so a card
+    that was untypeable when a session last regrouped is typeable now. Running
+    the regroup here drains those sections without anybody opening a session.
+
+    Deliberately narrow and defensive: only decks whose Unsorted section is
+    non-empty are rewritten (every other deck is already in shape and must not
+    be churned), each deck is wrapped on its own, and the caller wraps this —
+    a regroup problem must never turn a good sync into a failed one. Returns a
+    one-line summary, or None when there was nothing to do."""
+    import glob as _glob
+    import sys as _sys
+    scripts = os.path.join(ROOT, "scripts")
+    if scripts not in _sys.path:
+        _sys.path.insert(0, scripts)
+    import deck_sections
+
+    decks_dir = decks_dir or os.environ.get("MTG_DECKS_DIR",
+                                            os.path.join(ROOT, "data", "decks"))
+    collection = collection or _collection_path()
+    done, failed, skipped, left = [], [], [], 0
+    for path in sorted(_glob.glob(os.path.join(decks_dir, "*.txt"))):
+        try:
+            if not deck_sections.has_unsorted(path):
+                continue
+            if deck_sections.has_section_comments(path):
+                # A regroup drops comment lines that sit inside a section. Doing
+                # that unattended on the server would break CLAUDE.md's
+                # "edits keep comment lines intact" contract against a file the
+                # player may have hand-annotated. Skip loudly instead.
+                skipped.append(os.path.basename(path))
+                continue
+            text, st = deck_sections.regroup(path, collection)
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+            done.append(os.path.basename(path))
+            left += st.get("unsorted", 0)
+        except Exception as e:                      # one bad deck, not a bad sync
+            failed.append(f"{os.path.basename(path)}: {type(e).__name__}")
+    if not done and not failed and not skipped:
+        return None
+    parts = []
+    if done:
+        parts.append(f"regrouped {len(done)} deck(s): {', '.join(done)}")
+        # Honest about what is NOT resolved: cards the refreshed attrs still
+        # cannot type stay in Unsorted, and saying so is the whole point.
+        parts.append(f"{left} card(s) still unsorted" if left else "all Unsorted drained")
+    if skipped:
+        parts.append("skipped (in-section comments, regroup would drop them): "
+                     + ", ".join(skipped))
+    if failed:
+        parts.append("regroup failed for " + "; ".join(failed))
+    return " · ".join(parts)
+
+
 def _write_status(d):
     try:
         os.makedirs(os.path.dirname(STATUS), exist_ok=True)
@@ -104,8 +178,49 @@ def run(reason, reload_delay=0.0):
         # the old code all day — the stale-serve bug found 2026-08-12. A total
         # failure never moves HEAD, so this stays False exactly when it should.
         pulled = _head() != before
+        if pulled:
+            # A pull rewrites decks, collection attrs and reference lists under a
+            # live process. The memo cache keys on mtimes and would notice, but
+            # git can restore a file with a size and a coarse mtime that match —
+            # and this is the one code path that changes many files at once with
+            # nobody watching. Say it outright instead of trusting stat().
+            try:
+                import sys as _sys
+                scripts = os.path.join(ROOT, "scripts")
+                if scripts not in _sys.path:
+                    _sys.path.insert(0, scripts)
+                import memo
+                memo.invalidate()
+            except Exception:
+                pass                  # a cache miss is never worth failing a sync
+        # Post-pull hygiene: a pull can bring fresh collection attrs down, which
+        # is exactly when a deck's Unsorted section becomes resolvable. Wrapped
+        # whole — a regroup error is reported in the status line, never allowed
+        # to fail the sync it rode in on.
+        regroup = None
+        if pulled and enabled():
+            # `enabled()` scopes this to the hosted server — the one process that
+            # pulls attrs it did not author. It is also the switch that keeps a
+            # deck-file WRITE out of every other environment (PC, CI, tests),
+            # which is the safer default for a path nobody is watching.
+            try:
+                regroup = regroup_unsorted()
+            except Exception as e:
+                regroup = f"regroup skipped: {type(e).__name__}: {e}"
+            if regroup:
+                print(f"sync: {regroup}")
+        # `detail` stays the SCRIPT's own line, never concatenated with the
+        # regroup summary. Appending used to push the word RECOVERED out of the
+        # 300-char tail — and `status_view` keys the rescue-branch warning off
+        # that word, so a self-heal silently rendered plain green (found by the
+        # Phase 0 verifier, reproduced end-to-end). The regroup rides in its own
+        # field and `recovered` is stored as a BOOLEAN, so the warning no longer
+        # depends on a substring surviving truncation at all.
         st = {"when": time.time(), "ok": ok, "reason": reason,
-              "pulled": pulled, "detail": detail[-300:]}
+              "pulled": pulled, "detail": detail[-300:],
+              "recovered": "RECOVERED" in detail}
+        if regroup:
+            st["regroup"] = regroup
         _write_status(st)
     if pulled:
         if reload_delay > 0:
@@ -139,6 +254,17 @@ def maybe_start(now=None):
     return True
 
 
+def _regroup_suffix(st):
+    """The post-pull regroup summary, rendered from its OWN field.
+
+    It is never folded into `detail`: that is what truncated the RECOVERED
+    warning away. Capped separately so a long deck list cannot crowd out the
+    line it is appended to.
+    """
+    r = (st.get("regroup") or "").strip()
+    return f" · {r[:120]}" if r else ""
+
+
 def status_view(now=None):
     """One template-ready line about the last sync. None → render nothing."""
     st = status()
@@ -158,8 +284,11 @@ def status_view(now=None):
         # a pushed rescue branch that a session still has to merge. Green would
         # bury that — keep the warn styling and the script's own line until the
         # next fully-clean sync overwrites it.
-        if "RECOVERED" in st.get("detail", ""):
-            return {"cls": "warn", "text": f"synced {when} — {st['detail'][:200]}"}
+        # `recovered` is the boolean written since the truncation fix; the
+        # substring check stays for status files written before it.
+        if st.get("recovered") or "RECOVERED" in st.get("detail", ""):
+            return {"cls": "warn",
+                    "text": f"synced {when} — {st['detail'][:200]}{_regroup_suffix(st)}"}
         # `pulled` stays in the status file until the NEXT sync (up to 24 h), but
         # the reload itself takes seconds — cap the "reloading" claim or the page
         # reads as stuck all day.
@@ -167,5 +296,5 @@ def status_view(now=None):
         if st.get("pulled"):
             extra = (" · updates pulled, app reloading" if age < RELOAD_SHOWN
                      else " · updates pulled")
-        return {"cls": "good", "text": f"synced {when}{extra}"}
+        return {"cls": "good", "text": f"synced {when}{extra}{_regroup_suffix(st)}"}
     return {"cls": "warn", "text": f"sync failed {when} — {st.get('detail', '')}".rstrip(" —")}

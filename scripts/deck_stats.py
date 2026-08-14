@@ -21,14 +21,12 @@ import sys
 from collections import Counter, defaultdict
 
 import mtglib
+import deckcore
 
-TARGETS = {
-    "lands": (36, 38),
-    "ramp": (10, 12),
-    "draw": (10, 12),
-    "removal": (8, 10),
-    "wipe": (3, 5),
-}
+# Derived from THE role template in deckcore (Phase 12) — this used to be an
+# independent copy with different numbers (ramp 10-12 vs the canonical 9-13),
+# which is exactly the drift single-sourcing exists to kill.
+TARGETS = dict(deckcore.ROLE_RANGE, lands=deckcore.LAND_RANGE)
 
 
 def read(path):
@@ -58,7 +56,7 @@ def analyze(deck_cards, coll_index):
                 supertypes=ref.supertypes, rarity=ref.rarity,
                 scryfall_id=ref.scryfall_id, set_code=ref.set_code,
                 collector_number=ref.collector_number, price=ref.price,
-                produced=ref.produced, flags=ref.flags)
+                produced=ref.produced, flags=ref.flags, power=ref.power)
             enriched.append(merged)
     return enriched, missing
 
@@ -149,19 +147,19 @@ def build_report(deck_cards, enriched, missing, coll_index):
     }
 
 
-def print_report(rep):
+def print_report(rep, ranges=None):
     print("=" * 60)
     print("DECK REPORT")
     print("=" * 60)
     print(f"Total cards : {rep['total_cards']}  "
           f"(target 100 incl. commander)")
-    print(f"Lands       : {rep['lands']}   {_flag('lands', rep['lands'])}")
+    print(f"Lands       : {rep['lands']}   {_flag('lands', rep['lands'], ranges)}")
     print(f"Nonland     : {rep['nonland']}")
 
     print("\nCategories (heuristic — verify):")
     for role in ["ramp", "draw", "removal", "wipe", "counter"]:
         n = rep["categories"].get(role, 0)
-        print(f"  {role:<9}: {n:>2}  {_flag(role, n)}")
+        print(f"  {role:<9}: {n:>2}  {_flag(role, n, ranges)}")
     for role in ["creature", "spell", "artifact", "enchantment",
                  "planeswalker", "other"]:
         if rep["categories"].get(role):
@@ -222,10 +220,15 @@ def print_report(rep):
           "verify any post-2025 card's oracle text before trusting it.")
 
 
-def _flag(role, n):
-    if role not in TARGETS:
+def _flag(role, n, ranges=None):
+    """`ranges` = an archetype-aware `deckcore.role_ranges()` dict; defaults to the
+    blind template for callers with no deck header in hand (the dashboard's lands
+    tile). Without it a control deck's CLI report would flag counter:15 as high —
+    the exact wrong advice single-sourcing exists to kill."""
+    table = dict(ranges, lands=deckcore.LAND_RANGE) if ranges else TARGETS
+    if role not in table:
         return ""
-    lo, hi = TARGETS[role]
+    lo, hi = table[role]
     if n < lo:
         return f"(low; aim {lo}-{hi})"
     if n > hi:
@@ -254,7 +257,8 @@ def main():
     if args.json:
         print(json.dumps(rep, indent=2))
     else:
-        print_report(rep)
+        print_report(rep, ranges=deckcore.role_ranges(
+            deckcore.archetype_words(read(args.deck))))
     return 0
 
 

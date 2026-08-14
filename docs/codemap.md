@@ -6,7 +6,8 @@ toward. Companion to [research-roadmap.md](research-roadmap.md) (vision) and
 
 ## Shape in one line
 
-Two **hubs** (`mtglib` = data, `deckcore` = analysis) feed a ring of stdlib **analysis
+Two **hubs** (`mtglib` = data, `deckcore` = analysis) — memoized on file identity by
+`memo`, which sits below them and imports nothing — feed a ring of stdlib **analysis
 engines**, which feed **presentation spokes** (`build_dashboard`, `card_api`,
 `auto_build`), consumed by the **Flask web app**, the **CLIs**, and the **coaching skill**.
 
@@ -15,6 +16,7 @@ engines**, which feed **presentation spokes** (`build_dashboard`, `card_api`,
 ```mermaid
 flowchart TB
   subgraph HUBS["🎯 Hubs — foundation (stdlib + each other only)"]
+    memo["memo<br/>file-identity memo cache (below the hubs)<br/>get / stat_key / invalidate · one lock"]
     mtglib["<b>mtglib</b><br/>Card model · deck/collection parsing<br/>classify (roles) · pip math · load_collection"]
     deckcore["<b>deckcore</b><br/>shared helpers: attrs / notes / sections / buylist<br/>card-notes KB · role labels<br/>analyze_deck() → one pipeline for every consumer"]
   end
@@ -48,6 +50,8 @@ flowchart TB
     skill["mtg-deckbuilder skill<br/>(build · analyze · COACH)"]
   end
 
+  memo --> mtglib
+  memo --> deckcore
   mtglib --> deckcore
   mtglib --> ENGINES
   skill -. "rules Q&A: retrieve → read → cite" .-> crules
@@ -85,13 +89,14 @@ knew; the buy view didn't. `deckcore.buy_signals()` is the fix and the pattern.
 | owned / qty / spare copies | `mtglib.load_collection` + `deck_conflicts` | decklist badges, panel, add-picker, optimizer tiers |
 | identity / legality here | `mtglib` + deck `# Colors:` header | add/replace validation, optimizer candidate filter |
 | what it actually taps for / oracle-derived flags | `oracle_flags` → `carddb` → `collection_attrs.csv` → `Card.produced` / `Card.flags` | `deck_stats` colored-source counts (+ `color_sources_basis`), manabase CLI, dashboard pip table, assess packet, `/collection` coverage tile — **each labels the color-identity fallback when `produced is None`** · **`mtglib.classify`** reads the role-bearing flags (`rock`/`dork`/`ramp`, `draw`, `removal`, `wipe`, `counter`) **only where the curated name lists are silent**, so every category count downstream (`deck_stats.categories` → power, dashboard, optimizer role guardrails) inherits them |
-| fit (color/role/curve/power/theme) | `deck_fit.assess_card` | panel, add verdict, dead-weight, optimizer `value_of` |
+| printed creature POWER (how hard the board hits) | `oracle_flags.power_of` → `carddb` → `collection_attrs.csv` `Power` column → `Card.power` | the goldfish **clock** (Phase 2 of `spec-table-ready.md`) — and it only gets there because `deck_stats`'s explicit Card rebuild copies the field; **that list is the ONLY route a Card attribute takes to deck-level analysis**, so anything omitted there is silently invisible to every consumer. Empty cell = "no power / not a creature", absent column = "unknown — the clock says so instead of guessing" |
+| fit (color/role/curve/power/theme) | `deck_fit.assess_card` — the Role-need component reads THE archetype-aware template from `deckcore` (ctx["role_ranges"], computed once per deck), and its point spread is CAPPED so (shortage−depth)×2 stays under the optimizer margin: template pressure alone can never buy a swap. Template-vs-field disagreement is printed on the card ("the field plays this one in 4%…"), never resolved silently | panel, add verdict, dead-weight, optimizer `value_of`, the Cuts surface |
 | field: inclusion % + synergy | `edhrec` (live → cache → **committed snapshot**) | fit scoring, optimizer, Buy staples, verdicts (with an honest "fit-only" note when absent) |
 | combo membership: present / one-away | `combo_detector` (+ `spellbook` beyond `combos.csv`) | Combo Watch, bracket signal, **Buy tab when the piece is unowned** |
 | curated buy intent | `.buylist.csv` (player-written) | Buy tab — **always wins dedupe over generated rows** |
 | in-decklist-but-unowned | `deck_stats.analyze` → `missing` | BUY badge in decklist **and** the Buy tab |
 | how late it actually lands in sequenced play | `goldfish.sim_for_deck` (cast rate + mean first cast vs MV) | dashboard Mana tab, assess page, assess packet — **each printing the screw/flood definitions and the mana-model tier**, since a fallback-tier number is an approximation |
-| who decided (player vs tool) | `.changes.csv` `Source` column | NEW badge, advisor scope, optimizer's never-cut set |
+| who decided (player vs tool) | `.changes.csv` `Source` column | NEW badge, advisor scope, optimizer's never-cut set **and never-re-add set** (`deckcore.manual_removals` → `manual_holds`, reported with field evidence — a removal is a decision, not a cooldown) |
 | reserved for another deck | `pins.csv` | panel pin toggle, optimizer `reserved`, add-picker warning |
 | player's own words | `.notes.md` | Plan tab, optimizer/dead-weight protection |
 
@@ -113,9 +118,9 @@ packet now ends its analytics with ONE merged "CARDS TO BUY" section through
 `buy_signals` (provenance-labeled, CSB-merged), and `card_api` carries the REVERSE
 combo signal — `completes`: decks where the viewed card is the one missing piece —
 rendered by the site-wide panel (so the wishlist's combo rows explain themselves).
-**Still open:** the dashboard's Buy-tab rows for non-deck cards (combo pieces) are
-plain text, not panel-clickable — the inlined panel only carries details for cards
-in the deck.
+**Also closed 2026-08-13:** the dashboard's Buy-tab rows are panel-clickable (both the
+buy target and the card it replaces) — they were plain text, which made the cards a Buy
+tab exists FOR the only unclickable names on the page.
 
 ## Where each signal works — the deployment reality
 
@@ -171,13 +176,14 @@ inclusion rates drift slowly (the live cache TTL is a week).
 
 | Module | Role | Depends on |
 |---|---|---|
-| **mtglib** | Data hub: `Card`, parsing, `classify` (curated lists → `Card.flags` → types, in that precedence), pip math, `load_collection` (+ attrs/additions overlay); reads all major collection-app CSV formats via header aliases (`docs/collection-formats.md`) | — |
-| **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()`; `advise_card()` (per-card verdict), `manual_adds()` (Source=manual-*), `buy_signals()` (the merged Buy view), `section_label()`/`real_section_labels()` | mtglib |
+| memo | Below-the-hubs memo cache: `get(key_parts, build)` keyed on `stat_key()` file identity (`(path, mtime_ns, size)`, `(path, None)` for missing), `invalidate(substr)`, `MAX_ENTRIES` oldest-first eviction, one `threading.Lock`. Backs `mtglib.load_collection` (keyed on ALL merged inputs, not just the CSV) and `deckcore.analyze_deck` (deck + companions + collection + a reference-directory fingerprint). **Cached values are shared and must be treated as frozen** — `tests/test_memo.py` fingerprints the cached objects across every consumer to prove nothing scribbles on them. Unfingerprintable inputs (a preloaded collection list, caller-supplied `refs`) bypass the cache rather than risk a stale answer | — (`os`, `threading`; imports nothing in-repo, so the hubs can import it) |
+| **mtglib** | Data hub: `Card`, parsing, `classify` (curated lists → `Card.flags` → types, in that precedence), pip math, `load_collection` (+ attrs/additions overlay, **memoized on every file it merges** — `collection_inputs()` IS that key); reads all major collection-app CSV formats via header aliases (`docs/collection-formats.md`) | memo |
+| **deckcore** | Analysis hub: shared file loaders, card-notes KB, role labels; *(R2)* `analyze_deck()`; `advise_card()` (per-card verdict), `manual_adds()` / **`manual_removals()`** (Source=manual-* — the add side protects from cuts, the removal side blocks re-adds), `buy_signals()` (the merged Buy view), `section_label()`/`real_section_labels()`; **THE role template** (`ROLE_RANGE` + archetype table + `role_ranges*` + `LAND_RANGE` + `archetype_words` — one table every consumer reads; five disagreeing copies existed) | mtglib |
 | deck_stats | curve, colored-pip demand vs sources, role counts, ownership | mtglib |
-| power | WotC bracket (1–5, estimated) + 0–100 power score | mtglib, deck_stats, combo_detector, deckcore |
-| manabase | hypergeometric consistency: keepable %, source adequacy vs Karsten, risky-on-curve | mtglib |
+| power | WotC bracket (1–5, estimated) + 0–100 power score. Reads the deck's optional **`# Bracket:`** header (`read_declared_bracket` / `with_declared`): the player's setting headlines, `bracket` keeps meaning DETECTED, and the reasons never disappear | mtglib, deck_stats, combo_detector, deckcore |
+| manabase | hypergeometric consistency: keepable %, source adequacy vs Karsten, risky-on-curve. Ships an `explain` dict beside the numbers (what / why / what healthy looks like) so the CLI, dashboard and app render ONE wording and the caveats sit with the stat they qualify | mtglib |
 | combo_detector | infinite / 2-card combos present or one-away (`combos.csv`) | mtglib |
-| deck_fit | per-card fit score + `dead_weight()` (below-deck-median passengers) (library; no CLI) | mtglib |
+| deck_fit | per-card fit score + `dead_weight()` (below-deck-median passengers) + **`card_value()`** (the ONE scorer both sides of an optimizer swap and the Cuts surface use) + `cut_ranking()` ("if you must cut", advisory, protected cards shown flagged not hidden) (library; no CLI) | mtglib |
 | deck_conflicts | shared-across-decks + `--available` buildable pool | mtglib |
 | analyze_collection | "what can I build?" pool stats by color/type/tribe | mtglib |
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
@@ -185,16 +191,16 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | oracle_flags | Face-aware derivation from a Scryfall card object: `produced_of()` (what it actually taps for) + `derive_flags()` (`etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`, `removal`, `wipe`, `counter`). Pure dict-in/set-out, no I/O; heuristic by construction, so curated lists and human verification win | — (`re` only; no repo imports) |
 | rules | The **Comprehensive Rules**, retrieved rather than recalled: downloads WotC's official txt once into `data/cache/rules/` (never committed — ~1 MB of copyrighted text revving 5-6×/year), parses it into rules / sections / chapters / glossary in document order, and answers three questions — `lookup()` by number (with subrules and section/chapter context), `search()` (bag-of-words: +2/term, +5 all terms, +10 exact phrase, ties by document order), `glossary_lookup()` (exact → prefix → substring, with the rule refs the definition points at). Manual refresh only (`--refresh`); any cached copy is used and labeled `fetched <date>` from its mtime. Never raises — every failure is the standard error payload plus manual-download instructions | **nothing — the first engine here with zero repo imports.** Every other engine imports `mtglib`; rule text contains no card names, so there is nothing to normalize |
 | rulings | Scryfall **rulings for one named card** — the official clarifications behind an interaction. `/cards/named?fuzzy=` → the card's `rulings_uri` (0.1s courtesy delay, `has_more` followed), cached 30 days in `data/cache/rulings/`. On a failure the cache is consulted **regardless of age** (stale-and-labeled beats a shrug) before the error payload. Always carries `requested` alongside the resolved `name`: a fuzzy match can confidently resolve to the wrong card, and the caller must confirm | mtglib (`front_face`/`_norm` for the cache key — the `' // '` trap) |
-| goldfish | Seeded goldfish Monte Carlo: commander-by-turn, keepable/screw/flood (definitions shipped as data), mean lands by turn, sequenced first-cast per card, CRN A/B swap deltas. `sim_for_deck()` is the ONE cached entry point every surface calls (`data/cache/goldfish/`). Two mana tiers — enriched `Card.produced`/`Card.flags`, else a **labelled** color-identity fallback. Answers the sequenced-play questions `manabase`'s exact-but-unconditional closed forms structurally cannot | mtglib (`deck_stats`/`deckcore` imported inside the loader only) |
+| goldfish | Seeded goldfish Monte Carlo (+ the **CLOCK**: median turn the deck presents lethal, mapped onto the brackets' own turn anchors — combat-only, labelled UNDERSTATED for drain decks, no clock without printed power; and `--disruption standard`, an EXPERIMENT facing phantom opponents on a SECOND RNG stream so CRN pairing survives): commander-by-turn, keepable/screw/flood (definitions shipped as data), mean lands by turn, sequenced first-cast per card, CRN A/B swap deltas. `sim_for_deck()` is the ONE cached entry point every surface calls (`data/cache/goldfish/`). Two mana tiers — enriched `Card.produced`/`Card.flags`, else a **labelled** color-identity fallback. Answers the sequenced-play questions `manabase`'s exact-but-unconditional closed forms structurally cannot | mtglib (`deck_stats`/`deckcore` imported inside the loader only) |
 | **build_dashboard** | Spoke: deck → self-contained HTML dashboard + card panel | mtglib, deckcore, deck_stats, power, manabase, combo_detector, deck_fit, simc, card_image, deck_conflicts, goldfish |
 | **card_api** | Spoke: grounded per-card JSON for the site-wide panel | mtglib, deckcore, card_image, combo_detector |
 | **auto_build** | Spoke: assemble a full 99 from the owned pool (emits EDHREC-style type sections via `deckcore.type_bucket`; role sections only for cards with no type data) | mtglib, deck_fit, deck_conflicts, simc, power, deck_stats, manabase, combo_detector, card_image |
-| **deck_sections** | Spoke: regroup a deck file into the EDHREC-style type-section convention (Creatures/Instants/…/Lands/Basics, commander first) from the same data stack every tool uses; unknown types fall back to old-section hints, then an explicit `Unsorted` section — never a guess. Idempotent; `--all --apply` migrates every deck | mtglib, deckcore |
+| **deck_sections** | Spoke: regroup a deck file into the EDHREC-style type-section convention (Creatures/Instants/…/Lands/Basics, commander first) from the same data stack every tool uses; unknown types fall back to old-section hints, then an explicit `Unsorted` section — never a guess. Merges duplicate same-name BASIC lines (a nonbasic twin is left visible to `singleton_violations` instead). Idempotent; `--all --apply` migrates every deck. `has_unsorted()` / `has_section_comments()` are the filters `webapp/sync.py` uses to auto-regroup after a sync without eating hand-written prose | mtglib, deckcore |
 | carddb | **Two modes.** *Enrich* the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. *Verify* named cards — **`--verify "<name>"`** (repeatable, `--json`) batches names through the same endpoint, reconciles **positionally** (a back-face request returns a card named `Front // Back`, so name-keyed matching misfiles it), retries each miss once via `/cards/named?fuzzy=`, and returns verbatim oracle text + commander legality or an honest `UNVERIFIED`. 30-day cache in `data/cache/scryfall/`; a hallucinated card name dies here. The two modes are exclusive (enrichment still requires `--collection`). | mtglib, oracle_flags |
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
-| **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply` | mtglib, deckcore, deck_fit, deck_conflicts, power |
-| spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully | mtglib |
+| **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply`. The role template is **archetype-aware** (`role_ranges` reads the deck's `# Archetype:` header — a control deck's 15 counterspells are correct, not nine over budget; unmatched words are reported, never silently ignored) and the **field has a veto over role repair**: a swap may never cut a card the field plays MORE than the incoming one, because template pressure arrives through `value_of`'s fit blend and can manufacture the 25-point margin on its own | mtglib, deckcore, deck_fit, deck_conflicts, power |
+| spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully — and **degrades cheaply**: a failure is remembered for `FAIL_TTL` (5 min) so an unreachable CSB costs one attempt per cooldown instead of one per deck-page view (it was 315 ms of every warm render, ceiling 25 s when a connection hangs). The remembered failure is never served AS data — callers still get the empty error payload they already label | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 
 ## Web app (`webapp/`)
@@ -210,7 +216,24 @@ dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<s
 (validated add + fit verdict) · `/api/deck/<stem>/advise` · `/api/deck/<stem>/sections`
 · `/api/collection/search` (owned autocomplete) · `/build-next` (+ `/…/deck` auto-build,
 "build any commander") · `/collection` (searchable grid) · `/wishlist` · `/shared`
-· `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet).
+· `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet)
+· **`/deck/<stem>/table-card`** (the Rule-0 screen: bracket, Game Changers, MLD/extra
+turns/combos, clock, game plan — phone and print) · **`/deck/<stem>/mulligan`** +
+`/api/deck/<stem>/hand` (keep/ship practice on the deck's real hands, verdict from
+`goldfish.keep_verdict`) · **`/pins`** + `/pins/move` (every reserved copy, one-tap
+move) · `/deck/<stem>/bracket` (the player's bracket setting)
+· `/api/deck/<stem>/ab` (paired swap preview behind shift-click in the card panel —
+**disk-cached** by `goldfish.ab_for_deck`, so the second look at a swap is a file read).
+
+**Background work — two modules, one pattern.** `sync.py` (daily git sync) and
+`enrich_bg.py` (collection enrichment after an upload) both use: a daemon thread, a
+JSON status file under `data/cache/`, an already-running guard, and a **stale-status
+honesty rule** — PythonAnywhere kills daemon threads on app reload, so a `running`
+entry past its TTL renders as *interrupted*, never as a spinner that never stops.
+Copy that pattern rather than inventing a third. `/collection/upload` returns
+immediately and the attrs file is written atomically inside `carddb`
+(`write_attrs_csv`: tmp + `os.replace`), so a page render during a minutes-long
+enrichment sees the old complete file or the new one — never half of one.
 
 ## The coaching skill (`.claude/skills/mtg-deckbuilder/`)
 

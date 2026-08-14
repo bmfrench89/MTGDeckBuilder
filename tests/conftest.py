@@ -20,6 +20,64 @@ def _goldfish_cache_in_tmp(tmp_path_factory):
     goldfish.CACHE_DIR = str(tmp_path_factory.mktemp("goldfish-cache"))
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _enrich_status_in_tmp(tmp_path_factory):
+    """Same hermetic rule for the background-enrichment status file: any test that
+    exercises `/collection/upload` starts a real (fake-enrich) run, and its status
+    JSON would otherwise land in the player's real `data/cache/`."""
+    import enrich_bg
+    enrich_bg.STATUS = str(tmp_path_factory.mktemp("enrich") / "enrich_status.json")
+
+
+@pytest.fixture(autouse=True)
+def _clean_memo():
+    """Start (and leave) every test with an empty analysis memo.
+
+    `memo` is process-global by design — that is what makes it work across
+    requests in one web-app worker. In a test process it would also carry state
+    across tests, so a suite that passes in file order could fail in isolation
+    (or vice versa), which is exactly the kind of ghost this repo's hermetic rule
+    exists to prevent. `tests/test_memo.py` opts back in explicitly by populating
+    it inside a single test."""
+    import memo
+    memo.invalidate()
+    yield
+    memo.invalidate()
+
+
+@pytest.fixture(autouse=True)
+def _no_network_and_no_real_cache(monkeypatch, tmp_path_factory):
+    """Hard-stop the network clients for EVERY test, and move their caches to tmp.
+
+    `optimize` reaches EDHREC through `deck_fit.load_field_lands` →
+    `edhrec.land_names` → `_fetch`, which `os.makedirs`es and writes into the
+    REAL `data/cache/edhrec/`. Individual tests were expected to monkeypatch
+    that, and mostly did not (1 of 17 call sites before this fixture): in this
+    sandbox the proxy blocks the fetch so it degrades to empty and the suite
+    passes, but on the player's PC or a GitHub runner the same suite would hit
+    EDHREC and write into the player's real `data/`. That is the hermetic rule
+    in CLAUDE.md, so it is enforced here once rather than trusted 17 times.
+
+    A test that WANTS field data still monkeypatches `deck_fit.load_field` /
+    `load_synergy` (the established pattern) — those are pure lookups this
+    fixture does not touch.
+    """
+    import edhrec
+    cache = tmp_path_factory.mktemp("edhrec-cache")
+    monkeypatch.setattr(edhrec, "CACHE_DIR", str(cache), raising=False)
+
+    def _blocked(*_a, **_kw):
+        raise AssertionError(
+            "a test tried to reach EDHREC over the network — monkeypatch "
+            "deck_fit.load_field / load_synergy (or edhrec.<fn>) instead")
+    # The real function stays reachable under a second name, for the one test that
+    # is ABOUT `_fetch` itself (the failure-cooldown guard). It monkeypatches
+    # `urllib.request.urlopen` instead, so it is still offline — it just needs the
+    # function this fixture is standing in front of.
+    monkeypatch.setattr(edhrec, "_fetch_unblocked", edhrec._fetch, raising=False)
+    monkeypatch.setattr(edhrec, "_fetch", _blocked, raising=False)
+
+
 DECK_TEXT = """\
 # Title: Test Deck
 # Commander: Test Commander

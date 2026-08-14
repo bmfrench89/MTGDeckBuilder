@@ -24,15 +24,15 @@ your collection.** This is the flagship feature that makes the tool an *end-to-e
 ## 2. Deckbuilding methodology (research-grounded)
 
 Multiple community templates converge on the same ratios; the app already encodes them in
-`deck_fit.FIT_TARGETS`. The builder targets this **house template** (per 99 + commander):
+`deckcore.ROLE_RANGE` *(2026-08-13: was `deck_fit.FIT_TARGETS`, since removed — one canonical, archetype-aware table)*. The builder targets this **house template** (per 99 + commander):
 
 | Role | Target | Notes |
 |------|--------|-------|
 | Lands | **36–38** | Formula: ~41 − 1 per 3–4 ramp (→ 37 lands w/ 10 ramp). Karsten manabase (Phase 2) refines colored sources. |
-| Ramp | **10–12** | Command Zone template emphasizes this. |
+| Ramp | **9–13** | Command Zone template emphasizes this. *(bands synced to `deckcore.ROLE_RANGE` 2026-08-13)* |
 | Card draw | **8–12** | Sustained engines + burst. |
-| Spot removal | **8–10** | Instant-speed answers. |
-| Board wipes | **2–4** | Mass removal. |
+| Spot removal | **8–11** | Instant-speed answers. |
+| Board wipes | **2–5** | Mass removal. |
 | Win-cons / finishers | **2–4** | |
 | Commander synergy / theme + flex | **~25–30** | Cards that enable the commander's plan. |
 

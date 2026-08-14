@@ -21,16 +21,18 @@
 1 Phantom Warrior
 1 Valeria Richards, Precocious
 1 Falcon, Winged Wonder
+1 Loki, God of Mischief
+1 Pensive Professor
+1 Professor Hulk
+1 Kid Loki
 
 # --- Instants ---
 1 Brainstorm
 1 Frantic Search
 1 Think Twice
 1 Thirst for Knowledge
-1 Fellwar Stone
 1 Visions of Beyond
 1 Dig Through Time
-1 Loki, God of Mischief
 1 Force of Will
 1 Mana Drain
 1 Counterspell
@@ -46,11 +48,8 @@
 1 An Offer You Can't Refuse
 1 Sublime Epiphany
 1 Mystical Tutor
-1 Reconnaissance Mission
-1 Pensive Professor
 1 Snap
 1 Aetherize
-1 Bident of Thassa
 1 Misdirection
 1 Riddles in the Dark
 
@@ -58,9 +57,11 @@
 1 Winged Words
 1 Tinker
 1 Bribery
-1 Lightning Greaves
 
 # --- Artifacts ---
+1 Fellwar Stone
+1 Bident of Thassa
+1 Lightning Greaves
 1 Sol Ring
 1 Arcane Signet
 1 Mind Stone
@@ -69,12 +70,11 @@
 1 Worn Powerstone
 1 Hedron Archive
 1 Inspiring Statuary
-1 Professor Hulk
 1 Swiftfoot Boots
-1 Kid Loki
 1 Wizard's Staff
 
 # --- Enchantments ---
+1 Reconnaissance Mission
 1 Rhystic Study
 1 Mystic Remora
 1 Coastal Piracy

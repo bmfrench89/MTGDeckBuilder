@@ -53,6 +53,10 @@ open one for its full dashboard.</div>
     <a href="{{ url_for('export_deck', stem=d.stem) }}">Export</a>
     <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
        title="Deck + all analytics, to hand to a coaching session">Assess</a>
+    <a href="{{ url_for('deck_mulligan', stem=d.stem) }}"
+       title="Practise keep/ship decisions on this deck's real hands">Mulligan</a>
+    <a href="{{ url_for('deck_table_card', stem=d.stem) }}"
+       title="One screen for the Rule 0 conversation — bracket, Game Changers, combos, speed">🃏 Table card</a>
     <a href="{{ url_for('deck_edit', stem=d.stem) }}">Edit</a>
     <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" class="push"
       onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">

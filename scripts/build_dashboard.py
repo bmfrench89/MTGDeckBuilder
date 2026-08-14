@@ -484,12 +484,20 @@ def buylist_html(rows):
         pstr = f"${p:,.2f}" if p is not None else "—"
         src_tag = {"combo": " <span class='tier'>from Combo Watch</span>",
                    "decklist": " <span class='tier'>in decklist</span>"}.get(r.get("source"), "")
-        repl = (f"<span class='repl'>replace:</span> {esc(r['replaces'])}"
+        repl = ((f"<span class='repl'>replace:</span> "
+                 f"<a class='cardlink' data-card=\"{esc(r['replaces'])}\" "
+                 f"data-key='{esc(mtglib._norm(r['replaces']))}'>"
+                 f"{esc(r['replaces'])}</a>")
                 if r["replaces"] else "<span class='muted'>new add</span>") + src_tag
         tier = f"<span class='tier'>{esc(r['tier'])}</span>" if r["tier"] else ""
         body.append(
             f"<tr class='buyrow' data-price='{dp:.2f}'>"
-            f"<td class='bc'>{esc(r['card'])} {tier}</td>"
+            # Panel-clickable, including cards NOT in the deck (combo pieces, buy
+            # targets): the inlined panel carries details only for deck cards, but the
+            # click path falls back to a live Scryfall lookup, so a plain-text row was
+            # a dead end for exactly the cards a Buy tab is about.
+            f"<td class='bc'><a class='cardlink' data-card=\"{esc(r['card'])}\" "
+            f"data-key='{esc(mtglib._norm(r['card']))}'>{esc(r['card'])}</a> {tier}</td>"
             f"<td class='bp'>{pstr}</td>"
             f"<td>{repl}</td>"
             f"<td class='br'>{esc(r['reason'])}</td></tr>")
@@ -533,6 +541,60 @@ price source reachable) — sanity-check before buying.</p>
 </script>"""
 
 
+def cuts_html(cuts):
+    """The Cuts panel — advisory, and it says so twice.
+
+    Ranked by the same value the optimizer uses, so the two never disagree about what
+    a card is worth. Protected cards are rendered greyed and labelled rather than
+    filtered out: the player asked "what do I cut", and silently dropping their own
+    protected picks would answer a different question."""
+    if not cuts or not cuts.get("rows"):
+        return ""
+    rows = []
+    for r in cuts["rows"]:
+        cls = " class='muted'" if r["protected"] else ""
+        role = r.get("role") or "—"
+        state = f" <span class='muted'>({r['role_state']})</span>" if r.get("role_state") else ""
+        rows.append(
+            f"<tr{cls}><td><a class='cardlink' data-card=\"{esc(r['name'])}\" "
+            f"data-key='{esc(mtglib._norm(r['name']))}'>{esc(r['name'])}</a></td>"
+            f"<td>{r['value']}</td><td>{esc(role)}{state}</td>"
+            f"<td>{esc(r['why'])}</td></tr>")
+    note = ""
+    if cuts.get("no_field"):
+        note = ("<p class='muted'>No EDHREC field data reachable — this ranking is "
+                "fit-only, so treat it as a much weaker signal than usual.</p>")
+    return ("<div class='tablewrap'><table class='data'><thead><tr>"
+            "<th>Card</th><th>Value</th><th>Role</th><th>Why it ranks low</th>"
+            "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
+            + note + f"<p class='muted'>{esc(cuts.get('advisory', ''))}</p>")
+
+
+def bracket_form(stem, editable, a):
+    """The player's bracket setting — editable surface only.
+
+    A generated (CLI) dashboard is a snapshot with nowhere to POST, so it gets
+    nothing; the app's saved-deck page gets a select that writes the deck's
+    `# Bracket:` header. Auto is a real option, not the absence of one: clearing
+    the setting returns the deck to the detected verdict."""
+    if not editable or not a:
+        return ""
+    cur = a.get("bracket_declared")
+    opts = ["<option value='auto'%s>Auto (detected)</option>"
+            % ("" if cur else " selected")]
+    for n in (1, 2, 3, 4, 5):
+        opts.append("<option value='%d'%s>%d — %s</option>"
+                    % (n, " selected" if cur == n else "", n,
+                       esc(power.BRACKET_NAMES.get(n, ""))))
+    return (f"<form class='bracketform' method='post' "
+            f"action='/deck/{esc(stem)}/bracket'>"
+            f"<label for='bset'>Your bracket</label>"
+            f"<select id='bset' name='bracket'>{''.join(opts)}</select>"
+            f"<button type='submit'>Save</button>"
+            f"<span class='muted'>Records intent — brackets 1 and 5 are defined by "
+            f"it. The detected bracket stays visible either way.</span></form>")
+
+
 def power_html(a):
     reasons = "".join(f"<li>{esc(r)}</li>" for r in a["bracket_reasons"])
     bars = []
@@ -547,11 +609,24 @@ def power_html(a):
             f"<td class='pwrbar'><span style='width:{pct:.0f}%'></span></td>"
             f"<td class='pwrnum'>{c['score']:g}/{c['weight']} "
             f"<span class='muted'>· {esc(c['detail'])}</span></td></tr>")
+    # The player's `# Bracket:` setting headlines when present; the DETECTED verdict
+    # is printed beside it whenever they disagree. Both, always — the header records
+    # intent (brackets 1 and 5 are defined by intent, not contents), it does not
+    # silence the card evidence.
+    eff = a.get("bracket_effective", a["bracket"])
+    eff_name = a.get("bracket_effective_name", a["bracket_name"])
+    declared_tag = ("<span class='muted'>your setting</span>"
+                    if a.get("bracket_declared") else "")
+    mismatch = (f"<p class='muted'>Detected <b>Bracket {a['bracket_detected']}</b> "
+                f"({esc(a.get('bracket_detected_name', ''))}) from the card signals "
+                f"below — your setting is what this deck reports.</p>"
+                if a.get("bracket_mismatch") else "")
     return (
-        f"<div class='bracketline'><span class='bnum'>Bracket {a['bracket']}</span>"
-        f"<span class='bname'>{esc(a['bracket_name'])}</span>"
+        f"<div class='bracketline'><span class='bnum'>Bracket {eff}</span>"
+        f"<span class='bname'>{esc(eff_name)}</span>{declared_tag}"
         f"<span class='pscore'>{a['power']}<span class='muted'>/100 · "
         f"{esc(a['tier'])}</span></span></div>"
+        + mismatch +
         f"<ul class='notes'>{reasons}</ul>"
         "<div class='tablewrap'><table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table></div>"
         "<p class='muted'>Bracket follows WotC's Commander Bracket system; the "
@@ -614,6 +689,24 @@ def add_commander_details(details, similar, idx, size="normal"):
     return details
 
 
+def explain_html(explain, *keys):
+    """Collapsible "what this means" notes, rendered from the ENGINE's own text.
+
+    The wording is data (`manabase.analyze()["explain"]`, `goldfish`'s `definitions`),
+    never prose hardcoded here — so the CLI, the dashboard and --json cannot drift
+    into three different explanations of the same number. Uses <details>, so it costs
+    no JS and prints expanded."""
+    parts = []
+    for k in keys:
+        e = (explain or {}).get(k)
+        if not e:
+            continue
+        parts.append(
+            f"<details class='explain'><summary>{esc(e['what'])}</summary>"
+            f"<p>{esc(e['why'])}</p><p class='muted'>{esc(e['healthy'])}</p></details>")
+    return "".join(parts)
+
+
 def manabase_html(mana):
     """Consistency & Manabase section from manabase.analyze(). Reuses existing
     dashboard classes (stat tiles / data table / notes) — no new CSS."""
@@ -625,6 +718,7 @@ def manabase_html(mana):
                 "Cost column. Then you get opening-hand odds, per-color source adequacy vs "
                 "Karsten's targets, and which cards are risky to cast on curve.</p>")
     out = []
+    ex = mana.get("explain") or {}
     lo = mana.get("land_odds")
     if lo:
         out.append("<div class='tiles'>"
@@ -632,6 +726,7 @@ def manabase_html(mana):
                    + stat_tile("3+ lands", f"{lo['ge3_open']*100:.0f}%", "opening 7")
                    + stat_tile("4th land by T4", f"{lo['ge4_by_t4']*100:.0f}%", "on the play")
                    + "</div>")
+        out.append(explain_html(ex, "keepable", "ge3_open", "ge4_by_t4"))
     rows = []
     for c in mana["colors"]:
         dbl = f" · P(2 by T3) {c['p_two_t3']*100:.0f}%" if c["double_pips"] else ""
@@ -644,15 +739,55 @@ def manabase_html(mana):
     out.append("<div class='tablewrap'><table class='data'><thead><tr><th>Color</th>"
                "<th>Sources</th><th>Karsten</th><th>Pip demand</th><th>P(&ge;1 opener)</th>"
                "<th></th></tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>")
+    out.append(explain_html(ex, "sources"))
     if mana["risky"]:
         items = "".join(f"<li><b>{esc(r['name'])}</b> (MV {r['mv']:g}, {r['pips']}×{r['color']}) — "
                         f"{r['p']*100:.0f}% to have the color on curve</li>" for r in mana["risky"])
         out.append(f"<h3>Risky to cast on curve <span class='count'>{mana['risky_total']}</span></h3>"
                    f"<ul class='notes'>{items}</ul>")
-    out.append("<p class='muted'>Exact hypergeometric odds (unconditional — a relative guide, not "
-               "Karsten's mulligan-adjusted %). Sources approximate a permanent's output from its "
-               "color identity.</p>")
+        out.append(explain_html(ex, "risky"))
+    # The "these are unconditional" caveat used to be a footer under everything. It is
+    # a property of the probabilities themselves, so it now sits with them as one more
+    # explainer — a caveat read after the numbers is a caveat that arrived too late.
+    out.append(explain_html(ex, "unconditional"))
     return "".join(out)
+
+
+def clock_html(sim):
+    """The goldfish CLOCK — how fast this deck presents lethal, uncontested.
+
+    Since WotC's Oct-2025 rework the brackets are defined by expected game length, so
+    this is the one analytic that speaks the bracket system's own units. It is
+    rendered as EVIDENCE beside power.py's card-count bracket, never as a
+    reclassification — and every caveat the engine ships (combat-only, understated for
+    drain decks, no data) is printed with it, because a confident wrong number is
+    worse than an absent one."""
+    clk = (sim or {}).get("clock")
+    if not clk:
+        return ""
+    d = (sim.get("definitions") or {})
+    out = []
+    if clk.get("median_first_kill") is not None:
+        out.append("<div class='tiles'>")
+        out.append(stat_tile("Presents lethal", f"T{clk['median_first_kill']:g}",
+                             d.get("first_kill", "")))
+        if clk.get("median_table_kill") is not None:
+            out.append(stat_tile("Whole table", f"T{clk['median_table_kill']:g}",
+                                 d.get("table_kill", "")))
+        by = clk.get("p_first_kill_by") or {}
+        if "6" in by:
+            out.append(stat_tile("Lethal by T6", f"{by['6']*100:.0f}%",
+                                 d.get("first_kill", "")))
+        out.append("</div>")
+        if clk.get("bracket_hint"):
+            out.append(f"<p class='muted'>Clock consistent with the <b>Bracket "
+                       f"{clk['bracket_hint']}</b> expectation. "
+                       f"{esc(d.get('clock_bracket', ''))}</p>")
+    if clk.get("note"):
+        out.append(f"<p class='warn'>{esc(clk['note'])}</p>")
+    if not out:
+        return ""
+    return ("<h3>Clock <span class='count'>uncontested</span></h3>" + "".join(out))
 
 
 def goldfish_html(sim):
@@ -680,6 +815,14 @@ def goldfish_html(sim):
         out.append(stat_tile("Screwed", f"{sim['screw']*100:.0f}%", d.get("screw", "")))
     out.append(stat_tile("Flooded", f"{sim['flood']*100:.0f}%", d.get("flood", "")))
     out.append("</div>")
+    # The sim already ships its definitions as data; render them in the same
+    # collapsible shape the manabase explainers use so the whole tab reads one way.
+    out.append(explain_html(
+        {k: {"what": d.get(k, ""), "why": "", "healthy": ""}
+         for k in ("p_cast_by", "keepable_first7", "screw", "flood")
+         if d.get(k)},
+        "p_cast_by", "keepable_first7", "screw", "flood"))
+    out.append(clock_html(sim))
 
     lands = sim.get("mean_lands_by_turn") or {}
     if lands:
@@ -871,7 +1014,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
-                     dead=None, has_field=True, sim=None):
+                     dead=None, cuts=None, has_field=True, sim=None):
     t = THEMES.get(theme, THEMES["default"])
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
@@ -885,8 +1028,11 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     if rep.get("deck_value") is not None:
         tiles.append(stat_tile("Value", f"${rep['deck_value']:,.0f}", "market est"))
     if assessment:
-        tiles.append(stat_tile("Bracket", assessment["bracket"],
-                               assessment["bracket_name"]))
+        tiles.append(stat_tile(
+            "Bracket", assessment.get("bracket_effective", assessment["bracket"]),
+            (assessment.get("bracket_effective_name", assessment["bracket_name"])
+             + (f" · your setting (detected {assessment['bracket_detected']})"
+                if assessment.get("bracket_mismatch") else ""))))
         tiles.append(stat_tile("Power", f"{assessment['power']}",
                                f"/100 · {assessment['tier']}"))
     tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
@@ -895,9 +1041,12 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     tiles = "".join(tiles)
 
     power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
+                 f"{bracket_form(stem, editable, assessment)}"
                  "</section>" if assessment else "")
     combo_sec = (f"<section><h2>Combo Watch</h2>{combos_html(combos)}</section>"
                  if combos is not None else "")
+    cuts_sec = (f"<section><h2>If You Must Cut</h2>{cuts_html(cuts)}</section>"
+                if cuts and cuts.get("rows") else "")
     dead_sec = (f"<section><h2>Pulling the Least Weight</h2>"
                 f"{deadweight_html(dead, has_field)}</section>"
                 if dead is not None else "")
@@ -933,7 +1082,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     tab_css, tabs = tabs_block([
         ("deck",  "Deck",  deck_sec + own_sec),
         ("mana",  "Mana",  curve_sec + pip_sec + mana_sec),
-        ("power", "Power", power_sec + combo_sec + dead_sec),
+        ("power", "Power", power_sec + combo_sec + dead_sec + cuts_sec),
         ("buy",   "Buy",   buy_sec),
         ("plan",  "Plan",  notes_sec),
         ("more",  "More",  sim_sec + shared_sec),
@@ -1026,6 +1175,14 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .bracketline {{ display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap;
   margin-bottom:8px; }}
 .bnum {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2); }}
+.explain {{ margin:var(--sp-2) 0; font-size:var(--fs-sm); }}
+.explain > summary {{ cursor:pointer; color:var(--muted); }}
+.explain > p {{ margin:var(--sp-1) 0 0; }}
+.bracketform {{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap;
+  margin-top:var(--sp-3); font-size:var(--fs-sm); }}
+.bracketform select, .bracketform button {{ font:inherit; padding:var(--sp-1) var(--sp-2);
+  border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06); color:inherit; }}
 .bname {{ color:var(--gold); font-family:{t['head']}; text-transform:uppercase;
   letter-spacing:1.5px; font-size:var(--fs-xs); }}
 .pscore {{ margin-left:auto; font-family:{t['display']}; font-size:var(--fs-2xl);
@@ -1088,6 +1245,10 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   .tabs {{ display:none; }}
   .tabpanel {{ display:block !important; }}
   .ac {{ display:none; }}
+  /* An explainer collapsed on screen must still print: the caveat is part of the
+     number, and a printed page has no way to open a <details>. */
+  .explain > p {{ display:block !important; }}
+  .explain > summary {{ color:inherit; }}
 }}
 {add_card_css(t) if editable else ''}
 {modal_css}
@@ -1277,12 +1438,29 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     except Exception:
         dead = None
 
+    # "What do I cut" — the most-asked deckbuilding question, answered with the
+    # optimizer's OWN value scorer (deck_fit.card_value) so the two surfaces can never
+    # disagree about what a card is worth. Advisory and read-only; protected cards are
+    # shown flagged rather than hidden.
+    cuts = None
+    try:
+        # ctx already carries the archetype-aware template (deck_context computes it
+        # once) — no spoke-imports-spoke reach into optimize needed since Phase 12.
+        ranges = (ctx or {}).get("role_ranges") or deckcore.role_ranges(
+            (ctx or {}).get("archetype"))
+        cuts = deck_fit.cut_ranking(
+            enriched, rep, ctx, refs, (ctx or {}).get("field") or {},
+            protected=prot, ranges=ranges,
+            cats=dict(rep.get("categories") or {}), limit=10)
+    except Exception:
+        cuts = None
+
     url_stem = os.path.splitext(os.path.basename(deck_path))[0]
     dashboard = render_dashboard(title, commander, subtitle, rep, enriched, theme,
                                  sections, notes, buylist, shared, assessment,
                                  similar, details, combos, mana,
                                  editable=editable, stem=url_stem, missing=missing,
-                                 changes=changes, dead=dead,
+                                 changes=changes, dead=dead, cuts=cuts,
                                  has_field=bool((ctx or {}).get("field")), sim=sim)
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,

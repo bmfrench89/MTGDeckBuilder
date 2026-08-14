@@ -73,3 +73,11 @@ jobs:
 
       - name: "buy-link URL schemes (ManaPool direct page + Card Kingdom search)"
         run: python3 .github/scripts/live_buylink_check.py
+
+      - name: "Game Changers list vs Scryfall is:gamechanger (the canonical source)"
+        # WotC revises the Game Changers list on its own cadence and Scryfall syncs it
+        # into a boolean field, so the repo's curated file can silently go stale — and
+        # it is the ONE hard numeric lever in the whole bracket system (B3 allows up to
+        # 3). Reported as a DIFF, never auto-applied: a list this load-bearing gets a
+        # human's eyes before it changes.
+        run: python3 .github/scripts/live_gamechanger_check.py

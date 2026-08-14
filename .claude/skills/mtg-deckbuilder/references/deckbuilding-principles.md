@@ -7,17 +7,26 @@ laws — the archetype and commander bend them.
 
 ## The template (a solid baseline for a ~99-card deck)
 
+**The canonical machine-readable table is `deckcore.ROLE_RANGE` — the engines all
+read that one table** (fit scorer, optimizer filter, deck_stats flags, auto_build
+quotas, the assess page), and it is **archetype-aware**: the deck's `# Archetype:`
+header widens the bands (a draw-go control deck legitimately runs 15+ counterspells;
+a token deck legitimately runs 0–1 wipes). The numbers below are the DEFAULT bands,
+kept in sync with that table — if they ever disagree, the code is the truth.
+
 | Role | Count | Notes |
 |------|-------|-------|
 | Lands | 36–38 | 37 is the default. Go 38 for a top-heavy curve, 35–36 only with lots of cheap ramp / low curve. |
-| Ramp (mana rocks, dorks, ramp spells) | 10–12 | Includes Sol Ring, signets, Cultivate, dorks. More for higher curves. |
-| Card advantage / draw engines | 10–12 | Repeatable draw beats one-shot cantrips. Aim for several engines. |
-| Targeted removal | 8–10 | Answers to a problem permanent (creature/artifact/enchantment/planeswalker). |
-| Board wipes | 3–5 | At least a couple. Mind exile-vs-destroy with your own synergies. |
+| Ramp (mana rocks, dorks, ramp spells) | 9–13 | Includes Sol Ring, signets, Cultivate, dorks. More for higher curves. |
+| Card advantage / draw engines | 8–12 | Repeatable draw beats one-shot cantrips. Aim for several engines. |
+| Targeted removal | 8–11 | Answers to a problem permanent (creature/artifact/enchantment/planeswalker). |
+| Board wipes | 2–5 | At least a couple in most shells. Mind exile-vs-destroy with your own synergies. |
+| Counterspells | 0–6 | Optional outside blue shells; a control archetype widens this a lot. |
 | Synergy / payoff / win-cons | ~30 | The actual deck — the engine and finishers. |
 
 These overlap (a card can be ramp *and* a body). The point is to hit **every** role. A deck
-missing removal or draw feels bad no matter how strong its theme.
+missing removal or draw feels bad no matter how strong its theme — but judge "missing"
+against the deck's OWN archetype band, not the blind default.
 
 ## Curve
 

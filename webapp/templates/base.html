@@ -23,6 +23,8 @@
   <a class="tab {{ 'on' if page=='build' }}" href="{{ url_for('build_next') }}">Build Next</a>
   <a class="tab {{ 'on' if page=='wishlist' }}" href="{{ url_for('wishlist_view') }}">Wishlist</a>
   <a class="tab {{ 'on' if page=='shared' }}" href="{{ url_for('shared_view') }}">Shared</a>
+  <a class="tab {{ 'on' if page=='pins' }}" href="{{ url_for('pins_page') }}"
+     title="Physical copies reserved for one deck">Pins</a>
   <a class="tab {{ 'on' if page=='collection' }}" href="{{ url_for('collection_view') }}">Collection</a>
   <a class="tab {{ 'on' if page=='mobile' }}" href="{{ url_for('mobile') }}"
      title="Install on your phone">Mobile</a>
@@ -33,6 +35,11 @@
   {% endif %}
 </nav>
 <div class="wrap">
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}<div class="flashes">
+    {% for cat, m in msgs %}<p class="flash flash-{{ cat }}">{{ m }}</p>{% endfor %}
+  </div>{% endif %}
+{% endwith %}
 {% block content %}{% endblock %}
 <footer>Local app · your collection stays on your machine · grounded by the MTG deckbuilder toolkit</footer>
 </div>

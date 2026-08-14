@@ -434,6 +434,42 @@ def test_spellbook_degrades_on_a_corrupt_cache(tmp_path, monkeypatch):
     assert out["error"] and out["present"] == [] and out["almost"] == []
 
 
+def test_spellbook_failure_is_remembered_for_a_cooldown(tmp_path, monkeypatch):
+    """An unreachable CSB used to cost a fresh network attempt on EVERY deck-page
+    view: successes cached for a week, failures for nothing. Profiling a warm
+    render made it the single biggest cost in the request (315 ms proxied; the
+    ceiling is the 25 s socket timeout when a connection hangs rather than
+    refuses). The failure is remembered — never served as data — so an outage
+    costs one attempt per FAIL_TTL, and a recovered service is picked up as soon
+    as the cooldown lapses."""
+    import spellbook
+    monkeypatch.setattr(spellbook, "CACHE_DIR", str(tmp_path))
+    calls = []
+
+    def boom(*a, **k):
+        calls.append(1)
+        raise OSError("egress blocked")
+    monkeypatch.setattr(spellbook, "_post", boom)
+
+    first = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)])
+    second = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)])
+    assert len(calls) == 1, "the second call must not re-attempt the network"
+    assert first["error"] and second["error"], "the error payload is unchanged"
+    assert second["present"] == [] and second["almost"] == []
+    assert second.get("cooldown") is True
+
+    # Cooldown lapsed → try again, and a success clears the marker for good.
+    monkeypatch.setattr(spellbook, "_post",
+                        lambda *a, **k: {"results": {"identity": "WU", "included": [],
+                                                     "almostIncluded": []}})
+    ok = spellbook.find_my_combos(["Cmd"], [("Sol Ring", 1)], fail_ttl=0)
+    assert ok["error"] is None and ok["identity"] == "WU"
+    import hashlib as _h
+    key = _h.sha1(("Cmd" + "#" + "Sol Ring").encode()).hexdigest()[:16]
+    assert not os.path.exists(str(tmp_path / f"{key}.fail")), \
+        "a success must clear the failure marker, not leave it to expire"
+
+
 def test_attrs_snapshot_workflow_is_name_only_and_guarded():
     """The committed attrs file's privacy property is enforced, not assumed
     (docs/spec-network-and-attrs.md §3): the workflow may only read the
@@ -467,3 +503,47 @@ def test_attrs_snapshot_workflow_is_name_only_and_guarded():
         "the SHARED concurrency group is what serializes the three main-pushers"
     assert "set +e" not in code, \
         "carddb's non-zero exit is the failure signal — never swallow it"
+
+
+def test_edhrec_failure_is_remembered_for_a_cooldown(tmp_path, monkeypatch):
+    """The hot path's worst case. EDHREC is PERMANENTLY unreachable from the
+    hosted app (free-tier allowlist — see the codemap's deployment matrix), and a
+    single deck-page render calls `recommendations` three times. Every one of
+    those was a fresh doomed round trip: 950 ms of a warm render, measured, on
+    every view, on a host where it can never succeed.
+
+    The three-tier read (live → disk cache → committed snapshot) is unchanged —
+    remembering the failure only makes tier 1 fail fast so tiers 2 and 3 are
+    reached immediately. Nothing here ever stores an empty page as if it were
+    real data."""
+    import edhrec
+    import urllib.request
+    monkeypatch.setattr(edhrec, "CACHE_DIR", str(tmp_path))
+    calls = []
+
+    def boom(*a, **k):
+        calls.append(1)
+        raise OSError("egress blocked")
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    fetch = edhrec._fetch_unblocked          # see the conftest fixture's note
+    for _ in range(3):
+        with pytest.raises(OSError):
+            fetch("test-commander")
+    assert len(calls) == 1, "three calls made three doomed network attempts"
+
+    payload = {"container": {"json_dict": {"cardlists": []}}}
+
+    class _Resp:
+        def read(self):
+            return json.dumps(payload).encode()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: _Resp())
+    got = fetch("test-commander", fail_ttl=0)              # cooldown lapsed
+    assert got == payload
+    assert not os.path.exists(str(tmp_path / "test-commander.fail")), \
+        "a reachable EDHREC must clear the marker, not wait it out"

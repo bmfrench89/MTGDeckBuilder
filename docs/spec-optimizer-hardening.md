@@ -122,9 +122,15 @@ per request, threaded through `_validate_add(idx=…)` and `advise_card(collecti
 
 ## Typed-data role-repair churn (found 2026-08-12, first day of the attrs snapshot)
 
-**Status: OPEN — do not run `--apply`, the ⚡ button, or `refresh --optimize`
-until this lands.** The four affected decks carry notes-file churn guards for
-their first-round victims, but the pass just moves to new ones (verified:
+**Status: ☑ FIXED 2026-08-13 (Table-Ready Phase 8) — code landed and pinned by
+tests. The `--apply` / ⚡ / `refresh --optimize` freeze lifts only after the live
+acceptance run in `spec-table-ready.md` Phase 8 (a preview on real EDHREC data
+across all six decks, from the runner or the player's PC — not a sandbox).** The
+four affected decks keep their notes-file churn guards; those are player notes and
+are now redundant, not wrong.
+
+*Previously:* OPEN — the four affected decks carried notes-file churn guards for
+their first-round victims, but the pass just moved to new ones (verified:
 guard → re-preview → fresh field-superior cuts proposed).
 
 The first committed attrs snapshot gave every machine real role counts, and
@@ -146,16 +152,67 @@ Root cause, two layers:
    pressure overrides the field consensus the rest of the optimizer is built
    on.
 
-Fix directions for the implementing session (pick after reading the pass):
-- Repair swaps must satisfy the same ≥25-point inclusion-gain margin as field
-  swaps (smallest change; kills every observed bad proposal), and/or
-- Templates become archetype-aware (the deck header's `Archetype:` line
-  exists and is unread here — a `control` archetype should widen counter max
-  and relax ramp min), and/or
-- Repair only fires on decks the player has NOT hand-ratified (e.g. skip when
-  `.changes.csv` shows recent `manual-replace` activity).
-
 Note the asymmetry that makes this urgent-ish but not urgent: nothing runs the
 optimizer automatically on a cadence — it fires on Build-Next save, ⚡, the
 skill's build step, and `refresh --optimize` only. The player's ⚡ finger is
 the exposure.
+
+### What landed (2026-08-13)
+
+**Reading correction, and it matters.** Layer 2 was mis-stated above: there is no
+separate repair *code path* to gate. Role repair reaches the swap gate **through
+`value_of`** — `deck_fit._role_component` pays a card 30 points for filling a
+shortfall and 12 for being depth, an 18-point fit swing that `value_of`'s
+`(fit-60)*2` doubles into as much as 36 points of value, more than the whole
+25-point margin. So every one of the four observed proposals *did* clear the
+existing margin; template pressure had manufactured it. Applying "the same margin"
+to a repair path would therefore have changed nothing.
+
+**Fix 1 (mandatory, landed) — the field keeps a veto over role repair.**
+`inc_add < inc_cut` is refused in the owned-swap loop and in the buy-pairing loop.
+This is exactly "the margin gate, restored to meaning": where the FIELD supplies
+the margin, `value_of(add) == inc_add` and `value_of(cut) >= inc_cut`, so clearing
+the margin already implies `inc_add >= inc_cut + margin` — the veto can only ever
+bite on a fit-driven (i.e. repair-driven) swap. A high-fit low-inclusion upgrade
+over a card the field plays *less* is unaffected, so story C above still holds.
+All four recorded proposals die by construction.
+
+**Fix 2 (mandatory, landed) — the template reads `# Archetype:`.**
+`optimize.role_ranges(archetype)` widens `ROLE_RANGE` from a small
+`_ARCHETYPE_ROLE_RANGE` table beside it, keyed on the words the six decks actually
+use. Merging is **widening-only**, so stacking words can never make a deck stricter
+and the default (no header, empty header, unknown word) is byte-identical to the
+old behaviour. `control` widens counter to 0-18 and drops ramp min to 6, so
+iron-man's `counter:15, ramp:8` is correct rather than "nine excess plus a hole".
+The archetype word list comes from `deck_fit.deck_context`'s existing parse — no
+second header parser. Trap recorded in the table: captain-america's `counters`
+means **+1/+1 counters**, not counterspells, and is deliberately unmapped.
+
+**Fix 3 (explicitly skipped, recorded as a decision).** Suppressing repair on
+hand-ratified decks was not taken: the veto plus the archetype table kill every
+observed proposal at the source, and a per-deck suppression rule would have made
+the optimizer's behaviour depend on edit history the player can't see from the
+report. The reasoning is repeated in a comment above the swap loop.
+
+**Also fixed: the preview printed mixed units.** The old swap line showed the
+cut's `value_of` blend and the add's raw field % both as a bare "%", which is why
+this finding's evidence reads as `Ganax, Astral Hunter (27%)` — 27 was its
+*value*, not its field share. `optimize()` now also returns `swaps_detail`
+(cut/add × field % and value) and the CLI labels both sides, so "zero
+field-inferior cut proposals" is checkable from a preview instead of taken on
+trust. The `swaps` 5-tuple is unchanged for existing consumers.
+
+**Not taken, noted for whoever is next:** the role filter rejects any swap that
+leaves a touched role outside its range *in either direction*, so a role that
+starts out of range is frozen for cuts as well as adds. That asymmetry is
+pre-existing, is what pushed cuts onto unrelated cards, and is now harmless
+because of the veto — but "reject only if the trial moves a role further out of
+range" is the more correct rule if someone wants it.
+
+*Tests (`tests/test_optimize.py`):* the four recorded proposals are parametrized
+by name and percentage and must not swap; a control case replays each with the two
+percentages exchanged and must swap (proving the block is the veto, not the
+template or the margin); a genuine wipe shortfall still repairs; `role_ranges`
+defaults are pinned unchanged; a 15-counter deck swaps under `control` and refuses
+under the default template; idempotency is re-proven with typed attrs and an
+archetype present.

@@ -251,3 +251,22 @@ footer { color: var(--muted); font-size: var(--fs-xs); text-align: center;
   user-select: all; word-break: break-all; }
 .reasons-plain { margin: 0; padding-left: var(--sp-4); }
 .reasons-plain li { margin: var(--sp-2) 0; }
+
+/* Flash messages — the web-surface honesty channel for actions that used to
+   redirect silently (⚡ Optimize: what changed, and under which archetype-widened
+   role template). Tokens only: no ad-hoc sizes or spacing. */
+.flashes { margin: 0 0 var(--sp-4); display: grid; gap: var(--sp-2); }
+.flash {
+  margin: 0; padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-sm); font-size: var(--fs-sm);
+  background: rgba(255,255,255,.06); border-left: 3px solid var(--muted);
+}
+.flash-info { border-left-color: var(--accent); }
+.flash-warn { border-left-color: var(--warn); color: var(--warn); }
+
+/* Engine-supplied "what this means" notes. The text comes from the analysis
+   modules (manabase's explain dict, goldfish's definitions) so the app, the
+   generated dashboard and --json cannot drift; this is only the shell. */
+.explain { margin: var(--sp-2) 0; font-size: var(--fs-sm); }
+.explain > summary { cursor: pointer; color: var(--muted); }
+.explain > p { margin: var(--sp-1) 0 0; }

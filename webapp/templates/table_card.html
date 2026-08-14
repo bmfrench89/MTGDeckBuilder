@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+{#
+  The Rule-0 table card — one screen to hand across the table before a game.
+
+  Everything here is computed by the same engines the dashboard uses; nothing is
+  re-derived. The footer's "estimates, not verdicts" line is not decoration: the
+  bracket is a card-count estimate, the clock is uncontested, and a player reading
+  these numbers at a table deserves to know which parts are measurements and which
+  are the deck's own declared intent.
+#}
+<div class="tablecard">
+  <div class="tc-head">
+    <div>
+      <h1>{{ meta.title }}</h1>
+      <p class="muted">{{ meta.commander }}{% if meta.colors %} · {{ meta.colors }}{% endif %}
+        {%- if meta.archetype %} · {{ meta.archetype }}{% endif %}</p>
+    </div>
+    {% if assessment %}
+    <div class="tc-bracket">
+      <span class="tc-bnum">{{ assessment.bracket_effective or assessment.bracket }}</span>
+      <span class="tc-bname">{{ assessment.bracket_effective_name or assessment.bracket_name }}</span>
+      {% if assessment.bracket_declared %}<span class="muted">your setting</span>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if assessment and assessment.bracket_mismatch %}
+  <p class="flash flash-warn">Card signals detect <b>Bracket {{ assessment.bracket_detected }}</b>
+    ({{ assessment.bracket_detected_name }}). Both are shown on purpose — say which one
+    you mean at the table.</p>
+  {% endif %}
+
+  <section class="tc-sec">
+    <h2>What this deck does</h2>
+    <ul>{% for line in plan %}<li>{{ line }}</li>{% endfor %}</ul>
+    <p class="muted">Source: {{ plan_source }}.</p>
+  </section>
+
+  <section class="tc-sec">
+    <h2>Disclosures</h2>
+    <table class="data tc-table"><tbody>
+      <tr><td>Game Changers</td>
+          <td>{% if sig.game_changers %}<b>{{ sig.game_changers|length }}</b> —
+              {{ sig.game_changers|join(", ") }}{% else %}none{% endif %}</td></tr>
+      <tr><td>Mass land denial</td>
+          <td>{% if sig.mass_land_denial %}<b>{{ sig.mass_land_denial|join(", ") }}</b>
+              {% else %}none{% endif %}</td></tr>
+      <tr><td>Extra turns</td>
+          <td>{% if sig.extra_turns %}{{ sig.extra_turns|length }} —
+              {{ sig.extra_turns|join(", ") }}{% else %}none{% endif %}</td></tr>
+      <tr><td>Two-card combos</td>
+          <td>{% if combos_present %}<b>{{ combos_present|join(" · ") }}</b>
+              {% else %}none detected{% endif %}
+              {% if combos_near %}<span class="muted"> · {{ combos_near }} one card
+              away</span>{% endif %}
+              {% if combo_note %}<span class="muted"> · {{ combo_note }}</span>{% endif %}</td></tr>
+      <tr><td>Tutors</td>
+          <td>{{ sig.tutors|length if sig.tutors else 0 }}</td></tr>
+    </tbody></table>
+  </section>
+
+  {% if clock and (clock.median_first_kill or clock.note) %}
+  <section class="tc-sec">
+    <h2>Speed</h2>
+    {% if clock.median_first_kill %}
+      <p>Goldfish clock: presents lethal around <b>turn {{ clock.median_first_kill }}</b>
+         {%- if clock.bracket_hint %}, consistent with a <b>Bracket {{ clock.bracket_hint }}</b>
+         expectation{% endif %}.</p>
+      <p class="muted">{{ defs.get("first_kill", "") }}</p>
+    {% endif %}
+    {% if clock.note %}<p class="muted">{{ clock.note }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  <p class="tc-foot muted">These are <b>estimates, not verdicts</b>. The bracket is
+    read off card signals (plus your own setting where you made one); the speed figure
+    assumes nobody interacts with you. Numbers open a Rule&nbsp;0 conversation — they
+    don't replace it.</p>
+
+  <p class="noprint"><a href="{{ url_for('deck', stem=meta.stem) }}">&larr; back to the deck</a>
+     · <a href="{{ url_for('deck_assess_page', stem=meta.stem) }}">full assessment</a></p>
+</div>
+
+<style>
+/* Tokens only — no ad-hoc sizes or spacing (tests/test_design_tokens.py). */
+.tablecard { max-width: 46rem; }
+.tc-head { display:flex; justify-content:space-between; align-items:flex-start;
+  gap:var(--sp-4); flex-wrap:wrap; }
+.tc-head h1 { margin:0 0 var(--sp-1); }
+.tc-bracket { display:flex; align-items:baseline; gap:var(--sp-2); }
+.tc-bnum { font-size:var(--fs-3xl); color:var(--accent); line-height:1; }
+.tc-bname { text-transform:uppercase; letter-spacing:1.5px; font-size:var(--fs-xs);
+  color:var(--gold); }
+.tc-sec { margin-top:var(--sp-5); }
+.tc-sec h2 { font-size:var(--fs-lg); margin:0 0 var(--sp-2); }
+.tc-sec ul { margin:0; padding-left:var(--sp-5); }
+.tc-table td:first-child { white-space:nowrap; color:var(--muted); width:11rem; }
+.tc-foot { margin-top:var(--sp-5); border-top:1px solid rgba(255,255,255,.12);
+  padding-top:var(--sp-3); font-size:var(--fs-xs); }
+@media print {
+  /* Printable on one page: drop the app chrome, go to ink-on-paper colours. */
+  nav, footer, .noprint, .flashes { display:none !important; }
+  body, .tablecard { background:#fff !important; color:#000 !important; }
+  .tc-bnum { color:#000 !important; }
+  .tc-bname, .muted { color:#444 !important; }
+  .tc-sec { break-inside: avoid; }
+}
+</style>
+{% endblock %}

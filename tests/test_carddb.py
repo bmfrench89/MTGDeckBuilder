@@ -1,7 +1,7 @@
 """carddb writes the file every other tool reads. These tests pin the
-collection_attrs.csv contract — the exact 9-column header, what lands in the new
-Produced/Flags cells, and that a written file survives the round trip back through
-mtglib.load_collection.
+collection_attrs.csv contract — the exact 10-column header, what lands in the
+Produced/Flags/Power cells, and that a written file survives the round trip back
+through mtglib.load_collection.
 
 Fully offline: `_post_collection` is monkeypatched with canned Scryfall-shaped dicts
 and `urlopen` is booby-trapped, so a stray live fetch fails the test rather than
@@ -35,7 +35,7 @@ MAZE_OF_ITH = {"name": "Maze of Ith", "id": "maze-0001", "type_line": "Land",
 LLANOWAR = {"name": "Llanowar Elves", "id": "llan-0001",
             "type_line": "Creature — Elf Druid", "mana_cost": "{G}", "cmc": 1.0,
             "color_identity": ["G"], "produced_mana": ["G"],
-            "oracle_text": "{T}: Add {G}."}
+            "oracle_text": "{T}: Add {G}.", "power": "1", "toughness": "1"}
 
 GUILDGATE = {"name": "Azorius Guildgate", "id": "gate-0001",
              "type_line": "Land — Gate", "mana_cost": "", "cmc": 0.0,
@@ -101,15 +101,19 @@ def _read(path):
 
 
 # ── the pinned header ────────────────────────────────────────────────────────
-def test_header_is_the_nine_pinned_columns_in_order(tmp_path, collection_csv,
-                                                    fake_scryfall):
+def test_header_is_the_ten_pinned_columns_in_order(tmp_path, collection_csv,
+                                                   fake_scryfall):
     out = str(tmp_path / "attrs.csv")
     carddb.enrich_api(collection_csv, out, delay=0)
     header, _ = _read(out)
     assert header == ["Name", "Type", "MV", "Colors", "Cost", "Sub-types",
-                      "Scryfall", "Produced", "Flags"]
-    # New columns come strictly AFTER Scryfall so an older reader keeps working.
+                      "Scryfall", "Produced", "Flags", "Power"]
+    # New columns come strictly AFTER the ones older readers know, so a file written
+    # by this build still loads in an older one and vice versa. Power (2026-08-13)
+    # is appended after Flags for exactly the reason Produced/Flags came after
+    # Scryfall — the whole back-compat story is positional-append + read-by-name.
     assert header[:7] == carddb.ATTRS_HEADER[:7]
+    assert header[-1] == "Power"
 
 
 def test_bulk_path_writes_the_same_header(tmp_path, collection_csv):
@@ -145,6 +149,64 @@ def test_a_card_that_produces_nothing_writes_an_empty_cell(tmp_path, collection_
     assert rows["Maze of Ith"][8] == ""
 
 
+# ── the Power column (spec-table-ready Phase 1) ──────────────────────────────
+def test_printed_power_is_written_and_a_noncreature_cell_is_empty(
+        tmp_path, collection_csv, fake_scryfall):
+    """Empty cell = "enriched, this card has no power" (every noncreature). Only an
+    ABSENT column means unknown — the same rule Produced/Flags carry."""
+    out = str(tmp_path / "attrs.csv")
+    carddb.enrich_api(collection_csv, out, delay=0)
+    _, rows = _read(out)
+    assert rows["Llanowar Elves"][9] == "1"
+    assert rows["Sol Ring"][9] == ""            # an artifact has no power
+    assert rows["Command Tower"][9] == ""       # nor a land
+
+
+def test_power_comes_from_the_front_face_of_a_dfc(tmp_path, monkeypatch):
+    """Delver flips into a 3/2, but the card that gets CAST is the 1/1 front face.
+    Same face-selection path oracle_flags uses — and never a split("//"), which is
+    the SP//dr bug class."""
+    delver = {"name": "Delver of Secrets // Insectile Aberration", "id": "dlv-0001",
+              "color_identity": ["U"], "cmc": 1.0,
+              "card_faces": [
+                  {"name": "Delver of Secrets", "type_line": "Creature — Human Wizard",
+                   "mana_cost": "{U}", "oracle_text": "At the beginning of your upkeep…",
+                   "power": "1", "toughness": "1"},
+                  {"name": "Insectile Aberration", "type_line": "Creature — Human Insect",
+                   "mana_cost": "", "oracle_text": "Flying", "power": "3",
+                   "toughness": "2"}]}
+    coll = tmp_path / "c.csv"
+    coll.write_text("Quantity,Name\n1,Delver of Secrets // Insectile Aberration\n",
+                    encoding="utf-8")
+    monkeypatch.setattr(carddb, "_post_collection", lambda idents, retries=4: ([delver], []))
+    out = str(tmp_path / "attrs.csv")
+    carddb.enrich_api(str(coll), out, delay=0)
+    _, rows = _read(out)
+    assert rows["Delver of Secrets // Insectile Aberration"][9] == "1"
+
+
+def test_non_numeric_power_round_trips_verbatim_and_reads_as_unknown(tmp_path,
+                                                                     monkeypatch):
+    """'*' is stored EXACTLY as printed — nothing is lost in the file — and read back
+    as None, because the honest answer to "how hard does it hit" for a Tarmogoyf is
+    "that depends", not an invented integer."""
+    goyf = {"name": "Tarmogoyf", "id": "goyf-0001",
+            "type_line": "Creature — Lhurgoyf", "mana_cost": "{1}{G}", "cmc": 2.0,
+            "color_identity": ["G"], "produced_mana": [],
+            "oracle_text": "Tarmogoyf's power is equal to the number of card types "
+                           "among cards in all graveyards…",
+            "power": "*", "toughness": "1+*"}
+    coll = tmp_path / "collection.csv"
+    coll.write_text("Quantity,Name\n1,Tarmogoyf\n", encoding="utf-8")
+    monkeypatch.setattr(carddb, "_post_collection", lambda idents, retries=4: ([goyf], []))
+    out = os.path.join(str(tmp_path), "collection_attrs.csv")
+    carddb.enrich_api(str(coll), out, delay=0)
+    _, rows = _read(out)
+    assert rows["Tarmogoyf"][9] == "*"                       # verbatim in the file
+    idx = mtglib.index_by_name(mtglib.load_collection(str(coll)))
+    assert mtglib.lookup(idx, "Tarmogoyf").power is None     # unknown to consumers
+
+
 def test_bulk_and_api_paths_derive_identical_cells(tmp_path, collection_csv,
                                                    fake_scryfall):
     """One derivation, two writers — the offline file must not drift from the API file."""
@@ -177,6 +239,10 @@ def test_round_trip_into_load_collection(tmp_path, collection_csv, fake_scryfall
     maze = mtglib.lookup(idx, "Maze of Ith")
     assert maze.produced == set() and maze.produced is not None   # enriched, produces none
     assert mtglib.lookup(idx, "Azorius Guildgate").flags == {"etb-tapped"}
+    # Power survives the same trip: a real int for the creature, None for the cards
+    # that have no power at all.
+    assert mtglib.lookup(idx, "Llanowar Elves").power == 1
+    assert mtglib.lookup(idx, "Sol Ring").power is None
 
 
 def test_an_attrs_file_without_the_columns_still_means_unknown(tmp_path,
@@ -190,6 +256,23 @@ def test_an_attrs_file_without_the_columns_still_means_unknown(tmp_path,
     idx = mtglib.index_by_name(mtglib.load_collection(collection_csv))
     c = mtglib.lookup(idx, "Sol Ring")
     assert c.produced is None and c.flags == set()
+
+
+def test_a_pre_power_attrs_file_leaves_power_unknown(tmp_path, collection_csv):
+    """The 9-column file the player's machine holds today: every column it does
+    carry still applies, and the absent Power column reads as unknown — the goldfish
+    clock's "enrich to unlock" gate, not a creature that hits for nothing."""
+    attrs = os.path.join(os.path.dirname(collection_csv), "collection_attrs.csv")
+    with open(attrs, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall",
+                    "Produced", "Flags"])
+        w.writerow(["Llanowar Elves", "Creature", "1", "G", "{G}", "Elf;Druid",
+                    "llan-0001", "G", "dork;ramp"])
+    idx = mtglib.index_by_name(mtglib.load_collection(collection_csv))
+    elf = mtglib.lookup(idx, "Llanowar Elves")
+    assert elf.power is None
+    assert elf.produced == {"G"} and elf.flags == {"dork", "ramp"}
 
 
 # ── signature + stats ────────────────────────────────────────────────────────
@@ -230,3 +313,23 @@ def test_unmatched_cards_are_simply_absent_from_the_file(tmp_path, fake_scryfall
     assert (matched, total, unmatched) == (1, 2, ["Not A Real Card"])
     _, rows = _read(out)
     assert list(rows) == ["Sol Ring"]
+
+
+def test_the_duckdb_fallback_actually_fires_without_duckdb(tmp_path, capsys):
+    """`build_index(use_duckdb=True)` must DEGRADE to the stdlib reader, not raise.
+
+    It didn't: `_rows_duckdb` was a generator function, so `import duckdb` ran on
+    the first iteration — outside the try/except that documents the fallback — and
+    the call raised ModuleNotFoundError. duckdb is an optional dependency
+    (scripts/requirements-optional.txt) and is absent here, which is exactly the
+    condition the guard exists for."""
+    import carddb
+    bulk = tmp_path / "bulk.json"
+    bulk.write_text(json.dumps([{
+        "name": "Test Bear", "color_identity": ["G"], "type_line": "Creature — Bear",
+        "cmc": 2, "mana_cost": "{1}{G}", "id": "abc", "power": "2",
+        "produced_mana": [], "oracle_text": "", "card_faces": None,
+    }]), encoding="utf-8")
+    idx = carddb.build_index(str(bulk), use_duckdb=True)
+    assert "test bear" in idx, "the stdlib reader must have produced the index"
+    assert "duckdb unavailable" in capsys.readouterr().err

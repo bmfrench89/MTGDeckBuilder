@@ -209,3 +209,17 @@ def test_the_page_still_renders_when_the_simulation_fails(deck_file, collection_
     assert "Goldfish Simulation" not in html
     assert html.lstrip().lower().startswith("<!doctype html")
     assert "Consistency &amp; Manabase" in html
+
+
+def test_buy_tab_rows_are_panel_clickable(deck_file, collection_file, tmp_path):
+    """Known gap (codemap "still open"): Buy rows were plain text, so the cards a Buy
+    tab exists FOR — combo pieces and buy targets, none of them in the deck — were the
+    only unclickable names on the page."""
+    import build_dashboard as bd
+    buylist = tmp_path / "testdeck.buylist.csv"
+    buylist.write_text("Card,Price,Tier,Replaces,Reason\n"
+                       "Rhystic Study,35.00,A,Divination,better draw\n", encoding="utf-8")
+    html = bd.generate(deck_file, collection_file, title="T",
+                       commander="Test Commander", sim=None)["dashboard"]
+    assert 'data-card="Rhystic Study"' in html, "the buy target must open the panel"
+    assert 'data-card="Divination"' in html, "so must the card it replaces"

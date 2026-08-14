@@ -26,6 +26,15 @@ on:
   push:
     branches: [main]
     paths: ["data/collection/collection_snapshot.txt"]  # fresh export → fresh attrs
+    # DELIBERATELY NOT triggered by scripts/carddb.py or scripts/oracle_flags.py.
+    # A shape change (a new column like Power, 2026-08-13) does need a regenerated
+    # snapshot — but carddb.py is edited often for reasons that change no column at
+    # all (verify work, docstrings), and each run costs a full ~2,600-card Scryfall
+    # enrichment plus a push to main, contending on the SHARED concurrency group
+    # below whose documented quirk is that a queued field run supersedes a pending
+    # attrs run. Regenerate a shape change with the workflow_dispatch button (it
+    # works from a phone) or let Monday's cron pick it up; the plausibility gate's
+    # header check refuses to commit a file enriched by an older carddb either way.
   workflow_dispatch: {}         # the "Run workflow" button — works from a phone
 
 permissions:
@@ -83,22 +92,48 @@ jobs:
       # 2,621 identical "Creature / MV 3 / Elf" rows — so a size check alone
       # proves nothing. A real collection is never >90% one Type and never a
       # single Sub-type; refuse to commit anything that uniform.
+      #
+      # The shape check below is the same idea one layer up: every consumer reads
+      # this file BY HEADER NAME and treats an absent column as "unknown" (never as
+      # "empty"), so a runner enriching with an older carddb would silently ship a
+      # file whose missing columns read as honest ignorance repo-wide. Cheaper to
+      # refuse the commit than to debug a week of "enrich to unlock".
       - name: Plausibility gate
         run: |
           python3 - <<'EOF'
           import csv, sys
           from collections import Counter
-          rows = list(csv.DictReader(open(
-              "data/collection/collection_attrs.snapshot.csv", encoding="utf-8")))
+          with open("data/collection/collection_attrs.snapshot.csv",
+                    encoding="utf-8") as f:
+              reader = csv.DictReader(f)
+              cols = list(reader.fieldnames or [])
+              rows = list(reader)
           if len(rows) < 2:
               sys.exit("::error::attrs snapshot is empty/header-only — refusing")
+          missing = [c for c in ("Name", "Type", "MV", "Colors", "Cost",
+                                 "Sub-types", "Produced", "Flags", "Power")
+                     if c not in cols]
+          if missing:
+              sys.exit(f"::error::attrs snapshot is missing {missing} — an older "
+                       "carddb wrote it; consumers would read those as UNKNOWN")
+          if "Scryfall" in cols:
+              sys.exit("::error::Scryfall ids in the COMMITTED snapshot — --no-ids "
+                       "did not take effect; refusing (privacy, spec §3)")
           types = Counter((r.get("Type") or "?") for r in rows)
           top, top_n = types.most_common(1)[0]
           if len(types) < 5 or top_n / len(rows) > 0.90:
               sys.exit(f"::error::implausible Type spread ({dict(types)}) — "
                        "matches the 2026-08-12 stub signature, refusing to commit")
+          # Power is derived per card, so a whole collection of blank creatures is
+          # a derivation regression, not a real collection.
+          creatures = [r for r in rows if (r.get("Type") or "") == "Creature"]
+          powered = [r for r in creatures if (r.get("Power") or "").strip()]
+          if len(creatures) >= 50 and not powered:
+              sys.exit(f"::error::{len(creatures)} creatures and not one printed "
+                       "Power — the derivation is broken, refusing to commit")
           print(f"plausible: {len(rows)} rows, {len(types)} types, "
-                f"top {top!r} at {100*top_n//len(rows)}%")
+                f"top {top!r} at {100*top_n//len(rows)}%, "
+                f"{len(powered)}/{len(creatures)} creatures with printed power")
           EOF
 
       # Regenerate-not-rebase: this job rewrites ONE shared CSV, and a git

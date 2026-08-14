@@ -44,6 +44,7 @@ Every number is a simulated frequency under the assumptions the report ships in
 `report['assumptions']`. Render those assumptions wherever you render the numbers.
 """
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -68,6 +69,36 @@ FLOOD_TURN = 6          # "flooded" is judged by the end of this turn
 FLOOD_LANDS = 9         # ...having seen at least this many lands
 NO_DATA_LIMIT = 0.25    # >25% unknown nonlands and we report a note, not numbers
 
+# ---- the clock (Phase 2 of spec-table-ready.md). Since WotC's October 2025 rework
+# the official brackets are defined by how early you'd be satisfied a game ends
+# (B2 ~ turn 8+, B3 ~ turn 6+, B4 ~ turn 4+), so "what turn does this deck present
+# lethal" is the number the bracket system itself asks for.
+OPP_LIFE = 40           # a Commander opponent's starting life
+OPPONENTS = 3           # a four-player pod is you plus three
+CMD_DMG = 21            # commander damage kills one player on its own
+CLOCK_UNKNOWN_LIMIT = 0.25   # >25% of cast creatures with no printed power -> no clock
+BRACKET_CLOCK = [(4, 4), (6, 3), (8, 2)]   # (median first kill <= turn, bracket)
+
+# ---- phantom disruption (Phase 10, EXPERIMENT). The research is clear that the
+# demand for "an opponent" is really demand for a cheap APPROXIMATION of being
+# interacted with — Playgroup.gg's phantom opponents wipe and counter on a timer;
+# Krarkaplayer models a pod as inert 160 life. This is that, and nothing more: a
+# seeded event schedule, off by default, whose whole job is answering "how does this
+# deck rebuild?" — the question a pure goldfish structurally cannot reach.
+DISRUPTION = {
+    "none": None,
+    "standard": {
+        "wipe_turns": (5, 6),   # one board wipe, on a turn drawn from this range
+        "removal_every": 3,     # spot removal on the biggest creature every N turns
+        "removal_from": 3,      # ...starting here
+        "commander_tax": 2,     # recasting the commander costs {2} more each time
+    },
+}
+
+# Report-shape version. `cache_key` includes it, so adding a field to the payload
+# invalidates every cached sim instead of serving old entries that silently lack it.
+REPORT_SCHEMA = 2
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
 
@@ -89,6 +120,14 @@ DEFINITIONS = {
     "mean_lands_by_turn": "Average lands in play after the land drop on turn N.",
     "cards": "Per card: how often it got cast at all, and how much later than its "
              "mana value it actually landed.",
+    "first_kill": f"Turn this deck's UNBLOCKED board has dealt {OPP_LIFE} damage to "
+                  f"one opponent (or {CMD_DMG} commander damage) — 'presents lethal'. "
+                  "Combat damage only; nobody blocks, removes or gains life.",
+    "table_kill": f"Turn cumulative combat damage reaches {OPP_LIFE * OPPONENTS} — "
+                  f"enough for all {OPPONENTS} opponents, if it were assignable.",
+    "clock_bracket": "The bracket whose expected game length matches this median "
+                     "(WotC Oct-2025: B4 ~ turn 4+, B3 ~ turn 6+, B2 ~ turn 8+). "
+                     "Evidence beside the card-count bracket, never a reclassification.",
 }
 
 
@@ -98,15 +137,21 @@ DEFINITIONS = {
 class SimCard:
     """One physical copy, compiled. Immutable; shared across games and both A/B arms."""
     __slots__ = ("name", "key", "mv", "pips", "generic", "is_land", "produces",
-                 "amount", "etb_tapped", "is_producer", "castable", "model")
+                 "amount", "etb_tapped", "is_producer", "castable", "model",
+                 "is_creature", "power")
 
     def __init__(self, name, key, mv, pips, generic, is_land, produces, amount,
-                 etb_tapped, is_producer, castable, model):
+                 etb_tapped, is_producer, castable, model,
+                 is_creature=False, power=None):
         self.name, self.key, self.mv = name, key, mv
         self.pips, self.generic = pips, generic
         self.is_land, self.produces, self.amount = is_land, produces, amount
         self.etb_tapped, self.is_producer = etb_tapped, is_producer
         self.castable, self.model = castable, model
+        # The clock inputs. `power is None` on a creature means "we do not know how
+        # hard this hits" — it never attacks and it counts toward the coverage gate
+        # that decides whether a clock is reported at all.
+        self.is_creature, self.power = is_creature, power
 
     def __repr__(self):                                    # pragma: no cover - debug
         return f"<SimCard {self.name} mv={self.mv} model={self.model}>"
@@ -204,10 +249,13 @@ def compile_card(card):
             generic = int(card.mana_value)     # attrs with an MV but no Cost column
         castable = model != "none"
 
+    is_creature = bool(card.types) and any(t.lower() == "creature" for t in card.types)
     return SimCard(name=card.name, key=mtglib._norm(card.name), mv=card.mana_value,
                    pips=pips, generic=generic, is_land=is_land, produces=produces,
                    amount=amount, etb_tapped=etb, is_producer=is_producer,
-                   castable=castable, model=model)
+                   castable=castable, model=model,
+                   is_creature=is_creature,
+                   power=card.power if is_creature else None)
 
 
 def compile_deck(enriched, commander_name=""):
@@ -362,8 +410,40 @@ def _pick_land(hand, have_colors):
 # --------------------------------------------------------------------------- #
 # One game
 # --------------------------------------------------------------------------- #
-def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True):
-    """Play one goldfish game. Returns the per-game record the aggregator folds up."""
+def keep_verdict(hand, mulls=0, mulligan=True):
+    """Would the sim keep this hand? -> {"keep": bool, "lands": n, "why": str}.
+
+    The rule `play_game` uses, exposed as a function so the mulligan trainer and the
+    simulation can never disagree about what "keepable" means. Deliberately simple and
+    honest about it: land count inside a band, plus the London floor. It does not read
+    the cards' quality, so it is a heuristic to compare yourself against, not an
+    oracle — every surface that shows it says so."""
+    n = sum(1 for c in hand if c.is_land)
+    lo, hi = KEEP_LANDS
+    if not mulligan:
+        return {"keep": True, "lands": n, "why": "mulligans disabled"}
+    if mulls >= MULL_FLOOR:
+        return {"keep": True, "lands": n,
+                "why": f"at the London floor ({HAND - MULL_FLOOR} cards) — this hand "
+                       "is kept whatever it holds"}
+    if n < lo:
+        return {"keep": False, "lands": n,
+                "why": f"{n} land(s): below the {lo}-land floor, so the sim ships it"}
+    if n > hi:
+        return {"keep": False, "lands": n,
+                "why": f"{n} lands: above the {hi}-land ceiling — flood risk"}
+    return {"keep": True, "lands": n,
+            "why": f"{n} lands, inside the keepable band of {lo}-{hi}"}
+
+
+def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
+              disruption=None, drnd=None):
+    """Play one goldfish game. Returns the per-game record the aggregator folds up.
+
+    `disruption` is a DISRUPTION schedule (None = the pure goldfish, byte-identical to
+    before). `drnd` is a SEPARATE Random: disruption must not consume from the shuffle
+    stream, or turning it on would change which cards are drawn and the A/B pairing
+    would compare two different sets of games while still printing plausible numbers."""
     lib = list(library)
     rnd.shuffle(lib)
     first7_lands = sum(1 for c in lib[:HAND] if c.is_land)
@@ -371,9 +451,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     mulls = 0
     while True:
         hand, rest = lib[:HAND], lib[HAND:]
-        n_lands = sum(1 for c in hand if c.is_land)
-        if (not mulligan or mulls >= MULL_FLOOR
-                or KEEP_LANDS[0] <= n_lands <= KEEP_LANDS[1]):
+        if keep_verdict(hand, mulls, mulligan)["keep"]:
             break
         mulls += 1
         rnd.shuffle(lib)
@@ -390,8 +468,59 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     draws = 0
     flood_seen = 0
 
+    # ---- clock state. `board` is (SimCard, turn_it_entered) for every creature the
+    # sim actually cast; a creature attacks from the turn AFTER it lands (summoning
+    # sickness) and every turn thereafter, unblocked, for its printed power. Damage
+    # is cumulative and uncontested — see `_assumptions`.
+    board = []
+    wipe_turn = None
+    if disruption:
+        lo, hi = disruption["wipe_turns"]
+        # Drawn from the DISRUPTION stream, never `rnd` — see the docstring.
+        wipe_turn = (drnd or random.Random(0)).randint(lo, hi)
+    wiped, removed, recasts = 0, 0, 0
+    # Counted separately from `board`, which disruption empties — the clock's coverage
+    # gate asks "how many creatures did this deck CAST", not "how many survived".
+    creature_casts = 0
+    dmg = 0                     # total combat damage dealt
+    cmd_dmg = 0                 # of which the commander dealt (the 21 rule)
+    first_kill = None           # cumulative >= 40, or 21 commander damage
+    table_kill = None           # cumulative >= 120 (three 40-life opponents)
+    unknown_power_casts = 0     # creatures cast whose power we do not know
+
     for t in range(1, turns + 1):
         lands_at_start[t] = len(in_play)
+        if disruption:
+            # Opponents act at the START of your turn, before you attack: a wipe you
+            # walked into removes the board that would have swung.
+            if wipe_turn == t and board:
+                wiped += 1
+                if commander is not None and any(sc is commander for sc, _ in board):
+                    recasts += 1          # it goes back to the command zone
+                board = []
+            elif (t >= disruption["removal_from"] and board
+                  and (t - disruption["removal_from"]) % disruption["removal_every"] == 0):
+                # Kill the biggest thing — the play a real opponent makes.
+                board.sort(key=lambda b: -((b[0].power or 0)))
+                gone = board.pop(0)
+                removed += 1
+                if commander is not None and gone[0] is commander:
+                    recasts += 1
+        # Combat happens BEFORE this turn's land drop and casts: a creature cast on
+        # turn N attacks on turn N+1, so the damage credited to turn t comes from the
+        # board as it stood at the end of turn t-1.
+        if board:
+            swing = sum(sc.power for sc, entered in board
+                        if entered < t and sc.power is not None)
+            if swing:
+                dmg += swing
+                cmd_dmg += sum(sc.power for sc, entered in board
+                               if entered < t and sc.power is not None
+                               and sc is commander)
+                if first_kill is None and (dmg >= OPP_LIFE or cmd_dmg >= CMD_DMG):
+                    first_kill = t
+                if table_kill is None and dmg >= OPP_LIFE * OPPONENTS:
+                    table_kill = t
         if (t > 1 or not on_play) and draws < len(rest):
             c = rest[draws]
             draws += 1
@@ -422,6 +551,11 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
             rem = _pay(commander.pips, commander.generic, units)
             if rem is not None:
                 commander_turn, units = t, rem
+                if commander.is_creature:
+                    board.append((commander, t))
+                    creature_casts += 1
+                    if commander.power is None:
+                        unknown_power_casts += 1
         # ONE pass, highest mana value first. No restart-after-a-cast is needed:
         # paying for something only ever removes mana, so a card that couldn't be paid
         # for a moment ago can't become payable later in the same turn.
@@ -438,6 +572,11 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
             cast_any = True
             if sc.is_producer:
                 producers.append((sc, t))
+            if sc.is_creature:
+                board.append((sc, t))
+                creature_casts += 1
+                if sc.power is None:
+                    unknown_power_casts += 1
             if sc.key not in cast_turn:
                 cast_turn[sc.key] = t
             if not units:
@@ -450,7 +589,11 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True)
     return {"first7_lands": first7_lands, "mulls": mulls,
             "commander_turn": commander_turn, "cast_turn": cast_turn,
             "lands_by_turn": lands_by_turn, "lands_at_start": lands_at_start,
-            "seen_by_turn": seen_by_turn, "lands_seen_flood": flood_seen}
+            "seen_by_turn": seen_by_turn, "lands_seen_flood": flood_seen,
+            "first_kill": first_kill, "table_kill": table_kill,
+            "damage": dmg, "unknown_power_casts": unknown_power_casts,
+            "creature_casts": creature_casts,
+            "wiped": wiped, "removed": removed, "recasts": recasts}
 
 
 # --------------------------------------------------------------------------- #
@@ -464,9 +607,14 @@ def _game_seeds(seed, games):
     return [master.getrandbits(64) for _ in range(games)]
 
 
-def _run(compiled, seeds, turns, mulligan, on_play):
+def _run(compiled, seeds, turns, mulligan, on_play, disruption=None):
     commander, library = compiled["commander"], compiled["library"]
-    return [play_game(random.Random(s), commander, library, turns, mulligan, on_play)
+    # The disruption stream is seeded from the SAME per-game seed but as its own
+    # Random: identical games face identical disruption in both A/B arms, and turning
+    # it on cannot perturb the shuffle.
+    return [play_game(random.Random(s), commander, library, turns, mulligan, on_play,
+                      disruption=disruption,
+                      drnd=random.Random(s ^ 0x5EED))
             for s in seeds]
 
 
@@ -483,8 +631,11 @@ def _assumptions(compiled, mulligan, on_play, games):
              "mixed": "mixed: enriched where the collection has been enriched, "
                       "color identity elsewhere"}[compiled["model"]]
     out = [
-        "Goldfish: no opponent, no interaction, no combat. This measures whether the "
-        "deck's own machine turns over, nothing about how it fares at a table.",
+        "Goldfish: no opponent and no interaction. The CLOCK adds unblocked combat "
+        "on top of that — creatures attack every turn after they land, for printed "
+        "power, and nobody blocks, removes, counters or gains life. It measures "
+        "whether the deck's own machine turns over and how fast that machine would "
+        "kill if left completely alone, nothing about how it fares at a table.",
         (f"London mulligan, keep {KEEP_LANDS[0]}-{KEEP_LANDS[1]} lands, floor "
          f"{HAND - MULL_FLOOR} (at most {MULL_FLOOR} mulligans); bottoming takes "
          f"lands beyond {BOTTOM_KEEP_LANDS} first, then the highest mana values.")
@@ -541,15 +692,146 @@ def _card_rows(compiled, records, games, turns):
     return rows
 
 
+def _median(xs):
+    """Median of a list, or None. Kept local — the sim imports no stats module."""
+    s = sorted(xs)
+    n = len(s)
+    if not n:
+        return None
+    mid = n // 2
+    return float(s[mid]) if n % 2 else (s[mid - 1] + s[mid]) / 2.0
+
+
+def _drain_names(compiled):
+    """Cards whose damage the clock CANNOT see: noncombat damage and lifeloss.
+
+    Named from the oracle-derived flags and a small phrase list rather than guessed
+    from the type line, because the point is to be honest about a specific known
+    blind spot (Exsanguinate, Blood Artist, Vito) rather than to hedge everything."""
+    out = []
+    for sc in compiled["library"] + ([compiled["commander"]]
+                                     if compiled["commander"] else []):
+        n = sc.name.lower()
+        if any(w in n for w in ("exsanguinate", "blood artist", "vito",
+                                "bastion of remembrance", "gray merchant",
+                                "torment of hailfire", "debt to the deathless")):
+            out.append(sc.name)
+    return sorted(set(out))
+
+
+def _clock(compiled, records, games, turns):
+    """How fast this deck presents lethal, uncontested.
+
+    The honest shape of this number matters more than the number. It counts COMBAT
+    damage from creatures the sim actually cast, with nobody blocking, removing,
+    countering or gaining life — so it is an upper bound on speed for a creature deck
+    and a SEVERE UNDERSTATEMENT for a deck that wins by drain, burn, mill or an
+    alternate wincon. Both facts ship in the payload; no surface may print the number
+    without them.
+    """
+    if not games:
+        return None
+    unknown = sum(r["unknown_power_casts"] for r in records)
+    # Coverage is judged over the creatures the sim actually CAST, not the whole
+    # library: a deck can hold ten unknown-power creatures it never reaches, and
+    # refusing a clock over cards that never hit the battlefield would be the wrong
+    # kind of caution. `damage` being 0 across the board with unknown casts present
+    # is the real "no data" signal.
+    total_creature_casts = sum(r["creature_casts"] for r in records)
+    frac_unknown = (unknown / total_creature_casts) if total_creature_casts else 0.0
+
+    firsts = [r["first_kill"] for r in records if r["first_kill"] is not None]
+    tables = [r["table_kill"] for r in records if r["table_kill"] is not None]
+    have = total_creature_casts > 0 and frac_unknown <= CLOCK_UNKNOWN_LIMIT
+
+    out = {
+        "have_data": have,
+        "unknown_power_fraction": round(frac_unknown, 3),
+        "creature_casts_per_game": round(total_creature_casts / games, 2),
+        "kill_rate": round(len(firsts) / games, 4),
+        "table_kill_rate": round(len(tables) / games, 4),
+        "median_first_kill": _median(firsts),
+        "median_table_kill": _median(tables),
+        "mean_damage_by_turn_end": round(_mean([r["damage"] for r in records]), 1),
+        "p_first_kill_by": {str(t): round(sum(1 for x in firsts if x <= t) / games, 4)
+                            for t in (4, 6, 8) if t <= turns},
+        "horizon": turns,
+        "combat_only": True,
+        "noncombat_sources": _drain_names(compiled),
+        "note": None,
+        "bracket_hint": None,
+    }
+    if not have:
+        out["note"] = (
+            "No clock: this deck's creatures have no printed power in the data "
+            f"({int(round(frac_unknown * 100))}% of casts unknown). Re-run enrichment "
+            "(carddb.py) to unlock it." if total_creature_casts else
+            "No clock: the sim never cast a creature, so there is no board to attack "
+            "with. A deck that wins another way needs a different measure.")
+        return out
+    # A median only exists if at least half the games got there; below that the
+    # honest statement is the rate, not a median drawn from the fast tail.
+    if out["median_first_kill"] is None or out["kill_rate"] < 0.5:
+        out["median_first_kill"] = None
+        out["note"] = (f"Lethal presented in only {out['kill_rate'] * 100:.0f}% of "
+                       f"games within {turns} turns — too few for a median. The rate "
+                       "is the honest number here.")
+    else:
+        m = out["median_first_kill"]
+        for turn_cap, bracket in BRACKET_CLOCK:
+            if m <= turn_cap:
+                out["bracket_hint"] = bracket
+                break
+        else:
+            out["bracket_hint"] = 2
+    if out["noncombat_sources"]:
+        out["note"] = ((out["note"] + " ") if out["note"] else "") + (
+            "UNDERSTATED: this deck also wins with noncombat damage/drain "
+            f"({', '.join(out['noncombat_sources'][:4])}"
+            f"{'…' if len(out['noncombat_sources']) > 4 else ''}), which the clock "
+            "does not model.")
+    return out
+
+
+def _disruption_report(records, games, disruption):
+    """What the phantom opponents did, and how the deck coped. None when off.
+
+    EXPERIMENT (Phase 10). The schedule is a crude stand-in for real opponents — it
+    does not counter spells, does not respond to what you are doing, and never targets
+    anything but the biggest creature. It answers one question a pure goldfish
+    structurally cannot: after a wipe, does this deck come back?"""
+    if not disruption or not games:
+        return None
+    wiped = sum(r["wiped"] for r in records)
+    removed = sum(r["removed"] for r in records)
+    recasts = sum(r["recasts"] for r in records)
+    return {
+        "profile": "standard",
+        "wipes_per_game": round(wiped / games, 2),
+        "removal_per_game": round(removed / games, 2),
+        "commander_recasts_per_game": round(recasts / games, 2),
+        "definition": (f"One board wipe on a turn drawn from "
+                       f"{disruption['wipe_turns'][0]}-{disruption['wipe_turns'][1]}, "
+                       f"spot removal on the biggest creature every "
+                       f"{disruption['removal_every']} turns from turn "
+                       f"{disruption['removal_from']}, and the commander returning to "
+                       f"the command zone when it is hit."),
+        "caveat": ("A crude stand-in for opponents, not a simulation of them: it never "
+                   "counters a spell, never reacts to what you are doing, and always "
+                   "kills the biggest creature. Read it as 'can this deck rebuild', "
+                   "not as a win rate."),
+    }
+
+
 def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
-             on_play=True, seeds=None, _records=False):
+             on_play=True, seeds=None, _records=False, disruption=None):
     """Run the sim and return the report (§6.2). Same inputs -> identical report.
 
     `seeds` lets an A/B run replay the exact same games in both arms (common random
     numbers). `_records` additionally returns the per-game records the pairing needs."""
     seeds = seeds if seeds is not None else _game_seeds(seed, games)
     games = len(seeds)
-    records = _run(compiled, seeds, turns, mulligan, on_play)
+    records = _run(compiled, seeds, turns, mulligan, on_play, disruption)
 
     cmd_turns = [r["commander_turn"] for r in records if r["commander_turn"] is not None]
     p_cast_by, cum = {}, 0
@@ -587,6 +869,8 @@ def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
                                                     for r in records]), 2)
                                for t in range(1, turns + 1)},
         "cards": _card_rows(compiled, records, games, turns),
+        "clock": _clock(compiled, records, games, turns),
+        "disruption": _disruption_report(records, games, disruption),
         "definitions": dict(DEFINITIONS),
         "assumptions": _assumptions(compiled, mulligan, on_play, games),
         "note": None,
@@ -604,7 +888,11 @@ def simulate(compiled, games=DEFAULT_GAMES, seed=0, turns=TURNS, mulligan=True,
 # A/B over common random numbers
 # --------------------------------------------------------------------------- #
 AB_METRICS = ("commander_by_t4", "commander_by_t6", "keepable", "screw", "flood",
-              "lands_t4")
+              "lands_t4",
+              # The clock rides the same paired games for free: "does this swap make
+              # the deck faster" measured over identical shuffles. LOWER is better for
+              # first_kill_turn, which is the only metric here where that is true.
+              "first_kill_turn", "damage_dealt")
 Z95 = 1.96
 
 
@@ -619,7 +907,26 @@ def _per_game(record):
                  else 0.0,
         "flood": 1.0 if record["lands_seen_flood"] >= FLOOD_LANDS else 0.0,
         "lands_t4": float(record["lands_by_turn"].get(4, 0)),
+        # Clock metrics ride the SAME paired games, so "did this swap speed up the
+        # kill" is measured against identical shuffles rather than against luck.
+        # A game that never presents lethal contributes its horizon, not a None —
+        # dropping it would compare the two arms on different game sets and silently
+        # break the pairing the confidence interval depends on.
+        "first_kill_turn": _censored_kill(record),
+        "damage_dealt": float(record["damage"]),
     }
+
+
+def _censored_kill(record):
+    """First-kill turn for A/B, with non-kills CENSORED at one turn past the horizon.
+
+    A game that never presents lethal has no kill turn, but dropping it would compare
+    the two arms on different sets of games — which silently breaks the common-random-
+    numbers pairing the confidence interval rests on. Censoring keeps every game in
+    both arms and makes the metric read the right direction (lower = faster)."""
+    horizon = max(record["lands_by_turn"]) if record["lands_by_turn"] else 0
+    return float(record["first_kill"] if record["first_kill"] is not None
+                 else horizon + 1)
 
 
 def _stdev(xs, mean):
@@ -629,7 +936,7 @@ def _stdev(xs, mean):
 
 
 def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
-                turns=TURNS, mulligan=True, on_play=True):
+                turns=TURNS, mulligan=True, on_play=True, disruption=None):
     """Swap ONE card and re-run the identical games — common random numbers.
 
     Arm B replaces the outgoing card's compiled entries **at the same library
@@ -667,10 +974,14 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
     comp_b = _recount(dict(compiled, library=lib_b))
 
     seeds = _game_seeds(seed, games)
+    # Both arms get the SAME disruption schedule (it is seeded off the same per-game
+    # seed, on its own stream), so an A/B under disruption still measures the swap.
     rep_a, rec_a = simulate(compiled, seeds=seeds, seed=seed, turns=turns,
-                            mulligan=mulligan, on_play=on_play, _records=True)
+                            mulligan=mulligan, on_play=on_play, _records=True,
+                            disruption=disruption)
     rep_b, rec_b = simulate(comp_b, seeds=seeds, seed=seed, turns=turns,
-                            mulligan=mulligan, on_play=on_play, _records=True)
+                            mulligan=mulligan, on_play=on_play, _records=True,
+                            disruption=disruption)
 
     deltas = {}
     n = len(seeds)
@@ -717,7 +1028,10 @@ def cache_key(deck_path, collection_path, games, seed, turns, mulligan):
     to skip; it is recorded in the payload and checked on read instead."""
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     key = {"deck": _stat(deck_path), "deck_attrs": _stat(f"{stem}.attrs.csv"),
-           "games": games, "seed": seed, "turns": turns, "mulligan": bool(mulligan)}
+           "games": games, "seed": seed, "turns": turns, "mulligan": bool(mulligan),
+           # Bump when the REPORT SHAPE changes, or a cache written by an older build
+           # is served forever without the new fields (the clock landed 2026-08-13).
+           "schema": REPORT_SCHEMA}
     if collection_path:
         d = os.path.dirname(collection_path) or "."
         key["collection"] = _stat(collection_path)
@@ -768,7 +1082,7 @@ def sim_for_deck(deck_path, collection, games=DEFAULT_GAMES, seed=0, turns=TURNS
         enriched, _missing = deck_stats.analyze(deck, idx)
         dstem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
         deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{dstem}.attrs.csv"))
-        m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
         compiled = compile_deck(enriched, commander)
         rep = simulate(compiled, games=games, seed=seed, turns=turns, mulligan=mulligan)
@@ -781,6 +1095,72 @@ def sim_for_deck(deck_path, collection, games=DEFAULT_GAMES, seed=0, turns=TURNS
                 os.replace(tmp, cpath)
             except OSError:
                 pass                       # a read-only cache dir is not a failed sim
+        return rep
+    except Exception:
+        return None
+
+
+def ab_for_deck(deck_path, collection, out_name, in_name, *, games=DEFAULT_GAMES,
+                seed=0, turns=TURNS, mulligan=True, collection_path=None,
+                disruption=None, cache=True, cache_dir=None):
+    """`simulate_ab` for a SAVED deck, behind the same disk cache `sim_for_deck` uses.
+
+    The Replace flow runs this on a shift-click, inline in the request: 400 games ×
+    two arms on shared CPU, every time, for a swap the player is very likely to look
+    at twice while deciding. The sim is seeded-deterministic, so re-running it is
+    pure cost — the second look should be a file read.
+
+    Returns `simulate_ab`'s full payload, or None if the deck can't be compiled.
+
+    **Errors are never cached.** `simulate_ab` refuses unresolvable or duplicate
+    names with an `{'error': …}` payload, and pinning that to disk would make a
+    typo — or a card added to the collection five seconds later — stick for as
+    long as the entry lived. A refusal is cheap to recompute; a wrong one that
+    outlives its cause is not.
+
+    No eviction, matching `sim_for_deck`: entries are small JSON in a gitignored
+    cache dir, and they self-expire the moment the deck, its attrs, the collection
+    or the report schema change."""
+    try:
+        if collection_path is None and isinstance(collection, str):
+            collection_path = collection
+        key = dict(cache_key(deck_path, collection_path, games, seed, turns, mulligan),
+                   # The swap itself, normalized the way every name comparison in this
+                   # repo is — 'sol ring' and 'Sol  Ring' are the same A/B, and a
+                   # front-face alias must not open a second entry for one swap.
+                   out=mtglib._norm(mtglib.front_face(out_name)),
+                   **{"in": mtglib._norm(mtglib.front_face(in_name))},
+                   # The API never passes disruption today; keying it now means the
+                   # day it does, old entries miss instead of lying.
+                   disruption=disruption)
+        cdir = cache_dir if cache_dir is not None else CACHE_DIR
+        stem = os.path.splitext(os.path.basename(deck_path))[0]
+        digest = hashlib.sha1(json.dumps(key, sort_keys=True,
+                                         default=str).encode()).hexdigest()[:16]
+        cpath = os.path.join(cdir, f"ab-{stem}-{digest}.json")
+        if cache:
+            try:
+                with open(cpath, encoding="utf-8") as f:
+                    blob = json.load(f)
+                if blob.get("key") == key and blob.get("report"):
+                    return blob["report"]
+            except (OSError, ValueError):
+                pass
+
+        compiled, idx = load_for_ab(deck_path, collection, collection_path)
+        if not compiled:
+            return None
+        rep = simulate_ab(compiled, out_name, in_name, idx, games=games, seed=seed,
+                          turns=turns, mulligan=mulligan, disruption=disruption)
+        if cache and rep and not rep.get("error"):
+            try:
+                os.makedirs(cdir, exist_ok=True)
+                tmp = cpath + ".part"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump({"key": key, "report": rep}, f)
+                os.replace(tmp, cpath)
+            except OSError:
+                pass                   # a read-only cache dir is not a failed sim
         return rep
     except Exception:
         return None
@@ -800,7 +1180,7 @@ def load_for_ab(deck_path, collection, collection_path=None):
         enriched, _missing = deck_stats.analyze(mtglib.parse_deck(text), idx)
         dstem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
         deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{dstem}.attrs.csv"))
-        m = re.search(r"^#\s*Commander\s*:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
+        m = re.match(r"(.+)", mtglib.deck_header(text, "Commander"))
         commander = re.split(r"\s{2,}|\(", m.group(1))[0].strip() if m else ""
         return compile_deck(enriched, commander), idx
     except Exception:
@@ -833,6 +1213,25 @@ def print_report(rep):
           f"flood {_pct(rep['flood'])} ({rep['definitions']['flood']})")
     print("Lands in play: " + " · ".join(f"T{t} {v}" for t, v
                                          in rep["mean_lands_by_turn"].items()))
+    clk = rep.get("clock")
+    if clk:
+        print("\nCLOCK — how fast this deck presents lethal, uncontested:")
+        if clk["median_first_kill"] is not None:
+            print(f"   first kill  median T{clk['median_first_kill']:g}  "
+                  f"({rep['definitions']['first_kill']})")
+            print("   " + " · ".join(f"by T{t} {_pct(p)}"
+                                     for t, p in clk["p_first_kill_by"].items()))
+            if clk["median_table_kill"] is not None:
+                print(f"   table kill  median T{clk['median_table_kill']:g}  "
+                      f"({rep['definitions']['table_kill']})")
+            else:
+                print(f"   table kill  not reached within {clk['horizon']} turns "
+                      f"({_pct(clk['table_kill_rate'])} of games)")
+            if clk["bracket_hint"]:
+                print(f"   -> consistent with the Bracket {clk['bracket_hint']} "
+                      f"expectation. {rep['definitions']['clock_bracket']}")
+        if clk["note"]:
+            print(f"   [!] {clk['note']}")
     worst = [c for c in rep["cards"] if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0]
     if worst:
         print(f"\nWorst-sequenced cards ({rep['definitions']['cards']}):")
@@ -841,6 +1240,13 @@ def print_report(rep):
                     else f"first cast T{c['mean_first_cast']} "
                          f"({c['delta']:+g} vs MV {c['mv']:g})")
             print(f"  {c['name']:<34} cast {_pct(c['cast_rate']):>4} · {when}")
+    dis = rep.get("disruption")
+    if dis:
+        print(f"\nPHANTOM DISRUPTION ({dis['profile']}) — EXPERIMENT:")
+        print(f"   {dis['wipes_per_game']} wipe(s) · {dis['removal_per_game']} removal "
+              f"· {dis['commander_recasts_per_game']} commander recast(s) per game")
+        print(f"   {dis['definition']}")
+        print(f"   [!] {dis['caveat']}")
     print("\nAssumptions:")
     for a in rep["assumptions"]:
         print(f"  · {a}")
@@ -877,6 +1283,10 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--ab", metavar='"Out Card=In Card"',
                     help="swap one card and re-run the identical games")
+    ap.add_argument("--disruption", choices=sorted(DISRUPTION), default="none",
+                    help="EXPERIMENT: face phantom opponents (a wipe, periodic "
+                         "removal, commander tax) to see how the deck rebuilds. "
+                         "Off by default; 'none' is byte-identical to no flag.")
     args = ap.parse_args(argv)
 
     for path in (args.deck, args.collection):
@@ -893,13 +1303,14 @@ def main(argv=None):
             print('error: --ab wants "Out Card=In Card"', file=sys.stderr)
             return 2
         out_name, in_name = (s.strip() for s in args.ab.split("=", 1))
-        compiled, idx = load_for_ab(args.deck, args.collection)
-        if compiled is None:
+        ab = ab_for_deck(args.deck, args.collection, out_name, in_name,
+                         games=args.games, seed=args.seed, turns=args.turns,
+                         mulligan=mull, disruption=DISRUPTION[args.disruption],
+                         cache=not args.no_cache)
+        if ab is None:
             print("Goldfish A/B unavailable — the deck or collection couldn't be "
                   "loaded and enriched.")
             return 1
-        ab = simulate_ab(compiled, out_name, in_name, idx, games=args.games,
-                         seed=args.seed, turns=args.turns, mulligan=mull)
         if ab.get("error"):
             print(ab["error"])
             return 1
@@ -909,8 +1320,18 @@ def main(argv=None):
             print_ab(ab)
         return 0
 
-    rep = sim_for_deck(args.deck, args.collection, games=args.games, seed=args.seed,
-                       turns=args.turns, mulligan=mull, cache=not args.no_cache)
+    # Disruption is an experiment run from the CLI on purpose: it never reaches the
+    # cached surface path, so a dashboard can't start quietly showing disrupted
+    # numbers as if they were the goldfish ones.
+    if args.disruption != "none":
+        compiled, _idx = load_for_ab(args.deck, args.collection)
+        rep = (simulate(compiled, games=args.games, seed=args.seed, turns=args.turns,
+                        mulligan=mull, disruption=DISRUPTION[args.disruption])
+               if compiled else None)
+    else:
+        rep = sim_for_deck(args.deck, args.collection, games=args.games,
+                           seed=args.seed, turns=args.turns, mulligan=mull,
+                           cache=not args.no_cache)
     if rep is None:
         print("Goldfish simulation unavailable — the deck or collection couldn't be "
               "loaded and enriched. Check the paths, or enrich with scripts/carddb.py.")

@@ -446,6 +446,102 @@ def test_the_cache_writes_only_where_it_was_told(sim_deck, tmp_path):
     assert [p.name for p in cdir.iterdir()] == ["simdeck.json"]
 
 
+# --------------------------------------------------------------------------- #
+# ab_for_deck — the same disk cache, for the swap the Replace flow previews
+# --------------------------------------------------------------------------- #
+def test_ab_for_deck_caches_the_second_identical_swap(sim_deck, tmp_path, monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    first = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                                 games=120, cache_dir=cdir)
+    second = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                                  games=120, cache_dir=cdir)
+    assert len(calls) == 1, "the repeat shift-click must be a file read"
+    assert first == second
+    assert [p.name for p in (tmp_path / "cache").iterdir()][0].startswith("ab-simdeck-")
+
+
+def test_ab_cache_key_separates_swaps_and_normalizes_names(sim_deck, tmp_path,
+                                                           monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Counterspell",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2, "a different incoming card is a different question"
+    goldfish.ab_for_deck(deck, coll, "  serra   angel ", "swords to plowshares",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2, "casing and whitespace are not a different question"
+
+
+def test_ab_errors_are_never_cached(sim_deck, tmp_path, monkeypatch):
+    """A refusal is cheap to recompute; a wrong one that outlives its cause is
+    not. Pinning 'can't resolve that name' to disk would survive the player
+    adding the card to their collection five seconds later."""
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    bad = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Definitely Not A Card",
+                               games=60, cache_dir=cdir)
+    assert bad["error"] and "resolve" in bad["error"]
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Definitely Not A Card",
+                         games=60, cache_dir=cdir)
+    assert len(calls) == 2, "the refusal must be recomputed, not replayed from disk"
+    assert not os.path.isdir(cdir) or not list((tmp_path / "cache").iterdir())
+
+
+def test_ab_deck_edit_invalidates_the_cached_swap(sim_deck, tmp_path, monkeypatch):
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    with open(deck, "a", encoding="utf-8") as f:
+        f.write("1 Llanowar Elves\n")
+    os.utime(deck, (0, 10 ** 9))
+    goldfish.ab_for_deck(deck, coll, "Serra Angel", "Swords to Plowshares",
+                         games=120, cache_dir=cdir)
+    assert len(calls) == 2
+
+
+def test_ab_a_a_stays_exactly_zero_through_the_cache(sim_deck, tmp_path):
+    """The CRN tripwire, re-armed on the cached path. A cache that reordered,
+    rounded or partially re-ran anything would show up as a non-zero delta on a
+    swap of a card for itself — and the numbers would still look plausible."""
+    deck, coll = sim_deck
+    cdir = str(tmp_path / "cache")
+    first = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Serra Angel",
+                                 games=150, seed=4, cache_dir=cdir)
+    second = goldfish.ab_for_deck(deck, coll, "Serra Angel", "Serra Angel",
+                                  games=150, seed=4, cache_dir=cdir)
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+    for run in (first, second):
+        for m, d in run["deltas"].items():
+            assert d["delta"] == 0.0, m
+            assert d["ci"] == 0.0, m
+
+
+def test_ab_for_deck_returns_none_instead_of_raising(tmp_path, collection_file):
+    assert goldfish.ab_for_deck(str(tmp_path / "nope.txt"), collection_file,
+                                "A", "B", games=10,
+                                cache_dir=str(tmp_path / "c")) is None
+
+
 def test_cli_smoke(sim_deck, tmp_path, capsys, monkeypatch):
     deck, coll = sim_deck
     monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "cache"))
@@ -673,3 +769,235 @@ def test_a_new_snapshot_attrs_file_invalidates_the_cache(sim_deck, tmp_path,
     goldfish.sim_for_deck(deck, coll, games=150, cache_dir=cdir,
                           collection_path=coll)
     assert len(calls) == 2, "the snapshot's arrival must miss the cache"
+
+
+# --------------------------------------------------------------------------- #
+# The clock (Phase 2 of spec-table-ready.md)
+#
+# The bracket system has been defined by expected game length since WotC's Oct-2025
+# rework, so "what turn does this deck present lethal" is the number the brackets
+# themselves ask for. These tests pin the arithmetic, the honesty gates, and the fact
+# that adding combat did not break the common-random-numbers pairing.
+# --------------------------------------------------------------------------- #
+def _clock_deck(power=2, creatures=20, lands=40, mv=1.0):
+    """Vanilla creatures on untapped mono-U lands: a deck whose clock is arithmetic."""
+    cards = [C(name="Island", quantity=lands, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    for i in range(creatures):
+        cards.append(C(name=f"Bear {i}", quantity=1, mana_value=mv, colors={"U"},
+                       identity={"U"}, mana_cost="{U}", types=["Creature"],
+                       power=power))
+    return cards
+
+
+def test_one_huge_creature_kills_on_the_turn_the_arithmetic_says():
+    """A single 40-power creature cast on turn 1 attacks on turn 2 and deals exactly
+    lethal. Summoning sickness is the whole content of this test: the kill must be
+    T2, never T1."""
+    cards = [C(name="Island", quantity=40, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    # 20 copies-worth of distinct huge creatures, so one is reliably in the opener:
+    # the point under test is the summoning-sickness turn, not draw luck.
+    for i in range(20):
+        cards.append(C(name=f"Big Bear {i}", quantity=1, mana_value=1.0, colors={"U"},
+                       identity={"U"}, mana_cost="{U}", types=["Creature"], power=40))
+    compiled = goldfish.compile_deck(cards, "")
+    rep = goldfish.simulate(compiled, games=200, seed=7)
+    clk = rep["clock"]
+    assert clk["have_data"] is True
+    # It is not in every opening hand, so the median is what is pinned, not the min.
+    assert clk["median_first_kill"] is not None
+    assert clk["median_first_kill"] >= 2, "summoning sickness: never a turn-1 kill"
+
+
+def test_the_clock_counts_cumulative_unblocked_damage():
+    """Twenty 2-power bears: the kill turn must be finite, and the table kill (120
+    damage, three opponents) must never come BEFORE the first kill (40)."""
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    rep = goldfish.simulate(compiled, games=300, seed=3)
+    clk = rep["clock"]
+    assert clk["have_data"] is True
+    assert clk["kill_rate"] > 0
+    if clk["median_first_kill"] and clk["median_table_kill"]:
+        assert clk["median_table_kill"] >= clk["median_first_kill"]
+    assert clk["p_first_kill_by"], "the bracket anchors T4/T6/T8 are reported"
+
+
+def test_no_power_data_reports_a_note_instead_of_a_clock():
+    """The honesty gate: creatures with no printed power (an un-enriched collection,
+    or an attrs file predating the Power column) must yield a NOTE, never a number
+    invented from nothing."""
+    cards = _clock_deck()
+    for c in cards:
+        c.power = None
+    compiled = goldfish.compile_deck(cards, "")
+    clk = goldfish.simulate(compiled, games=120, seed=1)["clock"]
+    assert clk["have_data"] is False
+    assert clk["median_first_kill"] is None
+    assert "enrich" in clk["note"].lower() or "no printed power" in clk["note"].lower()
+
+
+def test_a_creatureless_deck_says_so_rather_than_claiming_speed():
+    cards = [C(name="Island", quantity=40, mana_value=0.0, colors={"U"},
+               identity={"U"}, types=["Land"], produced={"U"})]
+    for i in range(60):
+        cards.append(C(name=f"Spell {i}", quantity=1, mana_value=2.0, colors={"U"},
+                       identity={"U"}, mana_cost="{1}{U}", types=["Instant"]))
+    clk = goldfish.simulate(goldfish.compile_deck(cards, ""), games=80, seed=2)["clock"]
+    assert clk["have_data"] is False
+    assert "never cast a creature" in clk["note"]
+
+
+def test_a_drain_deck_is_labelled_as_understated():
+    """The clock models COMBAT damage only. A deck that wins by drain is measured
+    too slow, and the payload has to say so — CLAUDE.md's honesty rule applies hardest
+    where the number is confidently wrong rather than absent."""
+    cards = _clock_deck(creatures=10)
+    cards.append(C(name="Exsanguinate", quantity=1, mana_value=2.0, colors={"B"},
+                   identity={"B"}, mana_cost="{1}{B}", types=["Sorcery"]))
+    clk = goldfish.simulate(goldfish.compile_deck(cards, ""), games=120, seed=5)["clock"]
+    assert "Exsanguinate" in clk["noncombat_sources"]
+    assert "UNDERSTATED" in (clk["note"] or "")
+
+
+def test_clock_definitions_ship_as_data():
+    """Same contract as screw/flood: every clock number travels with its definition,
+    so no surface can supply its own and misread it."""
+    rep = goldfish.simulate(goldfish.compile_deck(_clock_deck(), ""), games=60, seed=1)
+    for key in ("first_kill", "table_kill", "clock_bracket"):
+        assert rep["definitions"][key], f"{key} must ship a definition"
+
+
+def test_the_bracket_hint_is_advisory_and_matches_the_turn_anchors():
+    """A fast deck maps to a lower bracket number; the mapping is the WotC turn
+    anchors (B4 ~ T4+, B3 ~ T6+, B2 ~ T8+) and never rewrites power.py's verdict."""
+    fast = goldfish.simulate(goldfish.compile_deck(_clock_deck(power=10, creatures=30), ""),
+                             games=200, seed=11)["clock"]
+    slow = goldfish.simulate(goldfish.compile_deck(_clock_deck(power=1, creatures=12), ""),
+                             games=200, seed=11)["clock"]
+    if fast["median_first_kill"] and slow["median_first_kill"]:
+        assert fast["median_first_kill"] <= slow["median_first_kill"]
+        assert fast["bracket_hint"] <= slow["bracket_hint"]
+
+
+def test_aa_pairing_is_still_exactly_zero_with_the_clock_metrics():
+    """THE tripwire, extended. Swapping a card for itself must produce deltas of
+    exactly 0.0 on every metric INCLUDING the two clock ones — if the combat model
+    re-sorted the compiled deck, positional pairing would die silently here while the
+    numbers stayed plausible."""
+    cards = _clock_deck()
+    compiled = goldfish.compile_deck(cards, "")
+    idx = mtglib.index_by_name(cards)
+    ab = goldfish.simulate_ab(compiled, "Bear 0", "Bear 0", idx, games=150, seed=4)
+    for metric, d in ab["deltas"].items():
+        assert d["delta"] == 0.0, f"{metric} drifted: A/A must be exactly zero"
+    assert "first_kill_turn" in ab["deltas"], "the clock rides the paired games"
+
+
+def test_the_cache_key_changes_when_the_report_shape_does(tmp_path):
+    """A cached sim written before the clock existed must not be served forever
+    without it. The schema version rides the cache key so a payload change
+    invalidates old entries by construction."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Commander: X\n\n# --- Main ---\n1 Island\n", encoding="utf-8")
+    k = goldfish.cache_key(str(deck), None, 100, 0, 10, True)
+    assert k["schema"] == goldfish.REPORT_SCHEMA
+    bumped = dict(k)
+    bumped["schema"] = goldfish.REPORT_SCHEMA + 1
+    assert bumped != k, "the schema must participate in the key"
+
+
+# --------------------------------------------------------------------------- #
+# Phantom disruption (Phase 10, EXPERIMENT)
+#
+# The gate on this whole feature: it must not perturb the common-random-numbers
+# pairing. Disruption draws from a SECOND Random seeded off the same per-game seed,
+# so both A/B arms face identical opponents and the shuffle stream is untouched.
+# --------------------------------------------------------------------------- #
+def test_disruption_off_is_byte_identical():
+    """`--disruption none` must be the pure goldfish, not 'the same numbers roughly'."""
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    a = goldfish.simulate(compiled, games=200, seed=9)
+    b = goldfish.simulate(compiled, games=200, seed=9, disruption=None)
+    a.pop("disruption", None); b.pop("disruption", None)
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_disruption_is_deterministic_per_seed():
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    d = goldfish.DISRUPTION["standard"]
+    a = goldfish.simulate(compiled, games=150, seed=4, disruption=d)
+    b = goldfish.simulate(compiled, games=150, seed=4, disruption=d)
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_disruption_actually_slows_the_deck_down():
+    """If the phantom opponents changed nothing, the experiment would be theatre."""
+    compiled = goldfish.compile_deck(_clock_deck(power=3, creatures=30), "")
+    clean = goldfish.simulate(compiled, games=300, seed=6)["clock"]
+    hit = goldfish.simulate(compiled, games=300, seed=6,
+                            disruption=goldfish.DISRUPTION["standard"])["clock"]
+    assert hit["kill_rate"] <= clean["kill_rate"]
+    assert hit["mean_damage_by_turn_end"] < clean["mean_damage_by_turn_end"]
+
+
+def test_the_disruption_report_ships_its_definition_and_caveat():
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    rep = goldfish.simulate(compiled, games=100, seed=2,
+                            disruption=goldfish.DISRUPTION["standard"])
+    d = rep["disruption"]
+    assert d["definition"] and d["caveat"]
+    assert "not a simulation of them" in d["caveat"], (
+        "an approximation of opponents must never read as a win rate")
+    assert goldfish.simulate(compiled, games=50, seed=2)["disruption"] is None
+
+
+def test_aa_pairing_is_exactly_zero_WITH_disruption_on():
+    """THE gate for Phase 10. Disruption must draw from its own stream — if it
+    consumed from the shuffle Random, both arms would face different games and this
+    would drift off zero while the numbers still looked plausible."""
+    cards = _clock_deck()
+    compiled = goldfish.compile_deck(cards, "")
+    idx = mtglib.index_by_name(cards)
+    ab = goldfish.simulate_ab(compiled, "Bear 0", "Bear 0", idx, games=150, seed=4,
+                              disruption=goldfish.DISRUPTION["standard"])
+    for metric, d in ab["deltas"].items():
+        assert d["delta"] == 0.0, f"{metric} drifted under disruption"
+
+
+# --------------------------------------------------------------------------- #
+# The Replace flow's endpoint — the surface the cache exists for
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def ab_client(tmp_path, monkeypatch, collection_file):
+    import app as appmod
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    (decks / "d.txt").write_text(DECK, encoding="utf-8")
+    monkeypatch.setattr(appmod, "DECKS_DIR", str(decks))
+    monkeypatch.setattr(appmod, "COLLECTION", collection_file)
+    monkeypatch.setattr(appmod, "PASSWORD", None)
+    monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "abcache"))
+    appmod.app.config["TESTING"] = True
+    return appmod.app.test_client()
+
+
+def test_the_ab_endpoint_serves_the_second_click_from_disk(ab_client, monkeypatch):
+    calls = []
+    real = goldfish.simulate_ab
+    monkeypatch.setattr(goldfish, "simulate_ab",
+                        lambda *a, **k: (calls.append(1), real(*a, **k))[1])
+    url = "/api/deck/d/ab?out=Serra+Angel&in=Swords+to+Plowshares"
+    first = json.loads(ab_client.get(url).get_data(as_text=True))
+    second = json.loads(ab_client.get(url).get_data(as_text=True))
+    assert "error" not in first, first
+    assert first == second
+    assert len(calls) == 1, "the repeat shift-click ran 800 games again"
+    assert first["out"] == "Serra Angel" and first["in"] == "Swords to Plowshares"
+    assert "commander_by_t4" in first["deltas"]
+
+
+def test_the_ab_endpoint_still_refuses_a_name_it_cannot_resolve(ab_client):
+    r = json.loads(ab_client.get(
+        "/api/deck/d/ab?out=Serra+Angel&in=Definitely+Not+A+Card").get_data(as_text=True))
+    assert "resolve" in r["error"], "a refusal must survive the cached path"

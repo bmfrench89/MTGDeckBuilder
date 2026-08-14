@@ -20,12 +20,13 @@ import sys
 import time
 from datetime import timedelta
 
-from flask import (Flask, Response, abort, jsonify, redirect, render_template,
-                   request, send_from_directory, session, url_for)
+from flask import (Flask, Response, abort, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, session, url_for)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
+import memo
 import mtglib
 import deck_stats
 import power
@@ -47,6 +48,7 @@ import optimize
 import goldfish
 
 import sync
+import enrich_bg
 
 
 def _txt(text, filename):
@@ -165,6 +167,31 @@ def _auth_flags():
     return {"auth_enabled": bool(PASSWORD)}
 
 
+def _explain_block(explain, *keys):
+    """Render the ENGINE's own "what this means" notes as collapsible <details>.
+
+    The wording lives in `manabase.analyze()["explain"]`, never in the template — one
+    source of truth, so the CLI, the generated dashboard and this page cannot drift
+    into three different explanations of the same percentage."""
+    from markupsafe import Markup, escape
+    parts = []
+    for k in keys:
+        e = (explain or {}).get(k)
+        if not e:
+            continue
+        why = f"<p>{escape(e['why'])}</p>" if e.get("why") else ""
+        healthy = (f"<p class='muted fs-xs'>{escape(e['healthy'])}</p>"
+                   if e.get("healthy") else "")
+        parts.append(f"<details class='explain'><summary>{escape(e['what'])}</summary>"
+                     f"{why}{healthy}</details>")
+    return Markup("".join(parts))
+
+
+@app.context_processor
+def _explain_helper():
+    return {"explain": _explain_block}
+
+
 @app.before_request
 def _auto_sync():
     """Poor-man's cron: on the hosted server (where Scheduled Tasks are paid-only)
@@ -189,7 +216,7 @@ def _err(e):  # friendly message instead of a bare stack trace
 # Helpers
 # --------------------------------------------------------------------------- #
 def _hdr(text, key, default=""):
-    m = re.search(rf"^#\s*{key}\s*:\s*(.+?)\s*$", text, re.MULTILINE | re.IGNORECASE)
+    m = re.match(r"(.+)", mtglib.deck_header(text, key))
     return m.group(1).strip() if m else default
 
 
@@ -203,6 +230,9 @@ def deck_meta(stem):
         "title": _hdr(text, "Title") or _hdr(text, "Commander") or stem,
         "commander": re.split(r"\s{2,}|\(", _hdr(text, "Commander"))[0].strip(),
         "theme": _hdr(text, "Theme", "default"),
+        # Read for the Rule-0 table card's identity line; both are optional headers.
+        "colors": _hdr(text, "Colors"),
+        "archetype": _hdr(text, "Archetype"),
     }
 
 
@@ -218,8 +248,40 @@ def _glob_txt(d):
 
 
 def collection_index():
+    """The collection + its name index. `load_collection` is memoized on the
+    mtimes of every file it reads, so the repeat calls this function makes across
+    a request (and across requests) cost one dict build, not a 54 ms re-parse.
+    The index itself is rebuilt per call deliberately — it is milliseconds, and a
+    shared dict is one more object callers could mutate."""
     coll = mtglib.load_collection(COLLECTION)
     return coll, mtglib.index_by_name(coll)
+
+
+def _invalidate(stem=None):
+    """Drop memoized analysis after a write. `stem` narrows it to one deck's
+    entries; no argument drops everything (a collection-level change).
+
+    Called explicitly from every write path rather than left to the mtime keys
+    alone: mtime granularity is a filesystem property, and the card panel writes
+    a deck and then redirects straight into a re-render — a same-second,
+    same-size edit (swapping a card for an equal-length name) is a real way to
+    serve the previous analysis. Deck STEMS appear in every key that read that
+    deck, which is what makes the substring match precise here."""
+    memo.invalidate(stem)
+
+
+@app.after_request
+def _invalidate_after_write(resp):
+    """Backstop: any state-changing request drops the whole memo.
+
+    The targeted `_invalidate` calls above are the ones that matter (they fire
+    *during* the request, before anything re-reads). This exists so that adding a
+    new write route and forgetting the call degrades to "one extra 50 ms rebuild"
+    instead of "serves stale analysis until the process restarts". Every read
+    path in this app is a GET, so the cost is bounded to genuine writes."""
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        memo.invalidate()
+    return resp
 
 
 # --------------------------------------------------------------------------- #
@@ -316,6 +378,7 @@ def deck_edit(stem):
         text = request.form.get("content", "")
         with open(m["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(text.replace("\r\n", "\n"))
+        _invalidate(stem)
         return redirect(url_for("deck", stem=stem))
     content = open(m["path"], encoding="utf-8").read()
     return render_template("edit.html", meta=m, content=content, page="decks")
@@ -330,7 +393,23 @@ def _insert_deck_card(path, lines, name, section=None):
     """Insert `1 <name>` as the LAST card of `section`, leaving every other byte of the
     file untouched — same contract as remove/replace (quantities, comments, and section
     headers all survive). Falls back to after the final card line if the section isn't
-    found, so a stale section name can never drop the card on the floor."""
+    found, so a stale section name can never drop the card on the floor.
+
+    A second copy of a BASIC land increments the card's existing line instead of
+    appending a twin (`3 Plains` -> `4 Plains`). Appending was how Y'shtola's
+    Basics ended up holding `1 Plains` and `3 Plains` as separate lines: legal,
+    but the page reads as two entries for one card. Only basics merge — a
+    nonbasic twin is a singleton illegality `optimize.singleton_violations`
+    reports right after this write, and rolling it into `2 <card>` would tuck the
+    evidence out of sight.
+
+    The basic search is deliberately FILE-WIDE, not section-scoped: a basic land
+    belongs on exactly one line of a deck file, and scoping the search to the
+    requested section produced a cross-section split (`2 Plains` under Lands plus
+    a fresh `1 Plains` under Basics) that nothing downstream merges — the server's
+    auto-regroup only fires on decks with an `Unsorted` section, so such a split
+    would live forever.
+    """
     want = (section or "").strip().lower()
     start = None
     if want:
@@ -343,13 +422,25 @@ def _insert_deck_card(path, lines, name, section=None):
         last = [i for i, l in enumerate(lines) if l.strip() and not l.strip().startswith("#")]
         at = (last[-1] + 1) if last else len(lines)
     else:
-        at = start + 1
-        for j in range(start + 1, len(lines)):
+        stop = next((j for j in range(start + 1, len(lines)) if _section_label(lines[j])),
+                    len(lines))
+        cards = [j for j in range(start + 1, stop)
+                 if lines[j].strip() and not lines[j].strip().startswith("#")]
+        at = (cards[-1] + 1) if cards else start + 1
+    if mtglib.is_basic(name):
+        key = mtglib._norm(name)
+        for j in range(len(lines)):
             s = lines[j].strip()
-            if _section_label(lines[j]):
-                break
-            if s and not s.startswith("#"):
-                at = j + 1
+            if not s or s.startswith("#"):
+                continue
+            m = mtglib._QTY_RE.match(s)   # the ONE qty-line parser ('1x Name' included)
+            qty, cardname = (int(m.group(1)), m.group(2)) if m else (1, s)
+            if mtglib._norm(cardname) == key:
+                indent = lines[j][:len(lines[j]) - len(lines[j].lstrip())]
+                lines[j] = f"{indent}{qty + 1} {cardname}"
+                with open(path, "w", encoding="utf-8", newline="\n") as f:
+                    f.write("\n".join(lines))
+                return True
     lines.insert(at, f"1 {name}")
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
@@ -363,6 +454,16 @@ def _edit_deck_card(path, action, name, replacement=None, section=None):
     lines = open(path, encoding="utf-8").read().split("\n")
     if action == "add":
         return _insert_deck_card(path, lines, name, section)
+    if action == "replace" and replacement and mtglib.is_basic(replacement):
+        # Replacing a card WITH a basic must not write `1 Plains` at the outgoing
+        # card's slot: that is simultaneously the split-line bug (a second Plains
+        # line) and the misfile bug (a basic sitting under Lands/Creatures) — and
+        # it comes from the very flow that misfiled White Auracite and Risky
+        # Shortcut. Drop the outgoing line, then merge into the basic's own line.
+        dropped = _edit_deck_card(path, "remove", name)
+        lines = open(path, encoding="utf-8").read().split("\n")
+        _insert_deck_card(path, lines, replacement, section="Basics")
+        return dropped
     out, changed = [], False
     for ln in lines:
         s = ln.strip()
@@ -479,6 +580,16 @@ def deck_card(stem):
             if action == "replace" and replacement:
                 _log_manual_change(m["path"], replacement, replaced=name,
                                    source="manual-replace")
+            elif action == "remove":
+                # A bare Remove is as much a player decision as a Replace, and the
+                # never-re-add rule reads the LOG — unlogged, the optimizer could
+                # re-propose the exact card through this button (the Hojo
+                # mechanism through the other flow). Card column stays empty:
+                # nothing came in, and load_changes skips empty-Card rows so the
+                # NEW badge and manual-adds advisory are untouched.
+                _log_manual_change(m["path"], "", replaced=name,
+                                   source="manual-remove")
+            _invalidate(stem)
     return redirect(url_for("deck", stem=stem))
 
 
@@ -501,6 +612,8 @@ def deck_add(stem):
         return jsonify({"ok": False, "error": err}), 400
     _edit_deck_card(m["path"], "add", card.name, section=section)
     _log_manual_change(m["path"], card.name, source="manual-add")
+    _invalidate(stem)                   # the deck changed — drop it before the
+                                        # singleton check and the advise below
     illegal = []
     try:
         illegal = optimize.singleton_violations(m["path"])
@@ -656,6 +769,36 @@ def _assess_packet(m):
     # Sequenced play — the questions the closed forms above structurally cannot answer.
     # Same cached helper the dashboard calls, so a coach and a page never disagree.
     sim = goldfish.sim_for_deck(m["path"], COLLECTION)
+    # "What do I cut" — the most-asked deckbuilding question, ranked by the same
+    # value the optimizer scores swaps with. Advisory: it names nothing to replace.
+    try:
+        cuts = optimize.cut_candidates(m["path"], COLLECTION, idx=idx, limit=10,
+                                       analysis=a)
+    except Exception:
+        cuts = None
+    try:
+        _opt_prev = optimize.optimize(m["path"], a["coll"], idx, DECKS_DIR,
+                                      apply=False)
+        holds = _opt_prev.get("manual_holds") or []
+    except Exception:
+        holds = []
+    if holds:
+        L.append("-- HELD (your removals, standing) --")
+        for h in sorted(holds, key=lambda x: -x["inc"])[:6]:
+            L.append(f"  {h['name']} ({h['inc']}% field) — removed by hand "
+                     f"{h['removed']}; the optimizer will not re-propose it")
+        L.append("")
+    if cuts and cuts.get("rows"):
+        L.append("-- IF YOU MUST CUT (advisory, ranked lowest value first) --")
+        for r in cuts["rows"]:
+            flag = " [PROTECTED]" if r["protected"] else ""
+            L.append(f"  {r['value']:>3}  {r['name']} — {r['why']}"
+                     f"{' · role ' + r['role'] + ' ' + r['role_state'] if r.get('role_state') else ''}"
+                     f"{flag}")
+        if cuts.get("no_field"):
+            L.append("  (no EDHREC field data — fit-only ranking, a weak signal)")
+        L.append(f"  {cuts['advisory']}")
+        L.append("")
     L.append("-- GOLDFISH SIMULATION (Monte Carlo, seeded) --")
     if sim is None:
         L.append("  unavailable — the simulation couldn't be run for this deck.\n")
@@ -679,6 +822,20 @@ def _assess_packet(m):
         L.append("  lands in play: " +
                  " · ".join(f"T{t} {v}" for t, v in
                             list(sim["mean_lands_by_turn"].items())[:8]))
+        clk = sim.get("clock") or {}
+        if clk.get("median_first_kill") is not None:
+            L.append(f"  CLOCK: presents lethal median T{clk['median_first_kill']:g} "
+                     + " · ".join(f"by T{t} {v*100:.0f}%"
+                                  for t, v in (clk.get("p_first_kill_by") or {}).items())
+                     + f"   [{d['first_kill']}]")
+            if clk.get("median_table_kill") is not None:
+                L.append(f"  CLOCK: whole table median T{clk['median_table_kill']:g} "
+                         f"  [{d['table_kill']}]")
+            if clk.get("bracket_hint"):
+                L.append(f"  CLOCK: consistent with the Bracket {clk['bracket_hint']} "
+                         f"expectation  [{d['clock_bracket']}]")
+        if clk.get("note"):
+            L.append(f"  CLOCK: {clk['note']}")
         worst = [c for c in sim["cards"]
                  if c["cast_rate"] < 1.0 or (c["delta"] or 0) > 0][:5]
         if worst:
@@ -770,6 +927,114 @@ def deck_pin(stem):
     return redirect(url_for("deck", stem=stem))
 
 
+def _set_deck_header(path, key, value):
+    """Set (or clear) one `# Key: value` header line, preserving everything else.
+
+    Header lines live above the first section marker. An existing key is rewritten in
+    place; a new one is appended to the header block, never dropped after a section
+    header where the parser would stop seeing it."""
+    lines = open(path, encoding="utf-8").read().split("\n")
+    pat = re.compile(rf"^#\s*{re.escape(key)}\s*:", re.IGNORECASE)
+    first_section = next((i for i, ln in enumerate(lines)
+                          if deckcore.section_label(ln) is not None), len(lines))
+    at = next((i for i in range(first_section) if pat.match(lines[i].strip())), None)
+    if value is None:
+        if at is not None:
+            lines.pop(at)
+    elif at is not None:
+        lines[at] = f"# {key}: {value}"
+    else:
+        insert = first_section
+        while insert > 0 and not lines[insert - 1].strip():
+            insert -= 1                       # keep the blank line before the section
+        lines.insert(insert, f"# {key}: {value}")
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines))
+
+
+@app.route("/deck/<stem>/bracket", methods=["POST"])
+def deck_bracket(stem):
+    """Record the player's own bracket for this deck (or clear it).
+
+    The detected bracket is a card-count estimate and stays visible either way —
+    brackets 1 and 5 are defined by INTENT rather than contents (Exhibition is "not
+    built to win", cEDH is metagame-tuned), which no card scan can see. This header
+    records that intent; it never silences the evidence."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    raw = (request.form.get("bracket") or "").strip()
+    if raw in ("1", "2", "3", "4", "5"):
+        _set_deck_header(m["path"], "Bracket", raw)
+        _invalidate(stem)
+        flash(f"Bracket set to {raw} for this deck. The detected bracket is still "
+              "shown beside it.", "info")
+    elif raw in ("", "auto"):
+        _set_deck_header(m["path"], "Bracket", None)
+        _invalidate(stem)
+        flash("Bracket setting cleared — showing the detected bracket only.", "info")
+    return redirect(url_for("deck", stem=stem) + "#tab-power")
+
+
+@app.route("/pins")
+def pins_page():
+    """Every reserved copy in one place, with one-tap move.
+
+    Pinning was already enforced (auto_build's pool, the optimizer's cuts and adds);
+    what was missing was somewhere to SEE the reservations and change them without
+    hunting through six deck pages. Moving a pin is one action here rather than
+    unpin-then-find-the-other-deck-then-repin, because cards shift between decks
+    constantly and friction there is what makes people stop pinning at all."""
+    pins = deckcore.load_pins()
+    coll, idx = collection_index()
+    decks = list_decks()
+    by_stem = {d["stem"]: d for d in decks}
+    # Which decks actually RUN each pinned card — a pin pointing at a deck that no
+    # longer runs the card is the stale state this page exists to surface.
+    runs = {}
+    for d in decks:
+        try:
+            for c in mtglib.parse_deck(open(d["path"], encoding="utf-8").read()):
+                for k in mtglib.name_keys(c.name):
+                    runs.setdefault(k, set()).add(d["stem"])
+        except OSError:
+            continue
+    rows = []
+    for key, stem in sorted(pins.items()):
+        ref = mtglib.lookup(idx, key)
+        in_decks = sorted(runs.get(key, set()))
+        rows.append({
+            "key": key,
+            "name": ref.name if ref else key,
+            "deck": stem,
+            "deck_title": (by_stem.get(stem) or {}).get("title", stem),
+            "owned": ref.quantity if ref else 0,
+            "in_decks": in_decks,
+            "stale": stem not in in_decks,      # pinned to a deck that doesn't run it
+            "contested": len(in_decks) > (ref.quantity if ref else 0),
+        })
+    return render_template("pins.html", rows=rows, decks=decks, page="pins")
+
+
+@app.route("/pins/move", methods=["POST"])
+def pins_move():
+    """Move a pin to another deck, or release it — one action, not two."""
+    key = (request.form.get("card") or "").strip()
+    target = (request.form.get("deck") or "").strip()
+    if key:
+        pins = deckcore.load_pins()
+        k = mtglib._norm(key)
+        if target in ("", "none"):
+            pins.pop(k, None)
+            flash(f"Released the pin on {key} — every deck can use that copy again.",
+                  "info")
+        else:
+            pins[k] = target                    # one deck per card: this MOVES it
+            flash(f"{key} is now reserved for {target}.", "info")
+        deckcore.save_pins(pins)
+    return redirect(url_for("pins_page"))
+
+
 @app.route("/deck/<stem>/delete", methods=["POST"])
 def deck_delete(stem):
     """Delete a deck and its companion files. Git keeps the history, so this is
@@ -788,6 +1053,11 @@ def deck_delete(stem):
     left = {c: d for c, d in pins.items() if d != stem}
     if len(left) != len(pins):
         deckcore.save_pins(left)
+    # The deck's files are gone; its cached analysis would outlive it. (Pin
+    # writes need no invalidation of their own — `analyze_deck` never reads pins;
+    # they reach the optimizer through `pinned_elsewhere` and the dashboard
+    # through its own `load_pins` call, neither of which is memoized.)
+    _invalidate(stem)
     return redirect(url_for("index"))
 
 
@@ -810,15 +1080,191 @@ def deck_assess_page(stem):
         field_decks = None if rec.get("error") else rec.get("sample_decks")
     except Exception:
         pass
-    roles = [("ramp", "Ramp", 9, 13), ("draw", "Card draw", 8, 12),
-             ("removal", "Removal", 8, 11), ("wipe", "Wipes", 2, 5),
-             ("counter", "Counters", 0, 6), ("land", "Lands", 35, 38)]
+    # Derived from THE template (deckcore), archetype-aware for THIS deck — this was
+    # a fourth hand-copied role table, and it disagreed with the other three.
+    arch = deckcore.archetype_words(open(m["path"], encoding="utf-8").read())
+    rr = deckcore.role_ranges(arch)
+    labels = [("ramp", "Ramp"), ("draw", "Card draw"), ("removal", "Removal"),
+              ("wipe", "Wipes"), ("counter", "Counters")]
+    roles = [(k, lbl, rr[k][0], rr[k][1]) for k, lbl in labels]
+    roles.append(("land", "Lands", deckcore.LAND_RANGE[0], deckcore.LAND_RANGE[1]))
     # Shares the dashboard's disk cache, so visiting both pages after a deck edit
     # costs ONE simulation in total, not one per surface.
     sim = goldfish.sim_for_deck(m["path"], coll, collection_path=COLLECTION)
     return render_template("assess.html", meta=m, a=a, pool=pool, roles=roles,
                            cats=a["report"].get("categories", {}),
                            field_decks=field_decks, sim=sim, page="decks")
+
+
+def _plan_lines(m, a):
+    """The deck's game plan, and an honest label for where it came from.
+
+    The player's own `.notes.md` is the truth when it exists; otherwise a plain
+    role-count summary stands in, LABELLED as derived so nobody reads a heuristic as
+    the author's intent. Returns (lines, source)."""
+    stem = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
+    notes = deckcore.load_notes(f"{stem}.notes.md")
+    if notes:
+        out = []
+        for raw in notes.splitlines():
+            s = raw.strip().lstrip("#").strip()
+            if not s or s.startswith("<!--"):
+                continue
+            out.append(s.lstrip("-* ").strip())
+            if len(out) >= 6:
+                break
+        if out:
+            return out, "your notes"
+    cats = (a.get("report") or {}).get("categories", {})
+    sig = (a.get("assessment") or {}).get("signals", {})
+    derived = [f"{cats.get('ramp', 0)} ramp · {cats.get('draw', 0)} draw · "
+               f"{sig.get('interaction', 0)} interaction pieces",
+               f"{(a.get('report') or {}).get('lands', 0)} lands, "
+               f"average mana value {sig.get('avg_mv', '—')}"]
+    return derived, "derived from role counts — no .notes.md for this deck"
+
+
+@app.route("/deck/<stem>/table-card")
+def deck_table_card(stem):
+    """The Rule-0 table card: one screen you can hand across the table.
+
+    Every fact comes from the same engines the dashboard uses (codemap's
+    card-knowledge-flow rule — nothing is re-derived here). Bracket 1's Game Changer
+    exception literally requires cards be "discussed pregame" and WotC frames the
+    bracket as a conversation aid, so this is the artifact the system asks for and no
+    surveyed tool generates. Degrades honestly: a source that isn't reachable is named
+    as unavailable rather than silently omitted."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    coll, idx = collection_index()
+    a = deckcore.analyze_deck(m["path"], coll)
+    assessment = a.get("assessment")
+    sig = (assessment or {}).get("signals", {})
+
+    combos_present, combos_near, combo_note = [], 0, None
+    try:
+        sb = spellbook.combos_for_deck(m["path"])
+        if sb and not sb.get("error"):
+            combos_present = [c.get("name") or ", ".join(c.get("pieces", []))
+                              for c in (sb.get("complete") or [])][:6]
+            combos_near = len(sb.get("near") or [])
+        else:
+            combo_note = "combo data unavailable offline — showing local combos only"
+    except Exception:
+        combo_note = "combo data unavailable offline — showing local combos only"
+    local = a.get("combos") or {}
+    if not combos_present and local.get("complete"):
+        combos_present = [c["name"] for c in local["complete"]][:6]
+
+    sim = goldfish.sim_for_deck(m["path"], coll, collection_path=COLLECTION)
+    clock = (sim or {}).get("clock")
+    plan, plan_source = _plan_lines(m, a)
+    return render_template("table_card.html", meta=m, a=a, assessment=assessment,
+                           sig=sig, combos_present=combos_present,
+                           combos_near=combos_near, combo_note=combo_note,
+                           clock=clock, defs=(sim or {}).get("definitions", {}),
+                           plan=plan, plan_source=plan_source, page="decks")
+
+
+@app.route("/deck/<stem>/mulligan")
+def deck_mulligan(stem):
+    """Mulligan practice on the deck's REAL hands.
+
+    The 2025-26 trainers that exist are deck-generic and online-only; this deals from
+    the actual compiled list, so the hands are the ones the player will really see.
+    The sim's verdict is shown AFTER the call with the reasoning behind it, and it is
+    framed as a heuristic to compare against rather than a correct answer — the rule
+    reads land counts, not card quality, and the page says so."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    return render_template("mulligan.html", meta=m, page="decks")
+
+
+@app.route("/api/deck/<stem>/hand")
+def api_deck_hand(stem):
+    """One seeded opening hand plus the sim's verdict and its reasoning.
+
+    Seeded by an explicit `seed` so a hand is reproducible (and so a test can pin
+    one); the page draws a fresh seed per hand."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    try:
+        seed = int(request.args.get("seed") or 0)
+    except ValueError:
+        seed = 0
+    mulls = max(0, min(goldfish.MULL_FLOOR, int(request.args.get("mulls") or 0)))
+    coll, _idx = collection_index()
+    try:
+        compiled, _idx2 = goldfish.load_for_ab(m["path"], coll,
+                                               collection_path=COLLECTION)
+    except Exception:
+        compiled = None
+    if not compiled:
+        return jsonify({"error": "could not compile this deck"}), 200
+    if not compiled or not compiled.get("library"):
+        return jsonify({"error": "no library to draw from"}), 200
+
+    import random as _random
+    lib = list(compiled["library"])
+    _random.Random(seed).shuffle(lib)
+    hand = lib[:goldfish.HAND]
+    verdict = goldfish.keep_verdict(hand, mulls=mulls, mulligan=True)
+    lands = [c.name for c in hand if c.is_land]
+    spells = [{"name": c.name, "mv": c.mv} for c in hand if not c.is_land]
+    colors = sorted({p for c in hand if c.is_land for p in (c.produces or ())})
+    ramp = [c.name for c in hand if not c.is_land and c.is_producer]
+    return jsonify({
+        "hand": [{"name": c.name, "land": c.is_land, "mv": c.mv} for c in hand],
+        "lands": lands, "spells": spells, "colors": colors, "ramp": ramp,
+        "mulls": mulls, "floor": goldfish.HAND - goldfish.MULL_FLOOR,
+        "verdict": verdict,
+        "band": list(goldfish.KEEP_LANDS),
+        "caveat": ("The sim's rule counts LANDS, not card quality — it cannot see that "
+                   "your two spells are both uncastable, or that one of them is a "
+                   "tutor. Disagreeing with it is often correct."),
+        "have_data": bool(compiled.get("have_data", True)),
+    })
+
+
+@app.route("/api/deck/<stem>/ab")
+def api_deck_ab(stem):
+    """Paired A/B for a proposed swap — "what does this change actually do?"
+
+    The engine has measured swaps over common random numbers since the goldfish
+    landed, but only from the CLI; the Replace flow is where the player is actually
+    choosing. Advisory and non-blocking: the panel shows it beside the button and the
+    edit proceeds whatever this says (or fails to say)."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    out_name = (request.args.get("out") or "").strip()
+    in_name = (request.args.get("in") or "").strip()
+    if not out_name or not in_name:
+        return jsonify({"error": "need out= and in="}), 200
+    coll, _idx = collection_index()
+    try:
+        # Fewer games than a CLI run: this is inline in a click, and the paired
+        # design means even a short run separates a real change from noise.
+        # Disk-cached on the same key `sim_for_deck` uses plus the swap itself, so
+        # looking at the same proposed swap twice costs a file read, not 800 games.
+        ab = goldfish.ab_for_deck(m["path"], coll, out_name, in_name, games=400,
+                                  seed=0, collection_path=COLLECTION)
+    except Exception:
+        return jsonify({"error": "simulation unavailable"}), 200
+    if not ab:
+        return jsonify({"error": "simulation unavailable"}), 200
+    if ab.get("error"):
+        return jsonify({"error": ab["error"]}), 200
+    keep = ("commander_by_t4", "commander_by_t6", "first_kill_turn", "screw")
+    return jsonify({
+        "out": ab["out"], "in": ab["in"], "games": ab["games"],
+        "deltas": {k: v for k, v in ab["deltas"].items() if k in keep},
+        "note": ("Paired over identical shuffles, so this measures the swap rather "
+                 "than luck. Only starred rows cleared their confidence interval."),
+    })
 
 
 @app.route("/deck/<stem>/assess.txt")
@@ -893,9 +1339,48 @@ def build_deck_save(commander):
         r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
+        _flash_optimize(r)
     except Exception:
         pass                      # offline / EDHREC down: keep the un-tuned draft
+    _invalidate(stem)             # a brand-new deck, and an optimizer pass over it
     return redirect(url_for("deck", stem=stem))
+
+
+def _flash_optimize(r):
+    """Say what the optimizer did, and under WHICH template, on the web surface.
+
+    The CLI has printed the archetype-widened role template since 2026-08-13, but
+    the ⚡ button is where the player's finger actually is — and a widened template
+    is a LOOSENING (it permits swaps the default refused), so the surface that
+    triggers it is the one that must disclose it. Invariant 10: on every surface.
+    """
+    if not r:
+        return
+    n = len(r.get("swaps") or []) + len(r.get("land_swaps") or [])
+    flash(f"Optimizer: {n} change(s) applied." if n else
+          "Optimizer: already aligned with the field — no changes.", "info")
+    widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()
+               if rng != optimize.ROLE_RANGE.get(role)}
+    if widened:
+        flash("Judged under an archetype-widened role template ("
+              + " ".join(r.get("archetype") or []) + "): "
+              + ", ".join(f"{k} {lo}-{hi}" for k, (lo, hi) in sorted(widened.items()))
+              + ".", "info")
+    if r.get("archetype_unknown"):
+        flash("Archetype word(s) not recognised, no widening applied: "
+              + ", ".join(r["archetype_unknown"]) + ".", "warn")
+    for h in sorted(r.get("manual_holds") or [], key=lambda x: -x["inc"])[:3]:
+        # The CLI has printed these since the rule landed; the ⚡ button — where
+        # the player's finger actually is — must too. Withholding a 69%-field
+        # card with zero disclosure would violate the rule's own contract:
+        # decision durable, evidence VISIBLE.
+        flash(f"Held: {h['name']} ({h['inc']}% field) — you removed it by hand on "
+              f"{h['removed']}, so it is not re-proposed. Add it back yourself if "
+              "you've changed your mind.", "info")
+    if r.get("illegal"):
+        flash("!! ILLEGAL after optimize: "
+              + ", ".join(f"{q}x {n2}" for q, n2 in r["illegal"])
+              + " — Commander allows one copy.", "warn")
 
 
 @app.route("/deck/<stem>/optimize", methods=["POST"])
@@ -909,8 +1394,10 @@ def deck_optimize(stem):
         r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
+        _flash_optimize(r)
     except Exception:
         pass
+    _invalidate(stem)                   # an applying run rewrote the 99
     return redirect(url_for("deck", stem=stem))
 
 
@@ -987,7 +1474,8 @@ def collection_view():
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
-                           carddb=carddb, cards=cards, types=types, page="collection")
+                           carddb=carddb, cards=cards, types=types,
+                           enrich_status=enrich_bg.status_view(), page="collection")
 
 
 @app.route("/collection/add", methods=["POST"])
@@ -1000,24 +1488,27 @@ def collection_add():
             if header_needed:
                 f.write("# Player-confirmed ownership not in the export yet.\n")
             f.write(f"{qty} {name}\n")
+        _invalidate()             # owned_additions feeds EVERY deck's analysis
     return redirect(url_for("collection_view"))
 
 
 @app.route("/collection/upload", methods=["POST"])
 def collection_upload():
+    """Save the uploaded export, then enrich it in the BACKGROUND.
+
+    Enrichment is ~1 Scryfall request per 75 cards — minutes for a real
+    collection. Running it inline held the browser open for the whole of that and
+    spent one request's worth of a shared CPU quota on it; on this host that is a
+    timeout, not a slow page. The upload itself is unchanged and deliberately
+    untouched: it writes the PRIVATE, gitignored CSV and never the tracked
+    name-only snapshot (that separation closed a real leak — see CLAUDE.md)."""
     f = request.files.get("csv")
     if f and f.filename:
-        # Save to the private, gitignored CSV — never the tracked snapshot (a priced
-        # export must not land in a public repo). Then enrich the whole collection so
-        # colors / types / mana value / image ids are ready and the analytics light up.
         global COLLECTION
         f.save(COLLECTION_CSV)
         COLLECTION = COLLECTION_CSV
-        try:
-            import carddb
-            carddb.enrich_api(COLLECTION_CSV, COLLECTION_ATTRS)
-        except Exception:
-            pass  # best-effort — the raw collection still loads without attributes
+        _invalidate()             # a whole new collection — nothing cached survives
+        flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
     return redirect(url_for("collection_view"))
 
 
@@ -1052,7 +1543,11 @@ def api_edhrec(commander):
     """EDHREC community staples for a commander, cross-referenced with the collection:
     owned (add) vs missing (buy). Cached to disk; degrades to an error payload."""
     _, idx = collection_index()
-    return jsonify(edhrec.recommendations(commander, idx))
+    # Pass the pins so a staple whose only copy is reserved for another deck is
+    # LABELLED rather than silently offered as available.
+    return jsonify(edhrec.recommendations(
+        commander, idx, pins=deckcore.load_pins(),
+        for_stem=request.args.get("for") or None))
 
 
 @app.route("/api/combos/build/<path:commander>")
@@ -1082,12 +1577,46 @@ def mobile():
                            port=int(os.environ.get("MTG_PORT", "5000")), page="mobile")
 
 
+def _asset_version():
+    """A cache-busting version derived from the code itself.
+
+    The service worker's cache name was hand-pinned (`mtgdb-v1`), so every shipped
+    change to a cached asset needed someone to remember to bump it — and forgetting
+    means an installed phone keeps serving the old CSS/JS with no way for the player
+    to tell. Derived from the current git HEAD where available, else the newest mtime
+    across the shell files, so it moves on its own."""
+    try:
+        head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True, timeout=5)
+        if head.returncode == 0 and head.stdout.strip():
+            return head.stdout.strip()
+    except Exception:
+        pass
+    newest = 0
+    for d in (os.path.join(ROOT, "webapp", "static"),
+              os.path.join(ROOT, "scripts", "assets")):
+        try:
+            for f in os.listdir(d):
+                newest = max(newest, int(os.path.getmtime(os.path.join(d, f))))
+        except OSError:
+            continue
+    return str(newest)
+
+
 @app.route("/sw.js")
 def service_worker():
     """Served from the root, not /static/, because a service worker can only control
-    pages at or below its own path — at /static/sw.js it could never manage the app."""
-    return send_from_directory(os.path.join(ROOT, "webapp", "static"), "sw.js",
-                               mimetype="application/javascript")
+    pages at or below its own path — at /static/sw.js it could never manage the app.
+
+    The cache VERSION is substituted at serve time from `_asset_version()`: a stale
+    installed worker is invisible to the player, so this must not depend on anyone
+    remembering to edit a constant."""
+    path = os.path.join(ROOT, "webapp", "static", "sw.js")
+    with open(path, encoding="utf-8") as f:
+        js = f.read()
+    js = js.replace("__ASSET_VERSION__", _asset_version())
+    return Response(js, mimetype="application/javascript",
+                    headers={"Cache-Control": "no-cache"})
 
 
 @app.route("/static/tokens.css")
