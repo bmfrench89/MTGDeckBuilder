@@ -1,7 +1,13 @@
 # Spec — Mana Intelligence: fetch targets, restricted sources, and honest manabase re-evaluation
 
-**Status: ☐ DRAFT — awaiting player approval. DO NOT START IMPLEMENTATION until the
-player has approved this spec in chat.**
+**Status: ☑ PHASES A–G ALL SHIPPED 2026-08-14** (player approved and drove the
+season in-session; adversarially verified by three lenses before implementation).
+Suite 685 → 713, offline, exit 0; `scripts/` stdlib-only throughout. **What
+remains is Phase H's data rollout — two re-enrichment legs (H2), neither of them
+code:** dispatch the attrs-snapshot Action, then re-enrich the server's private
+CSV. Until both legs run, every surface shows the pre-vocabulary honesty labels
+and all numbers are unchanged — the designed degrade, not a bug. H3's live
+acceptance closes the loop after the legs.
 
 **Why this exists (live findings, 2026-08-14, the-ur-dragon review):** the player
 asked why Wood Elves and Llanowar Elves are in a deck with "only 2 Forests." The
@@ -240,7 +246,7 @@ So the vocabulary version rides the existing mechanism by BECOMING a column:
 
 ---
 
-## Phase B — Count what's actually there: restricted sources + the fetch census
+## Phase B ☑ SHIPPED — Count what's actually there: restricted sources + the fetch census
 
 ### B1. Restricted sources — a SUBTRACTION from today's numbers (deck_stats)
 
@@ -350,7 +356,7 @@ fetch_census(enriched)  # -> {"rows": [...], "total_fetchers": int,
 
 ---
 
-## Phase C — Surface it everywhere mana already surfaces (five render sites, count them)
+## Phase C ☑ SHIPPED — Surface it everywhere mana already surfaces (five render sites, count them)
 
 The Mana tab is ONE renderer (the app deck page IS `build_dashboard.generate`
 output — there is no deck.html), but the mana dict renders in FIVE places total.
@@ -396,7 +402,7 @@ existing tab-structure invariants stay green.
 
 ---
 
-## Phase D — Re-evaluation on manual edits: a standing banner, not a flash
+## Phase D ☑ SHIPPED — Re-evaluation on manual edits: a standing banner, not a flash
 
 **Flask flashes DO NOT render on deck pages** — `/deck/<stem>` returns raw
 generated HTML with no `get_flashed_messages` (the ⚡ flashes already suffer
@@ -441,7 +447,7 @@ changed); `mana_note` in the add-route JSON for a thin fetcher.
 
 ---
 
-## Phase E — Optimizer guards: the land passes may not strand a fetcher
+## Phase E ☑ SHIPPED — Optimizer guards: the land passes may not strand a fetcher
 
 Scope: `optimize.py` pass 1 (weak-nonbasic upgrades, :568-588), pass 2 (basics
 repair, :590-611), and the buy-land pairing (:633-644). All three consume the
@@ -493,7 +499,7 @@ same run, each individually "leaving one").
 
 ---
 
-## Phase F — auto_build: prefer lands the deck can actually fetch
+## Phase F ☑ SHIPPED — auto_build: prefer lands the deck can actually fetch
 
 - The weight goes in the **land-take re-rank at auto_build.py:218-221 — NOT in
   `deck_fit.assess_card`**. The scorer is shared with the optimizer's
@@ -520,7 +526,7 @@ same run, each individually "leaving one").
 
 ---
 
-## Phase G — Goldfish: one honest sentence, one schema bump, NO game-logic changes
+## Phase G ☑ SHIPPED — Goldfish: one honest sentence, one schema bump, NO game-logic changes
 
 The sim's model gaps are real but out of scope (spend-restriction payment needs
 a `_pay` redesign + data SimCard doesn't carry; fetch modeling touches the draw
