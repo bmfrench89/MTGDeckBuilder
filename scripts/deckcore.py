@@ -361,7 +361,7 @@ def load_attrs(path):
                 "mv": mv,
                 "colors": (r.get("Colors") or "").strip(),
                 "produced": r.get("Produced"),      # None = column absent, keep it
-                "flags": r.get("Flags"),
+                "flags": r.get("Flags"), "flags_ver": r.get("FlagsVer"),
                 "power": r.get("Power"),            # verbatim; '*' stays '*'
             }
     return out
@@ -433,7 +433,13 @@ def apply_attrs(enriched, attrs):
         if a.get("produced") is not None:
             c.produced = mtglib._parse_produced(a["produced"])
         if a.get("flags") is not None:
+            # Same one-write rule as mtglib.overlay_attrs: a deck companion that
+            # supplies Flags without a FlagsVer supplies v1 flags, and saying so
+            # is what keeps "no restriction token" from reading as "verified
+            # unrestricted" on a file written before the token existed.
             c.flags = mtglib._parse_flags(a["flags"])
+            c.flags_ver = (mtglib._parse_flags_ver(a.get("flags_ver"))
+                           if a.get("flags_ver") is not None else 1)
         if a.get("power") is not None:
             p = mtglib._parse_power(a["power"])
             if p is not None:

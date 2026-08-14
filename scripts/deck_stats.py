@@ -56,7 +56,8 @@ def analyze(deck_cards, coll_index):
                 supertypes=ref.supertypes, rarity=ref.rarity,
                 scryfall_id=ref.scryfall_id, set_code=ref.set_code,
                 collector_number=ref.collector_number, price=ref.price,
-                produced=ref.produced, flags=ref.flags, power=ref.power)
+                produced=ref.produced, flags=ref.flags, power=ref.power,
+                flags_ver=ref.flags_ver)
             enriched.append(merged)
     return enriched, missing
 

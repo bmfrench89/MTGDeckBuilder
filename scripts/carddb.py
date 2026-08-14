@@ -65,7 +65,7 @@ import oracle_flags
 # in scope reads it — the goldfish sim has no blockers — and an unread column is a
 # column that silently rots. Add it the day something actually consumes it.
 ATTRS_HEADER = ["Name", "Type", "MV", "Colors", "Cost", "Sub-types", "Scryfall",
-                "Produced", "Flags", "Power"]
+                "Produced", "Flags", "Power", "FlagsVer"]
 
 BULK_LIST_URL = "https://api.scryfall.com/bulk-data"
 # Scryfall asks API clients to send a descriptive User-Agent and an Accept header.
@@ -213,7 +213,12 @@ def _attrs_row(card, a):
     """One collection_attrs.csv row, in ATTRS_HEADER order."""
     return [card.name, a["type"], a["mv"], a["colors"], a["cost"],
             a.get("subtypes", ""), a.get("id", ""),
-            a.get("produced", ""), a.get("flags", ""), a.get("power", "")]
+            a.get("produced", ""), a.get("flags", ""), a.get("power", ""),
+            # The vocabulary version that produced THIS row's Flags cell. Flags are
+            # the storage — there is no oracle text at rest — so without a version a
+            # file enriched before a token existed is indistinguishable from one
+            # where the token genuinely does not apply.
+            a.get("flags_ver", oracle_flags.VOCAB_VERSION)]
 
 
 def write_attrs_csv(out_path, header, rows):

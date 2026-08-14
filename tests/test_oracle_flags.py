@@ -136,7 +136,7 @@ def test_generic_amount_counts_toward_the_mana_tokens():
 
 
 def test_cultivate_text_is_ramp_without_being_a_rock():
-    assert oracle_flags.derive_flags(CULTIVATE) == {"ramp"}
+    assert oracle_flags.derive_flags(CULTIVATE) == {"ramp", "fetch:basic"}
 
 
 def test_a_land_that_taps_for_mana_is_never_a_rock_or_dork():
@@ -318,3 +318,118 @@ def test_a_bare_dict_never_raises():
     assert oracle_flags.produced_of({}) == set()
     assert oracle_flags.derive_flags({}) == set()
     assert oracle_flags.oracle_text_of({}) == ""
+
+
+# --------------------------------------------------------------------------- #
+# v2 vocabulary — fetch targets and spend restrictions
+#
+# These exist because the v1 search regex needs the literal word "land"
+# (`search your library for [^.]*\bland`), and "island" does not match `\bland`.
+# The whole typed-fetch class was therefore invisible: Farseek, Nature's Lore and
+# Wood Elves carry NO flags at all in the committed collection snapshot — Wood
+# Elves does not even register as `ramp`.
+# --------------------------------------------------------------------------- #
+WOOD_ELVES = card("Wood Elves", "Creature — Elf Scout",
+                  "When Wood Elves enters, search your library for a Forest card, "
+                  "put it onto the battlefield, then shuffle.")
+FARSEEK = card("Farseek", "Sorcery",
+               "Search your library for a Plains, Island, Swamp, or Mountain card, "
+               "put it onto the battlefield tapped, then shuffle.")
+NISSAS_PILGRIMAGE = card("Nissa's Pilgrimage", "Sorcery",
+                         "Search your library for up to two basic Forest cards, "
+                         "reveal them, put one onto the battlefield tapped and the "
+                         "rest into your hand, then shuffle.")
+KROSAN_VERGE = card("Krosan Verge", "Land",
+                    "This land enters tapped.\n{T}, Sacrifice this land: Search your "
+                    "library for a Forest card and a Plains card, put them onto the "
+                    "battlefield tapped, then shuffle.")
+EVOLVING_WILDS = card("Evolving Wilds", "Land",
+                      "{T}, Sacrifice this land: Search your library for a basic land "
+                      "card, put it onto the battlefield tapped, then shuffle.")
+EXPEDITION_MAP = card("Expedition Map", "Artifact",
+                      "{2}, {T}, Sacrifice this artifact: Search your library for a "
+                      "land card, put it into your hand, then shuffle.")
+DEMONIC_TUTOR = card("Demonic Tutor", "Sorcery",
+                     "Search your library for a card, put that card into your hand, "
+                     "then shuffle.")
+UNCLAIMED_TERRITORY = card(
+    "Unclaimed Territory", "Land",
+    "As this land enters, choose a creature type.\n{T}: Add {C}.\n"
+    "{T}: Add one mana of any color. Spend this mana only to cast a creature spell "
+    "of the chosen type.",
+    produced=["C", "W", "U", "B", "R", "G"])
+
+
+def test_a_typed_fetch_names_the_type_it_can_actually_find():
+    """The live miss this vocabulary exists for. A typed nonbasic satisfies a
+    typed fetch — Wood Elves finds Scattered Groves — so the token is the TYPE,
+    not 'basic'."""
+    assert oracle_flags.derive_flags(WOOD_ELVES) == {"ramp", "fetch:forest"}
+
+
+def test_a_multi_type_fetch_emits_one_token_per_type():
+    assert oracle_flags.derive_flags(FARSEEK) == {
+        "ramp", "fetch:plains", "fetch:island", "fetch:swamp", "fetch:mountain"}
+
+
+def test_basic_qualified_typed_fetch_is_its_own_token():
+    """'a basic Forest card' is NOT satisfied by a Forest-typed dual, so it must
+    not share a token with 'a Forest card'."""
+    assert oracle_flags.derive_flags(NISSAS_PILGRIMAGE) == {"ramp",
+                                                            "fetch:basic-forest"}
+
+
+def test_two_searches_in_one_clause_are_a_union():
+    """Krosan Verge finds a Forest AND a Plains — the tokens describe what it can
+    find, and a union is the honest reading."""
+    f = oracle_flags.derive_flags(KROSAN_VERGE)
+    assert {"fetch:forest", "fetch:plains"} <= f
+    assert "etb-tapped" in f, "the v1 land rules still apply to the same card"
+
+
+def test_basic_land_fetch_stays_generic():
+    assert oracle_flags.derive_flags(EVOLVING_WILDS) == {"ramp", "fetch:basic"}
+
+
+def test_a_fetch_to_hand_is_not_ramp():
+    """`ramp` keeps its v1 meaning — onto the battlefield. Expedition Map finds a
+    land but accelerates nothing."""
+    assert oracle_flags.derive_flags(EXPEDITION_MAP) == {"fetch:land"}
+
+
+def test_a_tutor_that_names_no_land_fetches_nothing():
+    """The clause is read, not the verb: 'search your library for a card' names
+    neither a type nor a land, so Demonic Tutor stays silent."""
+    assert oracle_flags.derive_flags(DEMONIC_TUTOR) == set()
+
+
+def test_a_spend_restricted_land_is_flagged_but_still_produces_everything():
+    """The two halves must not be conflated. Scryfall genuinely reports every
+    colour in produced_mana — the restriction is only in the text, so this token
+    is the only way a consumer can tell a rainbow land from a rainbow-for-one-
+    tribe land. Counting it as a full source of five colours is an OVERCOUNT,
+    which is what the downstream bucket corrects."""
+    assert oracle_flags.derive_flags(UNCLAIMED_TERRITORY) == {"mana-restricted"}
+    assert oracle_flags.produced_of(UNCLAIMED_TERRITORY) == set("WUBRGC")
+
+
+def test_the_new_tokens_do_not_disturb_the_mana_vocabulary():
+    """THE tripwire for this phase. Every v1 pin must come out unchanged — the
+    new tokens are additive, and a regex that co-fires on a v1 fixture would
+    silently move role counts, power scores and optimizer guardrails."""
+    assert oracle_flags.derive_flags(SOL_RING) == {"rock", "ramp", "mana2"}
+    assert oracle_flags.derive_flags(COMMAND_TOWER) == set()
+    assert oracle_flags.derive_flags(MAZE_OF_ITH) == set()
+    assert oracle_flags.derive_flags(GUILDGATE) == {"etb-tapped"}
+    assert oracle_flags.derive_flags(SHOCKLAND) == {"etb-tapped-cond"}
+    assert oracle_flags.derive_flags(SWORDS) == {"removal"}
+
+
+def test_new_tokens_map_to_no_classify_role():
+    """Deliberately absent from FLAG_ROLES: lands short-circuit before the flag
+    layer anyway, and mapping fetch:* to 'ramp' would reclassify every fetchland
+    and move every downstream count."""
+    import mtglib
+    for token in ("fetch:land", "fetch:basic", "fetch:forest",
+                  "fetch:basic-forest", "mana-restricted"):
+        assert token not in mtglib.FLAG_ROLES
