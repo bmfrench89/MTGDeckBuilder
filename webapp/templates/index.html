@@ -54,6 +54,8 @@ open one for its full dashboard.</div>
        title="ManaPool-ready list — quantity + card name, one per line">.txt</a>
     <a href="{{ url_for('export_deck_html', stem=d.stem) }}"
        title="Self-contained HTML report — opens anywhere; card images need an internet connection; print it (Ctrl+P) to save as PDF">Report</a>
+    <a href="{{ url_for('deck_proxies', stem=d.stem, buylist=1) }}"
+       title="Print-exact 63×88mm playtest proxies of this deck's buylist — sleeve them over the cards they'd replace and play before you buy. Print at 100% scale.">Proxies</a>
     <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
        title="Deck + all analytics, to hand to a coaching session">Assess</a>
     <a href="{{ url_for('deck_mulligan', stem=d.stem) }}"

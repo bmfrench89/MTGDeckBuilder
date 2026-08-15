@@ -1,16 +1,1 @@
-# Cards a sandboxed session could NOT verify, queued for a GitHub runner.
-#
-# Why this file exists: Scryfall is egress-blocked from the Claude Code sandbox
-# (the proxy answers 403 to CONNECT), so `carddb.py --verify` returns UNVERIFIED
-# and grounding rule #3 says an unverified card gets EXCLUDED, not guessed at.
-# `.github/workflows/deck-verify.yml` reads this list on a runner, which has
-# real internet, and prints the VERBATIM oracle text into the job log.
-#
-# Format: one card name per line. Blank lines and #-comments ignored.
-# Keep it short — this is a work queue, not a registry. Clear entries once the
-# answer has been written into a deck's .notes.md or the card has been ruled out.
-#
-# QUEUE IS EMPTY. The 2026-08-14 Bruce Banner batch (55 cards) came back clean —
-# 55/55 resolved, 0 UNVERIFIED — and every answer was written into
-# data/decks/bruce-banner-incredible-hulk.notes.md. Add the next session's
-# unknowns below.
+# Cleared — 2026-08-15 sleeper audit complete; both rounds written up in decks/notes + handoff.

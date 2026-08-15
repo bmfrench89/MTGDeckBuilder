@@ -28,7 +28,7 @@
 1 Wrathful Red Dragon
 1 Dragonlord Ojutai
 1 Zurgo and Ojutai
-1 Kolaghan, the Storm's Fury
+1 Smaug the Impenetrable
 1 Broodcaller Scourge
 1 Lozhan, Dragons' Legacy
 1 Dragonlord Silumgar
@@ -63,7 +63,7 @@
 # --- Artifacts ---
 1 Arcane Signet
 1 Sol Ring
-1 Thought Vessel
+1 Desolation of Smaug
 1 Fellwar Stone
 1 Roaming Throne
 1 Lightning Greaves
@@ -72,7 +72,7 @@
 # --- Enchantments ---
 1 Up the Beanstalk
 1 Temur Ascendancy
-1 Reconnaissance Mission
+1 Smaug the Magnificent
 1 Kindred Discovery
 1 Seal of Cleansing
 1 Dragon Tempest

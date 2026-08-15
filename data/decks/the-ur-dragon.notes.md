@@ -140,3 +140,23 @@ preview proposed cutting five deliberate keeps for counterspells (including
 - Llanowar Elves — the only T1 ramp play in the 99; 5c pip math still wants it.
 - Talisman of Progress — untapped rock; the proposed Negate is a worse slot in
   a tap-out tribal deck.
+
+# The Smaug package (sleeper audit 2026-08-15 — text runner-verified)
+Three Hobbit adds that feed the eminence engine directly; the optimizer must not churn them:
+- **Smaug the Magnificent** ({1}{R}{R} with eminence): the deck's cheapest *hasty* dragon —
+  it attacks the turn it lands, which is a draw + free permanent from The Ur-Dragon
+  immediately. His upkeep Treasure fixes five-color mana, and his attack trigger turns
+  every Treasure into reach damage.
+- **Smaug the Impenetrable**: haste + **indestructible** keeps the attack-trigger engine
+  running through the board wipe that usually resets this deck, and every burn spell or
+  pinger pointed at him mints Treasures.
+- **Desolation of Smaug**: a one-sided sweeper (3 damage to each NON-Dragon) that doubles
+  as a 4-mana Dragon ritual — clear the dorks, then cast the discounted dragon it just
+  paid for. Replaced Thought Vessel: a colorless-only rock was the worst fixer in a deck
+  whose mulligan rule is "fixing above all."
+Kolaghan, the Storm's Fury was the third cut: dash fights eminence (a dashed dragon
+re-buys at FULL cost — the discount only helps cast, and it leaves before Ur-Dragon's
+draw trigger can love it twice), and its +1/+0 swarm pump had no swarm here.
+**Lozhan stays on purpose** — verified text: every Dragon/Adventure cast deals its full
+mana value in damage. With ~30 dragons at MV 4–9, that's removal stapled to the plan in
+a deck whose removal count runs low. Its 14% field number underrates this deck.
