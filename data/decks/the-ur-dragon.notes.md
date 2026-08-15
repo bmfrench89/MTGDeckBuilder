@@ -160,3 +160,10 @@ draw trigger can love it twice), and its +1/+0 swarm pump had no swarm here.
 **Lozhan stays on purpose** — verified text: every Dragon/Adventure cast deals its full
 mana value in damage. With ~30 dragons at MV 4–9, that's removal stapled to the plan in
 a deck whose removal count runs low. Its 14% field number underrates this deck.
+
+**Kaalia of the Vast left this deck 2026-08-15 at the player's direction** — she is
+reserved for her own Mardu deck (pinned in `data/collection/pins.csv`, which is what
+keeps the optimizer and auto-builder from quietly re-seating her here). Her slot went
+to **Smaug, the Great Calamity // Spew Flame**: a fourth Smaug, a 31st dragon, and —
+via the Spew Flame adventure (5 damage to a creature, then the dragon waits in exile)
+— a removal spell in the deck's thinnest role. Eminence discounts the creature half.

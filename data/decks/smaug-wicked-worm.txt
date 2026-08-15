@@ -1,0 +1,108 @@
+# Title: Smaug, Wicked Worm — Dragon Sickness
+# Commander: Smaug, Wicked Worm
+# Colors: B R
+# Archetype: aristocrats artifacts burn
+# Source: sleeper-scout build 2026-08-15 (auto_build skeleton + hand-placed engine)
+
+# --- Commander ---
+1 Smaug, Wicked Worm
+
+# --- Creatures ---
+1 Burnished Hart
+1 Decadent Dragon // Expensive Taste
+1 Fin Fang Foom
+1 Smaug the Impenetrable
+1 Hellkite Tyrant
+1 Brainstealer Dragon
+1 The Sackville-Bagginses
+1 The Master of Lake-town
+1 Smaug the Magnificent
+1 Professional Face-Breaker
+1 Reckless Lackey
+1 The Great Goblin
+1 Misty Mountains Raider
+1 Gundabad Opportunist
+1 Millikin
+1 Containment Construct
+1 Gravestone Strider
+1 Stark Industries Executive
+1 Endrider Catalyzer
+1 Gilded Ghoda
+1 Gleaming Barrier
+1 Masked Meower
+1 Misty Knight, Hero for Hire
+1 Red Herring
+1 The Reaver Cleaver
+1 Goblin Glasswright // Craft with Pride
+1 Bola Warrior
+1 Burrog Banemaker
+1 Goblin Recruiter
+1 Mage Tower Referee
+
+# --- Instants ---
+1 Crash and Burn
+1 Deadly Dispute
+1 Rakdos Charm
+1 Death in the Family
+1 HULK SMASH!
+1 Hearth Charm
+1 Nameless Inversion
+1 Dark Ritual
+1 Chaos Warp
+1 Terminate
+1 Blasphemous Act
+1 Unearth
+1 Romantic Rendezvous
+1 Stir Up Trouble
+1 Feed the Swarm
+1 Raze
+1 Sandman's Quicksand
+1 Outbreak
+1 Brotherhood's End
+1 Big Score
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Explorer's Scope
+1 Giant's Boulder
+1 Sol Ring
+1 Diamond Pick-Axe
+1 Instant Ramen
+1 Ragged Short Spear
+1 Burner Rocket
+1 Talisman of Indulgence
+
+# --- Enchantments ---
+1 Last Light of Durin's Day
+1 Shadow of the Goblin
+1 Case of the Burning Masks
+
+# --- Lands ---
+1 Smoldering Marsh
+1 Terramorphic Expanse
+1 Command Tower
+1 Rocky Roads
+1 Thriving Bluff
+1 Villainous Hideout
+1 Exotic Orchard
+1 Foreboding Ruins
+1 Crystal Vein
+1 Dark Fortress
+1 Dwarven Ruins
+1 Hobbit Hole
+1 Scavenger Grounds
+1 Study Hall
+1 Temple of the False God
+1 The Gold Saucer
+1 Sulfurous Springs
+1 Mountain
+1 Bloodfell Caves
+1 Bojuka Bog
+1 Buried Ruin
+1 Castle Doom
+1 Cinder Barrens
+1 Dragon-Cursed Halls
+
+# --- Basics ---
+4 Swamp
+9 Mountain

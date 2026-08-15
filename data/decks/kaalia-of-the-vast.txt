@@ -1,0 +1,111 @@
+# Title: Kaalia of the Vast — Open the Gates
+# Commander: Kaalia of the Vast
+# Colors: B R W
+# Archetype: reanimator tribal-hero
+# Source: sleeper-scout build 2026-08-15 (auto_build skeleton + hand-placed engine)
+
+# --- Commander ---
+1 Kaalia of the Vast
+
+# --- Creatures ---
+1 Tragedy Feaster
+1 Angelic Curator
+1 Lorehold, the Historian
+1 Neriv, Heart of the Storm
+1 Summon: G.F. Ifrit
+1 Sustainer of the Realm
+1 Vanguard Seraph
+1 Voice of Grace
+1 Voice of Truth
+1 Karmic Guide
+1 Serra Paragon
+1 Sephara, Sky's Blade
+1 Archfiend of Depravity
+1 Bloodgift Demon
+1 Indulgent Tormentor
+1 Rakshasa Debaser
+1 Angel of Indemnity
+1 Guardian Scalelord
+1 Radiant, Archangel
+1 Fallen Angel
+1 Kardur, Doomscourge
+1 Defiling Daemogoth
+1 Contract Hero
+1 Luke Cage, Hero for Hire
+1 Agent Venom
+1 Human Torch, Johnny Storm
+1 Spider-Gwen, Free Spirit
+1 Spider-UK
+1 Hero in Training
+1 The Vision
+1 Viv Vision, Teen Synthezoid
+1 Emeria Angel
+1 Iron Spider, Stark Upgrade
+1 Jack of Hearts, Volatile Hero
+1 Herald of Serra
+
+# --- Instants ---
+1 Disenchant
+1 Spectacular Tactics
+1 Getaway Glamer
+1 Rakdos Charm
+1 Silverquill Charm
+1 Stone by Sunlight
+1 Swords to Plowshares
+1 Path to Exile
+1 Boros Charm
+
+# --- Sorceries ---
+1 Stir Up Trouble
+1 Requisition Raid
+1 Sandman's Quicksand
+1 Outbreak
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Explorer's Scope
+1 Giant's Boulder
+1 Sol Ring
+1 Diamond Pick-Axe
+1 Rakdos Signet
+1 Talisman of Conviction
+1 Fellwar Stone
+1 Talisman of Indulgence
+1 Lightning Greaves
+1 Swiftfoot Boots
+1 Talisman of Hierarchy
+
+# --- Enchantments ---
+1 Pacifism
+1 Planar Collapse
+
+# --- Lands ---
+1 Smoldering Marsh
+1 Mistveil Plains
+1 Radiant Summit
+1 Sacred Peaks
+1 Turbulent Steppe
+1 Terramorphic Expanse
+1 Exotic Orchard
+1 Command Tower
+1 Rocky Roads
+1 Thriving Bluff
+1 Villainous Hideout
+1 Isolated Chapel
+1 Rogue's Passage
+1 Clifftop Retreat
+1 Battlefield Forge
+1 Spectator Seating
+1 Dark Fortress
+1 Sulfurous Springs
+1 Evolving Wilds
+1 Bojuka Bog
+1 Lorehold Campus
+1 Rabanastre, Royal City
+1 Scavenger Grounds
+1 Scoured Barrens
+
+# --- Basics ---
+2 Swamp
+5 Mountain
+6 Plains
