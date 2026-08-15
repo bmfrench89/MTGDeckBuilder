@@ -11,17 +11,13 @@
 1 Burnished Hart
 1 Decadent Dragon // Expensive Taste
 1 Fin Fang Foom
-1 Obsidian Charmaw
+1 Smaug the Impenetrable
 1 Hellkite Tyrant
-1 Nova Hellkite
-1 Two-Headed Dragon
 1 Brainstealer Dragon
 1 The Sackville-Bagginses
 1 The Master of Lake-town
-1 Azog, Moria's Ruin
-1 Bolg's Company
-1 Gastal Thrillseeker
-1 Bile-Vial Boggart
+1 Smaug the Magnificent
+1 Professional Face-Breaker
 1 Reckless Lackey
 1 The Great Goblin
 1 Misty Mountains Raider
@@ -36,7 +32,7 @@
 1 Masked Meower
 1 Misty Knight, Hero for Hire
 1 Red Herring
-1 Kolaghan, the Storm's Fury
+1 The Reaver Cleaver
 1 Goblin Glasswright // Craft with Pride
 1 Bola Warrior
 1 Burrog Banemaker
@@ -52,8 +48,9 @@
 1 Hearth Charm
 1 Nameless Inversion
 1 Dark Ritual
-
-# --- Sorceries ---
+1 Chaos Warp
+1 Terminate
+1 Blasphemous Act
 1 Unearth
 1 Romantic Rendezvous
 1 Stir Up Trouble
@@ -62,6 +59,7 @@
 1 Sandman's Quicksand
 1 Outbreak
 1 Brotherhood's End
+1 Big Score
 
 # --- Artifacts ---
 1 Arcane Signet
@@ -69,10 +67,10 @@
 1 Giant's Boulder
 1 Sol Ring
 1 Diamond Pick-Axe
-1 Eerie Gravestone
 1 Instant Ramen
 1 Ragged Short Spear
 1 Burner Rocket
+1 Talisman of Indulgence
 
 # --- Enchantments ---
 1 Last Light of Durin's Day
@@ -86,8 +84,8 @@
 1 Rocky Roads
 1 Thriving Bluff
 1 Villainous Hideout
-1 Ash Barrens
-1 Avengers Tower
+1 Exotic Orchard
+1 Foreboding Ruins
 1 Crystal Vein
 1 Dark Fortress
 1 Dwarven Ruins
@@ -96,8 +94,8 @@
 1 Study Hall
 1 Temple of the False God
 1 The Gold Saucer
-1 Akoum Refuge
-1 Baxter Building
+1 Sulfurous Springs
+1 Mountain
 1 Bloodfell Caves
 1 Bojuka Bog
 1 Buried Ruin

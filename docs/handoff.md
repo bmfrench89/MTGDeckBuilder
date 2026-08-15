@@ -87,6 +87,34 @@ cells, nine per page, exact printings from the export's set+number, Chromium-mea
 geometry. The index links each deck's **buylist** proxies — decks are owned-only by
 rule, so what's worth printing is the upgrade you're deciding whether to buy.
 
+## Three new decks built 2026-08-15 (scout session -> builds, same day)
+
+The stable is NINE decks. Build order was deliberate — each claims physical copies:
+
+1. **smaug-wicked-worm — "Dragon Sickness"** (Rakdos treasures, power 71, Bracket 2).
+   Commands the SECOND owned copy of Smaug, Wicked Worm; the first stays in Ur-Dragon.
+   Engine: ETB Treasures scale with opponents' artifacts; every Treasure-funded spell
+   draws. Hellkite Tyrant is the win; Sackville/Lake-town sac shell grinds;
+   Dragon-Cursed Halls and Reckless Lackey verified in. Field: 292 cards, 1,223 decks.
+2. **doctor-doom — "All According to Plan"** (mono-B, power 73 — #2 IN THE STABLE at
+   birth, Bracket 2). The mono-B MSH card we own, not the Grixis "Rules All". Doombots
+   + Castle Doom + Doom Reigns Supreme keep him indestructible; The Masters of Evil
+   TUTORS PLANS (verified). Top-25 overlap 13/25 with 12 not owned — his buylist is
+   the growth path, said honestly by the optimizer itself.
+3. **kaalia-of-the-vast — "Open the Gates"** (Mardu, power 67, Bracket 2). The pin
+   resolves here. **24 A/D/D bodies** after the density repair: the first optimizer
+   pass took ten bodies for staples while nineteen generic Hero fillers survived —
+   the support was right, the room was wrong, so eight bodies came back OVER filler
+   (logged manual-replace, notes name them). Neriv (entered-this-turn damage DOUBLES)
+   and Rakshasa Debaser (drops attacking -> immediate reanimate trigger) are her
+   verified bombs. Dragons went to Smaug first; her dragon buys are the buylist.
+
+All three: auto_build skeletons + hand-placed engines, four verify-runner rounds total
+(103 cards, 0 unverified), sections regrouped, notes protect every engine piece,
+optimizer applied then re-previewed "already aligned", wishlist regenerated (the
+[share] land upgrades created real shortfalls -> priced rows). commanders.csv gained
+all three with verified identities.
+
 ## Deck export: HTML report + PDF via the browser (NEW 2026-08-15)
 
 Spec: `docs/spec-deck-export.md`. Player asked for "export a deck as an html/pdf

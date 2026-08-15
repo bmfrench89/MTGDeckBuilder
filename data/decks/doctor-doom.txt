@@ -31,10 +31,8 @@
 1 Mister Gutsy
 1 Camera Launcher
 1 Redrock Sentinel
-1 Aetherjacket
-1 Inner Demons Gangsters
-1 Black Cat, Cunning Thief
-1 The Master of Lake-town
+1 Solemn Simulacrum
+1 Ultron, Artificial Malevolence
 1 Scorpion, Seething Striker
 1 Madame Masque
 1 Gleaming Barrier
@@ -57,8 +55,6 @@
 1 Bilbo's Deadly Slice
 1 Spin Out
 1 Dark Ritual
-
-# --- Sorceries ---
 1 Unearth
 1 Stir Up Trouble
 1 Feed the Swarm
@@ -78,12 +74,14 @@
 1 Seal of Doom
 1 The Death of Gwen Stacy
 1 Doom Reigns Supreme
+1 Robot Domination
+1 Construct a Cosmic Cube
 
 # --- Lands ---
 1 Terramorphic Expanse
 1 Command Tower
 1 Villainous Hideout
-1 Ash Barrens
+1 Reliquary Tower
 1 Avengers Tower
 1 Crystal Vein
 1 Hobbit Hole

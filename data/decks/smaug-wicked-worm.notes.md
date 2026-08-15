@@ -22,3 +22,10 @@ draw 1, lose 1.
 ## Mulligan for
 Two lands + a cheap rock or a treasure-maker. Smaug wants to land on 4–5 with the
 draw engine online the same turn.
+
+## Round-4 verified keeps (do not cut)
+- **Reckless Lackey** — sac: draw + Treasure; the cheapest engine piece in the deck.
+- **Brainstealer Dragon** — end-step steals cast WITH Treasure mana are also draws
+  (Smaug's trigger reads "cast a spell", not "cast your spell").
+- **The Great Goblin / Misty Mountains Raider / Gundabad Opportunist** — verified this
+  session; goblin bodies with treasure-adjacent value.

@@ -22,3 +22,9 @@ Villain. NOT the Grixis "Doctor Doom, Rules All" — this is the mono-B one we o
 ## Mulligan for
 Three lands and any 2-drop artifact creature. Doom on 6 with the switch already on
 is the whole opening plan.
+
+## Round-4 verified keeps (do not cut)
+- **The Masters of Evil** — Villain anthem AND a tutor for Plan cards: it finds Doom
+  Reigns Supreme, which alone keeps Doom indestructible. Engine, not filler.
+- **Madame Masque** — connive + a Villain token on the second draw each turn, and
+  Doom's own end-step draw turns her on reliably.
