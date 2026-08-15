@@ -1,10 +1,52 @@
 # Spec — Deck export: printable HTML report, PDF via the browser
 
-**Status: ☐ Not started.** Written 2026-08-15 by a scoping session (Fable 5) for an
-implementing session (Opus 5) to follow explicitly. Player request, same day:
+**Status: ☑ ALL PHASES SHIPPED 2026-08-15.** Written the same day by a scoping session
+(Fable 5) and executed by an implementing session (Opus 5). Player request:
 *"add the ability to export a deck as an html report/pdf report."*
+Suite **720 → 735**, offline, exit 0; `scripts/` still imports stdlib-only with Flask
+uninstalled.
 
 **Branch:** `claude/deck-export-html-pdf-ofyd6d` · one PR, squash-merged.
+
+**What the implementing session found that the spec did not predict** (all three
+verified in source before acting, and the reason this file is worth reading before the
+next print change):
+
+1. **The print block was in the wrong place in the cascade.** It was emitted *before*
+   the inlined `add_card.css` and `card_panel.css`. `@media` adds no specificity, so any
+   print rule could be silently outranked by a later asset rule of equal weight — the
+   old `.ac { display:none }` survived only because `add_card.css` happens never to set
+   `display`. The block now sits last in the `<style>`. §2's requirement 4 assumed
+   wording was the problem; ordering was.
+2. **`.explain > p { display:block !important }` never worked.** `<details>` is emitted
+   closed, and a closed `<details>` hides its children through the UA's
+   `::details-content` box, not through the child's own `display`. Every "what this
+   means" caveat was missing from every printed page, while `test_explainers.py` passed
+   on the CSS *substring*. Fixed with `::details-content`, and both print tests now
+   assert against the whole brace-matched block via `conftest.print_block()`.
+3. **`shared_html` never closed its `<div class='tablewrap'>`** — 10 opens / 9 closes in
+   a real render. Harmless only because the table was last in its section; with
+   `.tablewrap` being `overflow-x:auto`, anything appended after it would have been
+   clipped in print. One-token fix, included.
+
+**Verified in a real browser** (headless Chromium, print emulation) rather than by
+string assertion alone: `body` computes `#fff`/`#000`; `header h1`, `header .cmd`,
+`section h2`, `.cardlink`, `.tile-val` all compute `rgb(0,0,0)`; `.tablewrap`
+`overflow-x` becomes `visible`; `.tabs` and `#cardmodal` compute `display:none`; SVG
+text fill goes near-white → `rgb(0,0,0)`; all six tabpanels render; and the explainer
+paragraph's `checkVisibility()` goes **`False` → `True`**. 67 of the block's 74
+selectors match live DOM; the other 7 are conditional content (no mana warning / no
+prices in the sample deck), dynamic state (`:focus`), or a pseudo-element
+`querySelectorAll` cannot match. **Real-paper printing is still the player's check** —
+a sandbox can verify computed style and a generated PDF, not ink.
+
+**Scope added beyond the spec, deliberately:** `render_visual()` (the `/deck/<stem>/visual`
+gallery) is a second self-contained document with its own theme and no print block at
+all — it would still have printed black-on-black. It got a minimal one. Both documents
+also collapse `img:not([src])` in print, because the image loader strips `src` on a
+failed fetch by design, and `aspect-ratio:5/7` would otherwise reserve a full card of
+blank paper for every miss — which is exactly what an offline print of a downloaded
+report would hit.
 
 ---
 

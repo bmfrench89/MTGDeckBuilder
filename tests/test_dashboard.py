@@ -3,6 +3,8 @@ build_dashboard.py — the rendered HTML must stay self-contained and keep the c
 the editable controls, and the image loader intact."""
 import build_dashboard as bd
 
+from conftest import print_block
+
 
 def _html(deck_file, collection_file, **kw):
     return bd.generate(deck_file, collection_file, title="Test Deck",
@@ -97,9 +99,103 @@ def test_hidden_tabs_keep_their_content_in_the_dom(deck_file, collection_file):
 
 def test_printing_restores_every_tab(deck_file, collection_file):
     html = _html(deck_file, collection_file)
-    assert "@media print" in html
-    printed = html.split("@media print", 1)[1][:200]
-    assert "display:block !important" in printed
+    printed = print_block(html)
+    assert ".tabpanel" in printed and "display:block !important" in printed
+
+
+def test_print_repaints_the_dark_theme_onto_white_paper(deck_file, collection_file):
+    """The bug this whole print block exists for.
+
+    Every theme is dark with near-white text. Browsers DROP background colours when
+    printing but KEEP text colour, so before this the dashboard printed pale grey on
+    white — legible on screen, blank on paper. The body repaint is the fix; the rest
+    of the block is only meaningful on top of it."""
+    printed = print_block(_html(deck_file, collection_file))
+    flat = printed.replace(" ", "")
+    assert "background:#fff!important" in flat and "color:#000!important" in flat
+
+
+def test_print_inks_the_accent_coloured_text(deck_file, collection_file):
+    """The theme accents run as low as 1.7:1 on white. Card names (`.cardlink`), the
+    commander line and section headings all use one, so each needs an explicit ink
+    override — repainting the body alone does not reach them."""
+    printed = print_block(_html(deck_file, collection_file))
+    for sel in ("header h1", "header .cmd", "section h2", ".cardlink", ".tile-val"):
+        assert sel in printed, f"{sel} keeps a dark-ground colour into print"
+
+
+def test_print_keeps_the_colour_only_warning_readable(deck_file, collection_file):
+    """`tr.warn` marks an under-supported colour in the pip table using COLOUR ALONE.
+    On paper that signal is simply gone, so print has to restate it in ink."""
+    printed = print_block(_html(deck_file, collection_file))
+    assert "tr.warn td" in printed and "font-weight:700" in printed
+
+
+def test_print_unclips_the_scrolling_tables(deck_file, collection_file):
+    """`.tablewrap` is overflow-x:auto — it SCROLLS on screen but CLIPS on paper, and
+    the printable page is narrower than the on-screen column, so the widest tables
+    would silently lose their right-hand columns."""
+    printed = print_block(_html(deck_file, collection_file))
+    assert ".tablewrap" in printed
+    assert "overflow:visible !important" in printed
+
+
+def test_print_hides_every_dead_control(deck_file, collection_file):
+    """Paper has nowhere to POST. The card panel is the one that matters most: it is
+    emitted on BOTH surfaces and hidden only by attribute, so printing with a card
+    open would drop a position:fixed sheet across the report."""
+    printed = print_block(_html(deck_file, collection_file, editable=True))
+    for sel in (".tabs", ".ac", ".bracketform", ".buytoggle", "#cardmodal"):
+        assert sel in printed, f"{sel} would print as a dead control"
+
+
+def test_the_print_block_can_outrank_the_inlined_asset_css(deck_file, collection_file):
+    """Ordering, not wording. @media adds no specificity, so a print rule placed
+    ABOVE add_card.css / card_panel.css loses to any later rule of equal weight —
+    which is how the old block's `.ac { display:none }` worked only by luck. The
+    print block must therefore be emitted last in the <style>."""
+    html = _html(deck_file, collection_file, editable=True)
+    style = html.split("<style>", 1)[1].split("</style>", 1)[0]
+    assert style.index("@media print") > style.index(".cm-overlay"), \
+        "print block must come after the inlined card-panel CSS"
+    assert style.index("@media print") > style.index(".ac-open"), \
+        "print block must come after the inlined add-card CSS"
+
+
+def test_every_theme_gets_the_print_block(deck_file, collection_file):
+    for theme in ("default", "yshtola", "cloud", "rakdos", "spider"):
+        printed = print_block(_html(deck_file, collection_file, theme=theme))
+        assert "background:#fff" in printed.replace(" ", "") + printed, theme
+
+
+def test_collapsing_a_missing_card_image_also_reflows_its_badges(deck_file, collection_file):
+    """These two rules must ship together or not at all.
+
+    Print collapses an image with no `src` so a report whose images did not load is a
+    dense name list instead of pages of blank frames. But `img:not([src])` matches
+    EVERY card until the loader runs — images ship carrying `data-src` — and the
+    qty/shared/buy/NEW badges are absolutely positioned against the figure, so
+    collapsing alone drops them onto the card name. Measured in headless Chromium on a
+    90-card deck with Scryfall blocked: 56 of 57 badges overlapped the caption without
+    the reflow rule, 0 with it."""
+    printed = print_block(_html(deck_file, collection_file))
+    if ".mc img:not([src])" not in printed:
+        return                      # the collapse rule is optional; the pairing is not
+    assert ".mc:has(img:not([src]))" in printed, \
+        "collapsing the image without reflowing the badges prints them over the name"
+    reflow = printed.split(".mc:has(img:not([src]))", 1)[1][:200]
+    assert "position:static" in reflow
+
+
+def test_the_visual_gallery_also_prints_on_white(deck_file, collection_file):
+    """The image gallery is a SECOND self-contained document with its own theme and
+    no CSS variables — fixing the dashboard does not reach it."""
+    visual = bd.generate(deck_file, collection_file, title="T", commander="C",
+                         want_visual=True)["visual"]
+    printed = print_block(visual)
+    flat = printed.replace(" ", "")
+    assert "background:#fff!important" in flat and "color:#000!important" in flat
+    assert "figcaption" in printed, "the card name is the only ID when an image fails"
 
 
 def test_tabs_add_no_external_assets(deck_file, collection_file):

@@ -9,6 +9,8 @@ footer read after the fact."""
 import build_dashboard as bd
 import manabase
 
+from conftest import print_block
+
 
 def test_the_engine_ships_an_explainer_for_every_stat_it_reports():
     ex = manabase._explain(37, 99, {})
@@ -64,9 +66,17 @@ def test_an_absent_explainer_renders_nothing_rather_than_an_empty_box():
 
 def test_explainers_print_expanded(deck_file, collection_file):
     """A collapsed <details> has no way to open on paper — the caveat is part of the
-    number, so the generated dashboard's print rules must force it visible."""
+    number, so the generated dashboard's print rules must force it visible.
+
+    This asserts the rule that actually WORKS. The original `.explain > p
+    { display:block }` never could: a closed <details> hides its children through
+    the UA's ::details-content box, not through the child's own `display`, so every
+    explainer printed as a bare summary line while this test passed on the
+    substring. `.explain > p` is kept as a fallback but is no longer the proof."""
     html = bd.generate(deck_file, collection_file, title="T", commander="Test Commander",
                        sim=None)["dashboard"]
-    assert "@media print" in html
-    printed = html.split("@media print", 1)[1][:400]
-    assert ".explain > p" in printed and "display:block !important" in printed
+    printed = print_block(html)
+    assert "details.explain::details-content" in printed
+    assert "content-visibility:visible" in printed.replace(" ", "")
+    # The markup this has to defeat: <details> is emitted closed on purpose.
+    assert "<details class='explain'>" in html

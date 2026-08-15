@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-14._
+_Last updated: 2026-08-15._
 
 ## Where the app runs
 
@@ -40,6 +40,38 @@ guard already used), refusals return 409/404 with a reason, and the panel alerts
 server's text instead of reloading. Regression tests cover both DFC directions, the
 `SP//dr` no-split guard, and the two error responses (`test_deck_edit`,
 `test_add_card`).
+
+## Deck export: HTML report + PDF via the browser (NEW 2026-08-15)
+
+Spec: `docs/spec-deck-export.md`. Player asked for "export a deck as an html/pdf
+report". Scoping found the HTML report already existed — `build_dashboard.generate()`
+has always emitted a self-contained single file — so the work was two real gaps, not a
+new feature.
+
+- **`GET /export/deck/<stem>.html`** downloads that file as an attachment
+  (`editable=False`, so nothing posts into the void; no singleton banner, which is a
+  live-surface alarm). Sits beside `/export/deck/<stem>.txt`, takes the same `?raw`.
+  The decks list now offers **`.txt`** and **`Report`**, and the Report link's title
+  carries the honesty label: images need a connection, Ctrl+P for a PDF.
+- **Print actually works now.** Every theme is dark; browsers drop backgrounds but keep
+  text colour, so the dashboard printed near-white on white. The `@media print` block
+  was rewritten to repaint ink-on-paper and **moved to the end of the `<style>`** —
+  `@media` adds no specificity, so sitting above the inlined `add_card.css` /
+  `card_panel.css` meant any print rule could be silently outranked (the old
+  `.ac { display:none }` worked only because `add_card.css` never sets `display`).
+- **There is deliberately no PDF generator**, and shouldn't be: `scripts/` is
+  stdlib-only, card images are browser hotlinks a server-side renderer can't fetch, and
+  the host is a free tier with no cairo/pango. The browser's print dialog is the export.
+- **Two live bugs found and fixed on the way.** `shared_html` never closed its
+  `<div class='tablewrap'>` (10 opens / 9 closes in a real render). And the explainer
+  print rule was a **no-op**: `<details>` is emitted closed, and a closed `<details>`
+  hides children through the UA's `::details-content` box, not the child's `display` —
+  so every "what this means" caveat was missing from paper while a test passed on the
+  substring. Verified in headless Chromium: the paragraph's `checkVisibility()` goes
+  `False → True`. `tests/conftest.py` now has `print_block()` so print tests assert
+  against the whole brace-matched block instead of a fixed `[:200]` window.
+- **Backlog, not built:** proxy sheets (3×3 grid at 63×88 mm) — the one genuinely
+  print-geometry-shaped thing missing. Own spec, own player decision.
 
 ## deck-verify: the sandbox's way out of the egress block (NEW 2026-08-14)
 

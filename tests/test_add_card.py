@@ -283,6 +283,13 @@ def test_dashboard_shows_an_illegal_banner_for_a_duplicate(client):
                     encoding="utf-8")
     html = client.get("/deck/testdeck").get_data(as_text=True)
     assert "ILLEGAL" in html and "Sol Ring" in html
+    # ...and it has to be VISIBLE, not merely present. The banner is spliced in at the
+    # first regex match for the body's opening tag, so any literal one emitted earlier
+    # — in a stylesheet comment, say — silently swallows the alarm into CSS while this
+    # test's substring check still passes. That happened for real: a print-block
+    # comment mentioning the tag buried the whole banner mid-<style>.
+    assert html.index("Commander allows one copy") > html.index("</head>"), \
+        "the illegal banner was injected inside <head> — it will never render"
 
 
 def test_dashboard_shows_no_banner_when_legal(client):

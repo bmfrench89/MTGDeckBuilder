@@ -144,3 +144,26 @@ def big_collection_file(tmp_path):
     p = tmp_path / "big_collection.csv"
     p.write_text("\n".join(rows) + "\n", encoding="utf-8")
     return str(p)
+
+
+def print_block(html):
+    """The generated dashboard's whole `@media print { … }` body, brace-matched.
+
+    Tests used to slice a fixed window after the marker (`[:200]`, `[:400]`), which
+    made them a hostage to rule ORDER: adding a comment or a rule at the top of the
+    block pushed the thing under test out of the window and failed a green change.
+    Worse, a windowed substring is only evidence that a STRING is present — which is
+    how `.explain > p { display:block }` sat here passing while doing nothing on
+    paper. Matching the real block lets a test assert against every rule in it.
+    """
+    i = html.index("@media print")
+    start = html.index("{", i)
+    depth = 0
+    for j in range(start, len(html)):
+        if html[j] == "{":
+            depth += 1
+        elif html[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return html[start + 1:j]
+    raise AssertionError("@media print block is not brace-balanced")

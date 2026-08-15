@@ -463,7 +463,7 @@ def shared_html(shared):
             "just so you can see the overlap.</div>")
     return (note + "<div class='tablewrap'><table class='data'><thead><tr>"
             "<th>Card</th><th>Status</th><th>Shared with</th></tr></thead><tbody>"
-            + "".join(rows) + "</tbody></table>")
+            + "".join(rows) + "</tbody></table></div>")
 
 
 def curve_note(enriched):
@@ -1337,17 +1337,163 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 .tabpanel {{ display:none; }}
 .tabpanel > section:first-child {{ margin-top:var(--sp-4); }}
 {tab_css}
-@media print {{
-  .tabs {{ display:none; }}
-  .tabpanel {{ display:block !important; }}
-  .ac {{ display:none; }}
-  /* An explainer collapsed on screen must still print: the caveat is part of the
-     number, and a printed page has no way to open a <details>. */
-  .explain > p {{ display:block !important; }}
-  .explain > summary {{ color:inherit; }}
-}}
 {add_card_css(t) if editable else ''}
 {modal_css}
+/* ---------------------------------------------------------------------------
+   PRINT — this block IS the PDF export.
+
+   The repo generates no PDF of its own on purpose: `scripts/` is stdlib-only, and
+   card images are browser hotlinks that a server-side renderer could not fetch
+   (docs/card-images.md). So "save as PDF" is the browser's own print dialog, and
+   how good that PDF is comes down to what is written here. Both surfaces render
+   through generate(), so this lands on CLI dashboards and the web app at once.
+
+   It is emitted AFTER add_card.css and card_panel.css deliberately. @media adds no
+   specificity, so a print rule sitting above those files loses to any later rule of
+   equal weight — the old block was above both and its `.ac {{ display:none }}`
+   worked only because add_card.css happens never to set `display`. Ordering it last
+   is what makes the rules below authoritative instead of lucky.
+
+   Two rules of thumb: force ink-on-paper (#000 text, #fff ground, #444 for text
+   that is genuinely secondary, #ccc/#999 hairlines), and reach for
+   print-color-adjust:exact ONLY where the colour IS the data and would otherwise be
+   dropped — the length of a bar, a mana swatch — never for decoration.
+   --------------------------------------------------------------------------- */
+@media print {{
+  /* No `size:` — the dialog's Letter/A4 choice should win. */
+  @page {{ margin:12mm; }}
+
+  /* tokens.css tunes its hairlines for dark surfaces (white at 7% alpha) and they
+     vanish on paper; the elevation shadows are just noise in ink. Redefining the
+     tokens fixes every consumer at once, the inlined card panel included. */
+  :root {{ --line:#ccc; --line-strong:#999; --el-1:none; --el-2:none; --el-3:none; }}
+
+  /* The core bug this block exists to fix: browsers DROP background colours when
+     printing but KEEP text colour, so every dark theme printed near-white on white.
+     `overflow` is reset because opening a card panel sets it inline on the body
+     element. NOTE: never write that element's opening tag literally anywhere in this
+     file above the real one — webapp/app.py splices its singleton-violation banner in
+     at the first regex match for it, so a literal in a comment silently swallows the
+     ILLEGAL alarm into a CSS comment where nobody can see it. */
+  body {{ background:#fff !important; color:#000 !important;
+    overflow:visible !important; orphans:3; widows:3; }}
+  /* A hair of side padding rather than none: Chrome lets the dialog's "Margins:
+     None" override @page, and this keeps text off the paper edge when it does. */
+  .wrap {{ max-width:none; margin:0; padding:0 var(--sp-1); }}
+
+  /* --- interactive chrome: every control here posts somewhere, and paper has
+     nowhere to post to. The card panel is the load-bearing one — it is emitted on
+     BOTH surfaces and is only `hidden` by attribute, so printing with a card open
+     would otherwise drop a position:fixed sheet over the report (Chrome paints it
+     on page 1, Firefox repeats it on every page). --- */
+  .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn,
+  #cardmodal, .cm-overlay {{ display:none !important; }}
+
+  /* --- structure: one tab per page turns the report into chapters, and every
+     panel already leads with a self-describing <h2>, so losing the tab bar costs
+     nothing. `.tabpanel:first-of-type` would match NOTHING here (the tiles div is
+     the first child of .wrap), which is why this is the adjacent-sibling form. --- */
+  .tabpanel {{ display:block !important; }}
+  .tabpanel + .tabpanel {{ break-before:page; }}
+
+  /* Never blanket-avoid a break on `section`: the decklist alone runs to several
+     pages, and forcing avoid on it makes the browser either ignore the rule or push
+     an unbreakable box onto a fresh page and overflow it anyway. Headings are the
+     right granularity — keep each one with the content it introduces. */
+  section {{ background:none; border:0; border-radius:0; padding:0;
+    margin:0 0 var(--sp-5); break-inside:auto; }}
+  section + section {{ border-top:1px solid #ccc; padding-top:var(--sp-4); }}
+  section > h2, h3 {{ break-after:avoid; break-inside:avoid; }}
+  .tile, .tiles, .mc, .banner.warn, ul.notes li, details.explain,
+  .warnbox {{ break-inside:avoid; }}
+
+  /* overflow:auto SCROLLS on screen but CLIPS on paper, and the printable width is
+     far narrower than the 960px column — so the widest tables would silently lose
+     their right-hand columns. Let them use the full page and wrap instead. */
+  .tablewrap {{ overflow:visible !important; max-width:none; border-radius:0; }}
+  table.data {{ font-size:var(--fs-xs); break-inside:auto; }}
+  table.data thead {{ display:table-header-group; }}
+  table.data tr {{ break-inside:avoid; }}
+  table.data th, table.data td {{ border-bottom:1px solid #ccc;
+    overflow-wrap:anywhere; }}
+  table.data th {{ color:#000; border-bottom:1px solid #999; }}
+  ul.cards {{ columns:1; }}
+
+  /* --- ink. Anything below is a theme colour picked to sit on a dark ground; on
+     white it runs from low-contrast to invisible (the cloud/yshtola accents are
+     about 1.7:1 on paper). --- */
+  header h1, header .cmd, section h2, h3, .tile-val, .cardlink, .ok, .warnbox,
+  .bnum, .bname, .pscore, .mv, .need, .repl, .buysum, .buytable td.bc,
+  .buytable td.bp, .pwrtable td:first-child, .mc figcaption,
+  .explain > summary {{ color:#000; }}
+  header .cmd, .ok, .need, .repl, .buysum {{ font-weight:700; }}
+  header .sub, .tile-label, .tile-note, .muted, h3 .count, .mv.dim, .pr,
+  .buytable td.br, .tier, .imgnote, footer {{ color:#444; }}
+  .tile {{ background:none; border:1px solid #ccc; }}
+  .cardlink {{ border-bottom:none; text-decoration:none; }}
+  code {{ background:none; border:1px solid #ccc; }}
+  .banner.warn {{ background:none; border:1px solid #000; }}
+  footer {{ border-top:1px solid #ccc; padding-top:var(--sp-2); }}
+  /* The pip table's under-supported rows are flagged by colour ALONE, so on paper
+     the warning simply disappears. Weight plus a rule restates it in ink. */
+  tr.warn td {{ color:#000; font-weight:700; }}
+  tr.warn td:first-child {{ border-left:3px solid #000; }}
+  /* Focus rings follow the accent and would print around whatever the reader last
+     clicked. */
+  *:focus, *:focus-visible {{ outline:none !important; }}
+
+  /* --- the two places colour genuinely IS the data --- */
+  /* A power bar's meaning is its length, and a background is exactly what print
+     drops. The track outline gives the eye a 100% reference to read it against. */
+  .pwrbar {{ outline:1px solid #bbb; outline-offset:-1px; }}
+  .pwrbar span {{ background:#444 !important; background-image:none !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+  /* Mana swatches keep their colour, but white mana is #f4efd6 — invisible on
+     paper without a ring around it. */
+  .pip {{ -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    box-shadow:none !important; border:1px solid #666; }}
+
+  /* SVG fill is content paint rather than a background, so it is NOT dropped — the
+     curve's value labels are drawn in the theme's near-white --text and print
+     invisible. A presentation attribute has specificity 0, so these win outright. */
+  svg text {{ fill:#000 !important; }}
+  svg rect {{ fill:#bbb !important; opacity:1 !important; stroke:#333;
+    stroke-width:1; }}
+
+  /* A card whose image could not be fetched has its `src` REMOVED by the loader, on
+     purpose, so the name reads cleanly instead of a broken icon. On screen that
+     leaves a tidy placeholder; on paper `aspect-ratio:5/7` would reserve full card
+     height for every one, so an offline print of a downloaded report becomes pages
+     of blank frames. Collapsing them turns it into a dense list of names instead —
+     which is what the figcaption was already there to provide.
+
+     Note this matches EVERY image until the loader has run (they ship carrying
+     `data-src`, not `src`), which is exactly the offline case this is for. That
+     makes the second rule mandatory rather than defensive: the badges are absolutely
+     positioned against the figure, so collapsing the image alone drops them straight
+     onto the card name — measured as captions printing "6 ⇄2n Titan" instead of
+     "6 Sun Titan". Returning them to flow puts them on their own line above it. */
+  .mc img:not([src]) {{ display:none; }}
+  .mc:has(img:not([src])) .qty, .mc:has(img:not([src])) .sb,
+  .mc:has(img:not([src])) .bb, .mc:has(img:not([src])) .nb {{
+    position:static; display:inline-block; margin:0 var(--sp-1) 0 0; }}
+
+  /* The Buy tab's price filter hides rows with an INLINE display:none, so a report
+     printed after filtering would silently omit buys with no visible filter to
+     explain the gap. A paper report should never lose rows — restore them all, and
+     the hidden .buytoggle above takes the now-meaningless control with it. */
+  .buyrow {{ display:table-row !important; }}
+
+  /* An explainer collapsed on screen must still print: the caveat is part of the
+     number, and paper has no way to open a <details>. The old `.explain > p`
+     rule could never do this — a closed <details> hides its children through the
+     UA's ::details-content box, not through the child's own `display`, so every
+     explainer printed as a bare summary line and the engine's text was lost.
+     `.explain > p` stays as a harmless fallback for pre-::details-content engines. */
+  details.explain::details-content {{ content-visibility:visible !important;
+    block-size:auto !important; }}
+  .explain > p {{ display:block !important; }}
+}}
 </style></head><body><div class="wrap">
 <header>
   <h1>{esc(title)}</h1>
@@ -1398,6 +1544,28 @@ figure img {{ width:100%; aspect-ratio:5/7; object-fit:cover;
 figcaption {{ font-family:{t['mono']}; font-size:.72rem; color:{t['muted']};
   margin-top:5px; text-align:center; }}
 .warn {{ color:{t['warn']}; }}
+/* Same ink-on-paper rule as the dashboard's print block, in miniature: this is a
+   second, self-contained document with its own theme colours and no CSS variables,
+   so the overrides have to be literal. The caption is the card NAME — on a sheet
+   whose images may not have loaded it is the only thing identifying the card, so it
+   prints as primary text, not as the muted grey it is on screen. */
+@media print {{
+  @page {{ margin:12mm; }}
+  body {{ background:#fff !important; color:#000 !important; }}
+  .wrap {{ max-width:none; padding:0; }}
+  h1 {{ color:#000; }}
+  .banner {{ background:none !important; border:1px solid #999; color:#000; }}
+  figure {{ break-inside:avoid; }}
+  figure img {{ background:none !important; border:1px solid #ccc; }}
+  /* The loader strips `src` when a fetch fails; without this every miss reserves a
+     full card of blank paper. The qty chip is absolutely positioned against the
+     figure, so it has to rejoin the flow or it lands on the caption. */
+  figure img:not([src]) {{ display:none; }}
+  figure:has(img:not([src])) .qty {{ position:static; display:inline-block;
+    margin:0 6px 0 0; }}
+  figcaption {{ color:#000; }}
+  .qty {{ background:none !important; color:#000; border:1px solid #666; }}
+}}
 </style></head><body><div class="wrap">
 <h1>{esc(title)}</h1>
 <div class="banner"><b>Heads up:</b> card images load <b>live from Scryfall by
