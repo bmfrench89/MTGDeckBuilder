@@ -25,6 +25,22 @@ _Last updated: 2026-08-14._
   stays, this keepalive stays, and the in-app sync thread stays instead of a
   Scheduled Task. Don't re-propose it unless one of those actually starts hurting.
 
+## Card-panel Replace/Remove: the " // " trap reached the editor (FIXED 2026-08-15)
+
+Live bug report: "I tried to replace a card in the Smaug deck and it did not work."
+Root cause: `webapp/app.py`'s `_edit_deck_card` matched the outgoing card by raw
+`_norm` equality while the panel's `data-key` can carry EITHER form of a DFC name —
+decklist figures key the deck file's own form, EDHREC/field rows key what the
+snapshot emits (often the front face alone). `Smaug, the Great Calamity // Spew
+Flame` vs `Smaug, the Great Calamity` therefore no-opped. Worse, BOTH failure paths
+(`would duplicate` refusal and edit-found-nothing) returned a bare redirect, and the
+panel reloads on any redirect — failure was pixel-identical to success. Fixed: the
+editor now matches `name_keys()` (front-face-aware, same test the route's singleton
+guard already used), refusals return 409/404 with a reason, and the panel alerts the
+server's text instead of reloading. Regression tests cover both DFC directions, the
+`SP//dr` no-split guard, and the two error responses (`test_deck_edit`,
+`test_add_card`).
+
 ## deck-verify: the sandbox's way out of the egress block (NEW 2026-08-14)
 
 `.github/workflows/deck-verify.yml` runs the two **network-dependent grounding steps** on a

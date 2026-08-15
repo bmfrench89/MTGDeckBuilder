@@ -279,7 +279,11 @@
     var f=new FormData(); f.append('action', action); f.append('name', curKey);
     if(replacement) f.append('replacement', replacement);
     fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f})
-      .then(function(r){ if(r.ok||r.redirected) location.reload(); else alert('Edit failed.'); })
+      .then(function(r){
+        if(r.ok||r.redirected){ location.reload(); return; }
+        r.text().then(function(t){ alert(t||'Edit failed.'); })
+                .catch(function(){ alert('Edit failed.'); });
+      })
       .catch(function(){ alert('Edit failed \u2014 is the app still running?'); });
   }
   function setupEdit(d){

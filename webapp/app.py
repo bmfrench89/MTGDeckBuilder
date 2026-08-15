@@ -450,7 +450,7 @@ def _insert_deck_card(path, lines, name, section=None):
 def _edit_deck_card(path, action, name, replacement=None, section=None):
     """Line-based edit of a deck .txt: remove, replace, or add a single card, preserving
     quantity, section, and everything else. Returns True if a line changed."""
-    key = mtglib._norm(name)
+    keys = mtglib.name_keys(name)
     lines = open(path, encoding="utf-8").read().split("\n")
     if action == "add":
         return _insert_deck_card(path, lines, name, section)
@@ -471,7 +471,13 @@ def _edit_deck_card(path, action, name, replacement=None, section=None):
             m = mtglib._QTY_RE.match(s)   # shared parser — '1x Name' must not no-op
             cardname = m.group(2) if m else s
             qty = m.group(1) if m else "1"
-            if mtglib._norm(cardname) == key:
+            # name_keys, not raw _norm: the panel's data-key can carry EITHER form of
+            # a DFC name (decklist figures key the deck file's form, EDHREC/field rows
+            # key what the snapshot emits — often the front face alone), so an exact
+            # compare silently no-ops on "Smaug, the Great Calamity // Spew Flame" vs
+            # "Smaug, the Great Calamity". The route's own singleton guard already
+            # matches both keys; the editor must agree with it.
+            if mtglib.name_keys(cardname) & keys:
                 if action == "remove":
                     changed = True
                     continue
@@ -574,9 +580,18 @@ def deck_card(stem):
             if not (mtglib.name_keys(c.name) & mtglib.name_keys(name)):
                 others |= mtglib.name_keys(c.name)
         if mtglib.name_keys(replacement) & others and not mtglib.is_basic(replacement):
-            return redirect(url_for("deck", stem=stem))   # would duplicate — refuse
+            # Refuse loudly, not with a bare redirect: the panel reloads on any
+            # redirect, so a silent one looks exactly like a success that changed
+            # nothing — the "replace did not work" bug report, twice over.
+            return (f"{replacement} is already in this deck — that swap would "
+                    "break the singleton rule.", 409)
     if action in ("remove", "replace") and name:
-        if _edit_deck_card(m["path"], action, name, replacement):
+        changed = _edit_deck_card(m["path"], action, name, replacement)
+        if not changed:
+            return (f"Couldn't find “{name}” in the deck file — nothing was "
+                    "changed. (If this card is a buy-list or field suggestion, "
+                    "it isn't in the 99 to begin with.)", 404)
+        if changed:
             if action == "replace" and replacement:
                 _log_manual_change(m["path"], replacement, replaced=name,
                                    source="manual-replace")
