@@ -1,0 +1,130 @@
+# Deck: Bruce Banner // The Incredible Hulk — Temur (URG) enrage/extra-combats — COMPLETE
+# Title: Bruce Banner // The Incredible Hulk
+# Theme: default
+# Archetype: voltron counters ramp
+# Colors: G R U
+# Commander: Bruce Banner // The Incredible Hulk
+# Source: built 2026-08-14 for the player's brother from the owned pool.
+# Note: gift deck — built almost entirely from the UNCOMMITTED pool so nothing has to be
+#   pulled out of the player's own six decks. Bruce Banner is {U} (NOT Gruul) — the back
+#   face's {2}{R}{R}{G}{G} is the transform cost, so color identity is Temur.
+# Note: Lightning Greaves is deliberately EXCLUDED — shroud would stop us pinging our own
+#   Hulk, which is the whole engine. Swiftfoot Boots / Champion's Helm give hexproof, which
+#   stops opponents but still lets us target him ourselves.
+# Note: Basilisk Collar is likewise excluded — deathtouch on a pinger would kill our own
+#   commander. Darksteel Plate is the protection artifact instead.
+# Regenerate the dashboard:
+#   python3 scripts/build_dashboard.py --deck data/decks/bruce-banner-incredible-hulk.txt \
+#     --collection data/collection/collection.csv --title "Bruce Banner // The Incredible Hulk" \
+#     --commander "Bruce Banner // The Incredible Hulk" --out hulk-dashboard.html
+
+# --- Commander ---
+1 Bruce Banner // The Incredible Hulk
+
+# --- Creatures ---
+1 Llanowar Elves
+1 Elvish Mystic
+1 Sakura-Tribe Elder
+1 Wood Elves
+1 Springbloom Druid
+1 Selvala, Heart of the Wilds
+1 Prodigal Sorcerer
+1 Goblin Medics
+1 Thornwind Faeries
+1 Brash Taunter
+1 Roaming Throne
+1 Tireless Tracker
+1 Laelia, the Blade Reforged
+1 Ohran Frostfang
+1 Savage Ventmaw
+1 Godo, Bandit Warlord
+1 Torrential Gearhulk
+1 Hulk, Brutal Brawler
+1 Hulk, Gamma Goliath
+1 Red Hulk
+
+# --- Planeswalkers ---
+1 Kiora, Behemoth Beckoner
+
+# --- Instants ---
+1 Shock
+1 Lightning Strike
+1 HULK SMASH!
+1 Chaos Warp
+1 Beast Within
+1 Abrade
+1 Essence Scatter
+1 Stubborn Denial
+1 Crop Rotation
+1 Negate
+1 An Offer You Can't Refuse
+1 Heroic Intervention
+1 Snakeskin Veil
+
+# --- Sorceries ---
+1 Rampant Growth
+1 Nature's Lore
+1 Harmonize
+1 Stock Up
+1 Pyroclasm
+1 Fiery Confluence
+1 Decimate
+1 Epic Fight
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+1 Talisman of Creativity
+1 Mind Stone
+1 Swiftfoot Boots
+1 Champion's Helm
+1 Darksteel Plate
+1 Hard-Won Jitte
+1 Sword of the Animist
+
+# --- Enchantments ---
+1 Wild Growth
+1 Rancor
+1 Seal of Fire
+1 Barbed Field
+1 Mystic Remora
+1 Up the Beanstalk
+1 Rhythm of the Wild
+1 Temur Ascendancy
+1 Coastal Piracy
+1 World War Hulk
+1 Fiery Emancipation
+
+# --- Lands ---
+1 Command Tower
+1 Exotic Orchard
+1 Rogue's Passage
+1 Terramorphic Expanse
+1 Evolving Wilds
+1 Fabled Passage
+1 Myriad Landscape
+1 Ash Barrens
+1 Cinder Glade
+1 Rootbound Crag
+1 Game Trail
+1 Sheltered Thicket
+1 Fire-Lit Thicket
+1 Mossfire Valley
+1 Temple of Abandon
+1 Gongaga, Reactor Town
+1 Omashu City
+1 Thornwood Falls
+1 Willowrush Verge
+1 Paradox Gardens
+1 Mutant Town
+1 Sulfur Falls
+1 Stormcarved Coast
+1 Frostboil Snarl
+1 Riverpyre Verge
+1 Spectacle Summit
+1 Stark Industries
+
+# --- Basics ---
+3 Mountain
+4 Forest
+3 Island

@@ -25,6 +25,32 @@ _Last updated: 2026-08-14._
   stays, this keepalive stays, and the in-app sync thread stays instead of a
   Scheduled Task. Don't re-propose it unless one of those actually starts hurting.
 
+## deck-verify: the sandbox's way out of the egress block (NEW 2026-08-14)
+
+`.github/workflows/deck-verify.yml` runs the two **network-dependent grounding steps** on a
+GitHub runner, because a Claude Code sandbox cannot reach Scryfall or EDHREC (the egress
+proxy answers **403 to CONNECT** — `carddb.py --verify` returns UNVERIFIED, `optimize.py`
+sees 0 field cards). Card Kingdom, Draftsim and Gatherer are blocked too; only `WebSearch`
+resolves, and a search summary is not verbatim oracle text.
+
+- **Triggers on push to `claude/**`**, not just `workflow_dispatch` — a dispatch-only
+  workflow is undispatchable until the file reaches the DEFAULT branch, which is no use to
+  the session authoring it. Dispatch inputs (`commander`, `cards`, `commit`) are kept for
+  manual runs.
+- **It pushes only to the ref it ran on** (`HEAD:${{ github.ref_name }}`). This is the whole
+  reason it is a separate file: `field-snapshots.yml` ends in a hardcoded
+  `git pull --rebase origin main` + `git push origin main`, so **dispatching THAT on a
+  feature branch would rebase the branch's commits onto main and push them there — a silent
+  merge with no review.** Do not "simplify" the two into one.
+- The card list lives in **`data/reference/verify-queue.txt`** (reviewable in the diff, and
+  a place to queue work for the next run). Results go to the job log *and* an artifact.
+- **First run (31852039320) verified 55/55 cards, 0 UNVERIFIED, in 13 seconds** and
+  committed `data/reference/field/bruce-banner.json` back to the branch. It corrected real
+  errors: **Squallmonger** hits creatures *with* flying (so it misses a reach commander) —
+  it had been shortlisted on memory; **Hulkbuster Armor** grants flying, which would make
+  the Hulk dodge our own sweeper pings; **Warmonger** does work but lets *any player*
+  activate it. Read a session's exclusions as provisional until this has run.
+
 ## The automation loop (all legs verified on real events)
 
 ```
@@ -84,6 +110,40 @@ three runtime-edited paths (never `git add -A`), rebases before pushing (abortin
 cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
 ## Current data (season closed 2026-08-10)
+
+- **NEW DECK 2026-08-14: `bruce-banner-incredible-hulk` — Temur (U/R/G), Bracket 3,
+  power 71/100.** Built for the player's *brother*, whose card it is — the commander is
+  deliberately NOT in the collection, so `deck_stats` reporting one card "not owned" is
+  correct, not a defect. **The trap this deck exists to document: Bruce Banner costs
+  `{U}`.** The `{2}{R}{R}{G}{G}` printed on the card is the *transform* cost, so the
+  color identity is **Temur, not Gruul** — a Gruul build would have been the wrong deck
+  entirely. Oracle text came from the player's photographs (grounding rule #6) because
+  Scryfall, EDHREC, Card Kingdom and Draftsim are ALL egress-blocked in the sandbox
+  (`carddb.py --verify` → UNVERIFIED, proxy 403); `WebSearch` still resolves and
+  corroborated the `{U}` front-face cost across three independent sources.
+  Engine: flip to an 8/8 reach/trample, then damage him **while he is attacking** —
+  Enrage untaps him and adds a combat phase. Pingers are Prodigal Sorcerer, Thornwind
+  Faeries and Brash Taunter (fight your own Hulk: he takes 1, the indestructible Taunter
+  takes 8 and throws it at a face); Roaming Throne naming **Hero** doubles every Enrage
+  trigger. Built from the **uncommitted** pool so it sleeves standalone without pulling
+  cards out of the player's six decks. Two exclusions are deliberate and documented in
+  the deck's `.notes.md`: **Lightning Greaves** (shroud would stop you targeting your own
+  Hulk — Swiftfoot Boots/Champion's Helm grant hexproof instead, which does not) and
+  **Basilisk Collar** (deathtouch on a Tim kills your own commander). `combo_detector`
+  flags Godo + Helm of the Host as infinite combats; Helm is unowned and is buylisted
+  under an explicit "Bracket 4 — DO NOT ADD" tier alongside Caltrops and Aggravated
+  Assault. **Both network gaps are now CLOSED — see the deck-verify workflow below.**
+  Final: Bracket 3, power **72/100**, top-25 field overlap **13/25 = 52%** (above the ~50%
+  floor). `optimize.py` was run on real field data and **deliberately not applied**: it
+  proposed cutting the verified engine piece Barbed Field for Blasphemous Act (13 damage
+  kills our own 8/8 commander in a one-creature deck) and pulling `[shared]` Counterspell /
+  Rhystic Study out of the player's other decks. The engine pieces are named in the deck's
+  `.notes.md`, which is what protects them from the next optimizer run.
+  `Bruce Banner // The Incredible Hulk` was added to `data/reference/commanders.csv`
+  (G R U, `voltron counters ramp`) — note `auto_build.py`'s CLI has **no `--identity`
+  flag** despite SKILL.md documenting an `identity=` syntax; `build()` takes the kwarg but
+  nothing exposes it, so an unknown commander auto-builds as colorless until it is added
+  to `commanders.csv`.
 
 - **Deck sections are now EDHREC-style TYPE sections (2026-08-11)** — Commander /
   Creatures / Instants / Sorceries / Artifacts / Enchantments / Lands / Basics —
