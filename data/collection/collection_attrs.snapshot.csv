@@ -62,6 +62,7 @@ Alien Invasion,Enchantment,4,G R,{1}{R}{R}{G},,,,,2
 Alien Symbiosis,Enchantment,2,B,{1}{B},Aura,,,,2
 Alisaie Leveilleur,Creature,3,W,{2}{W},Elf;Wizard,,,3,2
 All That Glitters,Enchantment,2,W,{1}{W},Aura,,,,2
+All-Fates Scroll,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,2
 Alley Grifters,Creature,3,B,{1}{B}{B},Human;Mercenary,,,2,2
 Almost Perfect,Enchantment,6,G W,{4}{G}{W},Aura,,,,2
 Alphinaud Leveilleur,Creature,4,U,{3}{U},Elf;Wizard,,draw,2,2
@@ -70,6 +71,7 @@ Ambition's Cost,Sorcery,4,B,{3}{B},,,draw,,2
 Ambrosia Whiteheart,Creature,2,W,{1}{W},Bird,,,2,2
 Ambush Gigapede,Creature,6,B,{4}{B}{B},Insect,,,6,2
 An Offer You Can't Refuse,Instant,1,U,{U},,W U B R G,counter,,2
+An Unexpected Party // At the Door,Enchantment,4,W,{2}{W}{W} // {X}{2}{W},,,,,2
 Anaba Bodyguard,Creature,4,R,{3}{R},Minotaur,,,2,2
 Ancestral Mask,Enchantment,3,G,{2}{G},Aura,,,,2
 Angel of Indemnity,Creature,6,W,{5}{W},Angel;Warrior,,,5,2
@@ -157,9 +159,11 @@ Avengers Disassembled,Sorcery,3,R,{1}{R}{R},,,removal,,2
 Avengers Hangar,Land,0,U W,,,W U,etb-tapped,,2
 Avengers Quinjet,Artifact,5,,{5},Vehicle,,,4,2
 Avengers Tower,Land,0,,,,W U B R G C,mana-restricted,,2
+Avishkar Raceway,Land,0,,,,C,draw,,2
 Awakening Zone,Enchantment,3,G,{2}{G},,C,,,2
 Axgard Cavalry,Creature,2,R,{1}{R},Dwarf;Berserker,,,2,2
 Azimaet Drake,Creature,3,U,{2}{U},Drake,,,1,2
+"Azog, Moria's Ruin",Creature,3,B,{2}{B},Goblin;Soldier,,draw,1,2
 Azorius Signet,Artifact,2,U W,{2},,W U,mana2;ramp;rock,,2
 "Azula, On the Hunt",Creature,4,B,{3}{B},Human;Noble,R,draw;mana2,4,2
 Back on Track,Sorcery,5,B,{4}{B},,,,,2
@@ -207,6 +211,7 @@ Belbe's Portal,Artifact,5,,{5},,,,,2
 Beledros Witherbloom,Creature,7,B G,{5}{B}{G},Elder;Dragon,,,4,2
 Benalish Knight,Creature,3,W,{2}{W},Human;Knight,,,2,2
 Benalish Missionary,Creature,1,W,{W},Human;Cleric,,,1,2
+Beorn the Fierce,Creature,5,G,{3}{G}{G},Bear;Shapeshifter;Warrior,,draw,6,2
 Beorn's Hospitality,Enchantment,2,G,{1}{G},,,,,2
 "Beorn, Reluctant Host // Till and Tend",Creature,5,G,{4}{G} // {1}{G},Human;Bear;Shapeshifter,,,5,2
 Bestow Greatness,Instant,3,G,{2}{G},,,,,2
@@ -218,10 +223,15 @@ Big Bertha,Creature,1,G,{X}{G},Mutant;Hero,,,1,2
 Big Score,Instant,4,R,{3}{R},,W U B R G,draw,,2
 Bighorner Rancher,Creature,5,G,{4}{G},Human;Ranger,G,dork;ramp,2,2
 "Bilbo Baggins, Burglar // Take a Glance",Creature,3,U,{2}{U} // {U},Halfling;Rogue,,draw,2,2
+Bilbo's Burglaring,Sorcery,6,U,{4}{U}{U},,,,,2
 Bilbo's Deadly Slice,Instant,3,B,{1}{B}{B},,,removal,,2
+"Bilbo, Fellow Conspirator",Creature,3,G,{2}{G},Halfling;Citizen,,,2,2
+"Bilbo, Thief in the Night",Creature,2,U,{1}{U},Halfling;Rogue,,,2,2
+Bile-Vial Boggart,Creature,1,B,{B},Goblin;Assassin,,,1,2
 Binding Grasp,Enchantment,4,U,{3}{U},Aura,,,,2
 Bionic Blow,Sorcery,2,R,{X}{R}{R},,,,,2
 "Bitterthorn, Nissa's Animus",Artifact,3,,{3},Equipment,,fetch:basic;ramp,,2
+"Black Cat, Cunning Thief",Creature,5,B,{3}{B}{B},Human;Rogue;Villain,,,2,2
 "Black Panther, Vanguard",Creature,4,G W,{2}{G}{W},Human;Warrior;Hero,,,4,2
 Black Tom Cassidy,Creature,2,G,{1}{G},Mutant;Villain,G,dork;ramp,1,2
 "Black Widow, Agile Avenger",Creature,3,R W,{1}{R}{W},Human;Spy;Hero,,draw,2,2
@@ -252,6 +262,8 @@ Bogwater Lumaret,Creature,2,B G,{B}{G},Spirit;Frog,,,2,2
 Bojuka Bog,Land,0,B,,,B,etb-tapped,,2
 Bola Warrior,Creature,2,R,{1}{R},Human;Spellshaper;Warrior,,,1,2
 Bold Biochemist,Creature,2,U,{1}{U},Human;Scientist,,draw,1,2
+Bolg's Company,Creature,2,B R,{B}{R},Goblin;Soldier,B R,dork;mana2;ramp,2,2
+Bombard,Instant,3,R,{2}{R},,,,,2
 Bonders' Enclave,Land,0,,,,C,draw,,2
 Bone Shredder,Creature,3,B,{2}{B},Phyrexian;Minion,,,1,2
 "Bonny Pall, Clearcutter",Creature,6,G U,{3}{G}{U}{U},Giant;Scout,,draw,6,2
@@ -358,12 +370,14 @@ Champions from Beyond,Enchantment,2,W,{X}{W}{W},,,draw,,2
 "Chandra, Flameshaper",Planeswalker,7,R,{5}{R}{R},Chandra,R,mana3,,2
 "Chandra, Spark Hunter",Planeswalker,4,R,{3}{R},Chandra,,draw,,2
 Change of Heart,Instant,1,W,{W},,,,,2
+Changeling Wayfinder,Creature,3,,{3},Shapeshifter,,fetch:basic,1,2
 Chaos Spewer,Creature,3,B R,{2}{B/R},Goblin;Warlock,,,5,2
 Chaos Warp,Instant,3,R,{2}{R},,,,,2
 Charging Strifeknight,Creature,3,R,{2}{R},Spirit;Knight,,draw,3,2
 Charm Peddler,Creature,1,W,{W},Human;Spellshaper,,,1,2
 Chase Inspiration,Instant,1,U,{U},,,,,2
 Cheerful Osteomancer // Raise Dead,Creature,4,B,{3}{B} // {B},Orc;Warlock,,,4,2
+Chief Warg's Company,Creature,3,B G,{1}{B}{G},Wolf,,,5,2
 Chieftain en-Dal,Creature,3,W,{1}{W}{W},Human;Knight,,,2,2
 Chill,Enchantment,2,U,{1}{U},,,,,2
 Chilling Apparition,Creature,3,B,{2}{B},Spirit,,,1,2
@@ -471,6 +485,7 @@ Crude Bent Blade,Artifact,3,B,{2}{B},Equipment,,,,2
 Cruel Alliance,Sorcery,3,B,{2}{B},,,removal,,2
 Crush Contraband,Instant,4,W,{3}{W},,,removal,,2
 Crux of Fate,Sorcery,5,B,{3}{B}{B},,,wipe,,2
+Cryogen Relic,Artifact,2,U,{1}{U},,,draw,,2
 Crypt Rats,Creature,3,B,{2}{B},Rat,,,1,2
 Crystal Rod,Artifact,1,,{1},,,,,2
 Crystal Vein,Land,0,,,,C,mana2,,2
@@ -490,6 +505,7 @@ Dancer's Chakrams,Artifact,4,W,{3}{W},Equipment,,,,2
 Dancing from Dark to Dawn,Enchantment,5,G,{3}{G}{G},,,,,2
 Darba,Creature,4,G,{3}{G},Bird;Beast,,,5,2
 "Daredevil, Man Without Fear",Creature,4,R W,{2}{R}{W},Human;Hero,,,3,2
+Daring Mechanic,Creature,3,W,{2}{W},Human;Artificer,,,3,2
 Dark Banishing,Instant,3,B,{2}{B},,,removal,,2
 Dark Deed,Instant,2,B,{1}{B},,,,,2
 Dark Depths,Land,0,,,,,,,2
@@ -518,6 +534,7 @@ Deathless Pilot,Creature,2,B,{1}{B},Zombie;Pilot,,,2,2
 Decadent Dragon // Expensive Taste,Creature,4,B R,{2}{R}{R} // {2}{B},Dragon,,,4,2
 Deceit,Creature,6,B U,{4}{U/B}{U/B},Elemental;Incarnation,,,5,2
 Decimate,Sorcery,4,G R,{2}{R}{G},,,removal,,2
+Decode Transmissions,Sorcery,3,B,{2}{B},,,draw,,2
 Decoy Ploy,Instant,2,B,{1}{B},,,,,2
 Deduce,Instant,2,U,{1}{U},,,draw,,2
 Deepwood Drummer,Creature,2,G,{1}{G},Human;Spellshaper,,,1,2
@@ -532,6 +549,7 @@ Defiant Falcon,Creature,2,W,{1}{W},Rebel;Bird,,,1,2
 Defiant Vanguard,Creature,3,W,{2}{W},Human;Rebel,,,2,2
 Defiling Daemogoth,Creature,5,B,{3}{B}{B},Demon,,,5,2
 Dehydration,Enchantment,4,U,{3}{U},Aura,,,,2
+"Delney, Streetwise Lookout",Creature,3,W,{2}{W},Human;Scout,,,2,2
 Deluge Virtuoso,Creature,3,U,{2}{U},Human;Wizard,,,2,2
 Demolition Field,Land,0,,,,C,fetch:basic;ramp,,2
 Dependable Quinjet,Artifact,3,,{3},Vehicle,W U B R G,ramp;rock,3,2
@@ -540,6 +558,7 @@ Derelor,Creature,4,B,{3}{B},Thrull,,,4,2
 Deserted Beach,Land,0,U W,,,W U,etb-tapped-cond,,2
 Desolate Mire,Land,0,B W,,,W B,mana2,,2
 Desolation Prowler,Creature,2,B,{1}{B},Wolf,,,2,2
+Desolation of Smaug,Sorcery,4,R,{2}{R}{R},,W U B R G,mana-restricted,,2
 Desperate Bloodseeker,Creature,2,B,{1}{B},Vampire,,,2,2
 Despondency,Enchantment,2,B,{1}{B},Aura,,,,2
 Destroy Evil,Instant,2,W,{1}{W},,,removal,,2
@@ -573,6 +592,7 @@ Doc Ock's Henchmen,Creature,3,U,{2}{U},Human;Villain,,draw,2,2
 Doc Ock's Tentacles,Artifact,1,,{1},Equipment,,,,2
 "Doc Ock, Sinister Scientist",Creature,5,U,{4}{U},Human;Scientist;Villain,,,4,2
 "Doc Samson, Super Psychiatrist",Creature,5,G,{4}{G},Gamma;Doctor;Hero,W U B R G,dork;ramp,3,2
+Dockworker Drone,Creature,2,W,{1}{W},Robot,,,1,2
 Doctor Doom,Creature,6,B,{4}{B}{B},Human;Scientist;Villain,,draw,3,2
 "Dogmeat, Ever Loyal",Creature,3,G R W,{R}{G}{W},Dog,,,3,2
 Dominate,Instant,3,U,{X}{1}{U}{U},,,,,2
@@ -587,6 +607,8 @@ Dose of Dawnglow,Instant,5,B,{4}{B},,,,,2
 Downhill Charge,Instant,3,R,{2}{R},,,,,2
 Dragon Broodmother,Creature,6,G R,{2}{R}{R}{R}{G},Dragon,,,4,2
 Dragon Tempest,Enchantment,2,R,{1}{R},,,,,2
+Dragon's Desire,Sorcery,4,R,{2}{R}{R},,R,,,2
+Dragon-Cursed Halls,Land,0,,,,C,,,2
 "Dragonhawk, Fate's Tempest",Creature,5,R,{3}{R}{R},Bird;Dragon,,,5,2
 Dragonlord Dromoka,Creature,6,G W,{4}{G}{W},Elder;Dragon,,,5,2
 Dragonlord Ojutai,Creature,5,U W,{3}{W}{U},Elder;Dragon,,,5,2
@@ -618,6 +640,7 @@ Dwarven Mattock,Artifact,2,,{2},Equipment,,,,2
 Dwarven Mauler,Creature,1,R,{R},Dwarf;Warrior,,,2,2
 Dwarven Ruins,Land,0,R,,,R,etb-tapped;mana2,,2
 Dwarven Shortsword,Artifact,4,W,{3}{W},Equipment,,,,2
+Dynamite Diver,Creature,1,R,{R},Goblin;Pilot,,,1,2
 Dáin Ironfoot,Creature,3,R,{2}{R},Dwarf;Warrior,,,1,2
 Eager Glyphmage,Creature,4,W,{3}{W},Cat;Cleric,,,3,2
 Earth Kingdom Jailer,Creature,3,W,{2}{W},Human;Soldier;Ally,,,3,2
@@ -645,6 +668,7 @@ Elemental Mascot,Creature,3,R U,{1}{U}{R},Elemental;Bird,,,1,2
 "Elena, Turk Recruit",Creature,3,W,{2}{W},Human;Assassin,,,1,2
 Elephant Grass,Enchantment,1,G,{G},,,,,2
 Elite Interceptor // Rejoinder,Creature,1,W,{W} // {1}{W},Human;Wizard,,draw,1,2
+"Elrond, Moon-Reader",Creature,3,U,{2}{U},Elf;Noble,,draw,3,2
 Elven Cache,Sorcery,4,G,{2}{G}{G},,,,,2
 Elven Riders,Creature,5,G,{3}{G}{G},Elf,,,3,2
 Elvenking's Halls,Land,0,G U,,,U G,etb-tapped,,2
@@ -722,6 +746,7 @@ Fang-Druid Summoner,Creature,4,G,{3}{G},Ape;Druid,,,2,2
 Farseek,Sorcery,2,G,{1}{G},,,fetch:island;fetch:mountain;fetch:plains;fetch:swamp;ramp,,2
 Fatal Fissure,Instant,2,B,{1}{B},,,,,2
 Fate of the Sun-Cryst,Instant,5,W,{4}{W},,,removal,,2
+Fateful Discovery,Enchantment,5,U,{3}{U}{U},,,draw,,2
 Fateful Tempest,Sorcery,3,R,{2}{R},,,,,2
 Fault Riders,Creature,3,R,{2}{R},Human;Soldier,,,2,2
 Favorable Winds,Enchantment,2,U,{1}{U},,,,,2
@@ -730,6 +755,7 @@ Feast of the Unicorn,Enchantment,4,B,{3}{B},Aura,,,,2
 Feed the Flames,Instant,4,R,{3}{R},,,,,2
 Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,2
 Feisty Spikeling,Creature,2,R W,{1}{R/W},Shapeshifter,,,2,2
+Fell Gravship,Artifact,3,B,{2}{B},Spacecraft,,,3,2
 Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,2
 Fend Off,Instant,2,W,{1}{W},,,draw,,2
 Feral Appetite,Enchantment,3,G,{2}{G},,,removal,,2
@@ -764,6 +790,7 @@ Flailing Soldier,Creature,1,R,{R},Human;Soldier,,,2,2
 Flame Elemental,Creature,4,R,{2}{R}{R},Elemental,,,3,2
 Flame Rift,Sorcery,2,R,{1}{R},,,,,2
 Flame Spirit,Creature,5,R,{4}{R},Elemental;Spirit,,,2,2
+Flame-Chain Mauler,Creature,2,R,{1}{R},Elemental;Warrior,,,2,2
 Flameshot,Sorcery,4,R,{3}{R},,,,,2
 Flaming Sword,Enchantment,2,R,{1}{R},Aura,,,,2
 "Flash Thompson, Spider-Fan",Creature,2,W,{1}{W},Human;Citizen,,,2,2
@@ -828,21 +855,25 @@ G'raha Tia,Creature,5,W,{4}{W},Cat;Archer,,draw,3,2
 "G'raha Tia, Scion Reborn",Creature,3,B U W,{W}{U}{B},Cat;Wizard,,,2,2
 Gadget Technician,Creature,4,R U,{2}{U}{R},Goblin;Artificer,,,3,2
 Gaelicat,Creature,3,W,{2}{W},Cat,,,1,2
+Galadriel's Dismissal,Instant,1,W,{W},,,,,2
 Gallant Citizen,Creature,2,G W,{G/W}{G/W},Human;Citizen,,draw,1,2
 Gallant Fowlknight,Creature,4,W,{3}{W},Kithkin;Knight,,,3,2
 Galuf's Final Act,Instant,2,G,{1}{G},,,,,2
 Game Trail,Land,0,G R,,,R G,etb-tapped-cond,,2
 "Ganax, Astral Hunter",Creature,5,R,{4}{R},Dragon,W U B R G,dork;ramp,3,2
+"Gandalf, Spark Starter",Creature,6,R,{4}{R}{R},Avatar;Wizard,,,4,2
 "Gandalf, Wandering Wizard",Creature,5,U,{4}{U},Avatar;Wizard,,draw,4,2
 Gangly Stompling,Creature,3,G R,{2}{R/G},Shapeshifter,,,4,2
 Gangrenous Zombies,Creature,3,B,{1}{B}{B},Zombie,,,2,2
 "Garnet, Princess of Alexandria",Creature,2,G W,{G}{W},Human;Noble;Cleric,,,2,2
 Gas Guzzler,Creature,1,B,{B},Vampire;Rogue,,draw,2,2
 Gaseous Form,Enchantment,3,U,{2}{U},Aura,,,,2
+Gastal Thrillseeker,Creature,2,B R,{B}{R},Lizard;Berserker,,,2,2
 Gathering Place,Land,0,G W,,,W G C,,,2
 Gaze of Pain,Sorcery,2,B,{1}{B},,,,,2
 Gearbane Orangutan,Creature,3,R,{2}{R},Ape,,,2,2
 Gearseeker Serpent,Creature,7,U,{5}{U}{U},Serpent,,,5,2
+Gene Pollinator,Creature,1,G,{G},Robot;Insect,W U B R G,dork;ramp;rock,1,2
 Generous Gift,Instant,3,W,{2}{W},,,removal,,2
 Geode Rager,Creature,6,R,{4}{R}{R},Elemental,,,4,2
 Germination Practicum,Sorcery,5,G,{3}{G}{G},Lesson,,,,2
@@ -870,10 +901,12 @@ Gilt-Leaf's Embrace,Enchantment,3,G,{2}{G},Aura,,,,2
 Glacial Fortress,Land,0,U W,,,W U,etb-tapped-cond,,2
 Glacial Wall,Creature,3,U,{2}{U},Wall,,,0,2
 Gladiolus Amicitia,Creature,6,G R,{4}{R}{G},Human;Warrior,,fetch:land;ramp,6,2
+"Glamdring, Foe-hammer // Gleam of Death",Artifact,2,U,{2} // {3}{U},Equipment,,,,2
 Glamermite,Creature,3,U,{2}{U},Faerie;Rogue,,,2,2
 Glasses of Urza,Artifact,1,,{1},,,,,2
 Gleaming Barrier,Creature,2,,{2},Wall,W U B R G,dork;ramp;rock,0,2
 Gleaming Bastion,Land,0,U W,,,W U C,,,2
+Gleaming Splendor,Enchantment,2,W,{1}{W},,,draw,,2
 Glider Kids,Creature,3,W,{2}{W},Human;Pilot;Ally,,,2,2
 Glitch Ghost Surveyor,Creature,3,U,{2}{U},Spirit;Scout,,draw,2,2
 Glittering Lynx,Creature,1,W,{W},Cat,,,1,2
@@ -881,6 +914,7 @@ Glittering Massif,Land,0,R W,,Mountain;Plains,W R,draw;etb-tapped,,2
 Glorious Decay,Instant,2,G,{1}{G},,,draw;removal,,2
 Glóin the Mighty // Easy Pickings,Creature,4,R,{3}{R} // {2}{R},Dwarf;Warrior,R,mana2,4,2
 Go Nuts!,Sorcery,1,G,{G},,,,,2
+Goatnap,Sorcery,3,R,{2}{R},,,,,2
 Goblin Boarders,Creature,3,R,{2}{R},Goblin;Pirate,,,3,2
 Goblin Cadets,Creature,1,R,{R},Goblin,,,2,2
 Goblin Digging Team,Creature,1,R,{R},Goblin,,,1,2
@@ -900,7 +934,6 @@ Goblin-town Flunkies,Creature,2,R,{1}{R},Goblin;Soldier,,,1,2
 "Godo, Bandit Warlord",Creature,6,R,{5}{R},Human;Barbarian,,,3,2
 Gold Rush,Instant,2,G,{1}{G},,,,,2
 Goldmeadow Nomad,Creature,1,W,{W},Kithkin;Scout,,,1,2
-"Gollum, Silent Slinker // Meager Meal",Creature,4,B,{3}{B} // {B},Halfling;Horror,,,4,2
 "Gongaga, Reactor Town",Land,0,G R,,Town,R G,etb-tapped,,2
 Gorilla Chieftain,Creature,4,G,{2}{G}{G},Ape,,,3,2
 Gorilla Warrior,Creature,3,G,{2}{G},Ape;Warrior,,,3,2
@@ -949,6 +982,8 @@ H.E.R.B.I.E. Scout Unit,Creature,4,,{4},Robot;Scout,,draw,2,2
 HULK SMASH!,Instant,2,R,{1}{R},,,removal,,2
 HYDRA Assault Robot,Creature,2,R,{1}{R},Robot;Villain,,,1,2
 HYDRA Infiltration,Enchantment,4,B,{3}{B},,,,,2
+"Haliya, Ascendant Cadet",Creature,5,G W,{2}{G}{W}{W},Human;Soldier,,draw,3,2
+"Haliya, Guided by Light",Creature,3,W,{2}{W},Human;Soldier,,draw,3,2
 "Hama, the Bloodbender",Creature,5,B U,{2}{U/B}{U/B}{U/B},Human;Warlock,,,3,2
 Hammer Mage,Creature,2,R,{1}{R},Human;Spellshaper,,,1,2
 Hammerhead Shark,Creature,2,U,{1}{U},Shark,,,2,2
@@ -1014,7 +1049,6 @@ Hidden Horror,Creature,3,B,{1}{B}{B},Horror,,,4,2
 Hidden Lair,Land,0,B U,,,U B C,,,2
 Hide on the Ceiling,Instant,1,U,{X}{U},,,,,2
 High Market,Land,0,,,,C,,,2
-Hildibrand Manderville // Gentleman's Rise,Creature,2,B W,{1}{W} // {2}{B},Human;Detective,,,2,2
 Hire a Crew,Instant,3,R,{2}{R},,,,,2
 Hired Giant,Creature,4,R,{3}{R},Giant,,,4,2
 Hobbit Hole,Land,0,,,,,fetch:basic;ramp,,2
@@ -1023,7 +1057,6 @@ Hofri Ghostforge,Creature,5,R W,{3}{R}{W},Dwarf;Cleric,,,4,2
 Hollow Marauder,Creature,7,B,{6}{B},Specter;Rogue,,draw,4,2
 Homesickness,Instant,6,U,{4}{U}{U},,,,,2
 Honest Work,Enchantment,1,U,{U},Aura,C,,,2
-Honorbound Page // Forum's Favor,Creature,4,W,{3}{W} // {W},Cat;Cleric,,,3,2
 Hoodwink,Instant,2,U,{1}{U},,,,,2
 Hope Estheim,Creature,2,U W,{W}{U},Human;Wizard,,,2,2
 Hope and Glory,Instant,2,W,{1}{W},,,,,2
@@ -1051,7 +1084,6 @@ Hydraulic Helper,Creature,2,U,{1}{U},Robot,U,dork;ramp;rock,2,2
 Hydro-Channeler,Creature,2,U,{1}{U},Merfolk;Wizard,W U B R G,dork;mana-restricted;ramp,1,2
 "Hydro-Man, Fluid Felon",Creature,2,U,{U}{U},Elemental;Villain,U,dork;ramp,2,2
 Hydroblast,Instant,1,U,{U},,,counter;removal,,2
-Hypnotic Sprite // Mesmeric Glare,Creature,2,U,{U}{U} // {2}{U},Faerie,,counter,2,2
 I Am Iron Man,Instant,3,U,{2}{U},,,draw,,2
 Ian the Reckless,Creature,2,R,{1}{R},Human;Warrior,,,2,2
 Ice Cream Kitty,Creature,2,B G,{1}{B/G},Food;Cat;Mutant,,draw,1,2
@@ -1073,6 +1105,7 @@ Infiltrate,Instant,1,U,{U},,,,,2
 Inflame,Instant,1,R,{R},,,,,2
 Informed Inkwright,Creature,2,W,{1}{W},Human;Wizard,,,2,2
 Inkling Mascot,Creature,2,B W,{W}{B},Inkling;Cat,,,2,2
+Inner Demons Gangsters,Creature,4,B,{3}{B},Human;Rogue;Villain,,,3,2
 Inside Information,Sorcery,2,B,{X}{B}{B},,,,,2
 Insight,Enchantment,3,U,{2}{U},,,draw,,2
 Inspired Fire,Instant,4,R,{3}{R},,,,,2
@@ -1116,7 +1149,6 @@ Ivory Mask,Enchantment,4,W,{2}{W}{W},,,,,2
 "Jack of Hearts, Volatile Hero",Creature,3,R,{1}{R}{R},Alien;Human;Hero,,draw,2,2
 "Jackal, Genius Geneticist",Creature,2,G U,{G}{U},Human;Scientist;Villain,,,1,2
 "Jadar, Ghoulcaller of Nephalia",Creature,2,B,{1}{B},Human;Wizard,,,1,2
-"Jadzi, Steward of Fate // Oracle's Gift",Creature,3,U,{2}{U} // {X}{X}{U},Human;Wizard,,draw,2,2
 Jalum Tome,Artifact,3,,{3},Book,,draw,,2
 Jamuraan Lion,Creature,3,W,{2}{W},Cat,,,3,2
 "Jarvis, Earth's Mightiest Butler",Creature,3,U,{2}{U},Human;Advisor,,draw,1,2
@@ -1151,6 +1183,7 @@ Kangee's Lieutenant,Creature,3,W,{2}{W},Bird;Soldier,,,1,2
 Kapow!,Sorcery,3,G,{2}{G},,,,,2
 "Kardur, Doomscourge",Creature,4,B R,{2}{B}{R},Demon;Berserker,,,4,2
 Karmic Guide,Creature,5,W,{3}{W}{W},Angel;Spirit,,,2,2
+Kavaron Harrier,Creature,1,R,{R},Robot;Soldier,,,2,2
 "Kazuul, Tyrant of the Cliffs",Creature,5,R,{3}{R}{R},Ogre;Warrior,,,5,2
 Keldon Berserker,Creature,4,R,{3}{R},Human;Soldier;Berserker,,,2,2
 Kickoff Celebrations,Enchantment,2,R,{1}{R},,,draw,,2
@@ -1162,7 +1195,6 @@ King Crab,Creature,6,U,{4}{U}{U},Crab,,,4,2
 Kingpin's Enforcers,Creature,3,B,{2}{B},Human;Villain,,draw,2,2
 "Kiora, Behemoth Beckoner",Planeswalker,3,G U,{2}{G/U},Kiora,,draw,,2
 "Kirol, Attentive First-Year",Creature,3,R W,{1}{R/W}{R/W},Vampire;Cleric,,,3,2
-"Kirol, History Buff // Pack a Punch",Creature,2,R W,{R}{W} // {1}{R}{W},Vampire;Cleric,,,2,2
 Kismet,Enchantment,4,W,{3}{W},,,,,2
 Kithkin Armor,Enchantment,1,W,{W},Aura,,,,2
 Kjeldoran Dead,Creature,1,B,{B},Skeleton,,,3,2
@@ -1176,6 +1208,7 @@ Knowledge Seeker,Creature,2,U,{1}{U},Fox;Spirit,,draw,2,2
 "Kolodin, Triumph Caster",Creature,2,R W,{R}{W},Human;Pilot,,,2,2
 Kraven's Cats,Creature,2,G,{1}{G},Cat;Villain,,,2,2
 Kraven's Last Hunt,Enchantment,4,G,{3}{G},Saga,,,,2
+"Kraven, Proud Predator",Creature,3,G R,{1}{R}{G},Human;Warrior;Villain,,,*,2
 Kree Commandos,Creature,3,W,{2}{W},Kree;Soldier;Villain,,,2,2
 Kree Sentinel,Creature,5,R,{4}{R},Kree;Robot;Villain,,fetch:basic,5,2
 Krile Baldesion,Creature,2,U W,{W}{U},Dwarf;Wizard,,,2,2
@@ -1220,7 +1253,6 @@ Lead Pipe,Artifact,1,B,{B},Clue;Equipment,,draw,,2
 "Leader, Super-Genius",Creature,4,U,{2}{U}{U},Gamma;Scientist;Villain,,draw,1,2
 Leap,Instant,1,U,{U},,,draw,,2
 Lecturing Scornmage,Creature,1,B,{B},Human;Warlock,,,1,2
-Leech Collector // Bloodletting,Creature,2,B,{1}{B} // {B},Human;Warlock,,,2,2
 Leonin Surveyor,Creature,2,W,{1}{W},Cat;Scout,,draw,2,2
 Lethal Scheme,Instant,4,B,{2}{B}{B},,,draw;removal,,2
 Levitation,Enchantment,4,U,{2}{U}{U},,,,,2
@@ -1256,6 +1288,7 @@ Loki Laufeyson,Creature,2,R,{1}{R},God;Sorcerer;Villain,,,2,2
 Lone Wolf,Creature,3,G,{2}{G},Wolf,,,2,2
 Long Lake Nuisance,Creature,4,U,{3}{U},Bird,,draw,3,2
 Long-Bodied Grey Dog,Creature,3,,{3},Dog,W U B R G,dork;ramp,2,2
+Long-Lost Lances,Artifact,2,,{2},Equipment,,,,2
 Longbow Archer,Creature,2,W,{W}{W},Human;Soldier;Archer,,,2,2
 Looming Shade,Creature,3,B,{2}{B},Shade,,,1,2
 Loporrit Scout,Creature,3,G,{2}{G},Rabbit;Scout,,,3,2
@@ -1351,6 +1384,7 @@ Migratory Route,Sorcery,5,U W,{3}{W}{U},,,fetch:basic,,2
 Miles Morales,Creature,2,G R W,{1}{G} // {3}{R}{G}{W},Human;Citizen;Hero,,,1,2
 Millikin,Creature,2,,{2},Construct,C,dork;ramp;rock,0,2
 Millstone,Artifact,2,,{2},,,,,2
+"Mimeoplasm, Revered One",Creature,3,B G U,{X}{B}{G}{U},Ooze,,,0,2
 Mind Roots,Sorcery,3,B G,{1}{B}{G},,,,,2
 Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,2
 Mindful Biomancer,Creature,2,G,{1}{G},Dryad;Druid,,,2,2
@@ -1414,6 +1448,7 @@ Mossfire Valley,Land,0,G R,,,R G,mana2,,2
 Mountain,Land,0,R,,Mountain,R,,,2
 Mountain Goat,Creature,1,R,{R},Goat,,,1,2
 Mourner's Surprise,Sorcery,2,B,{1}{B},,,,,2
+Mouth of the Storm,Creature,7,U,{6}{U},Elemental,,,6,2
 "Ms. Marvel, Kamala Khan",Creature,3,U,{2}{U},Mutant;Inhuman;Hero,,draw,1,2
 Mudbutton Cursetosser,Creature,1,B,{B},Goblin;Warlock,,,2,2
 Mulch,Sorcery,2,G,{1}{G},,,,,2
@@ -1443,9 +1478,11 @@ Namor the Sub-Mariner,Creature,3,U,{1}{U}{U},Mutant;Merfolk;Villain,,,*,2
 Nasty Little Rabbit,Creature,1,G,{G},Rabbit,,,1,2
 Nature's Lore,Sorcery,2,G,{1}{G},,,fetch:forest;ramp,,2
 Nature's Resurgence,Sorcery,4,G,{2}{G}{G},,,,,2
+Necklace of Girion,Artifact,3,G,{2}{G},,G,ramp;rock,,2
 Necroblossom Snarl,Land,0,B G,,,B G,etb-tapped-cond,,2
 Negate,Instant,2,U,{1}{U},,,counter,,2
 "Neriv, Heart of the Storm",Creature,4,B R W,{1}{R}{W}{B},Spirit;Dragon,,,4,2
+Nesting Bot,Creature,1,W,{W},Robot,,,1,2
 Nether Traitor,Creature,2,B,{B}{B},Spirit,,,1,2
 News Helicopter,Creature,3,,{3},Construct,,,1,2
 Nezumi Linkbreaker,Creature,1,B,{B},Rat;Warlock,,,1,2
@@ -1494,6 +1531,7 @@ Oracle's Restoration,Sorcery,1,G,{G},,,draw,,2
 Oraxid,Creature,4,U,{3}{U},Crab;Beast,,,2,2
 Orcish Librarian,Creature,2,R,{1}{R},Orc,,,1,2
 Orcish Settlers,Creature,2,R,{1}{R},Orc,,,1,2
+"Orcrist, Goblin-cleaver",Artifact,3,,{3},Equipment,,,,2
 Order of Yawgmoth,Creature,4,B,{2}{B}{B},Phyrexian;Zombie;Knight,,,2,2
 Ordinary Bear,Creature,4,G,{3}{G},Bear,,,4,2
 "Ori, Keeper of Songs",Creature,3,W,{2}{W},Dwarf;Bard,,,3,2
@@ -1527,6 +1565,7 @@ Parapet Thrasher,Creature,4,R,{2}{R}{R},Dragon,,,4,2
 Parch,Instant,2,R,{1}{R},,,,,2
 Park Heights Pegasus,Creature,2,G W,{G}{W},Pegasus,,draw,2,2
 Parker Luck,Enchantment,3,B,{2}{B},,,,,2
+Part in Friendship,Enchantment,5,G,{4}{G},,,,,2
 Passenger Ferry,Artifact,3,U,{3},Vehicle,,,4,2
 Patagia Golem,Creature,4,,{4},Golem,,,2,2
 Patchwork Banner,Artifact,3,,{3},,W U B R G,ramp;rock,,2
@@ -1564,6 +1603,7 @@ Pillage,Sorcery,3,R,{1}{R}{R},,,removal,,2
 Pious Warrior,Creature,4,W,{3}{W},Human;Rebel;Warrior,,,2,2
 Pip-Boy 3000,Artifact,1,,{1},Equipment,,draw,,2
 Pit Automaton,Creature,2,,{2},Construct,C,dork;mana-restricted;mana2;ramp;rock,0,2
+Pitiless Fists,Enchantment,4,G,{3}{G},Aura,,,,2
 Plains,Land,0,W,,Plains,W,,,2
 Planar Collapse,Enchantment,2,W,{1}{W},,,,,2
 Planar Engineering,Sorcery,4,G,{3}{G},,,fetch:basic;ramp,,2
@@ -1587,6 +1627,7 @@ Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,2
 Pre-War Formalwear,Artifact,3,W,{2}{W},Equipment,,,,2
 "Predator, Flagship",Artifact,5,,{5},,,,,2
 "Preston Garvey, Minuteman",Creature,5,G R W,{2}{R}{G}{W},Human;Soldier,W U B R G,dork;ramp,4,2
+Presumed Dead,Instant,2,B,{1}{B},,,,,2
 Pride of the Road,Creature,4,W,{3}{W},Zombie;Cat;Warrior,,,2,2
 Priest of Forgotten Gods,Creature,2,B,{1}{B},Human;Cleric,B,draw;mana2,1,2
 Priest of Titania,Creature,2,G,{1}{G},Elf;Druid,G,dork;ramp,1,2
@@ -1727,6 +1768,7 @@ Renounce,Instant,2,W,{1}{W},,,,,2
 Rent Is Due,Enchantment,1,W,{W},,,draw,,2
 Repel Calamity,Instant,2,W,{1}{W},,,removal,,2
 Repopulate,Instant,2,G,{1}{G},,,draw,,2
+Reprieve,Instant,2,W,{1}{W},,,draw,,2
 "Reptil, Dinomorpher",Creature,1,G,{G},Human;Hero,,,1,2
 Repulsor Blast,Sorcery,4,R,{3}{R},,,,,2
 Requisition Raid,Sorcery,1,W,{W},,,removal,,2
@@ -1974,6 +2016,7 @@ Skyshroud Poacher,Creature,4,G,{2}{G}{G},Human;Rebel,,,2,2
 Skyshroud Ridgeback,Creature,1,G,{G},Beast,,,2,2
 Skyshroud Sentinel,Creature,3,G,{2}{G},Elf,,,1,2
 Skystreak Engineer,Creature,2,U,{1}{U},Human;Pilot,,,1,2
+Skyward Spider,Creature,2,U W,{W/U}{W/U},Spider;Human;Hero,,,2,2
 Slash of Light,Instant,2,W,{1}{W},,,,,2
 Slayers' Stronghold,Land,0,R W,,,C,,,2
 Sleep Magic,Enchantment,1,U,{U},Aura,,,,2
@@ -1981,6 +2024,8 @@ Slice from the Shadows,Instant,1,B,{X}{B},,,,,2
 Slime Against Humanity,Sorcery,3,G,{2}{G},,,,,2
 Slippery Karst,Land,0,G,,,G,draw;etb-tapped,,2
 Sluggishness,Enchantment,2,R,{1}{R},Aura,,,,2
+Smaug the Impenetrable,Creature,7,B R,{5}{B}{R},Dragon,,,8,2
+Smaug the Magnificent,Creature,4,R,{2}{R}{R},Dragon,,,4,2
 Smaug's Fury,Instant,2,R,{1}{R},,,,,2
 "Smaug, Wicked Worm",Creature,5,B R,{3}{B}{R},Dragon,,draw,5,2
 Smite,Instant,1,W,{W},,,removal,,2
@@ -2081,6 +2126,7 @@ Squall,Sorcery,3,G,{2}{G},,,,,2
 Squallmonger,Creature,4,G,{3}{G},Monger,,,3,2
 "Squee, Goblin Nabob",Creature,3,R,{2}{R},Goblin,,,1,2
 Squeeze,Enchantment,4,U,{3}{U},,,,,2
+Squire's Lightblade,Artifact,1,W,{W},Equipment,,,,2
 Squirrel Nest,Enchantment,3,G,{1}{G}{G},Aura,,,,2
 Stadium Tidalmage,Creature,4,R U,{2}{U}{R},Djinn;Sorcerer,,draw,4,2
 Staff of the Storyteller,Artifact,2,W,{1}{W},,,draw,,2
@@ -2154,6 +2200,7 @@ Sudden Strike,Instant,2,W,{1}{W},,,removal,,2
 Sulfur Falls,Land,0,R U,,,U R,etb-tapped-cond,,2
 Sulfurous Springs,Land,0,B R,,,B R C,,,2
 Sumala Sentry,Creature,2,G W,{G}{W},Elf;Archer,,,1,2
+Summit Sentinel,Creature,2,U,{1}{U},Elemental;Soldier,,draw,1,2
 Summon: Anima,Creature,6,B,{4}{B}{B},Saga;Horror,,draw,4,2
 Summon: Choco/Mog,Creature,3,W,{2}{W},Saga;Bird;Moogle,,,3,2
 Summon: G.F. Ifrit,Creature,3,R,{2}{R},Saga;Demon,R,draw,3,2
@@ -2170,6 +2217,7 @@ Sun-Dappled Celebrant,Creature,6,W,{4}{W}{W},Treefolk;Cleric,,,5,2
 "Sun-Spider, Nimble Webber",Creature,4,U W,{3}{W/U},Spider;Human;Hero,,,3,2
 Sunbillow Verge,Land,0,R W,,,W R,,,2
 Sunbird's Invocation,Enchantment,6,R,{5}{R},,,,,2
+Sunderflock,Creature,9,U,{7}{U}{U},Elemental,,,5,2
 Sundering Archaic,Creature,6,,{6},Avatar,,,3,2
 Sungrass Prairie,Land,0,G W,,,W G,mana2,,2
 Sunken Field,Enchantment,2,U,{1}{U},Aura,,counter,,2
@@ -2190,6 +2238,7 @@ Superior Foes of Spider-Man,Creature,3,R,{2}{R},Human;Rogue;Villain,,,3,2
 Suplex,Sorcery,2,R,{1}{R},,,removal,,2
 Supper for Spiders,Instant,2,B,{1}{B},,,,,2
 Supportive Parents,Creature,3,G,{2}{G},Human;Citizen,W U B R G,,3,2
+Surveillance Monitor,Creature,4,U,{3}{U},Vedalken;Detective,,,3,2
 Surveillance Room,Land,0,,,,W U B R G C,,,2
 Suspicious Detonation,Sorcery,5,R,{4}{R},,,,,2
 Sustainer of the Realm,Creature,4,W,{2}{W}{W},Angel,,,2,2
@@ -2240,10 +2289,12 @@ Temur Ascendancy,Enchantment,3,G R U,{G}{U}{R},,,draw,,2
 Temur Battlecrier,Creature,3,G R U,{G}{U}{R},Orc;Ranger,,,4,2
 Tendershoot Dryad,Creature,5,G,{4}{G},Dryad,,,2,2
 Tendrils of Despair,Sorcery,1,B,{B},,,,,2
+Tenth District Hero,Creature,2,W,{1}{W},Human,,,2,2
 "Teo, Spirited Glider",Creature,4,U,{3}{U},Human;Pilot;Ally,,draw,1,2
 Terminate,Instant,2,B R,{B}{R},,,removal,,2
 Terrain Generator,Land,0,,,,C,,,2
 Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,2
+"Terrian, World Tyrant",Creature,5,G,{2}{G}{G}{G},Dinosaur;Ooze,,,9,2
 Terrific Team-Up,Instant,4,G,{3}{G},,,,,2
 Terror,Instant,2,B,{1}{B},,,removal,,2
 "Teshar, Ancestor's Apostle",Creature,4,W,{3}{W},Bird;Cleric,,,2,2
@@ -2263,12 +2314,16 @@ The Emperor of Palamecia,Creature,2,R U,{U}{R},Human;Noble;Wizard,U R,dork;mana-
 The Gold Saucer,Land,0,,,Town,C,draw,,2
 The Great Goblin,Creature,3,B R,{1}{B/R}{B/R},Goblin;Noble,,,3,2
 The Kingpin of Crime,Creature,3,B W,{1}{W}{B},Human;Villain,,,1,2
+The Lord of the Eagles,Creature,9,U,{7}{U}{U},Bird;Noble,,,8,2
+The Master of Lake-town,Creature,3,B,{1}{B}{B},Human;Advisor,,draw,3,2
 The Masters of Evil,Creature,6,B,{5}{B},Human;Villain,,,5,2
 "The Mechanist, Aerial Artisan",Creature,3,U,{2}{U},Human;Artificer;Ally,,draw,1,2
 "The Mighty Thor, Jane Foster",Creature,3,U W,{1}{W}{U},Human;God;Hero,,draw,3,2
 The Mind Stone,Artifact,2,W,{1}{W},Infinity;Stone,W,ramp;rock,,2
 The Mountain-king's Return,Enchantment,3,W,{2}{W},Saga,,draw,,2
 The Notary Hobbits,Creature,5,G,{3}{G}{G},Halfling;Advisor,C,dork;ramp,1,2
+The Reaver Cleaver,Artifact,3,R,{2}{R},Equipment,,,,2
+The Sackville-Bagginses,Creature,2,B,{1}{B},Halfling;Citizen,,draw,2,2
 The Scarlet Witch,Creature,3,R,{2}{R},Mutant;Warlock;Hero,,,2,2
 The Serpent Society,Creature,3,B G,{1}{B}{G},Human;Snake;Villain,,,3,2
 The Spot's Portal,Instant,3,B,{2}{B},,,,,2
@@ -2307,6 +2362,7 @@ Thriving Grove,Land,0,G,,,W U B R G,etb-tapped,,2
 Thriving Isle,Land,0,U,,,W U B R G,etb-tapped,,2
 Throne of Bone,Artifact,1,,{1},,,,,2
 Through the Breach,Instant,5,R,{4}{R},Arcane,,,,2
+Through the Forest Gate,Sorcery,8,G,{6}{G}{G},,,,,2
 Throw from the Saddle,Sorcery,2,G,{1}{G},,,,,2
 Thunder Magic,Instant,1,R,{R},,,,,2
 Thunder Salvo,Instant,2,R,{1}{R},,,,,2
@@ -2337,6 +2393,7 @@ Titan's Grave,Land,0,B G,,,B G,etb-tapped,,2
 Tocasia's Welcome,Enchantment,3,W,{2}{W},,,draw,,2
 Tolarian Drake,Creature,3,U,{2}{U},Drake,,,2,2
 Tolarian Winds,Instant,2,U,{1}{U},,,,,2
+Tom Bombadil,Creature,5,B G R U W,{W}{U}{B}{R}{G},God;Bard,,,4,2
 "Tom, Bert, and William",Creature,5,B G,{3}{B}{G},Troll,,,5,2
 "Tombstone, Career Criminal",Creature,3,B,{2}{B},Human;Villain,,,2,2
 Tome Blast,Sorcery,2,R,{1}{R},,,,,2
@@ -2380,6 +2437,7 @@ True Conviction,Enchantment,6,W,{3}{W}{W}{W},,,,,2
 "Trystan, Callous Cultivator",Creature,3,B G,{2}{G},Elf;Druid,,,3,2
 Tundra Tank,Artifact,3,B,{2}{B},Vehicle,R,,4,2
 Tundra Wolves,Creature,1,W,{W},Wolf,,,1,2
+Tune Up,Sorcery,4,W,{3}{W},,,,,2
 Tunnel Rats,Creature,2,B,{1}{B},Rat,,,2,2
 Turbulent Fen,Land,0,B G,,Swamp;Forest,B G,etb-tapped-cond,,2
 Turbulent Steppe,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,2
@@ -2388,6 +2446,7 @@ Tweeze,Instant,3,R,{2}{R},,,draw,,2
 Twilight Diviner,Creature,3,B,{2}{B},Elf;Cleric,,,3,2
 Twilight Mire,Land,0,B G,,,B G C,mana3,,2
 Two-Headed Dragon,Creature,6,R,{4}{R}{R},Dragon,,,4,2
+"Tyrox, Saurid Tyrant",Creature,2,R,{1}{R},Dinosaur;Warrior,,,4,2
 Ulna Alley Shopkeep,Creature,3,B,{2}{B},Goblin;Warlock,,,2,2
 Ultima Weapon,Artifact,7,,{7},Equipment,,,,2
 Ultimate Alliance,Instant,1,W,{W},,,,,2
@@ -2400,6 +2459,7 @@ Ultron Drone,Creature,3,,{3},Robot;Villain,,,2,2
 "Ultron, Artificial Malevolence",Creature,3,,{3},Robot;Villain,,,2,2
 Umbral Collar Zealot,Creature,2,B,{1}{B},Human;Cleric,,,3,2
 Unauthorized Exit,Instant,2,U,{1}{U},,,,,2
+Unbury,Instant,2,B,{1}{B},,,,,2
 Unclaimed Territory,Land,0,,,,W U B R G C,mana-restricted,,2
 Uncover the Moon-Letters,Enchantment,4,U,{3}{U},,,draw,,2
 Undercity Dire Rat,Creature,2,B,{1}{B},Rat,W U B R G,dork;ramp,2,2
@@ -2589,6 +2649,7 @@ Wrecking Ball Arm,Artifact,2,,{2},Equipment,,,,2
 "Xande, Dark Mage",Creature,4,B U,{2}{U}{B},Human;Wizard,,,3,2
 "Y'shtola, Night's Blessed",Creature,4,B U W,{1}{W}{U}{B},Cat;Warlock,,draw,2,2
 "Yahenni, Undying Partisan",Creature,3,B,{2}{B},Aetherborn;Vampire,,,2,2
+"Yarus, Roar of the Old Gods",Creature,4,G R,{2}{R}{G},Centaur;Druid,,draw,4,2
 Yavimaya Granger,Creature,3,G,{2}{G},Elf,,fetch:basic;ramp,2,2
 Yavimaya Scion,Creature,5,G,{4}{G},Treefolk,,,4,2
 "Yellowjacket, Heartless Marauder",Creature,2,B,{1}{B},Human;Rogue;Villain,,,1,2
@@ -2596,6 +2657,7 @@ You're Not Alone,Instant,1,W,{W},,,,,2
 "Yuffie, Materia Hunter",Creature,3,R,{2}{R},Human;Ninja,,,3,2
 Yuyan Archers,Creature,2,R,{1}{R},Human;Archer,,draw,3,2
 Zack Fair,Creature,1,W,{W},Human;Soldier,,,0,2
+Zealous Display,Instant,3,W,{2}{W},,,,,2
 Zealous Lorecaster,Creature,6,R,{5}{R},Giant;Sorcerer,,,4,2
 Zerapa Minotaur,Creature,4,R,{2}{R}{R},Minotaur,,,3,2
 Zhalfirin Knight,Creature,3,W,{2}{W},Human;Knight,,,2,2
