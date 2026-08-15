@@ -168,6 +168,21 @@ def test_every_theme_gets_the_print_block(deck_file, collection_file):
         assert "background:#fff" in printed.replace(" ", "") + printed, theme
 
 
+def test_the_print_button_is_on_both_surfaces_and_prints_itself_away(deck_file,
+                                                                     collection_file):
+    """The one control that belongs on a downloaded file too.
+
+    Every other button here is editable-surface-only because it POSTs somewhere;
+    `window.print()` needs no server, so a saved report keeps a working button. It
+    must also hide itself in print, or it lands on page 1 of the PDF."""
+    for editable in (True, False):
+        html = _html(deck_file, collection_file, editable=editable)
+        assert 'class="printbtn"' in html, f"no print button (editable={editable})"
+        assert "window.print()" in html
+    assert ".printbtn" in print_block(_html(deck_file, collection_file)), \
+        "the print button would print itself onto the report"
+
+
 def test_collapsing_a_missing_card_image_also_reflows_its_badges(deck_file, collection_file):
     """These two rules must ship together or not at all.
 

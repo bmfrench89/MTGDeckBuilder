@@ -1203,6 +1203,11 @@ header h1 {{ font-family:{t['display']}; font-size:var(--fs-3xl); margin:0 0 var
 header .sub {{ color:var(--muted); font-size:var(--fs-md); }}
 header .cmd {{ color:var(--gold); font-family:{t['mono']}; font-size:var(--fs-sm);
   margin-top:6px; }}
+.printbtn {{ margin-top:var(--sp-3); cursor:pointer; background:transparent;
+  color:var(--accent); border:1px solid rgba(255,255,255,.25);
+  border-radius:var(--r-pill); padding:var(--sp-2) var(--sp-4);
+  font-family:{t['mono']}; font-size:var(--fs-xs); min-height:44px; }}
+.printbtn:hover {{ border-color:var(--accent); }}
 .tiles {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
   gap:var(--sp-3); margin:var(--sp-6) 0; }}
 .tile {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
@@ -1386,7 +1391,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
      BOTH surfaces and is only `hidden` by attribute, so printing with a card open
      would otherwise drop a position:fixed sheet over the report (Chrome paints it
      on page 1, Firefox repeats it on every page). --- */
-  .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn,
+  .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn, .printbtn,
   #cardmodal, .cm-overlay {{ display:none !important; }}
 
   /* --- structure: one tab per page turns the report into chapters, and every
@@ -1499,6 +1504,12 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   <h1>{esc(title)}</h1>
   <div class="sub">{esc(subtitle)}</div>
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
+  <!-- Emitted on BOTH surfaces, unlike every other control here: window.print()
+       needs no server, so it is the one button that still works in a downloaded
+       file. It hides itself in print (see .printbtn in the @media print block). -->
+  <button type="button" class="printbtn" onclick="window.print()"
+    title="Opens your browser's print dialog — choose &quot;Save as PDF&quot; there to get a PDF">
+    &#128424; Print / Save as PDF</button>
 </header>
 {health_strip}
 <div class="tiles">{tiles}</div>
