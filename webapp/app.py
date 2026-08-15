@@ -46,6 +46,7 @@ import edhrec
 import spellbook
 import optimize
 import goldfish
+import proxy_sheet as px
 
 import sync
 import enrich_bg
@@ -738,6 +739,26 @@ def export_deck(stem):
     text = ex.deck_text(m["path"])
     raw = request.args.get("raw")
     return text if raw else _txt(text, f"{stem}.txt")
+
+
+@app.route("/deck/<stem>/proxies")
+def deck_proxies(stem):
+    """Print-exact playtest proxies: 63x88mm cells, nine per page.
+
+    Three sheets per deck: the whole deck (?), the buylist (?buylist=1 — the
+    real one: decks are owned-cards-only, so what's worth printing is the
+    upgrades the player is deciding whether to BUY; sleeve the proxy over the
+    card its Replaces names and play first), and ?missing=1 for completeness.
+    Geometry and images live in scripts/proxy_sheet.py — one code path with the
+    CLI, like every other spoke. Rendered inline (no attachment): the flow is
+    open -> print at 100%, not save."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    cells, title = px.build(deck=m["path"], collection=COLLECTION,
+                            missing=bool(request.args.get("missing")),
+                            buylist=bool(request.args.get("buylist")))
+    return px.generate_html(cells, title=title)
 
 
 @app.route("/export/deck/<stem>.html")
