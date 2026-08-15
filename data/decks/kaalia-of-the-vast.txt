@@ -1,0 +1,111 @@
+# Title: Kaalia of the Vast — Open the Gates
+# Commander: Kaalia of the Vast
+# Colors: B R W
+# Archetype: reanimator tribal-hero
+# Source: sleeper-scout build 2026-08-15 (auto_build skeleton + hand-placed engine)
+
+# --- Commander ---
+1 Kaalia of the Vast
+
+# --- Creatures ---
+1 Obsidian Charmaw
+1 Tragedy Feaster
+1 Angelic Curator
+1 Fallen Angel
+1 Fiendish Panda
+1 Herald of Serra
+1 Lorehold, the Historian
+1 Neriv, Heart of the Storm
+1 Radiant, Archangel
+1 Summon: G.F. Ifrit
+1 Sustainer of the Realm
+1 Vanguard Seraph
+1 Voice of Grace
+1 Voice of Truth
+1 Angel of Indemnity
+1 Guardian Scalelord
+1 Karmic Guide
+1 Serra Paragon
+1 Defiling Daemogoth
+1 Emeria Angel
+1 Sephara, Sky's Blade
+1 Archfiend of Depravity
+1 Bloodgift Demon
+1 Indulgent Tormentor
+1 Kardur, Doomscourge
+1 Rakshasa Debaser
+1 Masked Meower
+1 Misty Knight, Hero for Hire
+1 Agent Maria Hill
+1 Swordsman, Sharp Scoundrel
+1 Hawkeye, Master Marksman
+1 K'un-Lun Warrior
+1 Contract Hero
+1 Luke Cage, Hero for Hire
+1 Agent Venom
+1 Human Torch, Johnny Storm
+1 Spider-Gwen, Free Spirit
+1 Spider-UK
+1 Hero in Training
+1 The Vision
+1 Viv Vision, Teen Synthezoid
+1 Agent 13, Sharon Carter
+1 Iron Spider, Stark Upgrade
+1 Jack of Hearts, Volatile Hero
+1 Stark Industries Executive
+
+# --- Instants ---
+1 Disenchant
+1 Spectacular Tactics
+1 Getaway Glamer
+1 Rakdos Charm
+1 Silverquill Charm
+1 Stone by Sunlight
+
+# --- Sorceries ---
+1 Stir Up Trouble
+1 Requisition Raid
+1 Sandman's Quicksand
+1 Outbreak
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Explorer's Scope
+1 Giant's Boulder
+1 Sol Ring
+1 Diamond Pick-Axe
+
+# --- Enchantments ---
+1 Pacifism
+1 Planar Collapse
+
+# --- Lands ---
+1 Glittering Massif
+1 Mistveil Plains
+1 Radiant Summit
+1 Sacred Peaks
+1 Turbulent Steppe
+1 Terramorphic Expanse
+1 Asgardian Citadel
+1 Command Tower
+1 Rocky Roads
+1 Thriving Bluff
+1 Villainous Hideout
+1 Ash Barrens
+1 Avengers Tower
+1 Clifftop Retreat
+1 Country Roads
+1 Crystal Vein
+1 Dark Fortress
+1 Dwarven Ruins
+1 Fields of Strife
+1 Hobbit Hole
+1 Lorehold Campus
+1 Rabanastre, Royal City
+1 Scavenger Grounds
+1 Scoured Barrens
+
+# --- Basics ---
+2 Swamp
+5 Mountain
+6 Plains
