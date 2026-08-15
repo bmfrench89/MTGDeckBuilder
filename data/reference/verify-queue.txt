@@ -9,76 +9,8 @@
 # Format: one card name per line. Blank lines and #-comments ignored.
 # Keep it short — this is a work queue, not a registry. Clear entries once the
 # answer has been written into a deck's .notes.md or the card has been ruled out.
-
-# --- 2026-08-14: Bruce Banner // The Incredible Hulk build -------------------
-# The commander itself. The player's photos gave both faces' rules text, but the
-# front face's mana cost was hidden behind EDHREC's "+" overlay in both shots;
-# web search says {U} (Temur, not Gruul). This is the confirmation of record.
-Bruce Banner // The Incredible Hulk
-
-# Marvel cards EXCLUDED from the 99 purely because they could not be confirmed.
-# If any is good, it goes in.
-Origin of the Hulk
-Professor Hulk
-Red Hulk
-She-Hulk, Wallbreaker
-Hulkbuster Armor
-Super Strength
-It's Clobberin' Time!
-Kapow!
-Wakanda Forever!
-Earth's Mightiest Heroes
-
-# Marvel cards that ARE in the 99 on search-sourced text, not verbatim oracle.
-Hulk, Gamma Goliath
-Hulk, Brutal Brawler
-She-Hulk, Jade Defender
-World War Hulk
-HULK SMASH!
-
-# Engine pieces confirmed by web search but never read verbatim. If any of these
-# is wrong the deck's whole extra-combat plan is wrong.
-Brash Taunter
-Roaming Throne
-Godo, Bandit Warlord
-Prodigal Sorcerer
-Thornwind Faeries
-Temur Ascendancy
-Fiery Emancipation
-Savage Ventmaw
-Epic Fight
-
-# CANDIDATE repeatable damage sources, all owned, all passed over ONLY because
-# the sandbox could not read them. Any that pings our own attacking Hulk at
-# instant speed for a repeatable cost is a straight upgrade over a one-shot burn
-# spell — this is the highest-value part of the queue.
-Squallmonger
-Laccolith Rig
-Laccolith Whelp
-Laccolith Grunt
-Laccolith Warrior
-Laccolith Titan
-Kyren Sniper
-Arc Mage
-Kris Mage
-Thermo-Alchemist
-Stinging Barrier
-Walking Sponge
-Magmakin Artillerist
-Goblin Medics
-Shock Troops
-Sawtooth Ogre
-Warmonger
-Cinder Elemental
-Ghitu Fire-Eater
-Puffer Extract
-Steel Wrecking Ball
-Wrecking Ball Arm
-Diamond Pick-Axe
-Hard-Won Jitte
-Jinxed Ring
-Barbed Field
-Magma Mine
-Tremor
-Mjölnir, Hammer of Thor
-Dictate of the Twin Gods
+#
+# QUEUE IS EMPTY. The 2026-08-14 Bruce Banner batch (55 cards) came back clean —
+# 55/55 resolved, 0 UNVERIFIED — and every answer was written into
+# data/decks/bruce-banner-incredible-hulk.notes.md. Add the next session's
+# unknowns below.

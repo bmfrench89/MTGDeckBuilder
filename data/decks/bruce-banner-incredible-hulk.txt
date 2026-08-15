@@ -29,6 +29,7 @@
 1 Springbloom Druid
 1 Selvala, Heart of the Wilds
 1 Prodigal Sorcerer
+1 Goblin Medics
 1 Thornwind Faeries
 1 Brash Taunter
 1 Roaming Throne
@@ -40,7 +41,6 @@
 1 Torrential Gearhulk
 1 Hulk, Brutal Brawler
 1 Hulk, Gamma Goliath
-1 She-Hulk, Jade Defender
 1 Red Hulk
 
 # --- Planeswalkers ---
@@ -49,8 +49,6 @@
 # --- Instants ---
 1 Shock
 1 Lightning Strike
-1 Rhystic Lightning
-1 Lightning Blast
 1 HULK SMASH!
 1 Chaos Warp
 1 Beast Within
@@ -81,12 +79,14 @@
 1 Swiftfoot Boots
 1 Champion's Helm
 1 Darksteel Plate
+1 Hard-Won Jitte
 1 Sword of the Animist
 
 # --- Enchantments ---
 1 Wild Growth
 1 Rancor
 1 Seal of Fire
+1 Barbed Field
 1 Mystic Remora
 1 Up the Beanstalk
 1 Rhythm of the Wild
