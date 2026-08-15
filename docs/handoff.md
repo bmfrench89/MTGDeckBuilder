@@ -45,9 +45,19 @@ server's text instead of reloading. Regression tests cover both DFC directions, 
 
 **Collection:** the new Sorted export is live — 2,691 unique / 3,890 total, 70 new
 uniques, 42 quantity bumps, nothing lost. The Hobbit (HOB) is now 116 uniques in the
-pool. Enrichment for the ~88 new cards happens server-side on the next sync (Scryfall
-is egress-blocked in sandboxes); until then those cards ride on deck attrs + verified
-type lines. **Iron Man is retired at the player's direction** ("for now") — all five
+pool. **⚠ A sandbox import does NOT reach the server, and this bites every time.**
+`collection.csv` is gitignored (the privacy hard line), so an export handed to a
+session in chat lands in that sandbox only — no merge, sync or field-snapshot job can
+carry it. The server keeps serving its OWN older CSV (`_default_collection()` prefers
+it over the tracked snapshot whenever it exists), so **every newly-bought card renders
+with a phantom `BUY` badge** until the player uploads the same export through
+`/collection/upload`. Confirmed live 2026-08-15: 12 phantom BUY badges across five
+decks, all of them 2026-08-15 pickups. The fix is the player's one action — upload —
+after which the background enrichment runs and the badges clear. **Do NOT paper over
+it with `owned_additions.txt`:** `mtglib.merge_collection` ADDS quantities, so those
+rows double-count the moment the real export lands (that is exactly why Vito and
+Force of Will were deleted from that file on 2026-08-11). Say the upload step out
+loud whenever a session imports a collection. **Iron Man is retired at the player's direction** ("for now") — all five
 deck files deleted in one commit, recoverable verbatim from git history; no pins
 referenced it; its field snapshot stays for a future rebuild.
 
