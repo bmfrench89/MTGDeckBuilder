@@ -38,7 +38,6 @@
 1 Ohran Frostfang
 1 Savage Ventmaw
 1 Godo, Bandit Warlord
-1 Torrential Gearhulk
 1 Hulk, Brutal Brawler
 1 Hulk, Gamma Goliath
 1 Red Hulk
@@ -60,8 +59,7 @@
 1 An Offer You Can't Refuse
 1 Heroic Intervention
 1 Snakeskin Veil
-
-# --- Sorceries ---
+1 Counterspell
 1 Rampant Growth
 1 Nature's Lore
 1 Harmonize
@@ -70,6 +68,7 @@
 1 Fiery Confluence
 1 Decimate
 1 Epic Fight
+1 Blasphemous Act
 
 # --- Artifacts ---
 1 Sol Ring
@@ -77,7 +76,6 @@
 1 Talisman of Creativity
 1 Mind Stone
 1 Swiftfoot Boots
-1 Champion's Helm
 1 Darksteel Plate
 1 Hard-Won Jitte
 1 Sword of the Animist
@@ -103,12 +101,11 @@
 1 Evolving Wilds
 1 Fabled Passage
 1 Myriad Landscape
-1 Ash Barrens
+1 Reliquary Tower
 1 Cinder Glade
 1 Rootbound Crag
-1 Game Trail
+2 Forest
 1 Sheltered Thicket
-1 Fire-Lit Thicket
 1 Mossfire Valley
 1 Temple of Abandon
 1 Gongaga, Reactor Town
@@ -119,7 +116,7 @@
 1 Mutant Town
 1 Sulfur Falls
 1 Stormcarved Coast
-1 Frostboil Snarl
+1 Mountain
 1 Riverpyre Verge
 1 Spectacle Summit
 1 Stark Industries
