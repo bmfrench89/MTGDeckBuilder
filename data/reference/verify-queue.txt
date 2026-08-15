@@ -1,77 +1,10 @@
-# Sleeper-audit verify queue — 2026-08-15 import (The Hobbit + misc arrivals).
-# All 70 new-arrival uniques plus the pre-existing Smaug cards the audit reads.
-All-Fates Scroll
-An Unexpected Party // At the Door
-Avishkar Raceway
-Azog, Moria's Ruin
-Beorn the Fierce
-Bilbo's Burglaring
-Bilbo, Fellow Conspirator
-Bilbo, Thief in the Night
-Bile-Vial Boggart
-Black Cat, Cunning Thief
-Bolg's Company
-Bombard
-Changeling Wayfinder
-Chief Warg's Company
-Cryogen Relic
-Daring Mechanic
-Decode Transmissions
-Delney, Streetwise Lookout
-Desolation of Smaug
-Dockworker Drone
-Dragon's Desire
-Dragon-Cursed Halls
-Dynamite Diver
-Elrond, Moon-Reader
-Fateful Discovery
-Fell Gravship
-Flame-Chain Mauler
-Galadriel's Dismissal
-Gandalf, Spark Starter
-Gastal Thrillseeker
-Gene Pollinator
-Glamdring, Foe-hammer // Gleam of Death
-Gleaming Splendor
-Goatnap
-Haliya, Ascendant Cadet
-Haliya, Guided by Light
-Inner Demons Gangsters
-Kavaron Harrier
-Kraven, Proud Predator
-Long-Lost Lances
-Mimeoplasm, Revered One
-Mouth of the Storm
-My Precious // Allure of Power
-Necklace of Girion
-Nesting Bot
-Orcrist, Goblin-cleaver
-Part in Friendship
-Pitiless Fists
-Presumed Dead
-Reprieve
-Skyward Spider
-Smaug the Impenetrable
-Smaug the Magnificent
-Squire's Lightblade
-Summit Sentinel
-Sunderflock
-Surveillance Monitor
-Tenth District Hero
-Terrian, World Tyrant
-The Lord of the Eagles
-The Master of Lake-town
-The Reaver Cleaver
-The Sackville-Bagginses
-Through the Forest Gate
-Tom Bombadil
-Tune Up
-Tyrox, Saurid Tyrant
-Unbury
-Yarus, Roar of the Old Gods
-Zealous Display
-Smaug's Fury
-Smaug, Wicked Worm
-Smaug, the Great Calamity // Spew Flame
-Bard the Bowman
-Attercop
+# Round 2 — cut-candidate incumbents + commander texts the audit must not quote from memory.
+Kolaghan, the Storm's Fury
+Lozhan, Dragons' Legacy
+Pet Avengers
+Parapet Thrasher
+Y'shtola, Night's Blessed
+Cosmic Spider-Man
+Blood Artist
+Vito, Thorn of the Dusk Rose
+Up the Beanstalk
