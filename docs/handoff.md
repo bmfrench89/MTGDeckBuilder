@@ -41,6 +41,42 @@ server's text instead of reloading. Regression tests cover both DFC directions, 
 `SP//dr` no-split guard, and the two error responses (`test_deck_edit`,
 `test_add_card`).
 
+## 2026-08-15: Hobbit import, the Smaug package, Delney, proxy sheets
+
+**Collection:** the new Sorted export is live — 2,691 unique / 3,890 total, 70 new
+uniques, 42 quantity bumps, nothing lost. The Hobbit (HOB) is now 116 uniques in the
+pool. Enrichment for the ~88 new cards happens server-side on the next sync (Scryfall
+is egress-blocked in sandboxes); until then those cards ride on deck attrs + verified
+type lines. **Iron Man is retired at the player's direction** ("for now") — all five
+deck files deleted in one commit, recoverable verbatim from git history; no pins
+referenced it; its field snapshot stays for a future rebuild.
+
+**Sleeper audit (both verify rounds on the deck-verify runner, 84 cards, 0 unverified):**
+- **The Ur-Dragon got the Smaug package** — Smaug the Magnificent IN for Reconnaissance
+  Mission (0%), Desolation of Smaug IN for Thought Vessel (5%, colorless-only rock in a
+  "fixing above all" deck), Smaug the Impenetrable IN for Kolaghan, the Storm's Fury
+  (15%, dash fights eminence). Engine reasons in the deck notes. Dragons 30 → 31.
+  **Lozhan stays on purpose** (verified: every Dragon cast deals its MV in damage —
+  removal stapled to the plan; its 14% underrates this deck). Draw dips 8→7 against
+  template — the commander IS the draw engine, said openly in the audit. Desolation of
+  Smaug is curated into mtglib WIPES. Tiamat's buylist row re-pointed.
+- **Y'shtola got Delney, Streetwise Lookout** (39% field!) for Read the Bones (6%):
+  Y'shtola is printed power 2, so Delney doubles BOTH her triggers — and Blood Artist's
+  and Vito's. The compounding is written up in the deck notes as a protected engine piece.
+- **Cosmic Spider-Man got Skyward Spider** (21% field, on-tribe ward body) for Relic of
+  Legends (10%).
+- **Benched with reasons:** Glamdring (Banner's 23 spells are cheap + pip-heavy, and no
+  equipment shell), The Reaver Cleaver, Bard the Bowman, My Precious, An Unexpected
+  Party, Lord of the Eagles. **Commander seeds noticed, not built:** Tom Bombadil
+  (needs a Saga package), Mimeoplasm Revered One, a Beorn bear kernel and an
+  Azog/Bolg goblin kernel from HOB. Terrian and Tyrox returned "(no oracle text)"
+  from the verify runner — treated as unverified, judged nowhere.
+
+**Proxy sheets shipped** (`scripts/proxy_sheet.py` + `/deck/<stem>/proxies`): 63×88mm
+cells, nine per page, exact printings from the export's set+number, Chromium-measured
+geometry. The index links each deck's **buylist** proxies — decks are owned-only by
+rule, so what's worth printing is the upgrade you're deciding whether to buy.
+
 ## Deck export: HTML report + PDF via the browser (NEW 2026-08-15)
 
 Spec: `docs/spec-deck-export.md`. Player asked for "export a deck as an html/pdf

@@ -36,3 +36,13 @@ Exsanguinate math: count opponents' life ÷ 3 before calling it lethal.
   opponent 4 and gains 4, and the end-step draw doubles. Verified HOB #59. In over
   Absorb (7% field) — the deck's designated weakest counter, with two better ones
   already queued on the buylist.
+
+# Delney, Streetwise Lookout (sleeper audit 2026-08-15 — text runner-verified)
+Engine piece, do not cut. Delney doubles triggered abilities of your power-2-or-less
+creatures — and this deck's whole engine lives on exactly those bodies: **Y'shtola
+herself is printed power 2** (both triggers double: the end-step draw becomes draw 2,
+and every MV≥3 noncreature spell becomes 4 damage to each opponent + 4 life), **Blood
+Artist (0/1)** drains twice per death, and **Vito (1/3)** doubles every drain his
+lifegain trigger converts. Field agrees: 39% of Y'shtola decks run her. Replaced Read
+the Bones (6%) — a one-shot draw the doubled end-step trigger out-draws over any game
+longer than two turns.

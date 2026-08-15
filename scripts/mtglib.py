@@ -709,6 +709,10 @@ WIPES = {
     "reign of the pit", "casualties of war",
     # 2026-08-11 sleeper audit — text verified (drain + destroy all creatures):
     "villainous wrath",
+    # 2026-08-15 sleeper audit — runner-verified: "3 damage to each non-Dragon
+    # creature" — a one-sided sweeper in the deck it was printed for. The Dragon
+    # ritual rider is a bonus classify() has no bucket for.
+    "desolation of smaug",
 }
 COUNTERS = {
     "counterspell", "force of will", "misdirection", "arcane denial", "negate",
