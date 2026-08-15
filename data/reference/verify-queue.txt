@@ -1,16 +1,77 @@
-# Cards a sandboxed session could NOT verify, queued for a GitHub runner.
-#
-# Why this file exists: Scryfall is egress-blocked from the Claude Code sandbox
-# (the proxy answers 403 to CONNECT), so `carddb.py --verify` returns UNVERIFIED
-# and grounding rule #3 says an unverified card gets EXCLUDED, not guessed at.
-# `.github/workflows/deck-verify.yml` reads this list on a runner, which has
-# real internet, and prints the VERBATIM oracle text into the job log.
-#
-# Format: one card name per line. Blank lines and #-comments ignored.
-# Keep it short — this is a work queue, not a registry. Clear entries once the
-# answer has been written into a deck's .notes.md or the card has been ruled out.
-#
-# QUEUE IS EMPTY. The 2026-08-14 Bruce Banner batch (55 cards) came back clean —
-# 55/55 resolved, 0 UNVERIFIED — and every answer was written into
-# data/decks/bruce-banner-incredible-hulk.notes.md. Add the next session's
-# unknowns below.
+# Sleeper-audit verify queue — 2026-08-15 import (The Hobbit + misc arrivals).
+# All 70 new-arrival uniques plus the pre-existing Smaug cards the audit reads.
+All-Fates Scroll
+An Unexpected Party // At the Door
+Avishkar Raceway
+Azog, Moria's Ruin
+Beorn the Fierce
+Bilbo's Burglaring
+Bilbo, Fellow Conspirator
+Bilbo, Thief in the Night
+Bile-Vial Boggart
+Black Cat, Cunning Thief
+Bolg's Company
+Bombard
+Changeling Wayfinder
+Chief Warg's Company
+Cryogen Relic
+Daring Mechanic
+Decode Transmissions
+Delney, Streetwise Lookout
+Desolation of Smaug
+Dockworker Drone
+Dragon's Desire
+Dragon-Cursed Halls
+Dynamite Diver
+Elrond, Moon-Reader
+Fateful Discovery
+Fell Gravship
+Flame-Chain Mauler
+Galadriel's Dismissal
+Gandalf, Spark Starter
+Gastal Thrillseeker
+Gene Pollinator
+Glamdring, Foe-hammer // Gleam of Death
+Gleaming Splendor
+Goatnap
+Haliya, Ascendant Cadet
+Haliya, Guided by Light
+Inner Demons Gangsters
+Kavaron Harrier
+Kraven, Proud Predator
+Long-Lost Lances
+Mimeoplasm, Revered One
+Mouth of the Storm
+My Precious // Allure of Power
+Necklace of Girion
+Nesting Bot
+Orcrist, Goblin-cleaver
+Part in Friendship
+Pitiless Fists
+Presumed Dead
+Reprieve
+Skyward Spider
+Smaug the Impenetrable
+Smaug the Magnificent
+Squire's Lightblade
+Summit Sentinel
+Sunderflock
+Surveillance Monitor
+Tenth District Hero
+Terrian, World Tyrant
+The Lord of the Eagles
+The Master of Lake-town
+The Reaver Cleaver
+The Sackville-Bagginses
+Through the Forest Gate
+Tom Bombadil
+Tune Up
+Tyrox, Saurid Tyrant
+Unbury
+Yarus, Roar of the Old Gods
+Zealous Display
+Smaug's Fury
+Smaug, Wicked Worm
+Smaug, the Great Calamity // Spew Flame
+Bard the Bowman
+Attercop
