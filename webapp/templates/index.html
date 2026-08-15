@@ -50,7 +50,10 @@ open one for its full dashboard.</div>
   </div>
   <div class="acts">
     <a href="{{ url_for('deck_visual', stem=d.stem) }}">Images</a>
-    <a href="{{ url_for('export_deck', stem=d.stem) }}">Export</a>
+    <a href="{{ url_for('export_deck', stem=d.stem) }}"
+       title="ManaPool-ready list — quantity + card name, one per line">.txt</a>
+    <a href="{{ url_for('export_deck_html', stem=d.stem) }}"
+       title="Self-contained HTML report — opens anywhere; card images need an internet connection; print it (Ctrl+P) to save as PDF">Report</a>
     <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
        title="Deck + all analytics, to hand to a coaching session">Assess</a>
     <a href="{{ url_for('deck_mulligan', stem=d.stem) }}"

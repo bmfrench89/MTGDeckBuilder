@@ -79,7 +79,9 @@
     don't replace it.</p>
 
   <p class="noprint"><a href="{{ url_for('deck', stem=meta.stem) }}">&larr; back to the deck</a>
-     · <a href="{{ url_for('deck_assess_page', stem=meta.stem) }}">full assessment</a></p>
+     · <a href="{{ url_for('deck_assess_page', stem=meta.stem) }}">full assessment</a>
+     · <a href="#" onclick="window.print();return false;"
+          title="Opens your browser's print dialog — choose &quot;Save as PDF&quot; there">&#128424; print this card</a></p>
 </div>
 
 <style>

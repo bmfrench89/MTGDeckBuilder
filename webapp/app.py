@@ -55,6 +55,17 @@ def _txt(text, filename):
     return Response(text + "\n", mimetype="text/plain",
                     headers={"Content-Disposition": f"attachment; filename={filename}"})
 
+def _html_download(html, filename):
+    """An HTML page the browser SAVES instead of rendering.
+
+    Safe to hand out as a file because a generated dashboard is already one
+    self-contained document — tokens.css and the card panel are inlined by
+    `build_dashboard._asset()`, so it opens with no server and no sibling assets.
+    The one online dependency is card images, which are hotlinks by design
+    (`docs/card-images.md`); the UI says so where the link is offered."""
+    return Response(html, mimetype="text/html",
+                    headers={"Content-Disposition": f"attachment; filename={filename}"})
+
 def _default_collection():
     """Prefer the player's private CSV; fall back to the committed name-only
     snapshot so a fresh clone (which has no collection.csv — it's gitignored)
@@ -727,6 +738,32 @@ def export_deck(stem):
     text = ex.deck_text(m["path"])
     raw = request.args.get("raw")
     return text if raw else _txt(text, f"{stem}.txt")
+
+
+@app.route("/export/deck/<stem>.html")
+def export_deck_html(stem):
+    """The whole dashboard as a downloadable, self-contained HTML report.
+
+    `editable=False` is deliberate, not merely the default: a saved file has no
+    server behind it, so Add/Remove/Replace and the bracket form would be dead
+    controls posting into the void — the same reasoning that already keeps them
+    off CLI-rendered dashboards.
+
+    This is also the PDF path. The repo generates no PDF of its own on purpose
+    (`scripts/` is stdlib-only, and card images are browser hotlinks that a
+    server-side renderer could not fetch); the browser's own print dialog has the
+    images and paginates properly, so Ctrl+P on this file is the export."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    res = bd.generate(m["path"], COLLECTION, title=m["title"],
+                      commander=m["commander"], theme=m["theme"],
+                      decks_dir=DECKS_DIR, editable=False)
+    html = res["dashboard"]
+    # Deliberately no singleton banner, unlike /deck/<stem>: that red bar is a
+    # live-surface alarm meant to be acted on in the app, and the deck it names
+    # can be fixed only there. A downloaded snapshot has nowhere to send you.
+    return html if request.args.get("raw") else _html_download(html, f"{stem}.html")
 
 
 def _assess_packet(m):
