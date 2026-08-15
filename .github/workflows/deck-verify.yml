@@ -72,16 +72,21 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${CARDS_INPUT}" ]; then
-            printf '%s' "${CARDS_INPUT}" | tr '|' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' \
-              | grep -v '^$' > /tmp/names.txt
+            printf '%s\n' "${CARDS_INPUT}" | tr '|' '\n' > /tmp/raw.txt
             echo "source: workflow_dispatch input"
           elif [ -f data/reference/verify-queue.txt ]; then
-            grep -v '^[[:space:]]*#' data/reference/verify-queue.txt \
-              | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' > /tmp/names.txt
+            cp data/reference/verify-queue.txt /tmp/raw.txt
             echo "source: data/reference/verify-queue.txt"
           else
-            : > /tmp/names.txt
+            : > /tmp/raw.txt
           fi
+          # An EMPTY queue is the STEADY STATE, not an error — a session clears it
+          # once every answer is written up. Strip comments and blanks with sed,
+          # which exits 0 when it deletes everything; `grep -v` exits 1 on no
+          # match and, under `pipefail`, failed the whole job the first time the
+          # queue was emptied. Do not reintroduce grep here.
+          sed -e 's/^[[:space:]]*//; s/[[:space:]]*$//' -e '/^#/d' -e '/^$/d' \
+            /tmp/raw.txt > /tmp/names.txt
           count=$(wc -l < /tmp/names.txt)
           echo "Verifying ${count} card(s) against Scryfall"
           if [ "${count}" -eq 0 ]; then exit 0; fi
