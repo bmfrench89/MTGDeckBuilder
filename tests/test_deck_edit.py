@@ -116,3 +116,65 @@ def test_section_label_reads_the_decks_own_headers(deck_file):
     assert app._section_label("# --- Ramp (12) ---") == "Ramp"
     assert app._section_label("1 Sol Ring") is None
     assert app._section_label("# Commander: X") is None
+
+
+# --------------------------------------------------------------------------- #
+# The " // " trap, in the editor itself (2026-08-15). The panel's data-key can
+# carry EITHER form of a DFC name — decklist figures key the deck file's own
+# form, EDHREC/field rows key what the snapshot emits (often the front face
+# alone) — and the route's singleton guard already matches both via name_keys.
+# The editor compared raw _norm and silently no-opped on the mismatch, which is
+# exactly the live bug report: "I tried to replace a card in the Smaug deck and
+# it did not work."
+# --------------------------------------------------------------------------- #
+DFC_DECK = """\
+# Title: Smaug Test
+# Commander: Smaug, the Great Calamity // Spew Flame
+
+# --- Commander ---
+1 Smaug, the Great Calamity // Spew Flame
+
+# --- Creatures ---
+1 Shivan Dragon
+"""
+
+
+def test_replace_matches_a_full_dfc_line_from_its_front_face_key(tmp_path):
+    p = tmp_path / "smaug.txt"
+    p.write_text(DFC_DECK, encoding="utf-8")
+    assert app._edit_deck_card(str(p), "replace",
+                               "smaug, the great calamity",          # front-face key
+                               "Lathliss, Dragon Queen") is True
+    text = p.read_text(encoding="utf-8")
+    assert "1 Lathliss, Dragon Queen" in text
+    assert "1 Smaug, the Great Calamity // Spew Flame" not in text
+    # the header comment naming the commander is untouched — line edits only
+    assert "# Commander: Smaug, the Great Calamity // Spew Flame" in text
+
+
+def test_replace_matches_a_front_face_line_from_the_full_dfc_name(tmp_path):
+    p = tmp_path / "smaug.txt"
+    p.write_text(DFC_DECK.replace("1 Smaug, the Great Calamity // Spew Flame",
+                                  "1 Smaug, the Great Calamity"), encoding="utf-8")
+    assert app._edit_deck_card(str(p), "replace",
+                               "Smaug, the Great Calamity // Spew Flame",
+                               "Lathliss, Dragon Queen") is True
+    assert "1 Lathliss, Dragon Queen" in p.read_text(encoding="utf-8")
+
+
+def test_remove_matches_across_dfc_name_forms(tmp_path):
+    p = tmp_path / "smaug.txt"
+    p.write_text(DFC_DECK, encoding="utf-8")
+    assert app._edit_deck_card(str(p), "remove", "smaug, the great calamity") is True
+    assert "1 Smaug" not in p.read_text(encoding="utf-8")
+
+
+def test_a_bare_double_slash_name_is_not_split(tmp_path):
+    """'SP//dr' has no spaces around '//' — it is ONE name, and matching it must
+    not invent a bogus 'SP' front face (the alias that once produced six copies
+    of a singleton)."""
+    p = tmp_path / "spdr.txt"
+    p.write_text("# --- Creatures ---\n1 SP//dr, Piloted by Peni\n1 Shivan Dragon\n",
+                 encoding="utf-8")
+    assert app._edit_deck_card(str(p), "remove", "SP") is False
+    assert app._edit_deck_card(str(p), "remove", "SP//dr, Piloted by Peni") is True

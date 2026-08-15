@@ -295,3 +295,44 @@ def test_dashboard_shows_no_banner_when_legal(client):
         encoding="utf-8")
     html = client.get("/deck/testdeck").get_data(as_text=True)
     assert "ILLEGAL — Commander allows one copy" not in html
+
+
+# --------------------------------------------------------------------------- #
+# Replace/Remove failures explain themselves (2026-08-15). Both failure paths
+# used to return a bare redirect; the panel reloads on any redirect, so a
+# refused or no-op edit was indistinguishable from success — the live "replace
+# did not work" report from the Smaug deck.
+# --------------------------------------------------------------------------- #
+def test_a_duplicating_replace_returns_409_with_a_reason(client):
+    r = client.post("/deck/testdeck/card", data={"action": "replace",
+                                                 "name": "Arcane Signet",
+                                                 "replacement": "Sol Ring"})
+    assert r.status_code == 409
+    assert "singleton" in r.get_data(as_text=True).lower()
+
+
+def test_replacing_a_card_not_in_the_deck_returns_404_with_a_reason(client):
+    before = _deck_text(client)
+    r = client.post("/deck/testdeck/card", data={"action": "replace",
+                                                 "name": "Serra Angel",
+                                                 "replacement": "Counterspell"})
+    assert r.status_code == 404
+    assert "find" in r.get_data(as_text=True).lower()
+    assert _deck_text(client) == before
+
+
+def test_replace_reaches_a_dfc_line_through_its_front_face_key(client):
+    """The panel's data-key for EDHREC/field rows is often the FRONT FACE alone,
+    while the deck file holds the full 'A // B' name. The editor must bridge the
+    two forms the same way the route's singleton guard already does."""
+    (client._decks / "testdeck.txt").write_text(
+        "# Title: Smaug Test\n\n# --- Commander ---\n"
+        "1 Smaug, the Great Calamity // Spew Flame\n\n"
+        "# --- Ramp ---\n1 Sol Ring\n", encoding="utf-8")
+    r = client.post("/deck/testdeck/card", data={"action": "replace",
+                                                 "name": "smaug, the great calamity",
+                                                 "replacement": "Counterspell"})
+    assert r.status_code in (302, 303), r.get_data(as_text=True)
+    text = _deck_text(client)
+    assert "1 Counterspell" in text
+    assert "1 Smaug" not in text
