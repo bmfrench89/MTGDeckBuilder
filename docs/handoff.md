@@ -72,6 +72,16 @@ referenced it; its field snapshot stays for a future rebuild.
   Azog/Bolg goblin kernel from HOB. Terrian and Tyrox returned "(no oracle text)"
   from the verify runner — treated as unverified, judged nowhere.
 
+**Kaalia of the Vast is reserved (2026-08-15, player direction):** she left the
+Ur-Dragon 99 (Smaug, the Great Calamity // Spew Flame took the slot — fourth Smaug,
+31st dragon, and a removal adventure in the thinnest role) and is **pinned in
+`data/collection/pins.csv` to the future stem `kaalia-of-the-vast`** — that pin is
+what machine-blocks the optimizer/auto-builder from re-seating her copy anywhere.
+Dry-run says the deck is real when the player wants it: **34 uncommitted
+Angel/Demon/Dragon bodies in Mardu** (13 angels, 9 demons, 12 dragons — auto_build
+fills a legal 100 but its generic template can't see her cheat-into-play engine, so
+build her by hand from that pool when the time comes).
+
 **Proxy sheets shipped** (`scripts/proxy_sheet.py` + `/deck/<stem>/proxies`): 63×88mm
 cells, nine per page, exact printings from the export's set+number, Chromium-measured
 geometry. The index links each deck's **buylist** proxies — decks are owned-only by
