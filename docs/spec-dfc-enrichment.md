@@ -1,12 +1,12 @@
 # Spec — DFC enrichment: 26 double-faced cards have no attributes
 
-**Status: ☐ DRAFT FOR PLAYER REVIEW — do not implement until approved.** Written
-2026-08-16 after a measured investigation (deep-research pass + a live probe on the
-deck-verify runner). Player asked for the issue identified fully, researched, and
-spec'd before any code changes.
-
-**Branch when approved:** `claude/deck-export-html-pdf-ofyd6d` (or a fresh one) ·
-one PR, squash-merged.
+**Status: ☑ APPROVED AND IMPLEMENTED** — slices 1–3 shipped 2026-08-16 on
+`claude/deck-export-html-pdf-ofyd6d`. Phase F (the backfill dispatch) is the only
+step left. Written 2026-08-16 after a measured investigation (deep-research pass +
+a live probe on the deck-verify runner); the player asked for the issue identified
+fully, researched, and spec'd before any code changes, then for it to ship in slices
+with each one validated before the next. **§§8–9 record what actually shipped —
+read those alongside the diagnosis in §§1–3.**
 
 ---
 
@@ -335,9 +335,67 @@ get that one — slice 1 does, by giving it real type data. Likewise the heurist
 recognizes only 126 of 203 owned lands; Baxter Building and Stark Industries are not
 land-shaped names and never will be. The layer order is the defence, not the regex.
 
-**Verified.** 793 tests pass (was 755; the new cases are parametrized). Optimizer
+**Verified (slice 2).** 793 tests pass (was 755; the new cases are parametrized). Optimizer
 previews across all nine decks are byte-identical on the full typed collection. On a
 name-only collection — the regime where this heuristic actually fires — the only
 differences are in the right direction: "Love on the Battlefield" reaches the spell
 pass instead of being filed as a land, and the land pass picks different buylist
 targets. No deck's 99 changes.
+
+---
+
+## 9. Slice 3 as shipped — the hardening (Phases B–E)
+
+### B. One request path
+`_request_json(url, data=None, retries=4)` is now the only way this module talks to
+Scryfall's JSON API; `_post_collection` and `_fetch_named_fuzzy` both go through it, so
+the `(5, 15, 30, 60)` ladder exists once. Only 429 and 503 are retried — a 404, a
+proxy's 403 or a dead socket raises immediately, because 110 s of politeness before
+reporting an egress block is worse than an honest failure now.
+
+`gen_card_notes._fetch_oracle` was the third copy of that ladder, and it had quietly
+kept **both** bugs carddb had already fixed: it submitted the full `"Front // Back"`
+name (never matches), and it split the response name on a bare `//` (the `SP//dr`
+trap). It now calls `carddb._post_collection` with `front_face` identifiers and keys
+results through `mtglib.name_keys`. Every double-faced card was getting no note at all.
+
+### C. Pacing
+The fuzzy pass runs at **0.7 s**, not 0.1 s. Not a guess — `proxy_sheet.py` measured
+Scryfall's limit at ~2/s and found 400 ms already over it. After slice 1 this loop is
+near-empty, so the cost is ~0.
+
+### D. The silent drop is now impossible
+- `_fetch_named_fuzzy` is **three-way**: card / `None` for a genuine 404 / **raises**
+  for a transport failure. It used to swallow every exception into `None`, which is how
+  "the proxy blocked us" and "no such card" became the same answer.
+- `enrich_api` collects transport failures separately and **raises before writing**. A
+  partial attrs file is worse than none: every consumer reads an absent row as "not
+  enriched yet" and silently falls back to the name heuristics.
+- `verify_cards` keeps its never-raises contract — it wraps the step-3 call and reports
+  `network unreachable`, so an outage yields UNVERIFIED rows and never a false
+  "no such card".
+- The unmatched list **prints unconditionally** (first 25, then a count). It was already
+  computed and thrown away unless `--min-match` happened to trip.
+- **The floor applies per category.** DFC coverage is measured and printed on its own,
+  and with `--min-match` set it must clear the same floor as the total. This is the
+  gate that was blind: 26 of 40 DFCs missing still left the run at 99 % overall, and
+  `--min-match 95` waved it through.
+
+### E. The fuzzy pass uses the 30-day cache
+Wired to the same `VERIFY_CACHE_DIR` that `--verify` fills, so the two paths warm each
+other and re-running a partially-failed enrichment costs nothing for names already
+resolved.
+
+**Opt-in, deliberately.** `fuzzy_cache_dir` defaults to `None`, not to
+`VERIFY_CACHE_DIR`: the convenient default made the test suite write into the player's
+real `data/cache/scryfall` the first time it ran. `main()` passes the real path; a
+library function does not get to choose one under `data/`. `test_carddb_enrich.py`'s
+`test_the_fuzzy_cache_is_opt_in_and_never_guesses_a_path` is the guard.
+
+**Verified (slice 3).** 804 tests pass (was 793). `scripts/` still imports with Flask
+uninstalled — checked with Flask actually removed, not assumed. The suite writes
+nothing into `data/`.
+
+### Phase F — the backfill
+Still to run: one `workflow_dispatch` of `attrs-snapshot` regenerates the committed
+attrs file with all 40 DFCs. Nothing to hand-write.

@@ -66,3 +66,52 @@ def test_no_duplicate_phrasing():
     card = mtglib.Card(name="Rock", quantity=1, mana_value=2, types=["Artifact"])
     why = gen.compose("Rock", card, "{T}: Add {C}{C}.", "Artifact", "{2}", {}, {}, {})
     assert why.count("mana") <= 2
+
+
+# --------------------------------------------------------------------------- #
+# The oracle fetch shares carddb's Scryfall client (docs/spec-dfc-enrichment.md §3B).
+#
+# It used to hand-roll the request, the headers and the backoff ladder, which
+# meant it also hand-rolled two bugs carddb had already fixed: it asked for the
+# full "Front // Back" name (which /cards/collection never matches — the `name`
+# identifier matches a SINGLE face), and it split the response name on a bare
+# "//". Every double-faced card therefore got no note, silently.
+
+def _fake_post(monkeypatch, cards):
+    import carddb
+    asked = []
+
+    def post(idents, retries=4):
+        asked.extend(idents)
+        return (list(cards), [])
+    monkeypatch.setattr(carddb, "_post_collection", post)
+    monkeypatch.setattr(gen.time, "sleep", lambda *_a: None)
+    return asked
+
+
+def test_the_oracle_fetch_asks_for_the_front_face_and_keys_on_both_names(monkeypatch):
+    asked = _fake_post(monkeypatch, [{
+        "name": "Murderous Rider // Swift End",
+        "type_line": "Creature — Zombie Knight // Instant — Adventure",
+        "mana_cost": "{1}{B}{B}",
+        "card_faces": [{"oracle_text": "Lifelink."},
+                       {"oracle_text": "Destroy target creature or planeswalker."}]}])
+    out = gen._fetch_oracle(["Murderous Rider // Swift End"])
+    assert asked == [{"name": "Murderous Rider"}], "the combined name never matches"
+    # the note lookup may hold either spelling, so both must resolve
+    for key in ("murderous rider // swift end", "murderous rider"):
+        assert key in out, f"{key!r} did not resolve"
+    assert "Lifelink." in out["murderous rider"][0], \
+        "a DFC's text lives on its faces, not on the card object"
+
+
+def test_the_oracle_fetch_never_splits_a_bare_double_slash(monkeypatch):
+    """The `SP//dr` trap (CLAUDE.md): the old code's `.split('//')[0].strip()`
+    aliased this card to 'SP'."""
+    asked = _fake_post(monkeypatch, [{"name": "SP//dr, Piloted by Peni",
+                                      "type_line": "Creature — Robot",
+                                      "mana_cost": "{2}", "oracle_text": "Flying."}])
+    out = gen._fetch_oracle(["SP//dr, Piloted by Peni"])
+    assert asked == [{"name": "SP//dr, Piloted by Peni"}]
+    assert "sp//dr, piloted by peni" in out
+    assert "sp" not in out, "a bare // is part of the name, not a separator"

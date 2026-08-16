@@ -31,10 +31,27 @@ Shipping in slices, each validated before the next:
   matched inside "S-**cave**-nger". Now whole-word with a tolerated plural. Measured on
   the collection: lands recognized 105 → 126, non-lands misread 49 → 26, nothing lost
   either way. Spec §8 has the table and the honest limits.
-- **Slice 3 — hardening (next).** Shared `_request_json` with the `(5,15,30,60)`
-  backoff ladder, 0.7s pacing, transport-vs-miss counters so a network failure can
-  never again look like "card not found", a per-category DFC gate, and wiring the fuzzy
-  pass into `VERIFY_CACHE_DIR`.
+- **Slice 3 — hardening (done).** `_request_json` is the one path to Scryfall's JSON
+  API, carrying the `(5,15,30,60)` ladder for 429/503 only — a blocked proxy fails now
+  rather than after 110s. `_fetch_named_fuzzy` is **three-way** (card / `None` for a
+  real 404 / **raises** on transport failure); it used to swallow everything into
+  `None`, which is how "the proxy blocked us" and "no such card" became one answer.
+  `enrich_api` now raises **before writing** if any card could not be looked up at all
+  — a partial attrs file reads downstream as "not enriched yet". Misses print
+  unconditionally, the fuzzy pass paces at 0.7s and uses the 30-day
+  `VERIFY_CACHE_DIR`, and `--min-match` applies **per category**: DFC coverage is
+  measured on its own, because 26/40 missing still left the old run at 99% overall.
+  `gen_card_notes._fetch_oracle` was a third copy of the ladder carrying both original
+  bugs (full-name identifiers, bare `split("//")`) — it now calls
+  `carddb._post_collection`.
+
+**⚠ The fuzzy cache is opt-in** (`fuzzy_cache_dir=None`), not defaulted to
+`VERIFY_CACHE_DIR`. The convenient default made the test suite write into the real
+`data/cache/scryfall`. `main()` passes the real path; a library function does not pick
+one under `data/`. There is a test guarding this — don't "simplify" it back.
+
+**Still to do: Phase F.** One `workflow_dispatch` of `attrs-snapshot` regenerates the
+committed attrs file with all 40 DFCs. Nothing to hand-write.
 
 `download_bulk()` is **deferred by the player** ("leave the bulk for now"); the API
 path is the default and works.

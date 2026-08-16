@@ -79,6 +79,39 @@ def _get(url):
         return r.read()
 
 
+def _request_json(url, data=None, retries=4):
+    """The ONE request path to Scryfall's JSON API: GET, or POST when `data` is
+    given. Returns the decoded body; **raises** when it cannot get one.
+
+    Scryfall answers a burst with 429 and asks for a pause, and applies roughly a
+    30 s cooldown once it starts, so short exponential waits just burn retries —
+    the ladder ramps straight into that window instead. Enriching a 2,000-card
+    collection is ~28 back-to-back requests, which is exactly the shape that
+    trips it.
+
+    Only 429 and 503 are retried. Everything else — a 404, a proxy's 403, a dead
+    socket — raises on the first try, on purpose: those do not improve with
+    waiting, and 110 s of ladder before reporting an egress block is worse than
+    an immediate honest failure. Callers that need to tell a genuine 404 from an
+    outage inspect `HTTPError.code`; the distinction is the whole point of this
+    helper raising rather than returning None (docs/spec-dfc-enrichment.md §3B)."""
+    headers = dict(_HEADERS)
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=headers)
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 503) or attempt == retries - 1:
+                raise
+            wait = (5, 15, 30, 60)[min(attempt, 3)]
+            print(f"  (Scryfall {e.code} — waiting {wait}s)", file=sys.stderr)
+            time.sleep(wait)
+    raise AssertionError("unreachable: the last attempt raises")
+
+
 def download_bulk(kind="oracle_cards", dest=None, force=False):
     """Download a Scryfall bulk-data file (default 'oracle_cards' — one entry per
     card, ~40 MB, exactly what we need for colors/types/MV/ids). Returns the path.
@@ -260,31 +293,20 @@ def enrich(collection_path, bulk_path, out_path, use_duckdb=True):
 # ── Scryfall /cards/collection API enrichment (no bulk download) ─────────────
 COLLECTION_URL = "https://api.scryfall.com/cards/collection"
 _BATCH = 75  # Scryfall's max identifiers per /cards/collection request
+# How many unmatched names the CLI prints before summarizing. Enough to see a
+# pattern (a whole set, a whole card class); short of dumping 2,000 lines.
+_UNMATCHED_SHOWN = 25
 
 
 def _post_collection(identifiers, retries=4):
     """POST up to 75 identifiers; return (found cards, not_found identifiers).
 
-    Scryfall answers a burst with 429 and asks for a pause. Enriching a 2,000-card
-    collection is ~28 back-to-back requests, so retry with exponential backoff rather
-    than failing the whole run (which used to throw away every batch already fetched)."""
+    Retries live in `_request_json`, shared with the fuzzy path so both obey one
+    ladder. Exhaustion RAISES — that is this function's whole contract, and the
+    reason a 429 storm exits 2 rather than writing a short file with exit 0."""
     body = json.dumps({"identifiers": identifiers}).encode()
-    req = urllib.request.Request(COLLECTION_URL, data=body,
-                                 headers={**_HEADERS, "Content-Type": "application/json"})
-    for attempt in range(retries):
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                j = json.loads(r.read())
-            return j.get("data", []), j.get("not_found", [])
-        except urllib.error.HTTPError as e:
-            if e.code not in (429, 503) or attempt == retries - 1:
-                raise
-            # Scryfall applies roughly a 30s cooldown once it starts 429ing, so short
-            # exponential waits just burn retries — ramp straight into that window.
-            wait = (5, 15, 30, 60)[min(attempt, 3)]
-            print(f"  (Scryfall {e.code} — waiting {wait}s)", file=sys.stderr)
-            time.sleep(wait)
-    raise AssertionError("unreachable: the last attempt raises")  # one contract: exhaustion RAISES
+    j = _request_json(COLLECTION_URL, data=body, retries=retries)
+    return j.get("data", []), j.get("not_found", [])
 
 
 def _best_identifier(card):
@@ -383,7 +405,7 @@ def _fold_name(name):
 
 
 def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
-               include_ids=True):
+               include_ids=True, fuzzy_delay=0.7, fuzzy_cache_dir=None):
     """Enrich via Scryfall's /cards/collection API — no ~40 MB bulk download.
     ~1 request per 75 cards. Returns (matched, total, sorted unmatched names).
 
@@ -397,7 +419,12 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
     `include_ids=False` omits the Scryfall id column (header and cells) — for
     the COMMITTED attrs snapshot, where an id could pin a specific printing
     (docs/spec-network-and-attrs.md §3 PRIVACY). Every id consumer already
-    handles the absent column; images fall back to by-name URLs."""
+    handles the absent column; images fall back to by-name URLs.
+
+    RAISES if any card could not be looked up at all (a transport failure, as
+    distinct from Scryfall answering "no such card"). A short attrs file reads
+    downstream as "not enriched yet" and silently sends those cards back to the
+    name heuristics, so an incomplete run must not produce one."""
     log = log or (lambda *_a: None)
     coll = mtglib.load_collection(collection_path)
     resolved = {}       # card.name -> attrs
@@ -444,11 +471,33 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
     if missing:
         run(missing, lambda c: ({"name": c.name}, ("name", mtglib._norm(c.name))))
 
-    fuzzy_rejected = []
+    fuzzy_rejected, transport_failures = [], []
     if fuzzy:
+        # OPT-IN, and deliberately not defaulted to VERIFY_CACHE_DIR: that default
+        # made the test suite write into the player's real data/cache/scryfall the
+        # first time it ran. A library function does not get to pick a path under
+        # data/ on its own — `main()` passes the real one.
+        cache_dir = fuzzy_cache_dir
         for card in [c for c in coll if c.name not in resolved]:
-            hit = _fetch_named_fuzzy(card.name)
-            time.sleep(delay)
+            # The same 30-day cache --verify fills, so the two paths warm each
+            # other and a re-run of a partially-failed enrichment costs nothing
+            # for the names it already resolved (spec-dfc-enrichment.md §3E).
+            key = _verify_key(card.name)
+            hit = _cache_get(key, cache_dir) if cache_dir else None
+            if hit is None:
+                try:
+                    hit = _fetch_named_fuzzy(card.name)
+                except Exception as e:
+                    # NOT a miss. Recorded, and fatal below — the caller must not
+                    # get a file that looks complete because the network died.
+                    transport_failures.append((card.name, f"{type(e).__name__}: {e}"))
+                    continue
+                # 0.7s, not 0.1: proxy_sheet.py measured Scryfall's limit at ~2/s
+                # and 400ms was already OVER it. After the front-face fix this
+                # loop is near-empty anyway, so the pacing costs ~nothing.
+                time.sleep(fuzzy_delay)
+                if cache_dir and hit and hit.get("name"):
+                    _cache_put(key, hit, cache_dir)
             if not hit or not hit.get("name"):
                 continue
             if _fold_name(hit["name"]) == _fold_name(card.name):
@@ -456,6 +505,19 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
                 log(f"  …fuzzy-respelled: {card.name!r} -> {hit['name']!r}")
             else:
                 fuzzy_rejected.append((card.name, hit["name"]))
+
+    # Fail BEFORE writing. A partial attrs file is worse than no file: every
+    # consumer reads an absent row as "not enriched yet" and falls back to the
+    # name heuristics, quietly, which is the exact failure this slice exists to
+    # end. The batch path already raises out of `_post_collection`; this closes
+    # the fuzzy path's matching hole.
+    if transport_failures:
+        head = "; ".join(f"{n} ({why})" for n, why in transport_failures[:3])
+        raise RuntimeError(
+            f"{len(transport_failures)} card(s) could not be looked up at all "
+            f"(transport failure, not a Scryfall miss): {head}"
+            + (" …" if len(transport_failures) > 3 else "")
+            + " — refusing to write a partial attrs file")
 
     header = list(ATTRS_HEADER)
     id_col = header.index("Scryfall")
@@ -583,13 +645,26 @@ def _ident_key(ident):
 
 def _fetch_named_fuzzy(name):
     """One fuzzy /cards/named lookup — the second chance for a misspelling or a
-    back-face name that /cards/collection's exact matching rejects. Returns the card
-    object or None; never raises."""
+    back-face name that /cards/collection's exact matching rejects.
+
+    THREE-WAY, and the three-ness is the point (docs/spec-dfc-enrichment.md §3B):
+
+      card object → Scryfall matched something (the caller still decides whether
+                    the match is close enough — see `_fold_name`).
+      None        → 404. Scryfall was reached and says there is no such card.
+      raises      → we could not ask. A blocked proxy, a dead socket, a 500.
+
+    It used to swallow every exception into None, so "the network is down" and
+    "no such card" were the same answer. That is how 26 double-faced cards went
+    missing from the attrs snapshot without a single warning line, and why both
+    callers below now handle the raise explicitly instead of trusting a None."""
     url = NAMED_URL + "?fuzzy=" + urllib.parse.quote(name)
     try:
-        return json.loads(_get(url))
-    except Exception:
-        return None
+        return _request_json(url)
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
 
 
 def verify_cards(names, cache_dir=None, refresh=False, delay=0.1):
@@ -652,7 +727,14 @@ def verify_cards(names, cache_dir=None, refresh=False, delay=0.1):
             continue
         if delay:
             time.sleep(delay)
-        c = _fetch_named_fuzzy(n)
+        # `_fetch_named_fuzzy` now RAISES on transport failure instead of
+        # returning None, so an outage can no longer print as "no such card" —
+        # the one thing this report must never say about a card that exists.
+        try:
+            c = _fetch_named_fuzzy(n)
+        except Exception as e:
+            rows[i] = _unverified_row(n, f"network unreachable: {e}")
+            continue
         if c and c.get("name"):
             rows[i] = _verified_row(n, c, "fuzzy")
             _cache_put(_verify_key(n), c, cache_dir)
@@ -804,20 +886,48 @@ def main():
             unmatched_n = total - matched
         else:
             print("enriching via Scryfall /cards/collection API (no bulk download)…")
-            matched, total, unmatched = enrich_api(args.collection, out, log=print,
-                                                   include_ids=not args.no_ids)
+            matched, total, unmatched = enrich_api(
+                args.collection, out, log=print, include_ids=not args.no_ids,
+                fuzzy_cache_dir=VERIFY_CACHE_DIR)
             print(f"Matched {matched}/{total} owned cards "
                   f"({round(100 * matched / total) if total else 0}%).")
             unmatched_n = len(unmatched)
+            # Print the misses UNCONDITIONALLY. This list was already computed and
+            # thrown away unless --min-match happened to trip, which is how a run
+            # could resolve 99% overall while quietly dropping a whole category.
+            if unmatched:
+                for n in unmatched[:_UNMATCHED_SHOWN]:
+                    print(f"  UNMATCHED: {n}", file=sys.stderr)
+                if unmatched_n > _UNMATCHED_SHOWN:
+                    print(f"  …and {unmatched_n - _UNMATCHED_SHOWN} more",
+                          file=sys.stderr)
+            # Double-faced coverage, reported on its own. An overall floor cannot
+            # see a category this small: 26 of 40 DFCs missing still left the run
+            # at 99% overall, and --min-match 95 passed it (spec §1.4).
+            dfc = [c.name for c in mtglib.load_collection(args.collection)
+                   if " // " in c.name]
+            dfc_missed = [n for n in dfc if n in set(unmatched)]
+            if dfc:
+                print(f"double-faced cards: {len(dfc) - len(dfc_missed)}/{len(dfc)} "
+                      f"resolved ({round(100 * (len(dfc) - len(dfc_missed)) / len(dfc))}%)")
             if args.min_match is not None and total:
                 rate = 100 * matched / total
                 if rate < args.min_match:
-                    for n in unmatched:
-                        print(f"  UNMATCHED: {n}", file=sys.stderr)
                     print(f"error: resolution rate {rate:.1f}% is below the "
                           f"--min-match floor of {args.min_match:g}% — refusing to "
                           "treat this output as a good enrichment.", file=sys.stderr)
                     return 3
+                # The floor applies PER CATEGORY, not just to the total.
+                if dfc:
+                    dfc_rate = 100 * (len(dfc) - len(dfc_missed)) / len(dfc)
+                    if dfc_rate < args.min_match:
+                        for n in dfc_missed:
+                            print(f"  UNMATCHED DFC: {n}", file=sys.stderr)
+                        print(f"error: double-faced coverage {dfc_rate:.1f}% is below "
+                              f"the --min-match floor of {args.min_match:g}% even though "
+                              f"the overall rate ({rate:.1f}%) cleared it — that gap is "
+                              "the bug this gate exists to catch.", file=sys.stderr)
+                        return 3
     except FileNotFoundError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

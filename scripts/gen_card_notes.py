@@ -18,20 +18,17 @@ Usage:
 import argparse
 import csv
 import glob
-import json
 import os
 import re
 import sys
 import time
-import urllib.request
 
 import mtglib
+import carddb                    # the Scryfall client: batching, headers, backoff
 import deckcore
 import deck_fit
 
 REF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "reference")
-_HEADERS = {"User-Agent": "MTGDeckBuilder/1.0 (personal collection tool)",
-            "Accept": "application/json"}
 
 # role -> the job this card is doing, in plain language
 _ROLE_JOB = {
@@ -66,33 +63,31 @@ _MECHANICS = [
 
 
 def _fetch_oracle(names, sleep=0.25):
-    """{normalized name: (oracle_text, type_line, mana_cost)} via /cards/collection."""
+    """{normalized name: (oracle_text, type_line, mana_cost)} via /cards/collection.
+
+    Batching, headers and the (5, 15, 30, 60) backoff ladder all come from
+    `carddb._post_collection` now. They used to be copy-pasted here, which meant
+    this module quietly carried two bugs carddb had already fixed:
+
+    1. it submitted the full "Front // Back" name, which /cards/collection's
+       `name` identifier never matches (it matches a SINGLE face), so every
+       double-faced card missed and got no note at all;
+    2. it split the response name on a bare "//", the documented trap — that
+       turns "SP//dr, Piloted by Peni" into an alias for "SP".
+
+    `mtglib.name_keys` gives both spellings of a name without either mistake."""
     out = {}
     for i in range(0, len(names), 75):
         batch = names[i:i + 75]
-        body = json.dumps({"identifiers": [{"name": n} for n in batch]}).encode()
-        req = urllib.request.Request("https://api.scryfall.com/cards/collection", data=body,
-                                     headers={**_HEADERS, "Content-Type": "application/json"})
-        for attempt in range(4):
-            try:
-                with urllib.request.urlopen(req, timeout=60) as r:
-                    j = json.loads(r.read())
-                break
-            except urllib.error.HTTPError as e:
-                if e.code not in (429, 503) or attempt == 3:
-                    raise
-                time.sleep((5, 15, 30, 60)[attempt])
-        else:
-            continue
-        for c in j.get("data", []):
+        idents = [{"name": mtglib.front_face(n)} for n in batch]
+        data, _not_found = carddb._post_collection(idents)
+        for c in data:
             txt = c.get("oracle_text") or ""
             if not txt and c.get("card_faces"):
                 txt = " // ".join(f.get("oracle_text", "") for f in c["card_faces"])
             rec = (txt, c.get("type_line", ""), c.get("mana_cost", ""))
-            out[mtglib._norm(c.get("name", ""))] = rec
-            front = (c.get("name") or "").split("//")[0].strip()
-            if front:
-                out.setdefault(mtglib._norm(front), rec)
+            for key in mtglib.name_keys(c.get("name", "")):
+                out.setdefault(key, rec)
         print(f"  …oracle for {len(out)}/{len(names)}", file=sys.stderr)
         time.sleep(sleep)
     return out
