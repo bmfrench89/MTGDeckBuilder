@@ -290,7 +290,25 @@ def _post_collection(identifiers, retries=4):
 def _best_identifier(card):
     """Best Scryfall identifier for a collection Card + a key to match the response
     back. Prefer the exact printing (id, then set+number) for the correct art/id;
-    fall back to name (resolves attributes fine, incl. DFC/adventure front names)."""
+    fall back to the card's FRONT FACE name.
+
+    The front face is not a nicety — it is the only name form that works.
+    **MEASURED 2026-08-16** (deck-verify run 31961993767, which probes this very
+    endpoint): `/cards/collection`'s `name` identifier matches a SINGLE FACE, front
+    or back, and returns not_found for the combined "Front // Back" string.
+    `Murderous Rider`, `Marang River Regent`, `Scavenger Regent`,
+    `Gollum, Silent Slinker` and `Smaug, the Great Calamity` all matched exactly;
+    `Murderous Rider // Swift End` and `Scavenger Regent // Exude Toxin` did not.
+    Scryfall's docs are SILENT on this, so the behaviour is pinned by
+    tests/test_carddb_enrich.py rather than by a citation.
+
+    This docstring previously claimed the full name "resolves attributes fine, incl.
+    DFC/adventure front names". It does not, and that sentence cost the collection 26
+    unenriched double-faced cards — see docs/spec-dfc-enrichment.md.
+
+    The KEY stays the full name: `_response_keys` emits `mtglib.name_keys()` for the
+    returned card, which carries both the combined name and the front face, so a hit
+    returned as "Front // Back" still matches a card keyed by its full name."""
     sid = (getattr(card, "scryfall_id", "") or "").strip()
     if sid:
         return {"id": sid}, ("id", sid)
@@ -298,7 +316,9 @@ def _best_identifier(card):
     num = str(getattr(card, "collector_number", "") or "").strip()
     if setc and num:
         return {"set": setc, "collector_number": num}, ("sn", setc, num)
-    return {"name": card.name}, ("name", mtglib._norm(card.name))
+    # front_face, never split("//") — 'SP//dr, Piloted by Peni' is one real name.
+    return ({"name": mtglib.front_face(card.name)},
+            ("name", mtglib._norm(card.name)))
 
 
 def _response_keys(c):
@@ -396,9 +416,22 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
         for i in range(0, len(submit), _BATCH):
             data, _nf = _post_collection(submit[i:i + _BATCH])
             for c in data:
-                card = next((keymap[k] for k in _response_keys(c) if k in keymap), None)
-                if card is not None:
-                    resolved[card.name] = _attrs_from_scryfall(c)
+                # EVERY matching collection row, not just the first. Two rows can
+                # legitimately fold to one Scryfall card — a collection listing both
+                # "Murderous Rider" and "Murderous Rider // Swift End" wants the same
+                # attributes for both — and since front faces are what we now submit,
+                # such a pair produces ONE response. `next()` resolved whichever key
+                # `name_keys` happened to yield first (it returns a frozenset, so the
+                # order is arbitrary) and silently dropped the other row: the same
+                # class of silent loss this change exists to remove.
+                attrs = None
+                for k in _response_keys(c):
+                    card = keymap.get(k)
+                    if card is None:
+                        continue
+                    if attrs is None:
+                        attrs = _attrs_from_scryfall(c)
+                    resolved[card.name] = attrs
             log(f"  …resolved {len(resolved)}/{len(coll)}")
             time.sleep(delay)
 

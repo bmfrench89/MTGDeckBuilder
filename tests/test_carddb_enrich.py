@@ -179,3 +179,85 @@ def test_min_match_passes_a_healthy_run(namelist, tmp_path, monkeypatch):
                         ["carddb.py", "--collection", coll,
                          "--out", str(tmp_path / "a.csv"), "--min-match", "95"])
     assert carddb.main() == 0
+
+
+# --------------------------------------------------------------------------- #
+# DFC identifiers — the 26-missing-cards bug (docs/spec-dfc-enrichment.md)
+# --------------------------------------------------------------------------- #
+def test_dfc_submits_the_front_face_but_keys_on_the_full_name():
+    """MEASURED, not documented: /cards/collection's `name` matches a SINGLE FACE
+    and returns not_found for the combined "Front // Back" string (deck-verify run
+    31961993767). Submitting the full name meant EVERY double-faced card missed the
+    exact round and fell into the fuzzy pass, where a swallowed 429 dropped 26 of
+    them from the committed snapshot with no log line and exit 0.
+
+    The key must stay the FULL name — that is what `resolved` is keyed by, and what
+    `_response_keys` will match via `name_keys`."""
+    card = mtglib.Card(name="Murderous Rider // Swift End", quantity=1)
+    ident, key = carddb._best_identifier(card)
+    assert ident == {"name": "Murderous Rider"}, "submit the front face"
+    assert key == ("name", "murderous rider // swift end"), "key on the full name"
+
+
+def test_single_faced_identifiers_are_unchanged():
+    card = mtglib.Card(name="Sol Ring", quantity=1)
+    assert carddb._best_identifier(card) == ({"name": "Sol Ring"},
+                                             ("name", "sol ring"))
+
+
+def test_a_bare_double_slash_name_is_never_split():
+    """The `SP//dr` trap (CLAUDE.md): a bare '//' with no surrounding spaces is part
+    of a REAL card name. front_face() already guarantees this; the guard is pinned
+    here because this is a new call site for it."""
+    card = mtglib.Card(name="SP//dr, Piloted by Peni", quantity=1)
+    ident, key = carddb._best_identifier(card)
+    assert ident == {"name": "SP//dr, Piloted by Peni"}, "must NOT split on //"
+    assert key == ("name", "sp//dr, piloted by peni")
+
+
+def test_a_front_face_request_matches_the_combined_response(namelist, tmp_path,
+                                                            monkeypatch):
+    """The seam the whole fix rests on: we ask for "Murderous Rider", Scryfall
+    answers with a card NAMED "Murderous Rider // Swift End", and that response must
+    still land on the collection row keyed by its full name."""
+    coll = namelist(["Murderous Rider // Swift End"])
+    out = str(tmp_path / "attrs.csv")
+    asked = []
+
+    def fake_post(idents):
+        asked.extend(idents)
+        return ([_scry("Murderous Rider // Swift End",
+                       type_line="Creature — Zombie Knight // Instant — Adventure",
+                       cmc=3.0, ci=("B",))], [])
+
+    monkeypatch.setattr(carddb, "_post_collection", fake_post)
+    monkeypatch.setattr(carddb, "_fetch_named_fuzzy",
+                        lambda n: pytest.fail(f"fuzzy must not run for {n!r}"))
+    monkeypatch.setattr(carddb.time, "sleep", lambda *_: None)
+    matched, total, unmatched = carddb.enrich_api(coll, out)
+
+    assert asked == [{"name": "Murderous Rider"}]
+    assert (matched, total, unmatched) == (1, 1, []), "resolved in the EXACT round"
+    rows = list(csv.DictReader(open(out, encoding="utf-8")))
+    assert rows[0]["Name"] == "Murderous Rider // Swift End"
+    assert rows[0]["Type"] == "Creature", "a Dragon/Knight is not a land"
+
+
+def test_two_rows_sharing_a_front_face_both_resolve(namelist, tmp_path, monkeypatch):
+    """A collection may legitimately list the same physical card under both name
+    forms. Both fold to ONE submitted identifier and therefore ONE response, and the
+    old `next(...)` match resolved whichever key `name_keys` yielded first — it
+    returns a frozenset, so the loser was dropped arbitrarily and silently."""
+    coll = namelist(["Murderous Rider // Swift End", "Murderous Rider"])
+    out = str(tmp_path / "attrs.csv")
+    monkeypatch.setattr(carddb, "_post_collection",
+                        lambda idents: ([_scry("Murderous Rider // Swift End",
+                                               type_line="Creature — Zombie Knight",
+                                               ci=("B",))], []))
+    monkeypatch.setattr(carddb, "_fetch_named_fuzzy", lambda n: None)
+    monkeypatch.setattr(carddb.time, "sleep", lambda *_: None)
+    matched, total, unmatched = carddb.enrich_api(coll, out)
+    assert unmatched == [], "neither row may be silently dropped"
+    assert (matched, total) == (2, 2)
+    names = {r["Name"] for r in csv.DictReader(open(out, encoding="utf-8"))}
+    assert names == {"Murderous Rider // Swift End", "Murderous Rider"}
