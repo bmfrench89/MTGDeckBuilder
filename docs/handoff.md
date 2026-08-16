@@ -6,7 +6,38 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-15._
+_Last updated: 2026-08-16._
+
+## Double-faced cards never enriched (FIXING 2026-08-16, `docs/spec-dfc-enrichment.md`)
+
+Root cause, **measured on a GitHub runner** rather than inferred: Scryfall's
+`/cards/collection` `name` identifier matches a **single face**, so submitting the
+collection's `"Front // Back"` spelling missed. Only 14 of the player's 40 owned
+double-faced cards were resolving, and the ones that fell through landed on the name
+heuristic — which read the verified Dragon creatures `Scavenger Regent // Exude Toxin`
+and `Marang River Regent // Coil and Catch` as **lands**.
+
+Shipping in slices, each validated before the next:
+
+- **Slice 1 — the cure (done).** `carddb._best_identifier` submits `front_face(name)`
+  and `_response_keys` maps the single-face response back onto every row that answers
+  to it, so two rows sharing a front face both resolve. UAT is a probe step in
+  `.github/workflows/deck-verify.yml` that enriches every `" // "` name in the
+  committed snapshot against live Scryfall on each branch push — it lives there, not
+  in `attrs-snapshot.yml`, because that workflow ends in a hardcoded push to `main`.
+  **Live result: 40/40 resolved, 0 untyped, PROBE VERDICT: PASS** (was 14/40), and the
+  step now runs in ~1s, which is how you can tell the fuzzy fallback went quiet.
+- **Slice 2 — land hints (done).** `_LAND_HINTS` matched bare substrings, so "cave"
+  matched inside "S-**cave**-nger". Now whole-word with a tolerated plural. Measured on
+  the collection: lands recognized 105 → 126, non-lands misread 49 → 26, nothing lost
+  either way. Spec §8 has the table and the honest limits.
+- **Slice 3 — hardening (next).** Shared `_request_json` with the `(5,15,30,60)`
+  backoff ladder, 0.7s pacing, transport-vs-miss counters so a network failure can
+  never again look like "card not found", a per-category DFC gate, and wiring the fuzzy
+  pass into `VERIFY_CACHE_DIR`.
+
+`download_bulk()` is **deferred by the player** ("leave the bulk for now"); the API
+path is the default and works.
 
 ## Where the app runs
 

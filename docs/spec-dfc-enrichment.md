@@ -246,10 +246,8 @@ file with all 40 DFCs. No manual data entry, and nothing to hand-write.
   boundary (`spec-network-and-attrs.md` §3) and Phase A makes name-only sufficient.
 - **Not** adding a row-count regression gate as the primary defence — measured blind
   (§1.4).
-- **Not** touching `_LAND_HINTS` in this spec. The substring bug ("S-cave-nger") is
-  real and worth fixing, but it is a *second* defect on a *different* engine, and
-  bundling it would make this PR's blast radius the whole classifier. **Recommend a
-  follow-up spec**; see §7.
+- ~~**Not** touching `_LAND_HINTS` in this spec.~~ **Folded in** (player call,
+  2026-08-16) and shipped as slice 2 — see §8.
 - **Not** fixing `download_bulk()`. The research pass reported Scryfall's bulk-data
   format changed in July 2026 in a way that may already break it — flagged as
   unverified, out of scope, and noted in §7.
@@ -294,10 +292,52 @@ Extend `tests/test_carddb_enrich.py` / `test_carddb.py`:
 
 ## 7. Open questions for the player
 
-1. **Scope** — ship A–F as one PR, or split Phase A (the cure, small) from B–E (the
-   hardening, larger)?
-2. **The `_LAND_HINTS` substring bug** — "S-cave-nger" matching "cave" is a live
-   defect independent of enrichment. Follow-up spec, fold in here, or leave it?
+1. ~~**Scope**~~ — **answered 2026-08-16:** split into slices, each validated before the
+   next. Slice 1 = Phase A (the cure) + a live UAT probe. Slice 2 = `_LAND_HINTS`.
+   Slice 3 = Phases B–E (the hardening).
+2. ~~**The `_LAND_HINTS` substring bug**~~ — **answered: fold in.** Shipped as slice 2, §8.
 3. **`download_bulk()`** — reported as possibly broken by a July 2026 Scryfall format
-   change. Unverified. Worth a probe, or leave it (the API path is the default and
-   works)?
+   change. Unverified. **Deferred by the player 2026-08-16** ("leave the bulk for now").
+   The API path is the default and works.
+
+---
+
+## 8. Slice 2 as shipped — `_LAND_HINTS` matches whole words
+
+`_looks_like_land_by_name` compared each hint with `h in name.lower()`, so any hint
+buried inside a longer word claimed the card. It now matches on word boundaries
+(`(?<![a-z])hint(?:e?s)?(?![a-z])`) with a tolerated plural, so the singular hint
+still covers "Bloodfell Caves".
+
+Word boundaries are stricter than `\b` would be here on purpose: card names are full
+of apostrophes and hyphens ("Rogue's Passage", "Goblin-town"), and `\b` makes
+hyphenated compounds inconsistent.
+
+**Measured against the player's collection** (2,665 typed cards; 203 non-basic lands):
+
+| | before | after |
+|---|---|---|
+| non-basic lands recognized | 105 | **126** |
+| non-land cards misread as lands | 49 | **26** |
+| real lands lost by the change | — | **0** |
+| non-lands newly misread | — | **0** |
+
+Tightening alone would have dropped seven real lands that were only ever reaching the
+land pass by accident ("Scavenger Grounds" via `cave`, "Battlefield Forge" via
+`field`). They are covered deliberately instead: 20 hint words added, each measured at
+**zero** false positives against the collection — that is the bar for any future
+addition — plus "battlefield forge" and "subterranean cavern" named outright, the way
+"svyelunite temple" already was.
+
+**What this does not fix.** `Marang River Regent // Coil and Catch` still reads as a
+land, because "River" genuinely *is* a whole word in its name. No name heuristic can
+get that one — slice 1 does, by giving it real type data. Likewise the heuristic still
+recognizes only 126 of 203 owned lands; Baxter Building and Stark Industries are not
+land-shaped names and never will be. The layer order is the defence, not the regex.
+
+**Verified.** 793 tests pass (was 755; the new cases are parametrized). Optimizer
+previews across all nine decks are byte-identical on the full typed collection. On a
+name-only collection — the regime where this heuristic actually fires — the only
+differences are in the right direction: "Love on the Battlefield" reaches the spell
+pass instead of being filed as a land, and the land pass picks different buylist
+targets. No deck's 99 changes.

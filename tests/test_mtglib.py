@@ -1,5 +1,7 @@
 """mtglib is the data hub every other module trusts — parsing, name normalization,
 and role classification."""
+import pytest
+
 import mtglib
 
 
@@ -397,6 +399,64 @@ def test_snow_covered_basics_look_like_lands_by_name():
     for b in ("Snow-Covered Island", "Snow-Covered Wastes", "Island"):
         assert mtglib._looks_like_land_by_name(b)
     assert not mtglib._looks_like_land_by_name("Snow Devil")   # a snow SPELL stays one
+
+
+# --------------------------------------------------------------------------- #
+# Land hints match WHOLE WORDS (2026-08-16, docs/spec-dfc-enrichment.md §2).
+#
+# The hints used to match bare substrings. "S-cave-nger Regent" and "Marang
+# River Regent" are both verified Dragon creatures, and both read as lands; 49
+# owned non-land cards were one missing attrs row away from the same mistake.
+# This heuristic is the LAST layer — real type data always wins — but when it
+# does fire, a spell in the land pass and a land in the spell pass are both how
+# the optimizer cuts a card it should never have touched.
+
+@pytest.mark.parametrize("name, hint", [
+    ("Scavenger Regent // Exude Toxin", "cave"),   # the measured incident
+    ("Dreadwing Scavenger",             "cave"),
+    ("Seasoned Marshal",                "marsh"),
+    ("Ramosian Sky Marshal",            "marsh"),
+    ("Eclipsed Boggart",                "bog"),
+    ("Blossoming Bogbeast",             "bog"),
+    ("Taxi Driver",                     "river"),
+    ("Stampede Driver",                 "river"),
+    ("Quagmire Lamprey",                "mire"),
+    ("Battlefield Percher",             "field"),
+    ("Coastal Piracy",                  "coast"),
+    ("Lifestream's Blessing",           "stream"),
+    ("Silverglade Pathfinder",          "glade"),
+    ("Vengeful Townsfolk",              "town"),
+    ("Trailblazer's Boots",             "trail"),
+])
+def test_a_hint_buried_inside_a_word_is_not_a_land(name, hint):
+    assert hint in name.lower(), "the fixture must actually contain the substring"
+    assert not mtglib._looks_like_land_by_name(name), \
+        f"{name!r} is a spell — {hint!r} inside a longer word must not match"
+
+
+@pytest.mark.parametrize("name", [
+    "Command Tower", "Bojuka Bog", "Jungle Hollow", "Rhystic Cave",
+    "Temple of Malady", "Underground River", "Port Town", "Lotus Field",
+    "Rugged Prairie", "Smoldering Marsh", "Frostboil Snarl", "Sacred Peaks",
+    # plural tolerance: the singular hint still has to cover the plural land
+    "Bloodfell Caves", "Scattered Groves", "Sunken Ruins",
+    # named deliberately after the whole-word switch — these are the real lands
+    # that used to reach the land pass only through an accidental substring hit
+    "Battlefield Forge", "Forbidding Watchtower", "Junktown",
+    "Scavenger Grounds", "Subterranean Cavern", "Riverpyre Verge",
+    "Coastal Peak",
+])
+def test_real_lands_are_still_recognized_by_name(name):
+    assert mtglib._looks_like_land_by_name(name)
+
+
+def test_the_heuristic_admits_what_it_cannot_know():
+    """Not every land has a land-shaped name, and the fallback must not pretend
+    otherwise — `Card.is_land` prefers real type data precisely because of this."""
+    for blind_spot in ("Hidden Lair", "Stark Industries", "Baxter Building"):
+        assert not mtglib._looks_like_land_by_name(blind_spot)
+    typed = mtglib.Card(name="Hidden Lair", types=["Land"])
+    assert typed.is_land, "type data overrules the name every time"
 
 
 # --------------------------------------------------------------------------- #
