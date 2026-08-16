@@ -29,6 +29,12 @@ on:
       - "data/decks/*.txt"
       - "data/reference/verify-queue.txt"
       - ".github/workflows/deck-verify.yml"
+      # The DFC probe below is UAT for the enrichment path itself, and the only
+      # place it can run for real — Scryfall is unreachable from a sandbox. So a
+      # change to the Scryfall client has to re-run it, or the probe only ever
+      # validates the commit that happened to also touch a deck.
+      - "scripts/carddb.py"
+      - "scripts/mtglib.py"
   workflow_dispatch:
     inputs:
       commander:
@@ -121,8 +127,16 @@ jobs:
           echo "===== DFC ENRICHMENT PROBE ====="
           echo "double-faced names in the committed snapshot: ${n}"
           if [ "${n}" -eq 0 ]; then echo "nothing to probe"; exit 0; fi
+          # --min-match 95 on purpose: this input is 100% double-faced, so it
+          # exercises the per-category gate (slice 3) as well as the enrichment.
+          # rc is captured rather than `|| true`d away — a non-zero here IS the
+          # finding, and the python check below still runs either way.
+          set +e
           python3 scripts/carddb.py --collection /tmp/dfc.txt \
-            --out /tmp/dfc-attrs.csv --no-ids || true
+            --out /tmp/dfc-attrs.csv --no-ids --min-match 95
+          rc=$?
+          set -e
+          echo "carddb exit code: ${rc}  (0 = clean, 3 = below a floor, 2 = network)"
           python3 - <<'EOF'
           import csv, sys
           sys.path.insert(0, "scripts")
@@ -147,6 +161,9 @@ jobs:
           print("PROBE VERDICT:",
                 "PASS" if not missing and not untyped else "FAIL")
           EOF
+          if [ "${rc}" -ne 0 ]; then
+            echo "::warning::carddb exited ${rc} on the DFC probe — read the log above"
+          fi
           echo "===== END DFC ENRICHMENT PROBE ====="
 
       # EDHREC inclusion/synergy. Without it optimize.py has no field to tune
