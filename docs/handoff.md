@@ -50,8 +50,24 @@ Shipping in slices, each validated before the next:
 `data/cache/scryfall`. `main()` passes the real path; a library function does not pick
 one under `data/`. There is a test guarding this — don't "simplify" it back.
 
-**Still to do: Phase F.** One `workflow_dispatch` of `attrs-snapshot` regenerates the
-committed attrs file with all 40 DFCs. Nothing to hand-write.
+- **Phase F — the backfill (done).** PR #122 squash-merged, then one
+  `workflow_dispatch` of `attrs-snapshot` on `main` (run `31985056545`, commit
+  `17ecc12`). `collection_attrs.snapshot.csv` now carries **2,691 rows — all 40
+  double-faced cards present and typed, zero untyped**, and no deck reports an
+  untyped card on the name-only snapshot any more.
+
+**What the backfill actually recovered:** `Scavenger Regent // Exude Toxin` and
+`Marang River Regent // Coil and Catch` now read `Creature / Dragon` instead of *land*.
+Both are **owned ×1 and in no deck** — they were invisible to every Dragon pool scan
+while the heuristic called them lands, so the Ur-Dragon audits done before 2026-08-16
+never saw them. The owned Dragon pool now counts **47 unique / 54 copies**. Neither has
+been run through the sleeper audit
+(`.claude/skills/mtg-deckbuilder/references/card-review-method.md`) — that is open work,
+not a decision already taken.
+
+Post-merge state of the nine decks: no optimizer swaps proposed (everything held by the
+gate), field top-25 overlap Ur-Dragon 21/25, Y'shtola 21/25, Smaug 13/25 (a new build,
+12 of its gaps unowned).
 
 `download_bulk()` is **deferred by the player** ("leave the bulk for now"); the API
 path is the default and works.
