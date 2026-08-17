@@ -12,13 +12,10 @@ Changeling Wayfinder,Creature,3,,,fetch:basic,1
 Blastoderm,Creature,4,G,,,5
 Professional Wrestler,Creature,4,G,W U B R G,dork;ramp,4
 Devil Dinosaur,Creature,4,G,,,5
-Mycoloth,Creature,5,G,,,4
 Beorn the Fierce,Creature,5,G,,draw,6
 "Spider-Man, Brooklyn Visionary",Creature,5,G,,fetch:basic;ramp,4
 Baloth Woodcrasher,Creature,6,G,,,4
 Cactarantula,Creature,6,G,,draw,6
-Savage Land Dinosaur,Creature,6,G,,fetch:basic,7
-"Terrian, World Tyrant",Creature,5,G,,,9
 Mistmeadow Council,Creature,5,G,,draw,4
 Vaultborn Tyrant,Creature,7,G,,draw,6
 Crop Rotation,Instant,1,G,,fetch:land;ramp,
@@ -31,6 +28,9 @@ Broken Wings,Instant,3,G,,removal,
 Break Down,Instant,3,G,,removal,
 Airship Crash,Instant,3,G,,draw;removal,
 Origin of Metalbending,Instant,2,G,,removal,
+Snakeskin Veil,Instant,1,G,,,
+Heroic Intervention,Instant,2,G,,,
+Beast Within,Instant,3,G,,removal,
 Land Grant,Sorcery,2,G,,fetch:forest,
 Shared Roots,Sorcery,2,G,,fetch:basic;ramp,
 Plow Through,Sorcery,1,G,,removal,
@@ -54,19 +54,19 @@ Champion's Helm,Artifact,3,,,,
 Brass Knuckles,Artifact,4,,,,
 Masterwork of Ingenuity,Artifact,1,,,,
 Phyrexian Vault,Artifact,3,,,draw,
+Swiftfoot Boots,Artifact,2,,,,
 Wild Growth,Enchantment,1,G,G,,
 Rancor,Enchantment,1,G,,,
 Fertile Ground,Enchantment,2,G,W U B R G,,
 Treetop Bracers,Enchantment,2,G,,,
 Multani's Presence,Enchantment,1,G,,draw,
 Feral Appetite,Enchantment,3,G,,removal,
-Ancestral Mask,Enchantment,3,G,,,
 Terrain Generator,Land,0,,C,,
 Terramorphic Expanse,Land,0,,,fetch:basic;ramp,
 Myriad Landscape,Land,0,,C,etb-tapped;fetch:basic;ramp,
-Ash Barrens,Land,0,,C,fetch:basic,
+Evolving Wilds,Land,0,,,fetch:basic;ramp,
 Hobbit Hole,Land,0,,,fetch:basic;ramp,
 Vibrant Cityscape,Land,0,,,fetch:basic;ramp,
-Command Tower,Land,0,,W U B R G,,
-High Market,Land,0,,C,,
+Rogue's Passage,Land,0,,C,,
+Fabled Passage,Land,0,,,fetch:basic;ramp,
 Forest,Land,0,G,G,,

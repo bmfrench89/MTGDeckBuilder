@@ -27,7 +27,51 @@ holdout — it had no basics guard, so a 30-Forest manabase printed
 six basics plus Snow-Covered printings, and asserts the exemption stays surgical (a real
 shortfall on a non-basic still reports). Verified to fail without the guard.
 
-## The deck stable is EIGHT decks (2026-08-17)
+## Tifa took the shared green cards (2026-08-17, later same day)
+
+**Kaalia is gone too** — the player deleted it in the hosted app, and the app's own sync
+pushed the deletion (`343dfb5`), removing `data/decks/kaalia-of-the-vast.*` **and** its
+`pins.csv` row. Nothing was left for a session to clean up but a stale "Pinned to
+kaalia-of-the-vast" note in `commanders.csv`, now removed. **The stable is SEVEN decks.**
+Its `data/reference/field/kaalia-of-the-vast.json` is left alone — generated data the
+Action owns.
+
+**The correction that drove this:** the previous session refused to apply the optimizer's
+`[shared]` swaps to Tifa, claiming they would "break Bruce Banner and Cosmic Spider-Man."
+That was invented. `optimize`'s own docstring: *"Sharing is ON by default: two decks in the
+same archetype legitimately want the same cards, and the player decides which one gets the
+physical copy at sleeving time."* Grounding rule #8 says mark, don't block. Refusing to
+share is the failure that rule exists to prevent — do not re-introduce it.
+
+Applied with sharing at default (**not** `--owned-only`). **Nothing was removed from any
+other deck** — this is additive. Six cards now carry the ⇄ badge (Swiftfoot Boots,
+Snakeskin Veil, Heroic Intervention, Beast Within, Fabled Passage, Rogue's Passage) and the
+shortfall is on `data/wishlist.md`.
+
+- **Field top-25 overlap: 4/25 → 10/25 (16% → 40%).** Still under the ~50% line, and still
+  structural: 5 of the remainder are in other decks (cloud 5, bruce-banner 4) and 10 are
+  unowned. The optimizer's own verdict is unchanged — *"this deck can't improve from your
+  collection: buy the gaps."*
+- Power 66 → **67/100**, interaction 9 → 10, Bracket 3. Second run proposes no swaps
+  (idempotent). All 14 protected engine pieces survived.
+- Deleting Kaalia freed **Evolving Wilds** (81% field), which came in as a *free* add rather
+  than a shared one.
+- `deck_sections.py --apply` was needed afterwards: the optimizer's re-file merged the
+  Sorceries block into Instants. Regrouped, 0 unsorted.
+- Buylist pruned of the seven rows for cards now in the deck (their shared-copy need is
+  tracked by `wishlist.py` instead), and three `Replaces` targets repointed after their
+  original targets were cut.
+
+**Nothing in this deck is pinned.** Pinning is the manual, human-in-the-loop reservation —
+📌 on the card panel of any deck page (`POST /deck/<stem>/pin`) or the **Pins** tab
+(`/pins`, one-action move via `/pins/move`). A pin is honoured as "spoken for" by
+`optimize` (`pinned_elsewhere`), `auto_build` and `edhrec`; a manual add in the app only
+*warns*, because the player's word beats their own earlier reservation. Unpinned cards stay
+freely shareable. ⚠ Known gap: the pin button exists only on the **dashboard** card panel
+(`scripts/assets/card_panel.html`); the site-wide panel (`webapp/templates/_cardpanel.html`,
+used on collection/shared/wishlist pages) has no pin control.
+
+## The deck stable was EIGHT decks (2026-08-17) — see above, Kaalia brings it to SEVEN
 
 The player **dismantled Smaug, Wicked Worm and Doctor Doom** physically, so
 `data/decks/smaug-wicked-worm.*` and `data/decks/doctor-doom.*` were deleted (recoverable
@@ -35,9 +79,9 @@ from git history; no pins referenced either). That freed their copies back into 
 which is why the Tifa build below could claim cards the earlier conflict scans showed as
 committed.
 
-Current stable: `bruce-banner-incredible-hulk`, `captain-america-team-leader`,
-`cloud-ex-soldier`, `cosmic-spider-man`, `kaalia-of-the-vast`, `the-ur-dragon`,
-`yshtola-nights-blessed`, **`tifa-lockhart`** (new).
+Current stable (7): `bruce-banner-incredible-hulk`, `captain-america-team-leader`,
+`cloud-ex-soldier`, `cosmic-spider-man`, `the-ur-dragon`, `yshtola-nights-blessed`,
+**`tifa-lockhart`**. (Kaalia was deleted later the same day — see the section above.)
 
 ### tifa-lockhart — "Doubling Down" (mono-G landfall voltron, Bracket 3, power 65/100)
 

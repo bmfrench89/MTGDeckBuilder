@@ -25,13 +25,10 @@
 1 Blastoderm
 1 Professional Wrestler
 1 Devil Dinosaur
-1 Mycoloth
 1 Beorn the Fierce
 1 Spider-Man, Brooklyn Visionary
 1 Baloth Woodcrasher
 1 Cactarantula
-1 Savage Land Dinosaur
-1 Terrian, World Tyrant
 1 Mistmeadow Council
 1 Vaultborn Tyrant
 
@@ -46,6 +43,9 @@
 1 Break Down
 1 Airship Crash
 1 Origin of Metalbending
+1 Snakeskin Veil
+1 Heroic Intervention
+1 Beast Within
 
 # --- Sorceries ---
 1 Land Grant
@@ -73,6 +73,7 @@
 1 Brass Knuckles
 1 Masterwork of Ingenuity
 1 Phyrexian Vault
+1 Swiftfoot Boots
 
 # --- Enchantments ---
 1 Wild Growth
@@ -81,17 +82,16 @@
 1 Treetop Bracers
 1 Multani's Presence
 1 Feral Appetite
-1 Ancestral Mask
 
 # --- Lands ---
 1 Terrain Generator
 1 Terramorphic Expanse
 1 Myriad Landscape
-1 Ash Barrens
+1 Evolving Wilds
 1 Hobbit Hole
 1 Vibrant Cityscape
-1 Command Tower
-1 High Market
+1 Rogue's Passage
+1 Fabled Passage
 
 # --- Basics ---
 30 Forest
