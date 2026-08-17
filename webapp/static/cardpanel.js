@@ -105,7 +105,65 @@
       $('cp-decks').textContent = d.decks.join(' · ');
     } else wrap('cp-deckwrap', false);
 
+    renderPin(d);
     renderStrategy();
+  }
+
+  /* Pin = you deciding which deck gets the one physical copy; every other deck then
+     treats it as spoken for (optimize / auto_build / edhrec all honour it).
+     The picker offers only decks that actually RUN the card: pinning a card nothing
+     plays is the "stale" state the /pins page exists to flag, so we don't mint one.
+     An ALREADY-stale pin is the exception — it must be visible and releasable here. */
+  function renderPin(d) {
+    var wrapEl = $('cp-pinwrap'), sel = $('cp-pin-deck'), st = $('cp-pin-state');
+    if (!wrapEl || !sel || !st) return;
+    var decks = (d.decks || []).slice(), stale = d.pinned && decks.indexOf(d.pinned) < 0;
+    if (!decks.length && !d.pinned) { wrapEl.hidden = true; return; }
+    if (stale) decks.push(d.pinned);            // so it can be seen and released
+    var opts = ['<option value="none">— not pinned —</option>'];
+    decks.forEach(function (s) {
+      opts.push('<option value="' + esc(s) + '"' + (s === d.pinned ? ' selected' : '') +
+        '>' + esc(s) + (stale && s === d.pinned ? ' (stale)' : '') + '</option>');
+    });
+    sel.innerHTML = opts.join('');
+    sel.value = d.pinned || 'none';
+    st.textContent = d.pinned
+      ? (stale
+        ? 'Pinned to ' + d.pinned + ' — but that deck does not run this card (stale).'
+        : 'Pinned to ' + d.pinned + ' — other decks treat this copy as spoken for.')
+      : 'Not pinned — freely shared across your decks.';
+    wrap('cp-pin-err', false);
+    wrapEl.hidden = false;
+  }
+
+  function savePin() {
+    var btn = $('cp-pin-btn'), sel = $('cp-pin-deck'), err = $('cp-pin-err');
+    if (!btn || !sel || !cur) return;
+    var name = cur, body = new FormData();
+    body.append('card', name);                  // server norms it; don't pre-normalize
+    body.append('deck', sel.value);
+    body.append('json', '1');
+    btn.disabled = true;
+    fetch('/pins/move', { method: 'POST', body: body })
+      .then(function (r) {
+        // The app sits behind a shared-password session: an expired one answers a POST
+        // with 401 (and a GET with the login page as HTML). Either way this is not JSON,
+        // and failing silently would leave the panel showing a pin that never saved.
+        var ct = r.headers.get('content-type') || '';
+        if (!r.ok || ct.indexOf('application/json') < 0) throw new Error('not-json');
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error('not-ok');
+        if (cur !== name) return;               // panel moved on while we were saving
+        return fetch('/api/card/' + encodeURIComponent(name))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (fresh) { if (cur === name && fresh) render(fresh); });
+      })
+      .catch(function () {
+        if (err) { err.textContent = 'Could not save the pin — your session may have expired. Reload and log in.'; err.hidden = false; }
+      })
+      .then(function () { btn.disabled = false; });
   }
 
   function oracleOf(j) {
@@ -148,7 +206,8 @@
 
   function open(name) {
     cur = name; curData = curCard = null; show();
-    ['cp-stratwrap', 'cp-whywrap', 'cp-combowrap', 'cp-deckwrap', 'cp-rulewrap'].forEach(function (id) { wrap(id, false); });
+    ['cp-stratwrap', 'cp-whywrap', 'cp-combowrap', 'cp-deckwrap', 'cp-rulewrap',
+      'cp-pinwrap', 'cp-pin-err'].forEach(function (id) { wrap(id, false); });
     $('cp-name').textContent = name; $('cp-tags').innerHTML = '';
     $('cp-buy').innerHTML = ''; $('cp-imgmeta').innerHTML = '';
     $('cp-img').removeAttribute('src');
@@ -169,4 +228,5 @@
     if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(t.getAttribute('data-card')); }
   });
   var x = ov.querySelector('.cp-close'); if (x) x.addEventListener('click', close);
+  var pb = $('cp-pin-btn'); if (pb) pb.addEventListener('click', savePin);
 })();

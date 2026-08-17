@@ -48,6 +48,17 @@
   border:1px solid rgba(255,255,255,.2);font-family:'Rajdhani',sans-serif;font-size:var(--fs-xs)}
 .cp-buy a:hover{border-color:var(--accent);text-decoration:none}
 
+/* Pin control: reserve the physical copy for one deck. Mirrors .cp-buy's pill shape so
+   the panel reads as one system; every size/space value is a token (test_design_tokens). */
+.cp-pin{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;margin-top:var(--sp-2)}
+.cp-pin select,.cp-pin-btn{font-family:'Rajdhani',sans-serif;font-size:var(--fs-xs);
+  padding:var(--sp-2) 12px;border-radius:var(--r-pill);background:var(--panel2);
+  color:inherit;border:1px solid rgba(255,255,255,.2)}
+.cp-pin-btn{cursor:pointer}
+.cp-pin-btn:hover{border-color:var(--accent)}
+.cp-pin-btn[disabled]{opacity:.55;cursor:default}
+#cp-pin-err{color:var(--warn)}
+
 /* Clickable card-image grid (build-deck view, collection). */
 .cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:var(--sp-3);margin:2px 0 6px}
 figure.mc{margin:0;position:relative;cursor:pointer}

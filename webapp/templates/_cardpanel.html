@@ -26,6 +26,16 @@
             <div id="cp-combos"></div></div>
           <div id="cp-deckwrap" hidden><div class="cp-h">In your decks</div>
             <div id="cp-decks" class="cp-imgmeta"></div></div>
+          {# Reserve the physical copy for one deck. Only shown when a deck actually runs
+             the card — pinning a card nothing plays is the "stale" state /pins exists to
+             flag, so the panel must not offer to create one. #}
+          <div id="cp-pinwrap" hidden><div class="cp-h">Physical copy</div>
+            <div id="cp-pin-state" class="cp-imgmeta"></div>
+            <div class="cp-pin">
+              <select id="cp-pin-deck" aria-label="Reserve this copy for"></select>
+              <button id="cp-pin-btn" type="button" class="cp-pin-btn">&#128204; Pin</button>
+            </div>
+            <div id="cp-pin-err" class="cp-imgmeta" hidden></div></div>
         </div>
       </div>
     </div>
