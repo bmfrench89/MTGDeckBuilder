@@ -8,6 +8,23 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-17._
 
+## Basic lands are always owned (player-ratified 2026-08-17)
+
+The player owns hundreds of every basic and **will not** add them to the collection
+export. Treat the supply as unlimited: any basic count in a decklist is satisfied, basics
+never go on a buy list or an ownership-gap report, and a manabase is never sized to the
+snapshot's recorded count. Canonical statement lives in
+`.claude/skills/mtg-deckbuilder/references/grounding-rules.md` **#9**, echoed in
+`CLAUDE.md`, `SKILL.md`, `deckbuilding-principles.md`, `data/collection/README.md` and
+`docs/collection-formats.md`.
+
+**Known contradiction — `deck_stats.owned_enough()` does not exempt basics.**
+`mtglib.is_basic` is the repo-wide test and `deck_conflicts`/`optimize` already honour it,
+but `deck_stats` will still print `Forest: deck wants 30, you own 16` under "Ownership
+check". That is a false positive; it is **not fixed** because it is a shared-code change
+the player has not yet asked for. The one-line fix is a `mtglib.is_basic(d.name)` guard in
+`owned_enough` (`scripts/deck_stats.py:64`), plus a test.
+
 ## The deck stable is EIGHT decks (2026-08-17)
 
 The player **dismantled Smaug, Wicked Worm and Doctor Doom** physically, so
@@ -590,7 +607,8 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   green; Sindarin Liege x2 is the auto-include second legendary Elf);
   **Kaalia of the Vast** (~$40-60 payload — big A/D/D + reanimation; do NOT
   dismantle ur-dragon, she stays in its 99 meanwhile); **Tifa Lockhart**
-  (~$15-30 + ~20 basic Forests; the fetch-land instant-speed doubling core is
+  (~$15-30; basics are free and untracked — grounding rule #9 — so the old
+  "+ ~20 basic Forests" line here was never a real cost; the fetch-land instant-speed doubling core is
   already owned; sandbox auto_build saw her as colorless — enrich first);
   **Thorin, Mountain-king** (mono-R equipment voltron, NOT dwarf tribal; the
   good equipment is committed to cloud; buying Thorin King of Durin's Folk

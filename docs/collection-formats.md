@@ -7,6 +7,12 @@ The collection loader reads CSV exports from the major collection apps **directl
 no conversion step. Upload through the app's Collection page or drop the file at
 `data/collection/collection.csv`; either way it stays private (gitignored).
 
+**Basic lands are deliberately absent from every export** and must never be read as a
+quantity limit — the player owns hundreds of each and does not track them
+(grounding rule #9). Whatever a file says about `Forest` / `Island` / `Swamp` /
+`Mountain` / `Plains` / `Wastes` (or Snow-Covered printings), treat the supply as
+unlimited: no buy-list rows, no ownership shortfalls, no manabase shrinking.
+
 ## How it works
 
 There is one parser, in the data hub (`mtglib`), so every consumer — CLI tools, the

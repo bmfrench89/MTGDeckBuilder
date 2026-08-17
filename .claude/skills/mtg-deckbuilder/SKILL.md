@@ -192,6 +192,13 @@ Grounding requires the collection in a file. In priority order:
    snapshot so the skill is never empty-handed. Treat it as possibly stale — confirm with the
    player and prefer a fresh export.
 
+**Basic lands are exempt from all of this.** The player owns hundreds of each and does not
+track them in any export, so assume an unlimited supply of `Forest` / `Island` / `Swamp` /
+`Mountain` / `Plains` / `Wastes` (and Snow-Covered printings). Never buy-list one, never
+report one as an ownership gap, never shrink a manabase to the recorded count. `deck_stats`'
+"Ownership check" still flags them — that is a known false positive, not a finding.
+Full rule: `references/grounding-rules.md` #9.
+
 ## Reference files (read as needed)
 
 - `references/persona.md` — voice, philosophy, how a champion talks to a friend.

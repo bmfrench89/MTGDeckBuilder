@@ -3,6 +3,19 @@
 This folder holds the player's card collection — the source of truth for every
 ownership claim (Grounding Rule #1).
 
+> ## Basic lands are never tracked here — assume unlimited
+>
+> **Player-ratified 2026-08-17.** The player owns hundreds of every basic land and has
+> chosen not to add them to the export. **Whatever number of `Forest` / `Island` /
+> `Swamp` / `Mountain` / `Plains` / `Wastes` (or Snow-Covered printings) appears in these
+> files is meaningless as a ceiling** — a deck asking for 30 Forests against a snapshot
+> showing 16 is fully built, not short 14.
+>
+> Never put a basic on a buy list or wishlist, never report one as an ownership shortfall,
+> and never shrink a manabase to fit the recorded count. Basics are also exempt from
+> cross-deck conflicts: every deck can run its own full set.
+> Canonical rule: `.claude/skills/mtg-deckbuilder/references/grounding-rules.md` #9.
+
 ## Files
 
 - **`collection_snapshot.txt`** *(committed)* — a name-only snapshot

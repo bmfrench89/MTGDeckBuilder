@@ -147,7 +147,8 @@ the server re-enriches (Scryfall is reachable there) and re-scores everything on
 full private CSV. A sandbox session's job ends at *merge*, plus an honest note of
 what the loop will finish. The one true PC-only task is `rules.py`'s Comprehensive
 Rules download (wizards.com is blocked everywhere else). Physical tasks (sleeving,
-buying, pulling basics) are for the player, not a machine.
+buying, pulling basics) are for the player, not a machine. Note that *pulling* basics
+is a physical task; *buying* them is not a thing — see the basics rule under Data formats.
 
 ### Privacy — the hard line
 `data/collection/collection.csv` and `collection_attrs.csv` are **gitignored and private**
@@ -264,6 +265,16 @@ unknown (`Card.produced is None`) and every consumer must fall back to color ide
 (player-confirmed cards the export missed — the player's word beats the export).
 `pins.csv` (`Card,Deck`) reserves a physical copy for one deck; other decks treat it as
 unavailable.
+
+**Basic lands are always owned, in unlimited quantity** (player-ratified 2026-08-17). The
+player has hundreds of each and deliberately does not track them in the export, so the
+snapshot's basic counts are an artifact, not a limit. Any number of `Forest` / `Island` /
+`Swamp` / `Mountain` / `Plains` / `Wastes` (and Snow-Covered printings) in a decklist is
+satisfied; basics never go on a buy list, a wishlist or a shortfall report, and never
+constrain a manabase or a cross-deck conflict. `mtglib.is_basic` is the repo-wide test —
+`deck_conflicts` and `optimize` already honour it. **`deck_stats.owned_enough()` does
+not**, so its "Ownership check" still reports basics as missing; that line is a known
+false positive. Full rule: `grounding-rules.md` #9.
 
 **Reference** — `data/reference/*.csv|.txt` are hand-editable knowledge: `combos.csv`
 (`Pieces` are `;`-separated so card-name commas survive), `card_notes.csv` (curated "why it

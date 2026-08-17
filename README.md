@@ -71,6 +71,12 @@ Dragon Shield, ManaBox, Moxfield, Deckbox, Archidekt/ManaPool, and TCGplayer are
 read directly** (`docs/collection-formats.md`). That file is **gitignored — it stays
 on your machine**.
 
+**Basic lands are assumed unlimited and are not tracked.** You are expected to own as many
+`Forest` / `Island` / `Swamp` / `Mountain` / `Plains` / `Wastes` as any deck needs, so
+basics never appear on a buy list or wishlist and never limit a manabase — whatever count
+an export happens to carry is ignored. (One rough edge: `deck_stats.py`'s "Ownership check"
+does not yet exempt them and will list basics as missing.)
+
 No rich export? `carddb.py` builds the attributes from Scryfall's `/cards/collection`
 API (about one request per 75 cards):
 
