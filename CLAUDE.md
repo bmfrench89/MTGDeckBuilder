@@ -271,10 +271,9 @@ player has hundreds of each and deliberately does not track them in the export, 
 snapshot's basic counts are an artifact, not a limit. Any number of `Forest` / `Island` /
 `Swamp` / `Mountain` / `Plains` / `Wastes` (and Snow-Covered printings) in a decklist is
 satisfied; basics never go on a buy list, a wishlist or a shortfall report, and never
-constrain a manabase or a cross-deck conflict. `mtglib.is_basic` is the repo-wide test —
-`deck_conflicts` and `optimize` already honour it. **`deck_stats.owned_enough()` does
-not**, so its "Ownership check" still reports basics as missing; that line is a known
-false positive. Full rule: `grounding-rules.md` #9.
+constrain a manabase or a cross-deck conflict. `mtglib.is_basic` is the repo-wide test and
+every consumer honours it — `deck_conflicts`, `optimize` and `deck_stats.owned_enough()`
+(`tests/test_basics_unlimited.py`). Full rule: `grounding-rules.md` #9.
 
 **Reference** — `data/reference/*.csv|.txt` are hand-editable knowledge: `combos.csv`
 (`Pieces` are `;`-separated so card-name commas survive), `card_notes.csv` (curated "why it

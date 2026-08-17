@@ -50,8 +50,8 @@ against the deck's OWN archetype band, not the blind default.
 7. **Basics are free and unlimited — size the manabase to the deck, never to the export.**
    The player owns hundreds of every basic and does not track them (grounding rule #9), so
    "we only have 16 Forests recorded" is never a reason to run fewer. Fill the remaining
-   land slots with whatever basics the pip demand calls for. `deck_stats`' ownership check
-   will still list them as missing; ignore that line for basics.
+   land slots with whatever basics the pip demand calls for; the ownership check exempts
+   them, so a full manabase reports clean.
 
 ## Roles, defined
 

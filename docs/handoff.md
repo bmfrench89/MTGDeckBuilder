@@ -18,12 +18,14 @@ snapshot's recorded count. Canonical statement lives in
 `CLAUDE.md`, `SKILL.md`, `deckbuilding-principles.md`, `data/collection/README.md` and
 `docs/collection-formats.md`.
 
-**Known contradiction — `deck_stats.owned_enough()` does not exempt basics.**
-`mtglib.is_basic` is the repo-wide test and `deck_conflicts`/`optimize` already honour it,
-but `deck_stats` will still print `Forest: deck wants 30, you own 16` under "Ownership
-check". That is a false positive; it is **not fixed** because it is a shared-code change
-the player has not yet asked for. The one-line fix is a `mtglib.is_basic(d.name)` guard in
-`owned_enough` (`scripts/deck_stats.py:64`), plus a test.
+**The tooling now agrees (fixed 2026-08-17).** `deck_stats.owned_enough()` was the last
+holdout — it had no basics guard, so a 30-Forest manabase printed
+`Forest: deck wants 30, you own 16` under "Ownership check" and `build_dashboard`'s
+`ownership_block` rendered the same row under **Buy-list candidates**. It now skips
+`mtglib.is_basic` names like `deck_conflicts` and `optimize` always did.
+`tests/test_basics_unlimited.py` covers the function, the rendered dashboard block, all
+six basics plus Snow-Covered printings, and asserts the exemption stays surgical (a real
+shortfall on a non-basic still reports). Verified to fail without the guard.
 
 ## The deck stable is EIGHT decks (2026-08-17)
 

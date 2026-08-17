@@ -79,7 +79,6 @@ not to track them in the collection export. Treat the supply as unlimited:
 - The one legitimate basics line is **physical**: "pull 30 Forests from your bulk before
   you sleeve this." That is a task, not a purchase.
 
-⚠ **The tooling does not fully agree yet.** `deck_conflicts` and `optimize` already exempt
-basics via `mtglib.is_basic`, but **`deck_stats.owned_enough()` does not** — it will still
-report `Forest: deck wants 30, you own 16` under "Ownership check". That output is a known
-false positive; say so rather than repeating it at the player.
+The tooling agrees: `deck_conflicts`, `optimize` and `deck_stats.owned_enough()` all
+exempt basics via `mtglib.is_basic` (name-based, so it holds on a name-only snapshot and
+covers Snow-Covered printings). Guarded by `tests/test_basics_unlimited.py`.
