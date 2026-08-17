@@ -8,22 +8,55 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-17._
 
-## NEXT SESSION: implement `docs/spec-landfall-template-and-panel-pins.md` — follow it exactly
+## Phase A of the landfall spec SHIPPED — and it was not cosmetic (2026-08-17)
 
-The player commissioned that spec on 2026-08-17 for the next session (Opus 5) to
-execute verbatim. Two phases, both ratified, neither started:
+`deckcore._ARCHETYPE_ROLE_RANGE` now carries `"landfall": {"ramp": (9, 19)}`, and
+`tifa-lockhart`'s header reads `# Archetype: voltron landfall`.
 
-- **Phase A** — add the `landfall` entry to `deckcore._ARCHETYPE_ROLE_RANGE`
-  (`"landfall": {"ramp": (9, 20)}`), add `landfall` to `tifa-lockhart.txt`'s
-  `# Archetype:` header, tests, and confirm the ramp "high" flag clears on both
-  surfaces. This was proposed-not-shipped on 2026-08-17 precisely so the player
-  could ratify it; the spec IS the ratification.
+**The thing to not re-derive:** the default 9-13 band was not merely mislabelling ramp 19
+as "high". At 19, *every* ramp-touching swap falls outside the band in both directions, so
+`optimize.py`'s accept filter rejected all of them and printed **"already aligned with the
+field"** while the deck sat at **10/25** field top-25 overlap. The deck was frozen, not
+aligned. Widening released six field-superior swaps → **15/25**.
+
+**The ceiling is the MEASURED count (19), not one higher, and that is load-bearing.** A
+swept comparison: `hi=19` and `hi=20` unblock the identical six swaps and reach the
+identical 15/25 — but applied ramp equals the ceiling at every value 19-22. The ceiling is
+a target the optimizer FILLS, not a tolerance, so `hi=20` buys zero field alignment and
+spends a draw slot (draw 10→8, its band floor, instead of 10→9). A ceiling above a measured
+count is an add licence. This was caught by adversarial review after `(9, 20)` was first
+shipped in `460438a`; do not "restore headroom for consistency" with the other rows.
+
+Applied state (supervised, `.changes.csv` logged): 100 cards, ramp 19, draw 9, removal 10,
+Bracket 3, **field top-25 15/25**, second optimizer run reports "already aligned" so
+idempotence is genuine now. Power 67 → **64** — the dip is card advantage (−1.5, draw 10→9)
+and curve shape (−0.6) on a scorer that has no concept of landfall payoff, so it reads five
+land-to-battlefield ramp spells as generic ramp. Mana consistency unchanged (keepable 83%,
+screw 13%, commander T3 94%).
+
+⚠ **The 60% is paper.** Every card producing the 10/25 → 15/25 gain is a copy committed to
+another deck (Cultivate, Sakura-Tribe Elder, Nature's Lore, Rampant Growth, Sword of the
+Animist); only Planar Engineering was free. Shared cards went 6 → 11, 17 copies short,
+lending from Bruce Banner, Cloud, Cosmic Spider-Man and Ur-Dragon. Grounding rule #8
+working as designed — but never quote the 60% without this qualification.
+
+**Follow-up worth its own spec:** `optimize.py` prints "already aligned with the field"
+whenever no swap survives the filter, *including* when the filter is deadlocked by an
+out-of-band role count — so any deck outside a role band reads as aligned forever. A
+truthful message would name the gate.
+
+## NEXT SESSION: Phase B of `docs/spec-landfall-template-and-panel-pins.md` — follow it exactly
+
+Phase A is DONE (see the section above). Remaining:
+
 - **Phase B** — pin control on the **site-wide** card panel
   (`webapp/templates/_cardpanel.html` + `static/cardpanel.js`), as a deck **picker**
-  (those pages have no deck context), backed by `payload["pinned"]` from
-  `card_api`, `all_decks` from the `api_card` route, and a `json=1` variant of
-  `POST /pins/move`. The dashboard panel's existing pin button is untouched —
-  check both surfaces afterwards (the two-surfaces trap).
+  (those pages have no deck context), backed by `payload["pinned"]` from `card_api`,
+  the **existing** `payload.decks` as the picker source (the spec review removed the
+  proposed `all_decks` — offering every deck invites creating the stale pins `/pins`
+  exists to flag), and a `json=1` variant of `POST /pins/move` that suppresses its
+  `flash()`. The dashboard panel's existing pin button is untouched — check both
+  surfaces afterwards (the two-surfaces trap).
 
 The spec carries the session rules that bit this week: re-sync to `origin/main`
 first (squash merges), expect the deck-verify Action to push to your branch

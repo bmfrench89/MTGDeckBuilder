@@ -95,19 +95,31 @@ Baloth Woodcrasher, Rancor, Terrain Generator, Wood Elves.
   Season / The Ozolith owned, so Necklace's counters are linear rather than exponential.
 - **Ramp runs long on purpose** — 19 sources, because land-to-battlefield ramp is this
   deck's *payoff*, not just acceleration. The deck's `# Archetype:` header carries
-  `landfall`, and `deckcore._ARCHETYPE_ROLE_RANGE` widens ramp to 9-20 for that word,
-  so the count now reads as correct rather than as a "high" flag. That entry was
-  ratified and shipped in `docs/spec-landfall-template-and-panel-pins.md` Phase A;
-  it is not a per-deck exemption — any lands-matter deck gets the same template.
+  `landfall`, and `deckcore._ARCHETYPE_ROLE_RANGE` widens ramp to 9-19 for that word.
+  That entry was ratified and shipped in `docs/spec-landfall-template-and-panel-pins.md`
+  Phase A; it is not a per-deck exemption — any lands-matter deck gets the same template.
+  ⚠ **Removing `landfall` from the header above re-arms the flag AND re-deadlocks the
+  optimizer** — at ramp 19 against the default 9-13 band, every ramp-touching swap falls
+  outside the template in both directions, so the deck silently reports "already aligned"
+  while frozen. Nothing in the test suite guards the header (the suite is hermetic and
+  never reads real `data/`), so this note is the guard.
 - **Removal is mostly green removal** — it answers artifacts, enchantments and fliers.
   **Beast Within** (53% field) is the exception and the reason it is here: it answers *any*
   permanent, which is the hole green normally cannot cover.
 
 ## Shared with other decks — by design, not an accident
 
-Six cards here are also in other decks and carry the **⇄** badge in the decklist and a row
-in the **Shared Across Decks** panel: **Swiftfoot Boots**, **Snakeskin Veil**, **Heroic
-Intervention**, **Beast Within**, **Fabled Passage**, **Rogue's Passage**.
+Eleven cards here are also in other decks and carry the **⇄** badge in the decklist and a
+row in the **Shared Across Decks** panel: **Cultivate**, **Sakura-Tribe Elder**,
+**Nature's Lore**, **Rampant Growth**, **Sword of the Animist**, **Swiftfoot Boots**,
+**Snakeskin Veil**, **Heroic Intervention**, **Beast Within**, **Fabled Passage**,
+**Rogue's Passage** — 17 copies short in total, lending from Bruce Banner, Cloud,
+Cosmic Spider-Man and Ur-Dragon.
+
+**Read the field number honestly:** this deck's field top-25 overlap is 15/25 (60%), up
+from 10/25 — but *every* card that produced that gain is a copy committed to another deck.
+It is a paper 60% until those copies are bought or the other decks release them. The
+buylist carries the un-share rows; `data/wishlist.md` carries the counts.
 
 That is the intended behaviour, not a conflict to resolve (grounding rule #8 — mark, don't
 block). Sharing is ON by default in the optimizer precisely because two decks legitimately

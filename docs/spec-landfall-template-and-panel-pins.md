@@ -64,11 +64,17 @@ Add ONE entry to `_ARCHETYPE_ROLE_RANGE` (~line 277), following the existing
 comment style (state the measured deck and the reason):
 
 ```python
-    # Landfall: land-to-battlefield ramp IS the payoff, so ramp runs far past the
-    # default band. Measured on tifa-lockhart (2026-08-17): ramp 19 with the deck
-    # exactly field-aligned — the flag was noise, not a finding.
-    "landfall": {"ramp": (9, 20)},
+    "landfall": {"ramp": (9, 19)},   # the MEASURED count — see the comment in the code
 ```
+
+**Corrected 2026-08-17 during implementation** (this spec originally said `(9, 20)` and
+described the flag as "noise"). Both were wrong, and the implementation proved it — see
+the amended acceptance criteria below. The ceiling must be the **measured** count: a swept
+comparison shows `hi=19` and `hi=20` unblock the *identical* six field-superior swaps and
+reach the *identical* 15/25 field overlap, but applied ramp equals the ceiling at every
+value 19–22, so a ceiling above the measured count is an **add licence, not a tolerance** —
+at 20 the optimizer spends the extra point converting a draw slot into a ramp slot
+(draw 10→8, the floor of its band, instead of 10→9).
 
 Rules you must not break (they are what the existing tests pin):
 - **Widen only.** Merged via `min(lo), max(hi)` — never narrow another entry.
@@ -111,11 +117,35 @@ python3 scripts/deck_stats.py --deck data/decks/tifa-lockhart.txt \
 
 python3 scripts/optimize.py --deck data/decks/tifa-lockhart.txt \
     --collection data/collection/collection_snapshot.txt
-# -> "template: widened by archetype (voltron landfall) -> ..." and
-#    "already aligned with the field — no changes" (idempotence must survive)
+# -> "template: widened by archetype (voltron landfall) -> ramp 9-19, removal 6-11, wipe 0-5"
 
 python3 -m pytest -q   # full suite green
 ```
+
+**AMENDED 2026-08-17 — the original "already aligned … (idempotence must survive)"
+criterion was unsatisfiable by construction and has been removed.** It asked for two
+mutually exclusive things: widen the band so ramp 19 stops reading "high", *and* have the
+optimizer propose nothing. One table feeds both surfaces (a test exists to guarantee
+exactly that), so widening the band necessarily un-deadlocks the optimizer's accept filter.
+
+The deck was never "aligned" — at ramp 19 against 9-13, every ramp-touching swap fell
+outside the template in both directions, so the filter rejected all of them and
+`optimize.py` printed "already aligned with the field" while the deck sat at 10/25 field
+overlap. **The replacement criterion:** the widening will unblock previously-filtered ramp
+swaps — enumerate them, decide explicitly, apply the decision, and confirm that a *second*
+run then reports "already aligned with the field — no changes". At `(9, 19)` that end state
+is: 100 cards, ramp 19, draw 9, removal 10, field top-25 15/25, second run clean.
+
+Consequently "edit the header line ONLY — do not improve the 99" no longer holds for this
+phase: the six swaps ARE Phase A's consequence, not a separate improvement, and leaving
+them unapplied only defers them to an unsupervised automatic run (CLAUDE.md lists four
+triggers). They were applied deliberately, validated, and logged in `.changes.csv`.
+
+**Follow-up worth its own spec (out of scope here):** `optimize.py` prints "already aligned
+with the field — no changes" whenever no swap survives the filter, *including* when the
+filter is deadlocked by an out-of-band role count. Any deck sitting outside a role band
+reads as aligned forever. A truthful message would name the gate: "no changes — N
+candidate(s) blocked by the <role> band (current X, template lo-hi)".
 
 Also open the deck dashboard (`build_dashboard.py`) once and confirm the role tile
 no longer flags ramp — `build_dashboard.py:1726` reads the same `role_ranges`, so

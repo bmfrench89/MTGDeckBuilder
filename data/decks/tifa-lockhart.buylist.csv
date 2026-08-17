@@ -1,23 +1,18 @@
 Card,Price,Tier,Replaces,Reason
-Harrow,2,Core,"Spider-Man, Brooklyn Visionary","76% field, the #1 nonland. Instant-speed: sac a land, fetch TWO onto the battlefield = two landfall triggers mid-combat."
-Cultivate,2,Core,Shared Roots,"72% field. Owned x2 but all copies committed to Ur-Dragon, Cloud and Cosmic Spider-Man."
-"Azusa, Lost but Seeking",12,Core,Burnished Hart,71% field. Two extra land drops per turn — the category the collection is emptiest in.
-Entish Restoration,4,Core,Grow from the Ashes,66% field. Land-to-battlefield ramp the field has converged on.
-Tifa's Limit Break,5,Core,Professional Wrestler,62% field. Her own signature card and the deck does not own it.
-Ride the Shoopuf,3,Core,They Went This Way,61% field.
-Traveling Chocobo,6,Core,Yavimaya Granger,60% field. Landfall payoff.
-Sword of the Animist,6,Core,Wayfarer's Bauble,"57% field. Attack trigger fetches a basic onto the battlefield — a landfall trigger every combat. Owned x2, both committed to Cloud and Bruce Banner."
-Kodama's Reach,1,Core,Vaultborn Tyrant,55% field.
-Explore,1,Core,Gilded Goose,55% field. Extra land drop plus a card for {1}{G}.
-Sakura-Tribe Elder,2,Core,Environmental Scientist,55% field. Owned x1 but already over-committed across three decks.
-Nature's Lore,3,Core,Changeling Wayfinder,"54% field. Untapped Forest onto the battlefield — triggers Tifa AND the Necklace. Owned x1, committed to three decks."
-Mightform Harmonizer,5,Core,Devil Dinosaur,53% field.
-Rampant Growth,1,Core,,"53% field. Owned x3, all committed."
-Ancient Greenwarden,20,Core,Cactarantula,52% field. Doubles every landfall trigger and replays lands from the yard.
+Harrow,2,Core,Vaultborn Tyrant,"76% field, the #1 nonland. Instant-speed: sac a land, fetch TWO onto the battlefield = two landfall triggers mid-combat."
+"Azusa, Lost but Seeking",12,Core,Blastoderm,71% field. Two extra land drops per turn — the category the collection is emptiest in.
+Entish Restoration,4,Core,Changeling Wayfinder,66% field. Land-to-battlefield ramp the field has converged on.
+Tifa's Limit Break,5,Core,Devil Dinosaur,62% field. Her own signature card and the deck does not own it.
+Ride the Shoopuf,3,Core,Beorn the Fierce,61% field.
+Traveling Chocobo,6,Core,Bloodforged Battle-Axe,60% field. Landfall payoff.
+Kodama's Reach,1,Core,Cactarantula,55% field.
+Explore,1,Core,Conqueror's Flail,55% field. Extra land drop plus a card for {1}{G}.
+Mightform Harmonizer,5,Core,,53% field.
+Ancient Greenwarden,20,Core,,52% field. Doubles every landfall trigger and replays lands from the yard.
 Hardened Scales,6,Value,Multani's Presence,"Field has no opinion (0%), but the Necklace puts 2 counters instead of 1 on every green spell. Engine read over field read."
 Branching Evolution,10,Value,Wild Might,Same reasoning as Hardened Scales — doubles every counter the Necklace makes.
 Traverse the Outlands,8,Value,Scout the City,"Only 15% field despite the article hype — X basic lands where X is your greatest power, so it compounds with the doubling. Real, but not the staple it is talked up as."
-Rampaging Baloths,3,Value,Blastoderm,37% field. Landfall payoff that builds a board instead of one creature.
+Rampaging Baloths,3,Value,,37% field. Landfall payoff that builds a board instead of one creature.
 The Ozolith,15,Value,,Counters survive Tifa dying and move to the next creature. Answers the deck's fragility.
 Craterhoof Behemoth,35,Value,Mistmeadow Council,A win-con that does not route through the commander.
 Berserk,45,Value,Invigorate,Doubles power and grants trample at instant speed — stacks with Tifa's own doubling.
