@@ -5,6 +5,11 @@ surfaced as proposals) · not started · implementer: the next Claude session �
 this document exactly; where it conflicts with the code you find, STOP and say so
 rather than improvising.
 
+Line numbers cited below are anchors **as of `main` = `e9dc44f`** — `main` moves
+constantly (the deck-verify Action and the hosted app's sync both push), so resolve
+every reference by the named symbol/route, and treat a drifted line number as
+expected, not as a conflict.
+
 Two independent workstreams, shippable as two PRs or one. Phase A is a data-table
 change with tests; Phase B is a small full-stack feature. Neither invents anything:
 A extends an existing table by one row, B ports an existing control to the one
@@ -152,22 +157,23 @@ depending on `deckcore` is the architecture working as designed. Do NOT put the
 all-decks list here — deck enumeration is a webapp concern (next change), and
 `card_api` stays deck-agnostic.
 
-### Change 2 — route additions (`webapp/app.py`)
+### Change 2 — route addition (`webapp/app.py`)
 
-1. `api_card` (~line 1629): after building the payload, add
-   `payload["all_decks"] = sorted(<stems of decks in DECKS_DIR>)` — reuse however
-   the app already enumerates stems (see `pins_page`, ~1080, which builds a `decks`
-   list for exactly this picker); do not write a second glob if a helper exists.
-2. `pins_move` (~line 1111): keep the redirect behaviour for the `/pins` page
-   untouched, but return JSON when the caller asks for it:
+`pins_move` (~line 1111) only. Keep the redirect behaviour for the `/pins` page
+untouched, but return JSON when the caller asks for it — **and skip the `flash()`
+calls on that path**, or the queued message pops as a stale toast on whatever full
+page the player loads next:
 
 ```python
-    if request.form.get("json"):
+    wants_json = bool(request.form.get("json"))
+    # ... perform the pop / assignment as today, but only flash() when not wants_json
+    if wants_json:
         return jsonify({"ok": True, "pinned": pins.get(k)})
 ```
 
-   placed before the `redirect(...)`. The panel will POST with `json=1`.
-   (Note `pins.pop`/`pins[k] =` already ran; `pinned` reflects the new state.)
+The panel will POST with `json=1`. (`pins.pop`/`pins[k] =` already ran; `pinned`
+reflects the new state.) Do NOT add an `all_decks` payload or enumerate decks in
+`api_card` — see Change 3 for why the existing payload already suffices.
 
 ### Change 3 — the panel itself
 
@@ -184,15 +190,35 @@ layout reads naturally):
 ```
 
 `webapp/static/cardpanel.js`, where the `/api/card/` payload is applied:
-- If `payload.all_decks` is empty → keep the block hidden.
-- Populate the select with `— not pinned —` (value `none`) + every stem; preselect
-  `payload.pinned` or `none`. Set the state text: `Pinned to <stem> — other decks
-  treat this copy as spoken for` / `Not pinned — freely shared`.
+- **The picker is sourced from `payload.decks`** — the stems that actually RUN the
+  card, which `card_payload` already returns via `_decks_using` (that is why
+  Change 2 adds no `all_decks`). If `payload.decks` is empty → keep the whole
+  block hidden: a pin on a card no deck runs is definitionally the "stale" state
+  the `/pins` page exists to flag, so the panel must not offer to create one.
+  (The `/pins` page itself still allows arbitrary moves; that stays the escape
+  hatch for pre-building.)
+- Populate the select with `— not pinned —` (value `none`) + each stem from
+  `payload.decks`; preselect `payload.pinned` or `none`. Edge case: if
+  `payload.pinned` names a deck NOT in `payload.decks` (an existing stale pin),
+  show the block anyway with that stem in the list, labeled `(stale)` — the player
+  must be able to see and release a stale pin from here, not only from `/pins`.
+- Set the state text: `Pinned to <stem> — other decks treat this copy as spoken
+  for` / `Not pinned — freely shared`.
 - On click: `fetch('/pins/move', {method:'POST', body: FormData(card=<name>,
   deck=<selected>, json=1)})`, then re-fetch the card payload and re-render, so
   the state text confirms what the server actually stored.
+- **Handle the auth gate.** The whole app sits behind the shared-password session
+  (`_require_login`, spec-auth-gate.md); an expired session answers this fetch
+  with a redirect to the login page — HTML, not JSON. If the response is not JSON
+  (or not `ok:true`), show a visible "session expired — reload and log in" state
+  on the button; never fail silently.
 - Card name: use the exact name the panel was opened with (the `data-card` value)
   — `/pins/move` norms it server-side via `mtglib._norm`; do not pre-normalize in JS.
+
+Deployment note, for confidence rather than action: `data/collection/pins.csv` is
+**tracked**, and the hosted app's sync pushes pin changes back to git (commit
+`343dfb5` removed a deleted deck's pin exactly this way) — so pins made through
+this panel on the hosted app round-trip into the repo with no extra work.
 
 Styling: use existing tokens/classes from `tokens.css` and the panel's own CSS —
 **no ad-hoc font sizes or spacing values** (`test_design_tokens` will fail you).
@@ -210,11 +236,15 @@ fit), covering at minimum:
    CSV pinning a card, assert the payload's `pinned` equals that stem, and equals
    `None` for an unpinned card. (`load_pins` reads `deckcore.PINS` at call time
    specifically so tests can do this — see the comment at `deckcore.py:202`.)
-2. `/api/card/<name>` response includes `pinned` and sorted `all_decks`.
+2. `/api/card/<name>` response includes `pinned` (and the pre-existing `decks`
+   list the picker sources from — assert it survives, since the picker now
+   depends on it).
 3. `POST /pins/move` with `json=1` returns `{"ok": true, "pinned": <stem>}` on
-   pin, `{"ok": true, "pinned": null}` on release (`deck=none`), and the pins CSV
-   on disk reflects it. Without `json` it still redirects (the `/pins` page
-   contract, already covered by existing tests — do not break them).
+   pin, `{"ok": true, "pinned": null}` on release (`deck=none`), the pins CSV
+   on disk reflects it, and **no flash message is queued** (assert the session's
+   `_flashes` is empty / the next page render carries no toast). Without `json`
+   it still redirects AND still flashes (the `/pins` page contract, already
+   covered by existing tests — do not break them).
 4. `_cardpanel.html` contains the `cp-pin` ids (a cheap render/string test in the
    style of the existing template tests), so the control can't be silently lost.
 
