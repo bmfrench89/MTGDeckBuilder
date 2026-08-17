@@ -1,72 +1,72 @@
-Name,Type,MV,Colors,Produced,Flags,Power
-Tifa Lockhart,Creature,2,G,,,1
-Gilded Goose,Creature,1,G,W U B R G,dork;ramp,0
-Priest of Titania,Creature,2,G,G,dork;ramp,1
-Great Forest Druid,Creature,2,G,W U B R G,dork;ramp,0
-Silverglade Pathfinder,Creature,2,G,,fetch:basic;ramp,1
-Environmental Scientist,Creature,2,G,,fetch:basic,2
-Wood Elves,Creature,3,G,,fetch:forest;ramp,1
-Yavimaya Granger,Creature,3,G,,fetch:basic;ramp,2
-Burnished Hart,Creature,3,,,fetch:basic;ramp,2
-Changeling Wayfinder,Creature,3,,,fetch:basic,1
-Blastoderm,Creature,4,G,,,5
-Professional Wrestler,Creature,4,G,W U B R G,dork;ramp,4
-Devil Dinosaur,Creature,4,G,,,5
-Beorn the Fierce,Creature,5,G,,draw,6
-"Spider-Man, Brooklyn Visionary",Creature,5,G,,fetch:basic;ramp,4
-Baloth Woodcrasher,Creature,6,G,,,4
-Cactarantula,Creature,6,G,,draw,6
-Mistmeadow Council,Creature,5,G,,draw,4
-Vaultborn Tyrant,Creature,7,G,,draw,6
-Crop Rotation,Instant,1,G,,fetch:land;ramp,
-Giant Growth,Instant,1,G,,,
-Wild Might,Instant,2,G,,,
-Glorious Decay,Instant,2,G,,draw;removal,
-Invigorate,Instant,3,G,,,
-Constant Mists,Instant,2,G,,,
-Broken Wings,Instant,3,G,,removal,
-Break Down,Instant,3,G,,removal,
-Airship Crash,Instant,3,G,,draw;removal,
-Origin of Metalbending,Instant,2,G,,removal,
-Snakeskin Veil,Instant,1,G,,,
-Heroic Intervention,Instant,2,G,,,
-Beast Within,Instant,3,G,,removal,
-Land Grant,Sorcery,2,G,,fetch:forest,
-Shared Roots,Sorcery,2,G,,fetch:basic;ramp,
-Plow Through,Sorcery,1,G,,removal,
-Scout the City,Sorcery,2,G,,removal,
-Pick Your Poison,Sorcery,1,G,,,
-Grow from the Ashes,Sorcery,3,G,,fetch:basic;ramp,
-They Went This Way,Sorcery,3,G,,draw;fetch:basic;ramp,
-It's Clobberin' Time!,Sorcery,3,G,,removal,
-Sol Ring,Artifact,1,,C,mana2;ramp;rock,
-Wayfarer's Bauble,Artifact,1,,,fetch:basic;ramp,
-Adventuring Gear,Artifact,1,,,,
-Explorer's Scope,Artifact,1,,,,
-Bloodforged Battle-Axe,Artifact,1,,,,
-Arcane Signet,Artifact,2,,W U B R G,ramp;rock,
-Hero's Blade,Artifact,2,,,,
-Hero's Heirloom,Artifact,2,,,,
-Conqueror's Flail,Artifact,2,,,,
-Necklace of Girion,Artifact,3,G,G,ramp;rock,
-Horn of Greed,Artifact,3,,,draw,
-Champion's Helm,Artifact,3,,,,
-Brass Knuckles,Artifact,4,,,,
-Masterwork of Ingenuity,Artifact,1,,,,
-Phyrexian Vault,Artifact,3,,,draw,
-Swiftfoot Boots,Artifact,2,,,,
-Wild Growth,Enchantment,1,G,G,,
-Rancor,Enchantment,1,G,,,
-Fertile Ground,Enchantment,2,G,W U B R G,,
-Treetop Bracers,Enchantment,2,G,,,
-Multani's Presence,Enchantment,1,G,,draw,
-Feral Appetite,Enchantment,3,G,,removal,
-Terrain Generator,Land,0,,C,,
-Terramorphic Expanse,Land,0,,,fetch:basic;ramp,
-Myriad Landscape,Land,0,,C,etb-tapped;fetch:basic;ramp,
-Evolving Wilds,Land,0,,,fetch:basic;ramp,
-Hobbit Hole,Land,0,,,fetch:basic;ramp,
-Vibrant Cityscape,Land,0,,,fetch:basic;ramp,
-Rogue's Passage,Land,0,,C,,
-Fabled Passage,Land,0,,,fetch:basic;ramp,
-Forest,Land,0,G,G,,
+Name,Type,MV,Colors,Produced,Flags,Power,FlagsVer
+Tifa Lockhart,Creature,2,G,,,1,2
+Gilded Goose,Creature,1,G,W U B R G,dork;ramp,0,2
+Priest of Titania,Creature,2,G,G,dork;ramp,1,2
+Great Forest Druid,Creature,2,G,W U B R G,dork;ramp,0,2
+Silverglade Pathfinder,Creature,2,G,,fetch:basic;ramp,1,2
+Environmental Scientist,Creature,2,G,,fetch:basic,2,2
+Wood Elves,Creature,3,G,,fetch:forest;ramp,1,2
+Yavimaya Granger,Creature,3,G,,fetch:basic;ramp,2,2
+Burnished Hart,Creature,3,,,fetch:basic;ramp,2,2
+Changeling Wayfinder,Creature,3,,,fetch:basic,1,2
+Blastoderm,Creature,4,G,,,5,2
+Professional Wrestler,Creature,4,G,W U B R G,dork;ramp,4,2
+Devil Dinosaur,Creature,4,G,,,5,2
+Beorn the Fierce,Creature,5,G,,draw,6,2
+"Spider-Man, Brooklyn Visionary",Creature,5,G,,fetch:basic;ramp,4,2
+Baloth Woodcrasher,Creature,6,G,,,4,2
+Cactarantula,Creature,6,G,,draw,6,2
+Mistmeadow Council,Creature,5,G,,draw,4,2
+Vaultborn Tyrant,Creature,7,G,,draw,6,2
+Crop Rotation,Instant,1,G,,fetch:land;ramp,,2
+Giant Growth,Instant,1,G,,,,2
+Wild Might,Instant,2,G,,,,2
+Glorious Decay,Instant,2,G,,draw;removal,,2
+Invigorate,Instant,3,G,,,,2
+Constant Mists,Instant,2,G,,,,2
+Broken Wings,Instant,3,G,,removal,,2
+Break Down,Instant,3,G,,removal,,2
+Airship Crash,Instant,3,G,,draw;removal,,2
+Origin of Metalbending,Instant,2,G,,removal,,2
+Snakeskin Veil,Instant,1,G,,,,2
+Heroic Intervention,Instant,2,G,,,,2
+Beast Within,Instant,3,G,,removal,,2
+Land Grant,Sorcery,2,G,,fetch:forest,,2
+Shared Roots,Sorcery,2,G,,fetch:basic;ramp,,2
+Plow Through,Sorcery,1,G,,removal,,2
+Scout the City,Sorcery,2,G,,removal,,2
+Pick Your Poison,Sorcery,1,G,,,,2
+Grow from the Ashes,Sorcery,3,G,,fetch:basic;ramp,,2
+They Went This Way,Sorcery,3,G,,draw;fetch:basic;ramp,,2
+It's Clobberin' Time!,Sorcery,3,G,,removal,,2
+Sol Ring,Artifact,1,,C,mana2;ramp;rock,,2
+Wayfarer's Bauble,Artifact,1,,,fetch:basic;ramp,,2
+Adventuring Gear,Artifact,1,,,,,2
+Explorer's Scope,Artifact,1,,,,,2
+Bloodforged Battle-Axe,Artifact,1,,,,,2
+Arcane Signet,Artifact,2,,W U B R G,ramp;rock,,2
+Hero's Blade,Artifact,2,,,,,2
+Hero's Heirloom,Artifact,2,,,,,2
+Conqueror's Flail,Artifact,2,,,,,2
+Necklace of Girion,Artifact,3,G,G,ramp;rock,,2
+Horn of Greed,Artifact,3,,,draw,,2
+Champion's Helm,Artifact,3,,,,,2
+Brass Knuckles,Artifact,4,,,,,2
+Masterwork of Ingenuity,Artifact,1,,,,,2
+Phyrexian Vault,Artifact,3,,,draw,,2
+Swiftfoot Boots,Artifact,2,,,,,2
+Wild Growth,Enchantment,1,G,G,,,2
+Rancor,Enchantment,1,G,,,,2
+Fertile Ground,Enchantment,2,G,W U B R G,,,2
+Treetop Bracers,Enchantment,2,G,,,,2
+Multani's Presence,Enchantment,1,G,,draw,,2
+Feral Appetite,Enchantment,3,G,,removal,,2
+Terrain Generator,Land,0,,C,,,2
+Terramorphic Expanse,Land,0,,,fetch:basic;ramp,,2
+Myriad Landscape,Land,0,,C,etb-tapped;fetch:basic;ramp,,2
+Evolving Wilds,Land,0,,,fetch:basic;ramp,,2
+Hobbit Hole,Land,0,,,fetch:basic;ramp,,2
+Vibrant Cityscape,Land,0,,,fetch:basic;ramp,,2
+Rogue's Passage,Land,0,,C,,,2
+Fabled Passage,Land,0,,,fetch:basic;ramp,,2
+Forest,Land,0,G,G,,,2
