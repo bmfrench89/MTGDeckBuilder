@@ -6,6 +6,8 @@
 # Source: hand-built 2026-08-17
 # Note: Power doubling is multiplicative — raise Tifa's PERMANENT base power, then
 # Note: double it. Necklace of Girion is the engine: order its counter BEFORE the double.
+# Note: ramp runs deliberately long (19 vs the voltron template's 9-13) because
+# Note: land-to-battlefield ramp IS this deck's payoff, not just acceleration.
 
 # --- Commander ---
 1 Tifa Lockhart
@@ -27,8 +29,6 @@
 1 Beorn the Fierce
 1 Spider-Man, Brooklyn Visionary
 1 Baloth Woodcrasher
-1 Balamb T-Rexaur
-1 Saber-Tooth Moose-Lion
 1 Cactarantula
 1 Savage Land Dinosaur
 1 Terrian, World Tyrant
@@ -70,8 +70,8 @@
 1 Necklace of Girion
 1 Horn of Greed
 1 Champion's Helm
-1 Worn Powerstone
-1 Hedron Archive
+1 Brass Knuckles
+1 Masterwork of Ingenuity
 1 Phyrexian Vault
 
 # --- Enchantments ---
@@ -94,4 +94,4 @@
 1 High Market
 
 # --- Basics ---
-28 Forest
+30 Forest

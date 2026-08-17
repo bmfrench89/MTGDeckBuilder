@@ -23,9 +23,17 @@ Current stable: `bruce-banner-incredible-hulk`, `captain-america-team-leader`,
 ### tifa-lockhart — "Doubling Down" (mono-G landfall voltron, Bracket 3, power 65/100)
 
 Built 2026-08-17 from the name-only snapshot + `collection_attrs.snapshot.csv`.
-100 cards, 36 lands, singleton-clean, no color-identity violations.
-Goldfish (3,000 games): commander on board T2 86% / T3 96%, keepable 80%, screw 16%,
+100 cards, 38 lands (30 Forest), singleton-clean, no color-identity violations.
+Goldfish (3,000 games): commander on board T2 86% / T3 97%, keepable 83%, screw 13%,
 flood 0%. Green sources 29 vs Karsten target 23.
+
+**Card text WAS verified** — via `WebSearch` against Scryfall/Gatherer, which reaches
+the network even though `api.scryfall.com` and `json.edhrec.com` are 403 at this
+sandbox's gateway (`carddb.py --verify` and `edhrec.py` both fail here;
+`edhrec.com`/`gatherer.wizards.com` are also blocked for `WebFetch`, but WebSearch
+result snippets are not). That fallback is documented in
+`references/tooling-and-data.md` and is a required step of the sleeper audit — the
+first pass of this build skipped it and shipped three wrong claims.
 
 **The build thesis, and it is worth not re-deriving:** Tifa's landfall **doubles** her
 power rather than adding to it, so the deck maximizes *permanent base power* first and
@@ -34,20 +42,34 @@ permanent and its trigger and Tifa's landfall trigger go on the stack together, 
 order the Necklace counter to resolve **first** and the doubling then applies to the
 bigger number. Getting that order backwards halves the damage.
 
-**Two caveats a future session must not paper over:**
-- The collection contains **zero extra-land-drop effects** (no Azusa / Exploration /
-  Burgeoning / Wayward Swordtooth / Ancient Greenwarden) and **zero +1/+1 counter
-  payoffs** (no Hardened Scales / Branching Evolution / Doubling Season / The Ozolith).
-  This is a voltron deck wearing a landfall coat, not a landfall deck. The buylist is
-  ordered accordingly.
-- **The build session had no Scryfall and no EDHREC** (both 403 at the sandbox gateway),
-  so: oracle text for the post-2025 cards in the 99 was NOT verified — those cards were
-  selected on `collection_attrs.snapshot.csv` evidence (type / MV / colour identity /
-  oracle-derived `Flags` such as `fetch:forest`), not recalled text — and
-  `optimize.py` reported **0 field cards**, so the deck has **never been scored against
-  the field**. Both are the automation loop's job post-merge: the field-snapshot Action
-  and the hosted app's re-enrich + re-score. Treat the top-25 overlap as UNKNOWN, not
-  as passing, until that runs.
+**`fetch:forest` DOES NOT MEAN LANDFALL — the trap this build fell into.** The flag is
+oracle-derived but does not distinguish *search to hand* from *search to battlefield*.
+Verified 2026-08-17: **Saber-Tooth Moose-Lion** (`{4}{G}{G}` 7/7 reach) and **Balamb
+T-Rexaur** (`{4}{G}{G}` 6/6 trample) both carry **Forest*cycling* {2}** — Forest to
+**hand**. Neither triggers landfall or the Necklace. Both were in the first draft of the
+99 and named in the notes as protected engine pieces; both are now cut. **Land Grant** is
+the same shape and stays only as a land-drop enabler. Of the four `fetch:forest` cards in
+the pool, **only Wood Elves** actually puts the Forest onto the battlefield. Count the
+targets before crediting an ability (card-review-method §3).
+
+**Caveats a future session must not paper over:**
+- **Almost no extra-land-drop effects.** Corrected from the first draft's "zero":
+  **Terrain Generator** is one — verified that its `{2}, {T}` basic-land drop does *not*
+  use your land play. It is the only one owned. Still zero Azusa / Exploration /
+  Burgeoning / Wayward Swordtooth / Ancient Greenwarden, and **zero +1/+1 counter
+  payoffs**. This is a voltron deck wearing a landfall coat. The buylist is ordered
+  accordingly, headed by **Traverse the Outlands** (X = greatest power, so it compounds
+  with the doubling — the community's headline Tifa card, unowned).
+- **Ramp is 19 against the voltron template's 9–13, deliberately.** Land-to-battlefield
+  ramp is this deck's payoff, so `deck_stats`' "high" flag is expected. **Proposed, not
+  shipped:** a `landfall` entry in `deckcore._ARCHETYPE_ROLE_RANGE` (same rationale as the
+  existing `control` and `artifacts` widenings). It was left unshipped on purpose —
+  widening a shared template to silence a warning about one deck should be ratified
+  first, not slipped in by the session that benefits from it.
+- **EDHREC is still unreachable**, so `optimize.py` reports **0 field cards** and there is
+  no `data/reference/field/tifa-lockhart.json`. The deck has **never been scored against
+  the field** — treat top-25 overlap as UNKNOWN, not as passing. The field-snapshot Action
+  and the hosted app's re-score close this post-merge.
 
 `Tifa, Martial Artist` is also owned ×1 and is a *different card* — it is not in this
 deck and has not been evaluated.
