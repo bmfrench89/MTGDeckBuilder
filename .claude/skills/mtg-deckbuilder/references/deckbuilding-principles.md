@@ -47,6 +47,11 @@ against the deck's OWN archetype band, not the blind default.
 5. Utility lands (High Market, Bojuka Bog, Rogue's Passage) earn slots but each one that makes
    colorless-only mana is a small tax on your colored consistency — don't overload.
 6. `deck_stats.py` prints pip demand and source counts. Use it; don't eyeball.
+7. **Basics are free and unlimited — size the manabase to the deck, never to the export.**
+   The player owns hundreds of every basic and does not track them (grounding rule #9), so
+   "we only have 16 Forests recorded" is never a reason to run fewer. Fill the remaining
+   land slots with whatever basics the pip demand calls for; the ownership check exempts
+   them, so a full manabase reports clean.
 
 ## Roles, defined
 

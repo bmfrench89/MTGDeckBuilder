@@ -63,3 +63,22 @@ wants to see the overlap, not be denied. Track it, mark it, and let them decide.
   `--available` (owned minus committed elsewhere) for when the player *wants* disjoint decks.
 - If the player says they own something missing from the export, add it to
   `data/collection/owned_additions.txt` — their word outranks the export (rule #6).
+
+## 9. Basic lands are ALWAYS owned — never a buy, never a shortfall
+**Player-ratified 2026-08-17.** The player owns hundreds of every basic and has decided
+not to track them in the collection export. Treat the supply as unlimited:
+
+- **Any** quantity of `Forest` / `Island` / `Swamp` / `Mountain` / `Plains` / `Wastes` —
+  and their Snow-Covered printings — in a decklist is satisfied. A deck running 30 Forests
+  is fully built even if the snapshot shows 16.
+- **Never** put a basic on a buy list, a wishlist, a `.buylist.csv`, or an "you don't own
+  enough copies" report. "Go buy 14 Forests" is noise, not advice.
+- **Never** size a manabase down, or call a deck incomplete, because the snapshot's basic
+  count looks small. That number is an artifact of the export, not a limit. Basics are
+  likewise exempt from cross-deck conflicts — two decks can each run 30 Forests.
+- The one legitimate basics line is **physical**: "pull 30 Forests from your bulk before
+  you sleeve this." That is a task, not a purchase.
+
+The tooling agrees: `deck_conflicts`, `optimize` and `deck_stats.owned_enough()` all
+exempt basics via `mtglib.is_basic` (name-based, so it holds on a name-only snapshot and
+covers Snow-Covered printings). Guarded by `tests/test_basics_unlimited.py`.

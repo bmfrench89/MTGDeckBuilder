@@ -6,7 +6,108 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-16._
+_Last updated: 2026-08-17._
+
+## Basic lands are always owned (player-ratified 2026-08-17)
+
+The player owns hundreds of every basic and **will not** add them to the collection
+export. Treat the supply as unlimited: any basic count in a decklist is satisfied, basics
+never go on a buy list or an ownership-gap report, and a manabase is never sized to the
+snapshot's recorded count. Canonical statement lives in
+`.claude/skills/mtg-deckbuilder/references/grounding-rules.md` **#9**, echoed in
+`CLAUDE.md`, `SKILL.md`, `deckbuilding-principles.md`, `data/collection/README.md` and
+`docs/collection-formats.md`.
+
+**The tooling now agrees (fixed 2026-08-17).** `deck_stats.owned_enough()` was the last
+holdout — it had no basics guard, so a 30-Forest manabase printed
+`Forest: deck wants 30, you own 16` under "Ownership check" and `build_dashboard`'s
+`ownership_block` rendered the same row under **Buy-list candidates**. It now skips
+`mtglib.is_basic` names like `deck_conflicts` and `optimize` always did.
+`tests/test_basics_unlimited.py` covers the function, the rendered dashboard block, all
+six basics plus Snow-Covered printings, and asserts the exemption stays surgical (a real
+shortfall on a non-basic still reports). Verified to fail without the guard.
+
+## The deck stable is EIGHT decks (2026-08-17)
+
+The player **dismantled Smaug, Wicked Worm and Doctor Doom** physically, so
+`data/decks/smaug-wicked-worm.*` and `data/decks/doctor-doom.*` were deleted (recoverable
+from git history; no pins referenced either). That freed their copies back into the pool —
+which is why the Tifa build below could claim cards the earlier conflict scans showed as
+committed.
+
+Current stable: `bruce-banner-incredible-hulk`, `captain-america-team-leader`,
+`cloud-ex-soldier`, `cosmic-spider-man`, `kaalia-of-the-vast`, `the-ur-dragon`,
+`yshtola-nights-blessed`, **`tifa-lockhart`** (new).
+
+### tifa-lockhart — "Doubling Down" (mono-G landfall voltron, Bracket 3, power 65/100)
+
+Built 2026-08-17 from the name-only snapshot + `collection_attrs.snapshot.csv`.
+100 cards, 38 lands (30 Forest), singleton-clean, no color-identity violations.
+Goldfish (3,000 games): commander on board T2 86% / T3 97%, keepable 83%, screw 13%,
+flood 0%. Green sources 29 vs Karsten target 23.
+
+**Card text WAS verified** — via `WebSearch` against Scryfall/Gatherer, which reaches
+the network even though `api.scryfall.com` and `json.edhrec.com` are 403 at this
+sandbox's gateway (`carddb.py --verify` and `edhrec.py` both fail here;
+`edhrec.com`/`gatherer.wizards.com` are also blocked for `WebFetch`, but WebSearch
+result snippets are not). That fallback is documented in
+`references/tooling-and-data.md` and is a required step of the sleeper audit — the
+first pass of this build skipped it and shipped three wrong claims.
+
+**The build thesis, and it is worth not re-deriving:** Tifa's landfall **doubles** her
+power rather than adding to it, so the deck maximizes *permanent base power* first and
+treats land drops as the multiplier. Necklace of Girion is the engine — its counters are
+permanent and its trigger and Tifa's landfall trigger go on the stack together, so you
+order the Necklace counter to resolve **first** and the doubling then applies to the
+bigger number. Getting that order backwards halves the damage.
+
+**`fetch:forest` DOES NOT MEAN LANDFALL — the trap this build fell into.** The flag is
+oracle-derived but does not distinguish *search to hand* from *search to battlefield*.
+Verified 2026-08-17: **Saber-Tooth Moose-Lion** (`{4}{G}{G}` 7/7 reach) and **Balamb
+T-Rexaur** (`{4}{G}{G}` 6/6 trample) both carry **Forest*cycling* {2}** — Forest to
+**hand**. Neither triggers landfall or the Necklace. Both were in the first draft of the
+99 and named in the notes as protected engine pieces; both are now cut. **Land Grant** is
+the same shape and stays only as a land-drop enabler. Of the four `fetch:forest` cards in
+the pool, **only Wood Elves** actually puts the Forest onto the battlefield. Count the
+targets before crediting an ability (card-review-method §3).
+
+**Caveats a future session must not paper over:**
+- **Almost no extra-land-drop effects.** Corrected from the first draft's "zero":
+  **Terrain Generator** is one — verified that its `{2}, {T}` basic-land drop does *not*
+  use your land play. It is the only one owned. Still zero Azusa / Exploration /
+  Burgeoning / Wayward Swordtooth / Ancient Greenwarden, and **zero +1/+1 counter
+  payoffs**. This is a voltron deck wearing a landfall coat. The buylist is ordered
+  accordingly, headed by **Traverse the Outlands** (X = greatest power, so it compounds
+  with the doubling — the community's headline Tifa card, unowned).
+- **Ramp is 19 against the voltron template's 9–13, deliberately.** Land-to-battlefield
+  ramp is this deck's payoff, so `deck_stats`' "high" flag is expected. **Proposed, not
+  shipped:** a `landfall` entry in `deckcore._ARCHETYPE_ROLE_RANGE` (same rationale as the
+  existing `control` and `artifacts` widenings). It was left unshipped on purpose —
+  widening a shared template to silence a warning about one deck should be ratified
+  first, not slipped in by the session that benefits from it.
+- **Field top-25 overlap is 4/25 = 16%**, far under CLAUDE.md's ~50% "say so rather than
+  ship quietly" line. Saying so. The snapshot arrived mid-session — the deck-verify Action
+  (run `31992248480`) pushed `data/reference/field/tifa-lockhart.json`, 291 cards, onto the
+  branch while this work was in progress, so the deck HAS now been scored. **The 16% is
+  structural, not a build error:** of the field's top 25, **11 are locked in other decks**
+  (bruce-banner 10, cosmic-spider-man 6) and **10 are unowned**. Only 4 were available and
+  all 4 are in the deck. The optimizer says it outright: *"this deck can't improve from your
+  collection: buy the gaps, or free copies from the deck(s) above."* Every top-25 miss is
+  now a `.buylist.csv` row carrying its real field %.
+- **The optimizer's proposed swaps were NOT applied.** All four (Swiftfoot Boots 67%,
+  Snakeskin Veil 64%, Heroic Intervention 53%, Beast Within 53%) and all three land swaps
+  are `[shared]` — every copy is committed to another deck, so applying would silently
+  break Bruce Banner and Cosmic Spider-Man to feed this one. Grounding rule 8 says surface,
+  don't block; card-review-method §7 says present before applying. Both point the same way:
+  they are buylist rows and a player decision, not an automated write.
+- **Field %s that corrected this session's own claims:** `Traverse the Outlands` is **15%**,
+  not the headline card an article made it sound like; `Adventuring Gear` **51%** and
+  `Crop Rotation` **49%** are the deck's genuinely field-endorsed picks; `Horn of Greed`
+  **12%**, `Wood Elves` **10%**, `Explorer's Scope` **8%** are engine-read holds, not
+  field-backed ones.
+
+`Tifa, Martial Artist` is also owned ×1 and is a *different card* — it is not in this
+deck and has not been evaluated.
 
 ## Double-faced cards never enriched (FIXING 2026-08-16, `docs/spec-dfc-enrichment.md`)
 
@@ -508,7 +609,8 @@ cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
   green; Sindarin Liege x2 is the auto-include second legendary Elf);
   **Kaalia of the Vast** (~$40-60 payload — big A/D/D + reanimation; do NOT
   dismantle ur-dragon, she stays in its 99 meanwhile); **Tifa Lockhart**
-  (~$15-30 + ~20 basic Forests; the fetch-land instant-speed doubling core is
+  (~$15-30; basics are free and untracked — grounding rule #9 — so the old
+  "+ ~20 basic Forests" line here was never a real cost; the fetch-land instant-speed doubling core is
   already owned; sandbox auto_build saw her as colorless — enrich first);
   **Thorin, Mountain-king** (mono-R equipment voltron, NOT dwarf tribal; the
   good equipment is committed to cloud; buying Thorin King of Durin's Folk

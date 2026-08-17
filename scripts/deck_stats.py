@@ -63,9 +63,22 @@ def analyze(deck_cards, coll_index):
 
 
 def owned_enough(deck_cards, coll_index):
-    """Cards where deck quantity exceeds owned copies (or not owned at all)."""
+    """Cards where deck quantity exceeds owned copies (or not owned at all).
+
+    **Basics are exempt** (grounding rule #9, player-ratified 2026-08-17): the player
+    owns hundreds of every basic and deliberately does not track them in the export, so
+    a recorded count is an artifact of the file, never a ceiling. Without this guard a
+    30-Forest manabase read as "Forest: deck wants 30, you own 16" and the dashboard
+    printed it under **Buy-list candidates** — telling the player to go buy Forests,
+    which is the one purchase this project should never suggest.
+
+    `mtglib.is_basic` is the repo-wide test and is name-based on purpose, so the
+    exemption holds on a name-only snapshot and covers Snow-Covered printings.
+    `deck_conflicts` and `optimize` already honoured it; this was the last holdout."""
     problems = []
     for d in deck_cards:
+        if mtglib.is_basic(d.name):
+            continue
         ref = mtglib.lookup(coll_index, d.name)
         owned = ref.quantity if ref else 0
         if owned < d.quantity:
