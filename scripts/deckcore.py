@@ -285,6 +285,10 @@ _ARCHETYPE_ROLE_RANGE = {
     "tokens": {"wipe": (0, 5)},
     "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
     "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
+    # Landfall: land-to-battlefield ramp IS the payoff, so ramp runs far past the
+    # default band. Measured on tifa-lockhart (2026-08-17): ramp 19 with the deck
+    # exactly field-aligned — the flag was noise, not a finding.
+    "landfall": {"ramp": (9, 20)},
 }
 
 

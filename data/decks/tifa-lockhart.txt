@@ -1,7 +1,7 @@
 # Title: Tifa Lockhart — Doubling Down
 # Commander: Tifa Lockhart
 # Colors: G
-# Archetype: voltron
+# Archetype: voltron landfall
 # Theme: landfall-voltron
 # Source: hand-built 2026-08-17
 # Note: Power doubling is multiplicative — raise Tifa's PERMANENT base power, then

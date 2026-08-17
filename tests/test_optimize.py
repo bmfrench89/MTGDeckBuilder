@@ -908,6 +908,45 @@ def test_a_control_deck_running_fifteen_counterspells_is_not_over_budget():
         assert rlo <= dlo and rhi >= dhi
 
 
+def test_a_landfall_deck_running_nineteen_ramp_is_not_over_budget():
+    """tifa-lockhart: `# Archetype: voltron landfall`, ramp 19 while sitting exactly
+    field-aligned (optimizer says "already aligned"). Against the blind template that
+    is six excess ramp sources; in a lands-matter deck the land-to-battlefield ramp IS
+    the payoff, so the flag was noise. Same shape as the iron-man case above."""
+    lo, hi = optimize.ROLE_RANGE["ramp"]
+    assert not (lo <= 19 <= hi), "the default template is what called 19 ramp excess"
+    ranges = optimize.role_ranges(["landfall"])
+    lo, hi = ranges["ramp"]
+    assert lo <= 19 <= hi
+    # ONE role only — landfall says nothing about draw/removal/wipe/counter, and a
+    # word must never widen what was not measured.
+    for role in ("draw", "removal", "wipe", "counter"):
+        assert ranges[role] == optimize.ROLE_RANGE[role], (
+            f"landfall must not touch {role}")
+
+
+def test_voltron_and_landfall_stack_without_narrowing_either():
+    """The real header on tifa-lockhart carries both words. Merging is min(lo)/max(hi),
+    so the deck gets voltron's removal/wipe bands AND landfall's ramp band, and no
+    range may come out stricter than the default."""
+    ranges = optimize.role_ranges(["voltron", "landfall"])
+    assert ranges["ramp"] == (9, 20)
+    assert ranges["removal"] == (6, 11)
+    assert ranges["wipe"] == (0, 5)
+    for role, (dlo, dhi) in optimize.ROLE_RANGE.items():
+        rlo, rhi = ranges[role]
+        assert rlo <= dlo and rhi >= dhi, f"{role} came out stricter than the default"
+    # order must not matter — merging is commutative
+    assert optimize.role_ranges(["landfall", "voltron"]) == ranges
+
+
+def test_landfall_is_a_known_word_and_unknown_ones_are_still_reported():
+    """The honesty label: a word the table doesn't know buys nothing and SAYS so.
+    Adding `landfall` must move it out of the unknown list without muting the rest."""
+    _ranges, unknown = optimize.role_ranges_with_unknown(["landfall", "zzz"])
+    assert unknown == ["zzz"], "landfall is now known; zzz must still be reported"
+
+
 def _counter_deck(tmp_path, monkeypatch, archetype):
     """A deck sitting at counter:15 — nine over the default template — with one
     field-superior counterspell available and one filler creature to cut."""

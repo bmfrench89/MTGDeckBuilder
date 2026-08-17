@@ -93,11 +93,12 @@ Baloth Woodcrasher, Rancor, Terrain Generator, Wood Elves.
   Ancient Greenwarden. This is the single biggest upgrade path.
 - **No +1/+1 counter payoffs.** Zero Hardened Scales / Branching Evolution / Doubling
   Season / The Ozolith owned, so Necklace's counters are linear rather than exponential.
-- **Ramp runs long on purpose** — 19 against the voltron template's 9-13. Land-to-battlefield
-  ramp is this deck's *payoff*, so `deck_stats`' "high" flag is expected here, not a defect.
-  The proper fix is a `landfall` entry in `deckcore._ARCHETYPE_ROLE_RANGE`; that is
-  proposed, not shipped, because widening a shared template to silence a warning about
-  one deck needs ratifying first.
+- **Ramp runs long on purpose** — 19 sources, because land-to-battlefield ramp is this
+  deck's *payoff*, not just acceleration. The deck's `# Archetype:` header carries
+  `landfall`, and `deckcore._ARCHETYPE_ROLE_RANGE` widens ramp to 9-20 for that word,
+  so the count now reads as correct rather than as a "high" flag. That entry was
+  ratified and shipped in `docs/spec-landfall-template-and-panel-pins.md` Phase A;
+  it is not a per-deck exemption — any lands-matter deck gets the same template.
 - **Removal is mostly green removal** — it answers artifacts, enchantments and fliers.
   **Beast Within** (53% field) is the exception and the reason it is here: it answers *any*
   permanent, which is the hole green normally cannot cover.
