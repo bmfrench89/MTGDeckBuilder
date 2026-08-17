@@ -98,6 +98,28 @@ Baloth Woodcrasher, Rancor, Terrain Generator, Wood Elves.
   The proper fix is a `landfall` entry in `deckcore._ARCHETYPE_ROLE_RANGE`; that is
   proposed, not shipped, because widening a shared template to silence a warning about
   one deck needs ratifying first.
-- **No protection from wraths.** Tifa is a glass cannon and the counters die with her.
-- **Removal is green removal** — it answers artifacts, enchantments and fliers, not the
-  creature that is actually killing you.
+- **Removal is mostly green removal** — it answers artifacts, enchantments and fliers.
+  **Beast Within** (53% field) is the exception and the reason it is here: it answers *any*
+  permanent, which is the hole green normally cannot cover.
+
+## Shared with other decks — by design, not an accident
+
+Six cards here are also in other decks and carry the **⇄** badge in the decklist and a row
+in the **Shared Across Decks** panel: **Swiftfoot Boots**, **Snakeskin Veil**, **Heroic
+Intervention**, **Beast Within**, **Fabled Passage**, **Rogue's Passage**.
+
+That is the intended behaviour, not a conflict to resolve (grounding rule #8 — mark, don't
+block). Sharing is ON by default in the optimizer precisely because two decks legitimately
+want the same card, and **you decide which one gets the physical copy at sleeving time**.
+The shortfall is already on `data/wishlist.md` under "shared copies to buy"; nothing was
+removed from Bruce Banner, Cloud, Cosmic Spider-Man or Ur-Dragon to build this list.
+
+If you want a copy permanently reserved for one deck, **pin it** — 📌 on the card panel of
+any deck page, or the **Pins** tab. A pinned card is skipped as an add candidate by every
+other deck (`optimize`, `auto_build`, `edhrec`), while unpinned cards stay freely shared.
+Nothing in this deck is pinned.
+
+These three arrived as shared adds and fixed the deck's worst hole — it previously had
+**no protection at all** for a 1/2 commander whose counters die with her:
+Swiftfoot Boots (haste + hexproof), Snakeskin Veil (protection *and* a permanent counter
+the doubling then multiplies), Heroic Intervention (saves the board from a wrath).
