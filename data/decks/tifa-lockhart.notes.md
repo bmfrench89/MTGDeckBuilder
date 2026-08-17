@@ -37,9 +37,17 @@ Three reasons it is the best non-commander card in the deck:
 3. **It is never a dead draw.** It taps for `{G}`, so on an empty board it is a mana rock
    that ramps toward the turn you actually kill someone.
 
-The "cast a green spell" half is the real workhorse — roughly 55 of the 64 nonland cards
-are green, so it ticks up most turns even when you miss a land drop. The Forest half is
-gravy, and it is why the manabase is 28 basic Forests rather than a pile of utility lands.
+The "cast a green spell" half is the real workhorse — most of the nonland cards are green,
+so it ticks up most turns even when you miss a land drop. The Forest half is gravy, and it
+is why the manabase is 30 basic Forests rather than a pile of utility lands.
+
+**What the field actually says (snapshot 2026-08-17, 291 cards):** Necklace of Girion sits
+at **12% inclusion** — it is not a Tifa staple. Treat that as a prior, not a verdict: the
+card released 2026-08-14, three days before this snapshot, so 12% is a recency artifact
+rather than a rejection (card-review-method §3). The engine read above is the reason it is
+in the deck. But be honest that the field's real priorities for Tifa are **land-to-battlefield
+ramp and extra land drops** — Harrow 76%, Cultivate 72%, Azusa 71%, Entish Restoration 66% —
+not counters. This deck owns almost none of that, which is the buylist's whole first tier.
 
 ## Piloting
 

@@ -66,10 +66,26 @@ targets before crediting an ability (card-review-method §3).
   existing `control` and `artifacts` widenings). It was left unshipped on purpose —
   widening a shared template to silence a warning about one deck should be ratified
   first, not slipped in by the session that benefits from it.
-- **EDHREC is still unreachable**, so `optimize.py` reports **0 field cards** and there is
-  no `data/reference/field/tifa-lockhart.json`. The deck has **never been scored against
-  the field** — treat top-25 overlap as UNKNOWN, not as passing. The field-snapshot Action
-  and the hosted app's re-score close this post-merge.
+- **Field top-25 overlap is 4/25 = 16%**, far under CLAUDE.md's ~50% "say so rather than
+  ship quietly" line. Saying so. The snapshot arrived mid-session — the deck-verify Action
+  (run `31992248480`) pushed `data/reference/field/tifa-lockhart.json`, 291 cards, onto the
+  branch while this work was in progress, so the deck HAS now been scored. **The 16% is
+  structural, not a build error:** of the field's top 25, **11 are locked in other decks**
+  (bruce-banner 10, cosmic-spider-man 6) and **10 are unowned**. Only 4 were available and
+  all 4 are in the deck. The optimizer says it outright: *"this deck can't improve from your
+  collection: buy the gaps, or free copies from the deck(s) above."* Every top-25 miss is
+  now a `.buylist.csv` row carrying its real field %.
+- **The optimizer's proposed swaps were NOT applied.** All four (Swiftfoot Boots 67%,
+  Snakeskin Veil 64%, Heroic Intervention 53%, Beast Within 53%) and all three land swaps
+  are `[shared]` — every copy is committed to another deck, so applying would silently
+  break Bruce Banner and Cosmic Spider-Man to feed this one. Grounding rule 8 says surface,
+  don't block; card-review-method §7 says present before applying. Both point the same way:
+  they are buylist rows and a player decision, not an automated write.
+- **Field %s that corrected this session's own claims:** `Traverse the Outlands` is **15%**,
+  not the headline card an article made it sound like; `Adventuring Gear` **51%** and
+  `Crop Rotation` **49%** are the deck's genuinely field-endorsed picks; `Horn of Greed`
+  **12%**, `Wood Elves` **10%**, `Explorer's Scope` **8%** are engine-read holds, not
+  field-backed ones.
 
 `Tifa, Martial Artist` is also owned ×1 and is a *different card* — it is not in this
 deck and has not been evaluated.
