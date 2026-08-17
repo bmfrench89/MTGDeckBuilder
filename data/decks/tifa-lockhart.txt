@@ -1,0 +1,97 @@
+# Title: Tifa Lockhart — Doubling Down
+# Commander: Tifa Lockhart
+# Colors: G
+# Archetype: voltron
+# Theme: landfall-voltron
+# Source: hand-built 2026-08-17
+# Note: Power doubling is multiplicative — raise Tifa's PERMANENT base power, then
+# Note: double it. Necklace of Girion is the engine: order its counter BEFORE the double.
+
+# --- Commander ---
+1 Tifa Lockhart
+
+# --- Creatures ---
+1 Gilded Goose
+1 Priest of Titania
+1 Great Forest Druid
+1 Silverglade Pathfinder
+1 Environmental Scientist
+1 Wood Elves
+1 Yavimaya Granger
+1 Burnished Hart
+1 Changeling Wayfinder
+1 Blastoderm
+1 Professional Wrestler
+1 Devil Dinosaur
+1 Mycoloth
+1 Beorn the Fierce
+1 Spider-Man, Brooklyn Visionary
+1 Baloth Woodcrasher
+1 Balamb T-Rexaur
+1 Saber-Tooth Moose-Lion
+1 Cactarantula
+1 Savage Land Dinosaur
+1 Terrian, World Tyrant
+1 Mistmeadow Council
+1 Vaultborn Tyrant
+
+# --- Instants ---
+1 Crop Rotation
+1 Giant Growth
+1 Wild Might
+1 Glorious Decay
+1 Invigorate
+1 Constant Mists
+1 Broken Wings
+1 Break Down
+1 Airship Crash
+1 Origin of Metalbending
+
+# --- Sorceries ---
+1 Land Grant
+1 Shared Roots
+1 Plow Through
+1 Scout the City
+1 Pick Your Poison
+1 Grow from the Ashes
+1 They Went This Way
+1 It's Clobberin' Time!
+
+# --- Artifacts ---
+1 Sol Ring
+1 Wayfarer's Bauble
+1 Adventuring Gear
+1 Explorer's Scope
+1 Bloodforged Battle-Axe
+1 Arcane Signet
+1 Hero's Blade
+1 Hero's Heirloom
+1 Conqueror's Flail
+1 Necklace of Girion
+1 Horn of Greed
+1 Champion's Helm
+1 Worn Powerstone
+1 Hedron Archive
+1 Phyrexian Vault
+
+# --- Enchantments ---
+1 Wild Growth
+1 Rancor
+1 Fertile Ground
+1 Treetop Bracers
+1 Multani's Presence
+1 Feral Appetite
+1 Ancestral Mask
+
+# --- Lands ---
+1 Terrain Generator
+1 Terramorphic Expanse
+1 Myriad Landscape
+1 Ash Barrens
+1 Hobbit Hole
+1 Vibrant Cityscape
+1 Command Tower
+1 High Market
+
+# --- Basics ---
+28 Forest

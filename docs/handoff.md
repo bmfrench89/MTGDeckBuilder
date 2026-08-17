@@ -6,7 +6,51 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-16._
+_Last updated: 2026-08-17._
+
+## The deck stable is EIGHT decks (2026-08-17)
+
+The player **dismantled Smaug, Wicked Worm and Doctor Doom** physically, so
+`data/decks/smaug-wicked-worm.*` and `data/decks/doctor-doom.*` were deleted (recoverable
+from git history; no pins referenced either). That freed their copies back into the pool —
+which is why the Tifa build below could claim cards the earlier conflict scans showed as
+committed.
+
+Current stable: `bruce-banner-incredible-hulk`, `captain-america-team-leader`,
+`cloud-ex-soldier`, `cosmic-spider-man`, `kaalia-of-the-vast`, `the-ur-dragon`,
+`yshtola-nights-blessed`, **`tifa-lockhart`** (new).
+
+### tifa-lockhart — "Doubling Down" (mono-G landfall voltron, Bracket 3, power 65/100)
+
+Built 2026-08-17 from the name-only snapshot + `collection_attrs.snapshot.csv`.
+100 cards, 36 lands, singleton-clean, no color-identity violations.
+Goldfish (3,000 games): commander on board T2 86% / T3 96%, keepable 80%, screw 16%,
+flood 0%. Green sources 29 vs Karsten target 23.
+
+**The build thesis, and it is worth not re-deriving:** Tifa's landfall **doubles** her
+power rather than adding to it, so the deck maximizes *permanent base power* first and
+treats land drops as the multiplier. Necklace of Girion is the engine — its counters are
+permanent and its trigger and Tifa's landfall trigger go on the stack together, so you
+order the Necklace counter to resolve **first** and the doubling then applies to the
+bigger number. Getting that order backwards halves the damage.
+
+**Two caveats a future session must not paper over:**
+- The collection contains **zero extra-land-drop effects** (no Azusa / Exploration /
+  Burgeoning / Wayward Swordtooth / Ancient Greenwarden) and **zero +1/+1 counter
+  payoffs** (no Hardened Scales / Branching Evolution / Doubling Season / The Ozolith).
+  This is a voltron deck wearing a landfall coat, not a landfall deck. The buylist is
+  ordered accordingly.
+- **The build session had no Scryfall and no EDHREC** (both 403 at the sandbox gateway),
+  so: oracle text for the post-2025 cards in the 99 was NOT verified — those cards were
+  selected on `collection_attrs.snapshot.csv` evidence (type / MV / colour identity /
+  oracle-derived `Flags` such as `fetch:forest`), not recalled text — and
+  `optimize.py` reported **0 field cards**, so the deck has **never been scored against
+  the field**. Both are the automation loop's job post-merge: the field-snapshot Action
+  and the hosted app's re-enrich + re-score. Treat the top-25 overlap as UNKNOWN, not
+  as passing, until that runs.
+
+`Tifa, Martial Artist` is also owned ×1 and is a *different card* — it is not in this
+deck and has not been evaluated.
 
 ## Double-faced cards never enriched (FIXING 2026-08-16, `docs/spec-dfc-enrichment.md`)
 
