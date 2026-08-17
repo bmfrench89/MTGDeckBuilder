@@ -1,4 +1,32 @@
-# Tifa build — verify before designing around any of these.
-Tifa Lockhart
-Tifa, Martial Artist
-Necklace of Girion
+# Tifa Lockhart build — the free mono-G shortlist. Most sit at 0% field share
+# because they are recent-set cards, so none of them goes in the 99 unread.
+Planar Engineering
+Reach the Horizon
+Shared Roots
+Bitterthorn, Nissa's Animus
+Gene Pollinator
+Great Forest Druid
+Page, Loose Leaf
+Black Tom Cassidy
+Lys Alana Dignitary
+Pit Automaton
+Giant's Boulder
+Sazh's Chocobo
+Mole Man, Moloid Master
+Aftermath Analyst
+Beorn's Hospitality
+Claim the Kingdom
+Through the Forest Gate
+Germination Practicum
+Open the Way
+Origin of Metalbending
+Adventuring Gear
+Chocobo Racetrack
+Horn of Greed
+Multani's Presence
+Well Rested
+Professor Hojo
+Loxodon Surveyor
+Advancing the Spirit
+Terrain Generator
+Lotus Field
