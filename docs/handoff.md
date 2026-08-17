@@ -6,7 +6,55 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-15._
+_Last updated: 2026-08-16._
+
+## Double-faced cards never enriched (FIXING 2026-08-16, `docs/spec-dfc-enrichment.md`)
+
+Root cause, **measured on a GitHub runner** rather than inferred: Scryfall's
+`/cards/collection` `name` identifier matches a **single face**, so submitting the
+collection's `"Front // Back"` spelling missed. Only 14 of the player's 40 owned
+double-faced cards were resolving, and the ones that fell through landed on the name
+heuristic — which read the verified Dragon creatures `Scavenger Regent // Exude Toxin`
+and `Marang River Regent // Coil and Catch` as **lands**.
+
+Shipping in slices, each validated before the next:
+
+- **Slice 1 — the cure (done).** `carddb._best_identifier` submits `front_face(name)`
+  and `_response_keys` maps the single-face response back onto every row that answers
+  to it, so two rows sharing a front face both resolve. UAT is a probe step in
+  `.github/workflows/deck-verify.yml` that enriches every `" // "` name in the
+  committed snapshot against live Scryfall on each branch push — it lives there, not
+  in `attrs-snapshot.yml`, because that workflow ends in a hardcoded push to `main`.
+  **Live result: 40/40 resolved, 0 untyped, PROBE VERDICT: PASS** (was 14/40), and the
+  step now runs in ~1s, which is how you can tell the fuzzy fallback went quiet.
+- **Slice 2 — land hints (done).** `_LAND_HINTS` matched bare substrings, so "cave"
+  matched inside "S-**cave**-nger". Now whole-word with a tolerated plural. Measured on
+  the collection: lands recognized 105 → 126, non-lands misread 49 → 26, nothing lost
+  either way. Spec §8 has the table and the honest limits.
+- **Slice 3 — hardening (done).** `_request_json` is the one path to Scryfall's JSON
+  API, carrying the `(5,15,30,60)` ladder for 429/503 only — a blocked proxy fails now
+  rather than after 110s. `_fetch_named_fuzzy` is **three-way** (card / `None` for a
+  real 404 / **raises** on transport failure); it used to swallow everything into
+  `None`, which is how "the proxy blocked us" and "no such card" became one answer.
+  `enrich_api` now raises **before writing** if any card could not be looked up at all
+  — a partial attrs file reads downstream as "not enriched yet". Misses print
+  unconditionally, the fuzzy pass paces at 0.7s and uses the 30-day
+  `VERIFY_CACHE_DIR`, and `--min-match` applies **per category**: DFC coverage is
+  measured on its own, because 26/40 missing still left the old run at 99% overall.
+  `gen_card_notes._fetch_oracle` was a third copy of the ladder carrying both original
+  bugs (full-name identifiers, bare `split("//")`) — it now calls
+  `carddb._post_collection`.
+
+**⚠ The fuzzy cache is opt-in** (`fuzzy_cache_dir=None`), not defaulted to
+`VERIFY_CACHE_DIR`. The convenient default made the test suite write into the real
+`data/cache/scryfall`. `main()` passes the real path; a library function does not pick
+one under `data/`. There is a test guarding this — don't "simplify" it back.
+
+**Still to do: Phase F.** One `workflow_dispatch` of `attrs-snapshot` regenerates the
+committed attrs file with all 40 DFCs. Nothing to hand-write.
+
+`download_bulk()` is **deferred by the player** ("leave the bulk for now"); the API
+path is the default and works.
 
 ## Where the app runs
 
@@ -45,9 +93,19 @@ server's text instead of reloading. Regression tests cover both DFC directions, 
 
 **Collection:** the new Sorted export is live — 2,691 unique / 3,890 total, 70 new
 uniques, 42 quantity bumps, nothing lost. The Hobbit (HOB) is now 116 uniques in the
-pool. Enrichment for the ~88 new cards happens server-side on the next sync (Scryfall
-is egress-blocked in sandboxes); until then those cards ride on deck attrs + verified
-type lines. **Iron Man is retired at the player's direction** ("for now") — all five
+pool. **⚠ A sandbox import does NOT reach the server, and this bites every time.**
+`collection.csv` is gitignored (the privacy hard line), so an export handed to a
+session in chat lands in that sandbox only — no merge, sync or field-snapshot job can
+carry it. The server keeps serving its OWN older CSV (`_default_collection()` prefers
+it over the tracked snapshot whenever it exists), so **every newly-bought card renders
+with a phantom `BUY` badge** until the player uploads the same export through
+`/collection/upload`. Confirmed live 2026-08-15: 12 phantom BUY badges across five
+decks, all of them 2026-08-15 pickups. The fix is the player's one action — upload —
+after which the background enrichment runs and the badges clear. **Do NOT paper over
+it with `owned_additions.txt`:** `mtglib.merge_collection` ADDS quantities, so those
+rows double-count the moment the real export lands (that is exactly why Vito and
+Force of Will were deleted from that file on 2026-08-11). Say the upload step out
+loud whenever a session imports a collection. **Iron Man is retired at the player's direction** ("for now") — all five
 deck files deleted in one commit, recoverable verbatim from git history; no pins
 referenced it; its field snapshot stays for a future rebuild.
 

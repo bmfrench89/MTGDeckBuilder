@@ -1,1 +1,1 @@
-# Cleared — round 4 written up in the three new decks' notes.
+# Cleared — the DFC probe is answered; results are in docs/spec-dfc-enrichment.md §1.2.

@@ -611,6 +611,9 @@ def is_double_pip(mana_cost: str) -> Optional[str]:
 # Land name heuristic (fallback when no type data)
 # --------------------------------------------------------------------------- #
 _BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
+# Hints are matched as WHOLE WORDS (see `_looks_like_land_by_name`), never as bare
+# substrings — that distinction is load-bearing, so a hint added here must be a word
+# that actually heads a land name, not a fragment that happens to appear in one.
 _LAND_HINTS = (
     "command tower", "path of ancestry", "exotic orchard", "arcane sanctum",
     "plaza of heroes", "spire of industry", "estuary", "catacombs", "fortress",
@@ -624,6 +627,28 @@ _LAND_HINTS = (
     "storage", "citadel of", "academy", "coast", "summit", "monastery",
     "courtyard", "territory", "plaza", "shrine", "peaks", "outpost",
     "bivouac", "orchard", "sanctum", "panorama", "bloodfell",
+    # Added 2026-08-16 with the whole-word switch. Word-boundary matching drops the
+    # accidental hits that used to carry a handful of real lands ("Battlefield" is
+    # not a "field"; "Scavenger Grounds" was reaching the land pass through "cave"),
+    # so those names are covered deliberately here instead. Every entry below was
+    # measured against the player's collection at ZERO false positives — the bar for
+    # any future addition. Net effect on 203 non-basic owned lands: 105 -> 126
+    # recognized, while non-land names wrongly read as lands fell 49 -> 26.
+    "watchtower", "junktown", "verge", "peak", "grounds", "backwoods", "falls",
+    "hangar", "enclave", "citadel", "highlands", "steppe", "fen", "conclave",
+    "cove", "skerry", "vein", "encampment", "meadow", "massif",
+    # Named outright, the way "svyelunite temple" already is: their land noun
+    # ("forge", "cavern") is too generic to add as a bare word.
+    "battlefield forge", "subterranean cavern",
+)
+
+# One alternation per hint, matched on word boundaries with a tolerated plural.
+# `(?<![a-z])`/`(?![a-z])` rather than `\b` on purpose: card names are full of
+# apostrophes and hyphens ("Rogue's Passage", "Goblin-town"), and `\b` treats those
+# as word characters' edges in ways that make hyphenated compounds inconsistent.
+_LAND_HINT_RE = tuple(
+    re.compile(r"(?<![a-z])" + re.escape(h) + r"(?:e?s)?(?![a-z])")
+    for h in dict.fromkeys(_LAND_HINTS)
 )
 
 
@@ -647,10 +672,23 @@ def is_basic(name: str) -> bool:
 
 
 def _looks_like_land_by_name(name: str) -> bool:
-    low = name.lower()
+    """Last-resort guess at 'is this a land?' from the NAME alone.
+
+    Only ever consulted when there is no type data (`Card.is_land` prefers
+    `self.types`; `optimize` prefers the collection CSV, the deck's own type
+    section, and the field snapshot's `lands` key first). It is a guess, and a
+    coarse one — it recognizes 126 of the 203 non-basic lands the player owns, and
+    nothing here will ever catch Baxter Building or Stark Industries.
+
+    Hints match as WHOLE WORDS. They used to match bare substrings, which read
+    "S-cave-nger Regent" and "Marang River Regent" — both verified Dragon creatures —
+    as lands, and put 49 owned non-land cards one missing attrs row away from the
+    same mistake (docs/spec-dfc-enrichment.md §2). A plural `s`/`es` is tolerated so
+    the singular hint still covers "Bloodfell Caves"."""
     if is_basic(name):        # includes Snow-Covered printings — a plain _BASICS
         return True           # check missed them, so snow basics read as spells
-    return any(h in low for h in _LAND_HINTS)
+    low = name.lower()
+    return any(p.search(low) for p in _LAND_HINT_RE)
 
 
 # --------------------------------------------------------------------------- #

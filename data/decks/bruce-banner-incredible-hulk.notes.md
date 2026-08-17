@@ -154,3 +154,14 @@ Built almost entirely from the **uncommitted** pool so that nothing has to be pu
 the player's own six decks — this is a gift deck that should sleeve up standalone. The
 commander itself is the brother's card and is not in the player's collection, which is why
 `deck_stats.py` reports one card "not owned"; that is correct and expected.
+
+## Ownership: the commander is the BROTHER'S card (player-confirmed 2026-08-15)
+`Bruce Banner // The Incredible Hulk` is in NO collection export — old or new — and is
+deliberately absent from `owned_additions.txt`. That is correct and must stay that way:
+the player is **building this deck for his brother, who owns the commander**. The `BUY`
+badge on the commander tile is therefore RIGHT, not a data bug.
+
+Do not "fix" it by adding the card to `owned_additions.txt` — that file means *the
+player* owns it and the export missed it (grounding rule #6), which is not the case
+here. A future session that re-notices the badge should read this paragraph and stop.
+The other 99 are the player's own cards and are checked against his collection normally.

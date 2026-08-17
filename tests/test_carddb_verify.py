@@ -113,19 +113,21 @@ def fake_exact(monkeypatch, calls=None):
 
 
 def fake_fuzzy(monkeypatch, resolutions):
-    """Serve `/cards/named?fuzzy=` from a {queried name: card} map, at the `_get`
-    layer so the URL the code builds is exercised too."""
+    """Serve `/cards/named?fuzzy=` from a {queried name: card} map, at the
+    `_request_json` layer so the URL the code builds is exercised too — and so a
+    404 arrives as the real HTTPError, which is now what separates "no such card"
+    from "could not ask"."""
     seen = []
 
-    def get(url):
+    def request_json(url, data=None, retries=4):
         assert url.startswith(carddb.NAMED_URL + "?fuzzy="), url
         asked = carddb.urllib.parse.unquote(url.split("fuzzy=", 1)[1])
         seen.append(asked)
         card = resolutions.get(asked)
         if card is None:
             raise carddb.urllib.error.HTTPError(url, 404, "Not Found", {}, None)
-        return json.dumps(card).encode()
-    monkeypatch.setattr(carddb, "_get", get)
+        return json.loads(json.dumps(card))
+    monkeypatch.setattr(carddb, "_request_json", request_json)
     return seen
 
 
@@ -219,8 +221,8 @@ def test_a_network_failure_reports_unverified_and_does_not_raise(monkeypatch):
     def die(identifiers, retries=4):
         raise OSError("proxy said no")
     monkeypatch.setattr(carddb, "_post_collection", die)
-    monkeypatch.setattr(carddb, "_get", lambda url: (_ for _ in ()).throw(
-        OSError("proxy said no")))
+    monkeypatch.setattr(carddb, "_request_json", lambda *a, **k: (
+        _ for _ in ()).throw(OSError("proxy said no")))
     rows = carddb.verify_cards(["Sol Ring", "Llanowar Elves"], delay=0)
     assert [r["found"] for r in rows] == [False, False]
     assert all("network unreachable" in r["reason"] for r in rows)
