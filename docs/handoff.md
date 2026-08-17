@@ -8,6 +8,39 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-17._
 
+## NEXT SESSION: implement `docs/spec-landfall-template-and-panel-pins.md` — follow it exactly
+
+The player commissioned that spec on 2026-08-17 for the next session (Opus 5) to
+execute verbatim. Two phases, both ratified, neither started:
+
+- **Phase A** — add the `landfall` entry to `deckcore._ARCHETYPE_ROLE_RANGE`
+  (`"landfall": {"ramp": (9, 20)}`), add `landfall` to `tifa-lockhart.txt`'s
+  `# Archetype:` header, tests, and confirm the ramp "high" flag clears on both
+  surfaces. This was proposed-not-shipped on 2026-08-17 precisely so the player
+  could ratify it; the spec IS the ratification.
+- **Phase B** — pin control on the **site-wide** card panel
+  (`webapp/templates/_cardpanel.html` + `static/cardpanel.js`), as a deck **picker**
+  (those pages have no deck context), backed by `payload["pinned"]` from
+  `card_api`, `all_decks` from the `api_card` route, and a `json=1` variant of
+  `POST /pins/move`. The dashboard panel's existing pin button is untouched —
+  check both surfaces afterwards (the two-surfaces trap).
+
+The spec carries the session rules that bit this week: re-sync to `origin/main`
+first (squash merges), expect the deck-verify Action to push to your branch
+mid-session (and the branch-rebuild fix when lineage diverges), every `.attrs.csv`
+must carry `FlagsVer`, full pytest before every push. Where the spec conflicts
+with the code you find, stop and report — don't improvise.
+
+**State you inherit (all merged to `main`, latest `e9dc44f`):** stable is seven
+decks; `tifa-lockhart` is 100 cards / 38 lands (30 Forest), Bracket 3, power
+67/100, field top-25 overlap 10/25 with the optimizer idempotent ("already
+aligned"); six cards deliberately shared (⇄) with the shortfall on
+`data/wishlist.md`; nothing pinned anywhere except Force of Will →
+yshtola-nights-blessed. Basics are unlimited (rule #9) and the tooling agrees.
+Known sim caveat: goldfish understates the deck because fetch lands compile as
+zero-mana (documented in its own assumptions block) — commander T2 78% / T3 94%
+is the honest modeled floor, not a regression.
+
 ## Basic lands are always owned (player-ratified 2026-08-17)
 
 The player owns hundreds of every basic and **will not** add them to the collection
@@ -69,7 +102,8 @@ shortfall is on `data/wishlist.md`.
 *warns*, because the player's word beats their own earlier reservation. Unpinned cards stay
 freely shareable. ⚠ Known gap: the pin button exists only on the **dashboard** card panel
 (`scripts/assets/card_panel.html`); the site-wide panel (`webapp/templates/_cardpanel.html`,
-used on collection/shared/wishlist pages) has no pin control.
+used on collection/shared/wishlist pages) has no pin control — **spec'd as Phase B of
+`docs/spec-landfall-template-and-panel-pins.md`, ratified, awaiting implementation.**
 
 ## The deck stable was EIGHT decks (2026-08-17) — see above, Kaalia brings it to SEVEN
 
