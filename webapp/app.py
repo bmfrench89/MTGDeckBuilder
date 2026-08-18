@@ -1113,17 +1113,27 @@ def pins_move():
     """Move a pin to another deck, or release it — one action, not two."""
     key = (request.form.get("card") or "").strip()
     target = (request.form.get("deck") or "").strip()
+    # The card panel posts json=1 and stays on the page. It must NOT get a flash: the
+    # message would sit in the session and pop as a stale toast on whatever full page the
+    # player loads next, describing a pin they changed minutes ago somewhere else.
+    wants_json = bool(request.form.get("json"))
+    k = mtglib._norm(key)
+    pins = deckcore.load_pins() if key else {}
     if key:
-        pins = deckcore.load_pins()
-        k = mtglib._norm(key)
         if target in ("", "none"):
             pins.pop(k, None)
-            flash(f"Released the pin on {key} — every deck can use that copy again.",
-                  "info")
+            if not wants_json:
+                flash(f"Released the pin on {key} — every deck can use that copy again.",
+                      "info")
         else:
             pins[k] = target                    # one deck per card: this MOVES it
-            flash(f"{key} is now reserved for {target}.", "info")
+            if not wants_json:
+                flash(f"{key} is now reserved for {target}.", "info")
         deckcore.save_pins(pins)
+    if wants_json:
+        # Echo what was actually STORED, so the panel re-renders from the server's truth
+        # rather than from what it optimistically hoped it wrote.
+        return jsonify({"ok": True, "pinned": pins.get(k)})
     return redirect(url_for("pins_page"))
 
 

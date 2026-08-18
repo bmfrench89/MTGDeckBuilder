@@ -106,6 +106,16 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
     roles = sorted(mtglib.classify(ref)) if ref else []
     note = notes.get(key)
     decks = _decks_using(name, decks_dir)
+    # Which deck (if any) has reserved the physical copy. Best-effort exactly like
+    # build_dashboard's panel payload: a missing/malformed pins.csv must never take the
+    # panel down, it just means "no pin". Front-face aware via name_keys, because a pin
+    # recorded as "Murderous Rider" must be found when the panel opens on
+    # "Murderous Rider // Swift End" — the ' // ' trap this repo keeps re-learning.
+    try:
+        pins = deckcore.load_pins()
+        pinned = next((pins[k] for k in mtglib.name_keys(name) if k in pins), None)
+    except Exception:
+        pinned = None
     sid = ref.scryfall_id if (ref and ref.scryfall_id) else ""
     image = (card_image.image_url(sid) if sid
              else card_image.image_url_by_name(name))
@@ -123,6 +133,7 @@ def card_payload(name, coll_index, decks_dir, notes=None, combos=None):
         "combos": _combos_with(name, combos),
         "completes": _completes(name, decks_dir, combos),
         "decks": decks,
+        "pinned": pinned,          # deck stem holding the physical copy, or None
         "scryfall_id": sid,
         "image": image,
         "buy": card_image.purchase_links(ref.name if ref else name),

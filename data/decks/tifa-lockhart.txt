@@ -1,7 +1,7 @@
 # Title: Tifa Lockhart — Doubling Down
 # Commander: Tifa Lockhart
 # Colors: G
-# Archetype: voltron
+# Archetype: voltron landfall
 # Theme: landfall-voltron
 # Source: hand-built 2026-08-17
 # Note: Power doubling is multiplicative — raise Tifa's PERMANENT base power, then
@@ -19,18 +19,15 @@
 1 Silverglade Pathfinder
 1 Environmental Scientist
 1 Wood Elves
-1 Yavimaya Granger
-1 Burnished Hart
 1 Changeling Wayfinder
 1 Blastoderm
-1 Professional Wrestler
 1 Devil Dinosaur
 1 Beorn the Fierce
-1 Spider-Man, Brooklyn Visionary
 1 Baloth Woodcrasher
 1 Cactarantula
 1 Mistmeadow Council
 1 Vaultborn Tyrant
+1 Sakura-Tribe Elder
 
 # --- Instants ---
 1 Crop Rotation
@@ -48,13 +45,15 @@
 1 Beast Within
 
 # --- Sorceries ---
+1 Planar Engineering
+1 Nature's Lore
+1 Cultivate
 1 Land Grant
 1 Shared Roots
 1 Plow Through
 1 Scout the City
 1 Pick Your Poison
-1 Grow from the Ashes
-1 They Went This Way
+1 Rampant Growth
 1 It's Clobberin' Time!
 
 # --- Artifacts ---
@@ -74,6 +73,7 @@
 1 Masterwork of Ingenuity
 1 Phyrexian Vault
 1 Swiftfoot Boots
+1 Sword of the Animist
 
 # --- Enchantments ---
 1 Wild Growth

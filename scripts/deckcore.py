@@ -285,6 +285,21 @@ _ARCHETYPE_ROLE_RANGE = {
     "tokens": {"wipe": (0, 5)},
     "aristocrats": {"wipe": (0, 5)},       # sacrifice outlets, not sweepers
     "voltron": {"removal": (6, 11), "wipe": (0, 5)},   # protection over mass removal
+    # Landfall: land-to-battlefield ramp IS the payoff, so ramp runs far past the
+    # default band. Measured on tifa-lockhart (2026-08-17): ramp 19, ratified by hand.
+    # The default 9-13 band did not merely mislabel that count — it DEADLOCKED the
+    # optimizer's accept filter against every ramp-touching swap (at 19, in, out and
+    # ramp-for-ramp all land outside 9-13), so the deck read "already aligned" while
+    # sitting at 10/25 field top-25 overlap. Widening released six field-superior
+    # swaps -> 15/25.
+    # TRAP, and why this ceiling is the measured count and not one higher: the
+    # ceiling behaves as a TARGET the optimizer fills, not as a tolerance. Measured
+    # by sweeping it: hi=19 and hi=20 unblock the identical six adds and reach the
+    # identical 15/25, but applied ramp equals the ceiling at every value 19-22 —
+    # so hi=20 buys zero field alignment and spends a draw slot (draw 10->8, the
+    # floor of its band, instead of 10->9). A ceiling above a measured count is an
+    # add licence. Raise this only for a landfall deck that measures higher.
+    "landfall": {"ramp": (9, 19)},
 }
 
 
