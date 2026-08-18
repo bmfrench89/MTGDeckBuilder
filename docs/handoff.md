@@ -190,29 +190,34 @@ targets before crediting an ability (card-review-method §3).
   payoffs**. This is a voltron deck wearing a landfall coat. The buylist is ordered
   accordingly, headed by **Traverse the Outlands** (X = greatest power, so it compounds
   with the doubling — the community's headline Tifa card, unowned).
-- **Ramp is 19 against the voltron template's 9–13, deliberately.** Land-to-battlefield
-  ramp is this deck's payoff, so `deck_stats`' "high" flag is expected. **Proposed, not
-  shipped:** a `landfall` entry in `deckcore._ARCHETYPE_ROLE_RANGE` (same rationale as the
-  existing `control` and `artifacts` widenings). It was left unshipped on purpose —
-  widening a shared template to silence a warning about one deck should be ratified
-  first, not slipped in by the session that benefits from it.
-- **Field top-25 overlap is 4/25 = 16%**, far under CLAUDE.md's ~50% "say so rather than
-  ship quietly" line. Saying so. The snapshot arrived mid-session — the deck-verify Action
-  (run `31992248480`) pushed `data/reference/field/tifa-lockhart.json`, 291 cards, onto the
-  branch while this work was in progress, so the deck HAS now been scored. **The 16% is
-  structural, not a build error:** of the field's top 25, **11 are locked in other decks**
-  (bruce-banner 10, cosmic-spider-man 6) and **10 are unowned**. Only 4 were available and
-  all 4 are in the deck. The optimizer says it outright: *"this deck can't improve from your
-  collection: buy the gaps, or free copies from the deck(s) above."* Every top-25 miss is
-  now a `.buylist.csv` row carrying its real field %.
-- **The optimizer's proposed swaps were NOT applied.** All four (Swiftfoot Boots 67%,
-  Snakeskin Veil 64%, Heroic Intervention 53%, Beast Within 53%) and all three land swaps
-  are `[shared]` — every copy is committed to another deck, so applying would silently
-  break Bruce Banner and Cosmic Spider-Man to feed this one. Grounding rule 8 says surface,
-  don't block; card-review-method §7 says present before applying. Both point the same way:
-  they are buylist rows and a player decision, not an automated write.
-- **Field %s that corrected this session's own claims:** `Traverse the Outlands` is **15%**,
-  not the headline card an article made it sound like; `Adventuring Gear` **51%** and
+- **Ramp is 19, and the `landfall` template entry now covers it (SHIPPED).**
+  `deckcore._ARCHETYPE_ROLE_RANGE` carries `"landfall": {"ramp": (9, 19)}` and the deck's
+  header reads `# Archetype: voltron landfall`, so the count reads `(ok)`. The ceiling is
+  the MEASURED count on purpose — it behaves as a target the optimizer fills, so a higher
+  one is an add licence. Full reasoning in the code comment and in the section at the top
+  of this file.
+- **Field top-25 overlap is 15/25 (60%)**, up from 10/25 — but every card that produced
+  the gain is a copy committed to another deck (Cultivate, Sakura-Tribe Elder, Nature's
+  Lore, Rampant Growth, Sword of the Animist); only Planar Engineering was free. It is a
+  **paper 60%** until those copies are bought or the lending decks release them. Shared
+  cards went 6 → 11 (17 copies short), lending from Bruce Banner, Cloud, Cosmic
+  Spider-Man and Ur-Dragon. The un-share path is `data/wishlist.md`'s "shared copies to
+  buy" section, NOT the deck's `.buylist.csv` (a buy row names a card not in the 99).
+- **The optimizer's swaps WERE applied**, deliberately and supervised, in two rounds: the
+  four protection/land shares on 2026-08-17 (Swiftfoot Boots 67%, Snakeskin Veil 64%,
+  Heroic Intervention 53%, Beast Within 53%, plus Evolving Wilds / Fabled Passage /
+  Rogue's Passage), then the six the landfall widening un-deadlocked. Sharing is ON by
+  default (`optimize.py`'s docstring) and grounding rule 8 is mark-don't-block; refusing
+  to share was an invented rule, corrected by the player. Nothing was removed from any
+  other deck — all of it is additive.
+- **Current measurements** (re-derived 2026-08-18, replacing every superseded figure that
+  used to sit here): 100 cards, 38 lands (30 Forest), ramp 19 / draw 9 / removal 10 all in
+  band, Bracket 3, power **64/100** (the dip from 67 is card advantage and curve shape on a
+  scorer with no concept of landfall payoff), green sources 30 vs Karsten target 23,
+  goldfish keepable 83% / screw 13% / commander T3 94%, optimizer idempotent
+  ("already aligned"), ownership check clean.
+- **Field %s that corrected earlier claims:** `Traverse the Outlands` is **15%**, not the
+  headline card an article made it sound like; `Adventuring Gear` **51%** and
   `Crop Rotation` **49%** are the deck's genuinely field-endorsed picks; `Horn of Greed`
   **12%**, `Wood Elves` **10%**, `Explorer's Scope` **8%** are engine-read holds, not
   field-backed ones.

@@ -1,9 +1,11 @@
 # Spec: the `landfall` role template + pinning from the site-wide card panel
 
-**Status:** ☐ ratified 2026-08-17 (player asked for this spec after both items were
-surfaced as proposals) · not started · implementer: the next Claude session — follow
-this document exactly; where it conflicts with the code you find, STOP and say so
-rather than improvising.
+**Status:** ☑ **SHIPPED 2026-08-18.** Phase A landed as `20b6a65` (with `460438a`
+superseded — see the Change 1 correction), Phase B as `ac18786`. This file is now a
+RECORD, not a work item: read it to understand why the `landfall` band and the panel
+pin control are shaped the way they are, and do not re-implement from it. Anything
+below that reads as an instruction has been executed; the corrections marked
+"**Corrected**"/"**AMENDED**" are what actually shipped and outrank the text above them.
 
 Line numbers cited below are anchors **as of `main` = `e9dc44f`** — `main` moves
 constantly (the deck-verify Action and the hosted app's sync both push), so resolve
@@ -87,7 +89,10 @@ Rules you must not break (they are what the existing tests pin):
 Change `# Archetype: voltron` → `# Archetype: voltron landfall`.
 `deckcore.archetype_words` splits on whitespace/commas/slashes; both words resolve.
 Edit the header line ONLY — the deck body was tuned and validated on 2026-08-17;
-do not "improve" the 99. Then update the deck's `.notes.md`: the
+do not "improve" the 99. ⚠ **RETRACTED — see the AMENDED acceptance section below.**
+Widening the band un-deadlocked the optimizer, and the six swaps it then proposed
+were applied deliberately as Phase A's consequence; leaving them would only have
+deferred them to an unsupervised automatic run. Then update the deck's `.notes.md`: the
 "Ramp runs long on purpose" bullet currently says the fix is "proposed, not
 shipped" — rewrite it to say the `landfall` template entry now covers it.
 
@@ -98,9 +103,9 @@ Extend `tests/test_optimize.py` (near
 `tests/test_fit_single_source.py` — whichever file you judge closer to the
 existing coverage — with, at minimum:
 
-1. `role_ranges(["landfall"])["ramp"] == (9, 20)` and every other role equals the
+1. `role_ranges(["landfall"])["ramp"] == (9, 19)` and every other role equals the
    default.
-2. Stacking: `role_ranges(["voltron", "landfall"])` yields ramp `(9, 20)`,
+2. Stacking: `role_ranges(["voltron", "landfall"])` yields ramp `(9, 19)`,
    removal `(6, 11)`, wipe `(0, 5)` — widenings from both words, no narrowing.
 3. The unknown-word reporting still works:
    `role_ranges_with_unknown(["landfall", "zzz"])` returns `["zzz"]` as unknown.
@@ -113,7 +118,8 @@ entry is automatically covered there; make sure that test still passes unmodifie
 ```bash
 python3 scripts/deck_stats.py --deck data/decks/tifa-lockhart.txt \
     --collection data/collection/collection_snapshot.txt
-# -> ramp line reads "(ok)" with aim 9-20, NOT "(high; aim 9-13)"
+# -> ramp line reads a bare "(ok)", NOT "(high; aim 9-13)". deck_stats._flag prints
+#    an "aim lo-hi" string ONLY when a count is OUT of band, so no aim range appears here.
 
 python3 scripts/optimize.py --deck data/decks/tifa-lockhart.txt \
     --collection data/collection/collection_snapshot.txt

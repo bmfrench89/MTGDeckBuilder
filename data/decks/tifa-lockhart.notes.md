@@ -119,7 +119,11 @@ Cosmic Spider-Man and Ur-Dragon.
 **Read the field number honestly:** this deck's field top-25 overlap is 15/25 (60%), up
 from 10/25 — but *every* card that produced that gain is a copy committed to another deck.
 It is a paper 60% until those copies are bought or the other decks release them. The
-buylist carries the un-share rows; `data/wishlist.md` carries the counts.
+un-share path is **`data/wishlist.md`**, under "shared copies to buy" — `wishlist.py`
+derives it from `deck_conflicts`, so it counts every extra copy needed to sleeve all the
+decks at once. It is NOT on this deck's `.buylist.csv`: once a card enters the 99 its
+buylist row is removed (a buy row names a card you do *not* have in the deck), so the
+buylist tracks upgrades and gaps, never the copies you already play but share.
 
 That is the intended behaviour, not a conflict to resolve (grounding rule #8 — mark, don't
 block). Sharing is ON by default in the optimizer precisely because two decks legitimately
