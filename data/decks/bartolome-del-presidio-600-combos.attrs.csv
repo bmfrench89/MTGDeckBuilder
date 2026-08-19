@@ -1,0 +1,82 @@
+Name,Type,MV,Colors,Produced,Power
+Bartolomé del Presidio,Creature,2,W B,,2
+Angel of Indemnity,Creature,6,W,,5
+Body Snatcher,Creature,4,B,,2
+Boonweaver Giant,Creature,7,W,,4
+Brotherhood Outcast,Creature,3,W,,3
+Corpse Augur,Creature,4,B,,4
+Crow of Dark Tidings,Creature,2,B,,2
+"Danitha, Benalia's Hope",Creature,5,W,,4
+Dimir House Guard,Creature,4,B,,2
+Fiend Hunter,Creature,3,W,,1
+Gnawing Vermin,Creature,1,B,,1
+Leonin Relic-Warder,Creature,2,W,,2
+Marionette Apprentice,Creature,2,B,,1
+Millikin,Creature,2,,C,0
+Paramecia Coloniex,Creature,2,B,,2
+Redemption Choir,Creature,4,W,,3
+Shepherd of the Cosmos,Creature,6,W,,3
+Stitcher's Supplier,Creature,1,B,,1
+Sun Titan,Creature,6,W,,6
+The Warring Triad,Artifact,3,,W U B R G,5
+Undead Butler,Creature,2,B,,1
+Valgavoth's Faithful,Creature,1,B,,1
+Werefox Bodyguard,Creature,3,W,,2
+Zulaport Cutthroat,Creature,2,B,,1
+Another Chance,Instant,3,B,,
+Corpse Churn,Instant,2,B,,
+Disenchant,Instant,2,W,,
+Generous Gift,Instant,3,W,,
+Unseal the Necropolis,Instant,3,B,,
+Wake the Dead,Instant,2,B,,
+Demonic Bargain,Sorcery,3,B,,
+Diresight,Sorcery,3,B,,
+Dread Return,Sorcery,4,B,,
+Dusk // Dawn,Sorcery,4,W,,
+Final Parting,Sorcery,5,B,,
+Funeral Rites,Sorcery,3,B,,
+Infernal Offering,Sorcery,5,B,,
+Sevinne's Reclamation,Sorcery,3,W,,
+Summon Undead,Sorcery,5,B,,
+Unburial Rites,Sorcery,5,B,,
+Arcane Signet,Artifact,2,,W B,
+Charcoal Diamond,Artifact,2,,B,
+Mind Stone,Artifact,2,,C,
+Noble's Purse,Artifact,2,,,
+Orzhov Signet,Artifact,2,,W B,
+Prismatic Lens,Artifact,2,,W U B R G C,
+Talisman of Hierarchy,Artifact,2,,W B C,
+Throne of the Grim Captain,Artifact,2,,,
+Wayfarer's Bauble,Artifact,1,,,
+Agent of the Iron Throne,Enchantment,3,B,,
+Angelic Renewal,Enchantment,2,W,,
+Bastion of Remembrance,Enchantment,3,B,,
+Bound in Gold,Enchantment,3,W,,
+Changing Loyalty,Enchantment,2,B,,
+Fungal Fortitude,Enchantment,2,B,,
+Gift of Immortality,Enchantment,3,W,,
+Intercessor's Arrest,Enchantment,3,W,,
+Kaya's Ghostform,Enchantment,1,B,,
+Minion's Return,Enchantment,3,B,,
+Necrogen Communion,Enchantment,2,B,,
+Ninja Teen,Enchantment,3,B,,
+Scavenger's Talent,Enchantment,1,B,,
+Seal from Existence,Enchantment,3,W,,
+Ash Barrens,Land,0,,C,
+Bojuka Bog,Land,0,,B,
+Command Tower,Land,0,,W B,
+Conduit Pylons,Land,0,,W U B R G C,
+Dakmor Salvage,Land,0,,B,
+Exotic Orchard,Land,0,,W U B R G,
+Great Hall of the Citadel,Land,0,,W U B R G C,
+Hidden Grotto,Land,0,,W U B R G C,
+Mariposa Military Base,Land,0,,C,
+Memorial to Folly,Land,0,,B,
+Myriad Landscape,Land,0,,C,
+Orzhov Basilica,Land,0,,W B,
+Path of Ancestry,Land,0,,W B,
+Rogue's Passage,Land,0,,C,
+Surveillance Room,Land,0,,W U B R G C,
+Tainted Field,Land,0,,W B C,
+Plains,Land,0,,W,
+Swamp,Land,0,,B,

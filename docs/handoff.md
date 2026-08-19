@@ -6,7 +6,47 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-17._
+_Last updated: 2026-08-19._
+
+## Combo KB taught the Bartolomé lattice (2026-08-19)
+
+`data/reference/combos.csv` went 22 → 67 rows. The 45 new rows are the **Bartolomé del
+Presidio sacrifice lattice**, added while reviewing the deck from the YouTube tech
+*"1 Deck, 27 Dollars, 600 Infinite COMBOS"* (`youtu.be/1Yusxsud5BE`). Study copy lives at
+`data/decks/bartolome-del-presidio-600-combos.txt` (+ `.attrs.csv`, `.notes.md`) — it is
+**not** built from the collection (56 of 100 cards unowned) and exists so the engines have
+a real combo deck to score.
+
+**The generalisable shape, so it is not re-derived:** Bartolomé is a *free, unlimited*
+sacrifice outlet in the command zone. Pair any **Class A** card (aura/enchantment that
+returns the creature the instant it dies — Kaya's Ghostform, Angelic Renewal, Fungal
+Fortitude, Changing Loyalty, Necrogen Communion, Minion's Return, Gift of Immortality) with
+any **Class B** card (creature whose enter trigger returns that permanent from the
+graveyard — Brotherhood Outcast, Redemption Choir, Danitha, Sun Titan, Angel of Indemnity,
+Shepherd of the Cosmos, Boonweaver Giant) and the two loop for zero mana forever. **44 legal
+pairings**, gated only by each returner's MV cap and by Aura-vs-enchantment (Angelic Renewal
+is not an Aura, so the three Aura-only returners miss it). Boonweaver searches the *library*,
+so commander + Boonweaver is a one-card engine.
+
+**Gift of Immortality is infinite here and it is easy to get wrong.** Its creature returns
+*immediately*; only the Aura waits for the next end step — and the returner's enter trigger
+brings the Aura back at once, skipping the delay. On a sac outlet alone it is once per turn.
+
+**Two traps caught in the process:**
+- `mtglib._norm` does **not** fold accents. `combos.csv` pieces written as "Bartolome"
+  silently degraded 45 complete combos into "one piece away — add Bartolomé (not owned)".
+  Reference data must use the canonical accented name.
+- `deck_stats.py` does **not** read a deck's `.attrs.csv`; only `deckcore.analyze_deck()`
+  does. A deck whose types live in the companion file reads as 31 lands / empty curve
+  through the old CLI and 37 lands / real curve through the hub. Prefer the hub.
+
+Also worth knowing: the deck `.attrs.csv` contract has **no `Cost` column**, so pip demand
+cannot be computed from a companion file — `manabase.py` reported W 9 / B 2 for a deck whose
+real demand is **W 28 / B 37**. Any pip claim from a deck without the full collection CSV
+behind it has to be computed separately and labelled.
+
+With the KB taught, `power.py` moves this deck **Bracket 2 → Bracket 4** on the early
+two-card combos, which is the correct read.
 
 ## Phase A of the landfall spec SHIPPED — and it was not cosmetic (2026-08-17)
 
