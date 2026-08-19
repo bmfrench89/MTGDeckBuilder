@@ -15,6 +15,7 @@
 
 # --- Creatures ---
 1 Blood Artist
+1 Viscera Seer
 1 Baleful Strix
 1 Murderous Rider
 1 Archmage Emeritus
@@ -38,7 +39,6 @@
 1 Counterspell
 1 Infernal Grasp
 1 Void Rend
-1 Soul Shatter
 1 Snuff Out
 1 Lethal Scheme
 1 Force of Will
@@ -64,7 +64,6 @@
 1 White Auracite
 1 Talisman of Progress
 1 Sol Ring
-1 Commander's Sphere
 1 Arcane Signet
 1 Talisman of Dominance
 1 Talisman of Hierarchy
@@ -80,6 +79,7 @@
 1 Authority of the Consuls
 1 Rhystic Study
 1 Bastion of Remembrance
+1 Angelic Renewal
 1 Propaganda
 1 Observed Stasis
 1 Eye of Nidhogg

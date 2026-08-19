@@ -8,6 +8,27 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Y'shtola upgrade APPLIED — the collection's first live infinite (2026-08-19)
+
+Player-ratified. `yshtola-nights-blessed` now runs **Viscera Seer + Sun Titan +
+Angelic Renewal** — a zero-mana infinite death loop with Blood Artist / Bastion /
+Vito converting it into a table kill. In over **Commander's Sphere** (11th rock) and
+**Soul Shatter** (8% field, 10th removal); logged `Source=manual-replace`; notes
+carry the do-not-cut block, pilot line and bench list.
+
+**Honest bracket call: the deck STAYS Bracket 3, power 78 unchanged.** The detector
+rules the line "deterministic, but not a cheap 2-card line" — three pieces, none
+tutorable for free — so it is a clean win condition, not a bracket jump. An earlier
+in-session claim that this makes her Bracket 4 was wrong and is corrected here.
+
+Final sweep also surfaced two MORE owned free outlets, both white enchantments,
+committed nowhere: **Fanatical Devotion** (x2) and **Martyr's Cause** (verified;
+Martyr's Cause makes the loop also prevent one damage source per iteration).
+`combos.csv` 82 → **92**; `--collection-combos` now reports **25 of 92 owned** (was
+0 of 22 at session start). Karmic Guide is the one owned returner left on the bench
+with no loop partner (MV 5 puts her above every returner's cap — she needs
+Reveillark, not owned).
+
 ## The lattice generalises — collection can build 15 infinites (2026-08-19)
 
 Follow-up to #133. The 45 rows merged there named **Bartolomé** in every Pieces cell, so
