@@ -206,6 +206,11 @@ correct, not a miss. Full rule: `references/grounding-rules.md` #9.
   never do instead.** Injected into every session by a SessionStart hook and enforced by
   `tests/test_tool_contract.py`. The sandbox has no network; **GitHub Actions is the
   network arm** — queue cards in `data/reference/verify-queue.txt` and push.
+- `references/strategy-shapes.md` — the axes ABOVE card choice: six strategy shapes and the
+  one-question test that identifies each, the researched composition numbers (interaction
+  12-18, redundancy 5-8, protection 5-8 vs 2-4), the Fundamental Turn, and **CRISPI**
+  (Consistency/Resilience/Interaction/Speed), the framework that replaced single-number
+  power levels. Read when choosing a deck's THEORY, not its 99.
 - `references/grounding-rules.md` — the non-negotiables. **Read first, every session.**
 - `references/card-review-method.md` — the sleeper audit: how to review any card
   against any deck (engine-read over field %). **Use for every new-arrivals pass.**

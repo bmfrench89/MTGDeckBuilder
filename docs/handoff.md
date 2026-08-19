@@ -8,6 +8,42 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Strategy research: six shapes + CRISPI, and a live flaw in power.py (2026-08-19)
+
+Deep web research into high-level MTG strategy, written up as
+`.claude/skills/mtg-deckbuilder/references/strategy-shapes.md` — the companion to
+`combo-shapes.md`. That file answers "how do two cards loop"; this one answers "what is
+the deck's theory of winning". Six shapes, each with a one-question identifying test:
+resource denial (**is it asymmetric?**), life/library as fuel (**is my curve low enough
+to survive my own payoff?**), spell velocity (**is this card mana-POSITIVE?**), toolbox
+(**is the tutor the engine?**), inevitability (**who wins on turn 20?**), pillowfort
+(**am I a worse target than the other two?**).
+
+**The finding that matters for our tooling: DeckCheck retired single-number power levels
+in 2026** and replaced them with **CRISPI — Consistency, Resilience, Interaction, Speed**,
+because "power levels were competing with brackets, and the number was opaque."
+
+**That exact flaw is live in our output.** `power.py --rank` currently prints
+`bartolome-del-presidio-600-combos  Bracket 4 Optimized  31/100 Casual` — bracket and
+power contradicting each other in one row, because the bracket sees two-card infinites
+while the score sees no tutors/fast mana/draw. Both are right about what they measure; the
+row is nonsense. Treat 0-100 as a component readout, never a headline.
+
+**Audit of power.py against the four CRISPI axes:** Interaction counted; Consistency
+partial (lands + tutors, no redundancy); **Speed not scored though `goldfish.py` already
+simulates it and just is not wired in**; **Resilience not measured at all** (no protection
+count, no commander-dependence). The cheapest real upgrade available is Speed — the
+simulator exists.
+
+**Counted profile of the whole stable** (all nine decks, `deckcore.analyze_deck`):
+interaction **10-14** (healthy — low end of the cEDH 12-18 band), tutors **0-1**, fast mana
+**0-1**, draw 7-15, avg MV 2.42-3.03 except **the-ur-dragon at 4.22** (real outlier).
+The signature is tutor-less and fast-mana-less by design, which per the literature is a
+valid consistency posture *provided* redundancy carries it — so the lever here is
+**redundancy (5-8 copies of an effect; 8 gets it in hand by turn 3), never "buy tutors."**
+Researched targets now quotable: protection 5-8 if commander-dependent / 2-4 if resilient;
+cEDH composition interaction 12-18 incl. 3 free, tutors 7-12, fast mana 8-14, lands 28-31.
+
 ## Tool contract is now ENFORCED, not documented (2026-08-19)
 
 The player's call, and it was correct: this session missed `deck-verify.yml` for six
