@@ -45,34 +45,27 @@ whenever no swap survives the filter, *including* when the filter is deadlocked 
 out-of-band role count — so any deck outside a role band reads as aligned forever. A
 truthful message would name the gate.
 
-## NEXT SESSION: Phase B of `docs/spec-landfall-template-and-panel-pins.md` — follow it exactly
+## NEXT SESSION: implement `docs/spec-optimizer-deadlock-reporting.md` — follow it exactly
 
-Phase A is DONE (see the section above). Remaining:
+Both phases of the landfall/pins spec are SHIPPED (#129; that file is now a record, not
+a work item). The player then commissioned the follow-up it surfaced, ratified
+2026-08-18:
 
-- **Phase B** — pin control on the **site-wide** card panel
-  (`webapp/templates/_cardpanel.html` + `static/cardpanel.js`), as a deck **picker**
-  (those pages have no deck context), backed by `payload["pinned"]` from `card_api`,
-  the **existing** `payload.decks` as the picker source (the spec review removed the
-  proposed `all_decks` — offering every deck invites creating the stale pins `/pins`
-  exists to flag), and a `json=1` variant of `POST /pins/move` that suppresses its
-  `flash()`. The dashboard panel's existing pin button is untouched — check both
-  surfaces afterwards (the two-surfaces trap).
+**The optimizer must say "frozen", never "aligned", when a role band deadlocks it.**
+`optimize.py` prints "already aligned with the field — no changes" whenever no swap
+survives its filters — *including* when candidates cleared the anti-churn margin and
+the field veto but died at the role-band gate because a role's count already sits
+outside its template band. That is how tifa-lockhart sat at 10/25 field overlap
+reading "aligned" with six field-superior swaps frozen. The spec is **reporting-only**
+and says loudly why the gate itself must NOT be softened (monotone improvement would
+have churned the hand-ratified 19-ramp deck before the `landfall` entry existed — the
+freeze protected it; the lie is the bug). New `role_deadlock` report key, honest CLI
+message, mirrored webapp flash, six tests including a behaviour-frozen tripwire.
 
-The spec carries the session rules that bit this week: re-sync to `origin/main`
-first (squash merges), expect the deck-verify Action to push to your branch
-mid-session (and the branch-rebuild fix when lineage diverges), every `.attrs.csv`
-must carry `FlagsVer`, full pytest before every push. Where the spec conflicts
-with the code you find, stop and report — don't improvise.
-
-**State you inherit (all merged to `main`, latest `e9dc44f`):** stable is seven
-decks; `tifa-lockhart` is 100 cards / 38 lands (30 Forest), Bracket 3, power
-67/100, field top-25 overlap 10/25 with the optimizer idempotent ("already
-aligned"); six cards deliberately shared (⇄) with the shortfall on
-`data/wishlist.md`; nothing pinned anywhere except Force of Will →
-yshtola-nights-blessed. Basics are unlimited (rule #9) and the tooling agrees.
-Known sim caveat: goldfish understates the deck because fetch lands compile as
-zero-mana (documented in its own assumptions block) — commander T2 78% / T3 94%
-is the honest modeled floor, not a regression.
+The spec's appendix documents the split-card pin storage asymmetry (pins stored under
+the full `"a // b"` name are invisible to `optimize`/`auto_build`'s front-face
+reserved checks). It is **NOT ratified** — documented there so it has a home; do not
+implement it without the player's go-ahead.
 
 ## Basic lands are always owned (player-ratified 2026-08-17)
 
