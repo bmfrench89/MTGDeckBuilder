@@ -2,8 +2,9 @@
 
 ## Game plan
 Rakdos treasure aristocrats. **Smaug, Wicked Worm** (HOB 281, player-verified 2026-08-15):
-his ETB makes Treasures equal to opponents' artifacts, and casting spells with Treasure
-mana draws cards (lose 1 life) — so the hoard IS the draw engine. Bank Treasures, spend
+his ETB makes Treasures equal to opponents' artifacts (**they enter TAPPED** — runner-
+verified verbatim, so the hoard comes online the turn after he lands), and any spell cast
+with Treasure mana draws a card (lose 1) — so the hoard IS the draw engine. Bank Treasures, spend
 them in bursts, and kill with scaled burn or the artifact alt-win.
 
 ## Engine pieces (do not cut)

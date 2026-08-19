@@ -43,6 +43,15 @@ Known noise, unchanged: the Bartolomé study copy still inflates deck_conflicts
 (Bojuka Bog "short 1" etc.). Real new conflict worth knowing: Blasphemous Act own 3,
 now committed 4.
 
+**Runner round-trip closed the loop (run 32309549585):** all 12 queued cards verified
+verbatim on the GitHub runner — every claim this session made from web search held, with
+ONE addition the searches missed: **Smaug, Wicked Worm's ETB Treasures enter TAPPED**
+(notes fixed), and The Warring Triad's mana ability is "Activate only as an instant."
+Queue cleared back to its steady state. New known wart: the field-snapshot step reports
+`FAIL Bartolomé del Presidio (EDHREC unreachable)` on every run — likely the accented
+slug; the other 8 commanders snapshot fine. Worth a look if anyone ever wants field data
+for the study deck; harmless otherwise.
+
 ## Multiplicative lattice added — and it CORRECTS the doubler rule (2026-08-19)
 
 The player supplied the decklist for the unreachable second video: **Thorin, King of Durin's
