@@ -62,10 +62,18 @@ have churned the hand-ratified 19-ramp deck before the `landfall` entry existed 
 freeze protected it; the lie is the bug). New `role_deadlock` report key, honest CLI
 message, mirrored webapp flash, six tests including a behaviour-frozen tripwire.
 
-The spec's appendix documents the split-card pin storage asymmetry (pins stored under
-the full `"a // b"` name are invisible to `optimize`/`auto_build`'s front-face
-reserved checks). It is **NOT ratified** — documented there so it has a home; do not
-implement it without the player's go-ahead.
+**Phase B of the same spec — canonical pin keys — is now RATIFIED too (2026-08-19)**
+and fully specced in the same file: one canonical key (`_norm(front_face(name))`)
+minted by a new `deckcore.pin_key`, canonicalised in `load_pins`/`save_pins` (legacy
+rows migrate implicitly on read — no migration script), and every exact-key probe
+fixed by census: BOTH `keep` probes in `optimize` (the cut loop ~440 AND the land pass
+~643 — the second was missed on the first census pass, so grep `in keep` rather than
+trusting any list), `auto_build`'s pool filter, `build_dashboard`'s panel payload,
+`_validate_add`'s warning, and the two writing routes. The enforcement asymmetry cuts
+BOTH ways: a full-name pin is invisible to the reserved filter (optimizer offers a
+reserved card), and a front-face pin is invisible to the keep-set (optimizer may CUT
+a card pinned to that very deck). Nine tests specified, including tripwires for both
+directions and the SP//dr bare-slash trap.
 
 ## Basic lands are always owned (player-ratified 2026-08-17)
 

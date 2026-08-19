@@ -1,9 +1,18 @@
-# Spec: the optimizer must say "frozen", never "aligned", when a role band deadlocks it
+# Spec: honest deadlock reporting + canonical pin keys
 
-**Status:** ☐ ratified 2026-08-18 (player commissioned this spec after the defect was
-surfaced by the landfall adversarial review) · not started · implementer: the next
+**Status:** ☐ TWO phases, BOTH ratified, neither started · implementer: the next
 Claude session — follow this document exactly; where it conflicts with the code you
 find, STOP and say so rather than improvising.
+
+- **Phase A — deadlock reporting** (ratified 2026-08-18): the optimizer must say
+  "frozen", never "aligned", when a role band deadlocks it. Reporting-only.
+- **Phase B — canonical pin keys** (ratified 2026-08-19, promoted from this file's
+  former not-ratified appendix): split-card pins must be honoured by every engine
+  that enforces pins, not only by the readers that happen to probe front-face-aware.
+
+The phases are independent and may ship as one PR or two; Phase B touches
+`deckcore`/`optimize`/`auto_build`/`build_dashboard`/`webapp`, Phase A touches
+`optimize`/`webapp` only.
 
 Line numbers below are anchors **as of `main` = `8b40903`** — resolve every reference
 by the named symbol, and treat a drifted line number as expected, not as a conflict.
@@ -27,6 +36,8 @@ by the named symbol, and treat a drifted line number as expected, not as a confl
    instruction live.
 
 ---
+
+# PHASE A — deadlock reporting
 
 ## The defect, with its receipts
 
@@ -219,7 +230,7 @@ needed shape in `tmp_path`. At minimum:
    aligned one flashes the old text (the pattern `tests/test_panel_pin.py` uses for
    session inspection is adjacent).
 
-## Acceptance
+## Phase A acceptance
 
 ```bash
 # A real-deck smoke: tifa-lockhart is now IN band, so it must read genuinely aligned
@@ -238,29 +249,166 @@ Paste both outputs in the PR body.
 
 ---
 
-## Appendix — companion defect, documented here so it has a home. NOT ratified; do
-## not implement without the player's go-ahead.
+# PHASE B — canonical pin keys (ratified 2026-08-19)
 
-**Split-card pins are stored and read asymmetrically.** Both pin-writing routes
-(`deck_pin` at `webapp/app.py:~1010`, `pins_move` at `~1113`) store under
-`mtglib._norm(name)`, which for a split card keeps the FULL `"a // b"` string. The
-readers disagree:
+## The defect, measured — a full census, not the two sites the first report named
 
-- front-face aware (find the pin either way): `edhrec._pinned_elsewhere`,
-  `deck_conflicts._pin_of`, `card_api.card_payload` — all resolve via
-  `mtglib.name_keys`.
-- exact-key only: `optimize`'s add filter (`reserved = deckcore.pinned_elsewhere(stem)`
-  at ~line 323, consulted as `k in reserved` at ~line 390 where `k` is a FRONT-FACE
-  field key) and `optimize`'s keep-set (~line 280), plus `auto_build`'s pool filter.
+A pin is stored as `{key: deck stem}` where every writer computes the key as
+`mtglib._norm(name)` — which **keeps the full string for a split card**
+(`_norm("Murderous Rider // Swift End")` → `"murderous rider // swift end"`), while
+`front_face` would give `"Murderous Rider"`. Readers then probe with keys of whatever
+spelling THEIR data source uses. The system only works when writer and reader happen
+to share a spelling — and the sources genuinely differ: **deck files and the
+collection carry full names; the EDHREC field snapshot carries front faces; the two
+card panels post whatever spelling their `data-card`/form value happens to hold.**
 
-So a pin created from a panel showing `"Murderous Rider // Swift End"` is stored
-under the full string and **is invisible to the optimizer's reserved check**, whose
-keys are front faces. The engines that enforce pins are the ones that can't see it.
+Writers (both store `_norm(name)`, either spelling):
+- `deck_pin` (`webapp/app.py:~1012`) — posted from the dashboard panel (deck spelling).
+- `pins_move` (`~1121`, both form and `json=1` paths) — posted from `/pins` or the
+  site-wide panel.
+- (`deck_delete`, `~1154`, filters pins by VALUE only — unaffected either way.)
+- Hand edits to the tracked `data/collection/pins.csv`.
 
-Proposed fix direction (one line, at the chokepoint): expand keys inside
-`deckcore.pinned_elsewhere` and `load_pins`' consumers via `mtglib.name_keys` — or
-normalise to `front_face` at SAVE time in `save_pins` (with a one-shot migration of
-the existing `pins.csv`, which today holds no split-card rows, so the migration is a
-no-op in practice). Deciding between read-side and write-side normalisation is the
-implementing session's first task — write-side is simpler but changes stored data;
-read-side matches how `name_keys` fixed the same trap in `carddb` (PR #122 lineage).
+Readers already front-face aware via `mtglib.name_keys` (correct today, and still
+correct after this fix — `name_keys(probe)` always contains the front-face key):
+- `edhrec._pinned_elsewhere` (`scripts/edhrec.py:129`)
+- `deck_conflicts._pin_of` (`scripts/deck_conflicts.py:38`)
+- `card_api.card_payload` (`scripts/card_api.py:116`)
+- `pins_page` staleness (`webapp/app.py:~1090`) — its `runs` map is built under BOTH
+  keys of every deck card, so it matches either stored spelling.
+
+Readers that probe by EXACT key — the broken set, with each probe's key provenance:
+
+| site | probe key comes from | breaks when |
+|---|---|---|
+| `optimize.py:~323/390` `reserved` filter | EDHREC field keys (front faces) | pin stored under full name → **the optimizer offers a card that is pinned elsewhere** |
+| `optimize.py:~280/440` keep-set (`pinned here = keep`) | deck-file spelling (full) | pin stored under front face → **the optimizer may CUT a card pinned to this very deck** |
+| `auto_build.py:~146` pool filter | collection spelling (full) | pin stored under front face → auto-build claims a reserved copy |
+| `build_dashboard.py:~1685` panel `pinned` | panel detail keys (deck spelling) | pin stored under the other spelling → dashboard shows "Pin to this deck" on a pinned card |
+| `webapp/app.py:567` `_validate_add` warning | collection spelling (full) | pin stored under front face → no "spoken for" warning on a manual add |
+| `webapp/app.py:1136` `pins_move` JSON echo | `_norm` of the posted string | echo key must match whatever the store canonicalises to |
+
+Note the second row: the asymmetry cuts BOTH directions. This is not only "the
+optimizer can't see a full-name pin" (the original report) — a front-face pin (which
+is exactly what the new site-wide panel writes when opened from an EDHREC-sourced
+element) makes the keep-set miss, so the enforcement failure includes **cutting a
+card the player explicitly reserved for that deck**.
+
+Today `pins.csv` holds no split-card rows, which is why nothing has visibly broken
+yet; the site-wide panel (PR #129) makes split-card pins routine to create.
+
+## The design — one canonical key, minted in one place
+
+**The invariant after this phase: every key in the pin map is
+`_norm(front_face(name))`.** One new helper in `scripts/deckcore.py`, beside
+`load_pins` (~line 199):
+
+```python
+def pin_key(name):
+    """THE key a pin is stored and probed under: normalized FRONT face.
+
+    A pin reserves a physical card, and the physical card is one object however its
+    name is spelled — deck files and the collection write "A // B", EDHREC and the
+    panels often write "A". Storing under the front face makes every spelling of the
+    same object collide onto one pin. `front_face` splits only on " // " with spaces,
+    so "SP//dr, Piloted by Peni" survives intact (the bare-slash trap)."""
+    return mtglib._norm(mtglib.front_face(name))
+```
+
+Canonicalisation happens at the STORE, in both directions, so hand-edited and legacy
+rows are migrated implicitly on first read — no migration script:
+
+- `load_pins` (~line 202): build the map with `out[pin_key(card)] = deck` instead of
+  `out[mtglib._norm(card)] = deck`.
+- `save_pins` (~line 225): write `pin_key(card)` for each key (belt and braces — an
+  in-memory dict built with a raw key still lands canonical on disk).
+
+The current `pins.csv` (one row, `force of will`, no " // ") is already canonical, so
+the on-disk change is a no-op until a split card is pinned.
+
+## The probe fixes, per site
+
+With the store canonical, front-face probes already hit. Each exact-key probe that
+uses another spelling switches to `pin_key` (when it has a raw name) or a
+`name_keys` intersection (when it only has a normed key string — `name_keys` accepts
+those, and `front ∈ name_keys(anything)`):
+
+1. `optimize.py` keep-set (~280): no change to the build (its keys are now canonical
+   from `load_pins`), but keep has **two** exact probes, and both must widen — this
+   census itself missed the second on the first pass, which is exactly why the
+   implementer greps `in keep` rather than trusting this list:
+   - the cut loop, ~440: `k = _norm(c.name)`; change the test to
+     `if (mtglib.name_keys(c.name) & keep) or mtglib.is_basic(c.name)`.
+   - the land pass, ~643: `mtglib._norm(c.name) not in keep` inside the `weak_lands`
+     comprehension; change to `not (mtglib.name_keys(c.name) & keep)` — otherwise a
+     pinned split LAND (MDFC lands exist and this collection has DFCs) is offered as
+     a weak-land cut.
+   Both are strict widenings: every current match still matches (same-spelling keys
+   are in `name_keys`), and canonical pin keys now match deck-spelled split cards.
+2. `optimize.py` reserved probe (~390): **no change** — field keys are front faces
+   and the store is now canonical. Say so in the PR body rather than touching it.
+3. `auto_build.py:~147`: `if pin_key(n) not in _reserved` (it holds the raw pool
+   name; `import deckcore as _dc` is already in scope).
+4. `build_dashboard.py:~1688`:
+   `d["pinned"] = next((pins[x] for x in mtglib.name_keys(k) if x in pins), None)`
+   — mirrors `card_api`, which is the same payload for the other surface.
+5. `webapp/app.py:567` `_validate_add`: probe with
+   `next((pins[x] for x in mtglib.name_keys(card.name) if x in pins), None)`.
+6. `webapp/app.py` `deck_pin` (~1012) and `pins_move` (~1121): compute the mutation
+   key with `deckcore.pin_key(...)` instead of `mtglib._norm(...)` so the in-memory
+   dict, the JSON echo (`pins.get(k)`), and the saved file agree within the request.
+7. `card_api.card_payload`, `edhrec`, `deck_conflicts`, `pins_page`: **no change** —
+   verify by test, not by edit.
+
+`pins_page` display note: rows now surface front-face keys; its `mtglib.lookup(idx,
+key)` already resolves front faces against full-name collection rows (that is
+`lookup`'s documented job), so `name`/`owned` keep working — but ADD the acceptance
+check below rather than assuming.
+
+## What must NOT change
+
+- `name_keys` and `front_face` themselves — they are the repo-wide traps' fix and
+  other subsystems depend on their exact behaviour.
+- `pinned_elsewhere(stem, pins)`: unchanged. When called with explicit `pins` (tests
+  do this), keys pass through as given; canonicalisation is the store's job.
+- The `/pins` page contract, the panel JSON contract (`test_panel_pin.py` pins both).
+
+## Phase B tests (`tests/test_pins_v2.py` extension or a new file; hermetic)
+
+1. **`pin_key` itself**: identity for plain names; front face for `"A // B"`;
+   `"SP//dr, Piloted by Peni"` unchanged (the bare-slash trap, straight from
+   CLAUDE.md's Known Traps).
+2. **Legacy rows migrate on read**: write a pins.csv containing
+   `Murderous Rider // Swift End,gamma`; `load_pins` returns
+   `{"murderous rider": "gamma"}`; a `save_pins` round-trip writes the canonical key.
+3. **The enforcement tripwire — reserved direction** (the original bug): a pin
+   stored under the FULL split name, a field snapshot offering that card's front
+   face to another deck → `optimize` must NOT propose it as an add. This fails
+   before the fix.
+4. **The keep direction** (the bug the census found): a deck listing
+   `"A // B"` (full spelling), the pin on that deck stored canonically → the card
+   must not appear in `cuts`. Fails before the fix when the spellings differ.
+5. **`auto_build` honours it**: a pinned-elsewhere split card is absent from the
+   candidate pool whichever spelling the collection uses.
+6. **`build_dashboard` payload**: a deck-spelled split key gets `pinned` set from a
+   canonical pin.
+7. **`_validate_add` warns**: adding `"A // B"` when the front face is pinned to
+   another deck produces the warning.
+8. **The land pass honours a pinned land**: a pinned-here nonbasic land (use a
+   split/MDFC-style name) never appears in `weak_lands` whichever spelling the deck
+   file uses — the ~643 probe this spec's own first census missed.
+9. **Nothing regressed for the aware readers**: the existing
+   `test_pins_v2.py::_pinned_elsewhere` cases, `test_changes.py`'s explicit-dict
+   `pinned_elsewhere` cases, and all of `test_panel_pin.py` pass unmodified.
+
+## Phase B acceptance
+
+```bash
+python3 -m pytest -q          # green, including the unmodified panel/pin suites
+```
+
+Then end-to-end in /tmp (read-only against the real repo): copy the decks dir, pin
+`"Murderous Rider // Swift End"`-style card to one deck via a raw full-name pins.csv
+row, run `optimize.py` (no --apply) on ANOTHER deck whose field offers that card, and
+show it is not proposed; run the `/pins` page via the test client and show the row
+resolves name/owned/stale correctly from the canonical key. Paste both in the PR body.
