@@ -139,6 +139,16 @@ Every script takes `--help`. `deck_stats`, `power`, `combo_detector`, `deck_conf
 
 ## Working rules for this repo
 
+### Tools are non-negotiable — read `tool-contract.md` first
+`.claude/skills/mtg-deckbuilder/references/tool-contract.md` maps every question to the
+tool that answers it, and names the anti-patterns that cost real corrections. A
+SessionStart hook (`.claude/settings.json`) injects it into context, and
+`tests/test_tool_contract.py` fails if a script, workflow or agent exists that the
+contract never explains. **The sandbox has no network, but GitHub Actions does** — queue
+card names in `data/reference/verify-queue.txt` and push a `claude/**` branch;
+`deck-verify.yml` returns verbatim Scryfall text and refreshes the field data. Verifying
+more than three cards by web search is a defect, not a workaround.
+
 ### The PC is out of the loop
 Do not defer follow-up work to "run this on the player's PC." The automation loop
 covers it: a merged deck push triggers the field-snapshot GitHub Action (network on

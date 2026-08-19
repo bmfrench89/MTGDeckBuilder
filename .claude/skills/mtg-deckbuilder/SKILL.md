@@ -202,6 +202,10 @@ correct, not a miss. Full rule: `references/grounding-rules.md` #9.
 ## Reference files (read as needed)
 
 - `references/persona.md` — voice, philosophy, how a champion talks to a friend.
+- `references/tool-contract.md` — **which tool answers which question, and what you must
+  never do instead.** Injected into every session by a SessionStart hook and enforced by
+  `tests/test_tool_contract.py`. The sandbox has no network; **GitHub Actions is the
+  network arm** — queue cards in `data/reference/verify-queue.txt` and push.
 - `references/grounding-rules.md` — the non-negotiables. **Read first, every session.**
 - `references/card-review-method.md` — the sleeper audit: how to review any card
   against any deck (engine-read over field %). **Use for every new-arrivals pass.**

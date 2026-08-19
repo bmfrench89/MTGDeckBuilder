@@ -8,6 +8,33 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Tool contract is now ENFORCED, not documented (2026-08-19)
+
+The player's call, and it was correct: this session missed `deck-verify.yml` for six
+merged PRs while verifying ~40 cards one at a time by web search — with CLAUDE.md,
+SKILL.md and grounding-rules.md all loaded. **The lesson is structural: prose the session
+has to remember is not a control.** Three layers replace it.
+
+1. **`references/tool-contract.md`** — every question mapped to the tool that answers it,
+   plus the "NEVER do this instead" column and six named anti-patterns that each cost a
+   real correction this session.
+2. **A SessionStart hook** — `.claude/settings.json` (the repo had NO settings.json and no
+   hooks before this) runs `.claude/hooks/tool-contract.sh`, which emits the contract as
+   `hookSpecificOutput.additionalContext`. The harness injects it before the session acts,
+   so it cannot be skipped the way a reference file can.
+3. **`tests/test_tool_contract.py`** (9 tests) — enumerates `scripts/*.py`,
+   `.github/workflows/*.yml` and `.claude/agents/*.md` and FAILS if the contract never
+   names one. Adding a tool now forces you to say when to reach for it.
+
+**The guard immediately earned its keep**: it caught two tools the hand-written contract
+had already missed — **`spellbook.py`** (the actual tool for "how many combos does this
+deck have", which this session answered by hand-counting) and **`field-snapshots.yml`**.
+A negative control confirms it bites: deleting the `deck-verify.yml` reference fails three
+tests. Suite 840 -> **849**.
+
+If a genuinely non-session-facing script is added, put it in `NOT_SESSION_FACING` in the
+test — deliberately, with the same friction `test_agents.py` uses for widening agent tools.
+
 ## Smaug, Wicked Worm BUILT — and two review corrections (2026-08-19)
 
 The player asked two questions that both landed: *"can't GHA reach out online?"* and
