@@ -8,6 +8,40 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## The lattice generalises — collection can build 15 infinites (2026-08-19)
+
+Follow-up to #133. The 45 rows merged there named **Bartolomé** in every Pieces cell, so
+the KB had learned the *instance*, not the *pattern* — and could not see the identical
+engine sitting in the player's own decks. Fixed by adding 15 rows for the three **owned,
+uncommitted free sac outlets** (Viscera Seer, Woe Strider, **Yahenni, Undying Partisan**),
+crossed with the owned loop/returner halves (Angelic Renewal, Gift of Immortality x2 x
+Sun Titan, Angel of Indemnity, Brotherhood Outcast).
+
+**`--collection-combos` went 0 of 22 → 15 of 82.** Before this session the pool could
+assemble no curated combo at all; the 22 rows were all UB Thassa's Oracle lines whose
+pieces are not owned.
+
+**The live finding for an existing deck: `yshtola-nights-blessed` is TWO owned,
+uncommitted cards from an infinite.** She is WUB, already runs **Sun Titan** (returner),
+**Blood Artist**, **Bastion of Remembrance** and **Vito, Thorn of the Dusk Rose**
+(payoffs), and has **no free sac outlet and no loop card**. Add **Angelic Renewal** (owned
+x1, in no deck) + **Viscera Seer** or **Woe Strider** (both owned, in no deck) and the deck
+has a three-card infinite drain. NOT APPLIED — it moves a hand-tuned Bracket-3 control deck
+to Bracket 4, which is the player's call, not the optimizer's.
+
+**Yahenni, Undying Partisan is the only owned commander-legal free outlet** ({2}{B} legend,
+"Sacrifice another creature: Yahenni gains indestructible"). Mono-black is the catch: every
+owned loop/returner half is WHITE, so a Yahenni deck cannot legally run them. A WB/Esper
+host is required — which is why Y'shtola, not a new Yahenni deck, is the cheap win.
+
+Method written up as `.claude/skills/mtg-deckbuilder/references/combo-shapes.md` (read cards
+for the SLOT they fill — outlet / loop / returner / payoff) and linked from SKILL.md.
+
+⚠ **Known wart:** the study deck `bartolome-del-presidio-600-combos` lives in `data/decks/`,
+so `deck_conflicts` now counts it as a real deck (Generous Gift reads "committed 3"). It is
+a reference list, not a sleeved deck. If that noise matters, move it or teach
+`deck_conflicts` to skip decks whose `# Source:` marks them as study copies.
+
 ## Combo KB taught the Bartolomé lattice (2026-08-19)
 
 `data/reference/combos.csv` went 22 → 67 rows. The 45 new rows are the **Bartolomé del
