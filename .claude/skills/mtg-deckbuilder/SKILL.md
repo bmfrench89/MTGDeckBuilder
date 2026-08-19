@@ -205,6 +205,9 @@ correct, not a miss. Full rule: `references/grounding-rules.md` #9.
 - `references/grounding-rules.md` — the non-negotiables. **Read first, every session.**
 - `references/card-review-method.md` — the sleeper audit: how to review any card
   against any deck (engine-read over field %). **Use for every new-arrivals pass.**
+- `references/combo-shapes.md` — read a card for the SLOT it fills (outlet / loop /
+  returner / payoff), so a combo *lattice* is counted rather than missed. **Use whenever
+  a deck or a commander looks combo-shaped**, and before writing any `combos.csv` row.
 - `references/deckbuilding-principles.md` — EDH ratios, curve, roles, power/brackets, archetypes.
 - `references/rules-reference.md` — specific rules facts that were gotten wrong and corrected.
 - `references/tooling-and-data.md` — network limits, Scryfall image hotlinking, price disclaimers.
