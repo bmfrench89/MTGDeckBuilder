@@ -80,16 +80,29 @@ to Folly, Sevinne's Reclamation) buys the halves back.
   turn off every one of the 44 engines, because every Class B trigger reads the graveyard.
   The deck has no answer to an enchantment-based static beyond Disenchant.
 - **The basics are inverted.** Verified colored pip demand is **W 28 / B 37** (8 double-W
-  cards vs 4 double-B), but the list runs **12 Plains / 9 Swamp**. By pip share the 21 basics
-  should be **9 Plains / 12 Swamp**. Swap three.
+  cards vs 4 double-B), but the list runs **12 Plains / 9 Swamp**. Cross-checked both ways
+  (2026-08-19): the graveyard-side costs my count omits are white (Unburial Rites flashback
+  {3}{W}, Dawn {3}{W}{W} → effective ~31/37), yet the white pips sit disproportionately on
+  reanimation *targets* you rarely hard-cast, while nearly every black card is a tutor,
+  mill or recursion spell cast from hand on curve. Both refinements still land B ≥ W:
+  swap two to three Plains for Swamps.
 - **Four "any colour" lands charge {1}** (Conduit Pylons, Hidden Grotto, Surveillance Room,
   Great Hall of the Citadel) and four more make only colourless (Mariposa Military Base,
   Myriad Landscape, Rogue's Passage, Ash Barrens). The raw 21-source count per colour is
-  flattering; untapped free black is closer to 12.
-- **Dusk // Dawn kills its own engine** — Dusk destroys power ≥3, which is Sun Titan, Angel
-  of Indemnity, Boonweaver, Danitha, Redemption Choir and Brotherhood Outcast.
-- **Demonic Bargain exiles 13 cards** in a deck that wants its graveyard, and can exile
-  combo halves. It is a tutor with a real anti-synergy attached.
+  flattering; untapped free black is closer to 12. Great Hall earns its slot anyway: its
+  {1} → two-mana mode is restricted to legendary spells, which in this deck is a commander-
+  tax ritual for a commander who will die to removal repeatedly — a smart budget pick.
+- **Demonic Bargain exiles 13 cards** — but the lattice's redundancy (14 interchangeable
+  halves) means 13 random exiles rarely disable an engine. A real cost, not a dealbreaker;
+  the worst case is exiling Dusk // Dawn, whose Dawn half is graveyard value.
+- ~~Dusk // Dawn kills its own engine~~ — **retracted on cross-check** (2026-08-19). Dusk
+  destroys power ≥3: the seven returners plus Corpse Augur. But this deck *wants* its
+  returners in the graveyard — they are the reanimation targets — and Dusk **spares every
+  drain payoff and all the fodder** (all power ≤2). It is destroy-based, not exile-based
+  (grounding rule #5), and the Dawn half casts **from the graveyard regardless of how it
+  got there** (aftermath ruling), so milling it is value: a mass rebuy of every payoff.
+  This is a deliberately asymmetric wipe, correctly chosen. The one real caveat: Bartolomé
+  himself grows past power 2 and dies to your own Dusk — spend his counters knowingly.
 - **Corpse Augur and Gnawing Vermin are not loop payoffs** — Augur dies once, and Vermin's
   trigger needs a creature you don't control to target.
 - No counterspells, no protection, no fast mana. The cheapest engine is Brotherhood Outcast
