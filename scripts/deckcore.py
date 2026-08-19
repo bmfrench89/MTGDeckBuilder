@@ -199,6 +199,23 @@ def manual_removals(path):
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
 
 
+def pin_key(name):
+    """THE key a pin is stored and probed under: the normalized FRONT face.
+
+    A pin reserves one physical card, and that card is one object however its name is
+    spelled — deck files and the collection write `"A // B"`, the EDHREC field snapshot
+    and the card panels often write `"A"`. Storing under the front face makes every
+    spelling of the same object collide onto one pin, which is what makes the ENGINES
+    honour it: `optimize`'s reserved filter probes with front-face field keys, while
+    its keep-set probes with deck spelling. Before this, a pin was visible to whichever
+    of those happened to match, so a full-name pin let the optimizer offer a reserved
+    card and a front-face pin let it CUT a card pinned to that very deck.
+
+    `front_face` splits only on `" // "` WITH spaces, so `"SP//dr, Piloted by Peni"`
+    survives intact — the bare-slash trap (CLAUDE.md, Known traps)."""
+    return mtglib._norm(mtglib.front_face(name))
+
+
 def load_pins(path=None):
     """{normalized card: deck stem} — cards you've reserved for a specific deck.
 
@@ -218,7 +235,7 @@ def load_pins(path=None):
             card = (r.get("Card") or "").strip()
             deck = (r.get("Deck") or "").strip()
             if card and deck:
-                out[mtglib._norm(card)] = deck
+                out[pin_key(card)] = deck      # canonical: legacy rows migrate on read
     return out
 
 
@@ -229,7 +246,7 @@ def save_pins(pins, path=None):
     with open(path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["Card", "Deck"])
-        for card, deck in sorted(pins.items()):
+        for card, deck in sorted((pin_key(c), d) for c, d in pins.items()):
             w.writerow([card, deck])
 
 

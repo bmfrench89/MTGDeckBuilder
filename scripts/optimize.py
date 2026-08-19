@@ -437,7 +437,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cuts = []
     for c in deck:
         k = mtglib._norm(c.name)
-        if k in keep or mtglib.is_basic(c.name):    # is_basic: snow printings too
+        # name_keys, not the bare key: `keep` mixes deck-spelled note names with
+        # CANONICAL (front-face) pin keys, so a deck listing "A // B" must still match
+        # a pin stored as "a". Strict widening — same-spelling keys are in name_keys.
+        if (mtglib.name_keys(c.name) & keep) or mtglib.is_basic(c.name):  # snow too
             continue
         ref = mtglib.lookup(idx, c.name)
         if not ref or is_land_in_deck(c.name):
@@ -481,7 +484,22 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # `swaps` keeps its 5-tuple shape (several consumers unpack it positionally);
     # `swaps_detail` carries the SAME swaps with both units spelled out, so the field
     # veto is auditable from a preview instead of taken on trust.
+    # Roles whose CURRENT count sits outside the template. The band gate below can
+    # never move such a role — a swap touching it lands outside the band whichever
+    # way it goes (ramp-for-ramp holds the count, ramp-for-other shifts it by one and
+    # it is still outside), so the gate rejects every candidate and the run reports
+    # zero swaps. That is a FREEZE, not alignment, and the summary must say so: the
+    # deck reading "already aligned" at 10/25 field overlap is what hid tifa-lockhart's
+    # six field-superior swaps for the deck's whole life. The freeze itself is correct
+    # and deliberately kept — see the reporting note in `main` — because softening the
+    # gate would let template pressure churn a hand-ratified deck toward the blind
+    # band. The escape hatch is a ratified `_ARCHETYPE_ROLE_RANGE` entry.
+    out_of_band = {role: (cats.get(role, 0), lo, hi)
+                   for role, (lo, hi) in ranges.items()
+                   if not (lo <= cats.get(role, 0) <= hi)}
+
     swaps, swaps_detail, used_add, used_cut = [], [], set(), set()
+    band_blocked = {}                     # role -> {add names it froze}
     for val_add, _rank, add_name, avail, inc_add in adds:
         if len(swaps) >= min(len(cuts), max_swaps):
             break
@@ -507,6 +525,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                     ok = False
                     break
             if not ok:
+                # Only a role that was ALREADY outside its band is a deadlock. A
+                # rejection because the trial would push an IN-band role out is the
+                # gate doing its normal job and must not be reported as frozen.
+                for role in {cut_role, add_role} & set(out_of_band):
+                    band_blocked.setdefault(role, set()).add(add_name)
                 continue
             cats = trial
             swaps.append((cut_name, val_cut, add_name, inc_add, avail))
@@ -523,6 +546,18 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             used_cut.add(ck)
             used_add.add(mtglib._norm(add_name))
             break
+
+    # An add that was blocked on one cut but succeeded against another is not frozen;
+    # only report what never made it in. Sets are materialised here so both return
+    # sites (the no-field early return and the main result) share one shape.
+    role_deadlock = {
+        "out_of_band": [{"role": r, "count": n, "lo": lo, "hi": hi}
+                        for r, (n, lo, hi) in sorted(out_of_band.items())],
+        "blocked": [{"role": r, "adds": sorted(a for a in names
+                                               if mtglib._norm(a) not in used_add)}
+                    for r, names in sorted(band_blocked.items())
+                    if any(mtglib._norm(a) not in used_add for a in names)],
+    }
 
     # ---- advisory: field risers the margin gate suppressed ------------------------------
     # The margin gate exists to stop churn, but it also silences a NEW card the field is
@@ -563,7 +598,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 "land_swaps": [], "buy_swaps": [], "field_size": 0, "risers": risers,
                 "untyped": untyped, "archetype": list(ctx.get("archetype") or []),
                 "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
-                "role_ranges": ranges, "swaps_detail": swaps_detail}
+                "role_ranges": ranges, "swaps_detail": swaps_detail,
+                "role_deadlock": role_deadlock}
 
     # ---- the fetch ledger (spec-mana-intelligence Phase E) ------------------------------
     # Both land passes and the buy pairing consult ONE running ledger, because they
@@ -641,7 +677,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # pass 1: upgrade weak nonbasic lands to ones the field actually plays
     weak_lands = sorted((inc_of(c.name), c.name) for c in lands
                         if not mtglib.is_basic(c.name)
-                        and mtglib._norm(c.name) not in keep
+                        and not (mtglib.name_keys(c.name) & keep)   # canonical pins too
                         and c.name.lower() not in notes)
     used_land, used_land_add = set(), set()
     for _val, _rank, add_name, avail, inc_add in land_adds:
@@ -771,7 +807,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
               "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
-              "role_ranges": ranges, "swaps_detail": swaps_detail}
+              "role_ranges": ranges, "swaps_detail": swaps_detail,
+              "role_deadlock": role_deadlock}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
@@ -1148,8 +1185,31 @@ def main():
         if r.get("untyped"):
             print(f"   note: {r['untyped']} deck cards have no type data — the land/spell "
                   f"split falls back to the deck's own sections, then name heuristics")
+        # "No swaps" has two causes and only one of them is alignment. When the
+        # role-band gate froze candidates that had ALREADY cleared the margin and the
+        # field veto, saying "aligned" is a lie — it is what let tifa-lockhart sit at
+        # 10/25 field overlap looking finished. Name the gate instead. The freeze is
+        # deliberate (softening it would churn a hand-ratified deck toward the blind
+        # band); the fix is to ratify an archetype entry, not to force the swap.
+        dl = r.get("role_deadlock") or {}
+        blocked = dl.get("blocked") or []
         if not r["swaps"] and not r["land_swaps"]:
-            print("   already aligned with the field — no changes")
+            if blocked:
+                for b in blocked:
+                    cur, lo, hi = next((o["count"], o["lo"], o["hi"])
+                                       for o in dl["out_of_band"] if o["role"] == b["role"])
+                    print(f"   no changes — {len(b['adds'])} candidate(s) blocked by the "
+                          f"{b['role']} band (current {cur}, template {lo}-{hi})")
+                print("   the band freezes this role on purpose; if the count is "
+                      "deck-correct, ratify an archetype entry "
+                      "(deckcore._ARCHETYPE_ROLE_RANGE) rather than forcing swaps")
+            else:
+                print("   already aligned with the field — no changes")
+        for o in dl.get("out_of_band") or []:
+            # Standing fact about the deck, printed even when other roles DID swap —
+            # same class of honesty label as `untyped` and `archetype_unknown`.
+            print(f"   note: {o['role']} {o['count']} sits outside the template "
+                  f"{o['lo']}-{o['hi']} — swaps touching it are frozen")
         for sw in r.get("swaps_detail") or []:
             tag = " [shared]" if sw["avail"] == "share" else ""   # buys never reach swaps
             # BOTH units, both sides. The old line printed the cut's `value_of` blend and
