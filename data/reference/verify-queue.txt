@@ -1,1 +1,3 @@
-# Cleared — the DFC probe is answered; results are in docs/spec-dfc-enrichment.md §1.2.
+# Cleared 2026-08-19 — all 12 queued cards runner-verified verbatim in deck-verify
+# run 32309549585 (log has the oracle text; verify-results.json in the run artifact).
+# One correction landed from it: Smaug, Wicked Worm's ETB Treasures enter TAPPED.

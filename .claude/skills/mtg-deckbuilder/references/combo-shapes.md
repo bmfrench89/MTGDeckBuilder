@@ -144,6 +144,16 @@ note it makes the loop draw-your-library, which needs a Thassa's-Oracle-style ou
 No Ashnod's Altar, no Phyrexian Altar, no Pitiless Plunderer, no Dockside, no Kiki-Jiki,
 no Doubling Season. **Do not build toward this shape from this collection today.**
 
+**CORRECTION (same day):** that verdict was true of the *staples list* and wrong about the
+*archetype* — scanning a generic staples list is the wrong instrument for "is X supported".
+The player owns **Smaug, Wicked Worm x2** (a treasure commander already verified in
+`commanders.csv` with a saved field snapshot), plus Smaug the Magnificent, Smaug the
+Impenetrable, Hellkite Tyrant, The Reaver Cleaver and The Sackville-Bagginses — a complete
+owned treasure package that a commander-page scan finds immediately and a staples scan
+never will. The deck now exists (`data/decks/smaug-wicked-worm.txt`, 72/100, field 13/25).
+**Rule: count archetype support against the pool AND the owned-commander pages, never
+against a staples list alone.**
+
 **The one buy that matters: `Ashnod's Altar`.** Y'shtola already runs **Sun Titan + Angelic
 Renewal** (the loop) and **Exsanguinate** (the sink). Ashnod's Altar is the only missing
 piece, and because it is outlet *and* mana payoff at once it gives that deck a **second,
