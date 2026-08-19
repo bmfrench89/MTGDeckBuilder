@@ -8,6 +8,42 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Token / treasure / copy lattices — knowledge added, collection does NOT support it (2026-08-19)
+
+A second deck-tech was requested (video `j37Rsj4mqhU`, "crazy amounts of copies and treasure
+tokens"). **It could not be reviewed** — YouTube is egress-blocked here and the ID does not
+resolve through web search. The shape was therefore derived from verified card text and
+first principles, NOT from that creator's list. If the video's specific tech matters, the
+title or the decklist is needed.
+
+`combo-shapes.md` gained an extension covering four things worth not re-deriving:
+
+1. **PAYOFF sub-types.** The zero-mana death lattice is the same; what you bolt on sets the
+   ceiling. death→drain wins outright; **death→mana (Ashnod's Altar, Pitiless Plunderer) is
+   NOT a win — it is a resource, and the sink must be named in the same breath.**
+2. **Dual-slot cards.** Ashnod's Altar is outlet AND mana payoff at once, which shortens
+   every combo in the deck by a piece. Weight dual-slot cards above single-slot upgrades.
+3. **The COPY lattice** (Kiki-Jiki + an ETB-untapper) with the two gates people miss:
+   nonlegendary-only targets, and tokens die at the next end step, so it MUST win that turn.
+4. **Doublers are multipliers, not combo pieces.** infinity × 2 = infinity. Counting
+   Doubling Season/Parallel Lives as a combo piece inflates a census with non-combos.
+   Academy Manufactor is different — a *transmuter* that converts one infinite resource
+   into three, and it decks you unless you have an out.
+
+**Counted verdict: this collection does not support the shape.** death→mana outlets 2/15
+(both one-shot spells, not repeatable), copy engines 1/16 (Rite of Replication, one-shot),
+token doublers 0 real ones — the three "doublers" owned (Roaming Throne, Wizard's Staff,
+Delney) double TRIGGERS, not tokens. No Ashnod's Altar, Phyrexian Altar, Pitiless Plunderer,
+Dockside, Kiki-Jiki or Doubling Season. Do not build toward it today.
+
+**The one actionable buy: Ashnod's Altar**, now on `yshtola-nights-blessed.buylist.csv`.
+She already runs Sun Titan + Angelic Renewal (loop) and Exsanguinate (sink), so the Altar
+alone is a second independent infinite kill that survives Blood Artist being removed.
+`combos.csv` 92 → 98; the detector surfaces it as a one-away line on her page.
+
+Fixed in passing: Smothering Tithe's buylist `Replaces` still pointed at Commander's Sphere,
+which #135 cut — retargeted to Fellwar Stone.
+
 ## Y'shtola upgrade APPLIED — the collection's first live infinite (2026-08-19)
 
 Player-ratified. `yshtola-nights-blessed` now runs **Viscera Seer + Sun Titan +

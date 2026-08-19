@@ -70,3 +70,83 @@ Most wrong answers come from skipping one of these:
 Any commander that is a **free, repeatable sacrifice outlet** is a lattice host. When
 scouting, filter the pool for that text first and archetype second — it outranks tribal
 synergy, because it is the one effect that turns two unrelated cards into a win.
+
+---
+
+# Extension: token, treasure and copy lattices (2026-08-19)
+
+Added after a second deck-tech request (video `j37Rsj4mqhU`, **not viewable** — YouTube is
+egress-blocked here and the ID did not resolve through search, so this section is derived
+from verified card text and first principles, **not** from that creator's list). Everything
+below was checked against Scryfall this session.
+
+## 1. The PAYOFF slot has sub-types, and they are not equal
+
+The lattice in the first half produces **infinite deaths at zero mana**. What you bolt on
+decides the ceiling:
+
+| Payoff type | Example | Result | Catch |
+|---|---|---|---|
+| death → drain | Blood Artist, Zulaport Cutthroat | wins on the spot | blanked by lifegain hate / Platinum Angel |
+| **death → mana** | **Ashnod's Altar** (`Sacrifice a creature: Add {C}{C}`), **Pitiless Plunderer** (`Whenever another creature you control dies, create a Treasure token`) | **infinite mana** | **is not a win — see §2** |
+| death → mill | Scavenger's Talent lvl 2 | decks the table | slow vs. a big library |
+| death → cards | Corpse Augur | — | **not loopable**: it dies once, it is not the recurring creature |
+
+**Rule: infinite mana is a resource, not a win. Always name the sink in the same breath.**
+A deck that "goes infinite" and then does nothing has lost to its own combo.
+
+## 2. Cards that fill TWO slots are worth more than two cards
+
+**Ashnod's Altar is simultaneously the OUTLET and the death→mana payoff.** That is the whole
+reason it is a staple — it collapses two lattice slots into one card, which shortens every
+combo in the deck by a piece. Phyrexian Altar does the same and fixes colour. When scouting,
+weight a dual-slot card far above a card that only does one job better.
+
+## 3. The COPY lattice — same skeleton, different verb
+
+Instead of *dies → returns*, it is *enters → copies → untaps the copier*:
+
+- **Kiki-Jiki, Mirror Breaker** — `{T}: Create a token that's a copy of target nonlegendary
+  creature you control, except it has haste. Sacrifice it at the beginning of the next end
+  step.` Pair with any creature whose ETB **untaps Kiki** (Zealous Conscripts, Pestermite,
+  Deceiver Exarch) or blinks him back untapped. Infinite hasty bodies.
+- **Two gates people miss.** The copy target must be **nonlegendary** (so Kiki cannot copy
+  himself, and cannot copy most commanders), and the tokens **die at the next end step** —
+  so a copy loop must **win this turn**. A drain payoff or haste damage is mandatory; "I
+  have infinite blockers" is not a combo.
+
+## 4. Doublers are MULTIPLIERS, not engine pieces — do not slot them as combo cards
+
+Doubling Season, Parallel Lives, Anointed Procession, Mondrak scale a **finite** engine.
+On an already-infinite loop they do nothing: **infinity × 2 is still infinity.** Counting a
+doubler as a combo piece is a classic mis-slot and inflates a combo census with lines that
+are not combos. (The genuine exception is a doubler that changes a *rate into a threshold* —
+e.g. doubling loyalty counters to ultimate a planeswalker immediately.)
+
+**Academy Manufactor is not a doubler, it is a transmuter**: `if you would create one or more
+Clue, Food, or Treasure tokens, create that many of each instead`. On an infinite Treasure
+loop it converts one infinite resource into three — infinite Clues (draw your deck) and
+infinite Food (arbitrary life) alongside the mana. Slot it as a **payoff amplifier**, and
+note it makes the loop draw-your-library, which needs a Thassa's-Oracle-style out or you deck.
+
+## 5. Where this collection actually stands (counted 2026-08-19, snapshot 2,691 uniques)
+
+**This shape is NOT supported.** Honest counts, not vibes:
+
+| Class | Owned |
+|---|---|
+| death → mana outlets | **2 / 15** — Deadly Dispute ×2, Songs of the Damned, and **both are one-shot spells, not repeatable outlets** |
+| copy engines | **1 / 16** — Rite of Replication (a one-shot, not a loop) |
+| token/treasure doublers | 3 / 15 — Roaming Throne, Wizard's Staff, Delney (all *trigger* doublers, not token doublers) |
+| treasure makers | 3 / 16 — Seize the Spoils ×3, Big Score, Wayfarer's Bauble |
+| mana sinks | 2 / 11 — **Exsanguinate**, Profane Command |
+
+No Ashnod's Altar, no Phyrexian Altar, no Pitiless Plunderer, no Dockside, no Kiki-Jiki,
+no Doubling Season. **Do not build toward this shape from this collection today.**
+
+**The one buy that matters: `Ashnod's Altar`.** Y'shtola already runs **Sun Titan + Angelic
+Renewal** (the loop) and **Exsanguinate** (the sink). Ashnod's Altar is the only missing
+piece, and because it is outlet *and* mana payoff at once it gives that deck a **second,
+independent infinite kill** that does not care whether Blood Artist has been removed —
+infinite {C} into a lethal `{X}{B}{B}` Exsanguinate. Prices unverified: no feed is reachable
+from this sandbox.
