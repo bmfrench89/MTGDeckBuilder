@@ -1106,3 +1106,102 @@ def test_an_unrecognized_archetype_word_is_reported_not_silently_ignored(tmp_pat
     assert "draw-go-tempo-nonsense" in (r.get("archetype_unknown") or []), (
         "an unmapped archetype word must be surfaced")
     assert "control" not in (r.get("archetype_unknown") or [])
+
+
+# ---- deadlock reporting: "frozen" is not "aligned" --------------------------------
+# The optimizer used to print "already aligned with the field — no changes" whenever
+# no swap survived, INCLUDING when the role-band gate froze candidates that had
+# already cleared the anti-churn margin and the field veto. That is how tifa-lockhart
+# sat at 10/25 field top-25 overlap looking finished, with six field-superior swaps
+# invisible, until a ratified archetype entry widened the band and released them.
+# The freeze is CORRECT and stays; the lie is the bug.
+
+def test_a_frozen_role_is_reported_as_blocked_not_aligned(tmp_path, monkeypatch):
+    """The tifa freeze in miniature: counter:15 against the default 0-6, with a
+    60%-inclusion counterspell available. Every counter swap is refused because 15 is
+    outside the band in BOTH directions, so the run proposes nothing — and must name
+    the gate rather than claim alignment."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, None)
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+
+    assert r["swaps"] == [], "the band still freezes the swap — behaviour is unchanged"
+    dl = r["role_deadlock"]
+    assert {"role": "counter", "adds": ["Field Counter"]} in dl["blocked"]
+    assert {"role": "counter", "count": 15, "lo": 0, "hi": 6} in dl["out_of_band"]
+
+
+def test_the_deadlock_report_survives_the_archetype_widening(tmp_path, monkeypatch):
+    """The other half of the pair: under `control` the same deck's counter count is
+    IN band, the swap goes through, and counter no longer appears as frozen."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, "artifacts draw-engine control")
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+
+    assert _adds_for(r) == [("Filler Creature", "Field Counter")]
+    dl = r["role_deadlock"]
+    assert not any(b["role"] == "counter" for b in dl["blocked"]), (
+        "a card that got swapped in was never frozen")
+    assert not any(o["role"] == "counter" for o in dl["out_of_band"])
+
+
+def test_a_role_below_its_floor_deadlocks_the_same_way(tmp_path, monkeypatch):
+    """The bug is two-sided and this direction had never been observed in a real deck:
+    a role more than one step UNDER `lo` can never be repaired one swap at a time
+    either, because the post-trial count is still outside the band."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, None)
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+
+    below = {o["role"]: o for o in r["role_deadlock"]["out_of_band"]}
+    assert below["removal"]["count"] == 0 and below["removal"]["lo"] == 8
+    assert below["ramp"]["count"] == 0, "ramp:0 against (9,13) is frozen below the floor"
+
+
+def test_an_aligned_deck_reports_no_deadlock_at_all(tmp_path, monkeypatch, collection_file):
+    """The regression guard: a deck inside its template must produce an empty
+    role_deadlock, so the honest message stays reserved for real freezes."""
+    idx = mtglib.index_by_name(mtglib.load_collection(collection_file))
+    deck = _deck(tmp_path)
+    r = optimize.optimize(deck, mtglib.load_collection(collection_file), idx,
+                          str(tmp_path), apply=False)
+    dl = r["role_deadlock"]
+    assert isinstance(dl, dict) and set(dl) == {"out_of_band", "blocked"}
+    assert dl["blocked"] == [], "nothing was frozen, so nothing may be reported frozen"
+
+
+def test_normal_band_protection_is_not_a_deadlock(tmp_path, monkeypatch):
+    """The label must fire ONLY when the count was ALREADY outside. A swap refused
+    because it would push an in-band role OUT is the gate doing its ordinary job, and
+    reporting that as frozen would make the message meaningless."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, "artifacts draw-engine control")
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    frozen_roles = {b["role"] for b in r["role_deadlock"]["blocked"]}
+    out_roles = {o["role"] for o in r["role_deadlock"]["out_of_band"]}
+    assert frozen_roles <= out_roles, (
+        "every reported freeze must correspond to an already-out-of-band role")
+
+
+def test_reporting_is_additive_and_changes_no_swap(tmp_path, monkeypatch):
+    """This whole feature is REPORTING-ONLY. Softening the gate would let template
+    pressure churn a hand-ratified deck toward the blind band — the freeze is what
+    protected tifa-lockhart's 19 ramp until the player ratified the right template."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, None)
+    r = optimize.optimize(deck, coll, idx, str(tmp_path), apply=False)
+    assert r["swaps"] == [] and r["land_swaps"] == [] and r["buy_swaps"] == []
+
+
+def test_the_cli_names_the_gate_instead_of_claiming_alignment(tmp_path, monkeypatch,
+                                                              capsys):
+    """The surface the player actually reads. `main` must print the blocked-candidate
+    line and the standing out-of-band note, and must NOT print the aligned message."""
+    coll, idx, deck = _counter_deck(tmp_path, monkeypatch, None)
+    import sys
+    argv = ["optimize.py", "--deck", deck, "--collection",
+            str(tmp_path / "collection.csv"), "--decks-dir", str(tmp_path)]
+    monkeypatch.setattr(sys, "argv", argv)
+    try:
+        optimize.main()
+    except SystemExit:
+        pass
+    out = capsys.readouterr().out
+    assert "already aligned with the field" not in out
+    assert "blocked by the counter band (current 15, template 0-6)" in out
+    assert "sits outside the template" in out

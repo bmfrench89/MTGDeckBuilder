@@ -145,3 +145,40 @@ def test_the_site_wide_panel_carries_the_pin_control(client):
     body = client.get("/pins").get_data(as_text=True)
     for ident in ("cp-pinwrap", "cp-pin-deck", "cp-pin-btn", "cp-pin-state"):
         assert ident in body, f"{ident} missing from the site-wide card panel"
+
+
+# --- the optimizer's deadlock message on the web surface --------------------------
+
+def _flash_for(client, report):
+    """Run `_flash_optimize` inside a request context and read what it queued."""
+    import app as appmod
+    from flask import get_flashed_messages
+    with appmod.app.test_request_context():
+        appmod._flash_optimize(report)
+        return get_flashed_messages()
+
+
+def test_the_flash_names_the_frozen_role_instead_of_claiming_alignment(client):
+    """Invariant 10 — every surface. The ⚡ button is where the player's finger is, so
+    it must not say "aligned" when the role-band gate froze the candidates."""
+    msgs = _flash_for(client, {
+        "swaps": [], "land_swaps": [],
+        "role_deadlock": {"out_of_band": [{"role": "ramp", "count": 19,
+                                           "lo": 9, "hi": 13}],
+                          "blocked": [{"role": "ramp", "adds": ["Cultivate", "Harrow"]}]},
+    })
+    joined = " ".join(msgs)
+    assert "already aligned" not in joined
+    assert "2 by the ramp band" in joined
+
+
+def test_a_genuinely_aligned_report_still_flashes_the_old_message(client):
+    msgs = _flash_for(client, {"swaps": [], "land_swaps": [],
+                               "role_deadlock": {"out_of_band": [], "blocked": []}})
+    assert any("already aligned with the field" in m for m in msgs)
+
+
+def test_a_report_with_swaps_flashes_the_count(client):
+    msgs = _flash_for(client, {"swaps": [1, 2], "land_swaps": [3],
+                               "role_deadlock": {"out_of_band": [], "blocked": []}})
+    assert any("3 change(s) applied" in m for m in msgs)

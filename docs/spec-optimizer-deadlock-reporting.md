@@ -1,18 +1,25 @@
 # Spec: honest deadlock reporting + canonical pin keys
 
-**Status:** ☐ TWO phases, BOTH ratified, neither started · implementer: the next
-Claude session — follow this document exactly; where it conflicts with the code you
-find, STOP and say so rather than improvising.
+**Status:** ☑ **SHIPPED 2026-08-19** — both phases. This file is now a RECORD, not a
+work item: read it to understand why the deadlock message and the pin-key
+canonicalisation are shaped the way they are, and do not re-implement from it.
 
-- **Phase A — deadlock reporting** (ratified 2026-08-18): the optimizer must say
-  "frozen", never "aligned", when a role band deadlocks it. Reporting-only.
-- **Phase B — canonical pin keys** (ratified 2026-08-19, promoted from this file's
-  former not-ratified appendix): split-card pins must be honoured by every engine
-  that enforces pins, not only by the readers that happen to probe front-face-aware.
+Two deviations from the text below, both discovered while implementing and both
+recorded here rather than left to rot:
 
-The phases are independent and may ship as one PR or two; Phase B touches
-`deckcore`/`optimize`/`auto_build`/`build_dashboard`/`webapp`, Phase A touches
-`optimize`/`webapp` only.
+1. **`optimize` probes `reserved` with the FIELD key but scores with
+   `value_of(resolved_name)`.** For a split card those spellings differ, so a
+   split-card add is margin-blocked before the pin logic is observable end to end.
+   The reserved fix is still correct and necessary (it is the difference between
+   "never offered" and "offered, then blocked for an unrelated reason"), but the
+   tripwire for it asserts at the `pinned_elsewhere` level, where the contract
+   actually lives. The `value_of` front-face gap is REAL, pre-existing, unspecced and
+   NOT fixed here — it deserves its own ratification.
+2. **The keep-set test had to use a role-NEUTRAL split name.** A realistic one
+   (`Murderous Rider // Swift End`) classifies as `removal`, and with removal below
+   its band the BAND protects the card from cuts — which made the first version of
+   that test pass for the wrong reason. Both keep probes are now covered by tests
+   verified to fail when the probe is reverted.
 
 Line numbers below are anchors **as of `main` = `8b40903`** — resolve every reference
 by the named symbol, and treat a drifted line number as expected, not as a conflict.

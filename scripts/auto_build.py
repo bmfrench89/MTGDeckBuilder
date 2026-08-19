@@ -144,7 +144,9 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         # honour pins: a copy reserved for another deck isn't in this deck's pool
         import deckcore as _dc
         _reserved = _dc.pinned_elsewhere(skip_deck or "")
-        pool_names = [n for n in pool_names if mtglib._norm(n) not in _reserved]
+        # pin_key, not _norm: pins are stored under the canonical front face, and the
+        # collection spells split cards in full.
+        pool_names = [n for n in pool_names if _dc.pin_key(n) not in _reserved]
     else:
         pool_names = [c.name for c in coll]
 

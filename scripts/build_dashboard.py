@@ -1685,7 +1685,9 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         pins = deckcore.load_pins()
         if details:
             for k, d in details.items():
-                d["pinned"] = pins.get(k)
+                # front-face aware, mirroring card_api: panel keys are deck-spelled
+                d["pinned"] = next((pins[x] for x in mtglib.name_keys(k) if x in pins),
+                                   None)
     except Exception:
         pass
 

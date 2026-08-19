@@ -45,35 +45,43 @@ whenever no swap survives the filter, *including* when the filter is deadlocked 
 out-of-band role count — so any deck outside a role band reads as aligned forever. A
 truthful message would name the gate.
 
-## NEXT SESSION: implement `docs/spec-optimizer-deadlock-reporting.md` — follow it exactly
+## Optimizer honesty + canonical pin keys SHIPPED (2026-08-19)
 
-Both phases of the landfall/pins spec are SHIPPED (#129; that file is now a record, not
-a work item). The player then commissioned the follow-up it surfaced, ratified
-2026-08-18:
+Both phases of `docs/spec-optimizer-deadlock-reporting.md` are in; that file is now a
+record, not a work item. Nothing is queued for the next session.
 
-**The optimizer must say "frozen", never "aligned", when a role band deadlocks it.**
-`optimize.py` prints "already aligned with the field — no changes" whenever no swap
-survives its filters — *including* when candidates cleared the anti-churn margin and
-the field veto but died at the role-band gate because a role's count already sits
-outside its template band. That is how tifa-lockhart sat at 10/25 field overlap
-reading "aligned" with six field-superior swaps frozen. The spec is **reporting-only**
-and says loudly why the gate itself must NOT be softened (monotone improvement would
-have churned the hand-ratified 19-ramp deck before the `landfall` entry existed — the
-freeze protected it; the lie is the bug). New `role_deadlock` report key, honest CLI
-message, mirrored webapp flash, six tests including a behaviour-frozen tripwire.
+**Phase A — "frozen", never "aligned".** `optimize` used to print "already aligned with
+the field" whenever no swap survived, including when the role-band gate froze candidates
+that had already cleared the anti-churn margin and the field veto. It now names the gate:
+`no changes — N candidate(s) blocked by the ramp band (current 19, template 9-13)`, plus a
+standing `note:` for any out-of-band role even when other roles did swap, mirrored to the
+webapp flash. New additive `role_deadlock` key on both report return sites.
+**Reporting-only** — the freeze itself is deliberate and a test pins that swaps are
+unchanged; softening the gate would churn a hand-ratified deck toward the blind band.
+Verified against the real history: tifa with its header reverted to `voltron` now prints
+the blocked-candidate line where it used to claim alignment.
 
-**Phase B of the same spec — canonical pin keys — is now RATIFIED too (2026-08-19)**
-and fully specced in the same file: one canonical key (`_norm(front_face(name))`)
-minted by a new `deckcore.pin_key`, canonicalised in `load_pins`/`save_pins` (legacy
-rows migrate implicitly on read — no migration script), and every exact-key probe
-fixed by census: BOTH `keep` probes in `optimize` (the cut loop ~440 AND the land pass
-~643 — the second was missed on the first census pass, so grep `in keep` rather than
-trusting any list), `auto_build`'s pool filter, `build_dashboard`'s panel payload,
-`_validate_add`'s warning, and the two writing routes. The enforcement asymmetry cuts
-BOTH ways: a full-name pin is invisible to the reserved filter (optimizer offers a
-reserved card), and a front-face pin is invisible to the keep-set (optimizer may CUT
-a card pinned to that very deck). Nine tests specified, including tripwires for both
-directions and the SP//dr bare-slash trap.
+**Phase B — one canonical pin key.** `deckcore.pin_key` = `_norm(front_face(name))`,
+applied in `load_pins` AND `save_pins`, so legacy/hand-edited rows migrate on first read
+(no migration script; the live `pins.csv` was already canonical). Six probe sites fixed:
+BOTH `keep` probes in `optimize` (cut loop and land pass), `auto_build`'s pool filter,
+`build_dashboard`'s panel payload, `_validate_add`'s warning, and both writing routes.
+The bug was two-sided — a full-name pin was invisible to the reserved filter (optimizer
+OFFERS a reserved card) and a front-face pin was invisible to the keep-set (optimizer
+CUTS a card pinned to that deck).
+
+⚠ **Two things found while implementing, neither fixed, both recorded in the spec's
+header:**
+1. **`optimize` scores with `value_of(resolved_name)` but probes `reserved` with the
+   FIELD key.** For a split card those spellings differ, so a split-card add is
+   margin-blocked before the pin logic is even reachable. Pre-existing, unspecced, and
+   the next real thing to ratify in this area.
+2. A realistic split card (`Murderous Rider // Swift End`) classifies as `removal`, so
+   with removal below its band the BAND protects it from cuts — which made the first
+   version of the keep test pass for the wrong reason. The shipped tests use a
+   role-neutral split name and were each verified to FAIL when their fix is reverted.
+
+Suite is 840 tests (was 820).
 
 ## Basic lands are always owned (player-ratified 2026-08-17)
 

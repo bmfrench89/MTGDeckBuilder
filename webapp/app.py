@@ -545,7 +545,6 @@ def _validate_add(meta, stem, name, idx=None):
         return None, (f"You don't own a card called “{name}”. Add it to the "
                       "collection first (or check the spelling)."), None
     text = open(meta["path"], encoding="utf-8").read()
-    key = mtglib._norm(card.name)
     # Compare on BOTH the full name and the split-card front face. A deck line often
     # carries only the front face ('Fire') while the collection stores 'Fire // Ice';
     # matching raw names alone let the same card in twice — the known " // " trap, so
@@ -564,7 +563,8 @@ def _validate_add(meta, stem, name, idx=None):
                       f"(needs {bad}). It would make the deck illegal."), None
     warn = None
     try:
-        owner = deckcore.load_pins().get(key)
+        pins_ = deckcore.load_pins()      # canonical keys; probe both spellings
+        owner = next((pins_[x] for x in mtglib.name_keys(card.name) if x in pins_), None)
         if owner and owner != stem:
             warn = (f"Heads up: your copy of {card.name} is pinned to “{owner}”. "
                     "Adding it here spends a copy that deck is counting on.")
@@ -1010,7 +1010,7 @@ def deck_pin(stem):
     name = request.form.get("name", "").strip()
     if name:
         pins = deckcore.load_pins()
-        key = mtglib._norm(name)
+        key = deckcore.pin_key(name)          # canonical, so every engine sees it
         if request.form.get("action") == "unpin":
             pins.pop(key, None)
         else:
@@ -1117,7 +1117,7 @@ def pins_move():
     # message would sit in the session and pop as a stale toast on whatever full page the
     # player loads next, describing a pin they changed minutes ago somewhere else.
     wants_json = bool(request.form.get("json"))
-    k = mtglib._norm(key)
+    k = deckcore.pin_key(key)             # canonical, so every engine sees it
     pins = deckcore.load_pins() if key else {}
     if key:
         if target in ("", "none"):
@@ -1459,8 +1459,19 @@ def _flash_optimize(r):
     if not r:
         return
     n = len(r.get("swaps") or []) + len(r.get("land_swaps") or [])
-    flash(f"Optimizer: {n} change(s) applied." if n else
-          "Optimizer: already aligned with the field — no changes.", "info")
+    # Mirror the CLI's deadlock honesty (invariant 10: every surface). "No changes"
+    # because the role-band gate froze candidates is NOT alignment, and the ⚡ button
+    # is where the player's finger actually is.
+    blocked = (r.get("role_deadlock") or {}).get("blocked") or []
+    if n:
+        flash(f"Optimizer: {n} change(s) applied.", "info")
+    elif blocked:
+        parts = ", ".join(f"{len(b['adds'])} by the {b['role']} band" for b in blocked)
+        flash(f"Optimizer: no changes — candidates blocked: {parts}. That role's count "
+              "sits outside the deck's template, which freezes swaps touching it.",
+              "info")
+    else:
+        flash("Optimizer: already aligned with the field — no changes.", "info")
     widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()
                if rng != optimize.ROLE_RANGE.get(role)}
     if widened:
