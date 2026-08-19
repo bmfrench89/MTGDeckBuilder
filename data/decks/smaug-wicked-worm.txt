@@ -1,0 +1,109 @@
+# Title: Smaug, Wicked Worm
+# Commander: Smaug, Wicked Worm
+# Colors: B R
+# Archetype: aristocrats artifacts burn
+# Source: auto-generated draft (scripts/auto_build.py) from owned cards.
+
+# --- Commander ---
+1 Smaug, Wicked Worm
+
+# --- Creatures ---
+1 The Sackville-Bagginses
+1 Burnished Hart
+1 Hellkite Tyrant
+1 Stark Industries Executive
+1 Bolg's Company
+1 Endrider Catalyzer
+1 Masked Meower
+1 Misty Knight, Hero for Hire
+1 Decadent Dragon // Expensive Taste
+1 Fin Fang Foom
+1 Scavenger Regent // Exude Toxin
+1 Obsidian Charmaw
+1 Kolaghan, the Storm's Fury
+1 Nova Hellkite
+1 Two-Headed Dragon
+1 Goblin Glasswright // Craft with Pride
+1 Burrog Banemaker
+1 Goblin Recruiter
+1 Mage Tower Referee
+1 Raging Goblin
+1 Speed, Young Avenger
+1 Stony-Voiced Goblins
+1 Professional Face-Breaker
+1 Cackling Witch
+1 Dwarven Mauler
+1 Expressive Firedancer
+1 Front Porch Sentries
+1 Goblin Digging Team
+1 Smaug the Magnificent
+
+# --- Instants ---
+1 Deadly Dispute
+1 Big Score
+1 Crash and Burn
+1 Rakdos Charm
+1 Chaos Warp
+1 Death in the Family
+1 HULK SMASH!
+1 Hearth Charm
+1 Nameless Inversion
+1 Dark Ritual
+
+# --- Sorceries ---
+1 Blasphemous Act
+1 Feed the Swarm
+1 Desolation of Smaug
+1 Seize the Spoils
+1 Faithless Looting
+1 Sign in Blood
+1 Unearth
+1 Stir Up Trouble
+1 Sandman's Quicksand
+1 Outbreak
+1 Inside Information
+
+# --- Artifacts ---
+1 Sol Ring
+1 Talisman of Indulgence
+1 Rakdos Signet
+1 Thought Vessel
+1 Diamond Pick-Axe
+1 Giant's Boulder
+1 Burner Rocket
+1 The Reaver Cleaver
+1 Arcane Signet
+
+# --- Enchantments ---
+1 Last Light of Durin's Day
+1 Sticky Fingers
+1 Case of the Burning Masks
+
+# --- Lands ---
+1 Command Tower
+1 Smoldering Marsh
+1 Dragon-Cursed Halls
+1 Sulfurous Springs
+1 Dark Fortress
+1 Foreboding Ruins
+1 Terramorphic Expanse
+1 Bloodfell Caves
+1 Temple of Malice
+1 Rocky Roads
+1 Thriving Bluff
+1 Villainous Hideout
+1 Avengers Tower
+1 Crystal Vein
+1 Dwarven Ruins
+1 Scavenger Grounds
+1 Study Hall
+1 Temple of the False God
+1 The Gold Saucer
+1 Bojuka Bog
+1 Exotic Orchard
+1 Avishkar Raceway
+1 Baxter Building
+
+# --- Basics ---
+9 Mountain
+5 Swamp

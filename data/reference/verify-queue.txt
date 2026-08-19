@@ -1,1 +1,15 @@
-# Cleared — the DFC probe is answered; results are in docs/spec-dfc-enrichment.md §1.2.
+# Queued 2026-08-19 for the deck-verify Action (GitHub runner has Scryfall access).
+# These were verified this session by web search only — the runner should confirm
+# verbatim oracle text via carddb.py --verify and clear the queue.
+Smaug, Wicked Worm
+Smaug the Magnificent
+Smaug the Impenetrable
+Smaug, the Great Calamity // Spew Flame
+Hellkite Tyrant
+The Reaver Cleaver
+The Sackville-Bagginses
+Professional Face-Breaker
+Ninja Teen
+Paramecia Coloniex
+The Warring Triad
+Y'shtola, Night's Blessed

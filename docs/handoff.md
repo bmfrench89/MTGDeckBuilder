@@ -8,6 +8,41 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Smaug, Wicked Worm BUILT — and two review corrections (2026-08-19)
+
+The player asked two questions that both landed: *"can't GHA reach out online?"* and
+*"did you miss the different Smaugs and their treasures?"* Yes and yes.
+
+**GHA is the network arm, and the machinery already existed.** `deck-verify.yml` runs
+`carddb.py --verify` + the field refresh on a GitHub runner, triggered by pushing a
+`claude/**` branch that touches `data/decks/*.txt` or `data/reference/verify-queue.txt`,
+and pushes results back to that branch. This session had been web-searching cards one at
+a time while that workflow sat there. The queue is now refilled with the 12 cards this
+session verified only by search (the Smaugs, Ninja Teen, Paramecia Coloniex, …) so the
+runner confirms them verbatim. wizards.com (rules.py) remains the one true PC-only fetch.
+
+**The treasure verdict in #136/#137 was wrong, and the instrument was the bug: a generic
+staples list is not how you measure archetype support.** The player owns **Smaug, Wicked
+Worm x2** — already verified in commanders.csv (2026-08-15), already field-snapshotted
+(saved 2026-08-17, 1375 decks) — plus Smaug the Magnificent, Smaug the Impenetrable (in
+Ur-Dragon), Hellkite Tyrant, The Reaver Cleaver, The Sackville-Bagginses. 27 of the field
+top-60 owned. combo-shapes.md Extension 1 now carries the correction and the rule: count
+support against the pool AND the owned-commander pages, never a staples list alone.
+
+**The deck: `data/decks/smaug-wicked-worm.txt`** — auto_build from the owned uncommitted
+pool, then optimize --apply (4 fit swaps incl. Smaug the Magnificent in for the Great
+Calamity, 2 land upgrades, 14 buylist rows led by Goldspan 82% / Mirkwood Bats 76% /
+Xorn 74%). Final: 100 cards, 37 lands, power **72/100 Optimized, Bracket 2**, roles all
+in band, field top-25 **13/25** (12 of the missing are buylist rows — the honest ceiling
+of the owned pool). Sections normalized; notes carry the engine protections, pilot lines,
+and the one physical decision: **Smaug the Impenetrable + Blasphemous Act banks 13
+Treasures through your own wipe**, but the copy is sleeved in The Ur-Dragon — pull it or
+wishlist a second; it is deliberately NOT in the 99 until the player decides.
+
+Known noise, unchanged: the Bartolomé study copy still inflates deck_conflicts
+(Bojuka Bog "short 1" etc.). Real new conflict worth knowing: Blasphemous Act own 3,
+now committed 4.
+
 ## Multiplicative lattice added — and it CORRECTS the doubler rule (2026-08-19)
 
 The player supplied the decklist for the unreachable second video: **Thorin, King of Durin's
