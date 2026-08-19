@@ -150,3 +150,95 @@ piece, and because it is outlet *and* mana payoff at once it gives that deck a *
 independent infinite kill** that does not care whether Blood Artist has been removed —
 infinite {C} into a lethal `{X}{B}{B}` Exsanguinate. Prices unverified: no feed is reachable
 from this sandbox.
+
+---
+
+# Extension 2: the MULTIPLICATIVE lattice — "crazy amounts" is not "infinite"
+
+Written 2026-08-19 from a real decklist the player supplied for the video that could not be
+reached (see Extension 1): **Thorin, King of Durin's Folk** Boros Dwarf tribal, 99 + commander,
+20 lands. Every card cited here was verified against Scryfall this session.
+
+**Thorin** — `{3}{R}{W}` Legendary Creature — Dwarf Noble 4/4 (The Hobbit Eternal):
+*"Whenever Thorin or another Dwarf you control enters, create a Treasure token. Other Dwarves
+you control get +1/+0 for each artifact token you control."*
+
+## The finding: this deck has NO infinite combo, and that is by design
+
+Read the three copy engines:
+
+- **Molten Echoes** — *"Whenever a **nontoken** creature you control of the chosen type enters…"*
+- **Flameshadow Conjuring** — *"Whenever a **nontoken** creature you control enters…"*
+- **Cadric, Soul Kindler** — *"Whenever another **nontoken** legendary permanent you control enters…"*
+
+> ## The one-word diagnostic
+> **When you read a copy effect, look for the word `nontoken` first.** It tells you in a single
+> word which lattice you are in. `nontoken` ⇒ the copies cannot feed the engine ⇒ **no loop is
+> possible, ever.** No `nontoken` ⇒ check for a loop immediately.
+>
+> This is the fastest combo read in the game and it is one word long.
+
+Kiki-Jiki (Extension 1) has no `nontoken` clause — which is exactly why it loops, and why the
+untapper is a *separate* card. These engines are the deliberate opposite.
+
+## Slots of the multiplicative lattice
+
+| Slot | Job | Example here |
+|---|---|---|
+| **TRIGGER SOURCE** | converts an event into a resource | Thorin (Dwarf enters → Treasure) |
+| **BODY multiplier** | more creatures entering | Molten Echoes, Flameshadow Conjuring, Cadric |
+| **TOKEN multiplier** | more tokens per creation event | Xorn (+1), Anointed Procession (×2), Mondrak (×2), Academy Manufactor (×3 *types*) |
+| **TRIGGER multiplier** | the trigger itself fires more often | Roaming Throne (name Dwarf → Thorin triggers twice) |
+| **PAYOFF** | turns the pile into a win | Thorin's own anthem (+1/+0 per artifact token), **Terror of the Peaks** |
+
+**Check the payoff for the same gate.** Terror of the Peaks reads *"Whenever another creature
+you control enters"* with **no** `nontoken` clause — so it *does* see every token copy. A payoff
+that is nontoken-gated while your multipliers are not (or vice versa) is a dead card in the deck.
+
+## Why the multipliers are NOT interchangeable
+
+They apply at **different points in the chain**, so they compose multiplicatively rather than
+additively. One nontoken Dwarf cast, with Thorin + Roaming Throne (Dwarf) + Molten Echoes
+(Dwarf) + Xorn + Anointed Procession on board:
+
+1. Dwarf enters → Thorin triggers, **doubled by Roaming Throne** = 2 Treasure events
+2. Molten Echoes copies it (free) → the token is a Dwarf entering → Thorin triggers, doubled
+   again = **2 more events**. Molten Echoes does *not* re-trigger — the copy is a token.
+3. Each of the 4 events: create 1 Treasure → **Xorn +1** → **Procession ×2**
+
+**= 16 Treasures from one Dwarf**, and every other Dwarf gets **+16/+0**. That is the "crazy
+amounts." It is exponential in the number of multipliers and strictly **finite**.
+
+**Play tip — order your replacement effects.** With Xorn and Anointed Procession both out you
+choose the order, and it is not symmetric: `(1+1)×2 = 4` beats `(1×2)+1 = 3`. Apply Xorn
+**first**. (Standard replacement-effect choice — the affected object's controller picks the
+order. **Uncited:** the Comprehensive Rules are unreachable from the sandbox; confirm the rule
+number with `rules.py` on the player's PC before quoting one.)
+
+## This CORRECTS Extension 1
+
+Extension 1 said *"doublers are multipliers, not combo pieces — infinity × 2 is still infinity."*
+That is true **only on an infinite engine**. The full rule is:
+
+- **Infinite lattice** → a doubler is a **dead card**. It adds nothing to ∞.
+- **Multiplicative lattice** → doublers **are the deck**. They are the win condition.
+
+So the first question about any token doubler is *"is this deck's engine infinite or finite?"*
+The same card is a dead draw in one and the payoff in the other. Never evaluate a doubler
+without answering that first.
+
+## Why no rows were added to `combos.csv` for this deck
+
+**`combos.csv` is for combos, and this deck does not contain one.** Adding "Thorin + Molten
+Echoes" as a combo row would be exactly the census inflation Extension 1 warns about. A
+multiplicative engine belongs in a deck's `.notes.md` game plan, not in the combo KB.
+
+## Collection verdict (counted 2026-08-19)
+
+**30 of 80 non-basic slots owned — and none of the engine.** Everything owned is generic
+(Sol Ring, Arcane Signet, Path to Exile, Swords to Plowshares, duals). **Zero** Seven Dwarves,
+no Thorin, no Cadric, no Molten Echoes, no Flameshadow Conjuring, no Academy Manufactor, no
+Anointed Procession, no Mondrak, no Xorn, no Magda, no Goldspan Dragon, no Dwarven Recruiter.
+The one real overlap is **Roaming Throne** (owned ×1, uncommitted) — a trigger multiplier
+looking for a tribal deck that does not exist in this collection yet. **Not buildable; do not
+start here.**

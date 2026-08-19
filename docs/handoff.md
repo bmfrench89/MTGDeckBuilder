@@ -8,6 +8,38 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Multiplicative lattice added — and it CORRECTS the doubler rule (2026-08-19)
+
+The player supplied the decklist for the unreachable second video: **Thorin, King of Durin's
+Folk** Boros Dwarf tribal (99 + commander, 20 lands). Reviewed from the list; every card
+verified against Scryfall.
+
+**The deck has no infinite combo, and that is deliberate.** All three copy engines — Molten
+Echoes, Flameshadow Conjuring, Cadric — are gated on the word **`nontoken`**, so their copies
+can never feed the engine. That yields the fastest combo read there is, now written into
+`combo-shapes.md`: **read a copy effect for the word `nontoken` first; one word tells you
+whether a loop is possible at all.** Kiki-Jiki lacks the clause, which is exactly why it loops.
+
+**This corrects Extension 1's doubler rule.** "Doublers are not combo pieces, infinity x 2 is
+infinity" holds only on an *infinite* engine. On a *multiplicative* engine doublers ARE the
+deck. The same card is a dead draw in one and the win condition in the other, so the first
+question about any doubler is which engine you are in.
+
+Worked math recorded: one Dwarf cast under Thorin + Roaming Throne + Molten Echoes + Xorn +
+Anointed Procession = **16 Treasures** and +16/+0 on every other Dwarf. Also a real play tip —
+Xorn before Anointed Procession, because (1+1)x2 = 4 beats (1x2)+1 = 3. The replacement-effect
+ordering rule is labelled **uncited**: wizards.com is blocked, `rules.py` degraded as designed.
+
+**No `combos.csv` rows were added, on purpose** — the file is for combos and this deck has
+none; adding "Thorin + Molten Echoes" would be the census inflation the reference warns about.
+**No study deck was added to `data/decks/` either**, deliberately avoiding a repeat of the
+`deck_conflicts` wart the Bartolomé study copy introduced.
+
+Collection verdict: **30 of 80 non-basic slots owned and none of the engine** — all generic
+staples. Zero Seven Dwarves, no Thorin/Cadric/Molten Echoes/Flameshadow/Manufactor/Procession/
+Mondrak/Xorn. Only real overlap is Roaming Throne (owned x1, uncommitted), a trigger multiplier
+with no tribal deck to live in. Not buildable.
+
 ## Token / treasure / copy lattices — knowledge added, collection does NOT support it (2026-08-19)
 
 A second deck-tech was requested (video `j37Rsj4mqhU`, "crazy amounts of copies and treasure
