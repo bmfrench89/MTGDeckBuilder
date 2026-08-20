@@ -1,3 +1,2 @@
-# Cleared 2026-08-19 — all 12 queued cards runner-verified verbatim in deck-verify
-# run 32309549585 (log has the oracle text; verify-results.json in the run artifact).
-# One correction landed from it: Smaug, Wicked Worm's ETB Treasures enter TAPPED.
+# Cleared 2026-08-20 — all 14 resilience candidates runner-verified (deck-verify
+# runs 32319382690 and 32319519924) and written into resilience_staples.csv.

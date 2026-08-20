@@ -630,7 +630,8 @@ def type_bucket(name, types):
 # and stays free of circular dependencies.
 # --------------------------------------------------------------------------- #
 def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None,
-                  clock=None):
+                  clock=None, resilience_staples=None,
+                  declared_resilience=None):
     """Run report + power/bracket + manabase on an already-enriched card list
     (e.g. an auto-built 99). Returns {report, assessment, mana}; assessment/mana
     are None if the underlying engine can't run (e.g. name-only)."""
@@ -641,7 +642,12 @@ def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None,
                                   enriched, missing or [], idx)
     refs = refs or power.load_refs()
     try:
-        assessment = power.assess(enriched, rep, refs, clock=clock)
+        assessment = power.assess(
+            enriched, rep, refs, clock=clock,
+            resilience_staples=(resilience_staples
+                                if resilience_staples is not None
+                                else power.load_resilience_staples()),
+            declared_resilience=declared_resilience)
     except Exception:
         assessment = None
     try:
@@ -719,7 +725,9 @@ def _analyze_deck(deck_path, collection, refs=None):
     clock = power.clock_for_deck(
         deck_path, collection if isinstance(collection, str) else None)
     core = analyze_cards(enriched, idx, refs, deck_cards=deck, missing=missing,
-                         clock=clock)
+                         clock=clock,
+                         declared_resilience=power.read_declared_resilience(
+                             deck_path))
     try:
         combos = combo_detector.for_deck(deck_path, idx)
     except Exception:

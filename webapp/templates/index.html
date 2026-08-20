@@ -42,9 +42,8 @@ open one for its full dashboard.</div>
   <div class="stat">
     {% if d.assess %}
       <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
-      <div class="meter" style="width:88px"><span style="width:{{ d.assess.power }}%"></span></div>
-      <span class="pw">{{ d.assess.power }}</span>
-      <span class="muted fs-xs">{{ d.assess.tier }}</span>
+      <span class="pw">{{ d.assess.speed.short }}</span>
+      <span class="muted fs-xs">{{ d.assess.resilience.label }}</span>
     {% else %}<span class="muted">—</span>{% endif %}
     <a class="btn sm" href="{{ url_for('deck', stem=d.stem) }}">Open</a>
   </div>

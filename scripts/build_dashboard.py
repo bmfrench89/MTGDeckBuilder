@@ -633,8 +633,12 @@ def power_html(a):
     return (
         f"<div class='bracketline'><span class='bnum'>Bracket {eff}</span>"
         f"<span class='bname'>{esc(eff_name)}</span>{declared_tag}"
-        f"<span class='pscore'>{a['power']}<span class='muted'>/100 · "
-        f"{esc(a['tier'])}</span></span></div>"
+        # Phase D: the 0-100 composite is retired. The axes carry the meaning and
+        # the bracket carries the guardrail; a composite adjective beside a bracket
+        # is the exact row that made this change necessary.
+        f"<span class='pscore'>{esc((a.get('speed') or {}).get('short', '—'))}"
+        f"<span class='muted'> · {esc((a.get('resilience') or {}).get('short', '—'))}"
+        f"</span></span></div>"
         + mismatch +
         f"<ul class='notes'>{reasons}</ul>"
         "<div class='tablewrap'><table class='data pwrtable'><tbody>" + "".join(bars) + "</tbody></table></div>"
@@ -1114,8 +1118,15 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
             (assessment.get("bracket_effective_name", assessment["bracket_name"])
              + (f" · your setting (detected {assessment['bracket_detected']})"
                 if assessment.get("bracket_mismatch") else ""))))
-        tiles.append(stat_tile("Power", f"{assessment['power']}",
-                               f"/100 · {assessment['tier']}"))
+        sp = assessment.get("speed") or {}
+        rs = assessment.get("resilience") or {}
+        cn = assessment.get("consistency") or {}
+        tiles.append(stat_tile("Speed", sp.get("short", "—"), sp.get("detail", "")))
+        tiles.append(stat_tile("Resilience", rs.get("short", "—"),
+                               rs.get("detail", "")))
+        tiles.append(stat_tile("Consistency",
+                               cn.get("label", "—").split(" (")[0],
+                               cn.get("detail", "")))
     tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
               stat_tile("Removal", cats.get("removal", 0)),
               stat_tile("Draw", cats.get("draw", 0))]

@@ -17,6 +17,7 @@ Usage:
   python3 power.py --deck d.txt --collection coll.csv --json
 """
 import argparse
+import csv
 import glob
 import json
 import os
@@ -82,6 +83,89 @@ def load_refs(ref_dir=REF_DIR_DEFAULT):
         else:
             refs[key] = set(fallback)
     return refs
+
+
+def load_resilience_staples(ref_dir=REF_DIR_DEFAULT):
+    """`{"protection": {norm, …}, "recursion": {norm, …}}` from the curated CSV.
+
+    A separate file from `role_staples.csv` because that one answers "what could I
+    play instead?" (it needs Colors for identity filtering) while this one answers
+    "does this deck survive being interacted with?" — different question, different
+    consumers, and mixing them would put colour data on rows that never need it.
+
+    Every row is runner-verified: `data/reference/verify-queue.txt` + a `claude/**`
+    push makes `deck-verify.yml` print verbatim Scryfall text, and only cards whose
+    text actually protects or rebuilds get a row. Missing file -> empty sets, which
+    the axis reports as "unmeasured" rather than as a deck with zero protection."""
+    out = {"protection": set(), "recursion": set()}
+    path = os.path.join(ref_dir, "resilience_staples.csv")
+    try:
+        with open(path, encoding="utf-8") as f:
+            for row in csv.DictReader(ln for ln in f if not ln.startswith("#")):
+                role = (row.get("Role") or "").strip().lower()
+                name = (row.get("Card") or "").strip()
+                if role in out and name:
+                    out[role].add(mtglib._norm(name))
+    except (OSError, csv.Error):
+        pass
+    return out
+
+
+def read_declared_resilience(deck_path):
+    """The player's own `# Resilience: <low|medium|high>` header, or None.
+
+    Mirrors `read_declared_bracket` deliberately, for the same reason: the counted
+    proxy (protection + recursion density) cannot see whether the deck *needs* that
+    protection. "If your commander is removed twice, does the deck still function?"
+    is a question the player can answer and the data cannot — a 2-protection deck
+    with eight redundant engines is resilient, and a 2-protection deck built around
+    one commander is not. The header records that judgement; the count stays visible
+    beside it, never replaced."""
+    try:
+        with open(deck_path, encoding="utf-8") as f:
+            head = f.read()
+    except (OSError, UnicodeDecodeError):
+        return None
+    v = mtglib.deck_header(head, "Resilience").strip().lower()
+    m = re.match(r"(low|medium|high)\b", v)
+    return m.group(1) if m else None
+
+
+def resilience_axis(enriched, staples, declared=None):
+    """The CRISPI **Resilience** axis: can this deck survive being interacted with?
+
+    Spec `docs/spec-crispi-axes.md` Phase B, and deliberately the most modest of the
+    four. It counts two things the research names — protection density and recursion
+    density — and refuses to pretend they are the whole answer.
+
+    The researched bands are conditional, not absolute: **5-8 protection when the
+    commander or a key engine must stay on the battlefield, 2-4 when the deck has
+    recursion, redundancy or several ways to rebuild.** Which band applies depends on
+    commander-dependence, which is NOT derivable from the data this repo holds — so
+    the axis reports the counts, names the band each would satisfy, and lets a
+    `# Resilience:` header record the player's own verdict.
+
+    An empty staples file yields "unmeasured", never "0 protection": absent data and
+    a measured zero are different claims (the same empty-vs-absent rule the collection
+    attrs live under)."""
+    if not staples or not (staples["protection"] or staples["recursion"]):
+        return {"label": "unmeasured", "short": "unmeasured",
+                "protection": None, "recursion": None,
+                "declared": declared, "basis": "no-list",
+                "detail": "no curated resilience list — run the verify queue"}
+    prot = len(_match(enriched, staples["protection"]))
+    rec = len(_match(enriched, staples["recursion"]))
+    if prot >= 5:
+        band = "meets the 5-8 band for a commander-dependent deck"
+    elif prot >= 2:
+        band = "meets the 2-4 band for a deck that rebuilds; thin if the commander is load-bearing"
+    else:
+        band = "below both researched bands (2-4 rebuilding, 5-8 commander-dependent)"
+    return {"label": (declared or f"{prot} protection · {rec} recursion"),
+            "short": (declared or f"prot {prot} · rec {rec}"),
+            "protection": prot, "recursion": rec, "declared": declared,
+            "basis": "declared" if declared else "counted",
+            "detail": f"{prot} protection, {rec} recursion — {band}"}
 
 
 def _match(enriched, ref_set):
@@ -239,7 +323,46 @@ def speed_axis(detected, clock=None):
     return out
 
 
-def assess(enriched, rep, refs, declared=None, clock=None):
+def consistency_axis(rep, tutors, draw):
+    """The CRISPI **Consistency** axis: how reliably does the deck find its plan?
+
+    Spec Phase C. Two mechanisms get you there and the research is explicit that
+    they trade off: *"lots of tutors reduces the necessity for redundancy, while a
+    deck with heavy redundancy and strong draw engines can be extremely consistent
+    without a single traditional tutor."* This collection is emphatically the second
+    kind — tutors run 0-1 across all nine decks while draw runs 7-15 — so an axis
+    that only counted tutors would call every deck here inconsistent and be wrong.
+
+    Redundancy bands from the research: **5-8 copies of an effect is standard, 8-12
+    when the deck stalls without it, and 8 is the count that puts an effect in hand
+    by turn 3.** Redundancy is measured on the role buckets `classify` already
+    produces (ramp/draw/removal), which is a floor on true redundancy rather than
+    the whole of it — engine-specific clusters need per-deck knowledge the report
+    does not carry, and claiming otherwise would be the kind of false precision
+    this repo's honesty labels exist to prevent."""
+    cats = rep["categories"]
+    # `_match` returns the matched NAMES, and `draw` is already a count — normalise
+    # both so the axis never compares a list to an int (caught in implementation).
+    tutors = len(tutors) if isinstance(tutors, (list, set, tuple)) else (tutors or 0)
+    draw = len(draw) if isinstance(draw, (list, set, tuple)) else (draw or 0)
+    clusters = {k: cats.get(k, 0) for k in ("ramp", "draw", "removal")}
+    deep = sum(1 for v in clusters.values() if v >= 8)
+    ok = sum(1 for v in clusters.values() if 5 <= v < 8)
+    if tutors >= 7:
+        mech = f"tutor-led ({tutors} tutors)"
+    elif deep or ok:
+        mech = f"redundancy-led ({deep} role(s) at 8+, {ok} in the 5-7 band)"
+    else:
+        mech = "thin (no role reaches the 5-copy band, and under 7 tutors)"
+    return {"label": mech, "tutors": tutors, "draw": draw, "clusters": clusters,
+            "deep_roles": deep,
+            "detail": ("bands: 5-8 standard, 8-12 for stall-without-it enablers, "
+                       "8 ~ in hand by turn 3 · " + ", ".join(
+                           f"{k} {v}" for k, v in clusters.items()))}
+
+
+def assess(enriched, rep, refs, declared=None, clock=None,
+           resilience_staples=None, declared_resilience=None):
     cats = rep["categories"]
     interaction = cats.get("removal", 0) + cats.get("counter", 0) + cats.get("wipe", 0)
     ramp = cats.get("ramp", 0)
@@ -329,9 +452,18 @@ def assess(enriched, rep, refs, declared=None, clock=None):
         comps.append({"name": "Curve efficiency", "weight": 14, "score": None,
                       "detail": "avg MV unavailable (add attrs)"})
 
-    power = round(100 * total / avail) if avail else 0
-    tier = ("Casual" if power < 32 else "Focused" if power < 55
-            else "Optimized" if power < 75 else "High / cEDH")
+    # Phase D (spec-crispi-axes, player-ratified 2026-08-20): the 0-100 composite
+    # and its tier ADJECTIVE are gone, with no `legacy_power` afterlife. The defect
+    # was a single row printing "Bracket 4 … 31/100 Casual" — the bracket saw twelve
+    # early infinites while the composite saw no tutors/fast mana/draw. Both halves
+    # were right and the row was nonsense, which is exactly why DeckCheck retired
+    # power levels for CRISPI in 2026 ("the number was opaque").
+    #
+    # A number kept but renamed is the same lie with a smaller font: someone
+    # re-displays it, and tests then have to assert it ISN'T printed. Deleting it
+    # makes the defect UNREPRESENTABLE instead of merely suppressed, and the only
+    # consumer was our own leaderboard sort, replaced in the same change. The
+    # component table below survives untouched — raw counts were never the problem.
 
     # `bracket` deliberately stays the DETECTED number so every existing consumer
     # (ranking, dashboards, the optimizer's reporting) keeps its meaning. The player's
@@ -344,11 +476,16 @@ def assess(enriched, rep, refs, declared=None, clock=None):
         "bracket_effective": effective,
         "bracket_effective_name": BRACKET_NAMES.get(effective, name),
         "bracket_mismatch": bool(declared in (1, 2, 3, 4, 5) and declared != bracket),
-        "power": power, "tier": tier, "components": comps,
+        "components": comps,
         # CRISPI Speed (spec-crispi-axes Phase A). Additive: every existing consumer
         # of this dict keeps working, and `clock=None` yields the honest
         # "unmeasured" label rather than a missing key.
         "speed": speed_axis(detected, clock),
+        # CRISPI Resilience (Phase B) and Consistency (Phase C). Both additive and
+        # both degrade to "unmeasured" without their inputs, never to a zero.
+        "resilience": resilience_axis(enriched, resilience_staples,
+                                      declared_resilience),
+        "consistency": consistency_axis(rep, tutors, draw),
         "signals": {
             "game_changers": gc, "tutors": tutors, "fast_mana": fast,
             "extra_turns": extra, "mass_land_denial": mld, "combo_pieces": combos,
@@ -394,7 +531,40 @@ def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT,
     rep = deck_stats.build_report(deck, enriched, missing, coll_index)
     return assess(enriched, rep, load_refs(ref_dir),
                   declared=read_declared_bracket(deck_path),
-                  clock=clock_for_deck(deck_path, collection_path))
+                  clock=clock_for_deck(deck_path, collection_path),
+                  resilience_staples=load_resilience_staples(ref_dir),
+                  declared_resilience=read_declared_resilience(deck_path))
+
+
+_SPEED_ORDER = {"combo-early": 0, "combo-setup": 1, "combat": 2,
+                "combat-slow": 3, "unmeasured": 4}
+
+
+def _rank_key(item):
+    """Rank order after the composite's retirement: bracket, then how fast the deck
+    actually wins, then interaction density.
+
+    Every term is a shipped axis, so the ordering is explainable in one sentence —
+    which the 0-100 never was. Speed breaks ties within a bracket by BASIS first
+    (a deck with an early infinite outranks one that has to attack) and by the
+    combat turn inside the combat basis, so faster is genuinely earlier."""
+    r = item[1]
+    sp = r.get("speed") or {}
+    basis = _SPEED_ORDER.get(sp.get("basis"), 9)
+    turn = sp.get("combat_turn")
+    return (-r.get("bracket_effective", 0), basis,
+            turn if turn is not None else 99,
+            -r["signals"]["interaction"])
+
+
+def rank_key_for(assessment):
+    """`_rank_key`'s ordering for a bare assessment dict — the webapp leaderboard's
+    sort. Public so the two surfaces cannot drift into different orders, which is
+    the two-surfaces trap this repo keeps re-learning. A None assessment sorts last
+    rather than raising."""
+    if not assessment:
+        return (1, 9, 99, 0)
+    return _rank_key((None, assessment))
 
 
 def print_one(deck_path, res):
@@ -414,13 +584,17 @@ def print_one(deck_path, res):
         print(f"Bracket {res['bracket']} — {res['bracket_name']}")
     for r in res["bracket_reasons"]:
         print(f"    · {r}")
-    sp = res.get("speed")
-    if sp:
-        print(f"\nSpeed (CRISPI): {sp['label']}")
-        print(f"    · {sp['detail']}")
-        if sp.get("caveat"):
-            print(f"    · {sp['caveat']}")
-    print(f"\nPower score: {res['power']}/100  ({res['tier']})")
+    for name, key in (("Speed", "speed"), ("Resilience", "resilience"),
+                      ("Consistency", "consistency")):
+        ax = res.get(key)
+        if ax:
+            print(f"\n{name} (CRISPI): {ax['label']}")
+            print(f"    · {ax['detail']}")
+            if ax.get("caveat"):
+                print(f"    · {ax['caveat']}")
+    print(f"\nInteraction (CRISPI): {res['signals']['interaction']} "
+          f"removal/counter/wipe   (cEDH reference band 12-18, incl. 3+ free)")
+    print("\nComponent counts (raw, not a score):")
     for c in res["components"]:
         s = "—" if c["score"] is None else f"{c['score']:>4}/{c['weight']}"
         print(f"    {c['name']:<22}{s}   {c['detail']}")
@@ -448,15 +622,15 @@ def main():
         decks = sorted(glob.glob(os.path.join(args.decks_dir, "*.txt")))
         results = [(d, build_for_deck(d, idx, args.ref_dir, args.collection))
                    for d in decks]
-        results.sort(key=lambda x: -x[1]["power"])
+        results.sort(key=_rank_key)
         if args.json:
             print(json.dumps([{"deck": os.path.basename(d), **r}
                               for d, r in results], indent=2))
             return 0
         print("POWER RANKING — your decks, strongest first\n")
-        print(f"  {'#':<3}{'Deck':<28}{'Bracket':<20}{'Power':>6}  "
-              f"{'Speed (CRISPI)':<22}Tier")
-        print("  " + "-" * 88)
+        print(f"  {'#':<3}{'Deck':<34}{'Bracket':<14}{'Speed':<16}"
+              f"{'Resilience':<18}{'Consistency':<16}Inter")
+        print("  " + "-" * 106)
         for i, (d, r) in enumerate(results, 1):
             name = os.path.basename(d)[:-4]
             # The player's setting leads; a disagreeing detection is shown, never
@@ -465,8 +639,11 @@ def main():
             if r.get("bracket_mismatch"):
                 b += f" (det {r['bracket_detected']})"
             sp = (r.get("speed") or {}).get("short", "—")
-            print(f"  {i:<3}{name:<28}{b:<20}{r['power']:>4}/100  "
-                  f"{sp:<22}{r['tier']}")
+            rs = (r.get("resilience") or {}).get("short", "—")
+            cs = (r.get("consistency") or {}).get("label", "—")
+            cs = cs.split(" (")[0]
+            print(f"  {i:<3}{name[:33]:<34}{b:<14}{sp:<16}{rs:<18}{cs:<16}"
+                  f"{r['signals']['interaction']}")
         return 0
 
     if not args.deck:

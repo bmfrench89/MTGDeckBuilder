@@ -18,9 +18,7 @@ It's a grounded read, not a verdict.</div>
 <div class="card">
   <div class="row">
     <span class="pill b{{ asm.bracket }}">B{{ asm.bracket }} · {{ asm.bracket_name }}</span>
-    <div class="meter grow-sm"><span style="width:{{ asm.power }}%"></span></div>
-    <span class="stat-big">{{ asm.power }}</span>
-    <span class="muted fs-xs">/100 · {{ asm.tier }}</span>
+    <span class="muted fs-xs">Speed {{ asm.speed.label }} · Resilience {{ asm.resilience.label }}</span>
   </div>
   <ul class="reasons">
     {% for r in asm.bracket_reasons %}<li>{{ r }}</li>{% endfor %}
