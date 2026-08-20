@@ -547,3 +547,39 @@ def test_edhrec_failure_is_remembered_for_a_cooldown(tmp_path, monkeypatch):
     assert got == payload
     assert not os.path.exists(str(tmp_path / "test-commander.fail")), \
         "a reachable EDHREC must clear the marker, not wait it out"
+
+
+def test_a_field_snapshot_is_byte_stable_across_runs(tmp_path, monkeypatch):
+    """Committed + runner-regenerated means byte-stability matters.
+
+    Keys that tie on value came out in whatever order the upstream response listed
+    them, so two runs over identical data produced a diff that moved a line and
+    changed nothing. Four such commits landed on one branch in a single session
+    (2026-08-20) — each a merge conflict waiting to happen, carrying no information.
+    A snapshot commit should appear only when the FIELD actually changed.
+
+    Drives the real `save_snapshot`, with the same field data presented in two
+    different iteration orders — which is exactly what the upstream response did."""
+    import edhrec
+    monkeypatch.setattr(edhrec, "SNAP_DIR", str(tmp_path))
+    monkeypatch.setattr(edhrec, "_snapshot_path",
+                        lambda slug: str(tmp_path / f"{slug}.json"))
+
+    def _rec(order):
+        # `_distill` reads sections -> cards; ties on inclusion are the case that
+        # used to come out in arbitrary order.
+        return {"slug": "test-commander", "sample_decks": 100, "source": "live",
+                "sections": [{"header": "Creatures",
+                              "cards": [{"name": n, "inclusion": 7, "synergy": 1}
+                                        for n in order]}]}
+
+    outs = []
+    for order in (["zebra", "apple", "mongoose"], ["mongoose", "zebra", "apple"]):
+        monkeypatch.setattr(edhrec, "recommendations",
+                            lambda *a, _o=order, **k: _rec(_o))
+        path = edhrec.save_snapshot("Test Commander", {})
+        assert path, "live data must produce a snapshot"
+        outs.append(open(path, encoding="utf-8").read())
+
+    assert outs[0] == outs[1], (
+        "same field data in a different order must produce an IDENTICAL file")
