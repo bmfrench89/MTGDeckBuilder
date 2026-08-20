@@ -1,13 +1,8 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
-# triggers .github/workflows/deck-verify.yml, which runs carddb.py --verify on a
-# runner with real network and prints VERBATIM Scryfall oracle text to the job log.
+# triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — round 1 (the 90 new export names, run 32322609093) and round 2
-# (8 decision-bearing cards, run 32330821297) are both written up:
-# round 1 -> data/reference/hobbit-verified-2026-08-20.txt
-# round 2 -> docs/handoff.md and the Thorin deck's .notes.md
-#
-# STILL UNVERIFIED, if a future session needs them: 26 of the 86 nonbasic cards in
-# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk. Round 1
-# covered new NAMES in the export, not every post-2025 card already owned. Queue them
-# before making a claim about any of them.
+# Queued 2026-08-20: Mana Drain was added to yshtola-nights-blessed at the player's
+# direction. Its text is common knowledge ({U}{U} counter; bank the countered
+# spell's mana value as colorless next main phase) but the deck notes cite it, so
+# confirm verbatim rather than trusting memory.
+Mana Drain

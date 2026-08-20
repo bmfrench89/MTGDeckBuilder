@@ -8,6 +8,43 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## Y'shtola goes Bracket 4: the purchase package lands; Tifa and Smaug retired (2026-08-20)
+
+The player bought 8 cards specifically for Y'shtola (Mana Pool order #468964),
+ratified **Bracket 4** for her, asked for Mana Drain, and deleted the Tifa and
+Smaug decks. All executed:
+
+**Eight swaps, all through the sanctioned edit path** (logged `manual-replace`,
+so the optimizer holds them; cuts chosen by `optimize.cut_candidates` — every
+outgoing card unprotected and bottom-of-field):
+Ghostly Prison←Eye of Nidhogg · Norn's Annex←White Auracite · Bloodchief
+Ascension←Observed Stasis · Teferi, Time Raveler←Risky Shortcut (new
+Planeswalkers section) · Grim Tutor←Syphon Mind · Mana Drain←Cleansing Nova ·
+Talion←Dancer's Chakrams · Lotho←Lethal Scheme. Section checker clean; deck
+exactly 100, singleton-clean; the Viscera Seer + Sun Titan + Angelic Renewal
+loop is intact and Bloodchief now compounds it.
+
+**The strategy is rewritten in the .notes.md**: pillowfort drain-control —
+Prison/Annex tax attackers while the engine assembles, Teferi locks opponents to
+sorcery speed so the loop can't be interrupted at instant speed, Bloodchief's
+quest counters are advanced by Y'shtola's own MV≥3 drains, Talion/Lotho tax and
+ramp off opponents' turns, Grim Tutor is the second unconditional tutor, Mana
+Drain banks counter-mana into Exsanguinate. One wipe (Toxic Deluge) is
+deliberate. All 8 marked do-not-cut.
+
+**`# Bracket: 4` header set — this one is legitimately declared** (unlike the
+Resilience header removed earlier today): the player said "she is allowed to be
+bumped to bracket 4" in so many words. Every surface shows it as
+"Bracket 4 — Optimized (your setting), detected 3". The --rank Bracket column was
+widened 14→20 chars because the mismatch suffix collided with Speed.
+
+**Tifa and Smaug deck files deleted** (all companions + their field snapshots).
+8 decks remain. Grim Tutor was freed by Smaug's deletion and went to Y'shtola.
+Conflicts 117→100; wishlist regenerated (~$1,038 total, down from ~$1,377).
+Mana Drain is queued for runner verification (its text is cited in the notes).
+
+Suite steady at **909**.
+
 ## Phone screenshots exposed 19 misfiled cards and two render bugs — all fixed (2026-08-20)
 
 The player's phone showed a Sorcery under Artifacts, "9 Blasphemous Act" in a

@@ -1,10 +1,14 @@
 # Y'shtola, Night's Blessed — Night's Blessed Control
 
-## Game plan
-Esper control that wins by attrition: Y'shtola turns the deck's constant small
+## Game plan (updated 2026-08-20 — Bracket 4, player-ratified)
+Esper drain-control behind a pillowfort. Y'shtola turns the deck's constant small
 life-loss triggers into cards, Vito and Blood Artist turn drains into damage, and
-Exsanguinate closes with the mana Dark Ritual and a long game bank. Counter what
-matters, wipe what resolves, and let the drain engine grind the table out.
+two lines close: the Viscera Seer + Sun Titan + Angelic Renewal zero-mana loop, or
+Exsanguinate off Dark Ritual and Mana Drain mana. Ghostly Prison and Norn's Annex
+tax anyone who comes at us while the engine assembles; Teferi keeps our sorcery-
+speed pieces uncounterable; Bloodchief Ascension turns the drains the deck already
+makes into a second, compounding engine. Counter what matters, tax the rest, and
+let the drain grind the table out — then present the loop.
 
 ## Engine pieces (do not cut — this is the strongest deck in the stable; the
 ## optimizer must never churn its core for field-average FF cards)
@@ -77,3 +81,46 @@ not a bracket jump.
   Zulaport Cutthroat (payoff #4).
 - The whole lattice reads the graveyard: **Rest in Peace / Grafdigger's Cage turn it
   off.** The deck's answer is its counter suite, plus Vindicate/Void Rend on sight.
+
+## 2026-08-20 — the purchase package lands (8 cards, player-directed; do not cut)
+Bought specifically for this deck (Mana Pool order #468964) and placed by the cut
+ranking — every outgoing card was unprotected and bottom-of-field. All eight texts
+are runner-verified in `data/reference/hobbit-verified-2026-08-20.txt` except Mana
+Drain (queued for verification; its text is common knowledge but gets confirmed on
+the next runner push). **Bracket 4 is player-ratified** — the `# Bracket: 4` header
+records it, and the assess surfaces show it beside the detected estimate.
+
+- **Bloodchief Ascension** (in over Observed Stasis) — the deck's own commander
+  advances it: every MV≥3 noncreature spell drains each opponent 2, and "an
+  opponent lost 2 or more life this turn" is exactly the quest condition, so it is
+  usually online in two-three turns without playing differently. Once live, every
+  point of opponent life loss doubles into 2 more plus 2 mill — Blood Artist,
+  Vito, Bastion and Y'shtola herself all feed it, and the Seer loop with it on
+  board drains the table twice as fast.
+- **Ghostly Prison + Norn's Annex** (in over Eye of Nidhogg / White Auracite) —
+  the pillowfort. Attackers pay 2 generic (Prison) and {W/P} — 2 life if they
+  have no white — per creature (Annex). A go-wide board paying life to attack
+  feeds the end-step draw AND Bloodchief. We cut a wipe (Cleansing Nova) on the
+  theory that taxed attackers mostly don't come; Toxic Deluge stays.
+- **Teferi, Time Raveler** (in over Risky Shortcut) — opponents can only cast at
+  sorcery speed: the loop cannot be interrupted by an instant-speed kill spell on
+  the Seer, and our own wipes and tutors resolve clean. His -3 bounces a problem
+  permanent and draws. MV 3, so casting him drains the table.
+- **Grim Tutor** (in over Syphon Mind) — any card to hand for 3 life, and at MV 3
+  it triggers Y'shtola on the way. Finds the missing loop piece; second
+  unconditional tutor alongside Mystical Tutor.
+- **Mana Drain** (in over Cleansing Nova) — Counterspell that banks the countered
+  spell's mana for our next main phase: a countered 5-drop pays for Exsanguinate
+  or double-spell turns. The counter core is now FoW / Counterspell / Mana Drain /
+  Sublime Epiphany.
+- **Talion, the Kindly Lord** (in over Dancer's Chakrams) — name a number (3 is
+  usually right here); every opponent spell with that MV/power/toughness costs
+  them 2 life and draws us a card. Table-wide tax that feeds the end-step draw
+  and Bloodchief from OTHER people's turns.
+- **Lotho, Corrupt Shirriff** (in over Lethal Scheme) — a Treasure whenever any
+  player casts their second spell each turn, including opponents. Quiet ramp that
+  banks toward Exsanguinate and keeps counter mana open.
+
+Removal after the swaps: Swords, Infernal Grasp, Snuff Out, Void Rend, Dismember,
+Murderous Rider, Vindicate, plus Toxic Deluge. One wipe is deliberate — see
+Ghostly Prison above.
