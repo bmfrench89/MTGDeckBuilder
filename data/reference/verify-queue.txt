@@ -1,26 +1,10 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-20: the 15 owned Dragons that are NOT in the-ur-dragon and whose
-# text is not yet on disk. The player asked why the deck runs 32 of their 49 dragons
-# and not these — and the honest answer needs the ORACLE TEXT, not the field prior,
-# because EDHREC's Ur-Dragon page has no row for 27 of the 49 (it under-represents
-# Marvel / Hobbit / Final Fantasy / Tarkir printings). Judging these from memory is
-# exactly the failure this queue exists to prevent.
-# (Sonic Shrieker and Desert Were-Worm are already verified in
-#  data/reference/hobbit-verified-2026-08-20.txt.)
-Kolaghan, the Storm's Fury
-Decadent Dragon // Expensive Taste
-Neriv, Heart of the Storm
-Scavenger Regent // Exude Toxin
-Nova Hellkite
-Obsidian Charmaw
-Lorehold, the Historian
-Guardian Scalelord
-Hraesvelgr of the First Brood
-Marang River Regent // Coil and Catch
-Two-Headed Dragon
-Vaevictis Asmadi, the Dire
-Brainstealer Dragon
-Beledros Witherbloom
-Witherbloom, the Balancer
+# Queued 2026-08-20: The Ur-Dragon itself. The player asked whether the tuning work
+# accounted for EMINENCE, and the answer is that nothing in this repo models it —
+# `grep -rin "eminence" scripts/ data/reference/` returns NOTHING. Before quantifying
+# what that omission costs, the commander's own text has to be on disk rather than
+# recalled: it is the single most load-bearing card in the deck and every cost
+# assumption in the goldfish analysis depends on reading it exactly.
+The Ur-Dragon
