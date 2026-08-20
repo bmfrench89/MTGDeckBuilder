@@ -43,6 +43,7 @@
 1 Sarkhan, Soul Aflame
 1 Dragonspeaker Shaman
 1 Smaug the Magnificent
+1 Roaming Throne
 
 # --- Instants ---
 1 Assassin's Trophy
@@ -52,8 +53,6 @@
 1 Path to Exile
 1 Swords to Plowshares
 1 Heroic Intervention
-
-# --- Sorceries ---
 1 Rampant Growth
 1 Cultivate
 1 Farseek
@@ -66,7 +65,6 @@
 1 Arcane Signet
 1 Sol Ring
 1 Fellwar Stone
-1 Roaming Throne
 1 Lightning Greaves
 1 Chromatic Lantern
 
@@ -88,7 +86,7 @@
 1 Study Hall
 1 Thriving Bluff
 1 Tranquil Cove
-1 Villainous Hideout
+1 Dragon-Cursed Halls
 1 Exotic Orchard
 1 Path of Ancestry
 1 Unclaimed Territory
