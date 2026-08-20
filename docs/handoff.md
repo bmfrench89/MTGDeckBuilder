@@ -8,6 +8,36 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## CRISPI Phase A SHIPPED — the Speed axis (2026-08-20)
+
+`power.py` now carries a **Speed** axis, from `docs/spec-crispi-axes.md`. Combo evidence
+outranks the combat clock, because `goldfish`'s clock is combat-only and would otherwise
+call a sacrifice-loop deck slow. Live readings across the stable:
+
+| deck | Speed |
+|---|---|
+| bartolome (12 early infinites) | `combo (early)` |
+| yshtola (#135 line, not early) | `combo (setup)` |
+| smaug / cloud / spider / ur-dragon | `combat T9` · captain-america `combat T10` |
+| bruce-banner / tifa-lockhart | `slow (9%)` / `slow (16%)` |
+
+**The spec was wrong by one state and the implementation caught it.** It collapsed
+"slow" into "unmeasured". `goldfish._clock` nulls the median when `kill_rate < 0.5`, so
+a real-but-slow creature deck arrives with `have_data` **True** and no median — measured,
+and the answer is *slow*. Bruce (9% lethal by T10) and Tifa (16%) are the live cases.
+"unmeasured" is now reserved for decks with no clock at all. Spec amended to match.
+
+Design notes worth not re-deriving: `power.clock_for_deck` lazy-imports `goldfish` so the
+engine ring stays acyclic (`grep "^import goldfish" scripts/power.py` → 0, and goldfish
+only reaches back for `apply_attrs`/`load_attrs`, so there is no recursion); `bracket_hint`
+is taken verbatim from the clock rather than re-derived, to avoid two mappings drifting;
+the clock's UNDERSTATED caveat rides along even when the combo branch wins. Cost is a
+disk-cached sim (~0.3s uncached, ~0s after).
+
+**Still open:** Phases B (Resilience), C (redundancy) and D (retire the composite) are
+NOT started. D is why `--rank` still prints `31/100 Casual` beside `Bracket 4` — removing
+it is gated on the player question "does the legacy 0-100 die now or live one release?".
+
 ## Spec amended: the Speed axis is a pair, with anchors confirmed (2026-08-20)
 
 A "any concerns" review caught a defect in the just-merged spec: the goldfish clock
