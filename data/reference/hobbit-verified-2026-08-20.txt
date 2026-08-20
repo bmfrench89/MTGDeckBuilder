@@ -1,0 +1,639 @@
+# VERBATIM Scryfall oracle text — the 90 new names in the 2026-08-20 export.
+# Source: deck-verify.yml run 32322609093 (job 96287587424), carddb.py --verify.
+# The runner's output, unedited. Read THIS, never memory, for these cards.
+
+Abzan Monument  {2}
+  Artifact
+  identity: B G W · commander-legal: yes · TDM 238 · via scryfall
+  | When this artifact enters, search your library for a basic Plains, Swamp, or Forest card, reveal it, put it into your hand, then shuffle.
+  | {1}{W}{B}{G}, {T}, Sacrifice this artifact: Create an X/X white Spirit creature token, where X is the greatest toughness among creatures you control. Activate only as a sorcery.
+  https://scryfall.com/card/tdm/238/abzan-monument?utm_source=api
+
+Along the Crooked Way  {2}{B}
+  Enchantment
+  identity: B · commander-legal: yes · HOB 60 · via scryfall
+  | When this enchantment enters, return target creature card from your graveyard to your hand.
+  | Whenever a creature card leaves your graveyard, amass Goblins 1.
+  | {1}{B}: Goblins and Orcs you control gain menace until end of turn.
+  https://scryfall.com/card/hob/60/along-the-crooked-way?utm_source=api
+
+Aragorn and Arwen, Wed  {4}{G}{W}
+  Legendary Creature — Human Elf Noble
+  identity: G W · commander-legal: yes · LTR 287 · via scryfall
+  | Vigilance
+  | Whenever Aragorn and Arwen enters or attacks, put a +1/+1 counter on each other creature you control. You gain 1 life for each other creature you control.
+  https://scryfall.com/card/ltr/287/aragorn-and-arwen-wed?utm_source=api
+
+Bard's Company  {2}{W}{U}
+  Creature — Human Citizen
+  identity: U W · commander-legal: yes · HOB 146 · via scryfall
+  | You may cast this spell as though it had flash if you control a Human.
+  | Other creatures you control get +1/+1.
+  | Whenever this creature enters or attacks, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)
+  https://scryfall.com/card/hob/146/bards-company?utm_source=api
+
+Bard, King of Dale  {4}{W}{U}
+  Legendary Creature — Human Noble Archer
+  identity: U W · commander-legal: yes · HOB 144 · via scryfall
+  | Reach, vigilance
+  | If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.
+  | If one or more tokens would be created under your control, twice that many of those tokens are created instead.
+  https://scryfall.com/card/hob/144/bard-king-of-dale?utm_source=api
+
+Bejeweled Warg  {1}{G}
+  Creature — Wolf
+  identity: G · commander-legal: yes · HOB 117 · via scryfall
+  | Trample
+  | Whenever this creature deals combat damage to a player, choose one —
+  | • Put a +1/+1 counter on target Wolf you control.
+  | • Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  https://scryfall.com/card/hob/117/bejeweled-warg?utm_source=api
+
+Belladonna Took  {1}{W}
+  Legendary Creature — Halfling Citizen
+  identity: W · commander-legal: yes · HOB 4 · via scryfall
+  | Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a card. If it's the third time, put a +1/+1 counter on each creature you control.
+  https://scryfall.com/card/hob/4/belladonna-took?utm_source=api
+
+Bewildering Blizzard  {4}{U}{U}
+  Instant
+  identity: U · commander-legal: yes · TDM 38 · via scryfall
+  | Draw three cards. Creatures your opponents control get -3/-0 until end of turn.
+  https://scryfall.com/card/tdm/38/bewildering-blizzard?utm_source=api
+
+Bilbo's Gambit  {1}{W}
+  Instant
+  identity: W · commander-legal: yes · HOB 5 · via scryfall
+  | Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.
+  https://scryfall.com/card/hob/5/bilbos-gambit?utm_source=api
+
+Bilbo, Luckwearer // Burglar's Plot  {1}{U} // {4}{U}
+  Legendary Creature — Halfling Rogue // Sorcery — Adventure
+  identity: U · commander-legal: yes · HOB 32 · via fuzzy
+  | Bilbo can't be blocked.
+  | Whenever Bilbo deals combat damage to a player, draw a card, then discard a card. // Exchange control of two target nonland permanents that share a card type. (Then exile this card. You may cast the creature later from exile.)
+  https://scryfall.com/card/hob/32/bilbo-luckwearer-burglars-plot?utm_source=api
+
+Bloodchief Ascension  {B}
+  Enchantment
+  identity: B · commander-legal: yes · CMM 139 · via scryfall
+  | At the beginning of each end step, if an opponent lost 2 or more life this turn, you may put a quest counter on this enchantment. (Damage causes loss of life.)
+  | Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 life. If you do, you gain 2 life.
+  https://scryfall.com/card/cmm/139/bloodchief-ascension?utm_source=api
+
+Bofur, Reliable Guardian // Concerted Care  {W} // {1}{W}
+  Legendary Creature — Dwarf Scout // Instant — Adventure
+  identity: W · commander-legal: yes · HOB 6 · via fuzzy
+  | Lifelink // Target artifact or creature you control gains hexproof and indestructible until end of turn. (Then exile this card. You may cast the creature later from exile.)
+  https://scryfall.com/card/hob/6/bofur-reliable-guardian-concerted-care?utm_source=api
+
+Bolg of the North  {3}{B}{R}
+  Legendary Creature — Goblin Soldier
+  identity: B R · commander-legal: yes · HOB 148 · via scryfall
+  | When Bolg enters, you may sacrifice another creature. When you do, Bolg deals damage equal to that creature's power to another target creature. If excess damage was dealt this way, amass Goblins X, where X is that excess damage. (Put X +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)
+  https://scryfall.com/card/hob/148/bolg-of-the-north?utm_source=api
+
+Bombur, Gentle Dreamer  {2}{R}
+  Legendary Creature — Dwarf Bard
+  identity: R · commander-legal: yes · HOB 88 · via scryfall
+  | Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)
+  | Bombur doesn't untap during your untap step unless you have an enduring story.
+  https://scryfall.com/card/hob/88/bombur-gentle-dreamer?utm_source=api
+
+Bothersome Noisemaker  {1}{R}
+  Creature — Goblin Bard
+  identity: R · commander-legal: yes · HOB 89 · via scryfall
+  | Whenever you cast a noncreature spell, amass Goblins 1. (Put a +1/+1 counter on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)
+  https://scryfall.com/card/hob/89/bothersome-noisemaker?utm_source=api
+
+Burn, Burn, Tree and Fern  {3}{R}
+  Enchantment — Saga
+  identity: R · commander-legal: yes · HOB 90 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I — This Saga deals 6 damage to target creature an opponent controls.
+  | II — Destroy target artifact an opponent controls.
+  | III, IV — Add {R}.
+  https://scryfall.com/card/hob/90/burn-burn-tree-and-fern?utm_source=api
+
+Cantankerous Keepers  {5}{G}
+  Creature — Elf Soldier
+  identity: G · commander-legal: yes · HOB 122 · via scryfall
+  | Affinity for Elves (This spell costs {1} less to cast for each Elf you control.)
+  | When this creature enters, mill four cards, then put all Elf cards from among them into your hand.
+  https://scryfall.com/card/hob/122/cantankerous-keepers?utm_source=api
+
+Celebrate the Mountain-king  {3}{W}
+  Enchantment
+  identity: W · commander-legal: yes · HOB 7 · via scryfall
+  | When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.
+  | When this enchantment enters, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)
+  https://scryfall.com/card/hob/7/celebrate-the-mountain-king?utm_source=api
+
+Constrictor Sage  {4}{U}
+  Creature — Snake Wizard
+  identity: U · commander-legal: yes · TDM 39 · via scryfall
+  | When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
+  | Renew — {2}{U}, Exile this card from your graveyard: Tap target creature an opponent controls and put a stun counter on it. Activate only as a sorcery.
+  https://scryfall.com/card/tdm/39/constrictor-sage?utm_source=api
+
+Death Begets Life  {5}{B}{G}{U}
+  Sorcery
+  identity: B G U · commander-legal: yes · TDM 176 · via scryfall
+  | Destroy all creatures and enchantments. Draw a card for each permanent destroyed this way.
+  https://scryfall.com/card/tdm/176/death-begets-life?utm_source=api
+
+Desert Were-Worm  {4}{R}{R}
+  Creature — Dragon Wurm
+  identity: R · commander-legal: yes · HOB 92 · via scryfall
+  | This creature gets +2/+0 for each Mountain you control.
+  | Whenever you attack with creatures with total power 12 or greater for the first time each turn, untap all attacking creatures. After this phase, there is an additional combat phase.
+  https://scryfall.com/card/hob/92/desert-were-worm?utm_source=api
+
+Dismember  {1}{B/P}{B/P}
+  Instant
+  identity: B · commander-legal: yes · MM2 79 · via scryfall
+  | ({B/P} can be paid with either {B} or 2 life.)
+  | Target creature gets -5/-5 until end of turn.
+  https://scryfall.com/card/mm2/79/dismember?utm_source=api
+
+Down in the Valley  {2}{G}
+  Enchantment — Saga
+  identity: G · commander-legal: yes · HOB 124 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I — Search your library for a basic land card, reveal it, put it into your hand, then shuffle.
+  | II — This Saga gains "Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token."
+  | III, IV — Elves you control get +1/+0 and gain vigilance until end of turn.
+  https://scryfall.com/card/hob/124/down-in-the-valley?utm_source=api
+
+Dwalin, Weaponmaster  {1}{R/W}
+  Legendary Creature — Dwarf Warrior
+  identity: R W · commander-legal: yes · HOB 154 · via scryfall
+  | First strike
+  | Whenever Dwalin enters or attacks, put a hone counter on each Equipment you control. (Each hone counter on an Equipment grants +1/+0 to equipped creature.)
+  https://scryfall.com/card/hob/154/dwalin-weaponmaster?utm_source=api
+
+Dáin's Company  {R}{W}
+  Creature — Dwarf Warrior
+  identity: R W · commander-legal: yes · HOB 152 · via scryfall
+  | This creature has lifelink as long as you control another Dwarf.
+  | When this creature enters, look at the top four cards of your library. You may reveal a Dwarf or Equipment card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
+  https://scryfall.com/card/hob/152/d%C3%A1ins-company?utm_source=api
+
+Dáin, Lord of the Iron Hills  {1}{W}
+  Legendary Creature — Dwarf Noble
+  identity: W · commander-legal: yes · HOB 8 · via scryfall
+  | Vigilance
+  | Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)
+  | As long as you have an enduring story, creatures can't attack you unless their controller pays {1} for each of those creatures.
+  https://scryfall.com/card/hob/8/d%C3%A1in-lord-of-the-iron-hills?utm_source=api
+
+Eagle of the Great Shelf  {4}{W}
+  Creature — Bird Soldier
+  identity: W · commander-legal: yes · HOB 11 · via scryfall
+  | Flying
+  | Whenever this creature attacks, it gets +1/+1 until end of turn for each other creature you control.
+  https://scryfall.com/card/hob/11/eagle-of-the-great-shelf?utm_source=api
+
+Eagle's Rescue  {2}{W/U}{W/U}
+  Enchantment — Aura
+  identity: U W · commander-legal: yes · HOB 155 · via scryfall
+  | Enchant creature
+  | Enchanted creature gets +2/+2 and has flying.
+  | {2}{W/U}{W/U}: Return this card from your graveyard to the battlefield attached to target creature you control with power 1 or less. Activate only as a sorcery.
+  https://scryfall.com/card/hob/155/eagles-rescue?utm_source=api
+
+Elven Passage  —
+  Land
+  identity: colorless · commander-legal: yes · HOB 181 · via scryfall
+  | {T}, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. You may behold an Elf. If you do, untap that land. (To behold an Elf, choose an Elf you control or reveal an Elf card from your hand.)
+  https://scryfall.com/card/hob/181/elven-passage?utm_source=api
+
+Elven Raft-Steerer  {2}{U}
+  Creature — Elf Pilot
+  identity: U · commander-legal: yes · HOB 37 · via scryfall
+  | Landfall — Whenever a land you control enters, choose one —
+  | • Tap target creature an opponent controls.
+  | • Untap target creature you control.
+  https://scryfall.com/card/hob/37/elven-raft-steerer?utm_source=api
+
+Equilibrium Adept  {3}{R}
+  Creature — Dog Monk
+  identity: R · commander-legal: yes · TDM 106 · via scryfall
+  | When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card.
+  | Flurry — Whenever you cast your second spell each turn, this creature gains double strike until end of turn.
+  https://scryfall.com/card/tdm/106/equilibrium-adept?utm_source=api
+
+Fearsome Goblin Pair  {2}{B/R}
+  Creature — Goblin Soldier
+  identity: B R · commander-legal: yes · HOB 156 · via scryfall
+  | When this creature dies, amass Goblins 4. (Put four +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)
+  https://scryfall.com/card/hob/156/fearsome-goblin-pair?utm_source=api
+
+Fresh Start  {1}{U}
+  Enchantment — Aura
+  identity: U · commander-legal: yes · TDM 46 · via scryfall
+  | Flash
+  | Enchant creature
+  | Enchanted creature gets -5/-0 and loses all abilities.
+  https://scryfall.com/card/tdm/46/fresh-start?utm_source=api
+
+Frontline Rush  {R}{W}
+  Instant
+  identity: R W · commander-legal: yes · TDM 186 · via scryfall
+  | Choose one —
+  | • Create two 1/1 red Goblin creature tokens.
+  | • Target creature gets +X/+X until end of turn, where X is the number of creatures you control.
+  https://scryfall.com/card/tdm/186/frontline-rush?utm_source=api
+
+Fíli the Pathfinder  {3}{W}
+  Legendary Creature — Dwarf Scout
+  identity: W · commander-legal: yes · HOB 14 · via scryfall
+  | Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)
+  | As long as you have an enduring story, creatures you control get +1/+1.
+  | Whenever Fíli or another nontoken Dwarf you control enters, create a 2/2 red Dwarf creature token.
+  https://scryfall.com/card/hob/14/f%C3%ADli-the-pathfinder?utm_source=api
+
+Galion, Elvenking's Butler  {2}{G}{G}
+  Legendary Creature — Elf Advisor
+  identity: G · commander-legal: yes · HOB 125 · via scryfall
+  | Whenever Galion attacks, choose up to one other target creature you control. Its base power and toughness become equal to Galion's power and toughness until end of turn.
+  https://scryfall.com/card/hob/125/galion-elvenkings-butler?utm_source=api
+
+Gandalf, Goblins' Bane // Flameshape  {2}{R} // {1}{R}
+  Legendary Creature — Avatar Wizard // Sorcery — Adventure
+  identity: R · commander-legal: yes · HOB 96 · via fuzzy
+  | Whenever you cast a noncreature spell, Gandalf gets +1/+1 until end of turn and deals 1 damage to each opponent. // Look at the top two cards of your library and exile them face down. For as long as they remain exiled, you may play them if you control a Wizard.
+  https://scryfall.com/card/hob/96/gandalf-goblins-bane-flameshape?utm_source=api
+
+Gathering of Darkness  {3}{B}
+  Sorcery
+  identity: B · commander-legal: yes · HOB 68 · via scryfall
+  | Return up to one target creature card from your graveyard to your hand.
+  | Amass Goblins 3. (Put three +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)
+  https://scryfall.com/card/hob/68/gathering-of-darkness?utm_source=api
+
+Getaway Barrel  {3}{R}
+  Artifact
+  identity: R · commander-legal: yes · HOB 98 · via scryfall
+  | When this artifact is put into a graveyard from the battlefield, reveal the top thirteen cards of your library. Put a random creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.
+  https://scryfall.com/card/hob/98/getaway-barrel?utm_source=api
+
+Ghostly Prison  {2}{W}
+  Enchantment
+  identity: W · commander-legal: yes · SOC 146 · via scryfall
+  | Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.
+  https://scryfall.com/card/soc/146/ghostly-prison?utm_source=api
+
+Gigantic Big Bear  {5}{G}{G}
+  Creature — Bear
+  identity: G · commander-legal: yes · HOB 126 · via scryfall
+  | This spell can't be countered.
+  | Hexproof, haste
+  https://scryfall.com/card/hob/126/gigantic-big-bear?utm_source=api
+
+Gnashing of Teeth  {1}{B}{B}
+  Sorcery
+  identity: B · commander-legal: yes · HOB 69 · via scryfall
+  | Choose one —
+  | • Target creature gets -5/-5 until end of turn. If that creature would die this turn, exile it instead.
+  | • Creatures target player controls get -1/-1 until end of turn.
+  https://scryfall.com/card/hob/69/gnashing-of-teeth?utm_source=api
+
+Gollum the Abandoned  {1}{B}
+  Legendary Creature — Halfling Horror
+  identity: B · commander-legal: yes · HOB 72 · via scryfall
+  | Gollum can't block.
+  | When Gollum enters, exile up to one target card from an opponent's graveyard. Each opponent loses 2 life.
+  | {2}, Sacrifice an artifact or creature: Return this card from your graveyard to your hand. Activate only as a sorcery.
+  https://scryfall.com/card/hob/72/gollum-the-abandoned?utm_source=api
+
+Great Gilded Boat  {2}{U}
+  Artifact — Vehicle
+  identity: U · commander-legal: yes · HOB 42 · via scryfall
+  | Whenever you attack, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)
+  | Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)
+  https://scryfall.com/card/hob/42/great-gilded-boat?utm_source=api
+
+Great Ugly-Looking Goblin // Clap! Snap!  {5}{B} // {1}{B}
+  Creature — Goblin Soldier // Sorcery — Adventure
+  identity: B · commander-legal: yes · HOB 74 · via fuzzy
+  | Each creature you control with a +1/+1 counter on it has menace. (It can't be blocked except by two or more creatures.) // Amass Goblins 2. (Then exile this card. You may cast the creature later from exile.)
+  https://scryfall.com/card/hob/74/great-ugly-looking-goblin-clap!-snap!?utm_source=api
+
+Grim Tutor  {1}{B}{B}
+  Sorcery
+  identity: B · commander-legal: yes · M21 103 · via scryfall
+  | Search your library for a card, put that card into your hand, then shuffle. You lose 3 life.
+  https://scryfall.com/card/m21/103/grim-tutor?utm_source=api
+
+Head of the Hunt  {2}{B}{B}
+  Creature — Wolf
+  identity: B · commander-legal: yes · HOB 75 · via scryfall
+  | Flash
+  | If a creature an opponent controls would die, exile it instead. When you do, create a 2/2 green Wolf creature token.
+  https://scryfall.com/card/hob/75/head-of-the-hunt?utm_source=api
+
+Inspirited Vanguard  {4}{G}
+  Creature — Human Soldier
+  identity: G · commander-legal: yes · TDM 146 · via scryfall
+  | Whenever this creature enters or attacks, it endures 2. (Put two +1/+1 counters on it or create a 2/2 white Spirit creature token.)
+  https://scryfall.com/card/tdm/146/inspirited-vanguard?utm_source=api
+
+Key to the Side-Door  {1}
+  Artifact
+  identity: colorless · commander-legal: yes · HOB 175 · via scryfall
+  | {2}, {T}: Target creature can't be blocked this turn.
+  | {1}, {T}, Discard a legendary card with the same name as a legendary permanent you control: Draw two cards.
+  https://scryfall.com/card/hob/175/key-to-the-side-door?utm_source=api
+
+Kin-Tree Severance  {2/W}{2/B}{2/G}
+  Instant
+  identity: B G W · commander-legal: yes · TDM 200 · via scryfall
+  | Exile target permanent with mana value 3 or greater.
+  https://scryfall.com/card/tdm/200/kin-tree-severance?utm_source=api
+
+Kishla Skimmer  {G}{U}
+  Creature — Bird Scout
+  identity: G U · commander-legal: yes · TDM 201 · via scryfall
+  | Flying
+  | Whenever a card leaves your graveyard during your turn, draw a card. This ability triggers only once each turn.
+  https://scryfall.com/card/tdm/201/kishla-skimmer?utm_source=api
+
+Kíli the Resourceful  {1}{W}
+  Legendary Creature — Dwarf Scout
+  identity: W · commander-legal: yes · HOB 17 · via scryfall
+  | Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)
+  | As long as you have an enduring story, you may pay {0} rather than pay the equip cost of the first equip ability you activate each turn.
+  | Whenever another Dwarf or Equipment you control enters, draw a card. This ability triggers only once each turn.
+  https://scryfall.com/card/hob/17/k%C3%ADli-the-resourceful?utm_source=api
+
+Lake-town Mariners // Gone Fishing  {4}{U}{U} // {3}{U}
+  Creature — Human Citizen // Instant — Adventure
+  identity: U · commander-legal: yes · HOB 44 · via fuzzy
+  | Vigilance
+  | Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.) // Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.
+  https://scryfall.com/card/hob/44/lake-town-mariners-gone-fishing?utm_source=api
+
+Lake-town Toymaker  {3}{W}
+  Creature — Human Artificer
+  identity: W · commander-legal: yes · HOB 19 · via scryfall
+  | At the beginning of combat on your turn, if you've drawn two or more cards this turn, another target creature you control gets +3/+0 and gains first strike until end of turn.
+  https://scryfall.com/card/hob/19/lake-town-toymaker?utm_source=api
+
+Lotho, Corrupt Shirriff  {W}{B}
+  Legendary Creature — Halfling Rogue
+  identity: B W · commander-legal: yes · LTR 213 · via scryfall
+  | Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  https://scryfall.com/card/ltr/213/lotho-corrupt-shirriff?utm_source=api
+
+Most Decrepit Old Bird // Speak Secrets  {U} // {1}{U}
+  Creature — Bird // Sorcery — Adventure
+  identity: U · commander-legal: yes · HOB 49 · via fuzzy
+  | Flying
+  | Threshold — This creature gets +1/+1 as long as there are seven or more cards in your graveyard. // Mill four cards, then put an instant or sorcery card from among them into your hand.
+  https://scryfall.com/card/hob/49/most-decrepit-old-bird-speak-secrets?utm_source=api
+
+Nighthowl Pursuer  {B}
+  Creature — Wolf
+  identity: B · commander-legal: yes · HOB 78 · via scryfall
+  | Menace (This creature can't be blocked except by two or more creatures.)
+  | Ferocious — Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn.
+  https://scryfall.com/card/hob/78/nighthowl-pursuer?utm_source=api
+
+Norn's Annex  {3}{W/P}{W/P}
+  Artifact
+  identity: W · commander-legal: yes · CMM 829 · via scryfall
+  | ({W/P} can be paid with either {W} or 2 life.)
+  | Creatures can't attack you or planeswalkers you control unless their controller pays {W/P} for each of those creatures.
+  https://scryfall.com/card/cmm/829/norns-annex?utm_source=api
+
+Old Fat Spider  {4}{G}{G}
+  Creature — Spider
+  identity: G · commander-legal: yes · HOB 132 · via scryfall
+  | Reach
+  | This creature can't be blocked by creatures with power 2 or less.
+  | Whenever this creature becomes the target of a spell or ability an opponent controls, draw a card.
+  https://scryfall.com/card/hob/132/old-fat-spider?utm_source=api
+
+Old Fat Spider Can't See Me  {2}{U}
+  Enchantment — Saga
+  identity: U · commander-legal: yes · HOB 50 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I — Target creature you control gains hexproof for as long as this Saga remains on the battlefield.
+  | II — Prevent all damage that would be dealt by up to one target creature for as long as this Saga remains on the battlefield.
+  | III, IV — Draw a card.
+  https://scryfall.com/card/hob/50/old-fat-spider-cant-see-me?utm_source=api
+
+Rhovanion Rampager  {2}{B}
+  Creature — Wolf
+  identity: B · commander-legal: yes · HOB 82 · via scryfall
+  | Whenever this creature attacks, you may sacrifice another creature. If you do, put a number of +1/+1 counters on this creature equal to the sacrificed creature's power.
+  | When this creature dies, amass Goblins X, where X is this creature's power. (Put X +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)
+  https://scryfall.com/card/hob/82/rhovanion-rampager?utm_source=api
+
+Roll-Roll-Roll-Roll  {2}{U}
+  Enchantment — Saga
+  identity: U · commander-legal: yes · HOB 54 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I, II, III, IV — Exile up to one target creature or land you control. If you do, return it to the battlefield under its owner's control at the beginning of the next end step.
+  https://scryfall.com/card/hob/54/roll-roll-roll-roll?utm_source=api
+
+Sage of the Fang  {2}{G}
+  Creature — Human Druid
+  identity: G · commander-legal: yes · TDM 155 · via scryfall
+  | When this creature enters, put a +1/+1 counter on target creature.
+  | Renew — {3}{G}, Exile this card from your graveyard: Put a +1/+1 counter on target creature, then double the number of +1/+1 counters on that creature. Activate only as a sorcery.
+  https://scryfall.com/card/tdm/155/sage-of-the-fang?utm_source=api
+
+Settle the Wreckage  {2}{W}{W}
+  Instant
+  identity: W · commander-legal: yes · HOB 26 · via scryfall
+  | Exile all attacking creatures target player controls. That player may search their library for that many basic land cards, put those cards onto the battlefield tapped, then shuffle.
+  https://scryfall.com/card/hob/26/settle-the-wreckage?utm_source=api
+
+Shocking Sharpshooter  {1}{R}
+  Creature — Human Archer
+  identity: R · commander-legal: yes · TDM 121 · via scryfall
+  | Reach
+  | Whenever another creature you control enters, this creature deals 1 damage to target opponent.
+  https://scryfall.com/card/tdm/121/shocking-sharpshooter?utm_source=api
+
+Silvan Reveler  {2}{G}{U}
+  Creature — Elf Citizen
+  identity: G U · commander-legal: yes · HOB 163 · via scryfall
+  | When this creature enters, draw a card, then discard a card. If you discard a land card this way, put it from your graveyard onto the battlefield tapped.
+  | Landfall — Whenever a land you control enters, you may pay {1}{G}{U}. If you do, return this card from your graveyard to your hand.
+  https://scryfall.com/card/hob/163/silvan-reveler?utm_source=api
+
+Skirmish Rhino  {W}{B}{G}
+  Creature — Rhino
+  identity: B G W · commander-legal: yes · TDM 224 · via scryfall
+  | Trample
+  | When this creature enters, each opponent loses 2 life and you gain 2 life.
+  https://scryfall.com/card/tdm/224/skirmish-rhino?utm_source=api
+
+Sonic Shrieker  {2}{R}{W}{B}
+  Creature — Dragon
+  identity: B R W · commander-legal: yes · TDM 226 · via scryfall
+  | Flying
+  | When this creature enters, it deals 2 damage to any target and you gain 2 life. If a player is dealt damage this way, they discard a card.
+  https://scryfall.com/card/tdm/226/sonic-shrieker?utm_source=api
+
+Sting, Bilbo's Sword  {2}
+  Legendary Artifact — Equipment
+  identity: colorless · commander-legal: yes · HOB 178 · via scryfall
+  | Flash
+  | When Sting enters, put a hone counter on Sting for each creature target opponent controls. Attach Sting to up to one target creature you control. (Each hone counter on an Equipment grants +1/+0 to equipped creature.)
+  | Equip {3}
+  https://scryfall.com/card/hob/178/sting-bilbos-sword?utm_source=api
+
+Stone-Giant of High Pass  {5}{R}{R}
+  Creature — Giant
+  identity: R · commander-legal: yes · HOB 113 · via scryfall
+  | Whenever this creature enters or attacks, create a 3/1 colorless Wall artifact creature token with defender named Stone Boulder.
+  | {2}{R}, Sacrifice an artifact: This creature deals 4 damage to any target.
+  https://scryfall.com/card/hob/113/stone-giant-of-high-pass?utm_source=api
+
+Strategic Betrayal  {1}{B}
+  Sorcery
+  identity: B · commander-legal: yes · TDM 94 · via scryfall
+  | Target opponent exiles a creature they control and their graveyard.
+  https://scryfall.com/card/tdm/94/strategic-betrayal?utm_source=api
+
+Talion, the Kindly Lord  {2}{U}{B}
+  Legendary Creature — Faerie Noble
+  identity: B U · commander-legal: yes · WOE 215 · via scryfall
+  | Flying
+  | As Talion enters, choose a number between 1 and 10.
+  | Whenever an opponent casts a spell with mana value, power, or toughness equal to the chosen number, that player loses 2 life and you draw a card.
+  https://scryfall.com/card/woe/215/talion-the-kindly-lord?utm_source=api
+
+Teferi, Time Raveler  {1}{W}{U}
+  Legendary Planeswalker — Teferi
+  identity: U W · commander-legal: yes · RVR 232 · via scryfall
+  | Each opponent can cast spells only any time they could cast a sorcery.
+  | +1: Until your next turn, you may cast sorcery spells as though they had flash.
+  | −3: Return up to one target artifact, creature, or enchantment to its owner's hand. Draw a card.
+  https://scryfall.com/card/rvr/232/teferi-time-raveler?utm_source=api
+
+The Black Arrow  {3}
+  Legendary Artifact — Equipment
+  identity: colorless · commander-legal: yes · HOB 171 · via scryfall
+  | Flash
+  | When The Black Arrow enters, it deals 1 damage to any target. If a Dragon is dealt damage this way, destroy it.
+  | Equipped creature gets +1/+1 and has reach.
+  | Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)
+  https://scryfall.com/card/hob/171/the-black-arrow?utm_source=api
+
+The Eagles Are Coming!  {1}{W}
+  Instant
+  identity: W · commander-legal: yes · HOB 12 · via scryfall
+  | Kicker {2}{W}{W} (You may pay an additional {2}{W}{W} as you cast this spell.)
+  | Choose target creature you own. If this spell was kicked, instead choose any number of target creatures you own. Return each chosen creature to your hand. At the beginning of the next upkeep, create a 4/4 white Bird Soldier creature token with flying for each creature returned to your hand this way.
+  https://scryfall.com/card/hob/12/the-eagles-are-coming!?utm_source=api
+
+The Lonely Mountain  —
+  Land — Mountain
+  identity: R · commander-legal: yes · HOB 187 · via scryfall
+  | ({T}: Add {R}.)
+  | This land enters tapped unless you control an Equipment.
+  | {4}{R}, {T}: Create a 2/2 red Dwarf creature token. This ability costs {1} less to activate for each Equipment you control. Activate only as a sorcery.
+  https://scryfall.com/card/hob/187/the-lonely-mountain?utm_source=api
+
+The Misty Mountains Cold  {2}{R}
+  Enchantment — Saga
+  identity: R · commander-legal: yes · HOB 104 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying. (A Treasure token is an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  https://scryfall.com/card/hob/104/the-misty-mountains-cold?utm_source=api
+
+The Queen of Dale  {1}{W}
+  Legendary Creature — Human Noble
+  identity: W · commander-legal: yes · HOB 24 · via scryfall
+  | Whenever an opponent casts their first noncreature spell each turn, you recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)
+  https://scryfall.com/card/hob/24/the-queen-of-dale?utm_source=api
+
+Thorin Oakenshield  {R}{W}
+  Legendary Creature — Dwarf Noble
+  identity: R W · commander-legal: yes · HOB 165 · via scryfall
+  | Trample
+  | Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)
+  | As long as you have an enduring story, artifacts and creatures you control have ward {1}.
+  https://scryfall.com/card/hob/165/thorin-oakenshield?utm_source=api
+
+Thorin, King of Durin's Folk  {3}{R}{W}
+  Legendary Creature — Dwarf Noble
+  identity: R W · commander-legal: yes · HOC 3 · via scryfall
+  | Whenever Thorin or another Dwarf you control enters, create a Treasure token.
+  | Other Dwarves you control get +1/+0 for each artifact token you control.
+  https://scryfall.com/card/hoc/3/thorin-king-of-durins-folk?utm_source=api
+
+Thranduil's Company  {2}{G}{U}
+  Creature — Elf Soldier
+  identity: G U · commander-legal: yes · HOB 168 · via scryfall
+  | As long as you control another Elf, you may play an additional land on each of your turns.
+  | Landfall — Whenever a land you control enters, put two +1/+1 counters on target creature you control. It gains vigilance until end of turn.
+  https://scryfall.com/card/hob/168/thranduils-company?utm_source=api
+
+Thrór's Map  {2}
+  Legendary Artifact
+  identity: colorless · commander-legal: yes · HOB 179 · via scryfall
+  | When Thrór's Map enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle.
+  | {2}, {T}: Draw a card, then discard a card.
+  https://scryfall.com/card/hob/179/thr%C3%B3rs-map?utm_source=api
+
+Troop of Ponies  {2}
+  Creature — Horse
+  identity: colorless · commander-legal: yes · HOB 3 · via scryfall
+  | {2}, {T}, Sacrifice this creature: Search your library for up to two basic land cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle.
+  https://scryfall.com/card/hob/3/troop-of-ponies?utm_source=api
+
+United Battlefront  {3}{W}
+  Sorcery
+  identity: W · commander-legal: yes · TDM 32 · via scryfall
+  | Look at the top seven cards of your library. Put up to two noncreature, nonland permanent cards with mana value 3 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order.
+  https://scryfall.com/card/tdm/32/united-battlefront?utm_source=api
+
+Unrooted Ancestor  {2}{B}
+  Creature — Spirit Cleric
+  identity: B · commander-legal: yes · TDM 96 · via scryfall
+  | Flash
+  | {1}, Sacrifice another creature: This creature gains indestructible until end of turn. Tap it. (Damage and effects that say "destroy" don't destroy it.)
+  https://scryfall.com/card/tdm/96/unrooted-ancestor?utm_source=api
+
+Veteran Ice Climber  {1}{U}
+  Creature — Human Scout
+  identity: U · commander-legal: yes · TDM 64 · via scryfall
+  | Vigilance
+  | This creature can't be blocked.
+  | Whenever this creature attacks, up to one target player mills cards equal to this creature's power. (They put that many cards from the top of their library into their graveyard.)
+  https://scryfall.com/card/tdm/64/veteran-ice-climber?utm_source=api
+
+Warden of the Grove  {2}{G}
+  Creature — Hydra
+  identity: G · commander-legal: yes · TDM 166 · via scryfall
+  | At the beginning of your end step, put a +1/+1 counter on this creature.
+  | Whenever another nontoken creature you control enters, it endures X, where X is the number of counters on this creature. (Put X +1/+1 counters on the creature that entered or create an X/X white Spirit creature token.)
+  https://scryfall.com/card/tdm/166/warden-of-the-grove?utm_source=api
+
+Wilderland Scrounger  {4}{G}
+  Creature — Wolf
+  identity: G · commander-legal: yes · HOB 141 · via scryfall
+  | Ferocious — Whenever this creature attacks while you control a creature with power 4 or greater, put a +1/+1 counter on each creature you control.
+  https://scryfall.com/card/hob/141/wilderland-scrounger?utm_source=api
+
+Winternight Stories  {2}{U}
+  Sorcery
+  identity: U · commander-legal: yes · TDM 67 · via scryfall
+  | Draw three cards. Then discard two cards unless you discard a creature card.
+  | Harmonize {4}{U} (You may cast this card from your graveyard for its harmonize cost. You may tap a creature you control to reduce that cost by {X}, where X is its power. Then exile this spell.)
+  https://scryfall.com/card/tdm/67/winternight-stories?utm_source=api
+
+Woodland Weavemaster  {1}{G}
+  Creature — Elf Druid
+  identity: G · commander-legal: yes · HOB 143 · via scryfall
+  | Vigilance
+  | Whenever another Elf you control enters, this creature gets +1/+1 until end of turn.
+  | {T}: Add X mana of any one color, where X is this creature's power. Spend this mana only to cast Elf spells and activate abilities of Elf sources.
+  https://scryfall.com/card/hob/143/woodland-weavemaster?utm_source=api
