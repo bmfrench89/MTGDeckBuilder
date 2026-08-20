@@ -651,3 +651,66 @@ Radagast of Rhosgobel  {2}{G}{G}
   identity: G · commander-legal: yes · HOB 136 · via scryfall
   | The first creature spell you cast each turn costs {2} less to cast and can be cast as though it had flash.
   https://scryfall.com/card/hob/136/radagast-of-rhosgobel?utm_source=api
+
+Neriv, Heart of the Storm  {R/W}{R/W}{R/W}{R/W}
+  Legendary Creature — Spirit Dragon
+  identity: B R W · commander-legal: yes · TDM 210 · via scryfall
+  | Flying
+  | If a creature you control that entered this turn would deal damage, it deals twice that much damage instead.
+
+Hraesvelgr of the First Brood  {4}{U}
+  Legendary Creature — Elder Dragon
+  identity: U · commander-legal: yes · FIC 37 · via scryfall
+  | Flying, vigilance, ward {2}
+  | Shiva's Aid — When Hraesvelgr enters and whenever you cast a noncreature spell, target creature gets +1/+0 until end of turn and can't be blocked this turn.
+
+Lorehold, the Historian  {3}{R}{W}
+  Legendary Creature — Elder Dragon
+  identity: R W · commander-legal: yes · SOS 201 · via scryfall
+  | Flying, haste
+  | Each instant and sorcery card in your hand has miracle {2}.
+  | At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
+
+Ureni, the Song Unending  {5}{G}{U}{R}
+  Legendary Creature — Spirit Dragon
+  identity: G R U · commander-legal: yes · TDM 233 · via scryfall
+  | Flying, protection from white and from black
+  | When Ureni enters, it deals X damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control, where X is the number of lands you control.
+
+Niv-Mizzet, Visionary  {4}{U}{R}
+  Legendary Creature — Dragon Wizard
+  identity: R U · commander-legal: yes · FDN 123 · via scryfall
+  | Flying
+  | You have no maximum hand size.
+  | Whenever a source you control deals noncombat damage to an opponent, you draw that many cards.
+
+Smaug, the Great Calamity // Spew Flame  {5}{R}{R} // {4}{R}
+  Legendary Creature — Dragon // Sorcery — Adventure
+  identity: R · commander-legal: yes · HOB 109 · via fuzzy
+  | Flying // Spew Flame deals 5 damage to target creature. (Then exile this card. You may cast the creature later from exile.)
+
+Sylvia Brightspear  {2}{W}
+  Legendary Creature — Human Knight
+  identity: W · commander-legal: yes · BBD 10 · via scryfall
+  | Partner with Khorvath Brightflame
+  | Double strike
+  | Dragons your team controls have double strike.
+
+Wood Elves  {2}{G}
+  Creature — Elf Scout
+  identity: G · commander-legal: yes · HOB 142 · via scryfall
+  | When this creature enters, search your library for a Forest card, put that card onto the battlefield, then shuffle.
+
+Sarkhan, Soul Aflame  {1}{U}{R}
+  Legendary Creature — Human Shaman
+  identity: R U · commander-legal: yes · TDC 301 · via scryfall
+  | Dragon spells you cast cost {1} less to cast.
+  | Whenever a Dragon you control enters, you may have Sarkhan become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it's legendary in addition to its other types.
+
+Roaming Throne  {4}
+  Artifact Creature — Golem
+  identity: colorless · commander-legal: yes · LCI 258 · via scryfall
+  | Ward {2}
+  | As this creature enters, choose a creature type.
+  | This creature is the chosen type in addition to its other types.
+  | If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.

@@ -10,7 +10,7 @@
 # --- Creatures ---
 1 Savage Ventmaw
 1 Smaug, Wicked Worm
-1 Lorehold, the Historian
+1 Ureni, the Song Unending
 1 Dragonlord Dromoka
 1 Lathliss, Dragon Queen
 1 Miirym, Sentinel Wyrm
@@ -36,7 +36,7 @@
 1 Sylvia Brightspear
 1 Neriv, Heart of the Storm
 1 Dragonhawk, Fate's Tempest
-1 Hraesvelgr of the First Brood
+1 Radagast of Rhosgobel
 1 Atsushi, the Blazing Sky
 1 Ao, the Dawn Sky
 1 Wood Elves

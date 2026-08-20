@@ -1,22 +1,9 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-20 (revalidation round): the Ur-Dragon session's decisions rest on
-# ten texts that are NOT on disk.
-#  - Neriv / Hraesvelgr / Lorehold were swapped IN with text existing only in a CI
-#    log (run 32366919184) — the deck now contains cards nothing on disk can quote.
-#  - Ureni / Niv-Mizzet, Visionary / Smaug, the Great Calamity were swapped OUT with
-#    their text never verified at all: the A/B measured printed bodies only, and the
-#    abilities the deck LOST were never read. The cuts need validating, not assuming.
-#  - Sylvia Brightspear / Wood Elves / Sarkhan / Roaming Throne are the candidate
-#    cuts for Radagast of Rhosgobel; the recommendation turns on what they do.
-Neriv, Heart of the Storm
-Hraesvelgr of the First Brood
-Lorehold, the Historian
-Ureni, the Song Unending
-Niv-Mizzet, Visionary
-Smaug, the Great Calamity // Spew Flame
-Sylvia Brightspear
-Wood Elves
-Sarkhan, Soul Aflame
-Roaming Throne
+# Cleared 2026-08-20 — the revalidation round's ten texts (run 32370514534) are all
+# in hobbit-verified-2026-08-20.txt and the verdicts are in the-ur-dragon.notes.md.
+#
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
+# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.

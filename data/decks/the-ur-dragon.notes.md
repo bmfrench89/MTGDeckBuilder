@@ -289,3 +289,43 @@ kind, so it charges Radagast's dragons full price and sees only a 2/2 replacing 
 2-power body. This is the clearest example in the deck of the rule stated above:
 goldfish cannot rate cards whose value is cost reduction, and this deck's commander
 IS a cost reducer.
+
+## 2026-08-20 revalidation — the engine-read overrules two of the three sim swaps
+
+A second pass re-verified every text the day's decisions rested on (runner run
+32370514534; all ten now in `hobbit-verified-2026-08-20.txt`) and found the earlier
+session had cut two cards **without ever reading what the deck was losing** — the
+A/B measured printed bodies only. Engine-read verdicts, in the sleeper-audit form:
+
+- **Ureni, the Song Unending — RESTORED** (Lorehold, the Historian out). Verified:
+  10/10 flying with **protection from white AND from black** — it blanks Swords,
+  Path, and most of the table's removal — plus an ETB that deals **X damage divided
+  among opponent creatures/planeswalkers, X = your lands** (~7-8 by the time it
+  lands; a one-sided sweep). With eminence it costs an effective 7. Lorehold's
+  miracle ability is nearly blank here (the deck runs ~14 instants/sorceries), and
+  its upkeep loot is small. The sim preferred Lorehold because it is cheaper and it
+  cannot see a single one of Ureni's abilities. A/B for the record: restoring Ureni
+  measures +0.019 turns / −0.38 damage — the same artifact class as Radagast, and
+  overruled for the same reason.
+- **Radagast of Rhosgobel — IN** (Hraesvelgr of the First Brood out). The verdict in
+  the Radagast section above stands; the slot comes from the weakest of the three
+  sim swap-ins. Hraesvelgr's trigger keys on **noncreature** spells in a 37-creature
+  deck, and its unblockable rider is situational; Radagast discounts the first
+  creature spell **every turn** in a 31-dragon deck and lets it arrive at flash
+  speed. Sim for the record: +0.025 turns / −0.67 damage, overruled per the
+  cost-reduction blindness documented above.
+- **Neriv, Heart of the Storm — KEPT** (the one sim swap that survives the
+  engine-read): Smaug, the Great Calamity was verified a vanilla 6/6 flier whose
+  only text is a 5-damage Adventure, and it was cast in 0% of games. Neriv doubles
+  the damage of creatures that entered this turn — which is exactly what eminence
+  discounts and the commander's attack trigger cheats in.
+- **Sylvia Brightspear — verified and PROTECTED**: "Dragons your team controls have
+  double strike." A 3-mana board-wide damage doubler in a 31-dragon deck, invisible
+  to the sim, and the earlier session named her as a Radagast cut candidate. Never
+  cut. Same for **Wood Elves** (fetches the deck's typed duals — Sheltered Thicket,
+  Scattered Groves, Canopy Vista — not just basics), **Sarkhan, Soul Aflame**
+  (a second {1} dragon discount at 50% field) and **Roaming Throne** (naming Dragon
+  doubles the commander's attack trigger: draw twice, TWO free permanents).
+
+Do not cut: Sylvia Brightspear, Wood Elves, Sarkhan Soul Aflame, Roaming Throne,
+Neriv, Ureni, Radagast, Dragonspeaker Shaman.

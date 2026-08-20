@@ -8,6 +8,45 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## Ur-Dragon: sim-tuned, then engine-read revalidated; eminence exposed as a model hole (2026-08-20)
+
+The player asked for the mathematically best Ur-Dragon tested end-to-end in
+goldfish, then challenged whether eminence was accounted for. It was not — and the
+challenge unravelled exactly the right thread. Final state:
+
+**Net deck changes** (all manual-replace, all dragon-for-dragon-or-better):
+Smaug, the Great Calamity → **Neriv, Heart of the Storm** (kept: Smaug GC verified a
+vanilla 6/6 whose only text is a 5-damage Adventure, cast in 0% of 5,000 games);
+Niv-Mizzet, Visionary → **Radagast of Rhosgobel** (via an intermediate Hraesvelgr
+step, reverted); Ureni, the Song Unending **stays** (an intermediate Lorehold swap,
+reverted on engine-read: Ureni is 10/10 with protection from W AND B plus a
+lands-scaled one-sided sweep — the sim saw none of it).
+
+**Three model holes, all documented in the deck's .notes.md, all now with receipts:**
+1. Goldfish models no land-ramp (its own assumptions say so).
+2. Goldfish models no cost reduction — `grep -cin "cost reduc|cheaper|reduce"
+   scripts/goldfish.py` = 0 — while this deck's commander IS a cost reducer:
+   eminence (verified, run 32367856797) works FROM THE COMMAND ZONE, so the -1 is
+   on from turn one. Avg dragon MV 5.29 printed → 4.29 effective; MV6+ dragons
+   12 → 3. "Commander cast in 31% of games" and "too top-heavy" were both retracted.
+3. Goldfish sees no abilities — so it voted against Radagast (+0.016), against
+   restoring Ureni (+0.019), FOR cutting Sylvia Brightspear-class statics. Every
+   such vote is recorded in the notes and overruled with the reason.
+
+**The revalidation's own finding:** the first tuning pass cut Ureni and Niv-Mizzet
+without their text ever being on disk — the A/B measured printed bodies only. Ten
+texts (three swap-ins, three swap-outs, four cut candidates) are now verified in
+`hobbit-verified-2026-08-20.txt`, and the notes carry a do-not-cut list: Sylvia
+Brightspear ("Dragons your team controls have double strike" — a 3-mana board
+doubler the sim can't see), Wood Elves (fetches the deck's typed duals), Sarkhan
+Soul Aflame (second dragon discount), Roaming Throne (naming Dragon doubles the
+commander's attack trigger).
+
+**Standing recommendation, not yet built:** teach the cost model commander cost
+reduction (a flags token + a hook in goldfish's cast check). Three wrong verdicts
+in one day trace to its absence; it is the single highest-leverage improvement to
+the toolkit's honesty for this deck class.
+
 ## Y'shtola goes Bracket 4: the purchase package lands; Tifa and Smaug retired (2026-08-20)
 
 The player bought 8 cards specifically for Y'shtola (Mana Pool order #468964),
