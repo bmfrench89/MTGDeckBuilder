@@ -318,7 +318,10 @@ def index():
     rows = []
     for m in list_decks():
         try:
-            res = power.build_for_deck(m["path"], idx)
+            # COLLECTION rides along so the CRISPI speed axis gets its combat
+            # clock (goldfish, disk-cached); without it every leaderboard row
+            # would silently read "unmeasured" — found in the Phase A revalidation.
+            res = power.build_for_deck(m["path"], idx, collection_path=COLLECTION)
         except Exception:
             res = None
         try:

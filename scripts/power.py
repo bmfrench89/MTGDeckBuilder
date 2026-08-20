@@ -192,7 +192,11 @@ def speed_axis(detected, clock=None):
     clock = clock or {}
     has_clock = bool(clock.get("have_data"))
     median = clock.get("median_first_kill") if has_clock else None
-    rate = clock.get("kill_rate")
+    # A partial clock dict must degrade, not crash: this is a PUBLIC pure function
+    # and its contract says any clock shape short of goldfish's full payload still
+    # yields a label. `kill_rate` missing reads as 0.0 — "no lethal games observed"
+    # — which routes a median-less clock into the slow branch with an honest 0%.
+    rate = clock.get("kill_rate") or 0.0
 
     if early:
         basis, label, short = "combo-early", "combo (early)", "combo (early)"

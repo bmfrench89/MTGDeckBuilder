@@ -122,3 +122,16 @@ def test_clock_for_deck_never_raises(tmp_path):
     so the axis degrades to a label instead of taking a surface down."""
     assert power.clock_for_deck("whatever.txt", None) is None
     assert power.clock_for_deck(str(tmp_path / "nope.txt"), str(tmp_path / "c.txt")) is None
+
+
+def test_partial_clock_dict_degrades_instead_of_crashing():
+    """speed_axis is public and pure; a clock dict missing `kill_rate` (anything short
+    of goldfish's full payload) must yield a label, not a TypeError. Found in the
+    Phase A revalidation: `rate * 100` crashed on rate=None for both the slow and
+    combat branches."""
+    a = power.speed_axis({"complete": []}, {"have_data": True,
+                                            "median_first_kill": None})
+    assert a["basis"] == "combat-slow" and "0%" in a["label"]
+    b = power.speed_axis({"complete": []}, {"have_data": True,
+                                            "median_first_kill": 6})
+    assert b["label"] == "combat T6"
