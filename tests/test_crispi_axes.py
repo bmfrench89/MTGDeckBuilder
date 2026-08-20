@@ -153,3 +153,33 @@ def test_rank_order_is_bracket_then_speed_then_interaction():
 def test_rank_key_for_handles_a_missing_assessment():
     """The webapp builds rows whose assess can be None; sorting must not raise."""
     assert power.rank_key_for(None)[0] == 1
+
+
+def test_curated_lists_match_split_and_dfc_names_both_ways(tmp_path):
+    """A curated row and a deck line may spell the same card differently.
+
+    Found live 2026-08-20: `resilience_staples.csv` carried "Bofur, Reliable
+    Guardian" while the deck line read "Bofur, Reliable Guardian // Concerted Care",
+    so a hand-verified protection card scored ZERO. The failure is invisible — a
+    curated list that misses looks exactly like a deck that lacks the card — which is
+    why this matters more than the one row that exposed it: `_match` backs the Game
+    Changer, tutor, fast-mana, extra-turn, mass-land-denial and combo-piece lists too,
+    and a Game Changer that fails to match silently mis-brackets a deck."""
+    import mtglib
+    ref = tmp_path / "resilience_staples.csv"
+    ref.write_text(
+        "Role,Card\n"
+        'protection,"Bofur, Reliable Guardian"\n'          # curated: FRONT FACE only
+        'recursion,"Lake-town Mariners // Gone Fishing"\n',  # curated: FULL name
+        encoding="utf-8")
+    staples = power.load_resilience_staples(str(tmp_path))
+
+    full = mtglib.Card(name="Bofur, Reliable Guardian // Concerted Care")
+    front = mtglib.Card(name="Lake-town Mariners")
+    assert power._match([full], staples["protection"]) == [full.name], (
+        "deck line carries the full split name, curated row the front face")
+    assert power._match([front], staples["recursion"]) == [front.name], (
+        "and the reverse spelling must match too")
+
+    other = mtglib.Card(name="Some Unrelated Card")
+    assert power._match([other], staples["protection"]) == []

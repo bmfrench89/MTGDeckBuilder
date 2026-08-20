@@ -78,7 +78,7 @@ def load_refs(ref_dir=REF_DIR_DEFAULT):
                 for line in f:
                     s = line.split("#", 1)[0].strip()
                     if s:
-                        names.add(mtglib._norm(s))
+                        names |= mtglib.name_keys(s)     # full name AND front face
             refs[key] = names or set(fallback)
         else:
             refs[key] = set(fallback)
@@ -105,7 +105,7 @@ def load_resilience_staples(ref_dir=REF_DIR_DEFAULT):
                 role = (row.get("Role") or "").strip().lower()
                 name = (row.get("Card") or "").strip()
                 if role in out and name:
-                    out[role].add(mtglib._norm(name))
+                    out[role] |= mtglib.name_keys(name)   # full name AND front face
     except (OSError, csv.Error):
         pass
     return out
@@ -169,9 +169,18 @@ def resilience_axis(enriched, staples, declared=None):
 
 
 def _match(enriched, ref_set):
+    """Curated-list membership, split/DFC-aware.
+
+    Compares on `name_keys` (full name AND front face) rather than a bare `_norm`.
+    A curated row written as "Bofur, Reliable Guardian" matched NOTHING while the
+    deck line read "Bofur, Reliable Guardian // Concerted Care", so a hand-verified
+    protection card scored zero — silently, because a curated list that misses looks
+    exactly like a deck that lacks the card. Every ref set is loaded through
+    `name_keys` too, so the reverse spelling (curated full name, deck front face)
+    matches as well."""
     hits = []
     for c in enriched:
-        if mtglib._norm(c.name) in ref_set:
+        if mtglib.name_keys(c.name) & ref_set:
             hits.append(c.name)
     return hits
 

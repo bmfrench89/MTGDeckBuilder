@@ -124,6 +124,19 @@ def _commander_of(text):
     return re.split(r"\s{2,}|\(", v)[0].strip() if v else ""
 
 
+def _manual_add_keys(deck_path):
+    """`name_keys` for every card the player added by hand, from `<stem>.changes.csv`.
+
+    Returns an empty set on any failure: a missing or malformed companion must not
+    take a deck out of the optimizer, it just means there is nothing to protect."""
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    try:
+        return {k for r in deckcore.manual_adds(f"{stem}.changes.csv")
+                for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
+    except Exception:
+        return set()
+
+
 def _protected(deck_path, commander):
     """Cards we never cut: the commander, basics, and anything the player called out as
     part of the plan (the deck's notes.md) or curated in card_notes.csv."""
@@ -218,9 +231,11 @@ def append_buylist(deck_path, buy_swaps, commander=""):
     """Append buy recommendations to `<deck>.buylist.csv`, each mapped to the in-deck
     card it would replace. Existing rows are NEVER removed or reordered — hand-written
     entries survive — but a re-mapped card's Replaces cell is refreshed so "when this
-    arrives, which card do I pull" stays true. Prices are left blank (no live feed)."""
-    if not buy_swaps:
-        return 0
+    arrives, which card do I pull" stays true. Prices are left blank (no live feed).
+
+    Runs even with NO buys to append: the stale-target sweep below is exactly what a
+    deck needs after a run that proposes nothing, which is the common case for a deck
+    already aligned with its field."""
     import csv
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     path = f"{stem}.buylist.csv"
@@ -237,6 +252,27 @@ def append_buylist(deck_path, buy_swaps, commander=""):
         fields = list(existing_fields) + [c for c in fields if c not in existing_fields]
     existing = {mtglib._norm(r.get("Card") or ""): r for r in rows}
     changed = 0
+    # A row NOT re-proposed this run keeps whatever Replaces it had — including a
+    # card that has since left the deck, which turns "pull this when the buy
+    # arrives" into a lie about a card the player no longer owns a slot for. Found
+    # 2026-08-20: Drown in the Loch still pointed at Misdirection two swaps after
+    # Misdirection was cut by hand. Blank the cell rather than guess a new target
+    # (choosing one needs field data and the land/spell split this function cannot
+    # see) — and never drop the row: hand-written buys must survive.
+    try:
+        in_deck = set()
+        for c in mtglib.parse_deck(open(deck_path, encoding="utf-8").read()):
+            in_deck |= mtglib.name_keys(c.name)
+    except OSError:
+        in_deck = None
+    stale = 0
+    if in_deck:
+        for r in rows:
+            cut = (r.get("Replaces") or "").strip()
+            if cut and not (mtglib.name_keys(cut) & in_deck):
+                r["Replaces"] = ""
+                stale += 1
+                changed += 1
     for cut, _inc_cut, add, inc_add, _kind in buy_swaps:
         k = mtglib._norm(add)
         if k in existing:
@@ -278,6 +314,17 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                                 synergy=deck_fit.load_synergy(commander, idx))
     keep, notes = _protected(deck_path, commander)
     keep |= {c for c, d in deckcore.load_pins().items() if d == stem}   # pinned here = keep
+    # A card the player ADDED by hand is never cut, and never offered as a buy's
+    # Replaces target either. The symmetric rule for manual REMOVALS has been enforced
+    # since 2026-08-11 (`removed_by_hand` below), and `cut_ranking`'s advisory surface
+    # has unioned manual adds since Phase 9 — but THIS path, the one that actually
+    # rewrites the deck and writes the buylist, never did. Reproduced 2026-08-20:
+    # right after Grim Tutor was swapped into smaug-wicked-worm by hand, the same run
+    # printed "manual adds (advisory — the optimizer never cuts these): Grim Tutor"
+    # AND proposed pulling Grim Tutor for a bought Goldspan Dragon, with two more
+    # owned candidates held off it only by the 25-point margin. The advisory line was
+    # telling the truth about a different code path.
+    keep |= _manual_add_keys(deck_path)
 
     deck = mtglib.parse_deck(text)
     in_deck = set()
@@ -401,7 +448,19 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if owned_only or not include_buys or inc < buy_threshold:
                 continue
             name, avail = proper.get(k, _display_name(k)), "buy"
-            is_land = k in field_lands or mtglib._looks_like_land_by_name(name)
+            # Layering, per CLAUDE.md: the field snapshot's own Lands sections beat
+            # the NAME HEURISTIC, which is a last resort — for cards nothing else
+            # knows, not a co-equal vote. Letting it vote here classified "Gimli of
+            # the Glittering Caves" (a creature the field lists, absent from its
+            # Lands sections) as a land on the word "Caves", and the buylist then
+            # told the player to pull a real land for it — a nonland-for-land swap
+            # the guardrails exist to forbid, shipped as advice (2026-08-20).
+            # The field's silence is only informative when it HAS a row for the card
+            # and a lands key to be absent from; otherwise fall through as before.
+            if field_lands and field_knows(name):
+                is_land = k in field_lands
+            else:
+                is_land = k in field_lands or mtglib._looks_like_land_by_name(name)
         else:
             if ref.identity and not (ref.identity <= identity):
                 continue

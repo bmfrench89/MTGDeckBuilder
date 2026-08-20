@@ -1205,3 +1205,123 @@ def test_the_cli_names_the_gate_instead_of_claiming_alignment(tmp_path, monkeypa
     assert "already aligned with the field" not in out
     assert "blocked by the counter band (current 15, template 0-6)" in out
     assert "sits outside the template" in out
+
+
+# --------------------------------------------------------------------------- #
+# A hand-added card is never cut — in the path that actually rewrites the deck
+#
+# The symmetric rule for manual REMOVALS ("never re-add what the player pulled")
+# has been enforced since 2026-08-11, and `cut_ranking`'s advisory surface has
+# unioned manual adds since Phase 9. The optimizer's OWN cut path never did.
+# Reproduced live 2026-08-20: one run printed "manual adds (advisory — the
+# optimizer never cuts these): Grim Tutor" and, twelve lines earlier, proposed
+# pulling Grim Tutor to make room for a bought Goldspan Dragon.
+# --------------------------------------------------------------------------- #
+def test_a_hand_added_card_is_protected_from_the_optimizer(tmp_path):
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    with open(f"{stem}.changes.csv", "w", encoding="utf-8", newline="\n") as f:
+        f.write("Card,Added,Replaced,Source\n"
+                "Grim Tutor,2026-08-20,Goblin Recruiter,manual-replace\n")
+    assert mtglib._norm("Grim Tutor") in optimize._manual_add_keys(deck)
+
+
+def test_manual_add_protection_matches_split_names_both_ways(tmp_path):
+    """Written through `csv.writer`, exactly as the app's `_log_manual_change` does.
+
+    That detail is the test: Hobbit-set names are full of commas, and a row written
+    as raw text instead of through the csv module truncates at the first comma, so
+    the protection silently covers a card that does not exist. Reproduced while
+    writing this test."""
+    import csv as _csv
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    with open(f"{stem}.changes.csv", "w", encoding="utf-8", newline="") as f:
+        w = _csv.writer(f)
+        w.writerow(["Card", "Added", "Replaced", "Source"])
+        w.writerow(["Bofur, Reliable Guardian // Concerted Care",
+                    "2026-08-20", "X", "manual-add"])
+    keys = optimize._manual_add_keys(deck)
+    assert mtglib._norm("Bofur, Reliable Guardian // Concerted Care") in keys
+    assert mtglib._norm("Bofur, Reliable Guardian") in keys, (
+        "the deck may spell a DFC either way — both must be protected")
+
+
+def test_a_missing_changes_file_protects_nothing_and_does_not_raise(tmp_path):
+    assert optimize._manual_add_keys(_deck(tmp_path)) == set()
+
+
+def test_a_buylist_target_that_left_the_deck_is_blanked_not_kept(tmp_path):
+    """`Replaces` answers "which card do I pull when this arrives" — so a target
+    that is no longer in the deck is worse than none. Found live 2026-08-20: Drown
+    in the Loch still pointed at Misdirection two swaps after Misdirection was cut.
+
+    Blanked, never dropped: hand-written buy rows (and their prices and reasons)
+    must survive untouched."""
+    import csv
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    with open(f"{stem}.buylist.csv", "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Card", "Price", "Tier", "Replaces", "Reason"])
+        w.writerow(["Hand Written Buy", "4", "Value", "Card Long Since Cut",
+                    "a reason the player typed"])
+    optimize.append_buylist(deck, [], commander="Test Commander")
+    with open(f"{stem}.buylist.csv", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 1, "the row must survive"
+    assert rows[0]["Replaces"] == "", "the stale target must be cleared"
+    assert rows[0]["Price"] == "4"
+    assert rows[0]["Reason"] == "a reason the player typed"
+
+
+def test_a_buylist_target_still_in_the_deck_is_left_alone(tmp_path):
+    import csv
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    kept = mtglib.parse_deck(open(deck, encoding="utf-8").read())[-1].name
+    with open(f"{stem}.buylist.csv", "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Card", "Price", "Tier", "Replaces", "Reason"])
+        w.writerow(["Some Buy", "", "Core", kept, "still valid"])
+    optimize.append_buylist(deck, [], commander="Test Commander")
+    with open(f"{stem}.buylist.csv", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert rows[0]["Replaces"] == kept
+
+
+def test_the_fields_lands_key_outranks_the_name_heuristic_for_a_buy(tmp_path,
+                                                                    monkeypatch):
+    """A buy the field KNOWS and does not file under Lands is not a land, whatever
+    its name suggests.
+
+    The mirror of the Hallowed Fountain case above. "Gimli of the Glittering Caves"
+    is a creature the field lists; the name heuristic reads "Caves", classified it as
+    a land, and the buylist told the player to pull a real land for it — a
+    nonland-for-land swap the guardrails exist to forbid, shipped as advice
+    (2026-08-20). The heuristic is a LAST resort, not a co-equal vote."""
+    import deck_fit
+    coll, idx, p = _name_only_setup(
+        tmp_path, monkeypatch, {mtglib._norm("Gimli of the Glittering Caves"): 99})
+    # The field has a row for it, and its Lands sections do NOT contain it.
+    monkeypatch.setattr(deck_fit, "load_field_lands", lambda *a, **k: {
+        mtglib._norm("Some Other Land")})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
+    buys = [b for b in r["buy_swaps"]
+            if mtglib._norm(b[2]) == mtglib._norm("Gimli of the Glittering Caves")]
+    assert buys, "it should still be recommended — just not as a land"
+    assert buys[0][4] == "spell", "the field says nonland; the name must not override"
+
+
+def test_the_name_heuristic_still_decides_when_the_field_is_silent(tmp_path,
+                                                                  monkeypatch):
+    """The fallback must survive: a card the field has never heard of has nothing
+    but its name, and that is exactly when the heuristic earns its keep."""
+    import deck_fit
+    coll, idx, p = _name_only_setup(
+        tmp_path, monkeypatch, {mtglib._norm("Unknown Sunlit Tower"): 99})
+    monkeypatch.setattr(deck_fit, "load_field_lands", lambda *a, **k: set())
+    r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
+    buys = [b for b in r["buy_swaps"]
+            if mtglib._norm(b[2]) == mtglib._norm("Unknown Sunlit Tower")]
+    assert buys and buys[0][4] == "land", "no lands key to consult -> trust the name"

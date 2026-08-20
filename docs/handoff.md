@@ -62,7 +62,59 @@ was legal but blind — worth remembering as the reason the ordering matters.
 own 6 / committed 9, Rogue's Passage own 1 / committed 4. The study deck
 (bartolome) still inflates this count and is still not sleeved.
 
-Suite 884 -> **886**.
+**A 36-agent audit of the refresh then found four more bugs, all of the same family
+— a curated list or a heuristic silently matching the wrong thing:**
+
+3. **`power._match` did no front-face folding.** A curated row spelled
+   `Bofur, Reliable Guardian` matched nothing while the deck line read
+   `Bofur, Reliable Guardian // Concerted Care`, so a hand-verified protection card
+   scored zero. This backs the Game Changer, tutor, fast-mana, extra-turn,
+   mass-land-denial and combo-piece lists too — a Game Changer that fails to match
+   silently mis-brackets a deck. Now compares on `name_keys`, and both ref loaders
+   store both keys. Thorin's deck went prot 0 -> 2 on the fix alone.
+4. **The optimizer could cut a card the player added by hand.** `cut_ranking`'s
+   advisory surface has unioned manual adds since Phase 9, but the path that actually
+   rewrites the deck never did — so the same run printed "manual adds (advisory — the
+   optimizer never cuts these): Grim Tutor" AND proposed pulling Grim Tutor for a
+   bought Goldspan Dragon, with two more candidates held off it only by the 25-point
+   margin. `_manual_add_keys()` now feeds `keep`.
+5. **A buylist `Replaces` target that left the deck was never revisited.** Drown in
+   the Loch still pointed at Misdirection two swaps after Misdirection was cut. Stale
+   targets are blanked (never the row) on every applying run, including runs that
+   propose no buys — which was a hole in the first version of the fix.
+6. **The name heuristic outvoted the field's own Lands sections.** "Gimli of the
+   Glittering Caves" — a creature the field lists and does not file under Lands — was
+   classified a land on the word "Caves", and the buylist told the player to pull a
+   real land for it. The field's silence now decides when it HAS a row and a lands key
+   to be absent from; the heuristic stays the last resort it was documented to be.
+
+**Two swaps applied by hand** (logged `manual-replace`, so the optimizer holds them):
+Grim Tutor <- Goblin Recruiter in smaug-wicked-worm (its first tutor; the deck runs 7
+Goblins and zero Goblin payoffs), and Dismember <- Misdirection in yshtola (the
+optimizer proposes it unprompted, +38 field). `Dismember` was also added to
+`mtglib.REMOVAL`: `oracle_flags` can never derive it, because `_REMOVAL_RE` reads the
+destroy/exile verb and Dismember says "gets -5/-5".
+
+**`resilience_staples.csv` gained 5 rows** (Bofur, Thorin Oakenshield, Old Fat Spider
+Can't See Me, Lake-town Mariners, Along the Crooked Way) and, more importantly, a
+recorded DECISION: **attack taxation is deliberately excluded.** Ghostly Prison and
+Norn's Annex protect a life total, not a permanent; admitting them would take Thorin
+from prot 0 to prot 5 and flip its verdict to "meets the 5-8 band" while it holds one
+real protection spell. Ward belongs; bounce does not. The file also now warns that
+comma names MUST be quoted or `csv.DictReader` truncates them into rows that match
+nothing — the Hobbit set is full of them.
+
+**One data defect fixed, one still open.** `Bruce Banner // The Incredible Hulk` — the
+commander of a sleeved deck — was in no export, so every tool read the deck's own
+commander as own 0 / committed 1; it is now recorded in `owned_additions.txt` with a
+note to delete the line if the physical card isn't there. Still open: 26 of the 86
+nonbasic cards in the Thorin deck are HOB/HOC printings whose text is not on disk
+(round 1 covered new *names*, not all post-2025 cards), and eight decision-bearing
+cards are queued in `verify-queue.txt` for the next runner push — An Unexpected Party
+first, because it is 79% of the Thorin field, owned x2 free, and whether it makes
+TOKEN or NONTOKEN Dwarves decides if it is filler or a second multiplier.
+
+Suite 884 -> **894**.
 
 ## CRISPI COMPLETE — four axes, composite retired (2026-08-20)
 

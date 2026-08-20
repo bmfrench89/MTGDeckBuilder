@@ -42,7 +42,7 @@
 1 Snuff Out
 1 Lethal Scheme
 1 Force of Will
-1 Misdirection
+1 Dismember
 1 Sublime Epiphany
 1 Dig Through Time
 1 Dark Ritual

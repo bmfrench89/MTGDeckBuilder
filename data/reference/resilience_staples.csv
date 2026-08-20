@@ -6,6 +6,19 @@
 # memory — queue it in verify-queue.txt and push a claude/** branch first.
 # Colors are omitted on purpose: unlike role_staples.csv this list never feeds an
 # identity-filtered suggestion, so colour data would be unused weight.
+#
+# QUOTE ANY NAME CONTAINING A COMMA. csv.DictReader truncates an unquoted name at
+# the first comma and the row then silently matches nothing — the Hobbit set is full
+# of comma names, so this is a live hazard, not a hypothetical.
+#
+# TAXATION IS DELIBERATELY EXCLUDED (decided 2026-08-20). Ghostly Prison, Norn's
+# Annex and the Dain-style attack taxes protect your LIFE TOTAL, not your permanents,
+# and the Role line above defines protection as keeping a permanent alive. The
+# counterfactual is why: admitting them takes the Thorin deck from prot 0 to prot 5
+# and flips its verdict to "meets the 5-8 band" while it holds one real protection
+# spell and zero recursion — a false all-clear a player would act on. WARD does
+# belong (it taxes removal aimed at a permanent). BOUNCE does not: returning your own
+# card to hand is neither role.
 Role,Card
 protection,Swiftfoot Boots
 protection,Lightning Greaves
@@ -14,6 +27,11 @@ protection,Boros Charm
 protection,Clever Concealment
 protection,Snakeskin Veil
 protection,Darksteel Plate
+# 2026-08-20 additions — verbatim text in hobbit-verified-2026-08-20.txt (run 32322609093).
+protection,"Bofur, Reliable Guardian // Concerted Care"
+protection,Thorin Oakenshield
+protection,Old Fat Spider Can't See Me
+protection,Lake-town Mariners // Gone Fishing
 recursion,Sun Titan
 recursion,Sevinne's Reclamation
 recursion,Karmic Guide
@@ -21,3 +39,4 @@ recursion,Serra Paragon
 recursion,Angelic Renewal
 recursion,Gift of Immortality
 recursion,Haunted Crossroads
+recursion,Along the Crooked Way

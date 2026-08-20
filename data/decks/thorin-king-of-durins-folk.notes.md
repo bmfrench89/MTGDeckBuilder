@@ -41,9 +41,13 @@ looking for a sacrifice loop here; this deck wins by stacking, not by cycling.
   advantage that makes a go-wide deck not run out of gas.
 - **Dáin's Company** — ETB digs four for a Dwarf or Equipment. Redundancy is this
   deck's consistency mechanism; it has one tutor.
+- **Bofur, Reliable Guardian // Concerted Care** — {W} lifelink Dwarf whose
+  Adventure half reads *"Target artifact or creature you control gains hexproof and
+  indestructible until end of turn."* The deck's best protection, and it costs one
+  white mana. Hold it for Thorin.
 - **Thorin Oakenshield** — {R}{W} 2-drop, *"As long as you have an enduring story,
-  artifacts and creatures you control have ward {1}."* The deck's only real
-  protection, and it is cheap.
+  artifacts and creatures you control have ward {1}."* Blanket ward on the whole
+  board once Storied is on; the second protection effect, not the only one.
 - **The Lonely Mountain** — a land that makes 2/2 Dwarf tokens, cheaper per
   Equipment. A mana sink that feeds Thorin directly.
 
@@ -55,6 +59,15 @@ the rest of the game."* Treasures are artifacts and the deck is thick with
 legendary Dwarves, so the condition is usually met on the turn Thorin lands and is
 permanent thereafter. Sequence to hit three sooner rather than later: it switches on
 Fíli's +1/+1, Kíli's free equip, and Oakenshield's ward all at once.
+
+## Belladonna Took is a sleeper — do not let the field prior cut her
+
+Verified: *"Whenever a token you control enters, you gain 1 life if this is the first
+time this ability has resolved this turn. If it's the second time, draw a card. If
+it's the third time, put a +1/+1 counter on each creature you control."* Her field
+share is only 12%, but this deck makes tokens in threes without trying — Thorin's
+Treasure, Fíli's Dwarf, and that Dwarf's own Thorin trigger — so the third tier
+(a board-wide +1/+1 counter, every turn) is the normal case here, not the ceiling.
 
 ## Piloting
 
@@ -68,8 +81,11 @@ Fíli's +1/+1, Kíli's free equip, and Oakenshield's ward all at once.
 
 ## Known weaknesses (measured, not guessed)
 
-- **Resilience 0 protection · 0 recursion** — below both researched bands. Thorin
-  Oakenshield's ward {1} is the entire defence.
+- **Resilience 2 protection · 0 recursion.** Bofur and Thorin Oakenshield are the
+  two, and until 2026-08-20 the axis reported **0** — not because the deck lacked
+  them, but because `power._match` compared bare normalized names and the curated row
+  spelled Bofur without its Adventure half. Recursion is genuinely zero: nothing in
+  this list returns a permanent from the graveyard, so a wipe costs the whole board.
 - **1 tutor.** Consistency is redundancy-led: 29 of the 30 R/W-legal Dwarves owned
   are in this list, so the deck finds *a* Dwarf reliably and a *specific* one never.
 - **Bracket 2 (Core), first lethal ~turn 9** in 77% of goldfish games.
