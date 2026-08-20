@@ -244,7 +244,7 @@ def _curve_component(card, refs):
         return 12, f"mid curve (MV {mv:g})"
     if mv <= 6:
         return 9, f"top-end (MV {mv:g})"
-    if mtglib._norm(card.name) in refs.get("game_changers", set()):
+    if mtglib.name_keys(card.name) & refs.get("game_changers", set()):
         return 13, f"expensive (MV {mv:g}) but a payoff bomb"
     return 6, f"expensive (MV {mv:g}) — demands ramp"
 
@@ -258,10 +258,13 @@ def _staple_component(card, refs, ctx=None):
     auto-include just because it costs less mana — a generic "is it a staple" list can't
     know that Director Nick Fury is in 95% of Captain America decks."""
     n = mtglib._norm(card.name)
+    # name_keys, not the bare key: symmetric with power._match (2026-08-20) — a
+    # curated row may spell either face of a split name, and so may the deck.
+    ks = mtglib.name_keys(card.name)
     pts, detail = 7, "no special power flag"
-    if n in refs.get("game_changers", set()):
+    if ks & refs.get("game_changers", set()):
         pts, detail = 15, "a recognized Game Changer / format staple"
-    elif n in refs.get("tutors", set()) or n in refs.get("fast_mana", set()):
+    elif ks & refs.get("tutors", set()) or ks & refs.get("fast_mana", set()):
         pts, detail = 11, "an established staple"
 
     inc = (ctx or {}).get("field", {}).get(n)
@@ -361,7 +364,7 @@ def better_alternatives(card, ctx, idx, refs, curated_alts, in_deck, staples):
     staples that fit the deck's identity and aren't already in the list."""
     out, seen = [], set()
     gc = refs.get("game_changers", set())
-    card_is_gc = mtglib._norm(card.name) in gc
+    card_is_gc = bool(mtglib.name_keys(card.name) & gc)
 
     def add(name, why_default):
         k = mtglib._norm(name)
@@ -369,7 +372,7 @@ def better_alternatives(card, ctx, idx, refs, curated_alts, in_deck, staples):
             return
         seen.add(k)
         ref = mtglib.lookup(idx, name)
-        upgrade = (k in gc) and not card_is_gc
+        upgrade = bool(mtglib.name_keys(name) & gc) and not card_is_gc
         out.append({"n": name, "owned": ref is not None, "upgrade": upgrade,
                     "why": "stronger option — a format staple" if upgrade else why_default})
 

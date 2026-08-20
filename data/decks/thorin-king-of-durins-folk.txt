@@ -2,7 +2,6 @@
 # Commander: Thorin, King of Durin's Folk
 # Colors: R W
 # Archetype: artifacts go-wide tokens tribal-dwarf
-# Resilience: low
 # Source: auto-generated draft (scripts/auto_build.py) from owned cards.
 
 # --- Commander ---
@@ -53,9 +52,11 @@
 1 Getaway Glamer
 1 Bilbo's Gambit
 1 Swords to Plowshares
+1 Path to Exile
+
+# --- Sorceries ---
 1 Requisition Raid
 1 Steelshaper's Gift
-1 Path to Exile
 
 # --- Artifacts ---
 1 Thrór's Map

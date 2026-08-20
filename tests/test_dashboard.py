@@ -334,3 +334,32 @@ def test_buy_tab_rows_are_panel_clickable(deck_file, collection_file, tmp_path):
                        commander="Test Commander", sim=None)["dashboard"]
     assert 'data-card="Rhystic Study"' in html, "the buy target must open the panel"
     assert 'data-card="Divination"' in html, "so must the card it replaces"
+
+
+def test_stat_tile_uses_the_text_variant_for_phrase_values():
+    """CRISPI put phrases in a slot sized for numbers; "redundancy-led" clipped to
+    "redunda / led" on the player's phone (2026-08-20). A value with a space or
+    longer than 6 chars gets the smaller, wrapping variant; short numerics keep
+    the big display type."""
+    import build_dashboard as bd
+    assert "tile-val--text" in bd.stat_tile("Speed", "combat T9")
+    assert "tile-val--text" in bd.stat_tile("Resilience", "prot 2 · rec 0")
+    assert "tile-val--text" in bd.stat_tile("Consistency", "redundancy-led")
+    for short in ("100", "36", "$462", "T9", "3"):
+        html = bd.stat_tile("X", short)
+        assert "tile-val--text" not in html, short
+        assert "tile-val" in html
+
+
+def test_grid_figcaption_carries_no_mana_value_number(deck_file, collection_file):
+    """The card art already shows the cost; a bare number before the name reads as
+    a QUANTITY ("9 Blasphemous Act" = MV 9 misled the player, 2026-08-20). The
+    list view keeps its .mv gutter — quantity there is an explicit `N× `."""
+    import build_dashboard as bd
+    import re
+    res = bd.generate(deck_file, collection_file, title="T", commander="Test Commander",
+                      want_visual=True)
+    html = res["dashboard"] + (res["visual"] or "")
+    figs = re.findall(r"<figcaption>(.*?)</figcaption>", html)
+    assert figs, "the visual deck grid must render figcaptions"
+    assert all("class='mv'" not in f for f in figs)

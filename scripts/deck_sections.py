@@ -210,18 +210,83 @@ def regroup(path, collection_path):
                   "unsorted_names": [n for _, n in buckets[UNSORTED]]}
 
 
+def check(path, collection_path):
+    """-> (violations, untyped) for one deck file. Read-only.
+
+    A violation is a TYPED card sitting under one of the canonical type sections
+    (`deckcore.TYPE_SECTION_ORDER`) that contradicts its type — exactly the cards
+    `regroup` would move between type sections. Custom/function sections and the
+    Commander section are never enforced: the convention is the player's, and this
+    only polices the sections that claim to BE a type. Untyped cards in a canonical
+    section are returned separately — reported, never guessed, and never a failure,
+    because a fresh export's cards are legitimately untyped until the enrichment
+    loop runs (failing CI in that window would punish the pipeline for working).
+
+    Why this exists: 18 typed cards sat in contradicting sections across 7 of 10
+    decks before anyone looked (2026-08-20 — a Sorcery under Artifacts on the
+    player's phone was the tell). Three writers could misfile (optimizer swap-in
+    at the outgoing card's line, webapp replace-in-place, adds made pre-enrichment)
+    and nothing ever re-read the filing. tests stay hermetic, so the REAL decks are
+    guarded by running this in CI and refresh.py, not by a pytest that reads the
+    player's data/."""
+    _header, commander, entries = parse_file(path)
+    cards = mtglib.load_collection(collection_path)
+    idx = mtglib.index_by_name(cards)
+    attrs = deckcore.load_attrs(os.path.splitext(path)[0] + ".attrs.csv")
+    canon = set(deckcore.TYPE_SECTION_ORDER)
+    violations, untyped = [], []
+    for old_label, qty, name in entries:
+        label = (old_label or "").strip()
+        if label not in canon:
+            continue
+        if commander and mtglib._norm(name) == mtglib._norm(commander):
+            continue
+        types = None
+        a = attrs.get(mtglib._norm(name)) if attrs else None
+        if a and a.get("type"):
+            types = [a["type"]]
+        else:
+            card = mtglib.lookup(idx, name)
+            if card is not None and card.types:
+                types = card.types
+        bucket = deckcore.type_bucket(name, types)
+        if bucket is None:
+            untyped.append((label, name))
+        elif bucket != label:
+            violations.append((label, qty, name, bucket))
+    return violations, untyped
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--deck", help="deck file to regroup")
     ap.add_argument("--all", action="store_true", help="every deck in data/decks/")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--apply", action="store_true", help="write (default: preview)")
+    ap.add_argument("--check", action="store_true",
+                    help="read-only: exit 3 listing typed cards whose canonical "
+                         "type section contradicts their type; untyped cards are "
+                         "reported but never fail the check")
     args = ap.parse_args(argv)
     root = os.path.join(os.path.dirname(__file__), "..", "data", "decks")
     paths = sorted(glob.glob(os.path.join(root, "*.txt"))) if args.all else \
         ([args.deck] if args.deck else [])
     if not paths:
         ap.error("--deck or --all required")
+    if args.check:
+        bad = 0
+        for path in paths:
+            violations, untyped = check(path, args.collection)
+            bad += len(violations)
+            for label, _qty, name, bucket in violations:
+                print(f"MISFILED {os.path.basename(path)}: {name} sits under "
+                      f"'{label}' -> belongs under '{bucket}'")
+            for label, name in untyped:
+                print(f"untyped  {os.path.basename(path)}: {name} under '{label}' — "
+                      f"no type data; enrich and re-run (not a failure)")
+        print(f"{bad} misfiled card(s) across {len(paths)} deck(s)"
+              + ("" if bad else " — sections are clean"))
+        return 3 if bad else 0
     for path in paths:
         text, st = regroup(path, args.collection)
         tag = "wrote" if args.apply else "preview"

@@ -25,7 +25,6 @@
 1 Two-Headed Dragon
 1 Goblin Glasswright // Craft with Pride
 1 Burrog Banemaker
-1 Grim Tutor
 1 Mage Tower Referee
 1 Raging Goblin
 1 Speed, Young Avenger
@@ -51,6 +50,7 @@
 1 Dark Ritual
 
 # --- Sorceries ---
+1 Grim Tutor
 1 Blasphemous Act
 1 Feed the Swarm
 1 Desolation of Smaug

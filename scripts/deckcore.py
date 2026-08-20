@@ -517,7 +517,12 @@ def load_power_tags(refdir=None):
                     name = ln.strip()
                     if not name or name.startswith("#"):
                         continue
-                    tags.setdefault(mtglib._norm(name), []).append(label)
+                    # BOTH name_keys (full split name AND front face), so the
+                    # dashboard/card-panel labels agree with power.py's counts,
+                    # which have matched both since 2026-08-20 — a curated
+                    # "Boom // Bust" must label a deck line spelled "Boom" too.
+                    for k in mtglib.name_keys(name):
+                        tags.setdefault(k, []).append(label)
         except OSError:
             continue                      # a missing list degrades to no tag
     if refdir is None:
