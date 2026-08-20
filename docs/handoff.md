@@ -8,6 +8,24 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Spec amended: the Speed axis is a pair, with anchors confirmed (2026-08-20)
+
+A "any concerns" review caught a defect in the just-merged spec: the goldfish clock
+measures unblocked COMBAT only, so a bare clock-based Speed axis would mislabel exactly
+the combo decks that motivated the work (Bartolomé: 22 creatures, mediocre combat clock,
+real speed = zero-mana loop). Amended in place: **Speed resolves combo-first** — early
+complete combo → "combo (early)"; complete non-early → "combo (setup)" (Y'shtola's #135
+line lands here, NOT "unmeasured"); else the combat clock; else the honest label. The
+combo half needs zero plumbing: `power.assess` already receives `detected` with
+`early`/`category` per complete combo.
+
+The regrounding also nailed the anchors so the implementer never re-derives them: the
+dashboard already renders the clock (`build_dashboard.py` ~838 via cached
+`goldfish.sim_for_deck`, seed=0); deckcore does NOT expose the sim today; `signals.
+combos_complete` is names-only — read `detected`; and Phase D has THREE composite-print
+sites (`power.py` print_one/--rank, `webapp/app.py` ~333 leaderboard sort, ~806 flash).
+First uncached `--rank` pays 9 sims — disk-cached after, say so in output.
+
 ## Revalidated the CRISPI audit; spec written and READY (2026-08-20)
 
 Re-checked every #140 claim against the code instead of memory. Two were wrong, both

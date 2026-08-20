@@ -62,15 +62,25 @@ The number exists; wire it through the hub:
    a cache hit are shared and read-only.
 2. `power.assess` gains an optional `clock=None` parameter (deckcore passes it; the bare
    CLI path may pass None and must degrade to today's output byte-identically).
-3. Score: map `median_first_kill` onto the researched bands — goldfish kill by turn ~7 ≈
-   the Bracket-2 floor; earlier is faster. Emit it as a **separate axis**, not a weight
-   inside the 0–100. When `clock.have_data` is false or kill_rate is ~0 (control shells
-   that goldfish cannot kill with), the axis prints **"unmeasured (no combat clock)"** —
-   an honest label, never a silent 0. That label matters: Y'shtola wins through drain
-   loops the goldfish cannot see; do not let the axis call her "slow" — call her
-   unmeasured and say why.
-4. Determinism: same seed policy as the dashboard's goldfish panel; the axis must be
-   byte-stable across runs (memo tripwire).
+3. **Score — Speed is a PAIR, not one number (amended 2026-08-20).** The goldfish clock
+   measures *unblocked combat only*, so on its own it mislabels combo decks: the
+   Bartolomé deck runs 22 creatures and would read as a mediocre combat clock while its
+   real speed is a zero-mana loop. The good news, confirmed in code: `power.assess`
+   **already receives** `detected` from `combo_detector.for_deck`, and every item in
+   `detected["complete"]` carries `early: bool` and `category` — the combo half needs
+   **zero new plumbing**. Resolution order for the axis:
+   - a complete combo with `early=True`  → `Speed: combo (early)` — the combat number
+     is printed after it as context, never instead of it;
+   - a complete combo, none early        → `Speed: combo (setup)`;
+   - no complete combo, clock has data   → `Speed: combat T<median_first_kill>` mapped
+     onto the researched bands (goldfish kill ~T7 ≈ the Bracket-2 floor);
+   - no combo AND (`have_data` false or `kill_rate` ≈ 0) → **"unmeasured (no combat
+     clock)"** — an honest label, never a silent 0.
+   Note the consequence for the stable: after #135 **Y'shtola has a complete non-early
+   combo**, so she reads `combo (setup)`, not "unmeasured" — the unmeasured label is the
+   fallback for pure control/drain decks with neither a detected combo nor a clock.
+4. Determinism: same seed policy as the dashboard's goldfish panel (`seed=0` default in
+   `sim_for_deck`); the axis must be byte-stable across runs (memo tripwire).
 
 ## Phase B — Resilience (two counted layers + one labelled experiment)
 
@@ -131,11 +141,34 @@ IS this collection's consistency mechanism — the axis should say that in words
   byte-identical, tool-contract guard — the new CSV/reference must be added to the
   contract if it becomes session-facing, or the guard will rightly fail the build).
 
+## Anchors confirmed in code (2026-08-20 — so the implementer does not re-derive)
+
+- **The dashboard already renders the clock**: `build_dashboard.py` ~line 838 ("The
+  goldfish CLOCK — how fast this deck presents lethal, uncontested") via
+  `goldfish.sim_for_deck(deck_path, collection, games=DEFAULT_GAMES, seed=0, …)` — the
+  cached loader. `deckcore.analyze_deck` does **not** currently expose the sim; the
+  dashboard calls the loader itself and stashes `sim` as a per-hit top-level key (the
+  memoized-dict copy warning in `deckcore.analyze_deck`'s docstring is about exactly
+  this). Phase A routes the same loader's result — or just its `clock` dict — through
+  deckcore into `power.assess(…, clock=None)`.
+- **The combo-speed inputs already reach `power.assess`**: `detected["complete"]` items
+  carry `early`/`category` (`combo_detector.py` ~lines 90–145); `signals.combos_complete`
+  is names-only and is NOT sufficient — read `detected`, not `signals`.
+- **Three composite-print sites to fix in Phase D**, not one: `power.py`
+  `print_one`/`--rank`; `webapp/app.py` ~line 333 (leaderboard sorts on
+  `assess["power"]`) and ~line 806 (flash prints `Power X/100 (tier)`).
+- **Cost caveat**: the first uncached `--rank` pays one Monte Carlo per deck (9 today).
+  `sim_for_deck` is disk-cached with invalidation tested in `test_goldfish`; subsequent
+  runs are cache hits. Acceptable; say it in the CLI output the first time rather than
+  appearing hung.
+
 ## Acceptance
 
 1. `power.py --rank` on the real stable shows four axes + bracket per deck; the
-   Bartolomé row reads Bracket 4 with fast/consistent-combo axes and NO "Casual".
-2. Y'shtola reads Speed: unmeasured (no combat clock) — with the reason printed.
+   Bartolomé row reads **Bracket 4 · Speed: combo (early)** and NO "Casual".
+2. Y'shtola reads **Speed: combo (setup)** (her #135 line is complete but not early);
+   a synthetic tmp_path control deck with no combo and no clock reads
+   **"unmeasured (no combat clock)"** with the reason printed.
 3. Second run of everything is byte-identical (memo tripwire); 849+ tests pass.
 4. No new engine→engine import (`grep "import goldfish" scripts/power.py` is empty).
 
