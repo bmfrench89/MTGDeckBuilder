@@ -25,7 +25,7 @@
 1 Two-Headed Dragon
 1 Goblin Glasswright // Craft with Pride
 1 Burrog Banemaker
-1 Goblin Recruiter
+1 Grim Tutor
 1 Mage Tower Referee
 1 Raging Goblin
 1 Speed, Young Avenger

@@ -2,6 +2,7 @@
 # Commander: Thorin, King of Durin's Folk
 # Colors: R W
 # Archetype: artifacts go-wide tokens tribal-dwarf
+# Resilience: low
 # Source: auto-generated draft (scripts/auto_build.py) from owned cards.
 
 # --- Commander ---

@@ -728,7 +728,12 @@ DRAW = {
     "colossal majesty", "the great henge", "toski, bearer of secrets",
 }
 REMOVAL = {
+    # `dismember` is curated on purpose: oracle_flags' _REMOVAL_RE reads the
+    # destroy/exile VERB, and Dismember says "gets -5/-5", so the derived layer can
+    # never see it. The same blind spot covers other stat-reduction removal — add it
+    # here, not to the regex, which would start matching every pump spell's mirror.
     "swords to plowshares", "path to exile", "generous gift", "beast within",
+    "dismember",
     "chaos warp", "assassin's trophy", "vindicate", "infernal grasp",
     "murderous rider", "soul shatter", "lethal scheme", "snuff out", "vendetta",
     "terminate", "unlicensed disintegration", "nameless inversion", "condemn",

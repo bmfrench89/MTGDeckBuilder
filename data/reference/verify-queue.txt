@@ -2,98 +2,26 @@
 # triggers .github/workflows/deck-verify.yml, which runs carddb.py --verify on a
 # runner with real network and prints VERBATIM Scryfall oracle text to the job log.
 #
-# Queued 2026-08-20: every NEW name in the 2026-08-20 collection export (90 cards,
-# almost all from the Hobbit set). Post-2025 sets are exactly where memory is
-# unreliable, and these decide real deckbuilding calls — Thorin, King of Durin's
-# Folk (the video-2 commander, now owned) above all. Do not classify any of these
-# from memory; read the runner's text.
-Abzan Monument
-Along the Crooked Way
-Aragorn and Arwen, Wed
-Bard's Company
-Bard, King of Dale
-Bejeweled Warg
-Belladonna Took
-Bewildering Blizzard
-Bilbo's Gambit
-Bilbo, Luckwearer // Burglar's Plot
-Bloodchief Ascension
-Bofur, Reliable Guardian // Concerted Care
-Bolg of the North
-Bombur, Gentle Dreamer
-Bothersome Noisemaker
-Burn, Burn, Tree and Fern
-Cantankerous Keepers
-Celebrate the Mountain-king
-Constrictor Sage
-Death Begets Life
-Desert Were-Worm
-Dismember
-Down in the Valley
-Dwalin, Weaponmaster
-Dáin's Company
-Dáin, Lord of the Iron Hills
-Eagle of the Great Shelf
-Eagle's Rescue
-Elven Passage
-Elven Raft-Steerer
-Equilibrium Adept
-Fearsome Goblin Pair
-Fresh Start
-Frontline Rush
-Fíli the Pathfinder
-Galion, Elvenking's Butler
-Gandalf, Goblins' Bane // Flameshape
-Gathering of Darkness
-Getaway Barrel
-Ghostly Prison
-Gigantic Big Bear
-Gnashing of Teeth
-Gollum the Abandoned
-Great Gilded Boat
-Great Ugly-Looking Goblin // Clap! Snap!
-Grim Tutor
-Head of the Hunt
-Inspirited Vanguard
-Key to the Side-Door
-Kin-Tree Severance
-Kishla Skimmer
-Kíli the Resourceful
-Lake-town Mariners // Gone Fishing
-Lake-town Toymaker
-Lotho, Corrupt Shirriff
-Most Decrepit Old Bird // Speak Secrets
-Nighthowl Pursuer
-Norn's Annex
-Old Fat Spider
-Old Fat Spider Can't See Me
-Rhovanion Rampager
-Roll-Roll-Roll-Roll
-Sage of the Fang
-Settle the Wreckage
-Shocking Sharpshooter
-Silvan Reveler
-Skirmish Rhino
-Sonic Shrieker
-Sting, Bilbo's Sword
-Stone-Giant of High Pass
-Strategic Betrayal
-Talion, the Kindly Lord
-Teferi, Time Raveler
-The Black Arrow
-The Eagles Are Coming!
-The Lonely Mountain
-The Misty Mountains Cold
-The Queen of Dale
-Thorin Oakenshield
-Thorin, King of Durin's Folk
-Thranduil's Company
-Thrór's Map
-Troop of Ponies
-United Battlefront
-Unrooted Ancestor
-Veteran Ice Climber
-Warden of the Grove
-Wilderland Scrounger
-Winternight Stories
-Woodland Weavemaster
+# Queued 2026-08-20 (round 2). Round 1 covered the 90 NEW NAMES in the export; this
+# round covers cards a decision now rests on whose text is nowhere in the repo.
+# Ranked by how much rides on the answer:
+#
+#  1-2 An Unexpected Party is 79% of the Thorin field, owned x2 with 2 FREE copies,
+#      and not in the deck. Whether it makes TOKEN or NONTOKEN Dwarves decides
+#      whether it is filler or a second multiplier behind Fíli. Super Villain Lockup
+#      is the proposed cut for it, and is equally unverified.
+#  3   Y'shtola's own text is in NO repo source. Every claim about her MV>=3
+#      noncreature drain trigger currently rests on .notes.md prose.
+#  4   Mindcrank is the missing half of the Bloodchief Ascension infinite.
+#  5   Thorin, Mountain-king is owned x2 and 69% of the field — but mono-R per attrs,
+#      so commanding it would strip white. Verify before anyone calls it an option.
+#  6   Magda is on two buylists at 80%/57% and groundable from no repo source.
+#  7-8 Both are live cut candidates in Y'shtola.
+An Unexpected Party // At the Door
+Super Villain Lockup
+Y'shtola, Night's Blessed
+Mindcrank
+Thorin, Mountain-king
+Magda, Brazen Outlaw
+Krile Baldesion
+Dancer's Chakrams
