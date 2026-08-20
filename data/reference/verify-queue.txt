@@ -1,8 +1,12 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-20: Mana Drain was added to yshtola-nights-blessed at the player's
-# direction. Its text is common knowledge ({U}{U} counter; bank the countered
-# spell's mana value as colorless next main phase) but the deck notes cite it, so
-# confirm verbatim rather than trusting memory.
-Mana Drain
+# Cleared 2026-08-20 — Mana Drain runner-verified (run 32353008397): "Counter target
+# spell. At the beginning of your next main phase, add an amount of {C} equal to
+# that spell's mana value." Matches the citation in yshtola-nights-blessed.notes.md
+# word for word. That run also printed "No snapshot changes — nothing to commit" —
+# the first byte-stable field regeneration since sort_keys landed (#151 era churn
+# is dead), with the two retired decks (tifa, smaug) gone from the snapshot loop.
+#
+# STILL UNVERIFIED, if a future session needs them: 26 of the 86 nonbasic cards in
+# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.
