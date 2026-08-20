@@ -95,7 +95,20 @@ import re
 
 COLORS = "WUBRGC"
 
-VOCAB_VERSION = 2          # bump on ANY change to the vocabulary above
+VOCAB_VERSION = 3          # bump on ANY change to the vocabulary above
+# v3 adds cost-reduction tokens (spec: docs/spec-cost-reduction.md). Grammar mirrors
+# fetch:* — colon-joined, machine-readable, one token per discount:
+#   discount-cmd:<type>:<n>    eminence-class: "As long as ~ is in the command zone
+#                              or on the battlefield, other <Type> spells you cast
+#                              cost {n} less to cast."  Active from turn one.
+#   discount:<type>:<n>        battlefield static: "<Type> spells you cast cost {n}
+#                              less to cast."  Active only while the permanent is
+#                              on the battlefield.
+#   discount-first:<type>:<n>  "The first <type> spell you cast each turn costs {n}
+#                              less to cast."  Once per turn.
+# <type> is a single lowercase word — a subtype ("dragon") or "creature". Riders the
+# grammar can't express (Goreclaw's "with power 4 or greater") deliberately match
+# NOTHING: a missed discount degrades to today's behavior; a wrong one lies.
 
 # "enters tapped" (post-Foundations) and "enters the battlefield tapped" (older
 # printings) are the same event. Centralized here so a future rewording is one edit.
@@ -148,6 +161,17 @@ _REMOVAL_RE = re.compile(r"\b(?:destroy|exile) target\b")
 _WIPE_ALL_RE = re.compile(r"\b(?:destroy|exile) all\b")
 _WIPE_EACH_RE = re.compile(r"\b(?:all|each) creatures?\b[^.]{0,60}?"
                            r"(?:gets? -|is dealt|are dealt)")
+# --- cost reduction (v3, spec docs/spec-cost-reduction.md) ----------------------
+# Sentence-scoped like everything else here. The eminence test is the phrase
+# "command zone" in the SAME sentence as the discount — that is the whole
+# mechanical difference (active always vs active while on the battlefield).
+_DISC_CMD_RE = re.compile(
+    r"command zone[^.]*?other ([a-z]+) spells you cast cost \{(\d+)\} less")
+_DISC_STATIC_RE = re.compile(
+    r"(?:^|\W)(?:other )?([a-z]+) spells you cast cost \{(\d+)\} less to cast")
+_DISC_FIRST_RE = re.compile(
+    r"the first ([a-z]+) spell you cast each turn costs \{(\d+)\} less")
+
 # `.{0,40}` spans the qualifier a counterspell puts between the words —
 # "counter target creature spell", "counter target noncreature spell".
 _COUNTER_RE = re.compile(r"counter target .{0,40}spell")
@@ -319,6 +343,21 @@ def derive_flags(c):
             flags.add("wipe")
         if _COUNTER_RE.search(t):
             flags.add("counter")
+
+        # Cost reduction (v3). Sentence-scoped; eminence checked FIRST so its
+        # sentence never double-registers as a battlefield static.
+        for sentence in t.split("."):
+            m = _DISC_CMD_RE.search(sentence)
+            if m:
+                flags.add(f"discount-cmd:{m.group(1)}:{m.group(2)}")
+                continue
+            m = _DISC_FIRST_RE.search(sentence)
+            if m:
+                flags.add(f"discount-first:{m.group(1)}:{m.group(2)}")
+                continue
+            m = _DISC_STATIC_RE.search(sentence)
+            if m and "command zone" not in sentence:
+                flags.add(f"discount:{m.group(1)}:{m.group(2)}")
 
         if not is_land or taps_for_mana:
             amount = max(amount, _mana_added(t))

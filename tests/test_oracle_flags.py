@@ -448,3 +448,62 @@ def test_v2_tokens_are_inert_in_classify_for_uncurated_cards():
     land = mtglib.Card(name="Uncurated Grove", types=["Land"],
                        flags={"fetch:basic", "mana-restricted"}, flags_ver=2)
     assert mtglib.classify(land) == {"land"}
+
+
+# ── v3: cost-reduction tokens (spec docs/spec-cost-reduction.md) ─────────────
+# Fixture texts are the runner-verified oracle lines from
+# data/reference/hobbit-verified-2026-08-20.txt — not remembered wordings.
+UR_DRAGON = card(
+    "The Ur-Dragon", "Legendary Creature — Dragon Avatar",
+    "Eminence — As long as The Ur-Dragon is in the command zone or on the "
+    "battlefield, other Dragon spells you cast cost {1} less to cast.\n"
+    "Flying\nWhenever one or more Dragons you control attack, draw that many "
+    "cards, then you may put a permanent card from your hand onto the battlefield.",
+    produced=[])
+
+SARKHAN_SA = card(
+    "Sarkhan, Soul Aflame", "Legendary Creature — Human Shaman",
+    "Dragon spells you cast cost {1} less to cast.\n"
+    "Whenever a Dragon you control enters, you may have Sarkhan become a copy of "
+    "it until end of turn.", produced=[])
+
+RADAGAST = card(
+    "Radagast of Rhosgobel", "Legendary Creature — Avatar Wizard",
+    "The first creature spell you cast each turn costs {2} less to cast and can "
+    "be cast as though it had flash.", produced=[])
+
+
+def test_eminence_discount_is_a_command_zone_token():
+    flags = oracle_flags.derive_flags(UR_DRAGON)
+    assert "discount-cmd:dragon:1" in flags
+    # the same sentence must NOT also register as a battlefield static
+    assert not any(f.startswith("discount:dragon") for f in flags)
+
+
+def test_battlefield_static_discount(card=SARKHAN_SA):
+    flags = oracle_flags.derive_flags(card)
+    assert "discount:dragon:1" in flags
+    assert not any(f.startswith("discount-cmd") for f in flags)
+
+
+def test_first_spell_each_turn_discount():
+    flags = oracle_flags.derive_flags(RADAGAST)
+    assert "discount-first:creature:2" in flags
+    assert not any(f.startswith("discount:creature:") for f in flags)
+
+
+def test_discounts_never_fire_on_taxes_riders_or_opponents():
+    """A missed discount degrades to today's behavior; a wrong one lies. So the
+    grammar must not match cost INCREASES, opponents' spells, or ridered
+    discounts it cannot express (Goreclaw's power clause)."""
+    tax = card("Sphere-ish", "Artifact",
+               "Spells your opponents cast cost {1} more to cast.")
+    assert not any(f.startswith("discount") for f in oracle_flags.derive_flags(tax))
+    goreclaw = card("Goreclaw", "Legendary Creature — Bear",
+                    "Creature spells you cast with power 4 or greater cost {2} "
+                    "less to cast.")
+    assert not any(f.startswith("discount")
+                   for f in oracle_flags.derive_flags(goreclaw))
+    opp = card("Weird Gift", "Enchantment",
+               "Dragon spells your opponents cast cost {1} less to cast.")
+    assert not any(f.startswith("discount") for f in oracle_flags.derive_flags(opp))

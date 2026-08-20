@@ -264,7 +264,9 @@ color/type/tribe/curve/pip analysis; the name-only snapshot answers ownership on
 `Flags` is `;`-joined oracle-derived tokens (`oracle_flags.py`'s vocabulary —
 v1: `etb-tapped`, `etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`,
 `mana2`/`mana3`, `removal`, `wipe`, `counter`; v2 adds `fetch:*` and
-`mana-restricted`), `Power` is the front face's printed power verbatim, and
+`mana-restricted`; v3 adds the cost-reduction tokens `discount-cmd:<type>:<n>`,
+`discount:<type>:<n>`, `discount-first:<type>:<n>` — see
+`docs/spec-cost-reduction.md`), `Power` is the front face's printed power verbatim, and
 `FlagsVer` is the vocabulary version that produced the Flags cell — flags and
 their version are ONE write, so a file whose Flags column arrives without a
 FlagsVer reads as version 1 (pre-v2), never as verified-current. **The

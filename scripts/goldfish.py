@@ -100,7 +100,7 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 3
+REPORT_SCHEMA = 4
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
@@ -141,11 +141,11 @@ class SimCard:
     """One physical copy, compiled. Immutable; shared across games and both A/B arms."""
     __slots__ = ("name", "key", "mv", "pips", "generic", "is_land", "produces",
                  "amount", "etb_tapped", "is_producer", "castable", "model",
-                 "is_creature", "power")
+                 "is_creature", "power", "discounts", "subtypes")
 
     def __init__(self, name, key, mv, pips, generic, is_land, produces, amount,
                  etb_tapped, is_producer, castable, model,
-                 is_creature=False, power=None):
+                 is_creature=False, power=None, discounts=(), subtypes=frozenset()):
         self.name, self.key, self.mv = name, key, mv
         self.pips, self.generic = pips, generic
         self.is_land, self.produces, self.amount = is_land, produces, amount
@@ -155,6 +155,11 @@ class SimCard:
         # hard this hits" — it never attacks and it counts toward the coverage gate
         # that decides whether a clock is reported at all.
         self.is_creature, self.power = is_creature, power
+        # Cost reduction (oracle_flags v3): tuple of (kind, type, n) where kind is
+        # "cmd" (eminence — active from the command zone, i.e. always), "static"
+        # (active while THIS card is on the battlefield) or "first" (first matching
+        # spell each turn). `subtypes` exists so "dragon spells" can be matched.
+        self.discounts, self.subtypes = discounts, subtypes
 
     def __repr__(self):                                    # pragma: no cover - debug
         return f"<SimCard {self.name} mv={self.mv} model={self.model}>"
@@ -189,6 +194,32 @@ def parse_cost(cost):
         nums = [int(p) for p in parts if p.isdigit()]
         pips.append((letters, nums[0] if nums else 0))
     return pips, generic
+
+
+_DISC_TOKEN_RE = re.compile(r"discount(-cmd|-first)?:([a-z]+):(\d+)$")
+
+
+def _parse_discounts(flags):
+    """flags -> ((kind, type, n), …) per the v3 grammar. Unknown tokens are ignored —
+    an old attrs file (FlagsVer < 3) simply yields no discounts, which reproduces
+    today's behavior exactly (the empty-vs-absent rule: absence degrades, never lies)."""
+    out = []
+    for f in flags:
+        m = _DISC_TOKEN_RE.match(f)
+        if m:
+            kind = {None: "static", "-cmd": "cmd", "-first": "first"}[m.group(1)]
+            out.append((kind, m.group(2), int(m.group(3))))
+    return tuple(out)
+
+
+def _disc_matches(sc, typ):
+    """Does a '<typ> spells' discount apply to this card? "creature" reads the type;
+    anything else is a subtype word ("dragon"). Lands are never spells."""
+    if sc.is_land:
+        return False
+    if typ == "creature":
+        return sc.is_creature
+    return typ in sc.subtypes
 
 
 def _amount(flags):
@@ -258,7 +289,9 @@ def compile_card(card):
                    amount=amount, etb_tapped=etb, is_producer=is_producer,
                    castable=castable, model=model,
                    is_creature=is_creature,
-                   power=card.power if is_creature else None)
+                   power=card.power if is_creature else None,
+                   discounts=_parse_discounts(flags),
+                   subtypes=frozenset(x.lower() for x in (card.subtypes or ())))
 
 
 def compile_deck(enriched, commander_name=""):
@@ -486,6 +519,34 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
     # sickness) and every turn thereafter, unblocked, for its printed power. Damage
     # is cumulative and uncontested — see `_assumptions`.
     board = []
+    # Cost reduction. Eminence ("cmd") works FROM THE COMMAND ZONE — verified on
+    # The Ur-Dragon, runner run 32367856797 — so it is active from turn one whether
+    # or not the commander is ever cast. Its "other" wording means it never
+    # discounts the commander itself. Battlefield ("static"/"first") discounts are
+    # read off `board` at pay time, so a wiped reducer stops reducing — creatures
+    # only in v1, because `board` is the only battlefield the sim tracks.
+    cmd_disc = tuple((typ, n) for kind, typ, n in
+                     ((commander.discounts if commander is not None else ()) or ())
+                     if kind == "cmd")
+    first_disc_used = False
+
+    def _discounted_generic(sc, is_commander_cast):
+        d = 0
+        if not is_commander_cast:
+            for typ, n in cmd_disc:
+                if _disc_matches(sc, typ):
+                    d += n
+        for bsc, _t in board:
+            if bsc is sc:
+                continue
+            for kind, typ, n in bsc.discounts:
+                if kind == "static" and _disc_matches(sc, typ):
+                    d += n
+                elif kind == "first" and not first_disc_used and _disc_matches(sc, typ):
+                    d += n
+        # Reduction applies to the GENERIC portion only — colored pips are a floor.
+        return max(0, sc.generic - d)
+
     wipe_turn = None
     if disruption:
         lo, hi = disruption["wipe_turns"]
@@ -503,6 +564,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
 
     for t in range(1, turns + 1):
         lands_at_start[t] = len(in_play)
+        first_disc_used = False
         if disruption:
             # Opponents act at the START of your turn, before you attack: a wipe you
             # walked into removes the board that would have swung.
@@ -561,10 +623,12 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
         # The commander goes down the moment it's payable — goldfish never recasts it,
         # so commander tax is dead code by design and isn't modeled.
         if commander is not None and commander_turn is None and commander.castable:
-            rem = _pay(commander.pips, commander.generic, units)
+            rem = _pay(commander.pips,
+                       _discounted_generic(commander, is_commander_cast=True), units)
             if rem is not None:
                 commander_turn, units = t, rem
                 if commander.is_creature:
+                    first_disc_used = True     # the first creature spell is spent
                     board.append((commander, t))
                     creature_casts += 1
                     if commander.power is None:
@@ -577,7 +641,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             sc = hand[j]
             if sc.is_land or not sc.castable:
                 continue
-            rem = _pay(sc.pips, sc.generic, units)
+            rem = _pay(sc.pips, _discounted_generic(sc, is_commander_cast=False),
+                       units)
             if rem is None:
                 continue
             units = rem
@@ -586,6 +651,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             if sc.is_producer:
                 producers.append((sc, t))
             if sc.is_creature:
+                first_disc_used = True
                 board.append((sc, t))
                 creature_casts += 1
                 if sc.power is None:
@@ -648,6 +714,27 @@ def _assumptions(compiled, mulligan, on_play, games):
     dead_fetch_lands = sorted({sc.name for sc in compiled["library"]
                                if sc.is_land and sc.model == "exact"
                                and not sc.produces})
+    # Cost reduction (REPORT_SCHEMA 4, 2026-08-20): say what IS modeled, because
+    # for months nothing was and three wrong verdicts on one deck traced to it.
+    disc_lines = []
+    cmd = compiled.get("commander")
+    if cmd is not None:
+        for kind, typ, n in cmd.discounts:
+            if kind == "cmd":
+                disc_lines.append(f"{typ} spells -{n} (eminence — active from the "
+                                  f"command zone, never on the commander itself)")
+    seen = set()
+    for sc in compiled["library"]:
+        for kind, typ, n in sc.discounts:
+            if (sc.name, kind) in seen:
+                continue
+            seen.add((sc.name, kind))
+            if kind == "static":
+                disc_lines.append(f"{typ} spells -{n} while {sc.name} is on the "
+                                  f"battlefield")
+            elif kind == "first":
+                disc_lines.append(f"first {typ} spell each turn -{n} while "
+                                  f"{sc.name} is on the battlefield")
     label = {"exact": "production-aware (enriched: each permanent taps for what "
                       "Scryfall says it taps for)",
              "identity": "COLOR-IDENTITY FALLBACK — an approximation, the same bias "
@@ -696,6 +783,13 @@ def _assumptions(compiled, mulligan, on_play, games):
                         + ") find no lands")
         out.append("[!] Fetch effects are NOT modeled: " + "; ".join(bits) + ". "
                    "Their numbers here understate them.")
+    if disc_lines:
+        out.append("Cost reduction modeled (generic portion only; colored pips are "
+                   "a floor): " + "; ".join(sorted(disc_lines)) + ".")
+    else:
+        out.append("No cost reduction detected in this deck's flags — printed "
+                   "costs are paid as written. (Discount detection needs FlagsVer 3 "
+                   "attrs; re-enrich if this deck's commander reduces costs.)")
     return out
 
 

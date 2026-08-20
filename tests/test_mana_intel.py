@@ -635,9 +635,10 @@ def test_goldfish_admits_fetch_effects_are_unmodeled():
 
 def test_schema_bump_ships_with_the_assumptions_change():
     """Assumptions text is part of the cached report; without the bump, cached
-    decks keep the old list until an unrelated mtime change."""
+    decks keep the old list until an unrelated mtime change. Pin the current
+    value: any change to what a report says must arrive with a bump."""
     import goldfish
-    assert goldfish.REPORT_SCHEMA == 3
+    assert goldfish.REPORT_SCHEMA == 4
 
 
 def test_ab_arm_b_adjusts_the_fetch_flagged_list():
