@@ -167,3 +167,50 @@ keeps the optimizer and auto-builder from quietly re-seating her here). Her slot
 to **Smaug, the Great Calamity // Spew Flame**: a fourth Smaug, a 31st dragon, and —
 via the Spew Flame adventure (5 damage to a creature, then the dragon waits in exile)
 — a removal spell in the deck's thinnest role. Eminence discounts the creature half.
+
+## 2026-08-20 — three goldfish-measured swaps (manual-replace, do not churn)
+
+Player asked for the mathematically best list, tested in goldfish. Every swap below
+was A/B'd over **3,000 paired games with common random numbers** (both arms replay
+identical shuffles), and only swaps whose 95% CI excluded zero were applied.
+
+| out | in | first-kill Δ | damage Δ |
+|---|---|---|---|
+| Smaug, the Great Calamity // Spew Flame | Neriv, Heart of the Storm | −0.049 turns * | +1.44 * |
+| Niv-Mizzet, Visionary | Hraesvelgr of the First Brood | −0.025 turns * | +0.57 * |
+| Ureni, the Song Unending | Lorehold, the Historian | −0.020 turns * | +0.44 * |
+
+Aggregate, re-measured at 5,000 games: **lethal by T8 rose 17% → 19%**; the median
+first-kill turn stayed **T9**. Field overlap unchanged at 20 of the top 25.
+
+Smaug, the Great Calamity was the single clearest cut in the deck: the baseline's
+worst-sequenced table showed it **cast in 0% of games** (first cast T9.39 against
+MV 7). Ureni is a 10-power body, but at MV 8 in a list that already had 16 creatures
+at MV 6+ it was the top-end this curve could least afford.
+
+### READ THIS BEFORE OPTIMIZING THIS DECK ON GOLDFISH AGAIN
+
+Goldfish measures a **clock**, not a win rate — no opponents, no blocks, no removal.
+Worse, two of its documented assumptions bias it against *this* deck specifically:
+
+1. **It cannot see land-ramp.** Its own assumptions say "ramp sorceries add no mana"
+   and "fetch effects are NOT modeled". Farseek, Nature's Lore, Cultivate, Rampant
+   Growth and Wood Elves — this deck's actual ramp — are invisible, so every clock
+   number here **understates** the deck.
+2. **It casts highest-mana-value-first**, so cheap creatures are cast last and
+   contribute least. That makes the metric *reward a higher curve*. Measured
+   evidence: swapping Dragon Broodmother (MV 6, power 4) for Scavenger Regent
+   (MV 4, power 4) — strictly cheaper for the same power — measured **slower**
+   (+0.004 turns, significant). Maximising this metric would push the curve up,
+   which is the opposite of what this deck needs.
+
+So: use `--ab` for **like-for-like** comparisons, where both arms share the same
+blindness. Do not treat the absolute clock as a power rating, and never cut real
+ramp because goldfish can't see it.
+
+### Rejected by measurement (kept out on purpose)
+Scavenger Regent, Decadent Dragon and Marang River Regent all measured **slower**
+in this shell. Vaevictis Asmadi measured faster (−0.019) purely on printed power
+(6 vs Silumgar's 3) — held back anyway: the metric cannot see that its attack
+trigger is symmetrical and can hand opponents permanents, and Silumgar, the
+Drifting Death has 33% field support against Vaevictis's none.
