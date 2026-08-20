@@ -637,9 +637,9 @@ def main():
                               for d, r in results], indent=2))
             return 0
         print("POWER RANKING — your decks, strongest first\n")
-        print(f"  {'#':<3}{'Deck':<34}{'Bracket':<14}{'Speed':<16}"
+        print(f"  {'#':<3}{'Deck':<34}{'Bracket':<20}{'Speed':<16}"
               f"{'Resilience':<18}{'Consistency':<16}Inter")
-        print("  " + "-" * 106)
+        print("  " + "-" * 112)
         for i, (d, r) in enumerate(results, 1):
             name = os.path.basename(d)[:-4]
             # The player's setting leads; a disagreeing detection is shown, never
@@ -651,7 +651,7 @@ def main():
             rs = (r.get("resilience") or {}).get("short", "—")
             cs = (r.get("consistency") or {}).get("label", "—")
             cs = cs.split(" (")[0]
-            print(f"  {i:<3}{name[:33]:<34}{b:<14}{sp:<16}{rs:<18}{cs:<16}"
+            print(f"  {i:<3}{name[:33]:<34}{b:<20}{sp:<16}{rs:<18}{cs:<16}"
                   f"{r['signals']['interaction']}")
         return 0
 

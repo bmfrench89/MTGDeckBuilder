@@ -1,49 +1,118 @@
+2 Exotic Orchard
+2 Path of Ancestry
+2 Swords to Plowshares
+2 Path to Exile
 3 Rhystic Study
-2 Fellwar Stone
-2 Lightning Greaves
-2 Force of Will
+2 Generous Gift
 2 Kindred Discovery
+2 Nature's Lore
+2 Roaming Throne
+2 Rogue's Passage
+2 Sakura-Tribe Elder
 2 Secluded Courtyard
 2 Solemn Simulacrum
+2 Sun Titan
 2 Unclaimed Territory
-1 Swords to Plowshares
-1 Thought Vessel
+1 Fellwar Stone
+1 Lightning Greaves
+1 Battlefield Forge
+1 Beast Within
 1 Cultivate
 1 Farseek
-1 Path to Exile
-1 Reconnaissance Mission
-1 Relic of Legends
-1 Arcane Denial
-1 Archmage Emeritus
-1 Dig Through Time
+1 Angelic Renewal
+1 Bastion of Remembrance
+1 Darksteel Plate
 1 Dispatch
-1 Frantic Search
-1 Generous Gift
-1 Iron Man, Armored Avenger
-1 Kid Loki
-1 Misdirection
+1 Force of Will
+1 Harmonize
+1 Mind Stone
 1 Mystic Monastery
 1 Mystic Remora
-1 Mystical Tutor
-1 Nature's Lore
 1 Night's Whisper
-1 Professor Hulk
-1 Propaganda
-1 Roaming Throne
-1 Sakura-Tribe Elder
+1 Rhythm of the Wild
+1 Riverpyre Verge
+2 Savage Ventmaw
+1 Sheltered Thicket
 1 Skullclamp
-1 Sky Diamond
-1 Sublime Epiphany
-1 Sun Titan
-1 Visions of Beyond
-1 Winged Words
-1 Sapphire Medallion
-1 Lyla, Holographic Assistant
+1 Smaug the Magnificent
+1 Sulfur Falls
+1 Talisman of Creativity
+1 Talisman of Hierarchy
+1 Temur Ascendancy
+1 Tireless Tracker
+1 Up the Beanstalk
+1 Willowrush Verge
+1 Agent of the Iron Throne
+1 Another Chance
+2 Bartolomé del Presidio
+1 Body Snatcher
+1 Boonweaver Giant
+1 Bound in Gold
+1 Changing Loyalty
+1 Charcoal Diamond
+1 Conduit Pylons
+1 Corpse Augur
+1 Corpse Churn
+1 Crow of Dark Tidings
+1 Dakmor Salvage
+1 Danitha, Benalia's Hope
+1 Demonic Bargain
+1 Dimir House Guard
+1 Diresight
+1 Dread Return
+1 Dusk // Dawn
+1 Fiend Hunter
+1 Final Parting
+1 Funeral Rites
+1 Fungal Fortitude
+1 Gnawing Vermin
+1 Great Hall of the Citadel
+1 Hidden Grotto
+1 Infernal Offering
+1 Intercessor's Arrest
+1 Kaya's Ghostform
+1 Leonin Relic-Warder
+1 Marionette Apprentice
+1 Mariposa Military Base
+1 Memorial to Folly
+1 Minion's Return
+1 Necrogen Communion
+1 Ninja Teen
+1 Noble's Purse
+1 Orzhov Basilica
+1 Orzhov Signet
+1 Paramecia Coloniex
+1 Prismatic Lens
+1 Redemption Choir
+1 Scavenger's Talent
+1 Seal from Existence
+1 Shepherd of the Cosmos
+1 Stitcher's Supplier
+1 Summon Undead
+1 Tainted Field
+1 The Warring Triad
+1 Throne of the Grim Captain
+1 Unburial Rites
+1 Undead Butler
+1 Unseal the Necropolis
+1 Valgavoth's Faithful
+1 Wake the Dead
+1 Werefox Bodyguard
+1 Fíli and Kíli, Joyous
+1 Glóin, Dwarf Emissary
+1 Magda, Brazen Outlaw
+1 Ori, Plate Stacker
+1 The Arkenstone
+1 Dáin of the Ancient Halls
+1 Thorin, Company's Leader
+1 Gimli of the Glittering Caves
+1 Mines of Moria
+1 Sundown Pass
+1 Dwarven Mine
 1 Dragonlord's Servant
 1 Dragonspeaker Shaman
 1 Drakuseth Maw of Flames
 1 Junji the Midnight Sky
-1 Savage Ventmaw
 1 Dragon's Hoard
 1 Crucible of Fire
 1 Sunscorch Regent
@@ -70,8 +139,25 @@
 1 Godless Shrine
 1 Painful Truths
 1 Hallowed Fountain
+1 Ashnod's Altar
+1 Pitiless Plunderer
 1 Captain America, Super-Soldier
 2 Herald's Horn
+1 Moonmist
+1 Mjölnir, Hammer of Thor
+1 Cunning Sparkmage
+1 Pyrohemia
+1 Vithian Stinger
+1 Stomping Ground
+1 Breeding Pool
+1 Steam Vents
+1 Ketria Triome
+1 Three Visits
+1 Birds of Paradise
+1 Xenagos, God of Revels
+1 Caltrops
+1 Aggravated Assault
+1 Helm of the Host
 1 Sword of Feast and Famine
 1 Sword of Fire and Ice
 1 Buster Sword
@@ -102,5 +188,4 @@
 1 Spider-Ham, Peter Porker
 1 Spider Manifestation
 1 Spider-Woman, Stunning Savior
-1 Helm of the Host
 1 Exquisite Blood
