@@ -40,6 +40,32 @@ SECTION_ORDER = ["ramp", "draw", "removal", "wipe", "counter", "creature", "spel
                  "artifact", "enchantment", "planeswalker", "other"]
 
 
+class UnknownIdentity(ValueError):
+    """The commander's color identity could not be established, so no build is honest.
+
+    Raised instead of returning a deck because the failure is INVISIBLE in the output:
+    an unenriched commander reads as identity set(), `_color_legal` then passes only
+    colorless cards, and the result is a plausible-looking artifact pile in entirely
+    the wrong colors. Callers should surface `.message` — it names both fixes."""
+
+    def __init__(self, commander_name, found=True):
+        self.commander_name = commander_name
+        self.found = found
+        where = ("is in the collection but has no type/color data yet" if found
+                 else "isn't in the collection")
+        self.message = (
+            f"Refusing to build: {commander_name} {where}, so its color identity is "
+            f"UNKNOWN — not colorless. Building anyway would silently produce a "
+            f"colorless artifact pile in the wrong colors.\n"
+            f"  Fix it either way:\n"
+            f"    · pass the verified identity, e.g. --identity RW (from Scryfall's "
+            f"'identity:' line — carddb.py --verify \"{commander_name}\", or the "
+            f"deck-verify runner log), or\n"
+            f"    · enrich the collection first (scripts/carddb.py, or let "
+            f"attrs-snapshot.yml regenerate the committed attrs after merge).")
+        super().__init__(self.message)
+
+
 def _img(name, idx):
     """Scryfall image URL for a card — CDN via the collection's Scryfall id when
     available, else the image-by-name endpoint."""
@@ -117,6 +143,17 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         else:
             ref = mtglib.lookup(idx, commander_name)
             identity = set(ref.identity) if (ref and ref.identity) else set()
+            # An empty identity is TWO different situations and `Card.identity` — unlike
+            # `produced`/`flags` — has no None-vs-empty distinction to tell them apart:
+            # a genuinely colorless commander (Karn) and an UNENRICHED one both read
+            # set(). `_color_legal` then admits only colorless cards, so an unenriched
+            # commander silently yields an all-artifact pile in the wrong colors
+            # (reproduced 2026-08-20 on Thorin, King of Durin's Folk the day he was
+            # added to the collection: 43 artifacts, 0 basics, [C]). Use `types` as the
+            # enrichment tell — an unenriched card has none — and REFUSE rather than
+            # build something guaranteed wrong.
+            if not identity and not (ref and ref.types):
+                raise UnknownIdentity(commander_name, found=ref is not None)
     refs = refs or power.load_refs()
     # "field" = EDHREC inclusion % for this commander. Without it the scorer can only see
     # generic quality, so a vanilla 1-drop outranks the archetype's 95%-played auto-include
@@ -388,6 +425,11 @@ if __name__ == "__main__":
     ap.add_argument("--decks-dir", default="data/decks")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--txt", action="store_true", help="print the savable deck .txt")
+    ap.add_argument("--identity", default=None, metavar="WUBRG",
+                    help="the commander's color identity, e.g. RW. Needed only when "
+                         "the commander is neither in commanders.csv nor enriched in "
+                         "the collection — take it from a VERIFIED source (carddb.py "
+                         "--verify prints an 'identity:' line), never from memory.")
     args = ap.parse_args()
     try:
         coll = mtglib.load_collection(args.collection)
@@ -395,7 +437,11 @@ if __name__ == "__main__":
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(2)
     idx = mtglib.index_by_name(coll)
-    d = build(args.commander, coll, idx, args.decks_dir)
+    try:
+        d = build(args.commander, coll, idx, args.decks_dir, identity=args.identity)
+    except UnknownIdentity as e:
+        print(f"error: {e.message}", file=sys.stderr)
+        raise SystemExit(3)
     if args.txt:
         print(deck_text(d)); raise SystemExit(0)
     if args.json:
