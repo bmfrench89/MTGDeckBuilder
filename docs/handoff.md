@@ -8,7 +8,7 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
-## Ur-Dragon: sim-tuned, then engine-read revalidated; eminence exposed as a model hole (2026-08-20)
+## Ur-Dragon: sim-tuned, engine-read revalidated; eminence model hole exposed AND closed (2026-08-20)
 
 The player asked for the mathematically best Ur-Dragon tested end-to-end in
 goldfish, then challenged whether eminence was accounted for. It was not — and the
@@ -42,10 +42,20 @@ doubler the sim can't see), Wood Elves (fetches the deck's typed duals), Sarkhan
 Soul Aflame (second dragon discount), Roaming Throne (naming Dragon doubles the
 commander's attack trigger).
 
-**Standing recommendation, not yet built:** teach the cost model commander cost
-reduction (a flags token + a hook in goldfish's cast check). Three wrong verdicts
-in one day trace to its absence; it is the single highest-leverage improvement to
-the toolkit's honesty for this deck class.
+**BUILT same day** (PR #155, `docs/spec-cost-reduction.md`): `oracle_flags` v3
+derives `discount-cmd:<type>:<n>` / `discount:<type>:<n>` / `discount-first:<type>:<n>`
+from oracle text; goldfish pays them at cast time (generic portion only, pip
+floor, eminence always-on and never self-applied, statics off `board`, first-per-
+turn consumed positionally; A/A exact-zero holds WITH discounts on; REPORT_SCHEMA
+3→4; dual honesty label). Attrs snapshot regenerated on main (FlagsVer 3, 12
+discount rows — the four Ur-Dragon reducers all derive to spec; `artifact`/
+`noncreature` type-word tokens deliberately match nothing in the sim v1).
+Re-measured at 5,000 games: first-kill median **stays T9** but **lethal-by-T8
+19% → 37%**, commander lands in **41%** of games (was 31%), mean turn 8.23. The
+Radagast override is now vindicated by the fixed instrument (cutting him measures
+commander_by_t6 −0.009, CI excludes zero); Ureni's override still rests on the
+engine-read (abilities remain unmodeled). Model holes remaining: land-ramp,
+abilities/attack-trigger — hole #2 (cost reduction) is closed.
 
 ## Y'shtola goes Bracket 4: the purchase package lands; Tifa and Smaug retired (2026-08-20)
 

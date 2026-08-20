@@ -190,6 +190,11 @@ at MV 6+ it was the top-end this curve could least afford.
 
 ### EMINENCE IS MODELED NOWHERE — the third and largest blind spot
 
+> **RESOLVED 2026-08-20** (PR #155, `docs/spec-cost-reduction.md`): goldfish now
+> pays eminence, battlefield statics and first-per-turn discounts off oracle-derived
+> flags. The section below is kept as the record of what the hole cost; the
+> re-measured numbers are in "The cost model, live" at the end of this file.
+
 Verified text (runner run 32367856797), the line that governs this whole deck:
 
 > **Eminence — As long as The Ur-Dragon is in the command zone OR on the
@@ -221,10 +226,11 @@ The attack trigger is unmodeled too: goldfish counts combat damage only, so the
 draw-per-attacking-dragon and the free permanent from hand — the deck's real
 engine — contribute nothing to its clock.
 
-**Net: every goldfish number for this deck is pessimistic on three independent
-axes** (no land-ramp, no eminence discount, no attack trigger). Use `--ab` for
-like-for-like dragon swaps, where both arms are wrong in the same direction and
-the comparison still holds. Never read its absolute clock as this deck's speed.
+**Net: every goldfish number for this deck is pessimistic on ~~three~~ TWO
+independent axes** (no land-ramp, no attack trigger — the eminence discount is
+modeled as of 2026-08-20). Use `--ab` for like-for-like dragon swaps, where both
+arms are wrong in the same direction and the comparison still holds. The absolute
+clock is still an understatement of this deck's speed, just a smaller one.
 
 ### READ THIS BEFORE OPTIMIZING THIS DECK ON GOLDFISH AGAIN
 
@@ -254,6 +260,11 @@ trigger is symmetrical and can hand opponents permanents, and Silumgar, the
 Drifting Death has 33% field support against Vaevictis's none.
 
 ## Radagast of Rhosgobel — YES, and the simulator says no (2026-08-20)
+
+> **The simulator now says yes** (same day, after the cost model shipped): the A/B
+> re-run with discounts live shows cutting Radagast for Niv-Mizzet, Visionary makes
+> commander-by-T6 significantly WORSE (−0.9pp, CI excludes zero). The engine-read
+> override below is vindicated by measurement; kept as the record of the reasoning.
 
 Verified (run 32368808674), `{2}{G}{G}` Legendary Creature — Avatar Wizard, 2/2:
 
@@ -329,3 +340,36 @@ A/B measured printed bodies only. Engine-read verdicts, in the sleeper-audit for
 
 Do not cut: Sylvia Brightspear, Wood Elves, Sarkhan Soul Aflame, Roaming Throne,
 Neriv, Ureni, Radagast, Dragonspeaker Shaman.
+
+## The cost model, live — re-measured baseline (2026-08-20, after PR #155)
+
+`oracle_flags` v3 + the goldfish discount hook shipped and the attrs snapshot was
+regenerated (FlagsVer 3). This deck's report now models, by name: **dragon spells
+−1 (eminence, from the command zone, never the commander itself)**, dragon −1 while
+Sarkhan, Soul Aflame is out, dragon −2 while Dragonspeaker Shaman is out, and the
+first creature spell each turn −2 while Radagast of Rhosgobel is out. Discounts hit
+the generic portion only — colored pips are a floor.
+
+5,000 games, seed 0, printed-cost baseline vs discounts live:
+
+| metric | printed costs (old model) | discounts live |
+|---|---|---|
+| first-kill median | T9 | **T9** |
+| lethal by T8 | 19% | **37%** |
+| commander landed at all | 31% of games | **41%** |
+| commander mean turn | 8.33 | **8.23** |
+| by-T8 commander on battlefield | — | 22% |
+
+The median didn't move but the distribution did: nearly twice as many games
+present lethal by T8, and the commander itself lands in ten points more games
+(eminence never discounts him — the gain is the deck curving out a mana cheaper
+underneath, leaving more mana turns for the 9-drop). Still Bracket-2-paced by
+WotC's table on the median, still understated on two axes (land-ramp, the attack
+trigger).
+
+**The Radagast override, vindicated by the fixed instrument**: A/B over the same
+5,000 paired shuffles, OUT Radagast / IN Niv-Mizzet, Visionary — commander_by_t6
+−0.009 [−0.011, −0.006], the only significant mover. The sim that once called
+Radagast a downgrade now measures his absence as the harm. Ureni's case rests on
+abilities (protection, the ETB sweep) the sim still can't see; that override
+stands on the engine-read.
