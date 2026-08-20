@@ -8,6 +8,21 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Phase A revalidation: two fixes (2026-08-20)
+
+Post-merge re-audit of #143 found two real gaps, both fixed:
+
+1. **Latent crash in `speed_axis`** — a clock dict missing `kill_rate` hit
+   `rate * 100` with None in both the combat and slow branches. Unreachable via
+   `clock_for_deck` (goldfish always emits the key) but the function is public and
+   pure; missing rate now reads as 0.0 with an honest "0%" slow label. Test added.
+2. **Webapp leaderboard passed no collection path** to `build_for_deck`, so every
+   webapp row's speed silently read "unmeasured" while the CLI showed real values —
+   exactly the two-surfaces trap. `COLLECTION` now rides along; webapp speed for
+   Y'shtola verified as `combo (setup)`.
+
+Suite 860 → **861**. Everything else in #143 held up under re-audit.
+
 ## CRISPI Phase A SHIPPED — the Speed axis (2026-08-20)
 
 `power.py` now carries a **Speed** axis, from `docs/spec-crispi-axes.md`. Combo evidence
