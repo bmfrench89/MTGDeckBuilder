@@ -141,11 +141,11 @@ class SimCard:
     """One physical copy, compiled. Immutable; shared across games and both A/B arms."""
     __slots__ = ("name", "key", "mv", "pips", "generic", "is_land", "produces",
                  "amount", "etb_tapped", "is_producer", "castable", "model",
-                 "is_creature", "power", "discounts", "subtypes")
+                 "is_creature", "power", "discounts", "typewords")
 
     def __init__(self, name, key, mv, pips, generic, is_land, produces, amount,
                  etb_tapped, is_producer, castable, model,
-                 is_creature=False, power=None, discounts=(), subtypes=frozenset()):
+                 is_creature=False, power=None, discounts=(), typewords=frozenset()):
         self.name, self.key, self.mv = name, key, mv
         self.pips, self.generic = pips, generic
         self.is_land, self.produces, self.amount = is_land, produces, amount
@@ -158,8 +158,9 @@ class SimCard:
         # Cost reduction (oracle_flags v3): tuple of (kind, type, n) where kind is
         # "cmd" (eminence — active from the command zone, i.e. always), "static"
         # (active while THIS card is on the battlefield) or "first" (first matching
-        # spell each turn). `subtypes` exists so "dragon spells" can be matched.
-        self.discounts, self.subtypes = discounts, subtypes
+        # spell each turn). `typewords` holds lowercased subtype AND type words so
+        # "dragon spells", "vehicle spells" and "artifact spells" all match.
+        self.discounts, self.typewords = discounts, typewords
 
     def __repr__(self):                                    # pragma: no cover - debug
         return f"<SimCard {self.name} mv={self.mv} model={self.model}>"
@@ -213,13 +214,18 @@ def _parse_discounts(flags):
 
 
 def _disc_matches(sc, typ):
-    """Does a '<typ> spells' discount apply to this card? "creature" reads the type;
-    anything else is a subtype word ("dragon"). Lands are never spells."""
+    """Does a '<typ> spells' discount apply to this card? "creature"/"noncreature"
+    read the creature bit; anything else is a lowercased subtype or type word
+    ("dragon", "vehicle", "artifact"). Lands are never spells. The label in
+    `_assumptions` names every derived token, so a word this function cannot match
+    must never be derived — that's what keeps the label honest."""
     if sc.is_land:
         return False
     if typ == "creature":
         return sc.is_creature
-    return typ in sc.subtypes
+    if typ == "noncreature":
+        return not sc.is_creature
+    return typ in sc.typewords
 
 
 def _amount(flags):
@@ -291,7 +297,8 @@ def compile_card(card):
                    is_creature=is_creature,
                    power=card.power if is_creature else None,
                    discounts=_parse_discounts(flags),
-                   subtypes=frozenset(x.lower() for x in (card.subtypes or ())))
+                   typewords=frozenset(x.lower() for x in (card.subtypes or ()))
+                   | frozenset(t.lower() for t in (card.types or ())))
 
 
 def compile_deck(enriched, commander_name=""):

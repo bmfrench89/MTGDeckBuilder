@@ -82,6 +82,12 @@ had spent its effort hand-reasoning.
 5. **Accented names in reference data** — `mtglib._norm` does **not** fold accents, so
    `Bartolome` silently degraded 45 combo rows to "one piece away".
 6. **A rule number quoted without retrieval.** If `rules.py` degrades, write *uncited*.
+7. **A sim verdict accepted over a verified-text read without asking what the sim
+   cannot see.** `goldfish.py` paid printed mana costs for months while the Ur-Dragon
+   IS a cost reducer — three wrong verdicts in one day (2026-08-20) before the model
+   learned eminence. When a simulation contradicts the card text, check the report's
+   **assumptions block** first: the mechanism may simply not be modeled. The number is
+   only as good as what the model covers, and the assumptions say what that is.
 
 ## 6. THE STANDING ORDER
 
