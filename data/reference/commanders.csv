@@ -3,7 +3,9 @@
 # Ownership is checked live against the collection, so it's not stored here.
 # Grow this list freely. Tags in use: equipment voltron artifacts vehicles aristocrats
 # tokens go-wide spellslinger reanimator counters lifegain control group-slug burn
-# tribal-spiders tribal-hero superfriends ramp.
+# tribal-spider tribal-hero superfriends ramp.
+# Tribal tags are SINGULAR: the suffix is matched against a card's subtype
+# ("Dwarf", "Spider"), so "tribal-spiders" silently matches nothing.
 Name,Colors,Archetypes,Notes
 "Cloud, Ex-SOLDIER",R G W,equipment voltron artifacts,Attach on the cheap; big single-swing payoffs.
 "The Invincible Iron Man",U R,equipment artifacts voltron,"Tony Stark flips to Iron Man; cheats an artifact/equipment in and auto-attaches each combat. Izzet — shares only red with Naya equipment."
@@ -27,7 +29,7 @@ Name,Colors,Archetypes,Notes
 "Mazirek, Kraul Death Priest",B G,aristocrats counters tokens,Every sacrifice grows the whole board; Golgari sac.
 "Kaervek the Merciless",B R,group-slug burn control,Punishes opponents' spells with damage; Rakdos control/slug.
 "Y'shtola, Night's Blessed",W U B,control lifegain aristocrats,Esper lifeloss/drain payoff with a control shell.
-"Cosmic Spider-Man",W U B R G,tribal-spiders go-wide tokens,Five-color Spider lord — swing wide with evasion and lifelink.
+"Cosmic Spider-Man",W U B R G,tribal-spider go-wide tokens,Five-color Spider lord — swing wide with evasion and lifelink.
 "Captain America, Team Leader",W U R,tribal-hero counters equipment,Jeskai Hero typal with +1/+1 counters and combat tricks.
 "Doctor Doom, Rules All",U B R,control artifacts superfriends,Grixis villains/control; punishing value engine.
 "Bruce Banner // The Incredible Hulk",G R U,voltron counters ramp,Flips into an 8/8 reach/trample; damaging him untaps and adds a combat phase.
@@ -35,3 +37,4 @@ Name,Colors,Archetypes,Notes
 "Doctor Doom",B,artifacts aristocrats control,"MSH 95, verified 2026-08-15: ETB two 3/3 Doombots; indestructible while you control an artifact creature or a Plan; end-step draw-1-lose-1. Doombots/Plans grind — NOT the Grixis 'Rules All'."
 "Kaalia of the Vast",B R W,reanimator tribal-hero,"Attack trigger cheats an Angel/Demon/Dragon from hand onto the battlefield tapped and attacking. Wants A/D/D density + haste/protection for herself."
 "Tifa Lockhart",G,voltron ramp equipment,"FIN 206, verified 2026-08-17 (Scryfall): {1}{G} 1/2 trample; landfall doubles her power until EOT — the reminder is '+X/+0 where X is her power when the ability RESOLVES', so permanent base power (counters/equipment) applied first is multiplied. Wants land-to-battlefield ramp, cheap equipment, protection and haste. Pinned to tifa-lockhart."
+"Thorin, King of Durin's Folk",R W,tribal-dwarf artifacts tokens go-wide,"Every Dwarf ETB makes a Treasure, and Dwarves get +1/+0 per artifact token — a multiplicative engine, not an infinite one. Wants Dwarf density and blink/copy effects on ETBs, not sacrifice loops."
