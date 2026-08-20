@@ -167,3 +167,165 @@ keeps the optimizer and auto-builder from quietly re-seating her here). Her slot
 to **Smaug, the Great Calamity // Spew Flame**: a fourth Smaug, a 31st dragon, and —
 via the Spew Flame adventure (5 damage to a creature, then the dragon waits in exile)
 — a removal spell in the deck's thinnest role. Eminence discounts the creature half.
+
+## 2026-08-20 — three goldfish-measured swaps (manual-replace, do not churn)
+
+Player asked for the mathematically best list, tested in goldfish. Every swap below
+was A/B'd over **3,000 paired games with common random numbers** (both arms replay
+identical shuffles), and only swaps whose 95% CI excluded zero were applied.
+
+| out | in | first-kill Δ | damage Δ |
+|---|---|---|---|
+| Smaug, the Great Calamity // Spew Flame | Neriv, Heart of the Storm | −0.049 turns * | +1.44 * |
+| Niv-Mizzet, Visionary | Hraesvelgr of the First Brood | −0.025 turns * | +0.57 * |
+| Ureni, the Song Unending | Lorehold, the Historian | −0.020 turns * | +0.44 * |
+
+Aggregate, re-measured at 5,000 games: **lethal by T8 rose 17% → 19%**; the median
+first-kill turn stayed **T9**. Field overlap unchanged at 20 of the top 25.
+
+Smaug, the Great Calamity was the single clearest cut in the deck: the baseline's
+worst-sequenced table showed it **cast in 0% of games** (first cast T9.39 against
+MV 7). Ureni is a 10-power body, but at MV 8 in a list that already had 16 creatures
+at MV 6+ it was the top-end this curve could least afford.
+
+### EMINENCE IS MODELED NOWHERE — the third and largest blind spot
+
+Verified text (runner run 32367856797), the line that governs this whole deck:
+
+> **Eminence — As long as The Ur-Dragon is in the command zone OR on the
+> battlefield, other Dragon spells you cast cost {1} less to cast.**
+> Whenever one or more Dragons you control attack, draw that many cards, then you
+> may put a permanent card from your hand onto the battlefield.
+
+`grep -rin "eminence" scripts/ data/reference/` returns **nothing**. No tool in
+this repo applies the discount, and goldfish charges every dragon its printed cost.
+What that costs the analysis, measured on the current 31-dragon list:
+
+| | printed | with eminence |
+|---|---|---|
+| average dragon MV | 5.29 | **4.29** |
+| dragons at MV 6+ | 12 | **3** |
+
+Two consequences, both of which a previous session's analysis got wrong:
+
+1. **"The commander is only cast in 31% of games" is not the indictment it looks
+   like.** Eminence explicitly works **from the command zone**. The discount is on
+   from turn one whether or not the 9-drop is ever cast; casting it is a bonus
+   (a 10-power flier and the attack trigger), not the price of entry.
+2. **"This deck is too top-heavy at 16 creatures MV 6+" was materially
+   misleading.** Twelve of those are dragons, and with the discount only **three**
+   actually play at 6 or more. The curve is a full mana cheaper than any tool here
+   reports.
+
+The attack trigger is unmodeled too: goldfish counts combat damage only, so the
+draw-per-attacking-dragon and the free permanent from hand — the deck's real
+engine — contribute nothing to its clock.
+
+**Net: every goldfish number for this deck is pessimistic on three independent
+axes** (no land-ramp, no eminence discount, no attack trigger). Use `--ab` for
+like-for-like dragon swaps, where both arms are wrong in the same direction and
+the comparison still holds. Never read its absolute clock as this deck's speed.
+
+### READ THIS BEFORE OPTIMIZING THIS DECK ON GOLDFISH AGAIN
+
+Goldfish measures a **clock**, not a win rate — no opponents, no blocks, no removal.
+Worse, two of its documented assumptions bias it against *this* deck specifically:
+
+1. **It cannot see land-ramp.** Its own assumptions say "ramp sorceries add no mana"
+   and "fetch effects are NOT modeled". Farseek, Nature's Lore, Cultivate, Rampant
+   Growth and Wood Elves — this deck's actual ramp — are invisible, so every clock
+   number here **understates** the deck.
+2. **It casts highest-mana-value-first**, so cheap creatures are cast last and
+   contribute least. That makes the metric *reward a higher curve*. Measured
+   evidence: swapping Dragon Broodmother (MV 6, power 4) for Scavenger Regent
+   (MV 4, power 4) — strictly cheaper for the same power — measured **slower**
+   (+0.004 turns, significant). Maximising this metric would push the curve up,
+   which is the opposite of what this deck needs.
+
+So: use `--ab` for **like-for-like** comparisons, where both arms share the same
+blindness. Do not treat the absolute clock as a power rating, and never cut real
+ramp because goldfish can't see it.
+
+### Rejected by measurement (kept out on purpose)
+Scavenger Regent, Decadent Dragon and Marang River Regent all measured **slower**
+in this shell. Vaevictis Asmadi measured faster (−0.019) purely on printed power
+(6 vs Silumgar's 3) — held back anyway: the metric cannot see that its attack
+trigger is symmetrical and can hand opponents permanents, and Silumgar, the
+Drifting Death has 33% field support against Vaevictis's none.
+
+## Radagast of Rhosgobel — YES, and the simulator says no (2026-08-20)
+
+Verified (run 32368808674), `{2}{G}{G}` Legendary Creature — Avatar Wizard, 2/2:
+
+> **The first creature spell you cast each turn costs {2} less to cast and can be
+> cast as though it had flash.**
+
+A cost reducer, not a mana card. **It stacks with eminence**, and in this deck that
+is the whole point — Ur-Dragon takes {1} off every other Dragon spell, Radagast takes
+{2} off the first creature spell each turn, and a dragon is a creature spell:
+
+| first dragon each turn | average MV of this deck's 31 dragons |
+|---|---|
+| printed | 5.29 |
+| with eminence | 4.29 |
+| **with eminence + Radagast** | **2.29** |
+
+Flash is the second half and it is not decoration: it turns every dragon into an
+end-step play, dodges sorcery-speed wipes, and lets the deck hold up interaction and
+still deploy. The deck already runs Dragonspeaker Shaman (57% field) for the same
+reason; Radagast is the bigger discount and the one that also grants flash.
+
+**Honest limits.** Only the FIRST creature spell each turn is discounted, so the
+value is front-loaded and shrinks on the turns this deck dumps several dragons.
+Radagast is not a Dragon: no eminence discount on itself, no attack-trigger draw,
+and a 2/2 body contributes essentially nothing to the clock.
+
+**The measurement, and why it is wrong here.** A/B over 3,000 paired games
+(Sylvia Brightspear out, Radagast in) reports it as a DOWNGRADE: first-kill turn
++0.016, damage −0.42, both significant. That result is an artifact, and the cause is
+verifiable — `grep -cin "cost reduc\|cheaper\|reduce" scripts/goldfish.py` returns
+**0**. The simulator pays printed mana costs and models no cost reduction of any
+kind, so it charges Radagast's dragons full price and sees only a 2/2 replacing a
+2-power body. This is the clearest example in the deck of the rule stated above:
+goldfish cannot rate cards whose value is cost reduction, and this deck's commander
+IS a cost reducer.
+
+## 2026-08-20 revalidation — the engine-read overrules two of the three sim swaps
+
+A second pass re-verified every text the day's decisions rested on (runner run
+32370514534; all ten now in `hobbit-verified-2026-08-20.txt`) and found the earlier
+session had cut two cards **without ever reading what the deck was losing** — the
+A/B measured printed bodies only. Engine-read verdicts, in the sleeper-audit form:
+
+- **Ureni, the Song Unending — RESTORED** (Lorehold, the Historian out). Verified:
+  10/10 flying with **protection from white AND from black** — it blanks Swords,
+  Path, and most of the table's removal — plus an ETB that deals **X damage divided
+  among opponent creatures/planeswalkers, X = your lands** (~7-8 by the time it
+  lands; a one-sided sweep). With eminence it costs an effective 7. Lorehold's
+  miracle ability is nearly blank here (the deck runs ~14 instants/sorceries), and
+  its upkeep loot is small. The sim preferred Lorehold because it is cheaper and it
+  cannot see a single one of Ureni's abilities. A/B for the record: restoring Ureni
+  measures +0.019 turns / −0.38 damage — the same artifact class as Radagast, and
+  overruled for the same reason.
+- **Radagast of Rhosgobel — IN** (Hraesvelgr of the First Brood out). The verdict in
+  the Radagast section above stands; the slot comes from the weakest of the three
+  sim swap-ins. Hraesvelgr's trigger keys on **noncreature** spells in a 37-creature
+  deck, and its unblockable rider is situational; Radagast discounts the first
+  creature spell **every turn** in a 31-dragon deck and lets it arrive at flash
+  speed. Sim for the record: +0.025 turns / −0.67 damage, overruled per the
+  cost-reduction blindness documented above.
+- **Neriv, Heart of the Storm — KEPT** (the one sim swap that survives the
+  engine-read): Smaug, the Great Calamity was verified a vanilla 6/6 flier whose
+  only text is a 5-damage Adventure, and it was cast in 0% of games. Neriv doubles
+  the damage of creatures that entered this turn — which is exactly what eminence
+  discounts and the commander's attack trigger cheats in.
+- **Sylvia Brightspear — verified and PROTECTED**: "Dragons your team controls have
+  double strike." A 3-mana board-wide damage doubler in a 31-dragon deck, invisible
+  to the sim, and the earlier session named her as a Radagast cut candidate. Never
+  cut. Same for **Wood Elves** (fetches the deck's typed duals — Sheltered Thicket,
+  Scattered Groves, Canopy Vista — not just basics), **Sarkhan, Soul Aflame**
+  (a second {1} dragon discount at 50% field) and **Roaming Throne** (naming Dragon
+  doubles the commander's attack trigger: draw twice, TWO free permanents).
+
+Do not cut: Sylvia Brightspear, Wood Elves, Sarkhan Soul Aflame, Roaming Throne,
+Neriv, Ureni, Radagast, Dragonspeaker Shaman.

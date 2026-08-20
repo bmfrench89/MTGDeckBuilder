@@ -1,12 +1,9 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — Mana Drain runner-verified (run 32353008397): "Counter target
-# spell. At the beginning of your next main phase, add an amount of {C} equal to
-# that spell's mana value." Matches the citation in yshtola-nights-blessed.notes.md
-# word for word. That run also printed "No snapshot changes — nothing to commit" —
-# the first byte-stable field regeneration since sort_keys landed (#151 era churn
-# is dead), with the two retired decks (tifa, smaug) gone from the snapshot loop.
+# Cleared 2026-08-20 — the revalidation round's ten texts (run 32370514534) are all
+# in hobbit-verified-2026-08-20.txt and the verdicts are in the-ur-dragon.notes.md.
 #
-# STILL UNVERIFIED, if a future session needs them: 26 of the 86 nonbasic cards in
-# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
+# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.
