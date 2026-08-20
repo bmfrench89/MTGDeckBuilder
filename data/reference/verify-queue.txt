@@ -1,10 +1,22 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — Radagast of Rhosgobel verified (run 32368808674) and written
-# into hobbit-verified-2026-08-20.txt. It is a COST REDUCER, not a mana producer:
-# "The first creature spell you cast each turn costs {2} less to cast and can be
-# cast as though it had flash." The Ur-Dragon verdict is in that deck's notes.
-#
-# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
-# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.
+# Queued 2026-08-20 (revalidation round): the Ur-Dragon session's decisions rest on
+# ten texts that are NOT on disk.
+#  - Neriv / Hraesvelgr / Lorehold were swapped IN with text existing only in a CI
+#    log (run 32366919184) — the deck now contains cards nothing on disk can quote.
+#  - Ureni / Niv-Mizzet, Visionary / Smaug, the Great Calamity were swapped OUT with
+#    their text never verified at all: the A/B measured printed bodies only, and the
+#    abilities the deck LOST were never read. The cuts need validating, not assuming.
+#  - Sylvia Brightspear / Wood Elves / Sarkhan / Roaming Throne are the candidate
+#    cuts for Radagast of Rhosgobel; the recommendation turns on what they do.
+Neriv, Heart of the Storm
+Hraesvelgr of the First Brood
+Lorehold, the Historian
+Ureni, the Song Unending
+Niv-Mizzet, Visionary
+Smaug, the Great Calamity // Spew Flame
+Sylvia Brightspear
+Wood Elves
+Sarkhan, Soul Aflame
+Roaming Throne
