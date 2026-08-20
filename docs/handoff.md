@@ -114,6 +114,25 @@ cards are queued in `verify-queue.txt` for the next runner push — An Unexpecte
 first, because it is 79% of the Thorin field, owned x2 free, and whether it makes
 TOKEN or NONTOKEN Dwarves decides if it is filler or a second multiplier.
 
+**Round-2 verification came back and settled the biggest open question.** Runner run
+32330821297 resolved all 8 queued cards. The decisive one: **An Unexpected Party //
+At the Door** creates *"X 2/2 red **Dwarf creature tokens**"* — TOKEN Dwarves, so
+Fíli ignores them and **Thorin does not**. Casting it for X=4 is four Dwarves, four
+Thorin triggers, four Treasures and +4/+0 on the spot, with the enchantment half
+still in exile as a later +2/+2 anthem. Swapped into the Thorin deck over Super
+Villain Lockup (verified `{1}{W}`, exiles only a TAPPED creature), which drops
+Interaction 12 -> 11 — worth it for a 79% field card that is a second multiplier.
+
+The other seven, for the record: **Magda, Brazen Outlaw** makes a Treasure whenever a
+Dwarf becomes tapped and sacrifices five for an artifact/Dragon tutor — the 80% buy
+is confirmed good. **Thorin, Mountain-king** is `{3}{R}` mono-red Equipment payoff:
+commanding it would strip white and cut Fíli, Kíli, Dáin and Bofur, so it is a 99
+card, never the commander. **Y'shtola**'s own text finally exists on disk and
+confirms the MV>=3 noncreature drain the notes always claimed — which makes Dismember
+(MV 3) a trigger as well as removal. **Mindcrank** mills on any opponent life loss,
+so the Bloodchief Ascension line is real but needs a card the player does not own.
+**Krile Baldesion** is a Dwarf, but W/U — illegal in Thorin.
+
 Suite 884 -> **894**.
 
 ## CRISPI COMPLETE — four axes, composite retired (2026-08-20)
