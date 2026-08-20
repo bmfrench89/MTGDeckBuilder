@@ -8,6 +8,45 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## Roaming Throne pinned to the Ur-Dragon; two decks swapped off it (2026-08-20)
+
+One physical copy was committed to **three** decks (`deck_conflicts.py`: own 1,
+committed 3, short 2). Adjudicated on trigger density, not tribe headcount, with
+every candidate's oracle text batch-verified through `carddb.py --verify` (77 cards,
+0 unverified):
+
+| Deck | tribe pool | members with triggers | field % |
+|---|---|---|---|
+| **the-ur-dragon** (Dragon) | **31** | **28/31** | **31%** |
+| cosmic-spider-man (Spider) | 27 | 18/27 | 11% |
+| bruce-banner (Hero) | 4 | 2/4 | not in field |
+
+The Ur-Dragon wins on the engine read, not just the counts: the Throne naming Dragon
+doubles the commander's *own* attack trigger (draw twice, **two** free permanents),
+plus four ETB-per-Dragon payoffs (Lathliss, Miirym, Scourge of Valkas, Ganax), and
+named Dragon it is itself a Dragon for Sylvia's double strike and Valkas's X.
+
+- `data/collection/pins.csv` — `roaming throne,the-ur-dragon`, written via
+  `deckcore.save_pins()` so it lands under the canonical front-face key.
+- **cosmic-spider-man**: Roaming Throne -> **Sun-Spider, Nimble Webber** (25% field,
+  +25 synergy, 4 free copies; Spider body whose ETB fetches Skullclamp or Lightning
+  Greaves — the deck holds 3 Aura/Equipment targets).
+- **bruce-banner-incredible-hulk**: -> **Shang-Chi, Master of Kung Fu** (13% field, but
+  the engine read decides it: activate creature abilities as though hasted, so a pinger
+  cast this turn pings the Hulk this turn, and his creature-ability mana pays Brash
+  Taunter's `{2}{R}`). Both logged `Source=manual-replace`; both decks 100 cards, no
+  singleton violations, sections clean.
+- **Rules correction:** the Spider notes claimed the Throne "doubles Cosmic's trigger."
+  It does not do anything — Cosmic's trigger *grants keywords*, and granting the same
+  keywords twice is a no-op. Corrected in the notes file.
+- `deck_conflicts.py` now loads the pins: `conflicts()` has built a `pinned_to` field
+  since pins v2, but `main()` never passed any, so the CLI printed a shortfall while the
+  repo already knew which deck won the copy. Covered by
+  `test_pins_v2.py::test_cli_report_names_the_pin_holding_the_copy`.
+- **Not measurable by `goldfish.py`** — its assumptions block models mana, curve and an
+  unblocked clock; trigger doubling is not modeled, so a sim A/B would price the Throne
+  as a 4-mana 4/3 and say nothing about the actual question.
+
 ## Ur-Dragon: sim-tuned, engine-read revalidated; eminence model hole exposed AND closed (2026-08-20)
 
 The player asked for the mathematically best Ur-Dragon tested end-to-end in

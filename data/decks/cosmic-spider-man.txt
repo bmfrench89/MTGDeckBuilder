@@ -59,6 +59,7 @@
 1 Sensational Spider-Man
 1 Radioactive Spider
 1 Skyward Spider
+1 Sun-Spider, Nimble Webber
 
 # --- Instants ---
 1 Grow Extra Arms
@@ -80,7 +81,6 @@
 1 Villainous Wrath
 
 # --- Artifacts ---
-1 Roaming Throne
 1 Sol Ring
 1 Arcane Signet
 1 Commander's Sphere
