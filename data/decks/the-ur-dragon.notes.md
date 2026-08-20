@@ -188,6 +188,44 @@ worst-sequenced table showed it **cast in 0% of games** (first cast T9.39 agains
 MV 7). Ureni is a 10-power body, but at MV 8 in a list that already had 16 creatures
 at MV 6+ it was the top-end this curve could least afford.
 
+### EMINENCE IS MODELED NOWHERE — the third and largest blind spot
+
+Verified text (runner run 32367856797), the line that governs this whole deck:
+
+> **Eminence — As long as The Ur-Dragon is in the command zone OR on the
+> battlefield, other Dragon spells you cast cost {1} less to cast.**
+> Whenever one or more Dragons you control attack, draw that many cards, then you
+> may put a permanent card from your hand onto the battlefield.
+
+`grep -rin "eminence" scripts/ data/reference/` returns **nothing**. No tool in
+this repo applies the discount, and goldfish charges every dragon its printed cost.
+What that costs the analysis, measured on the current 31-dragon list:
+
+| | printed | with eminence |
+|---|---|---|
+| average dragon MV | 5.29 | **4.29** |
+| dragons at MV 6+ | 12 | **3** |
+
+Two consequences, both of which a previous session's analysis got wrong:
+
+1. **"The commander is only cast in 31% of games" is not the indictment it looks
+   like.** Eminence explicitly works **from the command zone**. The discount is on
+   from turn one whether or not the 9-drop is ever cast; casting it is a bonus
+   (a 10-power flier and the attack trigger), not the price of entry.
+2. **"This deck is too top-heavy at 16 creatures MV 6+" was materially
+   misleading.** Twelve of those are dragons, and with the discount only **three**
+   actually play at 6 or more. The curve is a full mana cheaper than any tool here
+   reports.
+
+The attack trigger is unmodeled too: goldfish counts combat damage only, so the
+draw-per-attacking-dragon and the free permanent from hand — the deck's real
+engine — contribute nothing to its clock.
+
+**Net: every goldfish number for this deck is pessimistic on three independent
+axes** (no land-ramp, no eminence discount, no attack trigger). Use `--ab` for
+like-for-like dragon swaps, where both arms are wrong in the same direction and
+the comparison still holds. Never read its absolute clock as this deck's speed.
+
 ### READ THIS BEFORE OPTIMIZING THIS DECK ON GOLDFISH AGAIN
 
 Goldfish measures a **clock**, not a win rate — no opponents, no blocks, no removal.

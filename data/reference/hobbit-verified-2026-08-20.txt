@@ -637,3 +637,11 @@ Woodland Weavemaster  {1}{G}
   | Whenever another Elf you control enters, this creature gets +1/+1 until end of turn.
   | {T}: Add X mana of any one color, where X is this creature's power. Spend this mana only to cast Elf spells and activate abilities of Elf sources.
   https://scryfall.com/card/hob/143/woodland-weavemaster?utm_source=api
+
+The Ur-Dragon  {4}{W}{U}{B}{R}{G}
+  Legendary Creature — Dragon Avatar
+  identity: B G R U W · commander-legal: yes · CMM 361 · via scryfall
+  | Eminence — As long as The Ur-Dragon is in the command zone or on the battlefield, other Dragon spells you cast cost {1} less to cast.
+  | Flying
+  | Whenever one or more Dragons you control attack, draw that many cards, then you may put a permanent card from your hand onto the battlefield.
+  https://scryfall.com/card/cmm/361/the-ur-dragon?utm_source=api

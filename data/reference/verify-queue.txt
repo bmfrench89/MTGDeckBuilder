@@ -1,10 +1,11 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-20: The Ur-Dragon itself. The player asked whether the tuning work
-# accounted for EMINENCE, and the answer is that nothing in this repo models it —
-# `grep -rin "eminence" scripts/ data/reference/` returns NOTHING. Before quantifying
-# what that omission costs, the commander's own text has to be on disk rather than
-# recalled: it is the single most load-bearing card in the deck and every cost
-# assumption in the goldfish analysis depends on reading it exactly.
-The Ur-Dragon
+# Cleared 2026-08-20 — The Ur-Dragon verified (run 32367856797) and its text written
+# into hobbit-verified-2026-08-20.txt. The finding it settled is recorded in
+# data/decks/the-ur-dragon.notes.md: eminence works from the COMMAND ZONE, so the
+# {1} discount is live whether or not the 9-drop is ever cast, and nothing in this
+# repo models it.
+#
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.
