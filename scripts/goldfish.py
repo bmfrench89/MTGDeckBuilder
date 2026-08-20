@@ -936,9 +936,15 @@ Z95 = 1.96
 
 def _per_game(record):
     ct = record["commander_turn"]
+    horizon = max(record["lands_by_turn"]) if record["lands_by_turn"] else 0
     return {
         "commander_by_t4": 1.0 if (ct is not None and ct <= 4) else 0.0,
         "commander_by_t6": 1.0 if (ct is not None and ct <= 6) else 0.0,
+        # For the disruption delta: cast at all, and the cast turn censored at one
+        # past the horizon — same reasoning as _censored_kill, a never-cast game must
+        # stay in both arms or the pairing silently breaks.
+        "commander_cast": 1.0 if ct is not None else 0.0,
+        "commander_cast_turn": float(ct if ct is not None else horizon + 1),
         "keepable": 1.0 if (KEEP_LANDS[0] <= record["first7_lands"] <= KEEP_LANDS[1])
                     else 0.0,
         "screw": 1.0 if record["lands_at_start"].get(SCREW_TURN, 0) < SCREW_LANDS
@@ -971,6 +977,65 @@ def _stdev(xs, mean):
     if len(xs) < 2:
         return 0.0
     return math.sqrt(sum((x - mean) ** 2 for x in xs) / (len(xs) - 1))
+
+
+def _paired_deltas(rec_a, rec_b, metrics):
+    """Per-metric paired deltas with 95% CIs over common random numbers.
+
+    The same math for both consumers: the card-swap A/B and the disruption
+    standard-vs-none delta. `rec_a` and `rec_b` must come from the same seeds in the
+    same order — the zip IS the pairing."""
+    n = len(rec_a)
+    deltas = {}
+    for m in metrics:
+        a = [_per_game(r)[m] for r in rec_a]
+        b = [_per_game(r)[m] for r in rec_b]
+        diffs = [y - x for x, y in zip(a, b)]
+        d = _mean(diffs)
+        sd = _stdev(diffs, d)
+        half = Z95 * sd / math.sqrt(n) if n else 0.0
+        ma, mb = _mean(a), _mean(b)
+        unpaired = (Z95 * math.sqrt(_stdev(a, ma) ** 2 / n + _stdev(b, mb) ** 2 / n)
+                    if n else 0.0)
+        deltas[m] = {"a": round(ma, 4), "b": round(mb, 4), "delta": round(d, 4),
+                     "ci": round(half, 4), "lo": round(d - half, 4),
+                     "hi": round(d + half, 4), "unpaired_ci": round(unpaired, 4),
+                     "significant": bool(abs(d) > half > 0)}
+    return deltas
+
+
+# The B.3 experiment line's metrics: what the phantom costs the deck, read as
+# cast-rate / cast-turn / clock. NEVER an axis input (player-ratified 2026-08-20:
+# "printed experiment, never score" — docs/spec-crispi-axes.md B.3).
+DISRUPTION_DELTA_METRICS = ("commander_cast", "commander_cast_turn",
+                            "first_kill_turn", "damage_dealt")
+
+
+def simulate_disrupted(compiled, disruption, games=DEFAULT_GAMES, seed=0,
+                       turns=TURNS, mulligan=True, on_play=True):
+    """Run the SAME games with and without the phantom schedule and attach the delta.
+
+    Arm A is the pure goldfish; arm B faces `disruption`. Both replay identical
+    shuffles (the disruption stream is its own Random off the same per-game seed), so
+    the paired delta reads "what the phantom costs this deck", not luck. Returns the
+    DISRUPTED report with `report['disruption']['delta']` filled in — CLI-only by
+    design: this never reaches `sim_for_deck`'s cache, so no surface can quietly
+    serve disrupted numbers as goldfish ones."""
+    seeds = _game_seeds(seed, games)
+    _rep_a, rec_a = simulate(compiled, seeds=seeds, seed=seed, turns=turns,
+                             mulligan=mulligan, on_play=on_play, _records=True)
+    rep_b, rec_b = simulate(compiled, seeds=seeds, seed=seed, turns=turns,
+                            mulligan=mulligan, on_play=on_play, _records=True,
+                            disruption=disruption)
+    rep_b["disruption"]["delta"] = {
+        "vs": "the identical games with no disruption (common random numbers)",
+        "games": len(seeds), "seed": seed,
+        "metrics": _paired_deltas(rec_a, rec_b, DISRUPTION_DELTA_METRICS),
+        "caveat": ("EXPERIMENT — this delta never feeds any axis or score "
+                   "(B.3, player-ratified 2026-08-20: printed experiment, never "
+                   "score)."),
+    }
+    return rep_b
 
 
 def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
@@ -1025,22 +1090,8 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
                             mulligan=mulligan, on_play=on_play, _records=True,
                             disruption=disruption)
 
-    deltas = {}
+    deltas = _paired_deltas(rec_a, rec_b, AB_METRICS)
     n = len(seeds)
-    for m in AB_METRICS:
-        a = [_per_game(r)[m] for r in rec_a]
-        b = [_per_game(r)[m] for r in rec_b]
-        diffs = [y - x for x, y in zip(a, b)]
-        d = _mean(diffs)
-        sd = _stdev(diffs, d)
-        half = Z95 * sd / math.sqrt(n) if n else 0.0
-        ma, mb = _mean(a), _mean(b)
-        unpaired = (Z95 * math.sqrt(_stdev(a, ma) ** 2 / n + _stdev(b, mb) ** 2 / n)
-                    if n else 0.0)
-        deltas[m] = {"a": round(ma, 4), "b": round(mb, 4), "delta": round(d, 4),
-                     "ci": round(half, 4), "lo": round(d - half, 4),
-                     "hi": round(d + half, 4), "unpaired_ci": round(unpaired, 4),
-                     "significant": bool(abs(d) > half > 0)}
     return {"out": out_name, "in": ref.name, "games": n, "seed": seed,
             "copies": len(positions), "a": rep_a, "b": rep_b, "deltas": deltas,
             "definitions": dict(DEFINITIONS),
@@ -1289,6 +1340,16 @@ def print_report(rep):
               f"· {dis['commander_recasts_per_game']} commander recast(s) per game")
         print(f"   {dis['definition']}")
         print(f"   [!] {dis['caveat']}")
+        delta = dis.get("delta")
+        if delta:
+            print(f"\n   What the phantom costs, vs {delta['vs']}:")
+            print(f"   {'metric':<21}{'goldfish':>10}{'disrupted':>11}{'delta':>9}"
+                  f"{'95% CI':>18}")
+            for m, d in delta["metrics"].items():
+                print(f"   {m:<21}{d['a']:>10.3f}{d['b']:>11.3f}{d['delta']:>+9.3f}"
+                      f"   [{d['lo']:+.3f}, {d['hi']:+.3f}]"
+                      + ("  *" if d["significant"] else ""))
+            print(f"   [!] {delta['caveat']}")
     print("\nAssumptions:")
     for a in rep["assumptions"]:
         print(f"  · {a}")
@@ -1367,8 +1428,9 @@ def main(argv=None):
     # numbers as if they were the goldfish ones.
     if args.disruption != "none":
         compiled, _idx = load_for_ab(args.deck, args.collection)
-        rep = (simulate(compiled, games=args.games, seed=args.seed, turns=args.turns,
-                        mulligan=mull, disruption=DISRUPTION[args.disruption])
+        rep = (simulate_disrupted(compiled, DISRUPTION[args.disruption],
+                                  games=args.games, seed=args.seed, turns=args.turns,
+                                  mulligan=mull)
                if compiled else None)
     else:
         rep = sim_for_deck(args.deck, args.collection, games=args.games,
