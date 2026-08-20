@@ -1,12 +1,26 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — Mana Drain runner-verified (run 32353008397): "Counter target
-# spell. At the beginning of your next main phase, add an amount of {C} equal to
-# that spell's mana value." Matches the citation in yshtola-nights-blessed.notes.md
-# word for word. That run also printed "No snapshot changes — nothing to commit" —
-# the first byte-stable field regeneration since sort_keys landed (#151 era churn
-# is dead), with the two retired decks (tifa, smaug) gone from the snapshot loop.
-#
-# STILL UNVERIFIED, if a future session needs them: 26 of the 86 nonbasic cards in
-# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.
+# Queued 2026-08-20: the 15 owned Dragons that are NOT in the-ur-dragon and whose
+# text is not yet on disk. The player asked why the deck runs 32 of their 49 dragons
+# and not these — and the honest answer needs the ORACLE TEXT, not the field prior,
+# because EDHREC's Ur-Dragon page has no row for 27 of the 49 (it under-represents
+# Marvel / Hobbit / Final Fantasy / Tarkir printings). Judging these from memory is
+# exactly the failure this queue exists to prevent.
+# (Sonic Shrieker and Desert Were-Worm are already verified in
+#  data/reference/hobbit-verified-2026-08-20.txt.)
+Kolaghan, the Storm's Fury
+Decadent Dragon // Expensive Taste
+Neriv, Heart of the Storm
+Scavenger Regent // Exude Toxin
+Nova Hellkite
+Obsidian Charmaw
+Lorehold, the Historian
+Guardian Scalelord
+Hraesvelgr of the First Brood
+Marang River Regent // Coil and Catch
+Two-Headed Dragon
+Vaevictis Asmadi, the Dire
+Brainstealer Dragon
+Beledros Witherbloom
+Witherbloom, the Balancer
