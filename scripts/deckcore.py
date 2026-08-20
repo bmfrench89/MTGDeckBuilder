@@ -629,7 +629,8 @@ def type_bucket(name, types):
 # (inside the functions) so this hub keeps only `mtglib` as a top-level import
 # and stays free of circular dependencies.
 # --------------------------------------------------------------------------- #
-def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None):
+def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None,
+                  clock=None):
     """Run report + power/bracket + manabase on an already-enriched card list
     (e.g. an auto-built 99). Returns {report, assessment, mana}; assessment/mana
     are None if the underlying engine can't run (e.g. name-only)."""
@@ -640,7 +641,7 @@ def analyze_cards(enriched, idx, refs=None, deck_cards=None, missing=None):
                                   enriched, missing or [], idx)
     refs = refs or power.load_refs()
     try:
-        assessment = power.assess(enriched, rep, refs)
+        assessment = power.assess(enriched, rep, refs, clock=clock)
     except Exception:
         assessment = None
     try:
@@ -709,7 +710,16 @@ def _analyze_deck(deck_path, collection, refs=None):
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     attrs = load_attrs(f"{stem}.attrs.csv")
     apply_attrs(enriched, attrs)
-    core = analyze_cards(enriched, idx, refs, deck_cards=deck, missing=missing)
+    # CRISPI Speed (spec-crispi-axes Phase A): the goldfish CLOCK is fetched through
+    # power's guarded helper, which lazy-imports goldfish. Only the saved-deck path
+    # has a deck file AND a collection path to simulate from; `analyze_cards` callers
+    # without one (auto_build's synthetic 99) pass no clock and get the honest
+    # "unmeasured" label. `sim_for_deck` is disk-cached, so this is a file read after
+    # the first run.
+    clock = power.clock_for_deck(
+        deck_path, collection if isinstance(collection, str) else None)
+    core = analyze_cards(enriched, idx, refs, deck_cards=deck, missing=missing,
+                         clock=clock)
     try:
         combos = combo_detector.for_deck(deck_path, idx)
     except Exception:

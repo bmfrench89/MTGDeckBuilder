@@ -1,6 +1,7 @@
 # Spec — CRISPI axes for power.py (four honest numbers, one retired headline)
 
-**Status: READY FOR IMPLEMENTATION — handoff to the next implementing session
+**Status: PHASE A SHIPPED 2026-08-20 (Opus 5). Phases B/C/D not started — B.3 and
+D.1 still gated on the player questions at the foot of this file.**
 (written by Fable 5, 2026-08-20, from the research in
 `.claude/skills/mtg-deckbuilder/references/strategy-shapes.md`).**
 Research PR: #140. Nothing here is started; every claim below was re-verified against
@@ -76,6 +77,16 @@ The number exists; wire it through the hub:
      onto the researched bands (goldfish kill ~T7 ≈ the Bracket-2 floor);
    - no combo AND (`have_data` false or `kill_rate` ≈ 0) → **"unmeasured (no combat
      clock)"** — an honest label, never a silent 0.
+
+   **AMENDED IN IMPLEMENTATION — this was FIVE states, not four.** The spec collapsed
+   "slow" into "unmeasured". `goldfish._clock` nulls `median_first_kill` whenever
+   `kill_rate < 0.5`, so a genuinely slow creature deck arrives with **`have_data`
+   True and no median** — measured, and the answer is *slow*. Two live cases in the
+   stable: **bruce-banner (lethal in 9% of games by T10)** and **tifa-lockhart (16%)**.
+   Labelling those "unmeasured" understates what the sim knows; printing a turn number
+   overstates it. Shipped resolution inserts a fourth branch before the fallback:
+   `slow (lethal N% by T<horizon>)`, with the clock's own note as the detail. The
+   fallback now belongs only to decks with **no clock at all**.
    Note the consequence for the stable: after #135 **Y'shtola has a complete non-early
    combo**, so she reads `combo (setup)`, not "unmeasured" — the unmeasured label is the
    fallback for pure control/drain decks with neither a detected combo nor a clock.
@@ -169,6 +180,10 @@ IS this collection's consistency mechanism — the axis should say that in words
 2. Y'shtola reads **Speed: combo (setup)** (her #135 line is complete but not early);
    a synthetic tmp_path control deck with no combo and no clock reads
    **"unmeasured (no combat clock)"** with the reason printed.
+   ✅ **All of §Acceptance 1–4 verified on the real stable, 2026-08-20** — Bartolomé
+   `combo (early)`, Y'shtola `combo (setup)`, Ur-Dragon `combat T9`, Bruce `slow (9%)`,
+   Tifa `slow (16%)`; two consecutive `--rank` runs byte-identical; 860 tests pass;
+   `grep "^import goldfish" scripts/power.py` → 0.
 3. Second run of everything is byte-identical (memo tripwire); 849+ tests pass.
 4. No new engine→engine import (`grep "import goldfish" scripts/power.py` is empty).
 

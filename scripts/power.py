@@ -148,7 +148,94 @@ def with_declared(assessment, declared):
     return assessment
 
 
-def assess(enriched, rep, refs, declared=None):
+def speed_axis(detected, clock=None):
+    """The CRISPI **Speed** axis: how fast this deck actually wins — combo FIRST.
+
+    Spec: `docs/spec-crispi-axes.md` Phase A. The subtlety that makes this a PAIR
+    rather than one number: `goldfish`'s clock measures **unblocked combat only** and
+    says so in its own payload (`combat_only`, `noncombat_sources`). Scoring Speed off
+    that alone would mislabel exactly the decks this axis was built for — the
+    Bartolome study deck runs 22 creatures, so it presents a mediocre *combat* clock
+    while its real speed is a zero-mana sacrifice loop.
+
+    So the combo evidence outranks the combat evidence, and the combat number is kept
+    as CONTEXT rather than replaced:
+
+      1. a complete combo flagged `early`  -> "combo (early)"
+      2. a complete combo, none early      -> "combo (setup)"
+      3. no combo, clock has a median      -> "combat T<n>"
+      4. no combo, clock but NO median      -> "slow (lethal N% by T<horizon>)"
+      5. no clock at all                   -> "unmeasured (no combat clock)"
+
+    States 4 and 5 are deliberately distinct, and the spec collapsed them. `goldfish`
+    nulls the median when fewer than half the games reach lethal, so a genuinely slow
+    creature deck arrives with `have_data` TRUE and `median_first_kill` None. Calling
+    that "unmeasured" understates what we know; calling it a turn number overstates
+    it. The honest statement is the RATE, which is exactly what the clock's own note
+    says.
+
+    Case 5 is the honesty case and must never be a silent 0: a control or drain deck
+    that the goldfish cannot kill with is *unmeasured*, not slow. The reason is
+    carried verbatim from the clock's own `note`, which already explains whether the
+    cause was no creatures cast, unknown power data, or too few lethal games for a
+    median.
+
+    `bracket_hint` is REUSED from the clock rather than re-derived here — `goldfish`
+    already maps a median onto BRACKET_CLOCK, and a second mapping in a second module
+    is how two sources of truth start disagreeing.
+
+    Pure: takes the already-computed `detected` (from `combo_detector`) and an
+    optional clock dict. `clock=None` is a first-class input, not an error — the
+    bare-CLI and auto-build paths legitimately have no simulation to offer."""
+    combos = (detected or {}).get("complete") or []
+    early = [c for c in combos if c.get("early")]
+    clock = clock or {}
+    has_clock = bool(clock.get("have_data"))
+    median = clock.get("median_first_kill") if has_clock else None
+    rate = clock.get("kill_rate")
+
+    if early:
+        basis, label, short = "combo-early", "combo (early)", "combo (early)"
+        detail = f"{len(early)} early complete combo(s): {early[0]['name']}"
+    elif combos:
+        basis, label, short = "combo-setup", "combo (setup)", "combo (setup)"
+        detail = (f"{len(combos)} complete combo(s), none flagged early: "
+                  f"{combos[0]['name']}")
+    elif median is not None:
+        basis = "combat"
+        label = short = f"combat T{median:g}"
+        detail = f"median first lethal turn {median:g} ({rate * 100:.0f}% of games)"
+    elif has_clock:
+        # THE STATE THE SPEC COLLAPSED (found in implementation, 2026-08-20):
+        # `goldfish` nulls the median when fewer than half the games reach lethal, so
+        # a real-but-slow deck arrives here with have_data TRUE and median None.
+        # Calling that "unmeasured" would be a lie in the other direction — the deck
+        # WAS measured and the answer is "slow". Bruce Banner (9% by T10) and Tifa
+        # (16%) are the live cases; both are creature decks the combat model simply
+        # cannot finish inside the horizon.
+        basis, label = "combat-slow", (
+            f"slow (lethal {rate * 100:.0f}% by T{clock.get('horizon', '?')})")
+        short = f"slow ({rate * 100:.0f}%)"
+        detail = clock.get("note") or "clock present, no median within the horizon"
+    else:
+        basis = "unmeasured"
+        label, short = "unmeasured (no combat clock)", "unmeasured"
+        detail = (clock.get("note")
+                  or "no goldfish simulation available for this deck")
+
+    out = {"label": label, "short": short, "basis": basis, "detail": detail,
+           "combat_turn": median, "kill_rate": rate,
+           "bracket_hint": clock.get("bracket_hint"), "caveat": None}
+    if clock.get("noncombat_sources"):
+        # The clock's own UNDERSTATED warning is the whole reason combo outranks it —
+        # carry it wherever a combat number is shown, including beside a combo label,
+        # because a reader comparing the two deserves to know.
+        out["caveat"] = ("combat clock understates this deck: it also wins with "
+                         "noncombat damage/drain")
+    return out
+
+
+def assess(enriched, rep, refs, declared=None, clock=None):
     cats = rep["categories"]
     interaction = cats.get("removal", 0) + cats.get("counter", 0) + cats.get("wipe", 0)
     ramp = cats.get("ramp", 0)
@@ -254,6 +341,10 @@ def assess(enriched, rep, refs, declared=None):
         "bracket_effective_name": BRACKET_NAMES.get(effective, name),
         "bracket_mismatch": bool(declared in (1, 2, 3, 4, 5) and declared != bracket),
         "power": power, "tier": tier, "components": comps,
+        # CRISPI Speed (spec-crispi-axes Phase A). Additive: every existing consumer
+        # of this dict keeps working, and `clock=None` yields the honest
+        # "unmeasured" label rather than a missing key.
+        "speed": speed_axis(detected, clock),
         "signals": {
             "game_changers": gc, "tutors": tutors, "fast_mana": fast,
             "extra_turns": extra, "mass_land_denial": mld, "combo_pieces": combos,
@@ -266,7 +357,31 @@ def assess(enriched, rep, refs, declared=None):
     }
 
 
-def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT):
+def clock_for_deck(deck_path, collection_path):
+    """The goldfish CLOCK for one deck, or None — the Speed axis's combat half.
+
+    `goldfish` is imported INSIDE this function on purpose. The engine ring keeps
+    dependencies pointing inward (`docs/codemap.md`) and `goldfish` itself only
+    reaches back for `deckcore.apply_attrs`/`load_attrs`, so a lazy import here is
+    the same contract its own loader uses — and it keeps `power` importable with no
+    simulation machinery present at all.
+
+    Never raises: a missing collection path, an unreadable deck or a failed sim all
+    return None, which `speed_axis` renders as the honest "unmeasured" label. The
+    underlying `sim_for_deck` is disk-cached, so the first uncached call costs one
+    Monte Carlo (~0.3s) and every later one costs a file read."""
+    if not collection_path:
+        return None
+    try:
+        import goldfish
+        sim = goldfish.sim_for_deck(deck_path, collection_path)
+        return (sim or {}).get("clock")
+    except Exception:
+        return None
+
+
+def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT,
+                   collection_path=None):
     with open(deck_path, encoding="utf-8") as f:
         deck = mtglib.parse_deck(f.read())
     enriched, missing = deck_stats.analyze(deck, coll_index)
@@ -274,7 +389,8 @@ def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT):
     deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = deck_stats.build_report(deck, enriched, missing, coll_index)
     return assess(enriched, rep, load_refs(ref_dir),
-                  declared=read_declared_bracket(deck_path))
+                  declared=read_declared_bracket(deck_path),
+                  clock=clock_for_deck(deck_path, collection_path))
 
 
 def print_one(deck_path, res):
@@ -294,6 +410,12 @@ def print_one(deck_path, res):
         print(f"Bracket {res['bracket']} — {res['bracket_name']}")
     for r in res["bracket_reasons"]:
         print(f"    · {r}")
+    sp = res.get("speed")
+    if sp:
+        print(f"\nSpeed (CRISPI): {sp['label']}")
+        print(f"    · {sp['detail']}")
+        if sp.get("caveat"):
+            print(f"    · {sp['caveat']}")
     print(f"\nPower score: {res['power']}/100  ({res['tier']})")
     for c in res["components"]:
         s = "—" if c["score"] is None else f"{c['score']:>4}/{c['weight']}"
@@ -320,15 +442,17 @@ def main():
 
     if args.rank:
         decks = sorted(glob.glob(os.path.join(args.decks_dir, "*.txt")))
-        results = [(d, build_for_deck(d, idx, args.ref_dir)) for d in decks]
+        results = [(d, build_for_deck(d, idx, args.ref_dir, args.collection))
+                   for d in decks]
         results.sort(key=lambda x: -x[1]["power"])
         if args.json:
             print(json.dumps([{"deck": os.path.basename(d), **r}
                               for d, r in results], indent=2))
             return 0
         print("POWER RANKING — your decks, strongest first\n")
-        print(f"  {'#':<3}{'Deck':<28}{'Bracket':<20}{'Power':>6}  Tier")
-        print("  " + "-" * 66)
+        print(f"  {'#':<3}{'Deck':<28}{'Bracket':<20}{'Power':>6}  "
+              f"{'Speed (CRISPI)':<22}Tier")
+        print("  " + "-" * 88)
         for i, (d, r) in enumerate(results, 1):
             name = os.path.basename(d)[:-4]
             # The player's setting leads; a disagreeing detection is shown, never
@@ -336,12 +460,14 @@ def main():
             b = f"{r['bracket_effective']} {r['bracket_effective_name']}"
             if r.get("bracket_mismatch"):
                 b += f" (det {r['bracket_detected']})"
-            print(f"  {i:<3}{name:<28}{b:<20}{r['power']:>4}/100  {r['tier']}")
+            sp = (r.get("speed") or {}).get("short", "—")
+            print(f"  {i:<3}{name:<28}{b:<20}{r['power']:>4}/100  "
+                  f"{sp:<22}{r['tier']}")
         return 0
 
     if not args.deck:
         ap.error("provide --deck, or --rank")
-    res = build_for_deck(args.deck, idx, args.ref_dir)
+    res = build_for_deck(args.deck, idx, args.ref_dir, args.collection)
     if args.json:
         print(json.dumps(res, indent=2))
     else:
