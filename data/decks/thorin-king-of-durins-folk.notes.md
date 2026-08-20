@@ -60,6 +60,21 @@ legendary Dwarves, so the condition is usually met on the turn Thorin lands and 
 permanent thereafter. Sequence to hit three sooner rather than later: it switches on
 Fíli's +1/+1, Kíli's free equip, and Oakenshield's ward all at once.
 
+## An Unexpected Party is a second multiplier, and for the same reason
+
+Verified 2026-08-20 (runner run 32330821297), `{2}{W}{W} // {X}{2}{W}`:
+
+> As this enchantment enters, choose a creature type.
+> Creatures you control of the chosen type get +2/+2.
+> // **Create X 2/2 red Dwarf creature tokens.**
+
+Apply the one-word test again. Those are **token** Dwarves, so Fíli ignores them —
+but **Thorin does not**, because his trigger has no nontoken clause. Casting the
+Adventure half for X=4 therefore makes four Dwarves, four Thorin triggers, **four
+Treasures**, and +4/+0 across the board on the spot. Then the enchantment half is
+still in exile to cast later as a +2/+2 Dwarf anthem. It is in 79% of the field's
+decks, and the second copy is still free if another R/W deck ever wants one.
+
 ## Belladonna Took is a sleeper — do not let the field prior cut her
 
 Verified: *"Whenever a token you control enters, you gain 1 life if this is the first
