@@ -966,6 +966,79 @@ def test_aa_pairing_is_exactly_zero_WITH_disruption_on():
 
 
 # --------------------------------------------------------------------------- #
+# The B.3 experiment line (player-ratified 2026-08-20: printed, never scored)
+#
+# standard-vs-none over common random numbers: what does the phantom cost this
+# deck? The delta is attached to the DISRUPTED report only, which the CLI builds
+# outside the cache — so it can never leak onto a cached surface.
+# --------------------------------------------------------------------------- #
+def test_disruption_delta_ships_paired_metrics_and_the_ratified_caveat():
+    compiled = goldfish.compile_deck(_clock_deck(power=3, creatures=30), "")
+    rep = goldfish.simulate_disrupted(compiled, goldfish.DISRUPTION["standard"],
+                                      games=200, seed=6)
+    delta = rep["disruption"]["delta"]
+    assert set(delta["metrics"]) == set(goldfish.DISRUPTION_DELTA_METRICS)
+    assert "never feeds any axis or score" in delta["caveat"]
+    for m, d in delta["metrics"].items():
+        assert d["lo"] <= d["delta"] <= d["hi"], m
+
+
+def test_disruption_delta_reads_the_right_direction():
+    """Phantom opponents can only hurt a goldfish: damage down, kill turn up. A
+    positive damage delta would mean the pairing (or the schedule) is broken."""
+    compiled = goldfish.compile_deck(_clock_deck(power=3, creatures=30), "")
+    rep = goldfish.simulate_disrupted(compiled, goldfish.DISRUPTION["standard"],
+                                      games=300, seed=6)
+    m = rep["disruption"]["delta"]["metrics"]
+    assert m["damage_dealt"]["delta"] <= 0.0
+    assert m["first_kill_turn"]["delta"] >= 0.0
+
+
+def test_disruption_delta_does_not_perturb_the_disrupted_run():
+    """Attaching the delta must be a pure annotation: the disrupted report under it
+    is byte-identical to a plain disrupted simulate() — same seeds, same games."""
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    plain = goldfish.simulate(compiled, games=150, seed=4,
+                              disruption=goldfish.DISRUPTION["standard"])
+    wrapped = goldfish.simulate_disrupted(compiled, goldfish.DISRUPTION["standard"],
+                                          games=150, seed=4)
+    wrapped["disruption"].pop("delta")
+    assert (json.dumps(plain, sort_keys=True)
+            == json.dumps(wrapped, sort_keys=True))
+
+
+def test_disruption_delta_is_deterministic_per_seed():
+    compiled = goldfish.compile_deck(_clock_deck(), "")
+    a = goldfish.simulate_disrupted(compiled, goldfish.DISRUPTION["standard"],
+                                    games=150, seed=4)
+    b = goldfish.simulate_disrupted(compiled, goldfish.DISRUPTION["standard"],
+                                    games=150, seed=4)
+    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def test_cli_disruption_prints_the_experiment_delta(sim_deck, tmp_path, capsys,
+                                                    monkeypatch):
+    deck, coll = sim_deck
+    monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "cache"))
+    rc = goldfish.main(["--deck", deck, "--collection", coll, "--games", "120",
+                        "--disruption", "standard"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "PHANTOM DISRUPTION" in out and "EXPERIMENT" in out
+    assert "What the phantom costs" in out
+    assert "never feeds any axis or score" in out
+
+
+def test_the_cached_surface_never_sees_the_delta(sim_deck, tmp_path, monkeypatch):
+    """The score firewall, end to end: the one entry point every surface calls runs
+    the pure goldfish, so neither disruption nor its delta can reach a dashboard."""
+    deck, coll = sim_deck
+    monkeypatch.setattr(goldfish, "CACHE_DIR", str(tmp_path / "cache"))
+    rep = goldfish.sim_for_deck(deck, coll, games=100)
+    assert rep["disruption"] is None
+
+
+# --------------------------------------------------------------------------- #
 # The Replace flow's endpoint — the surface the cache exists for
 # --------------------------------------------------------------------------- #
 @pytest.fixture

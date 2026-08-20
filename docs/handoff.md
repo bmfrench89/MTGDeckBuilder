@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-19._
+_Last updated: 2026-08-20._
 
 ## CRISPI COMPLETE — four axes, composite retired (2026-08-20)
 
@@ -46,11 +46,25 @@ bracket line still read `power`/`tier` after the CLI was done (memo byte-identic
 tests caught it), and the webapp leaderboard sort + assess packet needed the new
 `power.rank_key_for` so CLI and app cannot drift into different orders.
 
-**Still open, deliberately**: Phase B.3 — whether the `--disruption` A/B delta may
-ever feed the Resilience score. Unratified, so unimplemented; `--disruption` stays a
-goldfish-only labelled experiment, which is the spec's own default.
+**B.3 answered (2026-08-20): printed experiment, never score.** The player ratified
+keeping the disruption delta out of the Resilience score permanently under the
+current phantom model — Phase 10's own caveat ("a crude stand-in for opponents")
+disqualifies it as a score input, and scoring it would smuggle the backlogged pod sim
+(player decision 2026-08-13) in through a side door. What shipped instead is the
+spec's sanctioned experiment line: `goldfish.py --disruption standard` now replays
+the identical games undisrupted (common random numbers — the disruption stream is
+its own Random, so both arms share shuffles) and prints paired standard-vs-none
+deltas with 95% CIs under the PHANTOM DISRUPTION block: commander cast rate, cast
+turn (censored at horizon+1, same reasoning as `_censored_kill`), first-kill turn,
+damage dealt. `simulate_disrupted()` is CLI-only and outside `sim_for_deck`'s cache,
+so no surface can serve disrupted numbers as goldfish ones —
+`test_the_cached_surface_never_sees_the_delta` is the firewall test. Ratification of
+score-feeding is revisited only if the printed delta proves predictive in real games.
+Real-deck readout: Y'shtola loses ~22 damage/game to the phantom and its first-kill
+turn slips +0.33 (significant), while its commander line is untouched — exactly the
+"can it rebuild" cost the counted `prot/rec` layers can't see.
 
-Suite 861 → **874**.
+Suite 861 → 874 → **880**.
 
 ## Phase A revalidation: two fixes (2026-08-20)
 

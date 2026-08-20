@@ -3,9 +3,16 @@
 **Status: ✅ ALL PHASES SHIPPED 2026-08-20 (Opus 5). A #143/#144, B/C/D this PR.**
 D.1 was answered by the player — *"kill it all now"*: the composite AND its tier
 adjective are deleted outright, with no `legacy_power` afterlife, because a number
-kept-but-renamed is the same lie in a smaller font and gets re-displayed. B.3 remains
-UNRATIFIED and therefore unimplemented: the disruption A/B delta is not wired into
-the Resilience score, exactly as the spec's own default prescribes.
+kept-but-renamed is the same lie in a smaller font and gets re-displayed. B.3 was
+answered by the player 2026-08-20 — **printed experiment, never score**: the
+disruption delta stays out of the Resilience score permanently-under-the-current-model
+(Phase 10's own caveat calls it "a crude stand-in for opponents", and scoring it would
+smuggle the backlogged pod sim in through a side door). The sanctioned experiment line
+shipped the same day: `--disruption standard` now also replays the identical games
+undisrupted and prints paired standard-vs-none deltas (commander cast rate/turn,
+first-kill turn, damage) with 95% CIs under the EXPERIMENT label — CLI-only, outside
+the cache, so no surface can serve disrupted numbers as goldfish ones. Ratification of
+score-feeding is revisited only if the printed delta proves predictive in real games.
 (written by Fable 5, 2026-08-20, from the research in
 `.claude/skills/mtg-deckbuilder/references/strategy-shapes.md`).**
 Research PR: #140. Nothing here is started; every claim below was re-verified against
@@ -199,8 +206,12 @@ IS this collection's consistency mechanism — the axis should say that in words
 - No weights/tuning debates in v1: axes are printed raw with their bands; a composite
   "Performance Index" average is explicitly deferred to player ratification.
 
-## Open questions for the player (ask before Phase B.3 and D.1; everything else proceeds)
+## Open questions for the player — BOTH ANSWERED
 
 1. May the disruption A/B delta ever feed the Resilience *score*, or stay a printed
    experiment forever?
+   **ANSWERED 2026-08-20: printed experiment, never score** (see the Status block for
+   the full rationale and what shipped).
 2. Does the legacy 0–100 die immediately or live one release in `--json`?
+   **ANSWERED 2026-08-20: "kill it all now"** — no `legacy_power` afterlife (shipped
+   in #145).
