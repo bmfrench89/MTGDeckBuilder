@@ -1,7 +1,7 @@
 {
  "commander": "Tifa Lockhart",
  "slug": "tifa-lockhart",
- "saved": "2026-08-19",
+ "saved": "2026-08-20",
  "sample_decks": 14628,
  "inclusion": {
   "claim the kingdom": 18,
@@ -219,8 +219,8 @@
   "sapling nursery": 10,
   "case of the locked hothouse": 10,
   "earthbender ascension": 10,
-  "walk-in closet": 9,
   "walk-in closet // forgotten cellar": 9,
+  "walk-in closet": 9,
   "super state": 9,
   "level up": 9,
   "lion umbra": 8,
@@ -513,8 +513,8 @@
   "sapling nursery": 3,
   "case of the locked hothouse": 5,
   "earthbender ascension": 4,
-  "walk-in closet": 6,
   "walk-in closet // forgotten cellar": 6,
+  "walk-in closet": 6,
   "super state": 8,
   "level up": 5,
   "lion umbra": 5,
