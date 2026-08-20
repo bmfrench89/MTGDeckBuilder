@@ -48,8 +48,15 @@ from oracle text; goldfish pays them at cast time (generic portion only, pip
 floor, eminence always-on and never self-applied, statics off `board`, first-per-
 turn consumed positionally; A/A exact-zero holds WITH discounts on; REPORT_SCHEMA
 3→4; dual honesty label). Attrs snapshot regenerated on main (FlagsVer 3, 12
-discount rows — the four Ur-Dragon reducers all derive to spec; `artifact`/
-`noncreature` type-word tokens deliberately match nothing in the sim v1).
+discount rows — the four Ur-Dragon reducers all derive to spec). The collection
+sweep exposed one v1 defect: type-word tokens (`artifact`, `noncreature`) matched
+nothing while the label claimed them modeled — fixed same day: `_disc_matches`
+now resolves subtype AND type words via `SimCard.typewords` plus an explicit
+`noncreature` rule, pinned by test. Three other decks carry reducers, all now
+labeled truthfully: Captain America (Nick Fury, 25 Hero spells), Y'shtola (Lyse
+Hext, 40 noncreature spells), Cloud (Cid — zero vehicles in deck, so inert).
+No retroactive deck verdicts to unwind — goldfish A/Bs had only ever driven
+Ur-Dragon decisions; the schema bump already invalidated every cached sim.
 Re-measured at 5,000 games: first-kill median **stays T9** but **lethal-by-T8
 19% → 37%**, commander lands in **41%** of games (was 31%), mean turn 8.23. The
 Radagast override is now vindicated by the fixed instrument (cutting him measures

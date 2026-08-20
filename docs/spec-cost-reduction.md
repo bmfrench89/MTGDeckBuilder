@@ -27,7 +27,12 @@ empty-vs-absent rule: absence degrades, never lies).
   {n} less"* (Radagast). Once per turn; the slot is positional, so a matching spell
   cast before the reducer landed still spends it.
 
-`<type>` is one lowercase word — a subtype ("dragon") or "creature". Riders the
+`<type>` is one lowercase word — a subtype ("dragon", "vehicle", "hero"), a card
+type ("artifact"), or "creature"/"noncreature", which read the creature bit. The
+matcher (`goldfish._disc_matches`) resolves subtype and type words against one
+`typewords` set; a word the matcher could not match while the label claimed it
+was modeled was the one defect found in v1's collection-wide sweep (Lyse Hext's
+"noncreature") and is now pinned by test. Riders the
 grammar cannot express (Goreclaw's "with power 4 or greater") deliberately match
 **nothing**: a missed discount degrades to today's behavior; a wrong one lies.
 Sentence-scoped regexes; the eminence sentence is excluded from the static pattern.

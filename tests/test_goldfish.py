@@ -1124,6 +1124,64 @@ def test_discount_never_reduces_colored_pips():
         "no generic to reduce -> the discount must change nothing")
 
 
+def test_type_word_discounts_match_types_not_just_subtypes():
+    """'artifact spells cost less' (Shuri) and 'noncreature spells cost less'
+    (Lyse Hext) name TYPES, not subtypes. The matcher must read both — a token
+    the label names but the matcher cannot match would make the honesty label
+    lie (v1 shipped exactly that gap; this pins the fix)."""
+    rock = goldfish.compile_card(C(name="Mana Rock", quantity=1, mana_value=2.0,
+                                   colors=set(), identity=set(), mana_cost="{2}",
+                                   types=["Artifact"], produced=set()))
+    bear = goldfish.compile_card(C(name="Bear", quantity=1, mana_value=2.0,
+                                   colors={"G"}, identity={"G"}, mana_cost="{1}{G}",
+                                   types=["Creature"], subtypes=["Bear"], power=2,
+                                   produced=set()))
+    land = goldfish.compile_card(C(name="Forest", quantity=1, mana_value=0.0,
+                                   types=["Land"], produced={"G"}))
+    assert goldfish._disc_matches(rock, "artifact")
+    assert not goldfish._disc_matches(bear, "artifact")
+    assert goldfish._disc_matches(rock, "noncreature")
+    assert not goldfish._disc_matches(bear, "noncreature")
+    assert goldfish._disc_matches(bear, "creature")
+    assert not goldfish._disc_matches(land, "noncreature"), "lands are never spells"
+    assert not goldfish._disc_matches(land, "land"), \
+        "a 'land spells' word must never touch land drops"
+
+
+def test_noncreature_static_discount_moves_a_spell_not_a_creature():
+    """End to end: a noncreature reducer on the battlefield makes a {3} rock land
+    earlier while a same-cost creature's clock is untouched."""
+    def deck(reducer_flags):
+        return goldfish.compile_deck([
+            C(name="Mountain", quantity=40, mana_value=0.0, colors={"R"},
+              identity={"R"}, types=["Land"], produced={"R"}),
+            C(name="Cheap Reducer", quantity=1, mana_value=1.0, colors={"R"},
+              identity={"R"}, mana_cost="{R}", types=["Creature"],
+              subtypes=["Monk"], power=1, flags=set(reducer_flags)),
+            C(name="Big Rock", quantity=1, mana_value=4.0, colors=set(),
+              identity=set(), mana_cost="{4}", types=["Artifact"], produced=set()),
+            C(name="Big Bear", quantity=1, mana_value=4.0, colors={"R"},
+              identity={"R"}, mana_cost="{3}{R}", types=["Creature"],
+              subtypes=["Bear"], power=4, produced=set()),
+            C(name="Plain Cmd", quantity=1, mana_value=9.0, colors={"R"},
+              identity={"R"}, mana_cost="{8}{R}",
+              types=["Legendary", "Creature"], subtypes=["Dragon"], power=9),
+        ], "Plain Cmd")
+    plain = goldfish.simulate(deck(()), games=500, seed=13)
+    disc = goldfish.simulate(deck({"discount:noncreature:2"}), games=500, seed=13)
+    fc = lambda rep, name: next(r["mean_first_cast"] for r in rep["cards"]
+                                if r["name"] == name)
+    rock_gain = fc(plain, "Big Rock") - fc(disc, "Big Rock")
+    bear_gain = fc(plain, "Big Bear") - fc(disc, "Big Bear")
+    assert rock_gain > 0, "the noncreature discount must reach the artifact"
+    # The bear may drift a hair (a cheaper rock frees mana on later turns — a real
+    # knock-on, not a leak; _disc_matches never matching a creature is pinned by
+    # the unit test above), but the direct beneficiary must move far more.
+    assert rock_gain > bear_gain * 5, (
+        f"rock gained {rock_gain:.3f} vs bear {bear_gain:.3f} — the discount "
+        "should overwhelmingly land on the noncreature spell")
+
+
 def test_eminence_never_discounts_the_commander_itself():
     """'OTHER Dragon spells' — the commander pays full price for itself."""
     disc = _dragon_deck(cmd_flags={"discount-cmd:dragon:9"})
