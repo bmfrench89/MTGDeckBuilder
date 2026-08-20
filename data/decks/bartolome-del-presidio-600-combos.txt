@@ -40,7 +40,6 @@
 1 Shepherd of the Cosmos
 1 Stitcher's Supplier
 1 Sun Titan
-1 The Warring Triad
 1 Undead Butler
 1 Valgavoth's Faithful
 1 Werefox Bodyguard
@@ -67,6 +66,7 @@
 1 Unburial Rites
 
 # --- Artifacts ---
+1 The Warring Triad
 1 Arcane Signet
 1 Charcoal Diamond
 1 Mind Stone

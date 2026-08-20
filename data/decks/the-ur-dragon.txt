@@ -42,6 +42,7 @@
 1 Wood Elves
 1 Sarkhan, Soul Aflame
 1 Dragonspeaker Shaman
+1 Smaug the Magnificent
 
 # --- Instants ---
 1 Assassin's Trophy
@@ -59,11 +60,11 @@
 1 Crux of Fate
 1 Nature's Lore
 1 Blasphemous Act
+1 Desolation of Smaug
 
 # --- Artifacts ---
 1 Arcane Signet
 1 Sol Ring
-1 Desolation of Smaug
 1 Fellwar Stone
 1 Roaming Throne
 1 Lightning Greaves
@@ -72,7 +73,6 @@
 # --- Enchantments ---
 1 Up the Beanstalk
 1 Temur Ascendancy
-1 Smaug the Magnificent
 1 Kindred Discovery
 1 Seal of Cleansing
 1 Dragon Tempest

@@ -122,6 +122,7 @@ python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $CO
     --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
 python3 scripts/deck_sections.py --all --collection $COLL --apply   # regroup decks into type sections
+python3 scripts/deck_sections.py --all --collection $COLL --check   # exit 3 on misfiled cards (CI runs this)
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
 python3 scripts/carddb.py --verify "Sol Ring" --verify "Rejoinder" [--json]
                                                              # verify named cards' oracle text

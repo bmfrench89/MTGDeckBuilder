@@ -1325,3 +1325,35 @@ def test_the_name_heuristic_still_decides_when_the_field_is_silent(tmp_path,
     buys = [b for b in r["buy_swaps"]
             if mtglib._norm(b[2]) == mtglib._norm("Unknown Sunlit Tower")]
     assert buys and buys[0][4] == "land", "no lands key to consult -> trust the name"
+
+
+def test_tidy_runs_even_when_the_pass_proposes_no_swaps(tmp_path, monkeypatch):
+    """The self-heal gate. _tidy was called only when THIS pass wrote swaps, so a
+    manual swap that landed a Sorcery under Creatures survived every subsequent
+    "already aligned — no changes" apply (Grim Tutor, 2026-08-20). An apply must
+    tidy regardless of whether it changed anything itself."""
+    import csv
+    import deck_fit
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Test Commander,4,W,W,{3}{W},Legendary Creature,Noble,rare,cmd00000,1.00",
+            "1,Misplaced Rite,2,W,W,{1}{W},Sorcery,,common,mr000001,0.10",
+            "1,True Bear,2,W,W,{1}{W},Creature,Bear,common,tb000001,0.10"]
+    cpath = tmp_path / "coll.csv"
+    cpath.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    p = tmp_path / "d.txt"
+    p.write_text("# Title: T\n# Commander: Test Commander\n\n"
+                 "# --- Commander ---\n1 Test Commander\n\n"
+                 "# --- Creatures ---\n1 True Bear\n1 Misplaced Rite\n\n"
+                 "# --- Sorceries ---\n\n"
+                 "# --- Lands ---\n30 Plains\n", encoding="utf-8")
+    # A field with nothing to say -> no swaps proposed; non-empty so the pass runs.
+    monkeypatch.setattr(deck_fit, "load_field",
+                        lambda *a, **k: {mtglib._norm("True Bear"): 50})
+    r = optimize.optimize(str(p), coll, idx, str(tmp_path), apply=True)
+    assert not r["swaps"] and not r["land_swaps"], "the premise: a no-change apply"
+    text = p.read_text(encoding="utf-8")
+    creatures = text.split("# --- Creatures ---")[1].split("# ---")[0]
+    assert "Misplaced Rite" not in creatures, (
+        "a typed Sorcery under Creatures must be re-filed by ANY apply")

@@ -32,6 +32,7 @@
 1 Tataru Taru
 1 Hermes, Overseer of Elpis
 1 Alisaie Leveilleur
+1 Delney, Streetwise Lookout
 
 # --- Instants ---
 1 Mystical Tutor
@@ -57,7 +58,6 @@
 1 Toxic Deluge
 1 Vindicate
 1 Cleansing Nova
-1 Delney, Streetwise Lookout
 1 Night's Whisper
 
 # --- Artifacts ---

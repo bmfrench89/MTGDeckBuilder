@@ -58,6 +58,7 @@
 1 Anti-Venom, Horrifying Healer
 1 Sensational Spider-Man
 1 Radioactive Spider
+1 Skyward Spider
 
 # --- Instants ---
 1 Grow Extra Arms
@@ -83,7 +84,6 @@
 1 Sol Ring
 1 Arcane Signet
 1 Commander's Sphere
-1 Skyward Spider
 1 Skullclamp
 1 Lightning Greaves
 

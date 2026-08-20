@@ -178,3 +178,63 @@ def test_a_bare_double_slash_name_is_not_split(tmp_path):
                  encoding="utf-8")
     assert app._edit_deck_card(str(p), "remove", "SP") is False
     assert app._edit_deck_card(str(p), "remove", "SP//dr, Piloted by Peni") is True
+
+
+# --------------------------------------------------------------------------- #
+# Replace re-files by the INCOMING card's type
+#
+# Writing the replacement at the outgoing card's line put a Sorcery under
+# Creatures whenever the types differed — one of the three writers behind the 19
+# misfiled cards found on 2026-08-20 (Grim Tutor under Creatures came from this
+# exact flow, via the swap the session applied by hand).
+# --------------------------------------------------------------------------- #
+def _typed_deck(tmp_path):
+    p = tmp_path / "typed.txt"
+    p.write_text(
+        "# Title: T\n# Commander: Test Commander\n\n"
+        "# --- Commander ---\n1 Test Commander\n\n"
+        "# --- Creatures ---\n1 Grizzly Bears\n1 Llanowar Elves\n\n"
+        "# --- Sorceries ---\n1 Cultivate\n\n"
+        "# --- Combo Pieces ---\n1 Old Combo Card\n",
+        encoding="utf-8")
+    return str(p)
+
+
+def test_replace_refiles_when_the_incoming_type_contradicts_the_section(tmp_path):
+    deck = _typed_deck(tmp_path)
+    assert app._edit_deck_card(deck, "replace", "Grizzly Bears", "Grim Tutor",
+                               types=["Sorcery"]) is True
+    text = read(deck)
+    assert "Grizzly Bears" not in text
+    creatures = text.split("# --- Creatures ---")[1].split("# ---")[0]
+    sorceries = text.split("# --- Sorceries ---")[1].split("# ---")[0]
+    assert "Grim Tutor" not in creatures
+    assert "Grim Tutor" in sorceries
+
+
+def test_replace_stays_in_place_when_types_are_unknown(tmp_path):
+    """Absent type data must not become a guess — in place, exactly as before."""
+    deck = _typed_deck(tmp_path)
+    assert app._edit_deck_card(deck, "replace", "Grizzly Bears", "Mystery Card",
+                               types=None) is True
+    creatures = read(deck).split("# --- Creatures ---")[1].split("# ---")[0]
+    assert "Mystery Card" in creatures
+
+
+def test_replace_stays_in_place_when_types_agree(tmp_path):
+    deck = _typed_deck(tmp_path)
+    assert app._edit_deck_card(deck, "replace", "Grizzly Bears", "Bear Cub",
+                               types=["Creature"]) is True
+    creatures = read(deck).split("# --- Creatures ---")[1].split("# ---")[0]
+    assert "Bear Cub" in creatures
+    assert creatures.index("Bear Cub") >= 0
+
+
+def test_replace_respects_a_custom_section(tmp_path):
+    """A player's own grouping ('Combo Pieces') is not a type claim — the incoming
+    card stays where the outgoing one sat, whatever its type."""
+    deck = _typed_deck(tmp_path)
+    assert app._edit_deck_card(deck, "replace", "Old Combo Card", "Grim Tutor",
+                               types=["Sorcery"]) is True
+    combo = read(deck).split("# --- Combo Pieces ---")[1]
+    assert "Grim Tutor" in combo

@@ -871,6 +871,13 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
         record_changes(deck_path, swaps, land_swaps)
+    if apply:
+        # _tidy on EVERY apply, not only when this pass wrote swaps. It is idempotent
+        # and cheap, and gating it on our own changes left everyone else's misfiles
+        # in place forever: a manual swap writes in place (webapp replace, session
+        # edits), and the very next `--apply` printed "already aligned — no changes"
+        # while Grim Tutor sat under Creatures (2026-08-20; one of 19 misfiled cards
+        # found across 7 decks the day the player's phone surfaced one).
         _tidy(deck_path, idx)
         result["illegal"] = singleton_violations(deck_path)
     if apply and buy_swaps:

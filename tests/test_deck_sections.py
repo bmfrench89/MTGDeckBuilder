@@ -490,3 +490,87 @@ def test_a_basic_merges_into_its_existing_line_across_sections(tmp_path):
     text = p.read_text(encoding="utf-8")
     assert text.count("Plains") == 1, f"no cross-section twin, got:\n{text}"
     assert "3 Plains" in text
+
+
+# --------------------------------------------------------------------------- #
+# --check: the read-only tripwire for misfiled cards
+#
+# 18 typed cards sat in contradicting type sections across 7 of the 10 real decks
+# before the player's phone screenshot surfaced one (a Sorcery under Artifacts,
+# 2026-08-20). Tests stay hermetic, so the real decks are guarded by running this
+# checker in CI/refresh — these tests prove the checker itself.
+# --------------------------------------------------------------------------- #
+def _checker_deck(tmp_path, body):
+    deck = tmp_path / "c.txt"
+    deck.write_text("# Commander: Test Commander\n" + body, encoding="utf-8")
+    (tmp_path / "c.attrs.csv").write_text(
+        "Name,Type\nSol Ring,Artifact\nCultivate,Sorcery\nGrizzly Bears,Creature\n"
+        "Steel Golem,Artifact Creature\nCommand Tower,Land\n", encoding="utf-8")
+    coll = tmp_path / "coll.txt"
+    coll.write_text("1 Test Commander\n1 Sol Ring\n1 Cultivate\n1 Grizzly Bears\n"
+                    "1 Steel Golem\n1 Command Tower\n1 Mystery Card\n", encoding="utf-8")
+    return str(deck), str(coll)
+
+
+def test_check_flags_a_typed_card_in_a_contradicting_type_section(tmp_path):
+    deck, coll = _checker_deck(tmp_path, "# --- Artifacts ---\n1 Cultivate\n")
+    violations, untyped = deck_sections.check(deck, coll)
+    assert [(v[0], v[2], v[3]) for v in violations] == [
+        ("Artifacts", "Cultivate", "Sorceries")]
+    assert untyped == []
+    assert deck_sections.main(["--deck", deck, "--collection", coll, "--check"]) == 3
+
+
+def test_check_passes_a_clean_deck_and_exits_zero(tmp_path):
+    deck, coll = _checker_deck(
+        tmp_path, "# --- Sorceries ---\n1 Cultivate\n# --- Artifacts ---\n1 Sol Ring\n")
+    violations, _ = deck_sections.check(deck, coll)
+    assert violations == []
+    assert deck_sections.main(["--deck", deck, "--collection", coll, "--check"]) == 0
+
+
+def test_check_lets_an_artifact_creature_live_under_creatures(tmp_path):
+    """type_bucket says a creature is a creature no matter what else it is —
+    the checker must agree, or every Golem becomes a false positive."""
+    deck, coll = _checker_deck(tmp_path, "# --- Creatures ---\n1 Steel Golem\n")
+    violations, _ = deck_sections.check(deck, coll)
+    assert violations == []
+
+
+def test_check_reports_untyped_without_failing(tmp_path):
+    """A fresh export's cards are untyped until the enrichment loop runs; failing
+    CI in that window would punish the pipeline for working."""
+    deck, coll = _checker_deck(tmp_path, "# --- Instants ---\n1 Mystery Card\n")
+    violations, untyped = deck_sections.check(deck, coll)
+    assert violations == []
+    assert untyped == [("Instants", "Mystery Card")]
+    assert deck_sections.main(["--deck", deck, "--collection", coll, "--check"]) == 0
+
+
+def test_check_ignores_custom_sections_and_the_commander(tmp_path):
+    """Only sections that claim to BE a type are policed — a player's 'Combo
+    Pieces' section may hold anything, and the commander line is exempt."""
+    deck, coll = _checker_deck(
+        tmp_path,
+        "# --- Commander ---\n1 Test Commander\n"
+        "# --- Combo Pieces ---\n1 Cultivate\n1 Sol Ring\n")
+    violations, untyped = deck_sections.check(deck, coll)
+    assert violations == [] and untyped == []
+
+
+def test_check_is_read_only(tmp_path):
+    deck, coll = _checker_deck(tmp_path, "# --- Artifacts ---\n1 Cultivate\n")
+    before = open(deck, encoding="utf-8").read()
+    deck_sections.main(["--deck", deck, "--collection", coll, "--check"])
+    assert open(deck, encoding="utf-8").read() == before
+
+
+def test_power_tags_label_both_spellings_of_a_split_name(tmp_path):
+    """The label loader and power.py read the SAME curated files; power has matched
+    both faces of a split name since 2026-08-20, and the labels must agree — a
+    curated "Boom // Bust" that labels nothing when the deck spells "Boom" makes
+    the two surfaces silently disagree about the same card."""
+    (tmp_path / "mass_land_denial.txt").write_text("Boom // Bust\n", encoding="utf-8")
+    tags = deckcore.load_power_tags(refdir=str(tmp_path))
+    assert tags.get(mtglib._norm("Boom // Bust")) == ["Mass land denial"]
+    assert tags.get(mtglib._norm("Boom")) == ["Mass land denial"]

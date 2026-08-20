@@ -42,9 +42,6 @@
 1 Hulk, Gamma Goliath
 1 Red Hulk
 
-# --- Planeswalkers ---
-1 Kiora, Behemoth Beckoner
-
 # --- Instants ---
 1 Shock
 1 Lightning Strike
@@ -60,6 +57,8 @@
 1 Heroic Intervention
 1 Snakeskin Veil
 1 Counterspell
+
+# --- Sorceries ---
 1 Rampant Growth
 1 Nature's Lore
 1 Harmonize
@@ -93,6 +92,9 @@
 1 World War Hulk
 1 Fiery Emancipation
 
+# --- Planeswalkers ---
+1 Kiora, Behemoth Beckoner
+
 # --- Lands ---
 1 Command Tower
 1 Exotic Orchard
@@ -104,7 +106,6 @@
 1 Reliquary Tower
 1 Cinder Glade
 1 Rootbound Crag
-2 Forest
 1 Sheltered Thicket
 1 Mossfire Valley
 1 Temple of Abandon
@@ -116,12 +117,11 @@
 1 Mutant Town
 1 Sulfur Falls
 1 Stormcarved Coast
-1 Mountain
 1 Riverpyre Verge
 1 Spectacle Summit
 1 Stark Industries
 
 # --- Basics ---
-3 Mountain
-4 Forest
+6 Forest
+4 Mountain
 3 Island

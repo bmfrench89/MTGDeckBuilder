@@ -478,9 +478,33 @@ def _insert_deck_card(path, lines, name, section=None):
     return True
 
 
-def _edit_deck_card(path, action, name, replacement=None, section=None):
+def _section_of_card(lines, keys):
+    """The section label the matching card line currently sits under, or None."""
+    cur = None
+    for ln in lines:
+        label = _section_label(ln)
+        if label:
+            cur = label
+            continue
+        s = ln.strip()
+        if not s or s.startswith("#"):
+            continue
+        m = mtglib._QTY_RE.match(s)
+        if mtglib.name_keys(m.group(2) if m else s) & keys:
+            return cur
+    return None
+
+
+def _edit_deck_card(path, action, name, replacement=None, section=None, types=None):
     """Line-based edit of a deck .txt: remove, replace, or add a single card, preserving
-    quantity, section, and everything else. Returns True if a line changed."""
+    quantity, section, and everything else. Returns True if a line changed.
+
+    `types` (the REPLACEMENT card's type list, when the caller knows it) lets a
+    replace re-file: writing the incoming card at the outgoing card's line put a
+    Sorcery under Creatures whenever the types differed — one of the three writers
+    behind the 19 misfiled cards found on 2026-08-20 (Grim Tutor under Creatures
+    was this exact flow). Unknown types (None or empty) keep the old in-place
+    behavior: never guess a section from a name."""
     keys = mtglib.name_keys(name)
     lines = open(path, encoding="utf-8").read().split("\n")
     if action == "add":
@@ -495,6 +519,19 @@ def _edit_deck_card(path, action, name, replacement=None, section=None):
         lines = open(path, encoding="utf-8").read().split("\n")
         _insert_deck_card(path, lines, replacement, section="Basics")
         return dropped
+    if action == "replace" and replacement and types:
+        target = deckcore.type_bucket(replacement, types)
+        cur = _section_of_card(lines, keys)
+        # Re-file only when BOTH sections speak type: the outgoing card sits under a
+        # canonical type section and the incoming card's type names a different one.
+        # A custom section ("Combo Pieces") keeps the player's own grouping.
+        if (target and cur and cur in deckcore.TYPE_SECTION_ORDER
+                and cur != target):
+            dropped = _edit_deck_card(path, "remove", name)
+            if dropped:
+                lines = open(path, encoding="utf-8").read().split("\n")
+                _insert_deck_card(path, lines, replacement, section=target)
+            return dropped
     out, changed = [], False
     for ln in lines:
         s = ln.strip()
@@ -617,7 +654,15 @@ def deck_card(stem):
             return (f"{replacement} is already in this deck — that swap would "
                     "break the singleton rule.", 409)
     if action in ("remove", "replace") and name:
-        changed = _edit_deck_card(m["path"], action, name, replacement)
+        # The incoming card's types, when the collection knows them, let the editor
+        # re-file instead of inheriting the outgoing card's section (see
+        # _edit_deck_card). An unknown card passes None — in place, never guessed.
+        rtypes = None
+        if action == "replace" and replacement:
+            _coll, idx = collection_index()
+            ref = mtglib.lookup(idx, replacement)
+            rtypes = ref.types if (ref and ref.types) else None
+        changed = _edit_deck_card(m["path"], action, name, replacement, types=rtypes)
         if not changed:
             return (f"Couldn't find “{name}” in the deck file — nothing was "
                     "changed. (If this card is a buy-list or field suggestion, "

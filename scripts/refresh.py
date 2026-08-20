@@ -54,6 +54,19 @@ def main():
                            capture_output=True, text=True)
         print(r.stdout.strip() or r.stderr.strip()[:400])
 
+    # Section integrity, loudly but non-fatally: a misfiled card must not stop the
+    # dashboards from rebuilding, but it must not scroll by unseen either — 19 sat
+    # across 7 decks before anyone looked (2026-08-20). CI fails the build on the
+    # same check; here the dashboards still regenerate so the report stays usable.
+    r = subprocess.run([sys.executable, os.path.join(HERE, "deck_sections.py"),
+                        "--all", "--check", "--collection", args.collection],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print("== SECTION CHECK FAILED — run deck_sections.py --all --apply ==")
+        print((r.stdout or "").strip())
+    else:
+        print((r.stdout or "").strip().splitlines()[-1])
+
     ok = 0
     for path in decks:
         with open(path, encoding="utf-8") as f:

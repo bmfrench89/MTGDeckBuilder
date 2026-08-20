@@ -8,6 +8,45 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## Phone screenshots exposed 19 misfiled cards and two render bugs — all fixed (2026-08-20)
+
+The player's phone showed a Sorcery under Artifacts, "9 Blasphemous Act" in a
+singleton deck, and "redundancy-led" clipped to "redunda / led". Spec:
+`docs/spec-mobile-ui-and-sections.md`. What each actually was:
+
+1. **19 typed cards sat in contradicting type sections across 7 of 10 decks.**
+   Three writers could misfile: the optimizer writes swap-ins at the outgoing
+   card's line and `_tidy` only ran when THAT pass made changes (Grim Tutor sat
+   under Creatures through two "already aligned" applies); the webapp's replace
+   wrote in place; and adds made pre-enrichment stuck forever. Fixed in layers:
+   `deck_sections.py --check` (exit 3 on misfiles; untyped reported, never failed
+   — a fresh export must not break CI), run as a CI step in tests.yml and in
+   refresh.py because pytest deliberately never reads data/; all 10 decks
+   repaired (`--all --apply`, checker now 0, every deck still 100/singleton-clean,
+   `--rank` byte-identical); `_tidy` runs on EVERY apply; the webapp replace
+   re-files by the incoming card's type (custom sections and unknown types stay
+   in place — never guess).
+2. **"9 Blasphemous Act" was the MANA VALUE**, rendered as an accent-coloured
+   bare number before the name. Grid figcaptions now show name + price only (the
+   card art shows the cost; qty is the separate `N×` badge); the list view's .mv
+   gutter is muted — quantity there is an explicit `N× `.
+3. **CRISPI tiles clipped on phones** because `tile-val` is `--fs-2xl` display
+   type sized for "100"/"$462". `stat_tile()` now applies `tile-val--text`
+   (`--fs-lg`, word wrap) to any value with a space or >6 chars. Tokens only;
+   `test_design_tokens` green. Verified with headless Chromium at 390×844 —
+   screenshots sent to the player.
+
+Also shipped (carry-over from the same day's audit review): `load_power_tags`
+and `deck_fit`'s Game Changer checks now match both `name_keys` of a split name,
+so the dashboard labels can no longer disagree with `power.py`'s counts
+(`Boom // Bust` was a live case); and Thorin's agent-written `# Resilience: low`
+header is REMOVED — that header records the PLAYER's judgement, and nobody had
+declared it. Thorin reads `prot 2 · rec 0` again (Interaction 11 after the An
+Unexpected Party swap). Still with the player: confirm the physical
+Bruce Banner // The Incredible Hulk copy behind the owned_additions line.
+
+Suite 895 -> **909**.
+
 ## TENTH DECK: Thorin, King of Durin's Folk — and a fresh export (2026-08-20)
 
 The player uploaded a new collection export. **2,691 -> 2,781 distinct names,

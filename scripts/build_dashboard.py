@@ -148,8 +148,15 @@ def curve_svg(curve, t):
 
 
 def stat_tile(label, value, note=""):
+    """One stat tile. The value slot's --fs-2xl display type was sized for values
+    like "100" and "$462"; the CRISPI axes put PHRASES there ("redundancy-led",
+    "prot 2 · rec 0") and on a phone they clipped mid-word ("redunda / led",
+    player screenshot 2026-08-20). A value with a space or longer than 6 chars
+    gets the text variant: a smaller token and normal word wrap, no clipping."""
     note_html = f"<div class='tile-note'>{esc(note)}</div>" if note else ""
-    return (f"<div class='tile'><div class='tile-val'>{esc(value)}</div>"
+    v = str(value)
+    cls = "tile-val tile-val--text" if (" " in v or len(v) > 6) else "tile-val"
+    return (f"<div class='tile'><div class='{cls}'>{esc(value)}</div>"
             f"<div class='tile-label'>{esc(label)}</div>{note_html}</div>")
 
 
@@ -406,8 +413,11 @@ def sections_html(sections, enriched, shared=None, images=True, size="small",
             out.append("<div class='cardgrid'>")
             for q, name in cards:
                 k = mtglib._norm(name)
-                m = mv.get(k)
-                mvb = (f"<span class='mv'>{m:g}</span>" if m is not None else "")
+                # No MV in the figcaption: the card image shows the real cost, and a
+                # bare number before the name reads as a QUANTITY — "9 Blasphemous
+                # Act" (MV 9) misled the player on a phone (2026-08-20). The list
+                # view keeps its .mv gutter; it also prints quantity as an explicit
+                # `N× `, so the two can't be confused there.
                 p = pr.get(k)
                 price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
                 qty = f"<span class='qty'>{q}×</span>" if q > 1 else ""
@@ -420,7 +430,7 @@ def sections_html(sections, enriched, shared=None, images=True, size="small",
                     f"<img loading='lazy' data-src='{esc(url)}' "
                     f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
                     f"{_new_badge(k, changes)}"
-                    f"<figcaption>{mvb}{esc(name)}{price}</figcaption></figure>")
+                    f"<figcaption>{esc(name)}{price}</figcaption></figure>")
             out.append("</div>")
         else:
             out.append("<ul class='cards'>")
@@ -1225,6 +1235,7 @@ header .cmd {{ color:var(--gold); font-family:{t['mono']}; font-size:var(--fs-sm
   border-radius:var(--r-md); padding:var(--sp-4); text-align:center; }}
 .tile-val {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2);
   line-height:1; }}
+.tile-val--text {{ font-size:var(--fs-lg); line-height:1.25; overflow-wrap:break-word; }}
 .tile-label {{ color:var(--muted); text-transform:uppercase; font-size:var(--fs-2xs);
   letter-spacing:1.5px; margin-top:6px; }}
 .tile-note {{ color:var(--muted); font-size:var(--fs-2xs); margin-top:4px; }}
@@ -1258,7 +1269,7 @@ h3 .count {{ color:var(--muted); font-size:var(--fs-xs); float:right; }}
 ul.cards {{ list-style:none; padding:0; margin:0; columns:2; column-gap:var(--sp-5);
   font-family:{t['mono']}; font-size:var(--fs-xs); }}
 ul.cards li {{ break-inside:avoid; padding:var(--sp-1) 0; }}
-.mv {{ display:inline-block; min-width:20px; color:var(--accent);
+.mv {{ display:inline-block; min-width:20px; color:var(--muted);
   font-size:var(--fs-xs); }}
 .mv.dim {{ color:var(--muted); }}
 .pr {{ color:var(--muted); font-size:var(--fs-2xs); margin-left:6px; }}
@@ -1330,7 +1341,6 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .need {{ color:var(--warn); font-weight:700; }}
 .mc figcaption {{ font-family:{t['mono']}; font-size:var(--fs-2xs); color:var(--muted);
   margin-top:3px; line-height:1.25; }}
-.mc figcaption .mv {{ min-width:0; margin-right:3px; }}
 .mc figcaption .pr {{ display:block; margin:0; }}
 footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   text-align:center; }}

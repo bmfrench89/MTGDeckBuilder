@@ -24,6 +24,16 @@ jobs:
           pip install -r webapp/requirements.txt
       - name: Run tests
         run: pytest
+      # The COMMITTED decks' section integrity. pytest deliberately never reads
+      # data/ (the suite is hermetic), so the real deck files are guarded here:
+      # a typed card under a contradicting type section fails the build. Runs on
+      # the committed snapshot + snapshot attrs, so it works on a fresh clone;
+      # untyped cards (a fresh export before the enrichment loop) are reported
+      # but never fail. 19 misfiled cards across 7 decks predate this step.
+      - name: Check deck section integrity
+        run: |
+          python3 scripts/deck_sections.py --all --check \
+            --collection data/collection/collection_snapshot.txt
       # The analysis scripts are stdlib-only; this catches an accidental new dependency.
       - name: Check scripts import with no extra packages
         run: |
