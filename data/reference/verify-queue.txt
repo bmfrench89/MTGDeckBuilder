@@ -1,8 +1,10 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-20: the player asked whether Radagast of Rhosgobel helps the
-# Ur-Dragon deck, describing it as a green-mana / cost card. It is a Hobbit-set
-# printing, its text is on disk nowhere, and the whole question turns on exactly
-# what it discounts or produces — the one thing that must not be recalled.
-Radagast of Rhosgobel
+# Cleared 2026-08-20 — Radagast of Rhosgobel verified (run 32368808674) and written
+# into hobbit-verified-2026-08-20.txt. It is a COST REDUCER, not a mana producer:
+# "The first creature spell you cast each turn costs {2} less to cast and can be
+# cast as though it had flash." The Ur-Dragon verdict is in that deck's notes.
+#
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk are HOB/HOC printings whose text is not on disk.

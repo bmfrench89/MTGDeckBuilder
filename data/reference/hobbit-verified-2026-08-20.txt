@@ -645,3 +645,9 @@ The Ur-Dragon  {4}{W}{U}{B}{R}{G}
   | Flying
   | Whenever one or more Dragons you control attack, draw that many cards, then you may put a permanent card from your hand onto the battlefield.
   https://scryfall.com/card/cmm/361/the-ur-dragon?utm_source=api
+
+Radagast of Rhosgobel  {2}{G}{G}
+  Legendary Creature — Avatar Wizard
+  identity: G · commander-legal: yes · HOB 136 · via scryfall
+  | The first creature spell you cast each turn costs {2} less to cast and can be cast as though it had flash.
+  https://scryfall.com/card/hob/136/radagast-of-rhosgobel?utm_source=api

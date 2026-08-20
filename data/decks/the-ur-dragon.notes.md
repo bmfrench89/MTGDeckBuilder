@@ -252,3 +252,40 @@ in this shell. Vaevictis Asmadi measured faster (−0.019) purely on printed pow
 (6 vs Silumgar's 3) — held back anyway: the metric cannot see that its attack
 trigger is symmetrical and can hand opponents permanents, and Silumgar, the
 Drifting Death has 33% field support against Vaevictis's none.
+
+## Radagast of Rhosgobel — YES, and the simulator says no (2026-08-20)
+
+Verified (run 32368808674), `{2}{G}{G}` Legendary Creature — Avatar Wizard, 2/2:
+
+> **The first creature spell you cast each turn costs {2} less to cast and can be
+> cast as though it had flash.**
+
+A cost reducer, not a mana card. **It stacks with eminence**, and in this deck that
+is the whole point — Ur-Dragon takes {1} off every other Dragon spell, Radagast takes
+{2} off the first creature spell each turn, and a dragon is a creature spell:
+
+| first dragon each turn | average MV of this deck's 31 dragons |
+|---|---|
+| printed | 5.29 |
+| with eminence | 4.29 |
+| **with eminence + Radagast** | **2.29** |
+
+Flash is the second half and it is not decoration: it turns every dragon into an
+end-step play, dodges sorcery-speed wipes, and lets the deck hold up interaction and
+still deploy. The deck already runs Dragonspeaker Shaman (57% field) for the same
+reason; Radagast is the bigger discount and the one that also grants flash.
+
+**Honest limits.** Only the FIRST creature spell each turn is discounted, so the
+value is front-loaded and shrinks on the turns this deck dumps several dragons.
+Radagast is not a Dragon: no eminence discount on itself, no attack-trigger draw,
+and a 2/2 body contributes essentially nothing to the clock.
+
+**The measurement, and why it is wrong here.** A/B over 3,000 paired games
+(Sylvia Brightspear out, Radagast in) reports it as a DOWNGRADE: first-kill turn
++0.016, damage −0.42, both significant. That result is an artifact, and the cause is
+verifiable — `grep -cin "cost reduc\|cheaper\|reduce" scripts/goldfish.py` returns
+**0**. The simulator pays printed mana costs and models no cost reduction of any
+kind, so it charges Radagast's dragons full price and sees only a 2/2 replacing a
+2-power body. This is the clearest example in the deck of the rule stated above:
+goldfish cannot rate cards whose value is cost reduction, and this deck's commander
+IS a cost reducer.
