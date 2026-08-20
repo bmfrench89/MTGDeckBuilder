@@ -17,6 +17,7 @@ Usage:
   python3 power.py --deck d.txt --collection coll.csv --json
 """
 import argparse
+import csv
 import glob
 import json
 import os
@@ -82,6 +83,87 @@ def load_refs(ref_dir=REF_DIR_DEFAULT):
         else:
             refs[key] = set(fallback)
     return refs
+
+
+def load_resilience_staples(ref_dir=REF_DIR_DEFAULT):
+    """`{"protection": {norm, …}, "recursion": {norm, …}}` from the curated CSV.
+
+    A separate file from `role_staples.csv` because that one answers "what could I
+    play instead?" (it needs Colors for identity filtering) while this one answers
+    "does this deck survive being interacted with?" — different question, different
+    consumers, and mixing them would put colour data on rows that never need it.
+
+    Every row is runner-verified: `data/reference/verify-queue.txt` + a `claude/**`
+    push makes `deck-verify.yml` print verbatim Scryfall text, and only cards whose
+    text actually protects or rebuilds get a row. Missing file -> empty sets, which
+    the axis reports as "unmeasured" rather than as a deck with zero protection."""
+    out = {"protection": set(), "recursion": set()}
+    path = os.path.join(ref_dir, "resilience_staples.csv")
+    try:
+        with open(path, encoding="utf-8") as f:
+            for row in csv.DictReader(ln for ln in f if not ln.startswith("#")):
+                role = (row.get("Role") or "").strip().lower()
+                name = (row.get("Card") or "").strip()
+                if role in out and name:
+                    out[role].add(mtglib._norm(name))
+    except (OSError, csv.Error):
+        pass
+    return out
+
+
+def read_declared_resilience(deck_path):
+    """The player's own `# Resilience: <low|medium|high>` header, or None.
+
+    Mirrors `read_declared_bracket` deliberately, for the same reason: the counted
+    proxy (protection + recursion density) cannot see whether the deck *needs* that
+    protection. "If your commander is removed twice, does the deck still function?"
+    is a question the player can answer and the data cannot — a 2-protection deck
+    with eight redundant engines is resilient, and a 2-protection deck built around
+    one commander is not. The header records that judgement; the count stays visible
+    beside it, never replaced."""
+    try:
+        with open(deck_path, encoding="utf-8") as f:
+            head = f.read()
+    except (OSError, UnicodeDecodeError):
+        return None
+    v = mtglib.deck_header(head, "Resilience").strip().lower()
+    m = re.match(r"(low|medium|high)\b", v)
+    return m.group(1) if m else None
+
+
+def resilience_axis(enriched, staples, declared=None):
+    """The CRISPI **Resilience** axis: can this deck survive being interacted with?
+
+    Spec `docs/spec-crispi-axes.md` Phase B, and deliberately the most modest of the
+    four. It counts two things the research names — protection density and recursion
+    density — and refuses to pretend they are the whole answer.
+
+    The researched bands are conditional, not absolute: **5-8 protection when the
+    commander or a key engine must stay on the battlefield, 2-4 when the deck has
+    recursion, redundancy or several ways to rebuild.** Which band applies depends on
+    commander-dependence, which is NOT derivable from the data this repo holds — so
+    the axis reports the counts, names the band each would satisfy, and lets a
+    `# Resilience:` header record the player's own verdict.
+
+    An empty staples file yields "unmeasured", never "0 protection": absent data and
+    a measured zero are different claims (the same empty-vs-absent rule the collection
+    attrs live under)."""
+    if not staples or not (staples["protection"] or staples["recursion"]):
+        return {"label": "unmeasured", "protection": None, "recursion": None,
+                "declared": declared, "basis": "no-list",
+                "detail": "no curated resilience list — run the verify queue"}
+    prot = len(_match(enriched, staples["protection"]))
+    rec = len(_match(enriched, staples["recursion"]))
+    if prot >= 5:
+        band = "meets the 5-8 band for a commander-dependent deck"
+    elif prot >= 2:
+        band = "meets the 2-4 band for a deck that rebuilds; thin if the commander is load-bearing"
+    else:
+        band = "below both researched bands (2-4 rebuilding, 5-8 commander-dependent)"
+    return {"label": (declared or f"{prot} protection · {rec} recursion"),
+            "protection": prot, "recursion": rec, "declared": declared,
+            "basis": "declared" if declared else "counted",
+            "detail": f"{prot} protection, {rec} recursion — {band}"}
 
 
 def _match(enriched, ref_set):

@@ -1,18 +1,9 @@
-# Queued 2026-08-20 — CRISPI Phase B (spec-crispi-axes). Seeding
-# data/reference/resilience_staples.csv, which per the spec may contain ONLY
-# cards whose text the runner has confirmed. 14 owned candidates: 7 protection,
-# 7 recursion. The runner's verbatim oracle text decides which role each earns.
+# Queued 2026-08-20 — CRISPI Phase B, second pass. The first run verified all 14
+# candidates but the log window only surfaced 8 verbatim; these 6 protection cards
+# are re-queued so their text is READ, not remembered, before they earn a CSV row.
 Swiftfoot Boots
 Lightning Greaves
 Heroic Intervention
 Boros Charm
 Clever Concealment
 Snakeskin Veil
-Darksteel Plate
-Sun Titan
-Sevinne's Reclamation
-Karmic Guide
-Serra Paragon
-Angelic Renewal
-Gift of Immortality
-Haunted Crossroads
