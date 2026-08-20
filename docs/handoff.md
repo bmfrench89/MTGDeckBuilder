@@ -8,6 +8,33 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## Revalidated the CRISPI audit; spec written and READY (2026-08-20)
+
+Re-checked every #140 claim against the code instead of memory. Two were wrong, both
+UNDERSTATING the repo, both now corrected in `strategy-shapes.md`:
+
+1. **Speed is closer than reported**: `goldfish.py`'s `clock` block already computes
+   `median_first_kill` / `median_table_kill` / `kill_rate` — the fundamental-turn number
+   exists and `power.py` simply never reads it.
+2. **Resilience is not "unmeasured with nothing to build on"**: `goldfish.py
+   --disruption standard` (Table-Ready Phase 10, EXPERIMENT, off by default) already
+   models a wipe + periodic removal + commander tax. What is missing is protection
+   COUNTING and any scoring of the delta.
+
+Also confirmed the binding boundary: `docs/spec-pod-simulation.md` is BACKLOGGED by
+player decision 2026-08-13 — any axis work builds on shipped goldfish machinery only.
+
+**The handoff artifact: `docs/spec-crispi-axes.md` — status READY FOR IMPLEMENTATION.**
+Four phases (A: Speed via the existing clock through deckcore, never engine→engine
+imports; B: Resilience as counted protection/recursion + a `# Resilience:` declared
+header + the disruption delta as a labelled experiment only; C: Consistency gains
+redundancy-cluster counting against the 5-8/8-12 bands; D: presentation — four axes +
+bracket, the contradictory composite row becomes a regression test). Contains the house
+session rules, receipts, FlagsVer trap, memo/CRN tripwires, acceptance criteria, and two
+player questions (disruption-in-score? legacy 0-100 lifespan?). Y'shtola's "Speed:
+unmeasured (no combat clock)" honesty label is specified explicitly so the axis never
+calls a drain deck slow.
+
 ## Strategy research: six shapes + CRISPI, and a live flaw in power.py (2026-08-19)
 
 Deep web research into high-level MTG strategy, written up as

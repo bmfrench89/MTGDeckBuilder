@@ -128,12 +128,17 @@ dependence) need judgement.
 
 ### What this repo measures today, audited 2026-08-19
 
-| CRISPI axis | `power.py` status |
+| CRISPI axis | `power.py` status (re-audited 2026-08-19 against the code, not memory) |
 |---|---|
 | **Interaction** | ✅ counted (`signals.interaction`) |
 | **Consistency** | ◐ partial — lands and tutors counted, redundancy **not** |
-| **Speed** | ❌ not scored — **but `goldfish.py` already simulates it**, just isn't wired in |
-| **Resilience** | ❌ **not measured at all** — no protection count, no commander-dependence |
+| **Speed** | ❌ not scored — and the gap is smaller than first reported: `goldfish.py`'s `clock` block **already computes `median_first_kill`, `median_table_kill` and `kill_rate`**. The fundamental-turn number exists; `power.py` simply never reads it |
+| **Resilience** | ❌ not scored — first reported as "nothing measures it", which was wrong: `goldfish.py --disruption standard` (Table-Ready **Phase 10 EXPERIMENT**, off by default) already models a wipe + periodic removal + commander tax "to see how the deck rebuilds". What is missing is any *counting* of protection/recursion in `power.py` and any *scoring* of the disruption delta |
+
+**Boundary that binds any follow-up:** statistical/agent opponents beyond the Phase 10
+probe are **BACKLOGGED by player decision 2026-08-13** (`docs/spec-pod-simulation.md`).
+A four-axis upgrade must build on the shipped goldfish machinery, not promote the pod sim.
+Implementation spec: `docs/spec-crispi-axes.md`.
 
 **And the flaw CRISPI was invented to fix is live in our output.** `power.py --rank` prints:
 
