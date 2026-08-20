@@ -1,3 +1,18 @@
-# Cleared 2026-08-19 — all 12 queued cards runner-verified verbatim in deck-verify
-# run 32309549585 (log has the oracle text; verify-results.json in the run artifact).
-# One correction landed from it: Smaug, Wicked Worm's ETB Treasures enter TAPPED.
+# Queued 2026-08-20 — CRISPI Phase B (spec-crispi-axes). Seeding
+# data/reference/resilience_staples.csv, which per the spec may contain ONLY
+# cards whose text the runner has confirmed. 14 owned candidates: 7 protection,
+# 7 recursion. The runner's verbatim oracle text decides which role each earns.
+Swiftfoot Boots
+Lightning Greaves
+Heroic Intervention
+Boros Charm
+Clever Concealment
+Snakeskin Veil
+Darksteel Plate
+Sun Titan
+Sevinne's Reclamation
+Karmic Guide
+Serra Paragon
+Angelic Renewal
+Gift of Immortality
+Haunted Crossroads
