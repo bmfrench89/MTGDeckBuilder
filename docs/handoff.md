@@ -8,6 +8,62 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## TENTH DECK: Thorin, King of Durin's Folk — and a fresh export (2026-08-20)
+
+The player uploaded a new collection export. **2,691 -> 2,781 distinct names,
+3,890 -> 4,083 copies**: 90 new names, 50 quantity increases, nothing removed. The
+haul is overwhelmingly the Hobbit set (HOB/HOC), and it is not random — it tracks
+the EDHREC Thorin list almost card for card, which is what made the build obvious.
+
+**All 90 new names were runner-verified before any of them was reasoned about**
+(deck-verify run 32322609093: 90/90 resolved, zero UNVERIFIED, DFC probe 46/46).
+The verbatim output is committed at `data/reference/hobbit-verified-2026-08-20.txt`
+— read that file for any of these cards rather than trusting memory, and note the
+set codes are HOB/HOC, i.e. squarely in post-2025 territory.
+
+**The deck** (`data/decks/thorin-king-of-durins-folk.txt`, tuned and sectioned):
+Bracket 2 Core, combat T9 (77% of games), prot 0 · rec 0, redundancy-led, Inter 12.
+Field overlap **20 of the field's top 25 in the deck**, 1 free to add, 4 unowned —
+well above the ~50% health line. **29 of the 30 R/W-legal Dwarves owned are in it**,
+so the archetype is not "supported" by vibes; it is nearly exhausted by this list.
+
+**The engine, and the one word that carries it** (both quoted from the verified
+file): Thorin reads *"Whenever Thorin **or another Dwarf** you control enters,
+create a Treasure token"* — with **no nontoken clause**. Fíli the Pathfinder reads
+*"Whenever Fíli or another **nontoken** Dwarf you control enters, create a 2/2 red
+Dwarf creature token."* So one real Dwarf yields Treasure (Thorin) + 2/2 token
+(Fíli) + a second Treasure (the token triggering Thorin), and every Dwarf gets
++2/+0 from the pair — **multiplicative, and deliberately not a loop**, because Fíli
+ignores its own tokens. That asymmetry is the whole deck; it is written up in the
+deck's `.notes.md`, which also protects the five engine cards from the optimizer.
+
+**Two real bugs the refresh exposed, both fixed:**
+
+1. **`auto_build` built a colorless pile for an unenriched commander.** Thorin was
+   in the pool but not yet enriched, so identity resolved to `set()`, `_color_legal`
+   admitted only colorless cards, and the builder returned a plausible 84-card deck
+   with 43 artifacts and 0 basics — no error. `Card.identity` has no None-vs-empty
+   distinction (unlike `produced`/`flags`), so `types` is now the enrichment tell:
+   empty identity + no types raises `UnknownIdentity`, naming both fixes. A new
+   `--identity` CLI flag exposes what only the webapp's `?ci=` could reach before.
+2. **`tribal-spiders` in commanders.csv matched zero cards.** Tribal tags are
+   matched against card SUBTYPES, which Magic spells singular ("Spider"). The bug
+   was masked because a commander's own subtypes are candidates too, so Spider
+   commanders found their tribe by accident. Renamed to `tribal-spider`; a test now
+   reads the real commanders.csv and fails on any plural tribal tag.
+
+**The automation loop closed inside the session, exactly as designed:** merge fired
+`attrs-snapshot.yml` on main, which re-enriched all 2,781 names (untyped 90 -> 0) and
+pushed the attrs back; pulling that down is what let the Thorin build see the new
+Dwarves as creatures at all. The first build attempt, made before enrichment landed,
+was legal but blind — worth remembering as the reason the ordering matters.
+
+**Cost of a tenth deck:** cross-deck conflicts 112 -> 117. Exotic Orchard is now
+own 6 / committed 9, Rogue's Passage own 1 / committed 4. The study deck
+(bartolome) still inflates this count and is still not sleeved.
+
+Suite 884 -> **886**.
+
 ## CRISPI COMPLETE — four axes, composite retired (2026-08-20)
 
 Phases B, C and D shipped; the spec is now a record, not a work item.

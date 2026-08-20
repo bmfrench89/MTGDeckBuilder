@@ -133,3 +133,50 @@ def test_a_genuinely_colorless_commander_still_builds(tmp_path):
     idx = mtglib.index_by_name(coll)
     d = auto_build.build("Colorless Boss", coll, idx, decks_dir=None)   # must not raise
     assert d["identity"] in ("C", "")
+
+
+def test_tribal_tags_must_be_singular_to_resolve(tmp_path):
+    """A `tribal-X` tag is matched against card SUBTYPES, which Magic spells singular.
+
+    `tribal-spiders` sat in commanders.csv matching zero cards (the subtype is
+    "Spider"); the bug was masked because a commander's own subtypes are candidates
+    too, so Spider commanders still found their tribe by accident. This locks the
+    contract in both directions."""
+    # The commander deliberately has NO subtypes: its own subtypes are candidates too,
+    # so leaving one on would mask what the TAG contributes — which is the whole point.
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Tag Only Commander,4,W,W,{3}{W},Legendary Creature,,rare,tag00000,1.00"]
+    for i in range(12):
+        rows.append(f"1,Web Spinner {i},2,W,W,{{1}}{{W}},Creature,Spider,common,sp{i:06d},0.10")
+    p = tmp_path / "spiders.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+
+    tribe, n = auto_build._tribe_and_support(
+        "Tag Only Commander", idx, ["tribal-spider"], coll, {"W"})
+    assert (tribe, n) == ("spider", 12), "the singular tag must find the tribe"
+
+    tribe, n = auto_build._tribe_and_support(
+        "Tag Only Commander", idx, ["tribal-spiders"], coll, {"W"})
+    assert tribe is None and n == 0, "a plural tag matches no subtype — that's the bug"
+
+
+def test_every_curated_tribal_tag_is_a_real_subtype_shape():
+    """Guard the reference file itself: no tribal tag may be plural.
+
+    Reads the repo's own commanders.csv (not a fixture) because the defect lived in
+    the DATA, not the code — a test against a fixture would have stayed green."""
+    import csv
+    import os
+    import similar_commanders as simc
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "data", "reference", "commanders.csv")
+    plural = []
+    with open(path, encoding="utf-8") as f:
+        for row in csv.DictReader(l for l in f if not l.startswith("#")):
+            for tag in (row.get("Archetypes") or "").split():
+                if tag.startswith("tribal-") and tag.endswith("s"):
+                    plural.append((row["Name"], tag))
+    assert not plural, (
+        f"plural tribal tags match no subtype and silently do nothing: {plural}")
