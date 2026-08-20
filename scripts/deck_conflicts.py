@@ -20,6 +20,7 @@ import os
 import sys
 from collections import defaultdict
 
+import deckcore
 import mtglib
 
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes",
@@ -222,7 +223,10 @@ def main():
         print(f"\n  {len(rows)} distinct cards have at least one free copy.")
         return 0
 
-    conf = conflicts(usage, focus)
+    # A pin is the ANSWER to a shortfall — which deck already won the physical
+    # copy. `conflicts()` has carried `pinned_to` since it was written; main just
+    # never loaded the pins, so the report asked a question the repo could answer.
+    conf = conflicts(usage, focus, pins=deckcore.load_pins())
 
     if args.json:
         print(json.dumps(conf, indent=2))
@@ -249,6 +253,9 @@ def main():
         print(f"  {c['card']}: own {c['owned']}, committed {c['committed']} "
               f"(short {c['short']})")
         print(f"      used in: {where}")
+        if c["pinned_to"]:
+            print(f"      pinned to: {c['pinned_to']} — that deck holds the physical "
+                  "copy; the others must swap it out.")
     print("\nFix: buy the extra copies, or swap the card out of a deck. Sharing a "
           "single physical card across decks means they can't be assembled at once.")
     return 0

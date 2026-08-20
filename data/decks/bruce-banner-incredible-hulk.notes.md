@@ -47,8 +47,11 @@ counter and nothing else. Ping him **during combat**, after attackers are declar
   creature.` Fight your own Hulk: Hulk takes 1 (Taunter is a 1/1) and hands you a combat
   phase, the Taunter takes 8 and — being indestructible — survives and throws that 8
   straight at an opponent's face. Repeatable every turn.
-- **Roaming Throne** — name **Hero** as it enters. Enrage is a triggered ability, so it
-  triggers *twice*: two +1/+1 counters and **two** extra combat phases per ping.
+- **Shang-Chi, Master of Kung Fu** — replaced Roaming Throne (2026-08-20): the one copy
+  is pinned to the Ur-Dragon deck. Shang-Chi is on-engine here — you may activate
+  creature abilities as though they had haste, so a pinger cast this turn pings the
+  Hulk this turn, and his `{T}: add two mana of any one color, creature abilities only`
+  pays for Brash Taunter's `{2}{R}` fight.
 - **Godo, Bandit Warlord** — an extra combat every turn he attacks, no damage required,
   plus he tutors an Equipment straight onto the battlefield.
 - **Savage Ventmaw** — attacking adds `{R}{R}{R}{G}{G}{G}`. With extra combats it pays for
@@ -142,7 +145,7 @@ engine pieces are named in this file precisely so a future optimizer run leaves 
 
 **Bracket 3 (Upgraded), power 71/100** by `power.py`. One Game Changer — **Crop Rotation** —
 which is inside Bracket 3's cap of three. There is no infinite combo in the 99: the three
-pingers all tap, so each is worth one extra combat per turn (two with Roaming Throne out).
+pingers all tap, so each is worth one extra combat per turn.
 
 `combo_detector.py` flags that **Godo + Helm of the Host is infinite combats**, and Helm of
 the Host is **not owned**. If it is ever bought, this deck stops being Bracket 3 — that is a

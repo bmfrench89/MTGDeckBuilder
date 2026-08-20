@@ -8,7 +8,11 @@ future attacker; Cosmic is the "on" switch that ends the game in one or two turn
 - On your turn, Cosmic gives *all your other Spiders* flying, first strike, trample,
   lifelink, and haste **during combat** — so a wide-but-small board suddenly flies over
   and gains you a pile of life while it connects.
-- **Roaming Throne** (naming *Spider*) doubles Cosmic's trigger and your Spiders' ETBs.
+- **Sun-Spider, Nimble Webber** replaced Roaming Throne (2026-08-20): the single copy is
+  pinned to the Ur-Dragon. Sun-Spider is a Spider body that fetches Skullclamp or
+  Lightning Greaves on ETB. Note the old claim here was wrong on the rules: Roaming
+  Throne doubling Cosmic's trigger did **nothing** — granting the same keywords twice
+  is a no-op. Its real value was doubling the Spiders' own ETB triggers.
 - **Kindred Discovery** turns every Spider you play or attack with into a card — this is
   your engine; protect it.
 
