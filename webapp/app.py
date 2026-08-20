@@ -22,6 +22,7 @@ from datetime import timedelta
 
 from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, send_from_directory, session, url_for)
+from markupsafe import escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -222,6 +223,18 @@ def _err(e):  # friendly message instead of a bare stack trace
             "file wasn't found. The app uses <code>data/collection/collection.csv</code> "
             "if present, otherwise the committed snapshot. Add your Archidekt export at "
             "that path (see docs/SETUP-windows.md) and reload.</p>"), 500
+
+
+@app.errorhandler(auto_build.UnknownIdentity)
+def _unknown_identity(e):
+    """A build for a commander whose colors we cannot establish is refused, not faked.
+
+    Every build route already accepts `?ci=` — this turns the refusal into the page
+    that says so, instead of a 500 that reads like a broken app."""
+    return ("<h2>Can't build this commander yet</h2>"
+            f"<p>{escape(e.message).replace(chr(10), '<br>')}</p>"
+            "<p>In the app, add <code>?ci=RW</code> (the commander's color identity) "
+            "to this URL to build immediately.</p>"), 409
 
 
 # --------------------------------------------------------------------------- #

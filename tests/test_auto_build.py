@@ -69,3 +69,67 @@ def test_scan_skip_excludes_that_deck(tmp_path):
     skipped = deck_conflicts.scan(str(tmp_path), idx, skip="a")
     assert full["Sol Ring"]["total"] == 2
     assert skipped["Sol Ring"]["total"] == 1        # deck "a" no longer counted
+
+
+# --------------------------------------------------------------------------- #
+# An UNKNOWN color identity is refused, never guessed
+#
+# Reproduced live 2026-08-20: Thorin, King of Durin's Folk was added to the
+# collection the same day, so he was in the pool but not yet enriched. `identity`
+# resolved to set(), `_color_legal` then admitted only colorless cards, and the
+# build returned a plausible-looking 43-artifact pile with 0 basics in entirely the
+# wrong colors — no error, no warning. `Card.identity` has no None-vs-empty
+# distinction to catch it, so `types` is the enrichment tell.
+# --------------------------------------------------------------------------- #
+def _nameonly_collection(tmp_path, commander="Mystery Commander"):
+    """A name-only pool: every card is present but nothing is enriched."""
+    p = tmp_path / "nameonly.txt"
+    lines = [f"1 {commander}"] + [f"1 Filler Card {i}" for i in range(120)]
+    p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return str(p)
+
+
+def test_an_unenriched_commander_is_refused_not_built_colorless(tmp_path):
+    import pytest
+    coll = mtglib.load_collection(_nameonly_collection(tmp_path))
+    idx = mtglib.index_by_name(coll)
+    with pytest.raises(auto_build.UnknownIdentity) as exc:
+        auto_build.build("Mystery Commander", coll, idx, decks_dir=None)
+    msg = exc.value.message
+    assert "UNKNOWN" in msg and "not colorless" in msg
+    assert "--identity" in msg, "the refusal must name the way out"
+    assert "carddb.py --verify" in msg, "and the verified source for it"
+
+
+def test_a_commander_absent_from_the_collection_is_also_refused(tmp_path):
+    import pytest
+    coll = mtglib.load_collection(_nameonly_collection(tmp_path))
+    idx = mtglib.index_by_name(coll)
+    with pytest.raises(auto_build.UnknownIdentity) as exc:
+        auto_build.build("Not In The Pool", coll, idx, decks_dir=None)
+    assert "isn't in the collection" in exc.value.message
+
+
+def test_an_explicit_identity_unblocks_the_same_build(big_collection_file, tmp_path):
+    """The escape hatch has to actually work: a verified identity builds normally."""
+    coll = mtglib.load_collection(big_collection_file)
+    idx = mtglib.index_by_name(coll)
+    d = auto_build.build("Test Commander", coll, idx, decks_dir=None, identity="WU")
+    assert d["total"] == 100
+
+
+def test_a_genuinely_colorless_commander_still_builds(tmp_path):
+    """The guard keys on ENRICHMENT, not on emptiness — an enriched commander with a
+    truly empty identity (Karn, Kozilek) must not be caught by it."""
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Colorless Boss,5,,,{5},Legendary Creature,Construct,rare,clr00000,1.00"]
+    for i in range(60):
+        rows.append(f"1,Grey Rock {i},2,,,{{2}},Artifact,,common,ar{i:06d},0.10")
+    for i in range(30):
+        rows.append(f"1,Waste Land {i},0,,,,Land,,common,wl{i:06d},0.10")
+    p = tmp_path / "colorless.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+    d = auto_build.build("Colorless Boss", coll, idx, decks_dir=None)   # must not raise
+    assert d["identity"] in ("C", "")
