@@ -1,0 +1,23 @@
+# Resilience staples — the CRISPI Resilience axis's two counted layers.
+# Role: protection = keeps a permanent alive / untargetable / phased out.
+#       recursion  = rebuilds after it dies (back to battlefield, hand or library).
+# EVERY row's text was read verbatim from a deck-verify runner log before it was
+# added (runs 32319382690 and 32319519924, 2026-08-20). Do not add a card from
+# memory — queue it in verify-queue.txt and push a claude/** branch first.
+# Colors are omitted on purpose: unlike role_staples.csv this list never feeds an
+# identity-filtered suggestion, so colour data would be unused weight.
+Role,Card
+protection,Swiftfoot Boots
+protection,Lightning Greaves
+protection,Heroic Intervention
+protection,Boros Charm
+protection,Clever Concealment
+protection,Snakeskin Veil
+protection,Darksteel Plate
+recursion,Sun Titan
+recursion,Sevinne's Reclamation
+recursion,Karmic Guide
+recursion,Serra Paragon
+recursion,Angelic Renewal
+recursion,Gift of Immortality
+recursion,Haunted Crossroads

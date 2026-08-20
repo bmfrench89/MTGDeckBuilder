@@ -8,6 +8,50 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-19._
 
+## CRISPI COMPLETE — four axes, composite retired (2026-08-20)
+
+Phases B, C and D shipped; the spec is now a record, not a work item.
+
+**The defect is dead and unrepresentable.** `power.py --rank` no longer prints a
+0-100 or a tier adjective anywhere — deleted outright, no `legacy_power`, per the
+player's call ("kill it all now"). `test_crispi_axes.test_composite_is_gone_from_the
+_payload` fails if a roll-up ever returns. Raw component counts SURVIVE; they were
+never the bug.
+
+**The stable now reads** (bracket → speed → interaction sort):
+
+| # | deck | bracket | speed | resilience | consistency |
+|---|---|---|---|---|---|
+| 1 | bartolome | 4 | combo (early) | prot 0 · rec 4 | redundancy-led |
+| 2 | yshtola | 3 | combo (setup) | prot 1 · rec 2 | redundancy-led |
+| 3-5 | cloud / spider / ur-dragon | 3 | combat T9 | — | redundancy-led |
+| 7-8 | bruce / tifa | 3 | slow (9%) / slow (16%) | prot 4 / prot 3 | redundancy-led |
+
+Bartolomé now ranks **first** rather than last — a twelve-infinite deck at the top,
+which is what the bracket always said and the composite always denied.
+
+**Resilience** is counted from `data/reference/resilience_staples.csv`, every row
+runner-verified (deck-verify runs 32319382690 + 32319519924) — 7 protection, 7
+recursion. Empty list yields "unmeasured", never "0 protection". A `# Resilience:
+low|medium|high` deck header mirrors `# Bracket:` for the judgement the data cannot
+make ("does it work if the commander dies twice?").
+
+**Consistency** reports the MECHANISM, not a score: tutor-led (7+ tutors) vs
+redundancy-led (roles at the 5-8 / 8-12 bands). This matters here because the stable
+runs 0-1 tutors everywhere — an axis counting only tutors would call all nine decks
+inconsistent, which the research explicitly contradicts.
+
+**Two-surfaces trap caught twice more this session**: the dashboard's stat tile and
+bracket line still read `power`/`tier` after the CLI was done (memo byte-identical
+tests caught it), and the webapp leaderboard sort + assess packet needed the new
+`power.rank_key_for` so CLI and app cannot drift into different orders.
+
+**Still open, deliberately**: Phase B.3 — whether the `--disruption` A/B delta may
+ever feed the Resilience score. Unratified, so unimplemented; `--disruption` stays a
+goldfish-only labelled experiment, which is the spec's own default.
+
+Suite 861 → **874**.
+
 ## Phase A revalidation: two fixes (2026-08-20)
 
 Post-merge re-audit of #143 found two real gaps, both fixed:

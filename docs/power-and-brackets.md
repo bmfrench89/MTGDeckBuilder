@@ -1,5 +1,17 @@
 # Power & Bracket rubric (how `power.py` scores a deck)
 
+> **⚠ REWRITTEN IN PART 2026-08-20 — the 0-100 power score described below no
+> longer exists.** `power.py` now reports the **four CRISPI axes beside the
+> bracket**: Speed (combo-first, falling back to the goldfish combat clock),
+> Resilience (counted protection + recursion, with a `# Resilience:` header for the
+> player's own verdict), Consistency (tutor-led vs redundancy-led against the 5-8 /
+> 8-12 bands) and Interaction (counted, cEDH reference band 12-18). The composite
+> and its tier adjective were deleted in `docs/spec-crispi-axes.md` Phase D: they
+> printed "Bracket 4 … 31/100 Casual" on a deck with twelve early infinites, because
+> the bracket and the composite measured different things and disagreed. Raw
+> component counts survive — they were never the problem. Everything below about
+> BRACKETS remains accurate.
+
 Grounded in WotC's official **Commander Bracket system** (beta Feb 2025; updated
 Oct 21 2025 and Feb 9 2026), cross-checked across the official articles + Scryfall
 `is:gamechanger` + EDHREC / MTG Wiki / aggregators. Card lists live in

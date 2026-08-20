@@ -333,7 +333,10 @@ def index():
         label = deck_conflicts.deck_label(m["path"])
         rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
                      "contested": short_by_deck.get(label, 0)})
-    rows.sort(key=lambda r: -(r["assess"]["power"] if r["assess"] else 0))
+    # Phase D: the 0-100 composite is gone, so the leaderboard sorts on shipped
+    # axes — bracket, then how fast the deck actually wins, then interaction.
+    # Explainable in one sentence, which the composite never was.
+    rows.sort(key=lambda r: power.rank_key_for(r["assess"]))
     brackets = sorted({r["assess"]["bracket"] for r in rows if r["assess"]})
     try:
         # "I just scanned these — where do they go?" Only fires when the collection
@@ -805,8 +808,13 @@ def _assess_packet(m):
     if assessment:
         sig = assessment["signals"]
         L.append("-- POWER & BRACKET --")
-        L.append(f"Bracket {assessment['bracket']} ({assessment['bracket_name']}) · "
-                 f"Power {assessment['power']}/100 ({assessment['tier']})")
+        L.append(f"Bracket {assessment['bracket']} ({assessment['bracket_name']})")
+        for nm, k in (("Speed", "speed"), ("Resilience", "resilience"),
+                      ("Consistency", "consistency")):
+            ax = assessment.get(k)
+            if ax:
+                L.append(f"  {nm}: {ax['label']} — {ax['detail']}")
+        L.append(f"  Interaction: {sig['interaction']} (cEDH band 12-18)")
         for r in assessment["bracket_reasons"]:
             L.append(f"  · {r}")
         L.append(f"  interaction {sig['interaction']} · ramp {sig['ramp']} · draw {sig['draw']} · "

@@ -1,9 +1,2 @@
-# Queued 2026-08-20 — CRISPI Phase B, second pass. The first run verified all 14
-# candidates but the log window only surfaced 8 verbatim; these 6 protection cards
-# are re-queued so their text is READ, not remembered, before they earn a CSV row.
-Swiftfoot Boots
-Lightning Greaves
-Heroic Intervention
-Boros Charm
-Clever Concealment
-Snakeskin Veil
+# Cleared 2026-08-20 — all 14 resilience candidates runner-verified (deck-verify
+# runs 32319382690 and 32319519924) and written into resilience_staples.csv.

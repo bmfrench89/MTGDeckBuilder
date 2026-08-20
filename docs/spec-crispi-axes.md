@@ -1,7 +1,11 @@
 # Spec — CRISPI axes for power.py (four honest numbers, one retired headline)
 
-**Status: PHASE A SHIPPED 2026-08-20 (Opus 5). Phases B/C/D not started — B.3 and
-D.1 still gated on the player questions at the foot of this file.**
+**Status: ✅ ALL PHASES SHIPPED 2026-08-20 (Opus 5). A #143/#144, B/C/D this PR.**
+D.1 was answered by the player — *"kill it all now"*: the composite AND its tier
+adjective are deleted outright, with no `legacy_power` afterlife, because a number
+kept-but-renamed is the same lie in a smaller font and gets re-displayed. B.3 remains
+UNRATIFIED and therefore unimplemented: the disruption A/B delta is not wired into
+the Resilience score, exactly as the spec's own default prescribes.
 (written by Fable 5, 2026-08-20, from the research in
 `.claude/skills/mtg-deckbuilder/references/strategy-shapes.md`).**
 Research PR: #140. Nothing here is started; every claim below was re-verified against
