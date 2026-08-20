@@ -85,10 +85,10 @@
 1 Haven of the Spirit Dragon
 1 Dark Fortress
 1 Spectacle Summit
-1 Study Hall
+1 Horizon of Progress
 1 Thriving Bluff
-1 Tranquil Cove
-1 Villainous Hideout
+1 Prairie Stream
+1 Clifftop Retreat
 1 Exotic Orchard
 1 Path of Ancestry
 1 Unclaimed Territory
@@ -96,10 +96,10 @@
 1 Maelstrom of the Spirit Dragon
 1 Twilight Mire
 1 Festering Thicket
-1 Fields of Strife
-1 Fire Nation Palace
+1 Sunbillow Verge
+1 Spectator Seating
 1 Training Compound
-1 Forum of Amity
+1 Hidden Lair
 1 Sunscorched Divide
 1 Deserted Beach
 1 Sheltered Thicket

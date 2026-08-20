@@ -8,6 +8,43 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-20._
 
+## Ur-Dragon mana audit: six lands upgraded on verified text; ramp package confirmed (2026-08-20)
+
+The player asked to be certain every mana card in the Ur-Dragon is the best the
+collection offers. Grounding caveat first: **the PC's private `collection.csv` is
+stale** — 2,289 uniques vs the committed snapshot's 2,782, a strict subset, and it
+lacks twelve cards the deck already runs (Wood Elves, Radagast, the Smaugs, Deserted
+Beach, Sheltered Thicket, Scattered Groves, Dragonspeaker Shaman, Savage Ventmaw,
+Dragonlord Silumgar, Desolation of Smaug). Every count below used
+`collection_snapshot.txt` + `collection_attrs.snapshot.csv` (FlagsVer 3, 100%
+produced-known); the PC export needs refreshing before it is trusted again.
+
+- **Pool counted**: 206 owned nonbasic lands, 141 owned 5c-legal rocks/dorks/ramp,
+  joined to free copies via `deck_conflicts.available_pool` (Roaming Throne pin
+  honoured). **128 texts verified** in one `carddb.py --verify` batch (0 unverified;
+  Scryfall is reachable from the PC).
+- **Ramp (10) unchanged** — it is the field's package (Sol Ring 89% … Rampant Growth
+  22%); nothing owned-and-free outranks any slot. Kodama's Reach / Dragon's Hoard /
+  Orbs of Dragonkind are the unowned gaps (buylist).
+- **Six land swaps, all `Source=manual-replace`**: Villainous Hideout (any colour only
+  for *Villain* spells — the deck has one) -> Clifftop Retreat; Study Hall ({1} filter
+  tax) -> Horizon of Progress (Reflecting Pool + extra land drop + cash-in draw);
+  Fields of Strife -> Sunbillow Verge; Forum of Amity -> Hidden Lair (B->U: U was 10 src
+  / 16 pips, B 11/11); Tranquil Cove -> Prairie Stream (typed: Farseek 14->15 targets);
+  Fire Nation Palace -> Spectator Seating (untapped with 2+ opponents). Sources W 14 ·
+  U 11 · B 11 · R 18 · G 15 (+4 Dragon-only); always-tapped lands 10 -> 7; keepable
+  79%, screw 16%, field overlap 21/25, optimizer "already aligned", sections clean.
+- **Sim honesty**: goldfish fairly measures two of the six (Fields->Sunbillow -0.027
+  turns, Forum->Hidden Lair -0.012, both CI-significant), ties two (both arms modelled
+  identically), and mis-scores two as downgrades — it ignores Villainous Hideout's
+  spend restriction, and **`oracle_flags._mana_added` reads Fire Nation Palace's
+  firebending reminder text as the land tapping for RRR** (`mana3`). That false
+  positive is a follow-up: scope `_mana_added` to the card's own mana abilities
+  (strip parenthetical reminder text / "whenever ... attacks" clauses) and regenerate
+  the attrs snapshot. Until then any sim touching Fire Nation Palace overrates it.
+- Still open, out of scope here: Unclaimed Territory and Secluded Courtyard are one
+  copy each committed to three decks (cap, spider, ur-dragon).
+
 ## Roaming Throne pinned to the Ur-Dragon; two decks swapped off it (2026-08-20)
 
 One physical copy was committed to **three** decks (`deck_conflicts.py`: own 1,

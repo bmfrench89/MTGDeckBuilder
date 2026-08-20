@@ -373,3 +373,71 @@ trigger).
 Radagast a downgrade now measures his absence as the harm. Ureni's case rests on
 abilities (protection, the ETB sweep) the sim still can't see; that override
 stands on the engine-read.
+
+## 2026-08-20 — full mana audit: every mana slot read against the whole pool (manual-replace, do not churn)
+
+Player asked to be *certain* the mana cards are the best the collection can offer.
+Method: the committed collection snapshot (2,782 uniques, attrs FlagsVer 3 — the
+local private CSV on the PC was 493 cards stale and missing twelve cards this deck
+runs, so it was not used), `deck_conflicts` for free copies (owned minus committed
+elsewhere; Roaming Throne pin honoured), `manabase.py` for sources vs pips, and
+**128 oracle texts verified in one batch** (`carddb.py --verify`, 0 unverified) —
+every land in the deck, every free owned land that could replace one, and every
+owned 5c-legal rock/dork/ramp card.
+
+**Nonland ramp (10) — unchanged, and it is the field's own package:** Sol Ring 89%,
+Arcane Signet 80, Farseek 60, Chromatic Lantern 52, Nature's Lore 42, Cultivate 41,
+Fellwar Stone 33, Rampant Growth 22, Wood Elves (fetches the typed duals), plus
+Ganax/Savage Ventmaw incidentally. Nothing owned-and-free beats any of them:
+Commander's Sphere (18%) and Patchwork Banner (7%) are the only other field-listed
+rocks, both 3-mana any-colour, both worse than Lantern; the Talismans/Signets are
+2-colour where the deck needs five; the 3-mana Manalith clones (Hot Dog Cart, Bobble-
+heads, Scroll, Trove, Quinjet, Veloheart) are strictly worse than Commander's Sphere;
+Gilded Goose is one-shot; Priest of Titania has one other Elf here. Kodama's Reach
+(32%), Dragon's Hoard, the Orbs of Dragonkind and Fist of Suns are not owned — buylist.
+
+**Lands — six swaps, all verified-text reads; the sim cannot see four of them** (it
+treats `etb-tapped-cond` as always tapped and ignores spend restrictions and filter
+costs — see `goldfish.py` assumptions):
+
+| out | verified problem | in | verified gain |
+|---|---|---|---|
+| Villainous Hideout | any colour **only for Villain spells/abilities** — the deck's one Villain is Fin Fang Foom, so for 98 cards it is a colourless land | Clifftop Retreat | R/W, untapped with a Mountain or Plains (10 typed enablers in the 36) |
+| Study Hall | {C}, or **{1},{T}** for a colour — a mana tax on every fix | Horizon of Progress | {T}, 1 life: any type a land you control produces (Reflecting Pool with a life point), plus `{3},{T}`: extra land drop from hand, and `{1},{T},sac`: draw |
+| Fields of Strife | always tapped R/W | Sunbillow Verge | W untapped always; R with a Mountain or Plains |
+| Forum of Amity | always tapped B/W; B was the only colour over-served (11 src / 11 pips) | Hidden Lair | {C} untapped; U/B the turn it enters or with a basic — U was the scarcest colour (10 src / 16 pips) |
+| Tranquil Cove | always tapped U/W + 1 life | Prairie Stream | U/W, **Plains Island typed** (Farseek's targets 14 -> 15), untapped with two basics |
+| Fire Nation Palace | mono-R; tapped without a basic; firebending mana only lives until end of combat | Spectator Seating | R/W, **untapped whenever you have 2+ opponents** — i.e. every pod game |
+
+Sources after: **W 14 · U 11 · B 11 · R 18 · G 15** (+4 Dragon-only any-colour: Haven,
+Maelstrom, Unclaimed Territory, Secluded Courtyard) vs pips W 15 / U 16 / B 11 / R 47 /
+G 24. Always-tapped lands 10 -> 7. 36 lands, ramp 10, 100 cards, singleton clean,
+sections clean, field overlap unchanged (21/25), optimizer "already aligned".
+
+Kept on the read: Dark Fortress and Training Compound ({C} untapped; colours with a
+basic or on the entry turn — the same cycle Hidden Lair joins); Twilight Mire (filter,
+BB/BG/GG off one coloured source); Sunscorched Divide ({1},{T}: {R}{W} — a filter that
+doubles the colour of the deck's heaviest pip); Thriving Bluff and Spectacle Summit
+(tapped, but R + a chosen colour / R-U with a surveil sink; no untapped R/U or R/G dual
+is free in the collection); the four typed cycling duals (fetchable by Farseek /
+Nature's Lore / Wood Elves); Canopy Vista, Turbulent Fen, Deserted Beach; the five
+Dragon lands. Basics stay 4 Mountain / 2 Forest / 2 Island / 1 Plains / 1 Swamp —
+they are mostly fetch targets, and R is the 47-pip colour.
+
+Goldfish, 5,000 paired games each (common random numbers): Fields->Sunbillow
+first-kill **-0.027** turns / damage **+0.51** (CI excludes 0); Forum->Hidden Lair
+**-0.012 / +0.32** (excludes 0); Study Hall->Horizon and Tranquil->Prairie exact ties
+(both arms modelled identically). The other two the sim scores as *downgrades*, and
+both are instrument artifacts, not verdicts: it models Villainous Hideout as an
+untapped any-colour land (the Villain restriction is not modelled) against Clifftop as
+always-tapped; and `oracle_flags` reads Fire Nation Palace's firebending reminder text
+("add {R}{R}{R}{R}") as the land's own production, so the sim taps it for **three**
+red — a flag false-positive (`_mana_added` scans granted-ability text), logged as a
+follow-up. The verified text is the verdict in both cases.
+
+Not touched, flagged: Unclaimed Territory and Secluded Courtyard are each one physical
+copy committed to three decks (cap, spider, here) — a cross-deck conflict, not a
+quality problem. Rhystic Cave (any player pays {1} to fizzle it), Henge of Ramos
+({2} filter), Lotus Field (sacrifice two lands), Baxter Building ({4}: four mana) and
+the type-restricted Marvel lands (Avengers Tower / Castle Doom / Jasmine Dragon Tea
+Shop) were all read and rejected.
