@@ -1,11 +1,78 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-21 — round 2's twenty texts (run 32450437172) are all in
-# data/reference/dina-verified-2026-08-21.txt and the verdicts are in
-# dina-essence-brewer.notes.md. Round 1 (run 32442182052): the four commander
-# candidates + Witherbloom college cards, quoted in the same notes file.
+# 2026-08-21 ROUND 1 — Treasure deck scouting. The player asked for a Treasure
+# deck. The collection is heavy on 2025-2026 crossover sets (LOTR, Marvel,
+# Marvel's Spider-Man, Final Fantasy, Fallout, Avatar, Lorwyn Eclipsed) whose
+# oracle text is on disk nowhere, so NO treasure claim below is trusted from
+# memory. These are (a) owned legendary creatures that plausibly produce or care
+# about Treasure, harvested from the collection's 420 legend-shaped names, and
+# (b) every owned card whose NAME suggests treasure/gold/artifact-value.
 #
-# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
-# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.
+# Grounding note: the classic treasure staples (Goldspan Dragon, Dockside,
+# Prosper, Academy Manufactor, Xorn, Revel in Riches, Old Gnawbone, Ognis,
+# Magda, Brass's Bounty) are ALL absent from the collection — confirmed by grep
+# against collection_snapshot.txt. Whatever treasure deck exists here is built
+# out of these names or it does not exist.
+
+# --- commander suspects (owned legendary creatures) ---
+Smaug, Wicked Worm
+Smaug the Impenetrable
+Smaug the Magnificent
+Smaug, the Great Calamity
+The Master of Lake-town
+Glóin the Mighty
+Yuffie, Materia Hunter
+Duchess, Wayward Tavernkeep
+Veronica, Dissident Scribe
+Mica, Reader of Ruins
+Whiplash, Vengeful Engineer
+Vulture, Scheming Scavenger
+Captain Howler, Sea Scourge
+Klaw, Sonic Subjugator
+The Kingpin of Crime
+Bullseye, Death Dealer
+Black Cat, Cunning Thief
+Prowler, Clawed Thief
+Superior Foes of Spider-Man
+Green Goblin, Revenant
+Kaervek the Merciless
+Godo, Bandit Warlord
+Laelia, the Blade Reforged
+Merchant of Venom
+June, Bounty Hunter
+Tombstone, Career Criminal
+Moonstone, Harsh Mistress
+Shriek, Treblemaker
+Scarlet Spider, Kaine
+Naktamun Lorespinner
+Cait Sith, Fortune Teller
+Squee, Goblin Nabob
+Carnage, Crimson Chaos
+Thorin, Mountain-king
+Balin, Loremaster
+Óin the Brave
+
+# --- owned cards whose name suggests treasure / gold / artifact value ---
+Seize the Spoils
+Coveted Jewel
+Gold Rush
+The Gold Saucer
+Explosion of Riches
+Plunder the Trollshaws
+Bejeweled Warg
+Diamond Pick-Axe
+Currency Converter
+Crooked Scales
+Relic Retriever
+Scrap Compactor
+Vault 101: Birthday Party
+Vault 21: House Gambit
+Jeweled Torque
+Desolation of Smaug
+Smaug's Fury
+Prosperity
+Credit Voucher
+Costume Closet
+Futurist Forge
+Cosmic Cube
