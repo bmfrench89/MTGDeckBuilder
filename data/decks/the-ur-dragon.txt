@@ -43,6 +43,7 @@
 1 Sarkhan, Soul Aflame
 1 Dragonspeaker Shaman
 1 Smaug the Magnificent
+1 Roaming Throne
 
 # --- Instants ---
 1 Assassin's Trophy
@@ -52,8 +53,6 @@
 1 Path to Exile
 1 Swords to Plowshares
 1 Heroic Intervention
-
-# --- Sorceries ---
 1 Rampant Growth
 1 Cultivate
 1 Farseek
@@ -66,7 +65,6 @@
 1 Arcane Signet
 1 Sol Ring
 1 Fellwar Stone
-1 Roaming Throne
 1 Lightning Greaves
 1 Chromatic Lantern
 
@@ -84,28 +82,28 @@
 1 Command Tower
 1 Haven of the Spirit Dragon
 1 Dark Fortress
-1 Spectacle Summit
+1 Stormcarved Coast
 1 Horizon of Progress
-1 Thriving Bluff
+1 Cinder Glade
 1 Prairie Stream
-1 Clifftop Retreat
+1 Turbulent Steppe
 1 Exotic Orchard
 1 Path of Ancestry
-1 Unclaimed Territory
+1 Fabled Passage
 1 Secluded Courtyard
 1 Maelstrom of the Spirit Dragon
 1 Twilight Mire
-1 Festering Thicket
+1 Willowrush Verge
 1 Sunbillow Verge
 1 Spectator Seating
 1 Training Compound
 1 Hidden Lair
 1 Sunscorched Divide
 1 Deserted Beach
-1 Sheltered Thicket
+1 Rootbound Crag
 1 Scattered Groves
-1 Wooded Ridgeline
-1 Canopy Vista
+1 Jungle Shrine
+1 Riverpyre Verge
 1 Turbulent Fen
 
 # --- Basics ---
