@@ -8,6 +8,69 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-21._
 
+## Treasure deck scouting — commander shortlist, 2026-08-21
+
+The player asked to build a Treasures deck. No deck file exists yet; this is the grounded
+scouting that precedes the build, and the commander choice is **with the player**.
+
+**The census is the finding.** A name-grep of `collection_snapshot.txt` for
+`gold|treasure|riches|plunder|hoard` returns 13 cards and supports the wrong verdict — that
+the collection has no treasure support. So every one of the **2,776 non-basic cards** went
+through `carddb.py --verify` on the runner (`deck-verify.yml`, six runs; the full-collection
+run's log is bounded so it was re-run in ~520-card chunks). Verbatim text is in
+**`data/reference/treasure-verified-2026-08-21.txt`**: **57 owned Treasure producers**,
+3 alternate win conditions, 25 artifact-count/sacrifice payoffs, 4 symmetric pingers.
+The ones a name search cannot find are the ones that matter — Relic Retriever, Stark
+Industries Executive, Currency Converter, The Misty Mountains Cold, HYDRA Assault Robot.
+
+The classic pool is genuinely absent: no Goldspan Dragon, Dockside, Prosper, Xorn, Academy
+Manufactor, Magda, Old Gnawbone, Brass's Bounty, Revel in Riches, Mechanized Production.
+
+Field snapshots pulled this branch (basics excluded):
+
+| commander | decks | top-25 | top-50 | top-100 | producers legal |
+|---|---:|---:|---:|---:|---:|
+| **Thorin, King of Durin's Folk** (RW) | 3,588 | **20 (80%)** | 36 (72%) | 63 (63%) | 37 |
+| Smaug, Wicked Worm (BR) | 1,866 | 11 (44%) | 21 (42%) | 36 (36%) | 42 |
+| Smaug the Impenetrable (BR) | 3,821 | 11 (44%) | 18 (36%) | 35 (35%) | 42 |
+| Smaug the Magnificent (R) | 2,859 | 10 (40%) | 18 (36%) | 28 (28%) | 33 |
+| Atsushi, the Blazing Sky (R) | 198 | 7 (28%) | 16 (32%) | 25 (25%) | 33 |
+
+**Thorin is the recommendation and it is not close** — 32 Dwarves / 68 copies, and *every
+card in the package is uncommitted*. Its engine is Dwarf-ETB Treasures (Fíli turns each
+nontoken Dwarf into a token Dwarf, which triggers Thorin again; Bifur doubles every Dwarf
+trigger once Storied is on, which two Treasures does). Win con: Balin, Loremaster's X damage
+to each opponent, plus Hellkite Tyrant at twenty artifacts. Honest caveat recorded for the
+player: it is Dwarf tribal *running on* Treasure, not a Treasure-theme deck.
+
+**Two traps worth keeping.**
+
+1. **The Smaug builds cannibalise the Ur-Dragon.** Smaug the Magnificent and Smaug the
+   Impenetrable are single copies already sleeved there; Fiery Emancipation's only copy is in
+   the brother's Bruce Banner gift deck. Smaug, Wicked Worm is the exception — 4 copies, 1
+   committed.
+2. **Smaug the Impenetrable's infinite does NOT assemble today.** Indestructible +
+   damage-into-Treasure loops with any repeatable symmetric pinger, but all four owned
+   pingers fail: Crypt Rats is a 1/1 that dies to its own activation, Warmonger cannot hit a
+   flier, Thermo-Alchemist only hits opponents, Noxious Field taps. Pestilence or Pyrohemia
+   (a couple of dollars) closes it. Buy list, not a combo claim.
+
+**Revalidated 2026-08-21 by a second model, independently:** every number above
+reproduced — the census counts (57 / 33 / 42 / 37), the field table digit-for-digit,
+both Smaug rebuilds under the same 8-deck baseline (13-in-deck/12-unowned and
+11-in-deck/14-unowned, both ending in the optimizer's "can't improve from your
+collection"), Thorin's deck (100 cards, singleton clean, optimizer idempotent,
+goldfish identical at seed 0). Three corrections from the recount, none changing
+the verdict: the Thorin 99 carries **11** Treasure producers, not 10 — Dori,
+Bearer of Friends was missed because GitHub Actions log-masking garbled its name
+in the census corpus (repaired in the reference file); the census corpus was
+missing the 7 chunk-5 texts (Skirmish Rhino…Skycoach Conductor, none
+treasure-relevant, re-harvested); and the Impenetrable-loop check now covers six
+pinger candidates, not four — Cave-In (one-shot sorcery) and Gangrenous Zombies
+(self-sacrifice) also fail, so Pestilence/Pyrohemia remains the one missing card.
+
+Shortlist published as an artifact for the player; the deck build waits on their pick.
+
 ## New deck — Dina, Essence Brewer (Witherbloom aristocrats), 2026-08-21
 
 The player asked whether the collection supports "Dina or Witherbloom". It holds **four**

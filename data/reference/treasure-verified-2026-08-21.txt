@@ -1,0 +1,595 @@
+# Treasure census — verified verbatim from Scryfall, 2026-08-21
+#
+# HOW THIS WAS MADE. The player asked for a Treasure deck. Rather than
+# recognising treasure cards by name — which would have missed Relic Retriever,
+# Stark Industries Executive, Currency Converter, The Misty Mountains Cold and
+# most of this file — every one of the collection's 2,776 non-basic cards was
+# put through `carddb.py --verify` on a GitHub runner (deck-verify.yml, runs
+# 32508278331 / 32508971642 / 32509059736 / 32509085226 / 32509119407 and one
+# workflow_dispatch), and the resulting verbatim oracle text was matched for the
+# mechanics below. 2,776 of 2,776 cards were read. Nothing here is from memory.
+#
+# WHAT IT IS FOR. Grounding rule #2 says count the pool. This is the count, with
+# the text that justifies each entry, so a future session does not have to
+# re-run 2,776 Scryfall lookups to answer "does this collection do Treasures?"
+#
+# THE ANSWER: yes. 57 owned cards create Treasure tokens.
+#
+# Reminder text in parentheses was used to EXCLUDE matches, not include them —
+# a card that only mentions Treasure in a reminder clause is not a producer.
+#
+# REVALIDATED 2026-08-21 (second model, independent classifier): all counts
+# reproduced — 57 producers, 33 mono-R / 42 Rakdos / 37 Boros legal, 3 alt-wins,
+# 4 symmetric pingers. One repair: "Dori, Bearer of Friends" appeared here under
+# a GitHub-Actions log-masked name ("Dori, *** Friends"); the true name is
+# restored from the collection snapshot and EDHREC field data, which both carry
+# it. Its oracle text was unaffected. Two further pinger-shaped cards (Cave-In,
+# Gangrenous Zombies) were checked against the Smaug the Impenetrable loop and
+# also fail — one-shot sorcery and self-sacrifice respectively — so the
+# one-card-away verdict stands against six candidates, not four.
+
+
+========================================================================
+TREASURE PRODUCERS — 57 owned
+========================================================================
+
+Deadly Dispute  {1}{B}
+  Instant
+  identity: B · commander-legal: yes · MSC 794 · via scryfall
+  | As an additional cost to cast this spell, sacrifice an artifact or creature.
+  | Draw two cards and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Heartless Pillage  {2}{B}
+  Sorcery
+  identity: B · commander-legal: yes · 2XM 96 · via scryfall
+  | Target opponent discards two cards.
+  | Raid — If you attacked this turn, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark  {3}{B}{B}
+  (asked for "Sidequest: Hunt the Mark" — Scryfall resolved it to this card)
+  Enchantment // Legendary Creature — Dragon
+  identity: B · commander-legal: yes · FIN 119 · via scryfall
+  | When this enchantment enters, destroy up to one target creature.
+  | At the beginning of your end step, if a creature died under an opponent's control this turn, create a Treasure token. Then if you control three or more Treasures, transform this enchantment. // {1}{B}, Sacrifice another creature or artifact: Yiazmat gains indestructible until end of turn. Tap it.
+
+The Sackville-Bagginses  {1}{B}
+  Legendary Creature — Halfling Citizen
+  identity: B · commander-legal: yes · HOB 83 · via scryfall
+  | When The Sackville-Bagginses enter, you may sacrifice another creature or artifact. If you do, draw a card and create a Treasure token.
+  | Whenever you sacrifice a token, target opponent loses 1 life.
+
+Undercity Dire Rat  {1}{B}
+  Creature — Rat
+  identity: B · commander-legal: yes · FIN 123 · via scryfall
+  | Rat Tail — When this creature dies, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Decadent Dragon // Expensive Taste  {2}{R}{R} // {2}{B}
+  Creature — Dragon // Instant — Adventure
+  identity: B R · commander-legal: yes · WOE 223 · via fuzzy
+  | Flying, trample
+  | Whenever this creature attacks, create a Treasure token. // Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.
+
+Smaug the Impenetrable  {5}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · HOC 9 · via scryfall
+  | Flying, indestructible, haste
+  | Whenever Smaug is dealt noncombat damage, create that many Treasure tokens.
+
+Smaug, Wicked Worm  {3}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · HOB 164 · via scryfall
+  | Flying
+  | When Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.
+  | Whenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.
+
+Ultimate Green Goblin  {1}{B/R}{B/R}
+  Legendary Creature — Goblin Villain
+  identity: B R · commander-legal: yes · SPM 157 · via scryfall
+  | At the beginning of your upkeep, discard a card, then create a Treasure token.
+  | Mayhem {2}{B/R} (You may cast this card from your graveyard for {2}{B/R} if you discarded it this turn. Timing rules still apply.)
+
+Lotho, Corrupt Shirriff  {W}{B}
+  Legendary Creature — Halfling Rogue
+  identity: B W · commander-legal: yes · LTR 213 · via scryfall
+  | Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Ant-Man's Army  {2}{G}
+  Creature — Insect
+  identity: G · commander-legal: yes · MSH 161 · via scryfall
+  | When this creature enters, create a Food token or a Treasure token. (A Food token is an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life." A Treasure token is an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Bejeweled Warg  {1}{G}
+  Creature — Wolf
+  identity: G · commander-legal: yes · HOB 117 · via scryfall
+  | Trample
+  | Whenever this creature deals combat damage to a player, choose one —
+  | • Put a +1/+1 counter on target Wolf you control.
+  | • Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Bilbo, Fellow Conspirator  {2}{G}
+  Legendary Creature — Halfling Citizen
+  identity: G · commander-legal: yes · HOC 4 · via scryfall
+  | If you would create a Food token, instead create a Food token and a Treasure token.
+
+Gold Rush  {1}{G}
+  Instant
+  identity: G · commander-legal: yes · OTJ 166 · via scryfall
+  | Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control.
+
+Pictures of Spider-Man  {2}{G}
+  Artifact
+  identity: G · commander-legal: yes · SPM 109 · via scryfall
+  | When this artifact enters, look at the top five cards of your library. You may reveal up to two creature cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.
+  | {1}, {T}, Sacrifice this artifact: Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Professional Wrestler  {3}{G}
+  Creature — Human Warrior Performer
+  identity: G · commander-legal: yes · SPM 110 · via scryfall
+  | When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | This creature can't be blocked by more than one creature.
+
+Rocketeer Boostbuggy  {R}{G}
+  Artifact — Vehicle
+  identity: G R · commander-legal: yes · DFT 220 · via scryfall
+  | Whenever this Vehicle attacks, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Exhaust — {3}: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it. (Activate each exhaust ability only once.)
+  | Crew 1
+
+Cloud, Ex-SOLDIER  {2}{R}{G}{W}
+  Legendary Creature — Human Soldier Mercenary
+  identity: G R W · commander-legal: yes · FIC 2 · via scryfall
+  | Haste
+  | When Cloud enters, attach up to one target Equipment you control to it.
+  | Whenever Cloud attacks, draw a card for each equipped attacking creature you control. Then if Cloud has power 7 or greater, create two Treasure tokens.
+
+Atsushi, the Blazing Sky  {2}{R}{R}
+  Legendary Creature — Dragon Spirit
+  identity: R · commander-legal: yes · SOC 236 · via scryfall
+  | Flying, trample
+  | When Atsushi dies, choose one —
+  | • Exile the top two cards of your library. Until the end of your next turn, you may play those cards.
+  | • Create three Treasure tokens.
+
+Big Score  {3}{R}
+  Instant
+  identity: R · commander-legal: yes · MSC 802 · via scryfall
+  | As an additional cost to cast this spell, discard a card.
+  | Draw two cards and create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Contract Hero  {2}{R}
+  Creature — Human Mercenary Hero
+  identity: R · commander-legal: yes · MSC 683 · via scryfall
+  | When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Whenever this creature attacks, you may sacrifice an artifact or discard a card. If you do, this creature gets +2/+0 until end of turn.
+
+Death to Our Enemies  {2}{R}
+  Enchantment — Plan
+  identity: R · commander-legal: yes · MSH 127 · via scryfall
+  | Whenever you cast a noncreature spell, create a tapped Treasure token and put a plan counter on this enchantment.
+  | When the fourth plan counter is put on this enchantment, sacrifice it. When you do, it deals 7 damage divided as you choose among one or two targets.
+
+Diamond Pick-Axe  {R}
+  Artifact — Equipment
+  identity: R · commander-legal: yes · LCI 143 · via scryfall
+  | Indestructible (Effects that say "destroy" don't destroy this Equipment.)
+  | Equipped creature gets +1/+1 and has "Whenever this creature attacks, create a Treasure token." (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Equip {2}
+
+Dori, Bearer of Friends  {2}{R}
+  Legendary Creature — Dwarf Warrior
+  identity: R · commander-legal: yes · HOB 94 · via scryfall
+  | Trample
+  | When Dori enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Ganax, Astral Hunter  {4}{R}
+  Legendary Creature — Dragon
+  identity: R · commander-legal: yes · CLB 176 · via scryfall
+  | Flying
+  | Whenever Ganax or another Dragon you control enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Choose a Background (You can have a Background as a second commander.)
+
+Gilded Ghoda  {1}{R}
+  Creature — Horse Mount
+  identity: R · commander-legal: yes · DFT 130 · via scryfall
+  | Whenever this creature attacks while saddled, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Saddle 1 (Tap any number of other creatures you control with total power 1 or more: This Mount becomes saddled until end of turn. Saddle only as a sorcery.)
+
+Goblin Glasswright // Craft with Pride  {1}{R} // {R}
+  Creature — Goblin Sorcerer // Sorcery
+  identity: R · commander-legal: yes · SOS 117 · via fuzzy
+  | This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.) // Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Heroes for Hire  {3}{R}{R}
+  Enchantment
+  identity: R · commander-legal: yes · MSC 688 · via scryfall
+  | When this enchantment enters, create three Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Sacrifice a Treasure: Exile the top card of your library. You may play it this turn.
+
+Luke Cage, Hero for Hire  {2}{R}{R}
+  Legendary Creature — Human Mercenary Hero
+  identity: R · commander-legal: yes · MSC 696 · via scryfall
+  | Trample
+  | At the beginning of combat on your turn, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Megaton's Fate  {5}{R}
+  Sorcery
+  identity: R · commander-legal: yes · PIP 61 · via scryfall
+  | Choose one —
+  | • Disarm — Destroy target artifact. Create four Treasure tokens.
+  | • Detonate — Megaton's Fate deals 8 damage to each creature. Each player gets four rad counters.
+
+Mine Raider  {2}{R}
+  Creature — Human Rogue
+  identity: R · commander-legal: yes · OTJ 135 · via scryfall
+  | Trample
+  | When this creature enters, if you control another outlaw, create a Treasure token. (Assassins, Mercenaries, Pirates, Rogues, and Warlocks are outlaws. A Treasure token is an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Professional Face-Breaker  {2}{R}
+  Creature — Human Warrior
+  identity: R · commander-legal: yes · SNC 116 · via scryfall
+  | Menace
+  | Whenever one or more creatures you control deal combat damage to a player, create a Treasure token.
+  | Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn.
+
+Prompto Argentum  {1}{R}
+  Legendary Creature — Human Scout
+  identity: R · commander-legal: yes · FIN 148 · via scryfall
+  | Haste
+  | Selfie Shot — Whenever you cast a noncreature spell, if at least four mana was spent to cast it, create a Treasure token.
+
+Reckless Lackey  {R}
+  Creature — Goblin Pirate
+  identity: R · commander-legal: yes · OTJ 140 · via scryfall
+  | First strike, haste
+  | {2}{R}, Sacrifice this creature: Draw a card and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Relic Retriever  {1}{R}
+  Creature — Spirit Monkey
+  identity: R · commander-legal: yes · SOC 35 · via scryfall
+  | First strike
+  | At the beginning of each end step, if a card left your graveyard this turn, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Seize the Spoils  {2}{R}
+  Sorcery
+  identity: R · commander-legal: yes · SOS 129 · via scryfall
+  | As an additional cost to cast this spell, discard a card.
+  | Draw two cards and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Smaug the Magnificent  {2}{R}{R}
+  Legendary Creature — Dragon
+  identity: R · commander-legal: yes · HOB 110 · via scryfall
+  | Flying, haste
+  | Whenever Smaug attacks, he deals damage equal to the number of Treasures you control to any target.
+  | At the beginning of your upkeep, create a Treasure token.
+
+Stark Industries Executive  {R}
+  Creature — Human Advisor
+  identity: R · commander-legal: yes · MSH 153 · via scryfall
+  | {2}, {T}: Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Sticky Fingers  {R}
+  Enchantment — Aura
+  identity: R · commander-legal: yes · SNC 124 · via scryfall
+  | Enchant creature
+  | Enchanted creature has menace and "Whenever this creature deals combat damage to a player, create a Treasure token." (It can't be blocked except by two or more creatures. The token is an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | When enchanted creature dies, draw a card.
+
+The Misty Mountains Cold  {2}{R}
+  Enchantment — Saga
+  identity: R · commander-legal: yes · HOB 104 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying. (A Treasure token is an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+The Reaver Cleaver  {2}{R}
+  Legendary Artifact — Equipment
+  identity: R · commander-legal: yes · DMC 8 · via scryfall
+  | Equipped creature gets +1/+1 and has trample and "Whenever this creature deals combat damage to a player or planeswalker, create that many Treasure tokens."
+  | Equip {3}
+
+Vault 21: House Gambit  {1}{R}
+  Enchantment — Saga
+  identity: R · commander-legal: yes · PIP 69 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)
+  | I, II — Discard a card, then draw a card.
+  | III — Reveal up to five nonland cards from your hand. For each of those cards that has the same mana value as another card revealed this way, create a Treasure token.
+
+Ant-Man, Elusive Avenger  {1}{U}{R}
+  Legendary Creature — Human Rogue Hero
+  identity: R U · commander-legal: yes · MSC 73 · via scryfall
+  | Ant-Man can't be blocked by creatures with greater power.
+  | Whenever Ant-Man deals combat damage to a player, create that many Treasure tokens.
+
+Thorin, King of Durin's Folk  {3}{R}{W}
+  Legendary Creature — Dwarf Noble
+  identity: R W · commander-legal: yes · HOC 3 · via scryfall
+  | Whenever Thorin or another Dwarf you control enters, create a Treasure token.
+  | Other Dwarves you control get +1/+0 for each artifact token you control.
+
+An Offer You Can't Refuse  {U}
+  Instant
+  identity: U · commander-legal: yes · FDN 160 · via scryfall
+  | Counter target noncreature spell. Its controller creates two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Gleaming Splendor  {1}{W}
+  Enchantment
+  identity: W · commander-legal: yes · HOB 15 · via scryfall
+  | Whenever an opponent draws their second card each turn, you create a Treasure token.
+  | {2}{W}: Two target players each draw a card.
+
+Monologue Tax  {2}{W}
+  Enchantment
+  identity: W · commander-legal: yes · MSC 139 · via scryfall
+  | Whenever an opponent casts their second spell each turn, you create a Treasure token.
+
+Tataru Taru  {1}{W}
+  Legendary Creature — Dwarf Advisor
+  identity: W · commander-legal: yes · FIC 30 · via scryfall
+  | When Tataru Taru enters, you draw a card and target opponent may draw a card.
+  | Scions' Secretary — Whenever an opponent draws a card, if it isn't that player's turn, create a tapped Treasure token. This ability triggers only once each turn.
+
+Currency Converter  {1}
+  Artifact
+  identity: colorless · commander-legal: yes · MSC 197 · via scryfall
+  | Whenever you discard a card, you may exile that card from your graveyard.
+  | {2}, {T}: Draw a card, then discard a card.
+  | {T}: Put a card exiled with this artifact into its owner's graveyard. If it's a land card, create a Treasure token. If it's a nonland card, create a 2/2 black Rogue creature token.
+
+Dragon-Cursed Halls  —
+  Land
+  identity: colorless · commander-legal: yes · HOC 8 · via scryfall
+  | {T}: Add {C}.
+  | {1}, {T}: Until end of turn, target creature gains "Whenever this creature deals combat damage to a player, create a Treasure token."
+
+Gleaming Barrier  {2}
+  Artifact Creature — Wall
+  identity: colorless · commander-legal: yes · FDN 252 · via scryfall
+  | Defender
+  | When this creature dies, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Long-Bodied Grey Dog  {3}
+  Creature — Dog
+  identity: colorless · commander-legal: yes · HOB 1 · via scryfall
+  | Flash
+  | Reach
+  | When this creature enters, create a tapped Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+Luxurious Locomotive  {5}
+  Artifact — Vehicle
+  identity: colorless · commander-legal: yes · OTJ 244 · via scryfall
+  | Whenever this Vehicle attacks, create a Treasure token for each creature that crewed it this turn. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Crew 1. Activate only once each turn. (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)
+
+Orcrist, Goblin-cleaver  {3}
+  Legendary Artifact — Equipment
+  identity: colorless · commander-legal: yes · HOB 177 · via scryfall
+  | Equipped creature gets +2/+2 and has trample.
+  | Whenever equipped creature deals combat damage to a player, choose a creature type. Create a Treasure token for each creature you control of that type.
+  | Equip {3}
+
+Redrock Sentinel  {3}
+  Artifact Creature — Golem
+  identity: colorless · commander-legal: yes · OTJ 247 · via scryfall
+  | Defender
+  | {2}, {T}, Sacrifice a land: Draw a card and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+The Gold Saucer  —
+  Land — Town
+  identity: colorless · commander-legal: yes · FIN 279 · via scryfall
+  | {T}: Add {C}.
+  | {2}, {T}: Flip a coin. If you win the flip, create a Treasure token.
+  | {3}, {T}, Sacrifice two artifacts: Draw a card.
+
+Ticket Tortoise  {2}
+  Artifact Creature — Turtle
+  identity: colorless · commander-legal: yes · DFT 245 · via scryfall
+  | Defender
+  | When this creature enters, if an opponent controls more lands than you, you create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+
+
+========================================================================
+ALTERNATE WIN CONDITIONS — 3 owned
+========================================================================
+
+Call the Spirit Dragons  {W}{U}{B}{R}{G}
+  Enchantment
+  identity: B G R U W · commander-legal: yes · TDM 174 · via scryfall
+  | Dragons you control have indestructible.
+  | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way, you win the game.
+
+Hellkite Tyrant  {4}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · PLST RVR-111 · via scryfall
+  | Flying, trample
+  | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls.
+  | At the beginning of your upkeep, if you control twenty or more artifacts, you win the game.
+
+Laboratory Maniac  {2}{U}
+  Creature — Human Wizard
+  identity: U · commander-legal: yes · INR 71 · via scryfall
+  | If you would draw a card while your library has no cards in it, you win the game instead.
+
+
+========================================================================
+ARTIFACT-COUNT / SACRIFICE PAYOFFS — 25 owned
+========================================================================
+
+Chitin Gravestalker  {5}{B}
+  Creature — Insect Warrior
+  identity: B · commander-legal: yes · DFT 79 · via scryfall
+  | This spell costs {1} less to cast for each artifact and/or creature card in your graveyard.
+  | Cycling {2} ({2}, Discard this card: Draw a card.)
+
+Smothering Abomination  {2}{B}{B}
+  Creature — Eldrazi
+  identity: B · commander-legal: yes · SOC 226 · via scryfall
+  | Devoid (This card has no color.)
+  | Flying
+  | At the beginning of your upkeep, sacrifice a creature.
+  | Whenever you sacrifice a creature, draw a card.
+
+The Sackville-Bagginses  {1}{B}
+  Legendary Creature — Halfling Citizen
+  identity: B · commander-legal: yes · HOB 83 · via scryfall
+  | When The Sackville-Bagginses enter, you may sacrifice another creature or artifact. If you do, draw a card and create a Treasure token.
+  | Whenever you sacrifice a token, target opponent loses 1 life.
+
+Dina, Essence Brewer  {1}{B}{G}
+  Legendary Creature — Dryad Druid
+  identity: B G · commander-legal: yes · SOC 1 · via scryfall
+  | Whenever you sacrifice a creature, draw a card. This ability triggers only once each turn.
+  | {2}, {T}, Sacrifice another creature: You gain X life and put X +1/+1 counters on target creature you control, where X is the sacrificed creature's power.
+
+Smaug, Wicked Worm  {3}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · HOB 164 · via scryfall
+  | Flying
+  | When Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.
+  | Whenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.
+
+Haunt the Network  {3}{U}{B}
+  Sorcery
+  identity: B U · commander-legal: yes · DFT 207 · via scryfall
+  | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X is the number of artifacts you control.
+
+Ooze Patrol  {3}{G}
+  Creature — Ooze
+  identity: G · commander-legal: yes · DFT 172 · via scryfall
+  | When this creature enters, mill two cards, then put a +1/+1 counter on this creature for each artifact and/or creature card in your graveyard. (To mill two cards, put the top two cards of your library into your graveyard.)
+
+Tireless Tracker  {2}{G}
+  Creature — Human Scout
+  identity: G · commander-legal: yes · EOC 110 · via scryfall
+  | Landfall — Whenever a land you control enters, investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.")
+  | Whenever you sacrifice a Clue, put a +1/+1 counter on this creature.
+
+Anzrag's Rampage  {3}{R}{R}
+  Sorcery
+  identity: R · commander-legal: yes · MKM 111 · via scryfall
+  | Destroy all artifacts you don't control, then exile the top X cards of your library, where X is the number of artifacts that were put into graveyards from the battlefield this turn. You may put a creature card exiled this way onto the battlefield. It gains haste. Return it to your hand at the beginning of the next end step.
+
+Avalanche of Sector 7  {2}{R}
+  Legendary Creature — Human Rebel
+  identity: R · commander-legal: yes · FIC 53 · via scryfall
+  | Menace
+  | Avalanche of Sector 7's power is equal to the number of artifacts your opponents control.
+  | Whenever an opponent activates an ability of an artifact they control, Avalanche of Sector 7 deals 1 damage to that player.
+
+Chandra, Spark Hunter  {3}{R}
+  Legendary Planeswalker — Chandra
+  identity: R · commander-legal: yes · DFT 116 · via scryfall
+  | At the beginning of combat on your turn, choose up to one target Vehicle you control. Until end of turn, it becomes an artifact creature and gains haste.
+  | +2: You may sacrifice an artifact or discard a card. If you do, draw a card.
+  | 0: Create a 3/2 colorless Vehicle artifact token with crew 1.
+  | −7: You get an emblem with "Whenever an artifact you control enters, this emblem deals 3 damage to any target."
+
+Dragon's Desire  {2}{R}{R}
+  Sorcery
+  identity: R · commander-legal: yes · HOC 11 · via scryfall
+  | Add {R} for each artifact your opponents control.
+
+HYDRA Assault Robot  {1}{R}
+  Artifact Creature — Robot Villain
+  identity: R · commander-legal: yes · MSH 137 · via scryfall
+  | Whenever another Villain and/or artifact you control enters, this creature deals 1 damage to target opponent.
+
+Hellkite Tyrant  {4}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · PLST RVR-111 · via scryfall
+  | Flying, trample
+  | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls.
+  | At the beginning of your upkeep, if you control twenty or more artifacts, you win the game.
+
+Machinesmith Automaton  {2}{R}
+  Artifact Creature — Robot Villain
+  identity: R · commander-legal: yes · MSH 144 · via scryfall
+  | Trample
+  | Whenever another artifact you control enters, put a +1/+1 counter on this creature.
+
+Thorin, King of Durin's Folk  {3}{R}{W}
+  Legendary Creature — Dwarf Noble
+  identity: R W · commander-legal: yes · HOC 3 · via scryfall
+  | Whenever Thorin or another Dwarf you control enters, create a Treasure token.
+  | Other Dwarves you control get +1/+0 for each artifact token you control.
+
+Donatello, Way with Machines  {2}{U}
+  Legendary Creature — Mutant Ninja Turtle
+  identity: U · commander-legal: yes · TMT 38 · via scryfall
+  | Flying
+  | Whenever an artifact you control enters, put a +1/+1 counter on Donatello.
+
+Fateful Discovery  {3}{U}{U}
+  Enchantment
+  identity: U · commander-legal: yes · HOB 40 · via scryfall
+  | Whenever an artifact you control enters, draw a card.
+
+Simulacrum Synthesizer  {2}{U}
+  Artifact
+  identity: U · commander-legal: yes · BIG 6 · via scryfall
+  | When this artifact enters, scry 2.
+  | Whenever another artifact you control with mana value 3 or greater enters, create a 0/0 colorless Construct artifact creature token with "This token gets +1/+1 for each artifact you control."
+
+All That Glitters  {1}{W}
+  Enchantment — Aura
+  identity: W · commander-legal: yes · CMM 9 · via scryfall
+  | Enchant creature
+  | Enchanted creature gets +1/+1 for each artifact and/or enchantment you control.
+
+Bronze Guardian  {4}{W}
+  Artifact Creature — Golem
+  identity: W · commander-legal: yes · C21 13 · via scryfall
+  | Double strike
+  | Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)
+  | Other artifacts you control have ward {2}.
+  | Bronze Guardian's power is equal to the number of artifacts you control.
+
+Dispatch  {W}
+  Instant
+  identity: W · commander-legal: yes · MSC 130 · via scryfall
+  | Tap target creature.
+  | Metalcraft — If you control three or more artifacts, exile that creature.
+
+Haliya, Guided by Light  {2}{W}
+  Legendary Creature — Human Soldier
+  identity: W · commander-legal: yes · EOE 19 · via scryfall
+  | Whenever Haliya or another creature or artifact you control enters, you gain 1 life.
+  | At the beginning of your end step, draw a card if you've gained 3 or more life this turn.
+  | Warp {W} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)
+
+Puresteel Paladin  {W}{W}
+  Creature — Human Knight
+  identity: W · commander-legal: yes · CMM 51 · via scryfall
+  | Whenever an Equipment you control enters, you may draw a card.
+  | Metalcraft — Equipment you control have equip {0} as long as you control three or more artifacts.
+
+Ultron, Artificial Malevolence  {3}
+  Legendary Artifact Creature — Robot Villain
+  identity: colorless · commander-legal: yes · MSH 252 · via scryfall
+  | Whenever another nontoken artifact you control enters, you may pay {2}. If you do, create a token that's a copy of it. If the token isn't a creature, it becomes a 2/2 Robot Villain creature in addition to its other types.
+
+
+========================================================================
+SYMMETRIC PINGERS (the Pestilence slot — see the combo note) — 4 owned
+========================================================================
+
+Cave-In  {3}{R}{R}
+  Sorcery
+  identity: R · commander-legal: yes · MMQ 180 · via scryfall
+  | You may exile a red card from your hand rather than pay this spell's mana cost.
+  | Cave-In deals 2 damage to each creature and each player.
+
+Crypt Rats  {2}{B}
+  Creature — Rat
+  identity: B · commander-legal: yes · MH1 84 · via scryfall
+  | {X}: This creature deals X damage to each creature and each player. Spend only black mana on X.
+
+Gangrenous Zombies  {1}{B}{B}
+  Creature — Zombie
+  identity: B · commander-legal: yes · ME2 92 · via scryfall
+  | {T}, Sacrifice this creature: This creature deals 1 damage to each creature and each player. If you control a snow Swamp, this creature deals 2 damage to each creature and each player instead.
+
+Noxious Field  {1}{B}{B}
+  Enchantment — Aura
+  identity: B · commander-legal: yes · PCY 70 · via scryfall
+  | Enchant land
+  | Enchanted land has "{T}: This land deals 1 damage to each creature and each player."
+

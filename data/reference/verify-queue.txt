@@ -1,11 +1,13 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-21 — round 2's twenty texts (run 32450437172) are all in
-# data/reference/dina-verified-2026-08-21.txt and the verdicts are in
-# dina-essence-brewer.notes.md. Round 1 (run 32442182052): the four commander
-# candidates + Witherbloom college cards, quoted in the same notes file.
+# Cleared 2026-08-21 — the Treasure census is finished and written up. All 2,776
+# non-basic cards in the collection were verified against Scryfall across six
+# runs; the treasure-relevant text is in data/reference/treasure-verified-2026-08-21.txt
+# and the commander comparison is in docs/handoff.md.
 #
 # STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
 # thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.
+# Foom, Pet Avengers, Parapet Thrasher) — though note the census above now
+# covers every card the player owns, so those texts ARE on disk in the corpus
+# the census produced if the run logs are still retrievable.
