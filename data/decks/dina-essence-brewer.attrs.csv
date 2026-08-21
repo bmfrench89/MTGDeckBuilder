@@ -1,0 +1,89 @@
+Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
+"Dina, Essence Brewer",Creature,3,B G,,draw,3,2
+Priest of Titania,Creature,2,G,G,dork;ramp,3,1
+Great Forest Druid,Creature,2,G,W U B R G,dork;ramp,3,0
+Wight of the Reliquary,Creature,2,B G,,fetch:land;ramp,3,2
+Woodland Weavemaster,Creature,2,G,W U B R G,dork;mana-restricted;ramp,3,1
+Priest of Forgotten Gods,Creature,2,B,B,draw;mana2,3,1
+"Dina, Soul Steeper",Creature,2,B G,,,3,1
+"Gwenna, Eyes of Gaea",Creature,3,G,W U B R G,dork;mana-restricted;ramp,3,2
+Morbid Opportunist,Creature,3,B,,draw,3,1
+Pest Rescuer,Creature,3,G,,,3,2
+Smothering Abomination,Creature,4,B,,draw,3,4
+Ribtruss Roaster,Creature,5,G,,,3,3
+Gilded Goose,Creature,1,G,W U B R G,dork;ramp,3,0
+Environmental Scientist,Creature,2,G,,fetch:basic,3,2
+Mindful Biomancer,Creature,2,G,,,3,2
+"Jadar, Ghoulcaller of Nephalia",Creature,2,B,,,3,1
+Nether Traitor,Creature,2,B,,,3,1
+Umbral Collar Zealot,Creature,2,B,,,3,3
+Bloodghast,Creature,2,B,,,3,2
+Haywire Mite,Creature,1,G,,,3,1
+Teacher's Pest,Creature,2,B G,,,3,1
+Witch of the Moors,Creature,5,B,,,3,4
+Old-Growth Educator,Creature,4,B G,,,3,4
+Elvish Mystic,Creature,1,G,G,dork;ramp,3,1
+Tendershoot Dryad,Creature,5,G,,,3,2
+Fang-Druid Summoner,Creature,4,G,,,3,2
+Sage of the Fang,Creature,3,G,,,3,2
+"Trystan, Callous Cultivator",Creature,3,B G,,,3,3
+"Gorma, the Gullet",Creature,3,B G,,,3,1
+Ophiomancer,Creature,3,B,,,3,2
+Veinwitch Coven,Creature,3,B,,,3,3
+Creakwood Liege,Creature,4,B G,,,3,2
+Merchant of Venom,Creature,4,B,,,3,1
+Pawn of Ulamog,Creature,3,B,C,,3,2
+Zulaport Cutthroat,Creature,2,B,,,3,1
+Defiling Daemogoth,Creature,5,B,,,3,5
+Viscera Seer,Creature,1,B,,,3,1
+"Mazirek, Kraul Death Priest",Creature,5,B G,,,3,2
+Sakura-Tribe Elder,Creature,2,G,,fetch:basic;ramp,3,1
+Beledros Witherbloom,Creature,7,B G,,,3,4
+Blood Artist,Creature,2,B,,,3,0
+Crop Rotation,Instant,1,G,,fetch:land;ramp,3,
+Witherbloom Charm,Instant,2,B G,,draw;removal,3,
+Plumb the Forbidden,Instant,2,B,,draw,3,
+Mortality Spear,Instant,4,B G,,removal,3,
+Deadly Dispute,Instant,2,B,W U B R G,draw,3,
+Assassin's Trophy,Instant,2,B G,,removal,3,
+Infernal Grasp,Instant,2,B,,removal,3,
+Witherbloom Command,Sorcery,2,B G,,removal,3,
+Culling Ritual,Sorcery,4,B G,B G,,3,
+Shared Roots,Sorcery,2,G,,fetch:basic;ramp,3,
+Feed the Swarm,Sorcery,2,B,,removal,3,
+Final Act,Sorcery,6,B,,wipe,3,
+Toxic Deluge,Sorcery,3,B,,wipe,3,
+Deadly Brew,Sorcery,2,B G,,,3,
+Pest Infestation,Sorcery,1,G,,,3,
+Immoral Bargain,Sorcery,3,B G,,,3,
+Sol Ring,Artifact,1,,C,mana2;ramp;rock,3,
+Arcane Signet,Artifact,2,,W U B R G,ramp;rock,3,
+Feral Appetite,Enchantment,3,G,,removal,3,
+Awakening Zone,Enchantment,3,G,C,,3,
+Blight Mound,Enchantment,3,B,,,3,
+Moldervine Reclamation,Enchantment,5,B G,,draw,3,
+Command Tower,Land,0,,W U B R G,,3,
+High Market,Land,0,,C,,3,
+Llanowar Wastes,Land,0,B G,B G C,,3,
+Necroblossom Snarl,Land,0,B G,B G,etb-tapped-cond,3,
+Turbulent Fen,Land,0,B G,B G,etb-tapped-cond,3,
+Vernal Fen,Land,0,B G,B G,etb-tapped-cond,3,
+Woodland Cemetery,Land,0,B G,B G,etb-tapped-cond,3,
+Study Hall,Land,0,,W U B R G C,,3,
+Grim Backwoods,Land,0,B G,C,draw,3,
+Haunted Mire,Land,0,B G,B G,etb-tapped,3,
+Temple of Malady,Land,0,B G,B G,etb-tapped,3,
+Titan's Grave,Land,0,B G,B G,etb-tapped,3,
+Witherbloom Campus,Land,0,B G,B G,etb-tapped,3,
+Terramorphic Expanse,Land,0,,,fetch:basic;ramp,3,
+Jungle Hollow,Land,0,B G,B G,etb-tapped,3,
+Villainous Hideout,Land,0,,W U B R G C,draw;mana-restricted,3,
+Viridescent Bog,Land,0,B G,B G,mana2,3,
+Twilight Mire,Land,0,B G,B G C,mana3,3,
+Bojuka Bog,Land,0,B,B,etb-tapped,3,
+Fabled Passage,Land,0,,,fetch:basic;ramp,3,
+Exotic Orchard,Land,0,,W U B R G,,3,
+Festering Thicket,Land,0,B G,B G,draw;etb-tapped,3,
+Path of Ancestry,Land,0,,W U B R G,etb-tapped,3,
+Forest,Land,0,G,G,,3,
+Swamp,Land,0,B,B,,3,
