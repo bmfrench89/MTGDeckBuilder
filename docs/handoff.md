@@ -60,9 +60,16 @@ Golgari deck's ceiling on that axis is 2, and `resilience_axis` bands on `prot` 
 load-bearing in `yshtola-nights-blessed`, and it is the magnitude-aware lifegain payoff this
 deck lacks (Soul Steeper drains 1 per lifegain *event*, regardless of size).
 
-**Round-2 verify queue (20 names)** is loaded and unanswered. Highest value: **Final Act**,
-flagged `wipe` — `_WIPE_ALL_RE` matches "destroy all" and "exile all" identically, so if it
-exiles it blanks six of this deck's own death payoffs and becomes a cut, not a note.
+**Round-2 verify queue: answered** (run 32450437172; text in
+`data/reference/dina-verified-2026-08-21.txt`, verdicts in the deck's `.notes.md`).
+**Final Act is a KEEP** — modal, and the creature mode *destroys*, so the deck's own death
+payoffs trigger off it; only an optional mode exiles graveyards (pilot note recorded).
+**Feral Appetite's `removal` flag is a false positive** (graveyard exile, not board
+removal), so true board removal is 8 — still in band, no swap forced. Verified text also
+confirms real recursion the counter can't see (Veinwitch Coven, Teacher's Pest, Sage of
+the Fang) and the free sac outlet (Umbral Collar Zealot). Three bench candidates named:
+Environmental Scientist, Mindful Biomancer, Old-Growth Educator. Queue is back to steady
+state (cleared).
 
 ## Ur-Dragon mana audit: six lands upgraded on verified text; ramp package confirmed (2026-08-20)
 

@@ -1,40 +1,11 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Round 1 (2026-08-21, run 32442182052) answered the four commander candidates and the
-# Witherbloom college cards. Those texts are quoted in dina-essence-brewer.notes.md and
-# in the commit that created the deck. Queue cleared and refilled.
+# Cleared 2026-08-21 — round 2's twenty texts (run 32450437172) are all in
+# data/reference/dina-verified-2026-08-21.txt and the verdicts are in
+# dina-essence-brewer.notes.md. Round 1 (run 32442182052): the four commander
+# candidates + Witherbloom college cards, quoted in the same notes file.
 #
-# Round 2, 2026-08-21 — the Dina, Essence Brewer 99. About 82 of its 88 unique cards have
-# no oracle text stored anywhere in the repo (by design: oracle_flags.py holds flags, not
-# text), so an engine-read of the list is bounded until these come back. Ordered by what a
-# WRONG reading would cost.
-#
-# 1-2: the two cards whose flag could be lying about what they do.
-Final Act
-Feral Appetite
-# 3-4: the two removal adds that closed the 7-vs-8-11 gap. On mtglib.REMOVAL's curated
-# list, so classify() trusts them, but their verbatim text is not in the repo.
-Seal of Doom
-Nameless Inversion
-# 5: the buy candidate — the magnitude-aware lifegain payoff the deck lacks.
-Vito, Thorn of the Dusk Rose
-# 6-13: the 0%-field Druid/Dryad bodies auto_build seeded off the commander's TYPE LINE
-# (_tribe_and_support reads "druid" straight off it; deck_fit then pays +15 on-tribe).
-# Sixteen of 41 creature slots are Druids. Verify before the next round of cuts.
-Great Forest Druid
-Gwenna, Eyes of Gaea
-Environmental Scientist
-Mindful Biomancer
-Old-Growth Educator
-Sage of the Fang
-Trystan, Callous Cultivator
-Mortality Spear
-# 14-20: Secrets of Strixhaven bodies the deck's engine read depends on.
-Merchant of Venom
-Umbral Collar Zealot
-Blight Mound
-Veinwitch Coven
-Gorma, the Gullet
-Ribtruss Roaster
-Teacher's Pest
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
+# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.

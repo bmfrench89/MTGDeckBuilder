@@ -60,14 +60,45 @@ purpose gets churned out on the next run unless it is named here. These are deli
   see and therefore always undervalues.
 - **Crop Rotation** — the deck's one Game Changer; absent from the field snapshot entirely.
 
+## Round-2 verification verdicts (run 32450437172, 2026-08-21)
+
+All 20 queued names came back verified — full verbatim text in
+`data/reference/dina-verified-2026-08-21.txt`. The two risk items both resolved in the
+deck's favor, and the text audit *upgraded* several cards the counters undervalue:
+
+- **Final Act — KEEP.** Modal, "choose one or more", and the creature mode is **Destroy
+  all creatures** — so every death payoff (Blood Artist, Zulaport, Mazirek, Morbid
+  Opportunist, Moldervine Reclamation) triggers off your own wipe. The exile mode is
+  *graveyards only* and optional. **Pilot note:** do not pick "Exile all graveyards"
+  while your own recursion (Bloodghast, Nether Traitor, Teacher's Pest, Sage of the
+  Fang's Renew) is loaded — it hits every graveyard, yours included.
+- **Feral Appetite — KEEP, but the honest count changes.** Its `removal` flag is a false
+  positive: the text is "{1}{G}: Exile target card from a graveyard" — repeatable
+  graveyard hate that mints a Pest (fodder + a lifegain body), *not* board removal. So
+  the deck's true board-removal count is **8, not 9** — still inside the 8–11 band, so
+  no further swap is forced. The reported "12 removal/counter/wipe" includes this card.
+- **Vito, Thorn of the Dusk Rose — buy rec confirmed.** "Whenever you gain life, target
+  opponent loses **that much** life." Magnitude-aware, exactly as claimed.
+- **Recursion 0 is now disproven by text, not just suspected:** Veinwitch Coven ("whenever
+  you gain life, pay {B}: return a creature card from your graveyard to hand" — repeatable,
+  triggered by the commander's own activation), Teacher's Pest ({B}{G}: return to the
+  battlefield), Sage of the Fang (Renew), plus Bloodghast/Nether Traitor. The counted 0 is
+  purely `resilience_staples.csv` having no green rows.
+- **The free sacrifice outlet the metronome wants exists and is verified:** Umbral Collar
+  Zealot — "Sacrifice another creature or artifact: Surveil 1", no mana cost, no tap. Also
+  Viscera Seer and High Market. Merchant of Venom is an ETB edict that feeds Mazirek.
+- **The ten 0%-field Druids, read on text (sleeper-audit verdicts, no silent drops):**
+  Great Forest Druid (any-color dork — keep), Gwenna (two mana, creature-spend-only; 41
+  creatures here — keep), Merchant of Venom / Umbral Collar Zealot / Ribtruss Roaster /
+  Gorma / Teacher's Pest / Trystan (all real engine pieces on text — keep),
+  **Environmental Scientist, Mindful Biomancer, Old-Growth Educator — BENCH**: fine
+  bodies, weakest verified text in the 99, and the first cuts if the player wants slots.
+
 ## Known limits
 
-- **Not verified:** roughly 82 of the 88 unique cards here have no oracle text stored anywhere
-  in the repo — by design (`oracle_flags.py`: the flags *are* the storage), but it bounds any
-  audit. Queued for the next Scryfall round trip: **Final Act** (flagged `wipe`; if it *exiles*
-  rather than destroys it blanks six of this deck's own payoffs and becomes a cut),
-  **Feral Appetite** (counted as removal on a flag alone), and the ten 0%-field Druid/Dryad
-  bodies `auto_build` seeded off the commander's type line.
+- **Verified coverage:** 26 of the 88 unique cards now have verbatim text on disk (the 6
+  from round 1 + the 20 from round 2). The rest ride on enrichment flags — by design
+  (`oracle_flags.py`: the flags *are* the storage), but it bounds any audit.
 - **`auto_build` selected on the type line.** The commander is a *Dryad Druid*, so
   `_tribe_and_support` read "druid", cleared `_TRIBAL_MIN`, and seeded on-tribe creatures;
   `deck_fit` then pays +15 for "on-tribe (Druid)". Sixteen of 41 creature slots are Druids and
