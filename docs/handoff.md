@@ -55,6 +55,20 @@ player: it is Dwarf tribal *running on* Treasure, not a Treasure-theme deck.
    flier, Thermo-Alchemist only hits opponents, Noxious Field taps. Pestilence or Pyrohemia
    (a couple of dollars) closes it. Buy list, not a combo claim.
 
+**Revalidated 2026-08-21 by a second model, independently:** every number above
+reproduced — the census counts (57 / 33 / 42 / 37), the field table digit-for-digit,
+both Smaug rebuilds under the same 8-deck baseline (13-in-deck/12-unowned and
+11-in-deck/14-unowned, both ending in the optimizer's "can't improve from your
+collection"), Thorin's deck (100 cards, singleton clean, optimizer idempotent,
+goldfish identical at seed 0). Three corrections from the recount, none changing
+the verdict: the Thorin 99 carries **11** Treasure producers, not 10 — Dori,
+Bearer of Friends was missed because GitHub Actions log-masking garbled its name
+in the census corpus (repaired in the reference file); the census corpus was
+missing the 7 chunk-5 texts (Skirmish Rhino…Skycoach Conductor, none
+treasure-relevant, re-harvested); and the Impenetrable-loop check now covers six
+pinger candidates, not four — Cave-In (one-shot sorcery) and Gangrenous Zombies
+(self-sacrifice) also fail, so Pestilence/Pyrohemia remains the one missing card.
+
 Shortlist published as an artifact for the player; the deck build waits on their pick.
 
 ## New deck — Dina, Essence Brewer (Witherbloom aristocrats), 2026-08-21

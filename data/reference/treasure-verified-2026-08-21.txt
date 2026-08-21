@@ -17,6 +17,16 @@
 #
 # Reminder text in parentheses was used to EXCLUDE matches, not include them —
 # a card that only mentions Treasure in a reminder clause is not a producer.
+#
+# REVALIDATED 2026-08-21 (second model, independent classifier): all counts
+# reproduced — 57 producers, 33 mono-R / 42 Rakdos / 37 Boros legal, 3 alt-wins,
+# 4 symmetric pingers. One repair: "Dori, Bearer of Friends" appeared here under
+# a GitHub-Actions log-masked name ("Dori, *** Friends"); the true name is
+# restored from the collection snapshot and EDHREC field data, which both carry
+# it. Its oracle text was unaffected. Two further pinger-shaped cards (Cave-In,
+# Gangrenous Zombies) were checked against the Smaug the Impenetrable loop and
+# also fail — one-shot sorcery and self-sacrifice respectively — so the
+# one-card-away verdict stands against six candidates, not four.
 
 
 ========================================================================
@@ -165,7 +175,7 @@ Diamond Pick-Axe  {R}
   | Equipped creature gets +1/+1 and has "Whenever this creature attacks, create a Treasure token." (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
   | Equip {2}
 
-Dori, *** Friends  {2}{R}
+Dori, Bearer of Friends  {2}{R}
   Legendary Creature — Dwarf Warrior
   identity: R · commander-legal: yes · HOB 94 · via scryfall
   | Trample
