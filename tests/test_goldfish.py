@@ -68,6 +68,21 @@ def test_cost_tokenizer_treats_one_symbol_as_one_pip():
     assert goldfish.parse_cost("") == ([], 0)
 
 
+def test_cost_tokenizer_prices_a_combined_dfc_cost_at_its_front_face():
+    """carddb writes one combined cost string for every DFC/adventure —
+    '{U} // {2}{R}{R}{G}{G}' is the literal attrs row for Bruce Banner // The
+    Incredible Hulk. Iterating the whole string summed both faces into one
+    7-mana five-pip cost, and the sim reported a {U} one-drop COMMANDER landing
+    at a mean of T7.94 in 56% of games. The front face is the one you cast from
+    hand or the command zone, and the face whose MV the attrs row carries."""
+    assert goldfish.parse_cost("{U} // {2}{R}{R}{G}{G}") == ([(frozenset("U"), 0)], 0)
+    # adventure shape: creature face first (Glóin the Mighty // Easy Pickings)
+    pips, generic = goldfish.parse_cost("{3}{R} // {2}{R}")
+    assert generic == 3 and [(sorted(p), a) for p, a in pips] == [(["R"], 0)]
+    # a bare '//' with no spaces is NOT the separator (SP//dr, split-card trap)
+    assert goldfish.parse_cost("{2}{W/U}{B}")[1] == 2  # untouched by the split
+
+
 def test_commander_leaves_the_library_exactly_once():
     cards = _mono_deck()
     c = goldfish.compile_deck(cards, "Test Commander")

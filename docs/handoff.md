@@ -8,6 +8,36 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-08-21._
 
+## Hulk lands audit: lands correct; the sim's DFC cost bug was the real finding (2026-08-21)
+
+The player asked to revalidate bruce-banner-incredible-hulk's manabase. **All 24
+nonbasic lands verified verbatim against the census corpus — every produced color,
+tap clause and condition matches the enriched data the math runs on. No land is
+wrong and none was changed** (the deck is COMPLETE and sleeved). 37 lands: 13
+basics (6F/4M/3I) + 24 nonbasics; sources G 19 / R 18 / U 14 against pip demand
+34.5 / 29 / 15.5. Ten nonbasics always enter tapped — slow, but in family for the
+deck's bracket, and goldfish outcomes (keepable 81% · screw 15% · flood 0%) are
+identical to Dina's and Thorin's. Blue is the thin color and the free pool offers
+no untapped upgrade (every free U land is a tapland). Eight of its lands are
+copies shorted across other decks (Riverpyre/Willowrush Verge, Rogue's Passage,
+Fabled Passage short 2 each; Exotic Orchard short 3) — this deck being sleeved,
+the shortage bites the *unsleeved* decks.
+
+**What the audit actually caught: `goldfish.parse_cost` summed both faces of a
+combined DFC cost.** carddb writes `{U} // {2}{R}{R}{G}{G}` for Bruce Banner, and
+the sim priced him as a 7-mana five-pip card — "commander mean T7.94, landed in
+56% of games" for a {U} one-drop. Fixed to front-face pricing (split on `' // '`
+with spaces, same as `mtglib.front_face`), REPORT_SCHEMA bumped 4→5 so every
+cached sim recomputes, and the assumptions block now states the rule. After the
+fix: mean T2.72, lands in 97% of games. This artifact also poisoned every deck
+with DFCs/adventures — Thorin's Bofur ({W}) and Glóin ({3}{R}) showed first-cast
+T7+ for the same reason, so prior "worst-sequenced" lists are superseded.
+`mtglib.pip_counts` is deliberately untouched: aggregate Karsten demand may
+fairly count a transform activation the deck intends to pay. Bruce is also the
+one card the census never read — he lives in owned_additions, not the snapshot;
+his cost comes from the attrs snapshot row and the deck's notes, which verified
+it from card photos on 2026-08-14.
+
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 
 The player asked to build a Treasures deck. No deck file exists yet; this is the grounded

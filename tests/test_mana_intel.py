@@ -638,7 +638,10 @@ def test_schema_bump_ships_with_the_assumptions_change():
     decks keep the old list until an unrelated mtime change. Pin the current
     value: any change to what a report says must arrive with a bump."""
     import goldfish
-    assert goldfish.REPORT_SCHEMA == 4
+    # 5: combined DFC costs priced at the front face (2026-08-21) — the summed-faces
+    # bug had a {U} commander landing at a mean of T7.94, and every cached sim that
+    # contained a DFC or adventure card was computed under the wrong costs.
+    assert goldfish.REPORT_SCHEMA == 5
 
 
 def test_ab_arm_b_adjusts_the_fetch_flagged_list():

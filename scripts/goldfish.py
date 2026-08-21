@@ -100,7 +100,9 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 4
+# 5: parse_cost now prices combined DFC costs at the front face — every cached sim
+#    that contains a DFC was computed under the summed-faces cost and is wrong.
+REPORT_SCHEMA = 5
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
@@ -175,7 +177,19 @@ def parse_cost(cost):
       `{2/W}` -> ({'W'}, 2)          payable by W, or by two generic
       `{C}`   -> ({'C'}, 0)          colorless is a real requirement, not generic
       `{X}`   -> nothing             X = 0, stated
-    Anything unrecognized degrades to one generic rather than raising."""
+    Anything unrecognized degrades to one generic rather than raising.
+
+    A combined double-faced cost — `'{U} // {2}{R}{R}{G}{G}'`, the shape carddb
+    writes for every DFC/adventure — is priced at its FRONT face, which is the
+    face you cast from hand or the command zone (and the face whose MV the attrs
+    row carries). Iterating the whole string summed BOTH faces into one cost:
+    Bruce Banner, a {U} one-drop commander, simulated as a 7-mana five-pip card
+    and "landed" at a mean of T7.94 in 56% of games. The split is on ' // ' WITH
+    surrounding spaces, same as `mtglib.front_face` — see the split-card trap in
+    CLAUDE.md. `mtglib.pip_counts` is deliberately untouched: aggregate Karsten
+    demand may fairly count a transform activation the deck intends to pay."""
+    if cost and " // " in cost:
+        cost = cost.split(" // ")[0]
     pips, generic = [], 0
     for sym in _SYM_RE.findall(cost or ""):
         s = sym.upper().strip()
@@ -768,6 +782,10 @@ def _assumptions(compiled, mulligan, on_play, games):
         "creature producers are modeled.",
         "Land drops are untapped-first then color-greedy, and spells are cast "
         "highest-mana-value-first. That's a stated pilot approximation.",
+        "Double-faced and adventure cards are cast at their FRONT face's cost; "
+        "back faces, transform activations and adventure second halves are not "
+        "modeled (before schema 5 the two faces' costs were summed — a {U} "
+        "commander simulated as a seven-mana card).",
         f"Seeded Monte Carlo over {games:,} games — distinct from the exact "
         "hypergeometrics above, and meant to disagree with them: those are "
         "unconditional probabilities, these are sequenced play.",
