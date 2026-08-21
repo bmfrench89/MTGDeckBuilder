@@ -1,9 +1,17 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — the revalidation round's ten texts (run 32370514534) are all
-# in hobbit-verified-2026-08-20.txt and the verdicts are in the-ur-dragon.notes.md.
-#
-# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
-# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) whose text is on disk nowhere.
+# Round 1, 2026-08-21 — the Dina / Witherbloom commander question.
+# The collection snapshot holds FOUR candidates for "Dina or Witherbloom", two of
+# which are post-2025 (Secrets of Strixhaven) and unreadable from memory. The attrs
+# snapshot gives cost/type/power but NOT oracle text, and the whole build hangs on
+# what these actually do. Also queued: the Witherbloom college cards a BG list would
+# run, and the owned Golgari drain/sac payoffs whose text decides the engine.
+Dina, Soul Steeper
+Dina, Essence Brewer
+Beledros Witherbloom
+Witherbloom, the Balancer
+Witherbloom Command
+Witherbloom Charm
+Witherbloom Campus
+Mazirek, Kraul Death Priest
