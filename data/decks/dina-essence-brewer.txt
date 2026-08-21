@@ -11,7 +11,6 @@
 1 Priest of Titania
 1 Great Forest Druid
 1 Wight of the Reliquary
-1 Woodland Weavemaster
 1 Priest of Forgotten Gods
 1 Dina, Soul Steeper
 1 Gwenna, Eyes of Gaea
@@ -32,7 +31,6 @@
 1 Old-Growth Educator
 1 Elvish Mystic
 1 Tendershoot Dryad
-1 Fang-Druid Summoner
 1 Sage of the Fang
 1 Trystan, Callous Cultivator
 1 Gorma, the Gullet
@@ -50,6 +48,7 @@
 1 Blood Artist
 
 # --- Instants ---
+1 Nameless Inversion
 1 Crop Rotation
 1 Witherbloom Charm
 1 Plumb the Forbidden
@@ -74,6 +73,7 @@
 1 Arcane Signet
 
 # --- Enchantments ---
+1 Seal of Doom
 1 Feral Appetite
 1 Awakening Zone
 1 Blight Mound
@@ -95,7 +95,7 @@
 1 Witherbloom Campus
 1 Terramorphic Expanse
 1 Jungle Hollow
-1 Villainous Hideout
+1 Evolving Wilds
 1 Viridescent Bog
 1 Twilight Mire
 1 Bojuka Bog

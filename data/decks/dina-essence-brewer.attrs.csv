@@ -3,7 +3,6 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 Priest of Titania,Creature,2,G,G,dork;ramp,3,1
 Great Forest Druid,Creature,2,G,W U B R G,dork;ramp,3,0
 Wight of the Reliquary,Creature,2,B G,,fetch:land;ramp,3,2
-Woodland Weavemaster,Creature,2,G,W U B R G,dork;mana-restricted;ramp,3,1
 Priest of Forgotten Gods,Creature,2,B,B,draw;mana2,3,1
 "Dina, Soul Steeper",Creature,2,B G,,,3,1
 "Gwenna, Eyes of Gaea",Creature,3,G,W U B R G,dork;mana-restricted;ramp,3,2
@@ -24,7 +23,6 @@ Witch of the Moors,Creature,5,B,,,3,4
 Old-Growth Educator,Creature,4,B G,,,3,4
 Elvish Mystic,Creature,1,G,G,dork;ramp,3,1
 Tendershoot Dryad,Creature,5,G,,,3,2
-Fang-Druid Summoner,Creature,4,G,,,3,2
 Sage of the Fang,Creature,3,G,,,3,2
 "Trystan, Callous Cultivator",Creature,3,B G,,,3,3
 "Gorma, the Gullet",Creature,3,B G,,,3,1
@@ -40,6 +38,7 @@ Viscera Seer,Creature,1,B,,,3,1
 Sakura-Tribe Elder,Creature,2,G,,fetch:basic;ramp,3,1
 Beledros Witherbloom,Creature,7,B G,,,3,4
 Blood Artist,Creature,2,B,,,3,0
+Nameless Inversion,Instant,2,B,,,3,
 Crop Rotation,Instant,1,G,,fetch:land;ramp,3,
 Witherbloom Charm,Instant,2,B G,,draw;removal,3,
 Plumb the Forbidden,Instant,2,B,,draw,3,
@@ -58,6 +57,7 @@ Pest Infestation,Sorcery,1,G,,,3,
 Immoral Bargain,Sorcery,3,B G,,,3,
 Sol Ring,Artifact,1,,C,mana2;ramp;rock,3,
 Arcane Signet,Artifact,2,,W U B R G,ramp;rock,3,
+Seal of Doom,Enchantment,3,B,,removal,3,
 Feral Appetite,Enchantment,3,G,,removal,3,
 Awakening Zone,Enchantment,3,G,C,,3,
 Blight Mound,Enchantment,3,B,,,3,
@@ -77,7 +77,7 @@ Titan's Grave,Land,0,B G,B G,etb-tapped,3,
 Witherbloom Campus,Land,0,B G,B G,etb-tapped,3,
 Terramorphic Expanse,Land,0,,,fetch:basic;ramp,3,
 Jungle Hollow,Land,0,B G,B G,etb-tapped,3,
-Villainous Hideout,Land,0,,W U B R G C,draw;mana-restricted,3,
+Evolving Wilds,Land,0,,,fetch:basic;ramp,3,
 Viridescent Bog,Land,0,B G,B G,mana2,3,
 Twilight Mire,Land,0,B G,B G C,mana3,3,
 Bojuka Bog,Land,0,B,B,etb-tapped,3,
