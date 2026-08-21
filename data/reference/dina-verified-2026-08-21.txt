@@ -1,0 +1,107 @@
+# Verbatim Scryfall oracle text — Dina, Essence Brewer round-2 audit.
+# Source: deck-verify.yml run 32450437172 (2026-08-21), job 96677821808.
+# 20/20 resolved, 0 UNVERIFIED. Kept on disk so no future session re-queues these.
+
+Final Act  {4}{B}{B}  Sorcery  [B]  SOC 213
+  Choose one or more —
+  • Destroy all creatures.
+  • Destroy all planeswalkers.
+  • Destroy all battles.
+  • Exile all graveyards.
+  • Each opponent loses all counters.
+
+Feral Appetite  {2}{G}  Enchantment  [G]  SOC 38
+  Attacking Pests you control get +1/+0 and have deathtouch.
+  {1}{G}: Exile target card from a graveyard. If a creature card is exiled this way,
+  create a 1/1 black and green Pest creature token with "When this token dies, you
+  gain 1 life."
+
+Seal of Doom  {2}{B}  Enchantment  [B]  MM3 83
+  Sacrifice this enchantment: Destroy target nonblack creature. It can't be regenerated.
+
+Nameless Inversion  {1}{B}  Kindred Instant — Shapeshifter  [B]  ECL 113
+  Changeling (This card is every creature type.)
+  Target creature gets +3/-3 and loses all creature types until end of turn.
+
+Vito, Thorn of the Dusk Rose  {2}{B}  Legendary Creature — Vampire Cleric  [B]  M21 127
+  Whenever you gain life, target opponent loses that much life.
+  {3}{B}{B}: Creatures you control gain lifelink until end of turn.
+
+Great Forest Druid  {1}{G}  Creature — Treefolk Druid  [G]  ECL 178
+  {T}: Add one mana of any color.
+
+Gwenna, Eyes of Gaea  {2}{G}  Legendary Creature — Elf Druid Scout  [G]  BRO 185
+  {T}: Add two mana in any combination of colors. Spend this mana only to cast
+  creature spells or activate abilities of creature sources.
+  Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter
+  on Gwenna and untap it.
+
+Environmental Scientist  {1}{G}  Creature — Human Druid  [G]  SOS 147
+  When this creature enters, you may search your library for a basic land card,
+  reveal it, put it into your hand, then shuffle.
+
+Mindful Biomancer  {1}{G}  Creature — Dryad Druid  [G]  SOS 154
+  When this creature enters, you gain 1 life.
+  {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
+
+Old-Growth Educator  {2}{B}{G}  Creature — Treefolk Druid  [B G]  SOS 207
+  Reach, vigilance
+  Infusion — When this creature enters, put two +1/+1 counters on it if you gained
+  life this turn.
+
+Sage of the Fang  {2}{G}  Creature — Human Druid  [G]  TDM 155
+  When this creature enters, put a +1/+1 counter on target creature.
+  Renew — {3}{G}, Exile this card from your graveyard: Put a +1/+1 counter on target
+  creature, then double the number of +1/+1 counters on that creature. Activate only
+  as a sorcery.
+
+Trystan, Callous Cultivator // Trystan, Penitent Culler  {2}{G}  [B G]  ECL 199
+  Legendary Creature — Elf Druid // Legendary Creature — Elf Warlock
+  Deathtouch
+  Whenever this creature enters or transforms into Trystan, Callous Cultivator, mill
+  three cards. Then if there is an Elf card in your graveyard, you gain 2 life.
+  At the beginning of your first main phase, you may pay {B}. If you do, transform. //
+  Deathtouch
+  Whenever this creature transforms into Trystan, Penitent Culler, mill three cards,
+  then you may exile an Elf card from your graveyard. If you do, each opponent loses 2 life.
+  At the beginning of your first main phase, you may pay {G}. If you do, transform.
+
+Mortality Spear  {2}{B}{G}  Instant  [B G]  SOC 321
+  This spell costs {2} less to cast if you gained life this turn.
+  Destroy target nonland permanent.
+
+Merchant of Venom  {3}{B}  Creature — Cat Warlock  [B]  SOC 27
+  Menace
+  When this creature enters, each player sacrifices a creature of their choice.
+  Whenever a player sacrifices a permanent, put a +1/+1 counter on this creature.
+
+Umbral Collar Zealot  {1}{B}  Creature — Human Cleric  [B]  SOC 227
+  Sacrifice another creature or artifact: Surveil 1.
+
+Blight Mound  {2}{B}  Enchantment  [B]  SOC 208
+  Attacking Pests you control get +1/+0 and have menace.
+  Whenever a nontoken creature you control dies, create a 1/1 black and green Pest
+  creature token with "When this token dies, you gain 1 life."
+
+Veinwitch Coven  {2}{B}  Creature — Vampire Warlock  [B]  SOC 228
+  Menace
+  Whenever you gain life, you may pay {B}. If you do, return target creature card
+  from your graveyard to your hand.
+
+Gorma, the Gullet  {1}{B}{G}  Legendary Creature — Pest Frog  [B G]  SOC 3
+  Lifelink
+  Whenever another creature you control dies, put a +1/+1 counter on Gorma.
+  Nontoken creatures you control enter with an additional +1/+1 counter on them for
+  each creature that died under your control this turn.
+
+Ribtruss Roaster  {4}{G}  Creature — Troll Druid  [G]  SOC 43
+  Devour 1 (As this creature enters, you may sacrifice any number of creatures. This
+  creature enters with that many +1/+1 counters on it.)
+  At the beginning of your end step, create a number of 1/1 black and green Pest
+  creature tokens equal to the number of +1/+1 counters on this creature. They have
+  "When this token dies, you gain 1 life."
+
+Teacher's Pest  {B}{G}  Creature — Skeleton Pest  [B G]  SOS 238
+  Menace
+  Whenever this creature attacks, you gain 1 life.
+  {B}{G}: Return this card from your graveyard to the battlefield tapped.

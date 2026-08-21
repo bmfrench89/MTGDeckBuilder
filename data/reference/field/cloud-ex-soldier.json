@@ -569,8 +569,8 @@
   "yuffie, materia hunter": "Yuffie, Materia Hunter",
   "zack fair": "Zack Fair"
  },
- "sample_decks": 29710,
- "saved": "2026-08-20",
+ "sample_decks": 29774,
+ "saved": "2026-08-21",
  "slug": "cloud-ex-soldier",
  "synergy": {
   "adaptive omnitool": 16,
@@ -658,7 +658,7 @@
   "esper sentinel": 6,
   "evolving wilds": 12,
   "excalibur, sword of eden": 27,
-  "exotic orchard": 25,
+  "exotic orchard": 24,
   "explorer's scope": 14,
   "farewell": 1,
   "farseek": -18,
@@ -692,7 +692,7 @@
   "hexplate wallbreaker": 14,
   "hushwood verge": -1,
   "inspiring statuary": 26,
-  "inventors' fair": 5,
+  "inventors' fair": 4,
   "inventory management": 23,
   "ishgard, the holy see": 13,
   "jeska's will": 0,

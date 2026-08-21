@@ -1,8 +1,10 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-20 — the revalidation round's ten texts (run 32370514534) are all
-# in hobbit-verified-2026-08-20.txt and the verdicts are in the-ur-dragon.notes.md.
+# Cleared 2026-08-21 — round 2's twenty texts (run 32450437172) are all in
+# data/reference/dina-verified-2026-08-21.txt and the verdicts are in
+# dina-essence-brewer.notes.md. Round 1 (run 32442182052): the four commander
+# candidates + Witherbloom college cards, quoted in the same notes file.
 #
 # STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
 # thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang

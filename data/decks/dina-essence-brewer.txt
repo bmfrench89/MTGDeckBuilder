@@ -1,0 +1,109 @@
+# Title: Dina, Essence Brewer
+# Commander: Dina, Essence Brewer
+# Colors: B G
+# Archetype: aristocrats
+# Source: auto_build.py from owned cards, tuned by optimize.py against the EDHREC field (2026-08-21).
+
+# --- Commander ---
+1 Dina, Essence Brewer
+
+# --- Creatures ---
+1 Priest of Titania
+1 Great Forest Druid
+1 Wight of the Reliquary
+1 Priest of Forgotten Gods
+1 Dina, Soul Steeper
+1 Gwenna, Eyes of Gaea
+1 Morbid Opportunist
+1 Pest Rescuer
+1 Smothering Abomination
+1 Ribtruss Roaster
+1 Gilded Goose
+1 Environmental Scientist
+1 Mindful Biomancer
+1 Jadar, Ghoulcaller of Nephalia
+1 Nether Traitor
+1 Umbral Collar Zealot
+1 Bloodghast
+1 Haywire Mite
+1 Teacher's Pest
+1 Witch of the Moors
+1 Old-Growth Educator
+1 Elvish Mystic
+1 Tendershoot Dryad
+1 Sage of the Fang
+1 Trystan, Callous Cultivator
+1 Gorma, the Gullet
+1 Ophiomancer
+1 Veinwitch Coven
+1 Creakwood Liege
+1 Merchant of Venom
+1 Pawn of Ulamog
+1 Zulaport Cutthroat
+1 Defiling Daemogoth
+1 Viscera Seer
+1 Mazirek, Kraul Death Priest
+1 Sakura-Tribe Elder
+1 Beledros Witherbloom
+1 Blood Artist
+
+# --- Instants ---
+1 Nameless Inversion
+1 Crop Rotation
+1 Witherbloom Charm
+1 Plumb the Forbidden
+1 Mortality Spear
+1 Deadly Dispute
+1 Assassin's Trophy
+1 Infernal Grasp
+
+# --- Sorceries ---
+1 Witherbloom Command
+1 Culling Ritual
+1 Shared Roots
+1 Feed the Swarm
+1 Final Act
+1 Toxic Deluge
+1 Deadly Brew
+1 Pest Infestation
+1 Immoral Bargain
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+
+# --- Enchantments ---
+1 Seal of Doom
+1 Feral Appetite
+1 Awakening Zone
+1 Blight Mound
+1 Moldervine Reclamation
+
+# --- Lands ---
+1 Command Tower
+1 High Market
+1 Llanowar Wastes
+1 Necroblossom Snarl
+1 Turbulent Fen
+1 Vernal Fen
+1 Woodland Cemetery
+1 Study Hall
+1 Grim Backwoods
+1 Haunted Mire
+1 Temple of Malady
+1 Titan's Grave
+1 Witherbloom Campus
+1 Terramorphic Expanse
+1 Jungle Hollow
+1 Evolving Wilds
+1 Viridescent Bog
+1 Twilight Mire
+1 Bojuka Bog
+1 Fabled Passage
+1 Exotic Orchard
+1 Festering Thicket
+1 Path of Ancestry
+
+# --- Basics ---
+7 Forest
+7 Swamp
