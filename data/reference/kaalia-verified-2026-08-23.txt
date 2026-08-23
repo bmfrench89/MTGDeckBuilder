@@ -1,0 +1,496 @@
+# Kaalia of the Vast — cheat-target pool, verbatim Scryfall text
+# Source: deck-verify.yml run 32611590788 (job 97125433184), 2026-08-23.
+# Queued 66 cards; all 66 resolved and captured below. No UNVERIFIED lines in the run.
+#
+# What this is: every owned Angel/Demon/Dragon creature whose colour identity fits
+# Mardu (W/B/R) — Kaalia's entire cheat pool — plus Kaalia herself and the owned Mardu
+# support whose text decides a slot. Kaalia's trigger puts the creature onto the
+# battlefield TAPPED AND ATTACKING, so a target's value is what its text does on
+# arrival, not what it would have cost to cast. This file is the evidence for that read.
+===== VERBATIM ORACLE TEXT =====
+Angel of Indemnity  {5}{W}
+  Creature — Angel Warrior
+  identity: W · commander-legal: yes · SOC 133 · via scryfall
+  | Flying, lifelink
+  | When this creature enters, return target permanent card with mana value 4 or less from your graveyard to the battlefield.
+  | Encore {6}{W}{W} ({6}{W}{W}, Exile this card from your graveyard: For each opponent, create a token copy that attacks that opponent this turn if able. They gain haste. Sacrifice them at the beginning of the next end step. Activate only as a sorcery.)
+  https://scryfall.com/card/soc/133/angel-of-indemnity?utm_source=api
+
+Angelic Curator  {1}{W}
+  Creature — Angel Spirit
+  identity: W · commander-legal: yes · MH2 262 · via scryfall
+  | Flying, protection from artifacts
+  https://scryfall.com/card/mh2/262/angelic-curator?utm_source=api
+
+Ao, the Dawn Sky  {3}{W}{W}
+  Legendary Creature — Dragon Spirit
+  identity: W · commander-legal: yes · SOC 135 · via scryfall
+  | Flying, vigilance
+  | When Ao dies, choose one —
+  | • Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order.
+  | • Put two +1/+1 counters on each permanent you control that's a creature or Vehicle.
+  https://scryfall.com/card/soc/135/ao-the-dawn-sky?utm_source=api
+
+Archfiend of Depravity  {3}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · E01 31 · via scryfall
+  | Flying
+  | At the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest.
+  https://scryfall.com/card/e01/31/archfiend-of-depravity?utm_source=api
+
+Atsushi, the Blazing Sky  {2}{R}{R}
+  Legendary Creature — Dragon Spirit
+  identity: R · commander-legal: yes · SOC 236 · via scryfall
+  | Flying, trample
+  | When Atsushi dies, choose one —
+  | • Exile the top two cards of your library. Until the end of your next turn, you may play those cards.
+  | • Create three Treasure tokens.
+  https://scryfall.com/card/soc/236/atsushi-the-blazing-sky?utm_source=api
+
+Bloodgift Demon  {3}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · C14 137 · via scryfall
+  | Flying
+  | At the beginning of your upkeep, target player draws a card and loses 1 life.
+  https://scryfall.com/card/c14/137/bloodgift-demon?utm_source=api
+
+Brainstealer Dragon  {5}{B}{B}
+  Creature — Dragon Horror
+  identity: B · commander-legal: yes · OTC 127 · via scryfall
+  | Flying
+  | At the beginning of your end step, exile the top card of each opponent's library. You may play those cards for as long as they remain exiled. If you cast a spell this way, you may spend mana as though it were mana of any color to cast it.
+  | Whenever a nonland permanent an opponent owns enters the battlefield under your control, they lose life equal to its mana value.
+  https://scryfall.com/card/otc/127/brainstealer-dragon?utm_source=api
+
+Decadent Dragon // Expensive Taste  {2}{R}{R} // {2}{B}
+  Creature — Dragon // Instant — Adventure
+  identity: B R · commander-legal: yes · WOE 223 · via fuzzy
+  | Flying, trample
+  | Whenever this creature attacks, create a Treasure token. // Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.
+  https://scryfall.com/card/woe/223/decadent-dragon-expensive-taste?utm_source=api
+
+Defiling Daemogoth  {3}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · SOC 25 · via scryfall
+  | Menace
+  | Whenever a creature you control deals combat damage to a player, you gain 1 life.
+  | At the beginning of your end step, each opponent loses X life, where X is the amount of life you gained this turn.
+  https://scryfall.com/card/soc/25/defiling-daemogoth?utm_source=api
+
+Desert Were-Worm  {4}{R}{R}
+  Creature — Dragon Wurm
+  identity: R · commander-legal: yes · HOB 92 · via scryfall
+  | This creature gets +2/+0 for each Mountain you control.
+  | Whenever you attack with creatures with total power 12 or greater for the first time each turn, untap all attacking creatures. After this phase, there is an additional combat phase.
+  https://scryfall.com/card/hob/92/desert-were-worm?utm_source=api
+
+Dragonhawk, Fate's Tempest  {3}{R}{R}
+  Legendary Creature — Bird Dragon
+  identity: R · commander-legal: yes · BLB 132 · via scryfall
+  | Flying
+  | Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater. You may play those cards until your next end step. At the beginning of your next end step, Dragonhawk deals 2 damage to each opponent for each of those cards that are still exiled.
+  https://scryfall.com/card/blb/132/dragonhawk-fates-tempest?utm_source=api
+
+Emeria Angel  {2}{W}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · TDC 114 · via scryfall
+  | Flying
+  | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying.
+  https://scryfall.com/card/tdc/114/emeria-angel?utm_source=api
+
+Fallen Angel  {3}{B}{B}
+  Creature — Angel
+  identity: B · commander-legal: yes · A25 91 · via scryfall
+  | Flying
+  | Sacrifice a creature: This creature gets +2/+1 until end of turn.
+  https://scryfall.com/card/a25/91/fallen-angel?utm_source=api
+
+Fiendish Panda  {2}{W}{B}
+  Creature — Bear Demon
+  identity: B W · commander-legal: yes · FDN 120 · via scryfall
+  | Whenever you gain life, put a +1/+1 counter on this creature.
+  | When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the battlefield.
+  https://scryfall.com/card/fdn/120/fiendish-panda?utm_source=api
+
+Fin Fang Foom  {2}{R}{R}
+  Legendary Creature — Alien Dragon Villain
+  identity: R · commander-legal: yes · MSH 129 · via scryfall
+  | Flying
+  | Whenever you cast an instant or sorcery spell that targets an artifact or land, copy that spell. You may choose new targets for the copy. Put two +1/+1 counters on Fin Fang Foom.
+  https://scryfall.com/card/msh/129/fin-fang-foom?utm_source=api
+
+Ganax, Astral Hunter  {4}{R}
+  Legendary Creature — Dragon
+  identity: R · commander-legal: yes · CLB 176 · via scryfall
+  | Flying
+  | Whenever Ganax or another Dragon you control enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+  | Choose a Background (You can have a Background as a second commander.)
+  https://scryfall.com/card/clb/176/ganax-astral-hunter?utm_source=api
+
+Guardian Scalelord  {4}{W}
+  Creature — Dragon
+  identity: W · commander-legal: yes · SOC 149 · via scryfall
+  | Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the following abilities until end of turn.)
+  | Flying
+  | Whenever this creature attacks, return target nonland permanent card with mana value X or less from your graveyard to the battlefield, where X is this creature's power.
+  https://scryfall.com/card/soc/149/guardian-scalelord?utm_source=api
+
+Hellkite Courser  {4}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · TDC 218 · via scryfall
+  | Flying
+  | When this creature enters, you may put a commander you own from the command zone onto the battlefield. It gains haste. Return it to the command zone at the beginning of the next end step.
+  https://scryfall.com/card/tdc/218/hellkite-courser?utm_source=api
+
+Hellkite Tyrant  {4}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · PLST RVR-111 · via scryfall
+  | Flying, trample
+  | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls.
+  | At the beginning of your upkeep, if you control twenty or more artifacts, you win the game.
+  https://scryfall.com/card/plst/RVR-111/hellkite-tyrant?utm_source=api
+
+Herald of Serra  {2}{W}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · USG 17 · via scryfall
+  | Flying, vigilance
+  | Echo {2}{W}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)
+  https://scryfall.com/card/usg/17/herald-of-serra?utm_source=api
+
+Indulgent Tormentor  {3}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · IMA 94 · via scryfall
+  | Flying
+  | At the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays 3 life.
+  https://scryfall.com/card/ima/94/indulgent-tormentor?utm_source=api
+
+Kardur, Doomscourge  {2}{B}{R}
+  Legendary Creature — Demon Berserker
+  identity: B R · commander-legal: yes · DSC 223 · via scryfall
+  | When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.
+  | Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.
+  https://scryfall.com/card/dsc/223/kardur-doomscourge?utm_source=api
+
+Karmic Guide  {3}{W}{W}
+  Creature — Angel Spirit
+  identity: W · commander-legal: yes · SOC 151 · via scryfall
+  | Flying, protection from black
+  | Echo {3}{W}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)
+  | When this creature enters, return target creature card from your graveyard to the battlefield.
+  https://scryfall.com/card/soc/151/karmic-guide?utm_source=api
+
+Kolaghan, the Storm's Fury  {3}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · C17 176 · via scryfall
+  | Flying
+  | Whenever a Dragon you control attacks, creatures you control get +1/+0 until end of turn.
+  | Dash {3}{B}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)
+  https://scryfall.com/card/c17/176/kolaghan-the-storms-fury?utm_source=api
+
+Lathliss, Dragon Queen  {4}{R}{R}
+  Legendary Creature — Dragon
+  identity: R · commander-legal: yes · TDC 219 · via scryfall
+  | Flying
+  | Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.
+  | {1}{R}: Dragons you control get +1/+0 until end of turn.
+  https://scryfall.com/card/tdc/219/lathliss-dragon-queen?utm_source=api
+
+Lorehold, the Historian  {3}{R}{W}
+  Legendary Creature — Elder Dragon
+  identity: R W · commander-legal: yes · SOS 201 · via scryfall
+  | Flying, haste
+  | Each instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)
+  | At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
+  https://scryfall.com/card/sos/201/lorehold-the-historian?utm_source=api
+
+Neriv, Heart of the Storm  {1}{R}{W}{B}
+  Legendary Creature — Spirit Dragon
+  identity: B R W · commander-legal: yes · TDM 210 · via scryfall
+  | Flying
+  | If a creature you control that entered this turn would deal damage, it deals twice that much damage instead.
+  https://scryfall.com/card/tdm/210/neriv-heart-of-the-storm?utm_source=api
+
+Nova Hellkite  {3}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · EOE 148 · via scryfall
+  | Flying, haste
+  | When this creature enters, it deals 1 damage to target creature an opponent controls.
+  | Warp {2}{R} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)
+  https://scryfall.com/card/eoe/148/nova-hellkite?utm_source=api
+
+Obsidian Charmaw  {3}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · MH2 137 · via scryfall
+  | This spell costs {1} less to cast for each land your opponents control that could produce {C}.
+  | Flying
+  | When this creature enters, destroy target nonbasic land an opponent controls.
+  https://scryfall.com/card/mh2/137/obsidian-charmaw?utm_source=api
+
+Parapet Thrasher  {2}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · TDC 36 · via scryfall
+  | Flying
+  | Whenever one or more Dragons you control deal combat damage to an opponent, choose one that hasn't been chosen this turn —
+  | • Destroy target artifact that opponent controls.
+  | • This creature deals 4 damage to each other opponent.
+  | • Exile the top card of your library. You may play it this turn.
+  https://scryfall.com/card/tdc/36/parapet-thrasher?utm_source=api
+
+Radiant, Archangel  {3}{W}{W}
+  Legendary Creature — Angel
+  identity: W · commander-legal: yes · VMA 40 · via scryfall
+  | Flying, vigilance
+  | Radiant gets +1/+1 for each other creature on the battlefield with flying.
+  https://scryfall.com/card/vma/40/radiant-archangel?utm_source=api
+
+Rakshasa Debaser  {4}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · CMR 146 · via scryfall
+  | Whenever this creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control.
+  | Encore {6}{B}{B} ({6}{B}{B}, Exile this card from your graveyard: For each opponent, create a token copy that attacks that opponent this turn if able. They gain haste. Sacrifice them at the beginning of the next end step. Activate only as a sorcery.)
+  https://scryfall.com/card/cmr/146/rakshasa-debaser?utm_source=api
+
+Scalelord Reckoner  {3}{W}{W}
+  Creature — Dragon
+  identity: W · commander-legal: yes · C17 6 · via scryfall
+  | Flying
+  | Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.
+  https://scryfall.com/card/c17/6/scalelord-reckoner?utm_source=api
+
+Scavenger Regent // Exude Toxin  {3}{B} // {X}{B}{B}
+  Creature — Dragon // Sorcery — Omen
+  identity: B · commander-legal: yes · TDM 90 · via fuzzy
+  | Flying
+  | Ward—Discard a card. // Each non-Dragon creature gets -X/-X until end of turn. (Then shuffle this card into its owner's library.)
+  https://scryfall.com/card/tdm/90/scavenger-regent-exude-toxin?utm_source=api
+
+Scourge of Valkas  {2}{R}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · AFC 137 · via scryfall
+  | Flying
+  | Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.
+  | {R}: This creature gets +1/+0 until end of turn.
+  https://scryfall.com/card/afc/137/scourge-of-valkas?utm_source=api
+
+Sephara, Sky's Blade  {4}{W}{W}{W}
+  Legendary Creature — Angel
+  identity: W · commander-legal: yes · CMM 54 · via scryfall
+  | You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost.
+  | Flying, lifelink
+  | Other creatures you control with flying have indestructible. (Damage and effects that say "destroy" don't destroy them.)
+  https://scryfall.com/card/cmm/54/sephara-skys-blade?utm_source=api
+
+Serra Paragon  {2}{W}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · SOC 169 · via scryfall
+  | Flying
+  | Once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value 3 or less from your graveyard. If you do, it gains "When this permanent is put into a graveyard from the battlefield, exile it and you gain 2 life."
+  https://scryfall.com/card/soc/169/serra-paragon?utm_source=api
+
+Smaug the Impenetrable  {5}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · HOC 9 · via scryfall
+  | Flying, indestructible, haste
+  | Whenever Smaug is dealt noncombat damage, create that many Treasure tokens.
+  https://scryfall.com/card/hoc/9/smaug-the-impenetrable?utm_source=api
+
+Smaug the Magnificent  {2}{R}{R}
+  Legendary Creature — Dragon
+  identity: R · commander-legal: yes · HOB 110 · via scryfall
+  | Flying, haste
+  | Whenever Smaug attacks, he deals damage equal to the number of Treasures you control to any target.
+  | At the beginning of your upkeep, create a Treasure token.
+  https://scryfall.com/card/hob/110/smaug-the-magnificent?utm_source=api
+
+Smaug, Wicked Worm  {3}{B}{R}
+  Legendary Creature — Dragon
+  identity: B R · commander-legal: yes · HOB 164 · via scryfall
+  | Flying
+  | When Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.
+  | Whenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.
+  https://scryfall.com/card/hob/164/smaug-wicked-worm?utm_source=api
+
+Smaug, the Great Calamity // Spew Flame  {5}{R}{R} // {4}{R}
+  Legendary Creature — Dragon // Sorcery — Adventure
+  identity: R · commander-legal: yes · HOB 109 · via fuzzy
+  | Flying // Spew Flame deals 5 damage to target creature. (Then exile this card. You may cast the creature later from exile.)
+  https://scryfall.com/card/hob/109/smaug-the-great-calamity-spew-flame?utm_source=api
+
+Sonic Shrieker  {2}{R}{W}{B}
+  Creature — Dragon
+  identity: B R W · commander-legal: yes · TDM 226 · via scryfall
+  | Flying
+  | When this creature enters, it deals 2 damage to any target and you gain 2 life. If a player is dealt damage this way, they discard a card.
+  https://scryfall.com/card/tdm/226/sonic-shrieker?utm_source=api
+
+Summon: G.F. Ifrit  {2}{R}
+  Enchantment Creature — Saga Demon
+  identity: R · commander-legal: yes · FIN 163 · via scryfall
+  | (As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)
+  | I, II — You may discard a card. If you do, draw a card.
+  | III, IV — Add {R}.
+  https://scryfall.com/card/fin/163/summon:-gf-ifrit?utm_source=api
+
+Sustainer of the Realm  {2}{W}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · IMA 35 · via scryfall
+  | Flying
+  | Whenever this creature blocks, it gets +0/+2 until end of turn.
+  https://scryfall.com/card/ima/35/sustainer-of-the-realm?utm_source=api
+
+Tragedy Feaster  {2}{B}{B}
+  Creature — Demon
+  identity: B · commander-legal: yes · SOS 102 · via scryfall
+  | Trample
+  | Ward—Discard a card.
+  | Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.
+  https://scryfall.com/card/sos/102/tragedy-feaster?utm_source=api
+
+Two-Headed Dragon  {4}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · ARC 50 · via scryfall
+  | Flying
+  | Menace (This creature can't be blocked except by two or more creatures.)
+  | This creature can block an additional creature each combat.
+  | {1}{R}: This creature gets +2/+0 until end of turn.
+  https://scryfall.com/card/arc/50/two-headed-dragon?utm_source=api
+
+Vanguard Seraph  {3}{W}
+  Creature — Angel Warrior
+  identity: W · commander-legal: yes · FDN 28 · via scryfall
+  | Flying
+  | Whenever you gain life for the first time each turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+  https://scryfall.com/card/fdn/28/vanguard-seraph?utm_source=api
+
+Voice of Grace  {3}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · USG 54 · via scryfall
+  | Flying, protection from black
+  https://scryfall.com/card/usg/54/voice-of-grace?utm_source=api
+
+Voice of Truth  {3}{W}
+  Creature — Angel
+  identity: W · commander-legal: yes · NEM 25 · via scryfall
+  | Flying, protection from white
+  https://scryfall.com/card/nem/25/voice-of-truth?utm_source=api
+
+Wrathful Red Dragon  {3}{R}{R}
+  Creature — Dragon
+  identity: R · commander-legal: yes · CLB 207 · via scryfall
+  | Flying
+  | Whenever a Dragon you control is dealt damage, it deals that much damage to any target that isn't a Dragon.
+  https://scryfall.com/card/clb/207/wrathful-red-dragon?utm_source=api
+
+Kaalia of the Vast  {1}{R}{W}{B}
+  Legendary Creature — Human Cleric
+  identity: B R W · commander-legal: yes · MH3 290 · via scryfall
+  | Flying
+  | Whenever Kaalia attacks an opponent, you may put an Angel, Demon, or Dragon creature card from your hand onto the battlefield tapped and attacking that opponent.
+  https://scryfall.com/card/mh3/290/kaalia-of-the-vast?utm_source=api
+
+Slayers' Stronghold  —
+  Land
+  identity: R W · commander-legal: yes · MKC 295 · via scryfall
+  | {T}: Add {C}.
+  | {R}{W}, {T}: Target creature gets +2/+0 and gains vigilance and haste until end of turn.
+  https://scryfall.com/card/mkc/295/slayers-stronghold?utm_source=api
+
+Rogue's Passage  —
+  Land
+  identity: colorless · commander-legal: yes · HOC 212 · via scryfall
+  | {T}: Add {C}.
+  | {4}, {T}: Target creature can't be blocked this turn.
+  https://scryfall.com/card/hoc/212/rogues-passage?utm_source=api
+
+Boros Charm  {R}{W}
+  Instant
+  identity: R W · commander-legal: yes · FDN 721 · via scryfall
+  | Choose one —
+  | • Boros Charm deals 4 damage to target player or planeswalker.
+  | • Permanents you control gain indestructible until end of turn.
+  | • Target creature gains double strike until end of turn.
+  https://scryfall.com/card/fdn/721/boros-charm?utm_source=api
+
+Austere Command  {4}{W}{W}
+  Sorcery
+  identity: W · commander-legal: yes · MSC 121 · via scryfall
+  | Choose two —
+  | • Destroy all artifacts.
+  | • Destroy all enchantments.
+  | • Destroy all creatures with mana value 3 or less.
+  | • Destroy all creatures with mana value 4 or greater.
+  https://scryfall.com/card/msc/121/austere-command?utm_source=api
+
+Ghostly Prison  {2}{W}
+  Enchantment
+  identity: W · commander-legal: yes · SOC 146 · via scryfall
+  | Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.
+  https://scryfall.com/card/soc/146/ghostly-prison?utm_source=api
+
+Grim Tutor  {1}{B}{B}
+  Sorcery
+  identity: B · commander-legal: yes · M21 103 · via scryfall
+  | Search your library for a card, put that card into your hand, then shuffle. You lose 3 life.
+  https://scryfall.com/card/m21/103/grim-tutor?utm_source=api
+
+Toxic Deluge  {2}{B}
+  Sorcery
+  identity: B · commander-legal: yes · MSC 161 · via scryfall
+  | As an additional cost to cast this spell, pay X life.
+  | All creatures get -X/-X until end of turn.
+  https://scryfall.com/card/msc/161/toxic-deluge?utm_source=api
+
+Vindicate  {1}{W}{B}
+  Sorcery
+  identity: B W · commander-legal: yes · MH2 294 · via scryfall
+  | Destroy target permanent.
+  https://scryfall.com/card/mh2/294/vindicate?utm_source=api
+
+Generous Gift  {2}{W}
+  Instant
+  identity: W · commander-legal: yes · MSC 133 · via scryfall
+  | Destroy target permanent. Its controller creates a 3/3 green Elephant creature token.
+  https://scryfall.com/card/msc/133/generous-gift?utm_source=api
+
+Terminate  {B}{R}
+  Instant
+  identity: B R · commander-legal: yes · MSC 189 · via scryfall
+  | Destroy target creature. It can't be regenerated.
+  https://scryfall.com/card/msc/189/terminate?utm_source=api
+
+Dragon Tempest  {1}{R}
+  Enchantment
+  identity: R · commander-legal: yes · TDC 94 · via scryfall
+  | Whenever a creature you control with flying enters, it gains haste until end of turn.
+  | Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.
+  https://scryfall.com/card/tdc/94/dragon-tempest?utm_source=api
+
+Reliquary Tower  —
+  Land
+  identity: colorless · commander-legal: yes · SOC 398 · via scryfall
+  | You have no maximum hand size.
+  | {T}: Add {C}.
+  https://scryfall.com/card/soc/398/reliquary-tower?utm_source=api
+
+Swiftfoot Boots  {2}
+  Artifact — Equipment
+  identity: colorless · commander-legal: yes · MBC 77 · via scryfall
+  | Equipped creature has hexproof and haste. (It can't be the target of spells or abilities your opponents control. It can attack and {T} no matter when it came under your control.)
+  | Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)
+  https://scryfall.com/card/mbc/77/swiftfoot-boots?utm_source=api
+
+Lightning Greaves  {2}
+  Artifact — Equipment
+  identity: colorless · commander-legal: yes · MSC 202 · via scryfall
+  | Equipped creature has haste and shroud. (It can't be the target of spells or abilities.)
+  | Equip {0}
+  https://scryfall.com/card/msc/202/lightning-greaves?utm_source=api
+
+Spectator Seating  —
+  Land
+  identity: R W · commander-legal: yes · MSC 268 · via scryfall
+  | This land enters tapped unless you have two or more opponents.
+  | {T}: Add {R} or {W}.
+  https://scryfall.com/card/msc/268/spectator-seating?utm_source=api
+
+===== END VERBATIM ORACLE TEXT =====
