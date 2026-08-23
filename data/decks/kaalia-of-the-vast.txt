@@ -2,7 +2,7 @@
 # Commander: Kaalia of the Vast
 # Colors: B R W
 # Archetype: reanimator tribal-angel tribal-demon tribal-dragon
-# Source: auto-generated draft (scripts/auto_build.py) from owned cards.
+# Source: manual-replace — auto_build pivot draft, top end hand-tuned (12 swaps)
 
 # --- Commander ---
 1 Kaalia of the Vast
@@ -12,48 +12,45 @@
 1 Smaug, Wicked Worm
 1 Ganax, Astral Hunter
 1 Dragonhawk, Fate's Tempest
-1 Indulgent Tormentor
 1 Lorehold, the Historian
 1 Neriv, Heart of the Storm
-1 Bolg's Company
 1 Cartographer's Hawk
-1 Endrider Catalyzer
-1 Gilded Ghoda
-1 Leonin Surveyor
-1 Masked Meower
-1 Angelic Curator
 1 Hellkite Tyrant
 1 Archfiend of Depravity
 1 Sephara, Sky's Blade
 1 Bloodgift Demon
 1 Fin Fang Foom
-1 Voice of Truth
 1 Atsushi, the Blazing Sky
 1 Decadent Dragon // Expensive Taste
 1 Parapet Thrasher
 1 Scavenger Regent // Exude Toxin
 1 Serra Paragon
-1 Sustainer of the Realm
 1 Tragedy Feaster
-1 Vanguard Seraph
-1 Voice of Grace
 1 Desert Were-Worm
 1 Obsidian Charmaw
 1 Ao, the Dawn Sky
 1 Guardian Scalelord
 1 Hellkite Courser
+1 Brainstealer Dragon
+1 Smaug the Impenetrable
+1 Smaug, the Great Calamity // Spew Flame
+1 Lathliss, Dragon Queen
+1 Two-Headed Dragon
+1 Scourge of Valkas
+1 Karmic Guide
+1 Scalelord Reckoner
+1 Indulgent Tormentor
 
 # --- Instants ---
 1 Rakdos Charm
 1 Fracture
 1 Disenchant
-1 Spectacular Tactics
 1 Silverquill Charm
-1 Stone by Sunlight
 1 Cloud's Limit Break
 1 Swords to Plowshares
 1 Path to Exile
 1 Boros Charm
+1 Dark Ritual
 
 # --- Sorceries ---
 1 Faithless Looting
@@ -64,6 +61,7 @@
 1 Sandman's Quicksand
 1 Desolation of Smaug
 1 Outbreak
+1 Read the Bones
 
 # --- Artifacts ---
 1 Sol Ring
@@ -76,6 +74,10 @@
 1 Swiftfoot Boots
 1 Lightning Greaves
 1 Arcane Signet
+1 Commander's Sphere
+
+# --- Enchantments ---
+1 Dragon Tempest
 
 # --- Lands ---
 1 Command Tower

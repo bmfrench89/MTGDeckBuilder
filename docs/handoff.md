@@ -26,9 +26,12 @@ so the attack trigger the deck is named after is off in nearly two games in thre
 not the top end, is almost certainly what "not a big fan" is.
 
 **Why Kaalia is not the fix.** She solves exactly the two felt problems — commander on the
-battlefield 36.1% -> **97.8%**, risky-to-cast 52 -> **40** — and makes the measured ones
-worse: field top-25 in deck 20/25 -> 12/25, kill rate 78.1% -> 68.5%, and under a wipe
-11.9% -> **4.1%** (she is a 2/2 the wipe also kills). Bracket 3 -> 2.
+battlefield 36.1% -> **97.3%**, risky-to-cast 52 -> **42** — and makes the measured ones
+worse: field top-25 in deck 20/25 -> 12/25, kill rate 78.5% -> 58.4%, and under a wipe
+11.9% -> **4.1%** (she is a 2/2 the wipe also kills). Bracket 3 -> 2. Note the split
+scorecard: on power.py's own axes Kaalia scores **66.1/100 against the Ur-Dragon's 51.5**
+(interaction, ramp, draw and consistency all max out) — the bracket gap is entirely the
+Game Changer count, 1 vs 0.
 
 **The pool census is the hard constraint.** 50 owned Mardu-legal Angel/Demon/Dragon
 creatures — but the MV histogram is {2:1, 3:1, 4:17, 5:20, 6:7, 7:4} and there is **not one
@@ -37,6 +40,19 @@ Graded on verified text: 5 bombs, 16 solid, 21 filler, 8 unplayable. Every marqu
 unowned (Gisela 79%, Aurelia 73%, Rune-Scarred Demon 71%, Avacyn 67%, Liesa 60%, Master of
 Cruelties 59%). The optimizer's own verdict on the owned pool: *"this deck can't improve
 from your collection: buy the gaps."* Those six cards are in the deck's `.buylist.csv`.
+
+**The build needed hand-tuning and that is a finding.** `auto_build`'s curve template took
+only **4 of the 10 free MV6+ Mardu bodies** — it refuses the exact expensive cards Kaalia
+exists to cheat. Twelve manual swaps (five non-A/D/D filler bodies, five vanilla A/D/D, two
+weak spells out; Brainstealer Dragon, both big Smaugs, Lathliss, Two-Headed Dragon, Scourge
+of Valkas, Scalelord Reckoner, Karmic Guide and Dragon Tempest in) took the 99 from 4 to
+**9 cheat targets at MV 6+**. Goldfish scores that build *slower* (kill 58.4% vs 68.8%) and
+that is the documented artifact, not a verdict: the sim casts highest-MV-first, models no
+abilities, and **does not model Kaalia's trigger at all**. Engine-read overrules, same as
+Radagast and Ureni. The top end plus Indulgent Tormentor are named in the deck's
+`.notes.md` do-not-cut list, which is what stops `optimize.py` churning them — it proposed
+cutting Brainstealer Dragon and Smaug the Impenetrable for buys, and Indulgent Tormentor
+for a shared Talisman, because Universes Beyond cards score 0% on field data.
 
 **Third options tested and rejected.** Miirym, Sentinel Wyrm (Temur) looked strictly better
 on shard analysis — 27 dragons, 14 at MV 6+ against Mardu's 8, field top-25 18/25 — but
@@ -82,8 +98,18 @@ trigger + owned Mardu support) and `data/reference/kaalia-lands-verified-2026-08
 (43 candidate lands). New field snapshots: `kaalia-of-the-vast` (refreshed),
 `miirym-sentinel-wyrm`, `vaevictis-asmadi-the-dire`.
 
+**A point that cuts FOR the pivot, and was not obvious.** Dismantling the Ur-Dragon takes
+the collection from **115 cross-deck conflicts to 98**; adding the Kaalia deck back brings
+it to **105** — a net reduction of 10 against today. The pivot frees more contested copies
+than it consumes.
+
+**The coexist option is a mirage.** Built with `--owned-only` so it borrows nothing, a
+Kaalia deck alongside an intact Ur-Dragon runs **2 of the field's top 25 (8%)** and contains
+no Sol Ring, no Command Tower, no Arcane Signet, no Lightning Greaves, no Swords to
+Plowshares — every one is fully committed across the other nine decks.
+
 **The decision is the player's and it is still open.** The Kaalia deck and the Ur-Dragon
-share 35 cards (26 `deck_conflicts` shortfalls) and cannot both be sleeved.
+cannot both be sleeved.
 
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 

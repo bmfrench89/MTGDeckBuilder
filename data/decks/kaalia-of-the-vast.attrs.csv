@@ -4,46 +4,43 @@ Summon: G.F. Ifrit,Creature,3,R,R,draw,3,3
 "Smaug, Wicked Worm",Creature,5,B R,,draw,3,5
 "Ganax, Astral Hunter",Creature,5,R,W U B R G,dork;ramp,3,3
 "Dragonhawk, Fate's Tempest",Creature,5,R,,,3,5
-Indulgent Tormentor,Creature,5,B,,draw,3,5
 "Lorehold, the Historian",Creature,5,R W,,draw,3,5
 "Neriv, Heart of the Storm",Creature,4,B R W,,,3,4
-Bolg's Company,Creature,2,B R,B R,dork;mana2;ramp,3,2
 Cartographer's Hawk,Creature,2,W,,fetch:plains;ramp,3,2
-Endrider Catalyzer,Creature,2,R,R,dork;mana2;ramp,3,3
-Gilded Ghoda,Creature,2,R,W U B R G,dork;ramp,3,2
-Leonin Surveyor,Creature,2,W,,draw,3,2
-Masked Meower,Creature,1,R,,draw,3,1
-Angelic Curator,Creature,2,W,,,3,1
 Hellkite Tyrant,Creature,6,R,,,3,6
 Archfiend of Depravity,Creature,5,B,,,3,5
 "Sephara, Sky's Blade",Creature,7,W,,,3,7
 Bloodgift Demon,Creature,5,B,,,3,5
 Fin Fang Foom,Creature,4,R,,,3,3
-Voice of Truth,Creature,4,W,,,3,2
 "Atsushi, the Blazing Sky",Creature,4,R,,,3,4
 Decadent Dragon // Expensive Taste,Creature,4,B R,,,3,4
 Parapet Thrasher,Creature,4,R,,,3,4
 Scavenger Regent // Exude Toxin,Creature,4,B,,,3,4
 Serra Paragon,Creature,4,W,,,3,3
-Sustainer of the Realm,Creature,4,W,,,3,2
 Tragedy Feaster,Creature,4,B,,,3,7
-Vanguard Seraph,Creature,4,W,,,3,3
-Voice of Grace,Creature,4,W,,,3,2
 Desert Were-Worm,Creature,6,R,,,3,0
 Obsidian Charmaw,Creature,5,R,,,3,4
 "Ao, the Dawn Sky",Creature,5,W,,,3,5
 Guardian Scalelord,Creature,5,W,,,3,3
 Hellkite Courser,Creature,6,R,,,3,6
+Brainstealer Dragon,Creature,7,B,,,3,6
+Smaug the Impenetrable,Creature,7,B R,,,3,8
+"Smaug, the Great Calamity // Spew Flame",Creature,7,R,,,3,5
+"Lathliss, Dragon Queen",Creature,6,R,,,3,6
+Two-Headed Dragon,Creature,6,R,,,3,4
+Scourge of Valkas,Creature,5,R,,,3,4
+Karmic Guide,Creature,5,W,,,3,2
+Scalelord Reckoner,Creature,5,W,,,3,4
+Indulgent Tormentor,Creature,5,B,,draw,3,5
 Rakdos Charm,Instant,2,B R,,removal,3,
 Fracture,Instant,2,B W,,removal,3,
 Disenchant,Instant,2,W,,removal,3,
-Spectacular Tactics,Instant,2,W,,removal,3,
 Silverquill Charm,Instant,2,B W,,removal,3,
-Stone by Sunlight,Instant,2,W,,removal,3,
 Cloud's Limit Break,Instant,2,W,,removal;wipe,3,
 Swords to Plowshares,Instant,1,W,,removal,3,
 Path to Exile,Instant,1,W,,removal,3,
 Boros Charm,Instant,2,R W,,,3,
+Dark Ritual,Instant,1,B,B,mana3,3,
 Faithless Looting,Sorcery,1,R,,draw,3,
 Sign in Blood,Sorcery,2,B,,,3,
 Unearth,Sorcery,1,B,,draw,3,
@@ -52,6 +49,7 @@ Collision Course,Sorcery,2,W,,removal,3,
 Sandman's Quicksand,Sorcery,3,B,,wipe,3,
 Desolation of Smaug,Sorcery,4,R,W U B R G,mana-restricted,3,
 Outbreak,Sorcery,4,B,,wipe,3,
+Read the Bones,Sorcery,3,B,,draw,3,
 Sol Ring,Artifact,1,,C,mana2;ramp;rock,3,
 Rakdos Signet,Artifact,2,B R,B R,mana2;ramp;rock,3,
 Talisman of Indulgence,Artifact,2,B R,B R C,ramp;rock,3,
@@ -62,6 +60,8 @@ Talisman of Hierarchy,Artifact,2,B W,W B C,ramp;rock,3,
 Swiftfoot Boots,Artifact,2,,,,3,
 Lightning Greaves,Artifact,2,,,,3,
 Arcane Signet,Artifact,2,,W U B R G,ramp;rock,3,
+Commander's Sphere,Artifact,3,,W U B R G,draw;ramp;rock,3,
+Dragon Tempest,Enchantment,2,R,,,3,
 Command Tower,Land,0,,W U B R G,,3,
 Clifftop Retreat,Land,0,R W,W R,etb-tapped-cond,3,
 Smoldering Marsh,Land,0,B R,B R,etb-tapped-cond,3,
