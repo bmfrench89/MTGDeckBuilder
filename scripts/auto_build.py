@@ -106,21 +106,50 @@ _TRIBAL_MIN = 12  # owned in-color members before a tribal build is honest (grou
 
 
 def _tribe_and_support(commander_name, idx, archetype, coll, identity):
-    """The tribe a commander is built around + how many in-color members you own.
-    Candidates: 'tribal-X' archetype tags + the commander's own non-'Human' subtypes;
-    pick whichever the collection best supports (so we never force a tribe you can't field)."""
-    cands = [a.split("-", 1)[1].lower() for a in archetype if a.startswith("tribal-")]
+    """The tribe(s) a commander is built around + how many in-color members you own.
+
+    Returns `(tribes, n)` where `tribes` is a frozenset of lowercase subtypes (or
+    None) and `n` is the number of owned, in-color cards belonging to ANY of them.
+
+    Two candidate sources, deliberately treated differently:
+
+    * **Authored `tribal-X` tags in commanders.csv are intent, so they UNION.** A
+      commander that cares about several tribes at once gets all of them. Kaalia
+      of the Vast is the case that forced this: her trigger reads "an Angel, Demon,
+      or Dragon creature card", which is three subtypes and not reducible to one.
+      Picking the single best-supported tag would build a Dragon deck and silently
+      drop 22 owned Angels and Demons.
+    * **Subtypes read off the commander's own type line are a GUESS, so they
+      compete.** "Orc Dragon" should build Dragons, not Orcs-and-Dragons, so the
+      collection still decides — that is the original best-supported behaviour and
+      it is unchanged for every commander without an authored tag.
+
+    A tag naming a subtype the collection cannot field still returns its real count;
+    `build()` applies `_TRIBAL_MIN` and warns rather than forcing a tribe.
+    """
+    def _members(tribes):
+        return sum(1 for c in coll
+                   if tribes & {s.lower() for s in (c.subtypes or [])}
+                   and (not c.identity or c.identity <= identity))
+
+    tagged = frozenset(a.split("-", 1)[1].lower()
+                       for a in archetype if a.startswith("tribal-"))
+    if tagged:
+        return tagged, _members(tagged)
+
     ref = mtglib.lookup(idx, commander_name)
-    if ref and ref.subtypes:
-        cands += [s.lower() for s in ref.subtypes if s.lower() != "human"]
     best, best_n = None, 0
-    for tribe in dict.fromkeys(cands):
-        n = sum(1 for c in coll
-                if tribe in {s.lower() for s in (c.subtypes or [])}
-                and (not c.identity or c.identity <= identity))
+    for sub in dict.fromkeys(s.lower() for s in (ref.subtypes if ref else []) or []
+                             if s.lower() != "human"):
+        n = _members({sub})
         if n > best_n:
-            best, best_n = tribe, n
+            best, best_n = frozenset({sub}), n
     return best, best_n
+
+
+def _tribe_label(tribes):
+    """'Angel/Demon/Dragon' from a tribe set — stable order, for humans."""
+    return "/".join(t.title() for t in sorted(tribes))
 
 
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
@@ -168,9 +197,10 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     if tribe and tribe_n >= _TRIBAL_MIN:
         ctx["tribal"] = tribe
     elif tribe:
-        tribe_warning = (f"{commander_name} wants {tribe.title()}s, but you own only {tribe_n} "
+        label = _tribe_label(tribe)
+        tribe_warning = (f"{commander_name} wants {label}s, but you own only {tribe_n} "
                          f"in-color — too few for a tribal build (needs ~{_TRIBAL_MIN}+), so this "
-                         f"is a goodstuff draft, not a {tribe.title()} deck.")
+                         f"is a goodstuff draft, not a {label} deck.")
     nameonly = not any(c.types for c in coll)
 
     # Candidate pool: owned minus copies committed to your other decks (basics exempt).
@@ -280,7 +310,7 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         for c in nonland:
             if sum(1 for x in chosen if not x["is_land"]) >= spell_budget:
                 break
-            if tribe in {s.lower() for s in (c["card"].subtypes or [])}:
+            if tribe & {s.lower() for s in (c["card"].subtypes or [])}:
                 take(c)
     # synergy / threats / flex — NON-quota roles first (real synergy / creatures /
     # threats), then any remaining by fit for depth, up to the spell budget. This
@@ -387,7 +417,9 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "off_color_skipped": off_color,
         "nameonly": nameonly,
         "known_commander": known,
-        "tribal": ctx.get("tribal"),
+        # A sorted list, not the frozenset: this dict is handed straight to
+        # json.dumps by --json and by webapp's Build Next.
+        "tribal": sorted(ctx["tribal"]) if ctx.get("tribal") else None,
         "tribe_warning": tribe_warning,
         "assessment": assessment,
         "mana": mana,

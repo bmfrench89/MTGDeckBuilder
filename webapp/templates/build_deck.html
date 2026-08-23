@@ -11,7 +11,9 @@ A heuristic <b>draft</b>, not a tuned list.
 enrich the collection (Card DB) for a sharper build.</span>{% endif %}
 {% if d.short %}<br><span class="warn">Your available pool was {{ d.short }} card(s) short of a full 99.</span>{% endif %}
 {% if d.tribe_warning %}<br><span class="warn">⚠ {{ d.tribe_warning }}</span>{% endif %}
-{% if d.tribal %}<br><span class="muted">Tribal build — prioritizing your owned <b>{{ d.tribal|title }}s</b>.</span>{% endif %}</div>
+{# d.tribal is a LIST of subtypes — three of them for Kaalia of the Vast — so it is
+   joined here rather than |title'd, which would render the Python repr. #}
+{% if d.tribal %}<br><span class="muted">Tribal build — prioritizing your owned <b>{{ d.tribal|map('title')|join('/') }}s</b>.</span>{% endif %}</div>
 
 <div class="row mt-4">
   {% set ci = d.identity if d.identity != 'C' else '' %}

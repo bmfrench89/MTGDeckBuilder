@@ -155,11 +155,83 @@ def test_tribal_tags_must_be_singular_to_resolve(tmp_path):
 
     tribe, n = auto_build._tribe_and_support(
         "Tag Only Commander", idx, ["tribal-spider"], coll, {"W"})
-    assert (tribe, n) == ("spider", 12), "the singular tag must find the tribe"
+    assert (tribe, n) == (frozenset({"spider"}), 12), "the singular tag must find the tribe"
 
     tribe, n = auto_build._tribe_and_support(
         "Tag Only Commander", idx, ["tribal-spiders"], coll, {"W"})
-    assert tribe is None and n == 0, "a plural tag matches no subtype — that's the bug"
+    # An authored tag is now returned even when it matches nothing, with its real
+    # count of 0, so `build()` raises the "you own only 0 in-color" warning instead
+    # of the tag evaporating. The plural bug is LOUD now rather than a silent no-op;
+    # the data guard below is still what keeps it out of the reference file.
+    assert (tribe, n) == (frozenset({"spiders"}), 0), "a plural tag matches no subtype"
+
+
+def test_multi_tribe_commander_unions_its_tags(tmp_path):
+    """Kaalia of the Vast: three authored tribes must UNION, not compete.
+
+    Her trigger reads "an Angel, Demon, or Dragon creature card". The old code took
+    whichever single `tribal-` tag the collection best supported, so a pool of
+    28 Dragons / 13 Angels / 9 Demons built a Dragon deck and dropped 22 cards the
+    commander explicitly wants. (In the live repo the tag was worse still —
+    `tribal-hero`, copied from Captain America — so the builder filled the 99 with
+    Marvel Heroes and put ZERO Angels, Demons or Dragons in a Kaalia deck.)"""
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Multi Tribe Boss,4,W,W B R,{1}{R}{W}{B},Legendary Creature,,rare,mt000000,1.00"]
+    for i in range(6):
+        rows.append(f"1,Test Angel {i},4,W,W,{{3}}{{W}},Creature,Angel,rare,an{i:06d},0.50")
+    for i in range(5):
+        rows.append(f"1,Test Demon {i},5,B,B,{{4}}{{B}},Creature,Demon,rare,de{i:06d},0.50")
+    for i in range(4):
+        rows.append(f"1,Test Dragon {i},6,R,R,{{5}}{{R}},Creature,Dragon,rare,dr{i:06d},0.50")
+    p = tmp_path / "add.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+
+    tags = ["reanimator", "tribal-angel", "tribal-demon", "tribal-dragon"]
+    tribe, n = auto_build._tribe_and_support(
+        "Multi Tribe Boss", idx, tags, coll, {"W", "B", "R"})
+    assert tribe == frozenset({"angel", "demon", "dragon"})
+    # 6 + 5 + 4 — the UNION. Best-of-one would have answered 6 and built Angels only.
+    assert n == 15, f"tags must union, got {n}"
+
+
+def test_subtype_derived_tribes_still_compete(tmp_path):
+    """The union rule applies to AUTHORED tags only; a commander's own type line
+    stays a guess, so the collection still picks one. "Orc Dragon" builds Dragons,
+    not Orcs-and-Dragons."""
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Orcish Wyrm,5,R,R,{4}{R},Legendary Creature,Orc;Dragon,rare,ow000000,1.00"]
+    for i in range(9):
+        rows.append(f"1,Grunt {i},2,R,R,{{1}}{{R}},Creature,Orc,common,or{i:06d},0.10")
+    for i in range(13):
+        rows.append(f"1,Wyrmling {i},5,R,R,{{4}}{{R}},Creature,Dragon,rare,wy{i:06d},0.50")
+    p = tmp_path / "orcdragon.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+
+    tribe, n = auto_build._tribe_and_support("Orcish Wyrm", idx, [], coll, {"R"})
+    # 13 Dragons beat 9 Orcs; the commander itself is a Dragon so it counts too.
+    assert tribe == frozenset({"dragon"}) and n == 14, (tribe, n)
+
+
+def test_kaalia_row_names_her_three_real_tribes():
+    """Guard the DATA: Kaalia's row must not carry a tribe she does not care about.
+
+    It said `tribal-hero` — Captain America's tag — for long enough that
+    `auto_build "Kaalia of the Vast"` returned a legal 100 containing zero Angels,
+    Demons or Dragons. A wrong tribe is worse than the plural bug above: that one
+    matched nothing, this one matched the wrong cards and looked like a real deck."""
+    import csv
+    import os
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "data", "reference", "commanders.csv")
+    with open(path, encoding="utf-8") as f:
+        rows = {r["Name"]: r for r in csv.DictReader(l for l in f if not l.startswith("#"))}
+    tags = set((rows["Kaalia of the Vast"]["Archetypes"] or "").split())
+    assert {"tribal-angel", "tribal-demon", "tribal-dragon"} <= tags, tags
+    assert "tribal-hero" not in tags, "Kaalia is not a Hero commander"
 
 
 def test_every_curated_tribal_tag_is_a_real_subtype_shape():

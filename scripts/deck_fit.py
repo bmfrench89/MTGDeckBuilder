@@ -302,9 +302,18 @@ def _staple_component(card, refs, ctx=None):
 
 
 def _theme_component(card, ctx):
+    # `tribal` arrives in two shapes and BOTH are live: `context_for_deck` below
+    # derives ONE tribe from a saved deck's subtype histogram (a string), while
+    # `auto_build` passes the commander's authored tribe SET — three of them for
+    # Kaalia of the Vast (Angel/Demon/Dragon). Normalising here is what keeps a
+    # set from failing the `in` test silently and scoring every on-tribe card as
+    # themeless.
     tribal = ctx.get("tribal")
-    if tribal and card.subtypes and tribal in {s.lower() for s in card.subtypes}:
-        return 15, f"on-tribe ({tribal.title()})"
+    tribes = {tribal} if isinstance(tribal, str) else set(tribal or ())
+    if tribes and card.subtypes:
+        hit = tribes & {s.lower() for s in card.subtypes}
+        if hit:
+            return 15, f"on-tribe ({'/'.join(t.title() for t in sorted(hit))})"
     name = card.name.lower()
     for kw in ctx.get("archetype", []):
         if len(kw) >= 4 and kw in name:
