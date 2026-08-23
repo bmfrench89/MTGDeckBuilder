@@ -77,12 +77,33 @@ Tea Shop Ally-only. In a Kaalia deck all four are colourless lands. Real numbers
 W 19 · B 17 · R 21 against a ~23 target. Better than five-colour by a mile, still short.
 And it costs tempo: 12 of these 37 lands enter tapped against the Ur-Dragon's 3 of 36.
 
+**About "work well at bracket 3" specifically — this deck arithmetically cannot get
+there.** `power.py` assigns the bracket purely on Game Changer count: 0 is Bracket 2, 1–3
+is Bracket 3. You own exactly **four** of WotC's 53 Game Changers — Crop Rotation, Force of
+Will, Mystical Tutor, Rhystic Study — and **not one of them is Mardu-legal**. They are all
+green or blue. So no Kaalia deck built from your collection can be labelled Bracket 3 until
+you buy one, regardless of how good it is.
+
+Two honest caveats on that. It cuts the other way too: the Ur-Dragon's entire Bracket 3
+status is its single copy of Rhystic Study — and `deck_conflicts` says you own 2 and four
+decks want it, so the deck that earns the bracket may not be the deck that's sleeved. And
+the repo's own source concedes the mapping is a heuristic; the official system also weighs
+deck intent, which no script can read. Treat "Bracket 3" here as a proxy for power, not the
+thing itself.
+
 **The wipe problem does not go away — it gets worse.** The largest single number in this
 analysis is the Ur-Dragon's collapse from a 78.5% kill rate to 12.8% against one modeled
 board wipe. That is what 36 creatures with zero recursion does. Kaalia is *more* exposed:
 she is a 2/2 the wipe also kills, and this build measures 4.1%.
 
 ## Where the goldfish number is wrong, and why it was overruled
+
+One thing to hold on to when reading the kill-rate rows above: **the simulator models the
+Ur-Dragon's engine and not Kaalia's.** `goldfish.py` pays eminence discounts by name — the
+cost-reduction model shipped for this exact deck in August — while grepping it for "cheat"
+or "onto the battlefield" returns nothing. Every head-to-head clock number is therefore
+measured with one deck's engine switched on and the other's switched off, and the bias runs
+against the pivot. The Ur-Dragon still wins those rows; just don't read the margin as real.
 
 This build's kill rate (58.4%) reads *below* the straight auto-build's (68.8%), and that is
 an instrument artifact, not a verdict — the same class already documented at length in the
