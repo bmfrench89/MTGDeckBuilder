@@ -56,6 +56,8 @@
 1 Deadly Dispute
 1 Assassin's Trophy
 1 Infernal Grasp
+
+# --- Sorceries ---
 1 Witherbloom Command
 1 Culling Ritual
 1 Shared Roots

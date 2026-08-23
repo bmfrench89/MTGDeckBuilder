@@ -43,7 +43,6 @@
 1 Sarkhan, Soul Aflame
 1 Dragonspeaker Shaman
 1 Smaug the Magnificent
-1 Roaming Throne
 
 # --- Instants ---
 1 Assassin's Trophy
@@ -53,6 +52,8 @@
 1 Path to Exile
 1 Swords to Plowshares
 1 Heroic Intervention
+
+# --- Sorceries ---
 1 Rampant Growth
 1 Cultivate
 1 Farseek
@@ -62,6 +63,7 @@
 1 Desolation of Smaug
 
 # --- Artifacts ---
+1 Roaming Throne
 1 Arcane Signet
 1 Sol Ring
 1 Fellwar Stone
