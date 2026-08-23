@@ -1,0 +1,91 @@
+Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
+Kaalia of the Vast,Creature,4,B R W,,,3,2
+Summon: G.F. Ifrit,Creature,3,R,R,draw,3,3
+"Smaug, Wicked Worm",Creature,5,B R,,draw,3,5
+"Ganax, Astral Hunter",Creature,5,R,W U B R G,dork;ramp,3,3
+"Dragonhawk, Fate's Tempest",Creature,5,R,,,3,5
+Indulgent Tormentor,Creature,5,B,,draw,3,5
+"Lorehold, the Historian",Creature,5,R W,,draw,3,5
+"Neriv, Heart of the Storm",Creature,4,B R W,,,3,4
+Bolg's Company,Creature,2,B R,B R,dork;mana2;ramp,3,2
+Cartographer's Hawk,Creature,2,W,,fetch:plains;ramp,3,2
+Endrider Catalyzer,Creature,2,R,R,dork;mana2;ramp,3,3
+Gilded Ghoda,Creature,2,R,W U B R G,dork;ramp,3,2
+Leonin Surveyor,Creature,2,W,,draw,3,2
+Masked Meower,Creature,1,R,,draw,3,1
+Angelic Curator,Creature,2,W,,,3,1
+Hellkite Tyrant,Creature,6,R,,,3,6
+Archfiend of Depravity,Creature,5,B,,,3,5
+"Sephara, Sky's Blade",Creature,7,W,,,3,7
+Bloodgift Demon,Creature,5,B,,,3,5
+Fin Fang Foom,Creature,4,R,,,3,3
+Voice of Truth,Creature,4,W,,,3,2
+"Atsushi, the Blazing Sky",Creature,4,R,,,3,4
+Decadent Dragon // Expensive Taste,Creature,4,B R,,,3,4
+Parapet Thrasher,Creature,4,R,,,3,4
+Scavenger Regent // Exude Toxin,Creature,4,B,,,3,4
+Serra Paragon,Creature,4,W,,,3,3
+Sustainer of the Realm,Creature,4,W,,,3,2
+Tragedy Feaster,Creature,4,B,,,3,7
+Vanguard Seraph,Creature,4,W,,,3,3
+Voice of Grace,Creature,4,W,,,3,2
+Desert Were-Worm,Creature,6,R,,,3,0
+Obsidian Charmaw,Creature,5,R,,,3,4
+"Ao, the Dawn Sky",Creature,5,W,,,3,5
+Guardian Scalelord,Creature,5,W,,,3,3
+Hellkite Courser,Creature,6,R,,,3,6
+Rakdos Charm,Instant,2,B R,,removal,3,
+Fracture,Instant,2,B W,,removal,3,
+Disenchant,Instant,2,W,,removal,3,
+Spectacular Tactics,Instant,2,W,,removal,3,
+Silverquill Charm,Instant,2,B W,,removal,3,
+Stone by Sunlight,Instant,2,W,,removal,3,
+Cloud's Limit Break,Instant,2,W,,removal;wipe,3,
+Swords to Plowshares,Instant,1,W,,removal,3,
+Path to Exile,Instant,1,W,,removal,3,
+Boros Charm,Instant,2,R W,,,3,
+Faithless Looting,Sorcery,1,R,,draw,3,
+Sign in Blood,Sorcery,2,B,,,3,
+Unearth,Sorcery,1,B,,draw,3,
+Stir Up Trouble,Sorcery,1,B,,removal,3,
+Collision Course,Sorcery,2,W,,removal,3,
+Sandman's Quicksand,Sorcery,3,B,,wipe,3,
+Desolation of Smaug,Sorcery,4,R,W U B R G,mana-restricted,3,
+Outbreak,Sorcery,4,B,,wipe,3,
+Sol Ring,Artifact,1,,C,mana2;ramp;rock,3,
+Rakdos Signet,Artifact,2,B R,B R,mana2;ramp;rock,3,
+Talisman of Indulgence,Artifact,2,B R,B R C,ramp;rock,3,
+Chromatic Lantern,Artifact,3,,W U B R G,ramp;rock,3,
+Explorer's Scope,Artifact,1,,,,3,
+Giant's Boulder,Artifact,1,,W U B R G,ramp;rock,3,
+Talisman of Hierarchy,Artifact,2,B W,W B C,ramp;rock,3,
+Swiftfoot Boots,Artifact,2,,,,3,
+Lightning Greaves,Artifact,2,,,,3,
+Arcane Signet,Artifact,2,,W U B R G,ramp;rock,3,
+Command Tower,Land,0,,W U B R G,,3,
+Clifftop Retreat,Land,0,R W,W R,etb-tapped-cond,3,
+Smoldering Marsh,Land,0,B R,B R,etb-tapped-cond,3,
+Sulfurous Springs,Land,0,B R,B R C,,3,
+Temple of Triumph,Land,0,R W,W R,etb-tapped,3,
+Dark Fortress,Land,0,B R,B R C,,3,
+Scoured Barrens,Land,0,B W,W B,etb-tapped,3,
+Foreboding Ruins,Land,0,B R,B R,etb-tapped-cond,3,
+Terramorphic Expanse,Land,0,,,fetch:basic;ramp,3,
+Bloodfell Caves,Land,0,B R,B R,etb-tapped,3,
+Temple of Malice,Land,0,B R,B R,etb-tapped,3,
+Bojuka Bog,Land,0,B,B,etb-tapped,3,
+Mistveil Plains,Land,0,W,W,etb-tapped,3,
+Sacred Peaks,Land,0,R W,W R,etb-tapped,3,
+Turbulent Steppe,Land,0,R W,W R,etb-tapped-cond,3,
+Exotic Orchard,Land,0,,W U B R G,,3,
+Evolving Wilds,Land,0,,,fetch:basic;ramp,3,
+Crossroads Village,Land,0,,W U B R G,etb-tapped,3,
+Thriving Bluff,Land,0,R,W U B R G,etb-tapped,3,
+Sunbillow Verge,Land,0,R W,W R,,3,
+Isolated Chapel,Land,0,B W,W B,etb-tapped-cond,3,
+Rogue's Passage,Land,0,,C,,3,
+Battlefield Forge,Land,0,R W,W R C,,3,
+Spectator Seating,Land,0,R W,W R,etb-tapped-cond,3,
+Mountain,Land,0,R,R,,3,
+Plains,Land,0,W,W,,3,
+Swamp,Land,0,B,B,,3,

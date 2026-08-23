@@ -1,0 +1,109 @@
+# Title: Kaalia of the Vast
+# Commander: Kaalia of the Vast
+# Colors: B R W
+# Archetype: reanimator tribal-angel tribal-demon tribal-dragon
+# Source: auto-generated draft (scripts/auto_build.py) from owned cards.
+
+# --- Commander ---
+1 Kaalia of the Vast
+
+# --- Creatures ---
+1 Summon: G.F. Ifrit
+1 Smaug, Wicked Worm
+1 Ganax, Astral Hunter
+1 Dragonhawk, Fate's Tempest
+1 Indulgent Tormentor
+1 Lorehold, the Historian
+1 Neriv, Heart of the Storm
+1 Bolg's Company
+1 Cartographer's Hawk
+1 Endrider Catalyzer
+1 Gilded Ghoda
+1 Leonin Surveyor
+1 Masked Meower
+1 Angelic Curator
+1 Hellkite Tyrant
+1 Archfiend of Depravity
+1 Sephara, Sky's Blade
+1 Bloodgift Demon
+1 Fin Fang Foom
+1 Voice of Truth
+1 Atsushi, the Blazing Sky
+1 Decadent Dragon // Expensive Taste
+1 Parapet Thrasher
+1 Scavenger Regent // Exude Toxin
+1 Serra Paragon
+1 Sustainer of the Realm
+1 Tragedy Feaster
+1 Vanguard Seraph
+1 Voice of Grace
+1 Desert Were-Worm
+1 Obsidian Charmaw
+1 Ao, the Dawn Sky
+1 Guardian Scalelord
+1 Hellkite Courser
+
+# --- Instants ---
+1 Rakdos Charm
+1 Fracture
+1 Disenchant
+1 Spectacular Tactics
+1 Silverquill Charm
+1 Stone by Sunlight
+1 Cloud's Limit Break
+1 Swords to Plowshares
+1 Path to Exile
+1 Boros Charm
+
+# --- Sorceries ---
+1 Faithless Looting
+1 Sign in Blood
+1 Unearth
+1 Stir Up Trouble
+1 Collision Course
+1 Sandman's Quicksand
+1 Desolation of Smaug
+1 Outbreak
+
+# --- Artifacts ---
+1 Sol Ring
+1 Rakdos Signet
+1 Talisman of Indulgence
+1 Chromatic Lantern
+1 Explorer's Scope
+1 Giant's Boulder
+1 Talisman of Hierarchy
+1 Swiftfoot Boots
+1 Lightning Greaves
+1 Arcane Signet
+
+# --- Lands ---
+1 Command Tower
+1 Clifftop Retreat
+1 Smoldering Marsh
+1 Sulfurous Springs
+1 Temple of Triumph
+1 Dark Fortress
+1 Scoured Barrens
+1 Foreboding Ruins
+1 Terramorphic Expanse
+1 Bloodfell Caves
+1 Temple of Malice
+1 Bojuka Bog
+1 Mistveil Plains
+1 Sacred Peaks
+1 Turbulent Steppe
+1 Exotic Orchard
+1 Evolving Wilds
+1 Crossroads Village
+1 Thriving Bluff
+1 Sunbillow Verge
+1 Isolated Chapel
+1 Rogue's Passage
+1 Battlefield Forge
+1 Spectator Seating
+
+# --- Basics ---
+4 Mountain
+5 Plains
+4 Swamp

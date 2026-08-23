@@ -6,7 +6,84 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-21._
+_Last updated: 2026-08-23._
+
+## Kaalia of the Vast pivot — researched, built, and NOT recommended yet (2026-08-23)
+
+The player played the Ur-Dragon for the first time, did not enjoy it, and asked whether
+pivoting the commander to Kaalia of the Vast would run better on the owned cards. The deck
+is built and committed (`data/decks/kaalia-of-the-vast.*`); the verdict in its `.notes.md`
+is **not yet**, and the reasoning matters more than the answer.
+
+**The diagnosis the player did not make.** Their hypothesis was "lacking the big cards and
+lands". The lands half is confirmed and worse than it sounds — 52 of 64 nonland cards are
+flagged risky-to-cast-on-curve, all five colours sit below Karsten's ~23-source target, and
+only 11 of 36 lands enter untapped producing 2+ unrestricted colours. But the biggest
+number in the whole analysis is one nobody named: **against one modeled board wipe the
+Ur-Dragon's kill rate collapses 78.5% -> 12.8%** (mean damage −44.9, CI excludes zero).
+36 creatures, zero recursion. The second is that **the commander lands in 36.1% of games**,
+so the attack trigger the deck is named after is off in nearly two games in three. That,
+not the top end, is almost certainly what "not a big fan" is.
+
+**Why Kaalia is not the fix.** She solves exactly the two felt problems — commander on the
+battlefield 36.1% -> **97.8%**, risky-to-cast 52 -> **40** — and makes the measured ones
+worse: field top-25 in deck 20/25 -> 12/25, kill rate 78.1% -> 68.5%, and under a wipe
+11.9% -> **4.1%** (she is a 2/2 the wipe also kills). Bracket 3 -> 2.
+
+**The pool census is the hard constraint.** 50 owned Mardu-legal Angel/Demon/Dragon
+creatures — but the MV histogram is {2:1, 3:1, 4:17, 5:20, 6:7, 7:4} and there is **not one
+card above MV 7**. Kaalia's trigger is worth the mana you skip; 37 of 50 sit at MV 4-5.
+Graded on verified text: 5 bombs, 16 solid, 21 filler, 8 unplayable. Every marquee payoff is
+unowned (Gisela 79%, Aurelia 73%, Rune-Scarred Demon 71%, Avacyn 67%, Liesa 60%, Master of
+Cruelties 59%). The optimizer's own verdict on the owned pool: *"this deck can't improve
+from your collection: buy the gaps."* Those six cards are in the deck's `.buylist.csv`.
+
+**Third options tested and rejected.** Miirym, Sentinel Wyrm (Temur) looked strictly better
+on shard analysis — 27 dragons, 14 at MV 6+ against Mardu's 8, field top-25 18/25 — but
+building it refuted that: **59 cards risky to cast, worse than the Ur-Dragon's 52**, because
+the good Temur lands are committed elsewhere, and Temur has **zero** of the repo's 19
+curated recursion staples. Vaevictis Asmadi (Jund) is symmetric and hands opponents
+permanents. Field snapshots for both are now committed.
+
+**The finding worth keeping.** Of the 19 curated resilience staples, **all 19 are owned**,
+and 15 are Mardu-legal (7 protection, 8 recursion) against Temur's 7/0 and Jund's 7/2. The
+Ur-Dragon's `rec 0` is a build choice, not a collection gap — Karmic Guide, Serra Paragon,
+Haunted Crossroads and Along the Crooked Way are all free right now. **The cheapest fix for
+the deck the player already owns is recursion, not a new commander.**
+
+**Two repo defects found and fixed on the way:**
+
+1. **`auto_build` could not build Kaalia at all.** `commanders.csv` gave her
+   `tribal-hero` — Captain America's tag, copied — so the builder scored Hero (the
+   player's deepest tribe) as her tribe on merit and returned a legal, tuned, Bracket-2
+   deck containing **zero** Angels, Demons or Dragons, with no warning. Same family as the
+   old `tribal-spiders` bug but worse: that one matched nothing, this matched the wrong
+   cards. Fixed in data (her three real tribes) and in code — authored `tribal-` tags now
+   UNION (a commander can care about several tribes), while subtypes read off the
+   commander's own type line still compete. `ctx["tribal"]` is a frozenset now;
+   `deck_fit._theme_component` and `build_deck.html` handle both shapes. Four tests.
+2. **CI had been red on main since 2026-08-21T17:04**, on "Check deck section integrity",
+   not on pytest. Hosted-app deck edits had accumulated 17 typed cards under contradicting
+   sections (9 sorceries in dina under Instants, 7 in ur-dragon, Roaming Throne under
+   Creatures). Fixed with `deck_sections.py --all --apply`; card multisets are provably
+   identical. **Note for next time:** `optimize.py --apply` misfiles its swap-ins the same
+   way, so the CLAUDE.md pipeline needs a second `deck_sections --apply` after optimizing.
+
+**A claim that was tested and refuted.** An intermediate analysis held that the free Mardu
+pool clears Karsten in all three colours once "any colour" lands are counted back in. The
+verbatim text says no: Avengers Tower is Hero-only, Villainous Hideout Villain-only, Castle
+Doom artifact-only, Jasmine Dragon Tea Shop Ally-only — colourless lands in a Kaalia deck,
+and the exact trap the 2026-08-20 Ur-Dragon mana audit already caught. Real numbers
+W 19 · B 17 · R 21.
+
+**Evidence on disk** (109 cards, 0 UNVERIFIED, runner runs 32611590788 / 32612450375):
+`data/reference/kaalia-verified-2026-08-23.txt` (all 50 cheat targets + Kaalia's verbatim
+trigger + owned Mardu support) and `data/reference/kaalia-lands-verified-2026-08-23.txt`
+(43 candidate lands). New field snapshots: `kaalia-of-the-vast` (refreshed),
+`miirym-sentinel-wyrm`, `vaevictis-asmadi-the-dire`.
+
+**The decision is the player's and it is still open.** The Kaalia deck and the Ur-Dragon
+share 35 cards (26 `deck_conflicts` shortfalls) and cannot both be sleeved.
 
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 
