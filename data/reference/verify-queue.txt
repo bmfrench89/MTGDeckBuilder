@@ -1,79 +1,63 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Queued 2026-08-23 — Kaalia of the Vast pivot research. The player asked whether the
-# Ur-Dragon (5c, MV 9 commander) should become Kaalia (Mardu, cheats one
-# Angel/Demon/Dragon from hand into play tapped and attacking). The decisive read is
-# the QUALITY of the owned Mardu-legal Angel/Demon/Dragon pool: 50 unique cards, most
-# of them never verified, many from 2025+ sets where memory is unreliable. A Kaalia
-# target's whole value is what its text does when it arrives free and already
-# attacking, so this cannot be answered from type lines and heuristic flags.
+# Queued 2026-08-23 (round 2) — the Mardu manabase claim, tested rather than trusted.
 #
-# Contents: all 50 owned Mardu-legal Angel/Demon/Dragon creatures, Kaalia herself
-# (verbatim trigger wording), and the owned Mardu support whose text decides a slot.
-Angel of Indemnity
-Angelic Curator
-Ao, the Dawn Sky
-Archfiend of Depravity
-Atsushi, the Blazing Sky
-Bloodgift Demon
-Brainstealer Dragon
-Decadent Dragon // Expensive Taste
-Defiling Daemogoth
-Desert Were-Worm
-Dragonhawk, Fate's Tempest
-Emeria Angel
-Fallen Angel
-Fiendish Panda
-Fin Fang Foom
-Ganax, Astral Hunter
-Guardian Scalelord
-Hellkite Courser
-Hellkite Tyrant
-Herald of Serra
-Indulgent Tormentor
-Kardur, Doomscourge
-Karmic Guide
-Kolaghan, the Storm's Fury
-Lathliss, Dragon Queen
-Lorehold, the Historian
-Neriv, Heart of the Storm
-Nova Hellkite
-Obsidian Charmaw
-Parapet Thrasher
-Radiant, Archangel
-Rakshasa Debaser
-Scalelord Reckoner
-Scavenger Regent // Exude Toxin
-Scourge of Valkas
-Sephara, Sky's Blade
-Serra Paragon
-Smaug the Impenetrable
-Smaug the Magnificent
-Smaug, Wicked Worm
-Smaug, the Great Calamity // Spew Flame
-Sonic Shrieker
-Summon: G.F. Ifrit
-Sustainer of the Realm
-Tragedy Feaster
-Two-Headed Dragon
-Vanguard Seraph
-Voice of Grace
-Voice of Truth
-Wrathful Red Dragon
-Kaalia of the Vast
-Slayers' Stronghold
-Rogue's Passage
-Boros Charm
-Austere Command
-Ghostly Prison
-Grim Tutor
-Toxic Deluge
-Vindicate
-Generous Gift
-Terminate
-Dragon Tempest
-Reliquary Tower
-Swiftfoot Boots
-Lightning Greaves
-Spectator Seating
+# The Kaalia pivot research produced a load-bearing claim: that a 37-land Mardu base
+# from the FREE owned pool clears Karsten's ~23-source target in all three colours,
+# once the "spend-restricted" lands are counted back in for an Angel/Demon/Dragon
+# deck. That last step is exactly the read the Ur-Dragon mana audit REJECTED on
+# 2026-08-20, when Villainous Hideout turned out to make any colour only for VILLAIN
+# spells — one card in that 99 — and got cut for Clifftop Retreat.
+#
+# Avengers Tower, Castle Doom and Jasmine Dragon Tea Shop are the same shape and are
+# almost certainly restricted to Hero / Villain / some non-A-D-D type, in which case
+# they are colourless lands in a Kaalia deck and the "all three colours clear" claim
+# is wrong. Haven and Maelstrom of the Spirit Dragon are Dragon-only, so they serve
+# 28 of the 50 cheat targets, not all of them.
+#
+# Every free Mardu-legal land a tuned Kaalia manabase might use is queued here so the
+# recommendation rests on text, not on a flag heuristic.
+Avengers Tower
+Castle Doom
+Jasmine Dragon Tea Shop
+Villainous Hideout
+Study Hall
+Baxter Building
+Henge of Ramos
+Rhystic Cave
+Rumble Arena
+Molten Slagheap
+Plaza of Heroes
+Dark Fortress
+Horizon of Progress
+Sunbillow Verge
+Sunscorched Divide
+Mistveil Plains
+Sacred Peaks
+Turbulent Steppe
+Rocky Roads
+Thriving Bluff
+Crossroads Village
+Mirage Mesa
+Shimmerdrift Vale
+Lotus Field
+Vector Imperial Capital
+Rabanastre, Royal City
+Lorehold Campus
+Asgardian Citadel
+Glittering Massif
+Foreboding Ruins
+Urborg Volcano
+Cinder Barrens
+Akoum Refuge
+Forum of Amity
+Fields of Strife
+Emeria, the Sky Ruin
+Stensia Bloodhall
+Roadside Reliquary
+The Gold Saucer
+Junktown
+Scorched Ruins
+Terrain Generator
+Vibrant Cityscape
