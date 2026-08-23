@@ -100,7 +100,7 @@
   "fandaniel, telophoroi ascian": 39,
   "farewell": 19,
   "fell the profane": 25,
-  "fellwar stone": 25,
+  "fellwar stone": 24,
   "fetid heath": 46,
   "fierce guardianship": 35,
   "final judgment": 22,
@@ -279,7 +279,7 @@
   "the one ring": 18,
   "the wind crystal": 11,
   "thought vessel": 57,
-  "thran dynamo": 6,
+  "thran dynamo": 7,
   "tome of legends": 7,
   "torrential gearhulk": 17,
   "toxic deluge": 41,
@@ -311,7 +311,7 @@
   "windfall": 14,
   "wishclaw talisman": 5,
   "witch enchanter": 8,
-  "wizard's staff": 9,
+  "wizard's staff": 10,
   "yahenni's expertise": 7
  },
  "lands": [
@@ -692,8 +692,8 @@
   "wizard's staff": "Wizard's Staff",
   "yahenni's expertise": "Yahenni's Expertise"
  },
- "sample_decks": 51088,
- "saved": "2026-08-21",
+ "sample_decks": 51196,
+ "saved": "2026-08-23",
  "slug": "yshtola-nights-blessed",
  "synergy": {
   "absorb": 4,
@@ -761,7 +761,7 @@
   "damn": -14,
   "dancer's chakrams": 23,
   "dark ritual": 1,
-  "darkwater catacombs": 23,
+  "darkwater catacombs": 22,
   "deadly rollick": 30,
   "decanter of endless water": 17,
   "decorum dissertation": 12,
@@ -1006,7 +1006,7 @@
   "windfall": 1,
   "wishclaw talisman": -2,
   "witch enchanter": 1,
-  "wizard's staff": 5,
+  "wizard's staff": 6,
   "yahenni's expertise": 6
  }
 }
