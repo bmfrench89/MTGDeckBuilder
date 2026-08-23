@@ -85,6 +85,33 @@ the deck the player already owns is recursion, not a new commander.**
    identical. **Note for next time:** `optimize.py --apply` misfiles its swap-ins the same
    way, so the CLAUDE.md pipeline needs a second `deck_sections --apply` after optimizing.
 
+**MODEL HOLE FOUND — colour-source counts do not price a land's activation cost.**
+`manabase.py` (and `goldfish.py`) read the `Produced` column, which `carddb` derives from
+Scryfall's `produced_mana`. That records what a land CAN make and never what it COSTS to
+make it, and `grep -n "cost\|activat" scripts/manabase.py` finds no notion of one. So a
+land whose coloured ability reads `{4}, {T}: Add four mana in any combination of colors`
+is counted as a free five-colour source on turn one. Confirmed against verbatim text for
+five owned lands: Baxter Building `{4}`, Henge of Ramos `{2}`, Rumble Arena `{1}`, Study
+Hall `{1}`, Sunscorched Divide `{1}` — the first four all carry `Produced = W U B R G C`.
+Related but weaker: `Horizon of Progress` costs 1 life and only makes types your OTHER
+lands produce, and `Dark Fortress` needs a basic or to have just entered; both are counted
+unconditionally.
+
+**Scope of the error, measured rather than assumed:** exactly **one** such land sits in
+either deck compared here (Sunscorched Divide, in the Ur-Dragon; the Kaalia build has
+none), so the head-to-head numbers in this section stand and the Ur-Dragon is if anything
+a source worse than reported. What the defect *does* kill is the idea that the Ur-Dragon's
+mana can be repaired for free by rearranging owned lands: a challenger built exactly that
+deck and measured risky-to-cast 52 -> 41, then found four of its six swap-ins were the
+costed lands above. That experiment is an upper bound, not a result. **Do not quote
+52 -> 41.** Fixing the five-colour manabase needs purchases (Cavern of Souls 48%, the
+shocks, the fetches — 42 of 47 missing field lands are unowned).
+
+Follow-up if this is ever worth building: an `oracle_flags` token for a costed mana ability
+(vocabulary v4), so `manabase` can discount those sources and `goldfish` can charge for
+them. Same shape as the `mana3` false positive on Fire Nation Palace already logged
+2026-08-20 — both are `_mana_added` reading text it should not.
+
 **A claim that was tested and refuted.** An intermediate analysis held that the free Mardu
 pool clears Karsten in all three colours once "any colour" lands are counted back in. The
 verbatim text says no: Avengers Tower is Hero-only, Villainous Hideout Villain-only, Castle
@@ -107,6 +134,21 @@ than it consumes.
 Kaalia deck alongside an intact Ur-Dragon runs **2 of the field's top 25 (8%)** and contains
 no Sol Ring, no Command Tower, no Arcane Signet, no Lightning Greaves, no Swords to
 Plowshares — every one is fully committed across the other nine decks.
+
+**The adversarial panel split three ways, which is the honest shape of this call.** One
+skeptic returned PIVOT (the Ur-Dragon's 36% commander rate is unfixable from the pool;
+Kaalia wins six of eight power axes 66.1 vs 51.5; the bracket gap is one contested card),
+one returned STAY (the pivot makes 1,110 owned cards unplayable and 44 of the Ur-Dragon's
+90 unique nonbasics Mardu-illegal; every Kaalia build fails the ~50% field gate; the last
+twelve logged Ur-Dragon changes are hand-placed lands from 2026-08-20/21, so the manabase
+work is in progress rather than finished and failed), and one returned CONDITIONAL after
+finding the model hole above. They agree on every fact and differ only on framing: the
+PIVOT verdict is explicitly conditional on buying the six bombs, which is the same
+recommendation as "not yet" read from the other end.
+
+**One challenger claim checked and rejected:** that the player owns none of the 42 curated
+resilience staples. `resilience_staples.csv` has 42 *lines*, 22 of them comments — 19 data
+rows, and **all 19 are owned**. The free-recursion recommendation stands.
 
 **The decision is the player's and it is still open.** The Kaalia deck and the Ur-Dragon
 cannot both be sleeved.

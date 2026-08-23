@@ -75,6 +75,12 @@ text (`data/reference/kaalia-lands-verified-2026-08-23.txt`) says otherwise: Ave
 is Hero-only, Villainous Hideout Villain-only, Castle Doom artifact-only, Jasmine Dragon
 Tea Shop Ally-only. In a Kaalia deck all four are colourless lands. Real numbers:
 W 19 · B 17 · R 21 against a ~23 target. Better than five-colour by a mile, still short.
+Treat all such counts as slightly generous everywhere in this repo: `manabase.py` reads
+what a land CAN produce and never what it costs to activate, so a `{4},{T}: add four mana`
+land counts as free five-colour fixing. This deck happens to contain **none** of the five
+known offenders and the Ur-Dragon contains one (Sunscorched Divide), so the comparison
+above holds — but the defect is why "just rearrange the Ur-Dragon's lands" is not a free
+fix: most of the untapped-looking candidates in the free pool charge mana for their colour.
 And it costs tempo: 12 of these 37 lands enter tapped against the Ur-Dragon's 3 of 36.
 
 **About "work well at bracket 3" specifically — this deck arithmetically cannot get
