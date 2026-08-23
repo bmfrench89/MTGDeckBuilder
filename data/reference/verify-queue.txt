@@ -1,13 +1,79 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-21 — the Treasure census is finished and written up. All 2,776
-# non-basic cards in the collection were verified against Scryfall across six
-# runs; the treasure-relevant text is in data/reference/treasure-verified-2026-08-21.txt
-# and the commander comparison is in docs/handoff.md.
+# Queued 2026-08-23 — Kaalia of the Vast pivot research. The player asked whether the
+# Ur-Dragon (5c, MV 9 commander) should become Kaalia (Mardu, cheats one
+# Angel/Demon/Dragon from hand into play tapped and attacking). The decisive read is
+# the QUALITY of the owned Mardu-legal Angel/Demon/Dragon pool: 50 unique cards, most
+# of them never verified, many from 2025+ sets where memory is unreliable. A Kaalia
+# target's whole value is what its text does when it arrives free and already
+# attacking, so this cannot be answered from type lines and heuristic flags.
 #
-# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
-# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) — though note the census above now
-# covers every card the player owns, so those texts ARE on disk in the corpus
-# the census produced if the run logs are still retrievable.
+# Contents: all 50 owned Mardu-legal Angel/Demon/Dragon creatures, Kaalia herself
+# (verbatim trigger wording), and the owned Mardu support whose text decides a slot.
+Angel of Indemnity
+Angelic Curator
+Ao, the Dawn Sky
+Archfiend of Depravity
+Atsushi, the Blazing Sky
+Bloodgift Demon
+Brainstealer Dragon
+Decadent Dragon // Expensive Taste
+Defiling Daemogoth
+Desert Were-Worm
+Dragonhawk, Fate's Tempest
+Emeria Angel
+Fallen Angel
+Fiendish Panda
+Fin Fang Foom
+Ganax, Astral Hunter
+Guardian Scalelord
+Hellkite Courser
+Hellkite Tyrant
+Herald of Serra
+Indulgent Tormentor
+Kardur, Doomscourge
+Karmic Guide
+Kolaghan, the Storm's Fury
+Lathliss, Dragon Queen
+Lorehold, the Historian
+Neriv, Heart of the Storm
+Nova Hellkite
+Obsidian Charmaw
+Parapet Thrasher
+Radiant, Archangel
+Rakshasa Debaser
+Scalelord Reckoner
+Scavenger Regent // Exude Toxin
+Scourge of Valkas
+Sephara, Sky's Blade
+Serra Paragon
+Smaug the Impenetrable
+Smaug the Magnificent
+Smaug, Wicked Worm
+Smaug, the Great Calamity // Spew Flame
+Sonic Shrieker
+Summon: G.F. Ifrit
+Sustainer of the Realm
+Tragedy Feaster
+Two-Headed Dragon
+Vanguard Seraph
+Voice of Grace
+Voice of Truth
+Wrathful Red Dragon
+Kaalia of the Vast
+Slayers' Stronghold
+Rogue's Passage
+Boros Charm
+Austere Command
+Ghostly Prison
+Grim Tutor
+Toxic Deluge
+Vindicate
+Generous Gift
+Terminate
+Dragon Tempest
+Reliquary Tower
+Swiftfoot Boots
+Lightning Greaves
+Spectator Seating
