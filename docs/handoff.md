@@ -26,9 +26,9 @@ so the attack trigger the deck is named after is off in nearly two games in thre
 not the top end, is almost certainly what "not a big fan" is.
 
 **Why Kaalia is not the fix.** She solves exactly the two felt problems — commander on the
-battlefield 36.1% -> **97.3%**, risky-to-cast 52 -> **42** — and makes the measured ones
-worse: field top-25 in deck 20/25 -> 12/25, kill rate 78.5% -> 58.4%, and under a wipe
-11.9% -> **4.1%** (she is a 2/2 the wipe also kills). Bracket 3 -> 2. Note the split
+battlefield 36.7% -> **97.3%**, risky-to-cast 52 -> **42** — and makes the measured ones
+worse: field top-25 in deck 20/25 -> 12/25, kill rate 78.5% -> 58.8%, and under a wipe
+12.8% -> **4.8%** (she is a 2/2 the wipe also kills). Bracket 3 -> 2. Note the split
 scorecard: on power.py's own axes Kaalia scores **66.1/100 against the Ur-Dragon's 51.5**
 (interaction, ramp, draw and consistency all max out) — the bracket gap is entirely the
 Game Changer count, 1 vs 0.
@@ -46,7 +46,7 @@ only **4 of the 10 free MV6+ Mardu bodies** — it refuses the exact expensive c
 exists to cheat. Twelve manual swaps (five non-A/D/D filler bodies, five vanilla A/D/D, two
 weak spells out; Brainstealer Dragon, both big Smaugs, Lathliss, Two-Headed Dragon, Scourge
 of Valkas, Scalelord Reckoner, Karmic Guide and Dragon Tempest in) took the 99 from 4 to
-**9 cheat targets at MV 6+**. Goldfish scores that build *slower* (kill 58.4% vs 68.8%) and
+**9 cheat targets at MV 6+**. Goldfish scores that build *slower* (kill 58.8% vs 68.8%) and
 that is the documented artifact, not a verdict: the sim casts highest-MV-first, models no
 abilities, and **does not model Kaalia's trigger at all**. Engine-read overrules, same as
 Radagast and Ureni. The top end plus Indulgent Tormentor are named in the deck's

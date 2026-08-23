@@ -9,13 +9,13 @@ worse. Every number below is from this repo's own tools on the committed snapsho
 
 | | the-ur-dragon (today) | this deck |
 |---|---|---|
-| **commander on the battlefield** | **36.1%** of games | **97.3%** |
+| **commander on the battlefield** | **36.7%** of games | **97.3%** |
 | power score (the scorer's own axes) | 51.5 / 100 | **66.1 / 100** |
 | cards risky to cast on curve | 52 of 64 | **42** |
 | colours below Karsten's ~23 target | 5 of 5 | 3 of 3, but far closer (W 19 · B 17 · R 21) |
 | field top-25 the deck actually runs | **20/25** | 12/25 |
-| kill rate, no disruption | **78.5%** | 58.4% |
-| kill rate, after one board wipe | **11.9%** | 4.1% |
+| kill rate, no disruption | **78.5%** | 58.8% |
+| kill rate, after one board wipe | **12.8%** | 4.8% |
 | resilience | prot 2 · rec 0 | **prot 3 · rec 2** |
 | bracket | **3 Upgraded** | 2 Core |
 
@@ -81,7 +81,8 @@ land counts as free five-colour fixing. This deck happens to contain **none** of
 known offenders and the Ur-Dragon contains one (Sunscorched Divide), so the comparison
 above holds — but the defect is why "just rearrange the Ur-Dragon's lands" is not a free
 fix: most of the untapped-looking candidates in the free pool charge mana for their colour.
-And it costs tempo: 12 of these 37 lands enter tapped against the Ur-Dragon's 3 of 36.
+And it costs tempo: 9 of these 37 lands always enter tapped and 6 more conditionally,
+against the Ur-Dragon's 3 and 8.
 
 **About "work well at bracket 3" specifically — this deck arithmetically cannot get
 there.** `power.py` assigns the bracket purely on Game Changer count: 0 is Bracket 2, 1–3
@@ -100,7 +101,7 @@ thing itself.
 **The wipe problem does not go away — it gets worse.** The largest single number in this
 analysis is the Ur-Dragon's collapse from a 78.5% kill rate to 12.8% against one modeled
 board wipe. That is what 36 creatures with zero recursion does. Kaalia is *more* exposed:
-she is a 2/2 the wipe also kills, and this build measures 4.1%.
+she is a 2/2 the wipe also kills, and this build measures 4.8%.
 
 ## Where the goldfish number is wrong, and why it was overruled
 
@@ -111,7 +112,7 @@ or "onto the battlefield" returns nothing. Every head-to-head clock number is th
 measured with one deck's engine switched on and the other's switched off, and the bias runs
 against the pivot. The Ur-Dragon still wins those rows; just don't read the margin as real.
 
-This build's kill rate (58.4%) reads *below* the straight auto-build's (68.8%), and that is
+This build's kill rate (58.8%) reads *below* the straight auto-build's (68.8%), and that is
 an instrument artifact, not a verdict — the same class already documented at length in the
 Ur-Dragon notes. `goldfish.py` casts highest-mana-value-first, so it rewards a low curve;
 it models no abilities; and **it does not model Kaalia's trigger at all.** Nine free bombs
@@ -179,8 +180,11 @@ with three cheat targets and no way to cast her is a mulligan — the trigger is
 afterwards makes a 5/5. Hellkite Tyrant is the one cheat target whose trigger survives
 arrival — it keys on *combat damage*, not on attacking.
 
-**Never cheat**: Hellkite Courser (cast it), Guardian Scalelord, Rakshasa Debaser,
-Decadent Dragon, Desert Were-Worm, Smaug the Magnificent. Their triggers do not fire.
+**Never cheat** (all four are in this 99): Hellkite Courser (cast it — its ETB is dead
+when cheated), Guardian Scalelord, Decadent Dragon, Desert Were-Worm — their attack
+triggers do not fire on arrival. Cast them on an empty turn instead; they trigger normally
+on later attacks. The same warning covers Rakshasa Debaser and Smaug the Magnificent if
+they ever come off the bench.
 
 ## Provenance
 
@@ -188,7 +192,7 @@ Every card in the 99 is owned and has a free physical copy with the Ur-Dragon di
 nothing was invented. All 50 Mardu Angels/Demons/Dragons and 43 candidate lands were
 verified verbatim against Scryfall on the GitHub runner, 2026-08-23 (109 cards, 0
 UNVERIFIED — `kaalia-verified-2026-08-23.txt`, `kaalia-lands-verified-2026-08-23.txt`).
-Field data: EDHREC snapshot of 38,818 Kaalia decks. Built with `auto_build.py` →
+Field data: EDHREC snapshot of 38,937 Kaalia decks (refreshed 2026-08-23). Built with `auto_build.py` →
 `deck_sections.py` → `optimize.py --apply`, then 12 hand swaps for the top end and three
 land swaps made on verified text (Villainous Hideout → Sunbillow Verge, Temple of the False
 God → Foreboding Ruins, Rocky Roads → Crossroads Village). 100 cards, singleton clean,
