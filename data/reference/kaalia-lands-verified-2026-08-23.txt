@@ -1,0 +1,351 @@
+# Mardu lands for a Kaalia build — verbatim Scryfall text
+# Source: deck-verify.yml run 32612450375 (job 97127502778), 2026-08-23.
+# 43 lands queued, 43 resolved, 0 UNVERIFIED.
+#
+# WHY: the pivot research claimed a free-pool Mardu manabase clears Karsten's ~23
+# target in all three colours — W 24 / B 28 / R 32 — by counting the "spend-restricted"
+# lands back in "because this is an Angel/Demon/Dragon deck". The text below refutes
+# that. Four of the five restricted lands are restricted to types a Kaalia deck does
+# not play:
+#
+#   Avengers Tower          any colour only for a HERO spell
+#   Villainous Hideout      any colour only for a VILLAIN spell
+#   Castle Doom             any colour only for an ARTIFACT spell
+#   Jasmine Dragon Tea Shop any colour only for an ALLY spell
+#
+# In a Kaalia deck all four are colourless lands. This is the SAME failure the
+# Ur-Dragon mana audit caught on 2026-08-20, when Villainous Hideout was cut for
+# exactly this reason — the flag heuristic scores them as five-colour fixing and the
+# text says otherwise. Plaza of Heroes is the one that survives the check: it is
+# restricted to LEGENDARY spells, and this pool's cheat targets include a dozen
+# legends plus Kaalia herself. Study Hall, Henge of Ramos, Baxter Building, Rumble
+# Arena and Rhystic Cave all charge extra mana or let an opponent fizzle them.
+#
+# The honest Mardu source count is therefore the UNRESTRICTED one: W 20 / B 24 / R 28
+# against a ~23 target — black and red clear, white does not. Still far better than the
+# Ur-Dragon's five-of-five misses, but not "all three clear".
+===== VERBATIM ORACLE TEXT =====
+Avengers Tower  —
+  Land
+  identity: colorless · commander-legal: yes · MSH 260 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add one mana of any color. Spend this mana only to cast a Hero spell or to activate an ability of a Hero source.
+  | {4}, {T}: Look at the top three cards of your library. You may reveal a Hero card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
+  https://scryfall.com/card/msh/260/avengers-tower?utm_source=api
+
+Castle Doom  —
+  Land
+  identity: colorless · commander-legal: yes · MSH 263 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add one mana of any color. Spend this mana only to cast an artifact spell.
+  | {3}, {T}, Sacrifice an artifact: Create a 3/3 colorless Robot Villain artifact creature token named Doombot. Activate only as a sorcery.
+  https://scryfall.com/card/msh/263/castle-doom?utm_source=api
+
+Jasmine Dragon Tea Shop  —
+  Land
+  identity: colorless · commander-legal: yes · TLA 270 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add one mana of any color. Spend this mana only to cast an Ally spell or activate an ability of an Ally source.
+  | {5}, {T}: Create a 1/1 white Ally creature token.
+  https://scryfall.com/card/tla/270/jasmine-dragon-tea-shop?utm_source=api
+
+Villainous Hideout  —
+  Land
+  identity: colorless · commander-legal: yes · MSH 276 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add one mana of any color. Spend this mana only to cast a Villain spell or to activate an ability of a Villain source.
+  | {3}, {T}: Target Villain you control connives. Activate only as a sorcery. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on that creature.)
+  https://scryfall.com/card/msh/276/villainous-hideout?utm_source=api
+
+Study Hall  —
+  Land
+  identity: colorless · commander-legal: yes · SOC 407 · via scryfall
+  | {T}: Add {C}.
+  | {1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it's been cast from the command zone this game.
+  https://scryfall.com/card/soc/407/study-hall?utm_source=api
+
+Baxter Building  —
+  Land
+  identity: colorless · commander-legal: yes · MSH 261 · via scryfall
+  | {T}: Add {C}.
+  | {4}, {T}: Add four mana in any combination of colors.
+  | {4}, {T}: Draw a card. Activate only if you control a creature with toughness 4 or greater.
+  https://scryfall.com/card/msh/261/baxter-building?utm_source=api
+
+Henge of Ramos  —
+  Land
+  identity: colorless · commander-legal: yes · MMQ 318 · via scryfall
+  | {T}: Add {C}.
+  | {2}, {T}: Add one mana of any color.
+  https://scryfall.com/card/mmq/318/henge-of-ramos?utm_source=api
+
+Rhystic Cave  —
+  Land
+  identity: colorless · commander-legal: yes · PCY 142 · via scryfall
+  | {T}: Choose a color. Add one mana of that color unless any player pays {1}. Activate only as an instant.
+  https://scryfall.com/card/pcy/142/rhystic-cave?utm_source=api
+
+Rumble Arena  —
+  Land
+  identity: colorless · commander-legal: yes · TLA 277 · via scryfall
+  | Vigilance
+  | When this land enters, scry 1. (Look at the top card of your library. You may put it on the bottom.)
+  | {T}: Add {C}.
+  | {1}, {T}: Add one mana of any color.
+  https://scryfall.com/card/tla/277/rumble-arena?utm_source=api
+
+Molten Slagheap  —
+  Land
+  identity: B R · commander-legal: yes · TSR 282 · via scryfall
+  | {T}: Add {C}.
+  | {1}, {T}: Put a storage counter on this land.
+  | {1}, Remove X storage counters from this land: Add X mana in any combination of {B} and/or {R}.
+  https://scryfall.com/card/tsr/282/molten-slagheap?utm_source=api
+
+Plaza of Heroes  —
+  Land
+  identity: colorless · commander-legal: yes · MSC 255 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add one mana of any color. Spend this mana only to cast a legendary spell.
+  | {T}: Add one mana of any color among legendary permanents you control.
+  | {3}, {T}, Exile this land: Target legendary creature gains hexproof and indestructible until end of turn.
+  https://scryfall.com/card/msc/255/plaza-of-heroes?utm_source=api
+
+Dark Fortress  —
+  Land
+  identity: B R · commander-legal: yes · MSH 264 · via scryfall
+  | {T}: Add {C}.
+  | {T}: Add {B} or {R}. Activate only if this land entered this turn or if you control a basic land.
+  https://scryfall.com/card/msh/264/dark-fortress?utm_source=api
+
+Horizon of Progress  —
+  Land
+  identity: colorless · commander-legal: yes · M3C 78 · via scryfall
+  | {T}, Pay 1 life: Add one mana of any type that a land you control could produce.
+  | {3}, {T}: You may put a land card from your hand onto the battlefield tapped.
+  | {1}, {T}, Sacrifice this land: Draw a card.
+  https://scryfall.com/card/m3c/78/horizon-of-progress?utm_source=api
+
+Sunbillow Verge  —
+  Land
+  identity: R W · commander-legal: yes · DFT 264 · via scryfall
+  | {T}: Add {W}.
+  | {T}: Add {R}. Activate only if you control a Mountain or a Plains.
+  https://scryfall.com/card/dft/264/sunbillow-verge?utm_source=api
+
+Sunscorched Divide  —
+  Land
+  identity: R W · commander-legal: yes · SOC 410 · via scryfall
+  | {1}, {T}: Add {R}{W}.
+  https://scryfall.com/card/soc/410/sunscorched-divide?utm_source=api
+
+Mistveil Plains  —
+  Land — Plains
+  identity: W · commander-legal: yes · SOC 386 · via scryfall
+  | ({T}: Add {W}.)
+  | This land enters tapped.
+  | {W}, {T}: Put target card from your graveyard on the bottom of your library. Activate only if you control two or more white permanents.
+  https://scryfall.com/card/soc/386/mistveil-plains?utm_source=api
+
+Sacred Peaks  —
+  Land — Mountain Plains
+  identity: R W · commander-legal: yes · SOC 402 · via scryfall
+  | ({T}: Add {R} or {W}.)
+  | This land enters tapped.
+  https://scryfall.com/card/soc/402/sacred-peaks?utm_source=api
+
+Turbulent Steppe  —
+  Land — Mountain Plains
+  identity: R W · commander-legal: yes · SOC 58 · via scryfall
+  | ({T}: Add {R} or {W}.)
+  | This land enters tapped unless your opponents control eight or more lands.
+  https://scryfall.com/card/soc/58/turbulent-steppe?utm_source=api
+
+Rocky Roads  —
+  Land
+  identity: R · commander-legal: yes · DFT 261 · via scryfall
+  | This land enters tapped unless you control a Mount or Vehicle.
+  | {T}: Add {R}.
+  | {1}{R}, {T}, Sacrifice this land: Create a 1/1 colorless Pilot creature token with "This token saddles Mounts and crews Vehicles as though its power were 2 greater." Activate only as a sorcery.
+  https://scryfall.com/card/dft/261/rocky-roads?utm_source=api
+
+Thriving Bluff  —
+  Land
+  identity: R · commander-legal: yes · MSC 578 · via scryfall
+  | This land enters tapped. As it enters, choose a color other than red.
+  | {T}: Add {R} or one mana of the chosen color.
+  https://scryfall.com/card/msc/578/thriving-bluff?utm_source=api
+
+Crossroads Village  —
+  Land — Town
+  identity: colorless · commander-legal: yes · FIN 276 · via scryfall
+  | This land enters tapped. As it enters, choose a color.
+  | {T}: Add one mana of the chosen color.
+  https://scryfall.com/card/fin/276/crossroads-village?utm_source=api
+
+Mirage Mesa  —
+  Land — Desert
+  identity: colorless · commander-legal: yes · OTJ 262 · via scryfall
+  | This land enters tapped. As it enters, choose a color.
+  | {T}: Add one mana of the chosen color.
+  https://scryfall.com/card/otj/262/mirage-mesa?utm_source=api
+
+Shimmerdrift Vale  —
+  Snow Land
+  identity: colorless · commander-legal: yes · KHM 267 · via scryfall
+  | This land enters tapped.
+  | As this land enters, choose a color.
+  | {T}: Add one mana of the chosen color.
+  https://scryfall.com/card/khm/267/shimmerdrift-vale?utm_source=api
+
+Lotus Field  —
+  Land
+  identity: colorless · commander-legal: yes · SOC 385 · via scryfall
+  | Hexproof
+  | This land enters tapped.
+  | When this land enters, sacrifice two lands.
+  | {T}: Add three mana of any one color.
+  https://scryfall.com/card/soc/385/lotus-field?utm_source=api
+
+Vector, Imperial Capital  —
+  (asked for "Vector Imperial Capital" — Scryfall resolved it to this card)
+  Land — Town
+  identity: B R · commander-legal: yes · FIN 291 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {B} or {R}.
+  https://scryfall.com/card/fin/291/vector-imperial-capital?utm_source=api
+
+Rabanastre, Royal City  —
+  Land — Town
+  identity: R W · commander-legal: yes · FIN 287 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {R} or {W}.
+  https://scryfall.com/card/fin/287/rabanastre-royal-city?utm_source=api
+
+Lorehold Campus  —
+  Land
+  identity: R W · commander-legal: yes · SOC 384 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {R} or {W}.
+  | {4}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+  https://scryfall.com/card/soc/384/lorehold-campus?utm_source=api
+
+Asgardian Citadel  —
+  Land
+  identity: R W · commander-legal: yes · MSH 258 · via scryfall
+  | This land enters tapped.
+  | When this land enters, you gain 1 life.
+  | {T}: Add {R} or {W}.
+  https://scryfall.com/card/msh/258/asgardian-citadel?utm_source=api
+
+Glittering Massif  —
+  Land — Mountain Plains
+  identity: R W · commander-legal: yes · MSC 249 · via scryfall
+  | ({T}: Add {R} or {W}.)
+  | This land enters tapped.
+  | Cycling {2} ({2}, Discard this card: Draw a card.)
+  https://scryfall.com/card/msc/249/glittering-massif?utm_source=api
+
+Foreboding Ruins  —
+  Land
+  identity: B R · commander-legal: yes · MSC 244 · via scryfall
+  | As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.
+  | {T}: Add {B} or {R}.
+  https://scryfall.com/card/msc/244/foreboding-ruins?utm_source=api
+
+Urborg Volcano  —
+  Land
+  identity: B R · commander-legal: yes · C17 288 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {B} or {R}.
+  https://scryfall.com/card/c17/288/urborg-volcano?utm_source=api
+
+Cinder Barrens  —
+  Land
+  identity: B R · commander-legal: yes · C19 235 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {B} or {R}.
+  https://scryfall.com/card/c19/235/cinder-barrens?utm_source=api
+
+Akoum Refuge  —
+  Land
+  identity: B R · commander-legal: yes · C19 226 · via scryfall
+  | This land enters tapped.
+  | When this land enters, you gain 1 life.
+  | {T}: Add {B} or {R}.
+  https://scryfall.com/card/c19/226/akoum-refuge?utm_source=api
+
+Forum of Amity  —
+  Land
+  identity: B W · commander-legal: yes · SOS 256 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {W} or {B}.
+  | {2}{W}{B}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+  https://scryfall.com/card/sos/256/forum-of-amity?utm_source=api
+
+Fields of Strife  —
+  Land
+  identity: R W · commander-legal: yes · SOS 255 · via scryfall
+  | This land enters tapped.
+  | {T}: Add {R} or {W}.
+  | {2}{R}{W}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+  https://scryfall.com/card/sos/255/fields-of-strife?utm_source=api
+
+Emeria, the Sky Ruin  —
+  Land
+  identity: W · commander-legal: yes · SOC 368 · via scryfall
+  | This land enters tapped.
+  | At the beginning of your upkeep, if you control seven or more Plains, you may return target creature card from your graveyard to the battlefield.
+  | {T}: Add {W}.
+  https://scryfall.com/card/soc/368/emeria-the-sky-ruin?utm_source=api
+
+Stensia Bloodhall  —
+  Land
+  identity: B R · commander-legal: yes · ISD 247 · via scryfall
+  | {T}: Add {C}.
+  | {3}{B}{R}, {T}: This land deals 2 damage to target player or planeswalker.
+  https://scryfall.com/card/isd/247/stensia-bloodhall?utm_source=api
+
+Roadside Reliquary  —
+  Land
+  identity: colorless · commander-legal: yes · NEO 272 · via scryfall
+  | {T}: Add {C}.
+  | {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment.
+  https://scryfall.com/card/neo/272/roadside-reliquary?utm_source=api
+
+The Gold Saucer  —
+  Land — Town
+  identity: colorless · commander-legal: yes · FIN 279 · via scryfall
+  | {T}: Add {C}.
+  | {2}, {T}: Flip a coin. If you win the flip, create a Treasure token.
+  | {3}, {T}, Sacrifice two artifacts: Draw a card.
+  https://scryfall.com/card/fin/279/the-gold-saucer?utm_source=api
+
+Junktown  —
+  Land
+  identity: R · commander-legal: yes · PIP 150 · via scryfall
+  | {T}: Add {C}.
+  | {4}{R}, {T}, Sacrifice this land: Create three Junk tokens. (They're artifacts with "{T}, Sacrifice this token: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery.")
+  https://scryfall.com/card/pip/150/junktown?utm_source=api
+
+Scorched Ruins  —
+  Land
+  identity: colorless · commander-legal: yes · WTH 166 · via scryfall
+  | If this land would enter, sacrifice two untapped lands instead. If you do, put this land onto the battlefield. If you don't, put it into its owner's graveyard.
+  | {T}: Add {C}{C}{C}{C}.
+  https://scryfall.com/card/wth/166/scorched-ruins?utm_source=api
+
+Terrain Generator  —
+  Land
+  identity: colorless · commander-legal: yes · CLB 926 · via scryfall
+  | {T}: Add {C}.
+  | {2}, {T}: You may put a basic land card from your hand onto the battlefield tapped.
+  https://scryfall.com/card/clb/926/terrain-generator?utm_source=api
+
+Vibrant Cityscape  —
+  Land
+  identity: colorless · commander-legal: yes · TMC 82 · via scryfall
+  | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
+  https://scryfall.com/card/tmc/82/vibrant-cityscape?utm_source=api
+
+===== END VERBATIM ORACLE TEXT =====
