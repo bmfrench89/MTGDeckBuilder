@@ -69,7 +69,7 @@
   "darkwater catacombs": 37,
   "deadly rollick": 47,
   "decanter of endless water": 25,
-  "decorum dissertation": 16,
+  "decorum dissertation": 17,
   "defacing duskmage": 10,
   "delney, streetwise lookout": 39,
   "demolition field": 27,
@@ -279,7 +279,7 @@
   "the one ring": 18,
   "the wind crystal": 11,
   "thought vessel": 57,
-  "thran dynamo": 6,
+  "thran dynamo": 7,
   "tome of legends": 7,
   "torrential gearhulk": 17,
   "toxic deluge": 41,
@@ -311,7 +311,7 @@
   "windfall": 14,
   "wishclaw talisman": 5,
   "witch enchanter": 8,
-  "wizard's staff": 9,
+  "wizard's staff": 10,
   "yahenni's expertise": 7
  },
  "lands": [
@@ -692,8 +692,8 @@
   "wizard's staff": "Wizard's Staff",
   "yahenni's expertise": "Yahenni's Expertise"
  },
- "sample_decks": 51088,
- "saved": "2026-08-21",
+ "sample_decks": 51261,
+ "saved": "2026-08-24",
  "slug": "yshtola-nights-blessed",
  "synergy": {
   "absorb": 4,
@@ -761,7 +761,7 @@
   "damn": -14,
   "dancer's chakrams": 23,
   "dark ritual": 1,
-  "darkwater catacombs": 23,
+  "darkwater catacombs": 22,
   "deadly rollick": 30,
   "decanter of endless water": 17,
   "decorum dissertation": 12,
@@ -810,7 +810,7 @@
   "generous gift": 12,
   "ghostly prison": 26,
   "gilded lotus": 4,
-  "glacial fortress": 23,
+  "glacial fortress": 22,
   "gleaming splendor": -1,
   "godless shrine": 4,
   "grand abolisher": 1,
@@ -1006,7 +1006,7 @@
   "windfall": 1,
   "wishclaw talisman": -2,
   "witch enchanter": 1,
-  "wizard's staff": 5,
+  "wizard's staff": 6,
   "yahenni's expertise": 6
  }
 }
