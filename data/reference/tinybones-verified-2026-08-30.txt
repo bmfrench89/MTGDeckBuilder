@@ -1,0 +1,152 @@
+# Tinybones analogs — verified verbatim from Scryfall, 2026-08-30
+#
+# THE QUESTION. The player asked for "a Commander with mechanics similar to
+# Tinybones," for their brother. They own no Tinybones printing, so nothing in
+# the collection anchored the comparison and memory was the only alternative —
+# which is exactly the anti-pattern tool-contract.md §5.1 names.
+#
+# HOW THIS WAS MADE. 38 card names (30 via data/reference/verify-queue.txt on a
+# push, 8 more via workflow_dispatch) went through `carddb.py --verify` on a
+# GitHub runner: deck-verify.yml runs 33329008762, 33329055024, 33329105195,
+# 33329112713 and the Tergrid re-dispatch. Field data for the three commanders
+# below came from the same workflow's edhrec.py --snapshot step and is committed
+# under data/reference/field/. Nothing here is from memory.
+#
+# MEMORY WAS WRONG, AND THIS IS WHY THE RUN HAPPENED. Before verification the
+# model's recollection of Tinybones, Trinket Thief was "whenever an opponent
+# discards a card, you may pay {1}: draw a card." The real card is a delayed
+# once-per-turn end-step trigger that also costs 1 life. Same flavour, different
+# card, and a deck built on the remembered version would over-value wheel
+# effects that dump many cards at once.
+#
+# ==================================================================
+# THE BASELINE — all four Tinybones cards, verbatim
+# ==================================================================
+#
+# Tinybones, Trinket Thief  {1}{B}  — Legendary Creature — Skeleton Rogue
+#   identity B · commander-legal · JMP 17
+#   | At the beginning of each end step, if an opponent discarded a card this
+#   | turn, you draw a card and you lose 1 life.
+#   | {4}{B}{B}: Each opponent with no cards in hand loses 10 life.
+#   TWO HALVES: (a) a payoff that fires ONCE per turn cycle no matter how many
+#   cards were discarded, and (b) an emptied-hand alt-wincon. Any "similar"
+#   commander is similar on one half or the other, rarely both.
+#
+# Tinybones, Bauble Burglar  {1}{B}  — Legendary Creature — Skeleton Rogue
+#   identity B · commander-legal · FDN 72
+#   | Whenever an opponent discards a card, exile it from their graveyard with a
+#   | stash counter on it.
+#   | During your turn, you may play cards you don't own with stash counters on
+#   | them from exile, and mana of any type can be spent to cast those spells.
+#   | {3}{B}, {T}: Each opponent discards a card. Activate only as a sorcery.
+#   The most-played Tinybones by a wide margin (10,674 EDHREC decks vs 4,960 for
+#   Trinket Thief). Unlike Trinket Thief it scales per discard AND carries its
+#   own repeatable discard engine, so it needs less enchantment support.
+#
+# Tinybones, the Pickpocket  {B}  — Legendary Creature — Skeleton Rogue
+#   identity B · commander-legal · OTJ 109
+#   | Deathtouch
+#   | Whenever Tinybones deals combat damage to a player, you may cast target
+#   | nonland permanent card from that player's graveyard, and mana of any type
+#   | can be spent to cast that spell.
+#   The THEFT half only — no discard payoff. Wants evasion, not hand attack.
+#
+# Tinybones Joins Up  {B}  — Legendary Enchantment (not a commander)
+#   identity B · commander-legal · OTJ 108
+#   | When Tinybones Joins Up enters, any number of target players each discard
+#   | a card.
+#   | Whenever a legendary creature you control enters, any number of target
+#   | players each mill a card and lose 1 life.
+#
+# ==================================================================
+# THE ANALOGS — ranked by how much of Tinybones they reproduce
+# ==================================================================
+#
+# 1. Tergrid, God of Fright // Tergrid's Lantern  {3}{B}{B} // {3}{B}
+#    identity B · commander-legal · KHM 112 · Legendary Creature — God //
+#    Legendary Artifact
+#    | Menace
+#    | Whenever an opponent sacrifices a nontoken permanent or discards a
+#    | permanent card, you may put that card from a graveyard onto the
+#    | battlefield under your control.
+#    // {T}: Target player loses 3 life unless they sacrifice a nonland
+#    | permanent of their choice or discard a card.
+#    | {3}{B}: Untap Tergrid's Lantern.
+#    SAME AXIS, BIGGER PAYOFF: punishes the opponent's hand, but converts the
+#    discard into a permanent on YOUR board instead of a card draw. The back
+#    face is a standalone repeatable discard engine, so the card is never dead.
+#    57% inclusion in the Trinket Thief field — Tinybones players run Tergrid.
+#    CAVEAT worth stating out loud for a gift deck: Tergrid has a real
+#    reputation as a miserable card to sit across from.
+#
+# 2. Rankle, Master of Pranks  {2}{B}{B}
+#    identity B · commander-legal · OTC 148 · Legendary Creature — Faerie Rogue
+#    | Flying, haste
+#    | Whenever Rankle deals combat damage to a player, choose any number —
+#    | • Each player discards a card.
+#    | • Each player loses 1 life and draws a card.
+#    | • Each player sacrifices a creature of their choice.
+#    The AGGRO reading of Tinybones: evasive body that forces the discard
+#    itself. Symmetric, so it wants a hand the player can afford to empty.
+#    67% inclusion in the Trinket Thief field, 66% in Bauble Burglar's.
+#
+# 3. The Haunt of Hightower  {4}{B}{B}
+#    identity B · commander-legal · PLST RNA-273 · Legendary Creature — Vampire
+#    | Flying, lifelink
+#    | Whenever The Haunt of Hightower attacks, defending player discards a card.
+#    | Whenever a card is put into an opponent's graveyard from anywhere, put a
+#    | +1/+1 counter on The Haunt of Hightower.
+#    VOLTRON reading: discard is the fuel, a flying lifelinker is the clock.
+#    Simplest of the four to pilot; six mana is the cost.
+#
+# 4. Nath of the Gilt-Leaf  {3}{B}{G}
+#    identity B G · commander-legal · C16 213 · Legendary Creature — Elf Warrior
+#    | At the beginning of your upkeep, you may have target opponent discard a
+#    | card at random.
+#    | Whenever an opponent discards a card, you may create a 1/1 green Elf
+#    | Warrior creature token.
+#    The only analog that is BOTH engine and payoff in one card, and the only
+#    one that goes wide. Costs the mono-black identity (so no Cabal Coffers /
+#    Crypt Ghast) and adds green ramp.
+#
+# ALSO VERIFIED, and why each is NOT the answer:
+#   Kroxa, Titan of Death's Hunger {B}{R} (THB 221) — "Whenever Kroxa enters or
+#     attacks, each opponent discards a card, then each opponent who didn't
+#     discard a nonland card this way loses 3 life." A recursive discard ENGINE,
+#     but it sacrifices itself when cast from hand, so it is a poor commander
+#     for a deck that wants the discard payoff to stay on the battlefield.
+#   Lord Xander, the Collector {4}{U}{B}{R} (SNC 197) — discards half a hand on
+#     ETB, but it is a one-shot at seven mana in three colours.
+#   Sadistic Hypnotist {3}{B}{B} (DDJ 62) — "Sacrifice a creature: Target player
+#     discards two cards." A support piece, not a commander (not legendary).
+#   Maralen of the Mornsong {1}{B}{B} (MOR 65) — hand DENIAL, not discard; it
+#     hands every opponent a tutor.
+#   Nekusar, the Mindrazer {2}{U}{B}{R} (CMM 349) — draw-damage, not discard.
+#   Braids, Arisen Nightmare {1}{B}{B} (EOC 82) — sacrifice punisher, adjacent.
+#   Bone Miser {4}{B} (C19 15) — YOUR discard, and not legendary.
+#   Chainer, Nightmare Adept {2}{B}{R} / Anje Falkenrath {1}{B}{R} — self-
+#     discard / madness. Opposite direction of play.
+#   Geth, Lord of the Vault {4}{B}{B} · Gonti, Canny Acquisitor {2}{B}{G}{U} —
+#     graveyard/library THEFT, i.e. the Pickpocket half, no hand attack.
+#   Ob Nixilis, Captive Kingpin {2}{B}{R} (MAT 41) — triggers on exactly 1 life
+#     lost, not on discard. Verified because the name suggested otherwise.
+#   Rankle and Torbran {1}{B}{B}{R}{R} (MOM 252) — the merged card DROPPED the
+#     discard mode; its three modes are Treasure / sacrifice / damage +2.
+#     Verified precisely because memory said it kept discard. It does not.
+#   Sauron, the Dark Lord {3}{U}{B}{R} · Oona, Queen of the Fae {3}{U/B}{U/B}
+#     {U/B} · Varragoth {2}{B} · Davriel, Rogue Shadowmage {2}{B} · Sheoldred,
+#     Whispering One {5}{B}{B} — none are discard payoffs.
+#
+# ==================================================================
+# THE DISCARD PACKAGE — all verified, none owned except Megrim
+# ==================================================================
+# Waste Not {1}{B} (C16 117) — Zombie on a discarded creature, {B}{B} on a
+#   discarded land, a card on anything else. 92% / 82% field inclusion.
+# Oppression {1}{B}{B} (7ED 152) — every player discards on every spell cast.
+# Bottomless Pit {1}{B}{B} (STH 51) — each player discards at random each upkeep.
+# Necrogen Mists {2}{B} (MRD 69) — each player discards each upkeep.
+# Painful Quandary {3}{B}{B} (FDN 179) — lose 5 life unless they discard.
+# Raiders' Wake {3}{B} (XLN 116) — lose 2 on each discard; raid discard at end.
+# Liliana's Caress {1}{B} (M11 103) — opponent loses 2 per discard.
+# Megrim {2}{B} (M10 104) — 2 damage per opponent discard. OWNED (1 copy).
+#   67% inclusion for Trinket Thief, 58% for Bauble Burglar.
