@@ -1,13 +1,37 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-21 — the Treasure census is finished and written up. All 2,776
-# non-basic cards in the collection were verified against Scryfall across six
-# runs; the treasure-relevant text is in data/reference/treasure-verified-2026-08-21.txt
-# and the commander comparison is in docs/handoff.md.
-#
-# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
-# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) — though note the census above now
-# covers every card the player owns, so those texts ARE on disk in the corpus
-# the census produced if the run logs are still retrievable.
+# 2026-08-30 — "a commander with mechanics similar to Tinybones" (deck is for the
+# player's brother; the player does not own any Tinybones). Baseline + every
+# candidate analog, so the comparison is made against verbatim text rather than
+# memory. Includes deliberate fuzzy probes for printings I am not certain exist.
+Tinybones, Trinket Thief
+Tinybones, the Pickpocket
+Tinybones Joins Up
+Tergrid, God of Fright
+Nath of the Gilt-Leaf
+Rankle, Master of Pranks
+The Haunt of Hightower
+Lord Xander, the Collector
+Kroxa, Titan of Death's Hunger
+Maralen of the Mornsong
+Nekusar, the Mindrazer
+Bone Miser
+Geth, Lord of the Vault
+Braids, Arisen Nightmare
+Sauron, the Dark Lord
+Gonti, Canny Acquisitor
+Chainer, Nightmare Adept
+Anje Falkenrath
+Oona, Queen of the Fae
+Varragoth, Bloodsky Sire
+Davriel, Rogue Shadowmage
+Sheoldred, Whispering One
+Waste Not
+Megrim
+Oppression
+Bottomless Pit
+Raiders' Wake
+Necrogen Mists
+Liliana's Caress
+Painful Quandary
