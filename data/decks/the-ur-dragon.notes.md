@@ -520,3 +520,92 @@ Ojutai → Globe over the same 5,000 shuffles: commander_by_t6 **+0.005** (CI ex
 first_kill −0.007 turns *not* significant, damage −0.21 — i.e. trading a 5-power flier
 for a rock is a wash on the clock the sim can see, before any credit for 30 dragons
 each entering a point bigger. **Not applied** — the swap is the player's call.
+
+## 2026-09-02 (2) — Carnelian Orb of Dragonkind vs Dragonstorm Globe (texts verified)
+
+Runner run **33638733867**, verbatim:
+
+> **Carnelian Orb of Dragonkind** {2}{R} — Artifact
+> {T}: Add {R}. If that mana is spent on a Dragon creature spell, it gains haste
+> until end of turn.
+
+> **Temur Ascendancy** {G}{U}{R} — Enchantment
+> **Creatures you control have haste.**
+> Whenever a creature you control with power 4 or greater enters, you may draw a card.
+
+> **Rhythm of the Wild** {1}{R}{G} — Enchantment
+> Creature spells you control can't be countered.
+> Nontoken creatures you control have riot. (They enter with your choice of a
+> +1/+1 counter or haste.)
+
+**Verdict: Dragonstorm Globe again.** Both are now in `owned_additions.txt` on photo
+confirmation — note this supersedes the 2026-08-20 mana audit's line that "the Orbs of
+Dragonkind ... are not owned — buylist."
+
+**Verification caught a real error before it became advice.** The working assumption
+going in was that Temur Ascendancy hastes only power-4-or-greater creatures. It does
+not: the power-4 clause is on the **draw** trigger only, and the haste line is
+**unconditional for every creature you control**. So the deck does not haste 26 of its
+30 dragons — it hastes all 30, plus Radagast, Wood Elves, the dorks and every token.
+
+That is the whole argument. Carnelian Orb's only rider is conditional haste on a Dragon
+creature spell, and this deck already runs **two blanket haste sources**: Temur
+Ascendancy (58% field, unconditional) and Rhythm of the Wild (41% field, riot on every
+nontoken creature). The Orb would be the third, and the worst of the three — it hastes
+only if *that specific {R}* is spent on the dragon, only one dragon per turn, and only
+Dragon **creature** spells.
+
+Worse, the redundancy runs the wrong way. With Temur Ascendancy already granting haste,
+**Rhythm of the Wild's riot should be taking the +1/+1 counter**, which means the Globe's
+counter *stacks* with riot for +2/+2 on every nontoken dragon. The Orb's rider is the
+one effect in this deck that is already covered twice over; the Globe's rider compounds
+with what is already there.
+
+**Mana quality points the same way.** `manabase.py` on the current 36 lands:
+
+| | W | U | B | R | G |
+|---|---|---|---|---|---|
+| sources | 13 | 12 | **9** | **19** | 14 |
+| P(≥1 opener) | 64% | 61% | **50%** | **79%** | 67% |
+
+Red is the **best**-served colour in the deck; black is the worst at 9 sources / 50%. The
+Orb adds a source to the colour that needs it least and nothing to the four that need it
+more. The Globe adds one to all five. The Orb also costs {2}**{R}** — a coloured pip in a
+five-colour deck — against the Globe's {3}, so it is the harder of the two to deploy on
+curve.
+
+**The field does not break the tie, and that is worth saying plainly:** Carnelian Orb
+21% / synergy 19, Dragonstorm Globe 23% / synergy 20 — statistically the same card to
+EDHREC. Per `card-review-method.md` the field % is the prior and the verified text read
+against this deck's engine is the verdict, and the engine-read is lopsided.
+
+**Measurement** (goldfish, 5,000 paired games, seed 0, common random numbers). Same
+control card out as the Belbe's Portal run, so all three candidates are comparable:
+
+| in (Seal of Cleansing out) | first_kill Δ | damage Δ | commander_by_t6 Δ |
+|---|---|---|---|
+| **Dragonstorm Globe** | **−0.044** * | **+1.46** * | **+0.006** * |
+| Carnelian Orb of Dragonkind | −0.032 * | +1.05 * | +0.005 * |
+| Belbe's Portal | +0.007 * | −0.23 * | +0.000 |
+
+And head-to-head, Orb already in the 99, OUT Orb / IN Globe over the same 5,000 shuffles:
+first_kill **−0.012** [−0.016, −0.008], damage **+0.41** [+0.315, +0.506],
+commander_by_t6 **+0.001** [+0.000, +0.002] — all three CIs exclude zero, all three
+favour the Globe.
+
+### A new documented blind spot: goldfish does not model haste at all
+
+`grep -cin "haste" scripts/goldfish.py` returns **0**, and the compile comment at
+`goldfish.py:526` has creatures attack from the turn after they land (summoning sickness
+is modelled, haste is not). So the sim gives Carnelian Orb **zero** credit for its rider,
+exactly as it gives the Globe zero credit for the +1/+1 counters. Both arms are
+understated; the sim's margin here is pure mana quality (any colour vs mono-red,
+{3} vs {2}{R}). Neither number is the verdict — the redundancy read above is.
+
+This belongs on the same list as the cost-reduction hole: **the sim cannot rate a card
+whose value is haste**, and it has now been checked rather than assumed twice in one day.
+
+**Still not applied.** The 99 is untouched; the standing offer from the earlier entry
+(Dragonlord Ojutai, 14% field, out for the Globe) is unchanged. If both artifacts are
+wanted the Orb is a perfectly reasonable *second* add — it is not a bad card, it is a
+redundant one here — but it is the third haste source and the fifth-best colour it makes.
