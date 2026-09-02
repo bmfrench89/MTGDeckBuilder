@@ -12,8 +12,5 @@
 # covers every card the player owns, so those texts ARE on disk in the corpus
 # the census produced if the run logs are still retrievable.
 
-# 2026-09-02 — Ur-Dragon: two physical pulls compared for the 99.
-Dragonstorm Globe
-Belbe's Portal
-Lozhan, Dragons' Legacy
-Chromatic Lantern
+# 2026-09-02: Dragonstorm Globe / Belbe's Portal / Lozhan / Chromatic Lantern
+# verified by run 33637609977; texts recorded in the-ur-dragon.notes.md. Cleared.

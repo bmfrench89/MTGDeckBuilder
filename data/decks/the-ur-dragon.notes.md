@@ -441,3 +441,82 @@ quality problem. Rhystic Cave (any player pays {1} to fizzle it), Henge of Ramos
 ({2} filter), Lotus Field (sacrifice two lands), Baxter Building ({4}: four mana) and
 the type-restricted Marvel lands (Avengers Tower / Castle Doom / Jasmine Dragon Tea
 Shop) were all read and rejected.
+
+## 2026-09-02 — Dragonstorm Globe vs Belbe's Portal (player held both up; texts verified)
+
+Runner run **33637609977**, verbatim from Scryfall:
+
+> **Dragonstorm Globe** {3} — Artifact (TDM 241)
+> Each Dragon you control enters with an additional +1/+1 counter on it.
+> {T}: Add one mana of any color.
+
+> **Belbe's Portal** {5} — Artifact (NEM 127)
+> As this artifact enters, choose a creature type.
+> {3}, {T}: You may put a creature card of the chosen type from your hand onto the battlefield.
+
+> **Lozhan, Dragons' Legacy** {3}{U}{R} — Whenever you **cast** an Adventure or Dragon
+> spell, Lozhan deals damage equal to **that spell's mana value** to any target that
+> isn't a commander.
+
+**Verdict: Dragonstorm Globe, and it is not close.** Globe is added to
+`owned_additions.txt` (photo confirmation; the export has never carried it). Belbe's
+Portal was **already owned and committed to no deck** — it has sat free through every
+optimizer pass and the 2026-08-20 full mana audit without being wanted, which is its
+own evidence.
+
+**Why Globe wins on the engine-read, not just the sim.**
+1. It is the card the 2026-08-20 mana audit went looking for and could not find. That
+   audit's conclusion was that nothing owned-and-free beat the existing package, and
+   that the only other 3-mana any-colour rocks in the pool were Commander's Sphere
+   (18% field) and Patchwork Banner (7%). Globe beats both here: Sphere's upside is a
+   one-shot sacrifice, and Banner's mana is **restricted to creature spells of the
+   chosen type** while Globe's is unrestricted. The deck's own mulligan rule is
+   "fixing above all."
+2. The rider is a real tribal anthem, not decoration. It is a replacement effect on
+   *each Dragon you control entering*, so it also catches **Dragon Broodmother's**
+   upkeep tokens and **Miirym's** copies — the two effects that put the most dragons
+   on the battlefield here — and it multiplies through **Sylvia Brightspear** (double
+   strike turns +1/+1 into +2 damage per dragon per combat) and **Neriv** (doubling
+   damage from creatures that entered this turn).
+
+**Why Belbe's Portal is actively anti-synergistic with this specific deck.**
+- **It fights four cost reducers.** With eminence alone the 30 dragons in the 99
+  average **4.40** effective MV (printed 5.40), and Dragonspeaker Shaman / Sarkhan /
+  Radagast take more off. The Portal's activation is a flat {3} — so it saves roughly
+  1.4 mana per dragon, against a **5-mana** up-front investment that does nothing the
+  turn it lands. That is ~3.6 activations to break even, in a deck whose median
+  first kill is T9.
+- **It turns Lozhan off.** Lozhan keys on **cast**; the Portal puts a creature onto the
+  battlefield from hand without casting it. Every Portal drop forfeits 4–7 damage —
+  and note Lozhan reads *that spell's mana value*, so the eminence discount does not
+  shrink the trigger. Losing it is pure loss.
+- **It duplicates the commander for free.** The Ur-Dragon's attack trigger already
+  puts a permanent from hand onto the battlefield every combat, and **Roaming Throne**
+  (in the 99, naming Dragon) doubles it to two. The Portal is a 5-mana, once-per-turn,
+  {3}-a-pop version of an effect this deck gets for nothing.
+- Its instant-speed drop is also partly redundant with **Radagast**, who already grants
+  flash to the first creature spell each turn.
+- Genuine credit where due: the {3} activation is **colourless**, which is real value in
+  a WUBRG deck. That is the one axis on which it is good here, and Globe covers the same
+  problem for 2 fewer mana and no per-use tax.
+
+**Measurement** (goldfish, 5,000 paired games, seed 0, common random numbers,
+cost model live). Same control card out on both arms:
+
+| in (Seal of Cleansing out) | first_kill Δ | damage Δ | commander_by_t6 Δ |
+|---|---|---|---|
+| **Dragonstorm Globe** | **−0.044** * | **+1.46** * | **+0.006** * |
+| Belbe's Portal | +0.007 * | −0.23 * | +0.000 |
+
+`*` = 95% CI excludes zero. Read these the way this file has always read them: the sim
+models Globe's *rock half* correctly and is blind to the +1/+1 counters, and it is blind
+to the Portal's cheat-into-play entirely — so both numbers understate their cards. The
+engine-read above is the verdict; the sim only fails to contradict it.
+
+**If a slot is wanted:** the optimizer reports the deck "already aligned", with
+**Dragonlord Ojutai (14% field)** as its own lowest-field cut candidate not protected
+anywhere in this file (its named replacement, Tiamat, is buylist-only). A/B of
+Ojutai → Globe over the same 5,000 shuffles: commander_by_t6 **+0.005** (CI excludes 0),
+first_kill −0.007 turns *not* significant, damage −0.21 — i.e. trading a 5-power flier
+for a rock is a wash on the clock the sim can see, before any credit for 30 dragons
+each entering a point bigger. **Not applied** — the swap is the player's call.

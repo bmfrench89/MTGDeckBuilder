@@ -12,3 +12,7 @@
 # own 0 / committed 1, a permanent false shortfall. Recorded here rather than edited
 # into the export. If the physical card is NOT in that deck, delete this line.
 1 Bruce Banner // The Incredible Hulk
+# 2026-09-02 player-confirmed by photo (physical card in hand): a Tarkir:
+# Dragonstorm copy the export has never carried. Recorded here so the Ur-Dragon
+# analysis can see it as owned; the private CSV will pick it up on the next export.
+1 Dragonstorm Globe
