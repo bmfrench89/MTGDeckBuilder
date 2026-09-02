@@ -743,3 +743,108 @@ Sarkhan's Triumph and Smuggler's Surprise and leave the third slot: the next-bes
 option among the six is Boros Charm, and the case above says it is not worth the slot.
 
 **Not applied.** These are records; the 99 is untouched.
+
+## 2026-09-02 (4) — REFRAME: the player is rebuilding from scratch. What survives, what doesn't.
+
+The player corrected the premise: **assume no card is already in the deck.** Every verdict
+in entries (1)–(3) that leaned on "the deck already runs X" has to be re-tested, because
+"already in the 99" is not a fact any more. Re-grounded against the three things that
+*are* still fixed — the commander's text, the collection, and the 244-deck field — plus a
+real from-scratch reference build.
+
+**The reference build.** Ran the mandated pipeline on the committed snapshot:
+`auto_build.py "The Ur-Dragon"` → `deck_sections.py --apply` → `optimize.py --apply`
+(twice; the second pass reports "already aligned with the field", so it converged).
+Its manabase, from `manabase.py`, next to the hand-tuned list for contrast:
+
+| | W | U | B | R | G |
+|---|---|---|---|---|---|
+| machine-built from scratch | 16 | 11 | **8** | 17 | **7** |
+| hand-tuned list | 13 | 12 | 9 | 19 | 14 |
+
+**A from-scratch build is *worse* on colour, not better** — 7 green sources against 14,
+8 black against 9. That matters below.
+
+The reference build DID pick **Temur Ascendancy** (58% field) and **Dragonspeaker Shaman**
+(57%). It did NOT pick Heroic Intervention (38%), Rhythm of the Wild (41%), Sylvia
+Brightspear (**0% field**), Radagast (**0%**) or Lozhan (14%).
+
+### Corrections to the earlier entries
+
+- **Entry (1), Globe over Belbe's Portal — verdict stands, one argument withdrawn.** The
+  eminence maths and the "the commander's attack trigger already free-drops a permanent"
+  point are commander-level and survive untouched. **Drop the Lozhan argument**: Lozhan is
+  14% field and is not in a from-scratch list, so "the Portal turns Lozhan off" is no
+  longer load-bearing. The verdict does not depend on it.
+- **Entry (2), Globe over Carnelian Orb — verdict stands, and the mana half gets
+  stronger.** "The deck already hastes everything" now rests on Temur Ascendancy alone
+  (58% field, and the reference build picked it) rather than on two blanket sources —
+  **withdraw the Rhythm-of-the-Wild riot-stacking argument entirely**, since neither
+  Rhythm nor Sylvia survives a from-scratch cut. But the core point is manabase-level and
+  a fresh build makes it *worse*: mono-red fixing against a 7-green / 8-black / 11-blue
+  manabase is even less useful than against 14/9/12. Any-colour still wins.
+- **Entry (3), the three instants — one pick changes. See below.**
+
+### Re-ranked: three instants, from scratch
+
+Castability recomputed with `manabase.hypergeom_at_least` over BOTH reference manabases
+(99 cards, on the play), because in a five-colour deck the pip is the card:
+
+| card | field | machine-built T3 | hand-tuned T3 |
+|---|---|---|---|
+| Sarkhan's Triumph {2}{R} | **21%** | **83%** | 87% |
+| Chaos Warp {2}{R} | 8% | **83%** | 87% |
+| Stubborn Denial {U} | 13% | 67% | 70% |
+| Boros Charm {R}{W} | 7% | 67% | 64% |
+| Smuggler's Surprise {G} | 10% | **50%** | 76% |
+| Archdruid's Charm {G}{G}{G} | **0%** | **2%** | 11% |
+
+**1. Sarkhan's Triumph — unchanged, and the reasoning was never deck-state.** Highest
+field of the six, joint-most castable, single pip in the colour every Ur-Dragon build is
+deepest in. It tutors to **hand**, so the dragon is still *cast*: eminence discounts it
+and the attack trigger can free-drop it. Commander-level; survives the reframe intact.
+
+**2. Stubborn Denial — unchanged, and now grounded at collection level.** Ferocious was
+never a property of the old 99: **43 of the 49 Dragon creatures in the collection (88%)
+have power 4 or greater**, and the commander is a 10/10. In any Ur-Dragon build this is a
+one-mana hard counter for noncreature spells. Second-highest field of the six.
+
+**3. Chaos Warp — IN, replacing Smuggler's Surprise.** This is the pick that changes. In
+entry (3) it was disqualified purely because it was already sleeved in the old list; from
+scratch that objection evaporates. It is **owned ×6** (3 free even against every other
+deck), single red pip at **83–87%** — joint-best of the six — and it is the only card
+here that answers *anything*: enchantment, planeswalker, indestructible creature, land,
+artifact. Removal is the thinnest role in this archetype.
+
+**Smuggler's Surprise drops to fourth on the manabase, not on card quality.** Its field
+number (10%) is a hair above Chaos Warp's (8%) — noise. But it is **50% castable by T3 in
+the from-scratch manabase**, because green is the colour a fresh Ur-Dragon build serves
+worst (7 sources). It was a fine pick against the hand-tuned list's 14 green sources at
+76%; it is a coin flip against 7. Note also that its protection mode is now *more*
+valuable in isolation (the reference build has no Heroic Intervention) — the mana is what
+demotes it, and that is worth being precise about.
+**If the rebuild lands on a green-heavy manabase (≈14+ green sources), swap it back in
+over Chaos Warp** — that is the one condition that flips this slot.
+
+**Boros Charm — still out, but the earlier reasoning was half wrong.** Entry (3) called
+its modes redundant with Heroic Intervention and Sylvia Brightspear. From scratch that
+does not hold: Sylvia is **0% field** and the reference build picked neither. **Withdraw
+the redundancy argument.** It stays out on its own merits: lowest field of the six (7%),
+two coloured pips in two colours (64–67%), and 4 damage to a player is a rounding error
+against 40 life.
+
+**Archdruid's Charm — out, and the reframe makes this the most decisive call of the set.**
+`{G}{G}{G}` in the from-scratch manabase is **2% by T3, 3% by T5**. Sensitivity, so the
+answer does not depend on one build:
+
+| green sources | P(GGG by T3) | by T5 |
+|---|---|---|
+| 7 (from-scratch build) | 2% | 3% |
+| 14 (hand-tuned list) | 11% | 19% |
+| 22 | 32% | 46% |
+| 30 (impossible in five colours) | 55% | 71% |
+
+There is no five-colour manabase in which this card is reliably castable. It is also the
+only one of the six at **0% field**. Out under every build.
+
+### Final: **Sarkhan's Triumph · Stubborn Denial · Chaos Warp**
