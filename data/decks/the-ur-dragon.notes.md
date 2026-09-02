@@ -609,3 +609,137 @@ whose value is haste**, and it has now been checked rather than assumed twice in
 (Dragonlord Ojutai, 14% field, out for the Globe) is unchanged. If both artifacts are
 wanted the Orb is a perfectly reasonable *second* add — it is not a bad card, it is a
 redundant one here — but it is the third haste source and the fifth-best colour it makes.
+
+## 2026-09-02 (3) — six physical instants, pick three (all eight texts verified)
+
+Runs **33641708705** (six candidates + the two in-deck cards the redundancy question
+turns on) and **33641987943** (the two modal ones re-queued so their block fit the
+readable log window). Verbatim:
+
+> **Smuggler's Surprise** {G} — Instant. Spree *(Choose one or more additional costs.)*
+> `+{2}` Mill four cards. You may put up to two creature and/or land cards from among
+> the milled cards into your hand.
+> `+{4}{G}` You may put up to two creature cards from your hand onto the battlefield.
+> `+{1}` Creatures you control with power 4 or greater gain hexproof and indestructible
+> until end of turn.
+
+> **Archdruid's Charm** {G}{G}{G} — Instant. Choose one — • Search your library for a
+> creature or land card and reveal it. Put it onto the battlefield tapped if it's a land
+> card. Otherwise, put it into your hand. Then shuffle. • Put a +1/+1 counter on target
+> creature you control. It deals damage equal to its power to target creature you don't
+> control. • Exile target artifact or enchantment.
+
+> **Stubborn Denial** {U} — Counter target noncreature spell unless its controller pays
+> {1}. *Ferocious* — If you control a creature with power 4 or greater, counter that
+> spell instead.
+
+> **Boros Charm** {R}{W} — Choose one — • 4 damage to target player or planeswalker.
+> • Permanents you control gain indestructible until end of turn. • Target creature
+> gains double strike until end of turn.
+
+> **Sarkhan's Triumph** {2}{R} — Search your library for a Dragon creature card, reveal
+> it, put it into your hand, then shuffle.
+
+> **Chaos Warp** {2}{R} — (already in this deck)
+> **Heroic Intervention** {1}{G} — Permanents you control gain hexproof **and**
+> indestructible until end of turn. (already in this deck)
+> **Counterspell** {U}{U} — Counter target spell. (already in this deck)
+
+### Verdict: Sarkhan's Triumph · Stubborn Denial · Smuggler's Surprise
+
+**Two of the six are disqualified before quality is even discussed.**
+
+- **Chaos Warp is already in the 99.** `deck_conflicts` says own 6, committed 3, free 3 —
+  the extra copies are useless in singleton. It is not a choice, it is a duplicate.
+- **Archdruid's Charm is uncastable here.** `manabase.hypergeom_at_least` on this deck's
+  **14 green sources** (the three Dragon-only any-colour lands do not help a Charm):
+  P(GGG available) = **11% by T3, 15% T4, 19% T5, 23% by T6**. A card that is live in
+  under a quarter of games by turn six is not a card. It is also the only one of the six
+  with **no field presence at all** (0 of 244 Ur-Dragon decks). Its tutor mode is
+  genuinely strong — Sarkhan's Triumph does the dragon half of it for one red pip.
+
+**The three that get in.**
+
+1. **Sarkhan's Triumph** {2}{R} — **21% field / synergy 19, the highest of the six.**
+   Red is this deck's best-served colour (19 sources, **87%** by T3). An instant-speed
+   tutor into 30 dragons finds the answer, not just a threat: Ureni (pro-white and
+   pro-black plus the X-damage sweep), Dragonlord Dromoka, Hellkite Tyrant, Miirym.
+   **And it puts the dragon in HAND, so you still cast it** — eminence discounts it,
+   Lozhan's cast trigger fires, and the commander's attack trigger can free-drop it.
+   That is exactly the distinction that sank Belbe's Portal in this file two entries ago.
+2. **Stubborn Denial** {U} — **13% field / synergy 12, second-highest.** One blue pip
+   (70% by T3) against Counterspell's {U}{U}, so it is the counter you can hold up
+   *and* still deploy a dragon. Ferocious is not a condition here, it is a formality:
+   **28 of the 37 creatures in the 99 have power 4 or greater**, and the commander is a
+   10/10. So this is a one-mana hard counter for every noncreature spell — which is the
+   deck's named weakness ("Board wipes. Your threats are all on the battlefield"): Crux
+   of Fate, Cyclonic Rift, Farewell, Blasphemous Act, targeted removal, combo pieces.
+   It does not answer creature spells, and in this pod that is the right blind spot to
+   have — nothing else at the table out-sizes a discounted dragon.
+3. **Smuggler's Surprise** {G} — **10% field / synergy 9**, one green pip (76% by T3),
+   and the only one of the four finalists that is **owned and committed to no other deck.**
+   Spree is choose-one-*or-more*, so it is two cards in one slot:
+   - `+{1}` (total {1}{G}) is a second Heroic Intervention for the creatures — the
+     redundancy this deck's own notes ask for, in the one role where redundancy is the
+     point.
+   - `+{2}` (total {2}{G}) is real card advantage into the **draw 6 vs template 8–12**
+     gap the optimizer keeps flagging. **73 of the 99 cards are creatures or lands**, so
+     a mill-four converts to two cards in hand ~74% of the time per card seen.
+   - `+{4}{G}` is the trap mode: putting creatures onto the battlefield **skips casting**,
+     forfeiting eminence and Lozhan exactly as Belbe's Portal did. Take it only when the
+     alternative is dying with dragons stranded in hand.
+
+**Why Boros Charm is the cut, and it is not close.** Two of its three modes are already
+in the deck, verified this run:
+- Indestructible for your permanents → **Heroic Intervention** does the same thing plus
+  **hexproof**, for one coloured pip instead of two, at **38% field** against Boros
+  Charm's **7%**.
+- Double strike → **Sylvia Brightspear** already grants it to every Dragon your team
+  controls, permanently, and she is on the do-not-cut list.
+- 4 damage to a player is a rounding error against 40 life.
+
+It also needs both {R} and {W} (~64% joint by T3 against the single-pip candidates' 70–87%),
+and it has the **lowest field number of all six**. Same failure mode as Carnelian Orb
+earlier today: a good card whose every relevant line this deck already runs.
+
+### goldfish cannot rate a single one of these six — no A/B was run
+
+Checked rather than assumed, the same way the haste hole was found this morning:
+
+```
+grep -cin "search your library" scripts/goldfish.py  -> 0     (tutors unmodelled)
+grep -cin "indestructible"      scripts/goldfish.py  -> 0     (protection unmodelled)
+grep -cin "hexproof"            scripts/goldfish.py  -> 0
+grep -cin "instant"             scripts/goldfish.py  -> 0     (no instant speed at all)
+grep -in  "counter"             scripts/goldfish.py  -> 6 hits, every one of them PROSE
+      saying the sim does NOT counter spells (lines 754, 866, 939, 959); line 318 notes
+      Counterspell is compiled but "Never consulted by game" logic
+```
+
+Every candidate here is a tutor, a counterspell or a protection effect, in a metric with
+no opponent, no blocks, no removal and no instant speed. An A/B would have returned
+plausible-looking deltas measuring nothing but the cards' mana values. **The field
+snapshot and the verified-text engine-read are the whole evidence base for this call**,
+and that is an honest degrade, not a hidden one.
+
+### Physical availability — read this before sleeving
+
+`deck_conflicts` on the committed snapshot, because two of the picks are already
+physically spoken for:
+
+| card | owned | committed elsewhere | free |
+|---|---|---|---|
+| Sarkhan's Triumph | new pull (not in export) | — | **yes** |
+| Smuggler's Surprise | 1 | none | **yes** |
+| Stubborn Denial | 1 | **bruce-banner-incredible-hulk** | no |
+| Boros Charm | 1 | **cloud-ex-soldier** | no |
+| Archdruid's Charm | new pull | — | yes (but uncastable here) |
+| Chaos Warp | 6 | 3 decks incl. this one | 3 (moot — already in) |
+
+So two of the three picks cost nothing. **Stubborn Denial means pulling it out of the
+Bruce Banner deck** — where ferocious is also live, so it is a real trade and not a
+free one. If that deck is sleeved and the player would rather not raid it, take
+Sarkhan's Triumph and Smuggler's Surprise and leave the third slot: the next-best
+option among the six is Boros Charm, and the case above says it is not worth the slot.
+
+**Not applied.** These are records; the 99 is untouched.

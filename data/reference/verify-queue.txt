@@ -18,8 +18,6 @@
 # 2026-09-02 (2): Carnelian Orb / Temur Ascendancy / Rhythm of the Wild verified
 # by run 33638733867; texts recorded in the-ur-dragon.notes.md. Cleared.
 
-# 2026-09-02 (3b) — re-queued alone: the 8-card run's log window cut these two
-# off, and both are MODAL with mode-specific costs (Spree / charm modes) where
-# a paraphrase is exactly the wrong thing to trust.
-Smuggler's Surprise
-Archdruid's Charm
+# 2026-09-02 (3): the six candidate instants + Heroic Intervention + Counterspell
+# verified by runs 33641708705 and 33641987943; texts and the verdict are in
+# the-ur-dragon.notes.md. Cleared.
