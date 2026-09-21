@@ -1,9 +1,15 @@
 # Tinybones analogs — verified verbatim from Scryfall, 2026-08-30
 #
 # THE QUESTION. The player asked for "a Commander with mechanics similar to
-# Tinybones," for their brother. They own no Tinybones printing, so nothing in
-# the collection anchored the comparison and memory was the only alternative —
-# which is exactly the anti-pattern tool-contract.md §5.1 names.
+# Tinybones" — for themselves (an earlier draft of this file said it was for
+# their brother; corrected 2026-09-21 on the player's word, which outranks any
+# note on disk, grounding rule #6). They own no Tinybones printing, so nothing
+# in the collection anchored the comparison and memory was the only
+# alternative — exactly the anti-pattern tool-contract.md §5.1 names.
+#
+# STATUS: the player set this line of enquiry aside before picking a commander.
+# Nothing here has been built. The file stands as verified reference, not as a
+# decision — a future session should re-ask what they want, not assume Tergrid.
 #
 # HOW THIS WAS MADE. 38 card names (30 via data/reference/verify-queue.txt on a
 # push, 8 more via workflow_dispatch) went through `carddb.py --verify` on a
