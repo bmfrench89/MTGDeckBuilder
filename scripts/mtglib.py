@@ -72,10 +72,24 @@ class Card:
     #           cannot count — it must be reported, not treated as 0.
     power: Optional[int] = None
 
+    def _type_words(self) -> set:
+        """Every card-type WORD across `types`, supertypes included, subtypes dropped.
+
+        `types` is a list of single words when it comes from the CSV, but a deck's
+        .attrs.csv holds one free-text type line per card: "Basic Land", "Artifact
+        Creature", "Land — Cave". Matching whole entries against "land" read
+        "Basic Land" as a NONLAND, so manabase.py reported a 35-land deck as 6 lands
+        (found 2026-10-07)."""
+        words = set()
+        for t in self.types or ():
+            head = re.split(r"\s+[\u2014-]\s+", t, maxsplit=1)[0]   # drop "— subtypes"
+            words.update(w.lower() for w in head.split())
+        return words
+
     @property
     def is_land(self) -> bool:
         if self.types:
-            return any(t.lower() == "land" for t in self.types)
+            return "land" in self._type_words()
         return _looks_like_land_by_name(self.name)
 
     @property
@@ -86,7 +100,7 @@ class Card:
     def primary_type(self) -> str:
         order = ["Land", "Creature", "Planeswalker", "Artifact",
                  "Enchantment", "Instant", "Sorcery", "Battle"]
-        low = [t.lower() for t in self.types]
+        low = self._type_words()
         for t in order:
             if t.lower() in low:
                 return t

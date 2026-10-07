@@ -121,7 +121,7 @@ def load_changes(path, days=NEW_CARD_DAYS):
             except ValueError:
                 continue
             ago = (today - added).days
-            if ago > days or ago < 0:
+            if ago < 0 or (days is not None and ago > days):   # days=None: no window
                 continue
             k = mtglib._norm(name)
             prev = out.get(k)
@@ -148,7 +148,13 @@ def manual_adds(path, days=NEW_CARD_DAYS):
 
     The optimizer writes its own swaps to the same log, so `Source` is what separates
     "the tool did this" from "the player decided this" — the distinction the advisor
-    exists to respect."""
+    exists to respect.
+
+    The optimizer calls this with days=None: a player's decision does not expire.
+    The 14-day default is for the dashboard's NEW badge only. (Until 2026-10-07 the
+    optimizer used the default too, so a hand-added card lost its protection two
+    weeks after it was added — the opposite of "never second-guess a deliberate swap",
+    and the asymmetric twin of manual_removals, which was always unwindowed.)"""
     rows = [dict(v, key=k) for k, v in load_changes(path, days).items()
             if _is_manual(v.get("source"))]
     return sorted(rows, key=lambda r: r["days_ago"])

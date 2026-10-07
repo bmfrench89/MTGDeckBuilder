@@ -1428,3 +1428,56 @@ def test_tidy_never_pulls_sorceries_up_under_instants(tmp_path):
     assert "Quick Trick" in instants
     assert "Slow Lore" in sorceries and "Big Plan" in sorceries
     assert "Slow Lore" not in instants and "Big Plan" not in instants
+
+
+def test_manual_add_protection_never_expires(tmp_path):
+    """A hand-added card stays protected however old the decision is. The 14-day
+    window belongs to the dashboard's NEW badge, not to the optimizer."""
+    import deckcore
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    with open(f"{stem}.changes.csv", "w", encoding="utf-8", newline="\n") as f:
+        f.write("Card,Added,Replaced,Source\n"
+                "Grim Tutor,2020-01-01,Goblin Recruiter,manual-replace\n")
+    assert mtglib._norm("Grim Tutor") in optimize._manual_add_keys(deck)
+    # the dashboard's NEW badge still ages out on the default window
+    assert deckcore.load_changes(f"{stem}.changes.csv") == {}
+
+
+def test_append_buylist_keeps_a_curated_target_still_in_the_deck(tmp_path):
+    """A hand-picked Replaces that still names an in-deck card survives a re-proposal;
+    a blank cell is filled."""
+    (tmp_path / "d.txt").write_text("# Commander: Test Commander\n\n# --- Creatures ---\n"
+                                    "1 Chosen Target\n1 Optimizer Pick\n", encoding="utf-8")
+    bl = tmp_path / "d.buylist.csv"
+    bl.write_text("Card,Price,Tier,Replaces,Reason\n"
+                  "Curated Buy,,Core,Chosen Target,Hand-picked.\n"
+                  "Blank Buy,,Core,,No target yet.\n", encoding="utf-8")
+    optimize.append_buylist(str(tmp_path / "d.txt"), [
+        ("Optimizer Pick", 0, "Curated Buy", 80, "spell"),
+        ("Optimizer Pick", 0, "Blank Buy", 80, "spell")], "Test Commander")
+    text = bl.read_text(encoding="utf-8")
+    assert "Curated Buy,,Core,Chosen Target,Hand-picked." in text
+    assert "Blank Buy,,Core,Optimizer Pick,No target yet." in text
+
+
+def test_a_name_only_owned_row_does_not_erase_deck_attrs_types(tmp_path, monkeypatch):
+    """owned_additions.txt rows carry no type data. A typed card in the deck's own
+    .attrs.csv must still be valued from those types, not as an untyped value-0 card
+    the optimizer will happily cut."""
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text("1 Test Commander\n1 Big Typed Beast\n1 Great New Spell\n13 Island\n",
+                     encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    p = _deck(tmp_path, "# Title: T\n# Commander: Test Commander\n# Colors: U\n\n"
+                        "# --- Commander ---\n1 Test Commander\n\n"
+                        "# --- Creatures ---\n1 Big Typed Beast\n\n# --- Basics ---\n13 Island\n")
+    (tmp_path / "d.attrs.csv").write_text(
+        "Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power\n"
+        "Big Typed Beast,Creature,4,U,,draw,3,7\n", encoding="utf-8")
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {mtglib._norm("Great New Spell"): 30})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    cuts = [mtglib._norm(cut) for cut, *_ in r["swaps"]]
+    assert mtglib._norm("Big Typed Beast") not in cuts

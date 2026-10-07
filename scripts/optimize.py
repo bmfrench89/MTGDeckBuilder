@@ -101,7 +101,7 @@ def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
     # the full path, or this reads a changes.csv relative to the process's cwd.
     path_stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv")
+        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv", days=None)
                   for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
@@ -131,7 +131,7 @@ def _manual_add_keys(deck_path):
     take a deck out of the optimizer, it just means there is nothing to protect."""
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        return {k for r in deckcore.manual_adds(f"{stem}.changes.csv")
+        return {k for r in deckcore.manual_adds(f"{stem}.changes.csv", days=None)
                 for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         return set()
@@ -230,8 +230,9 @@ def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
 def append_buylist(deck_path, buy_swaps, commander=""):
     """Append buy recommendations to `<deck>.buylist.csv`, each mapped to the in-deck
     card it would replace. Existing rows are NEVER removed or reordered — hand-written
-    entries survive — but a re-mapped card's Replaces cell is refreshed so "when this
-    arrives, which card do I pull" stays true. Prices are left blank (no live feed).
+    entries survive. A re-proposed card's Replaces cell is only filled when it is blank
+    or stale (names a card no longer in the deck); a target that is still in the deck
+    is kept, because it may be a hand-picked one. Prices are left blank (no live feed).
 
     Runs even with NO buys to append: the stale-target sweep below is exactly what a
     deck needs after a run that proposes nothing, which is the common case for a deck
@@ -276,7 +277,14 @@ def append_buylist(deck_path, buy_swaps, commander=""):
     for cut, _inc_cut, add, inc_add, _kind in buy_swaps:
         k = mtglib._norm(add)
         if k in existing:
-            if (existing[k].get("Replaces") or "") != cut:
+            cur = (existing[k].get("Replaces") or "").strip()
+            # A target that still names a card IN THE DECK is a decision someone made
+            # (often by hand: the beorn-the-fierce buylist, 2026-10-07, was curated
+            # card by card and every apply overwrote it with field-driven picks). Only
+            # fill a blank or stale cell; the sweep above has already blanked stale ones.
+            if cur and in_deck and (mtglib.name_keys(cur) & in_deck):
+                continue
+            if cur != cut:
                 existing[k]["Replaces"] = cut
                 changed += 1
             continue
@@ -504,7 +512,12 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         # a pin stored as "a". Strict widening — same-spelling keys are in name_keys.
         if (mtglib.name_keys(c.name) & keep) or mtglib.is_basic(c.name):  # snow too
             continue
-        ref = mtglib.lookup(idx, c.name)
+        # The enriched card first: it carries the deck's own .attrs.csv types. A bare
+        # collection lookup can return a NAME-ONLY row (owned_additions.txt has no type
+        # data), which scored a typed 10/7 like Gigantic Big Bear as value 0 and put it
+        # up for a fit-driven cut (beorn-the-fierce, 2026-10-07).
+        e = enriched_by_key.get(k)
+        ref = e if (e is not None and e.has_type_data) else mtglib.lookup(idx, c.name)
         if not ref or is_land_in_deck(c.name):
             continue                      # lands handled by the manabase pass
         if c.name.lower() in notes:
@@ -1150,7 +1163,7 @@ def manual_adds_review(deck_path, coll):
     """
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        rows = deckcore.manual_adds(f"{stem}.changes.csv")
+        rows = deckcore.manual_adds(f"{stem}.changes.csv", days=None)
     except Exception:
         return []
     # Only cards STILL IN the deck. `.changes.csv` is append-only history, so a card

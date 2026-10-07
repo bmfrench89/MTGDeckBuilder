@@ -53,8 +53,10 @@ Secret Tunnel push damage through (Beorn and any converted creature share the Be
 
 - **Cosmic Cube**: every attack, cast a spell from the top six for free if its mana value is no
   more than your biggest attacker's power. With 6-12 power attackers that's nearly any spell.
+- **Ghalta the Unstoppable**: costs {8}{G} minus your biggest power, so {2}{G} next to Beorn and
+  {G} with Goreclaw too. It gives the whole team trample. The fit score only sees the printed 9.
 - **Earth's Mightiest Heroes**: tap 5 power (teamwork) to put every creature from the top eight
   onto the battlefield.
 
-Both are newer than most of the EDHREC data, so the optimizer sees "no field data" and proposes
-cutting them for Grizzly Bears and Fog. Both of those are clear downgrades.
+The field data can't see these cards, so the optimizer proposes cutting them for Grizzly Bears or
+Fog. Those would be clear downgrades.

@@ -38,8 +38,28 @@ Two optimizer bugs found and fixed while building it (tests added, each fails wi
 2. `_type_allowed("Instants")` also allowed Sorcery, a holdover from combined
    "Instants & sorceries" headings, so `_tidy` re-filed sorceries under Instants on every
    --apply. That is where the-ur-dragon's misfiled sorceries came from. Separate sections are
-   now exclusive; only a combined heading holds both. The existing misfiles in other decks are
-   NOT regrouped yet (deck_sections --all --apply would do it; awaiting the player's go-ahead).
+   now exclusive; only a combined heading holds both. The existing misfiles (the-ur-dragon,
+   dina-essence-brewer) were regrouped with the player's go-ahead; no card changed.
+
+Follow-up fixes the same day (player: "let's fix other issues"):
+3. Manual-add protection expired after 14 days (the optimizer used the NEW-badge window), so a
+   hand-added card became cuttable two weeks later. The optimizer now reads manual adds with no
+   window. This was the "calendar time bomb" behind the two long-failing test_optimize tests:
+   they were right, the code was wrong. Suite is fully green (931).
+4. The optimizer valued cuts from the collection index, where an owned_additions.txt row is
+   name-only, so typed deck cards (Gigantic Big Bear, Carnage Tyrant...) scored 0 and were put up
+   for fit-driven cuts. Cuts now use the enriched card (deck .attrs.csv types) first.
+5. append_buylist overwrote a hand-picked Replaces on every apply. It now only fills a blank or
+   stale cell.
+6. mtglib read attrs type LINES by whole entry, so "Basic Land" was a nonland (manabase reported
+   6 lands for a 35-land list). Type lines are now read by word. Every existing deck's manabase,
+   power ranking and deck_stats output is byte-identical before and after.
+
+Known limitation, not fixed: a fit-driven swap can cut a card that has NO field row for a
+mediocre field card (Fog at 35%), because the field veto compares against 0. beorn-the-fierce
+blocks the cards it should never take with dated manual-remove rows (Fog, Balduvian Bears,
+Lightning Greaves (shroud stops Beorn's trigger), Metallic Mimic) and names its unmodelled
+picks in .notes.md (Cosmic Cube, Earth's Mightiest Heroes, Ghalta the Unstoppable).
 
 ## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
 
