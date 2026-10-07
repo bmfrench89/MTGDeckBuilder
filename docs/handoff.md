@@ -6,7 +6,21 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-21._
+_Last updated: 2026-10-07._
+
+## Bruce Banner deck dismantled, 2026-10-07
+
+The player physically dismantled the Bruce Banner // The Incredible Hulk deck, so
+`data/decks/bruce-banner-incredible-hulk.*` was deleted (recoverable from git history; no
+pins referenced it). Its copies are back in the pool. The card itself stays in
+`owned_additions.txt` because the player still owns it, and its `commanders.csv` row stays as
+reference. `data/wishlist.md` still lists Bruce Banner shortfalls until the hosted app's next
+refresh regenerates it from the priced private CSV. Do not regenerate it from the name-only
+snapshot, which would drop every price.
+
+A mono-green Beorn the Fierce / Goreclaw build is in progress with the player. Per the
+player, nothing goes into `data/decks/` until they say the list is finished, and Roaming
+Throne stays in the Ur-Dragon deck.
 
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 
@@ -46,8 +60,8 @@ player: it is Dwarf tribal *running on* Treasure, not a Treasure-theme deck.
 **Two traps worth keeping.**
 
 1. **The Smaug builds cannibalise the Ur-Dragon.** Smaug the Magnificent and Smaug the
-   Impenetrable are single copies already sleeved there; Fiery Emancipation's only copy is in
-   the brother's Bruce Banner gift deck. Smaug, Wicked Worm is the exception — 4 copies, 1
+   Impenetrable are single copies already sleeved there; Fiery Emancipation's only copy was in
+   the Bruce Banner deck (dismantled 2026-10-07, so it is free now). Smaug, Wicked Worm is the exception — 4 copies, 1
    committed.
 2. **Smaug the Impenetrable's infinite does NOT assemble today.** Indestructible +
    damage-into-Treasure loops with any repeatable symmetric pinger, but all four owned
