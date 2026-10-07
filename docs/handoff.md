@@ -8,6 +8,14 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-10-07._
 
+## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
+
+The player also physically dismantled the Cloud deck, so `data/decks/cloud-ex-soldier.*` was
+deleted the same way (recoverable from git history; no pins referenced it). Its copies, including
+Bugenhagen, Tireless Tracker and Bonders' Enclave, are free for the Beorn / Goreclaw build. The
+player has confirmed that every card on that build's pull list is available. Its
+`commanders.csv` row stays as reference; `data/wishlist.md` catches up on the next hosted refresh.
+
 ## Bruce Banner deck dismantled, 2026-10-07
 
 The player physically dismantled the Bruce Banner // The Incredible Hulk deck, so
