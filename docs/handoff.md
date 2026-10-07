@@ -45,7 +45,7 @@ Follow-up fixes the same day (player: "let's fix other issues"):
 3. Manual-add protection expired after 14 days (the optimizer used the NEW-badge window), so a
    hand-added card became cuttable two weeks later. The optimizer now reads manual adds with no
    window. This was the "calendar time bomb" behind the two long-failing test_optimize tests:
-   they were right, the code was wrong. Suite is fully green (931).
+   they were right, the code was wrong. Suite is fully green.
 4. The optimizer valued cuts from the collection index, where an owned_additions.txt row is
    name-only, so typed deck cards (Gigantic Big Bear, Carnage Tyrant...) scored 0 and were put up
    for fit-driven cuts. Cuts now use the enriched card (deck .attrs.csv types) first.
@@ -55,11 +55,15 @@ Follow-up fixes the same day (player: "let's fix other issues"):
    6 lands for a 35-land list). Type lines are now read by word. Every existing deck's manabase,
    power ranking and deck_stats output is byte-identical before and after.
 
-Known limitation, not fixed: a fit-driven swap can cut a card that has NO field row for a
-mediocre field card (Fog at 35%), because the field veto compares against 0. beorn-the-fierce
-blocks the cards it should never take with dated manual-remove rows (Fog, Balduvian Bears,
-Lightning Greaves (shroud stops Beorn's trigger), Metallic Mimic) and names its unmodelled
-picks in .notes.md (Cosmic Cube, Earth's Mightiest Heroes, Ghalta the Unstoppable).
+7. Fit-driven swaps against a cut with NO field row compared mixed units (the add's field % vs the
+   cut's fit-only value) and a fake 0 in the field veto. New guard: unless the add is in at least
+   STRONG_CONSENSUS (50%) of the field's decks, it must beat the cut on fit alone by the margin.
+   Every other deck's preview is unchanged (Thorin's Patchwork Banner -> The Misty Mountains Cold
+   still goes through). beorn-the-fierce also keeps dated manual-remove rows (Fog, Balduvian
+   Bears, Lightning Greaves (shroud stops Beorn's trigger), Metallic Mimic) and names its
+   unmodelled picks in .notes.md (Cosmic Cube, Earth's Mightiest Heroes, Ghalta the Unstoppable).
+8. edhrec.slugify stripped accents instead of folding them, so Bartolomé del Presidio queried
+   "bartolom-del-presidio" (not a page) and ran with 0 field cards. Now folds to "bartolome".
 
 ## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
 

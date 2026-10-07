@@ -55,6 +55,11 @@ LAND_TARGET = deckcore.LAND_TARGET
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
 
 
+# A field % at which "the field plays it in most decks" outweighs a cut the field
+# has no row for. See the no-field-row guard in optimize().
+STRONG_CONSENSUS = 50
+
+
 def card_value(name, ref, rep, ctx, refs, field):
     """Deprecated shim — the scorer lives in `deck_fit.card_value` now.
 
@@ -410,6 +415,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         return card_value(name, mtglib.lookup(idx, name) if ref is None else ref,
                           rep, ctx, refs, field)
 
+    _fit_only = {}
+
+    def fit_only(name):
+        """Value with the field taken out: the units a no-field-row cut is valued in."""
+        if name not in _fit_only:
+            _fit_only[name] = deck_fit.card_value(name, mtglib.lookup(idx, name),
+                                                  rep, ctx, refs, {})
+        return _fit_only[name]
+
     # ---- candidates to bring IN ---------------------------------------------------------
     # Ranked by how much the field plays them, then by availability:
     #   free  = you own a spare copy            (always allowed)
@@ -587,6 +601,17 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 continue                  # not a clear enough upgrade, like-for-like units
             if inc_add < inc_cut:
                 continue                  # role repair may not overrule the field (above)
+            if (not field_knows(cut_name) and inc_add < STRONG_CONSENSUS
+                    and fit_only(add_name) - val_cut < margin):
+                # The field has NO row for the cut, so its value is fit-only, while the
+                # add's value may be its field %. That compares different units, and the
+                # veto above compares against a fake 0. Make the add win in the cut's own
+                # units. Without this, Fog (35% field, weak fit) was proposed over Carnage
+                # Tyrant, Hulking Raptor and Ghalta the Unstoppable in beorn-the-fierce,
+                # whose newer cards EDHREC has little data on (2026-10-07). A missing
+                # row can mean "rarely played" OR "too new to have data", so a card the
+                # field plays in most decks (STRONG_CONSENSUS) still gets through.
+                continue
             cut_role = role_of(cut_name)
             # keep role counts inside the template
             trial = dict(cats)

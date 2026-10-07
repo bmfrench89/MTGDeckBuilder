@@ -1481,3 +1481,19 @@ def test_a_name_only_owned_row_does_not_erase_deck_attrs_types(tmp_path, monkeyp
     r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
     cuts = [mtglib._norm(cut) for cut, *_ in r["swaps"]]
     assert mtglib._norm("Big Typed Beast") not in cuts
+
+
+def test_a_middling_field_card_cannot_cut_a_card_with_no_field_row(tmp_path, monkeypatch):
+    """No field row for the cut means its value is fit-only. A 35%-field card with no
+    fit edge must not replace it (Fog over Carnage Tyrant, beorn-the-fierce). A card
+    the field plays in most decks still can (see the split-name test above: 99%)."""
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text(SPLIT_NAME_COLLECTION, encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {
+        mtglib._norm("Great New Spell"): 35, mtglib._norm("Adventurer Host"): 90})
+    p = _deck(tmp_path, SPLIT_NAME_DECK)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    assert r["swaps"] == []
