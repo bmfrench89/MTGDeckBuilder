@@ -1,0 +1,71 @@
+Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
+"Beorn the Fierce",Creature,5,G,,draw,3,6
+"Llanowar Elves",Creature,1,G,G,dork,3,1
+"Elvish Mystic",Creature,1,G,G,dork,3,1
+"Beorn's Hospitality",Enchantment,2,G,,,3,
+"Ilysian Caryatid",Creature,2,G,W U B R G,dork,3,1
+"Studious First-Year // Rampant Growth",Creature,1,G,,ramp,3,1
+"Hulking Raptor",Creature,4,G,,ramp,3,5
+"Loot, Exuberant Explorer",Creature,3,G,,ramp,3,1
+"Beast Whisperer",Creature,4,G,,draw,3,4
+"Tireless Tracker",Creature,3,G,,draw,3,3
+"Ohran Frostfang",Creature,5,G,,draw,3,2
+"Elder Gargaroth",Creature,5,G,,draw,3,6
+"Vaultborn Tyrant",Creature,7,G,,draw,3,6
+"Scrapshooter",Creature,3,G,,removal,3,4
+"Surrak and Goreclaw",Creature,6,G,,,3,6
+"Gigantic Big Bear",Creature,7,G,,,3,10
+"Carnage Tyrant",Creature,6,G,,,3,7
+"Dungrove Elder",Creature,3,G,,,3,*
+"Rhonas the Indomitable",Creature,3,G,,,3,5
+"Managorger Hydra",Creature,3,G,,,3,1
+"Regal Imperiosaur",Creature,3,G,,,3,5
+"Terrian, World Tyrant",Creature,5,G,,,3,9
+"Ghalta, Primal Hunger",Creature,12,G,,,3,12
+"Beast Within",Instant,3,G,,removal,3,
+"Archdruid's Charm",Instant,3,G,,removal,3,
+"Ram Through",Instant,2,G,,removal,3,
+"Selfless Safewright",Creature,5,G,,,3,4
+"Heroic Intervention",Instant,2,G,,,3,
+"Nature's Lore",Sorcery,2,G,,ramp,3,
+"Rishkar's Expertise",Sorcery,6,G,,draw,3,
+"Overwhelming Stampede",Sorcery,5,G,,,3,
+"Germination Practicum",Sorcery,5,G,,,3,
+"Ezuri's Predation",Sorcery,8,G,,wipe,3,
+"Garruk's Uprising",Enchantment,3,G,,draw,3,
+"Elemental Bond",Enchantment,3,G,,draw,3,
+"Dancing from Dark to Dawn",Enchantment,5,G,,,3,
+"Unnatural Growth",Enchantment,5,G,,,3,
+"Kenrith's Transformation",Enchantment,2,G,,removal,3,
+"Sol Ring",Artifact,1,,C,rock,3,
+"Rhonas's Monument",Artifact,3,,,ramp,3,
+"Necklace of Girion",Artifact,3,,G,rock,3,
+"Swiftfoot Boots",Artifact,2,,,,3,
+"Goreclaw, Terror of Qal Sisma",Creature,4,G,,ramp,3,4
+"Verdant Kraken",Creature,7,G,,ramp,3,6
+"Radagast of Rhosgobel",Creature,4,G,,ramp,3,2
+"Bugenhagen, Wise Elder",Creature,2,G,W U B R G,dork;draw,3,1
+"Ghalta the Unstoppable",Creature,9,G,,,3,8
+"Cosmic Cube",Artifact,5,,,draw,3,
+"Burrog Barrage",Instant,2,G,,removal,3,
+"Beorn, Reluctant Host // Till and Tend",Creature,5,G,,,3,5
+"Earth's Mightiest Heroes",Sorcery,6,G,,,3,
+"Devil Dinosaur",Creature,4,G,,,3,5
+"It's Clobberin' Time!",Sorcery,3,G,,removal,3,
+"Lizard, Connors's Curse",Creature,4,G,,removal,3,5
+"Little Bear",Creature,3,G,,,3,3
+"Whiptongue Hydra",Creature,6,G,,removal,3,4
+"Mirkwood Pathmaker",Creature,3,G,,,3,*
+"Ordinary Bear",Creature,4,G,,,3,4
+"Punishing Punch",Instant,3,G,,removal,3,
+"Selvala, Heart of the Wilds",Creature,3,G,W U B R G,dork;draw,3,2
+"Smuggler's Surprise",Instant,1,G,,,3,
+"Hulk, Brutal Brawler",Creature,4,G,,,3,4
+"Terrific Team-Up",Instant,4,G,,removal,3,
+"Wood Elves",Creature,3,G,,ramp,3,1
+"Roiling Canopy",Land,0,,G,etb-tapped,3,
+"Mosswort Bridge",Land,0,,G,etb-tapped,3,
+"Tranquil Thicket",Land,0,,G,etb-tapped,3,
+"Secret Tunnel",Land,0,,C,,3,
+"Rogue's Passage",Land,0,,C,,3,
+"Reliquary Tower",Land,0,,C,,3,

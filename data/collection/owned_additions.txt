@@ -12,3 +12,44 @@
 # own 0 / committed 1, a permanent false shortfall. Recorded here rather than edited
 # into the export. If the physical card is NOT in that deck, delete this line.
 1 Bruce Banner // The Incredible Hulk
+
+# 2026-10-07: Beorn the Fierce deck. The player photographed every card below and confirmed
+# ("All the cards listed I have available or copies to use") that they own enough copies to
+# sleeve it next to their other decks. The export predates those cards, or under-counts copies
+# already sleeved elsewhere, so each line adds exactly the shortfall deck_conflicts reported.
+# Player's word outranks the export (grounding rule #6).
+1 Archdruid's Charm
+1 Beast Whisperer
+1 Carnage Tyrant
+1 Dungrove Elder
+1 Elder Gargaroth
+1 Elemental Bond
+1 Elvish Mystic
+1 Ezuri's Predation
+1 Garruk's Uprising
+1 Ghalta the Unstoppable
+1 Ghalta, Primal Hunger
+1 Goreclaw, Terror of Qal Sisma
+1 Hulking Raptor
+1 Ilysian Caryatid
+1 Kenrith's Transformation
+1 Loot, Exuberant Explorer
+1 Managorger Hydra
+1 Mosswort Bridge
+1 Nature's Lore
+1 Overwhelming Stampede
+1 Radagast of Rhosgobel
+1 Ram Through
+1 Regal Imperiosaur
+1 Rhonas the Indomitable
+1 Rhonas's Monument
+1 Rishkar's Expertise
+2 Rogue's Passage
+1 Roiling Canopy
+1 Scrapshooter
+1 Secret Tunnel
+1 Surrak and Goreclaw
+1 Tranquil Thicket
+1 Unnatural Growth
+1 Verdant Kraken
+1 Whiptongue Hydra

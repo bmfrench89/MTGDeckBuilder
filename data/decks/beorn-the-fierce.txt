@@ -1,0 +1,92 @@
+# Title: Beorn the Fierce — Bear Den
+# Commander: Beorn the Fierce
+# Colors: G
+# Archetype: stompy
+# Source: hand-built with the player from photographed cards and a full owned-collection sweep; every card's text verified on the deck-verify runner (run 37654666265, 2026-10-07).
+
+# --- Commander ---
+1 Beorn the Fierce
+
+# --- Creatures ---
+1 Llanowar Elves
+1 Elvish Mystic
+1 Ilysian Caryatid
+1 Studious First-Year // Rampant Growth
+1 Hulking Raptor
+1 Loot, Exuberant Explorer
+1 Beast Whisperer
+1 Tireless Tracker
+1 Ohran Frostfang
+1 Elder Gargaroth
+1 Vaultborn Tyrant
+1 Scrapshooter
+1 Surrak and Goreclaw
+1 Gigantic Big Bear
+1 Carnage Tyrant
+1 Dungrove Elder
+1 Rhonas the Indomitable
+1 Managorger Hydra
+1 Regal Imperiosaur
+1 Terrian, World Tyrant
+1 Ghalta, Primal Hunger
+1 Selfless Safewright
+1 Goreclaw, Terror of Qal Sisma
+1 Verdant Kraken
+1 Radagast of Rhosgobel
+1 Bugenhagen, Wise Elder
+1 Ghalta the Unstoppable
+1 Beorn, Reluctant Host // Till and Tend
+1 Devil Dinosaur
+1 Lizard, Connors's Curse
+1 Little Bear
+1 Whiptongue Hydra
+1 Mirkwood Pathmaker
+1 Ordinary Bear
+1 Selvala, Heart of the Wilds
+1 Hulk, Brutal Brawler
+1 Wood Elves
+
+# --- Instants ---
+1 Beast Within
+1 Archdruid's Charm
+1 Ram Through
+1 Heroic Intervention
+1 Burrog Barrage
+1 Punishing Punch
+1 Smuggler's Surprise
+1 Terrific Team-Up
+
+# --- Sorceries ---
+1 Nature's Lore
+1 Germination Practicum
+1 Earth's Mightiest Heroes
+1 It's Clobberin' Time!
+1 Rishkar's Expertise
+1 Overwhelming Stampede
+1 Ezuri's Predation
+
+# --- Artifacts ---
+1 Sol Ring
+1 Rhonas's Monument
+1 Necklace of Girion
+1 Swiftfoot Boots
+1 Cosmic Cube
+
+# --- Enchantments ---
+1 Beorn's Hospitality
+1 Garruk's Uprising
+1 Elemental Bond
+1 Dancing from Dark to Dawn
+1 Unnatural Growth
+1 Kenrith's Transformation
+
+# --- Lands ---
+1 Roiling Canopy
+1 Mosswort Bridge
+1 Tranquil Thicket
+1 Secret Tunnel
+1 Rogue's Passage
+1 Reliquary Tower
+
+# --- Basics ---
+30 Forest

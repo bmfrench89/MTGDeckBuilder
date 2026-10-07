@@ -372,7 +372,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cats = dict(rep.get("categories", {}))
 
     def inc_of(name):
-        return field.get(mtglib._norm(name), 0)
+        # name_keys, not the bare key: EDHREC keys an adventure / prepare / MDFC card by
+        # its FRONT face ("Beorn, Reluctant Host"), while a verified deck line carries the
+        # full "A // B" name. A bare lookup read 52% as 0% and cut the card (2026-10-07).
+        return max((field.get(k, 0) for k in mtglib.name_keys(name)), default=0)
 
     def field_knows(name):
         """True when the field actually HAS a row for this card.
@@ -382,7 +385,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         distinction CLAUDE.md calls load-bearing, and printing an absent value
         as `0% field` is a measurement claim about data we do not have — so
         every surface that shows an inclusion number asks this first."""
-        return mtglib._norm(name) in field
+        return any(k in field for k in mtglib.name_keys(name))
 
     def role_of(name):
         r = mtglib.lookup(idx, name)
@@ -924,19 +927,27 @@ _TYPE_SECTIONS = [
     (("artifact",), {"Artifact"}),
     (("enchantment",), {"Enchantment"}),
     (("planeswalker",), {"Planeswalker"}),
-    (("instant", "sorcery", "sorceries", "spell"), {"Instant", "Sorcery"}),
+    # Separate EDHREC-style "Instants" / "Sorceries" sections (the 2026-08-11 convention)
+    # are exclusive. Only a COMBINED heading ("Instants & sorceries", "Spells") holds both;
+    # that case is matched first in _type_allowed. When "Instants" also allowed Sorcery,
+    # _tidy re-filed every sorcery into the first section that "allowed" it — so each
+    # optimize --apply pulled sorceries up under Instants (the-ur-dragon, beorn, 2026-10-07).
+    (("instant",), {"Instant"}),
+    (("sorcery", "sorceries"), {"Sorcery"}),
 ]
 # Where a card goes when no suitable section exists — created in this order, after the
 # existing ones. Type-based, which is the convention every decklist site uses.
 _FALLBACK_ORDER = [("Creature", "Creatures"), ("Planeswalker", "Planeswalkers"),
                    ("Artifact", "Artifacts"), ("Enchantment", "Enchantments"),
-                   ("Instant", "Instants & sorceries"), ("Sorcery", "Instants & sorceries"),
+                   ("Instant", "Instants"), ("Sorcery", "Sorceries"),
                    ("Land", "Lands")]
 
 
 def _type_allowed(section):
     """The card types a section may hold, or None if it isn't type-exclusive."""
     name = re.sub(r"\s*\(\d+\)\s*$", "", section).strip().lower()
+    if name.startswith("spell") or ("instant" in name and "sorcer" in name):
+        return {"Instant", "Sorcery"}               # a combined section holds both
     for words, types in _TYPE_SECTIONS:
         if any(name.startswith(w) for w in words):
             return types

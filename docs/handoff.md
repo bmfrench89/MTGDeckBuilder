@@ -8,6 +8,39 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-10-07._
 
+## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
+
+**Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
+99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 11 /
+wipe 1. Singleton-clean, sections clean, no Game Changers, no combos (power.py: Bracket 2 by
+guardrails; plays at the low end of 3). EDHREC top-25 overlap 14/25 (56%).
+
+How it was built: the player photographed ~100 candidates, then every owned green/colorless
+card (633) was verified verbatim on the runner (deck-verify run 37654666265) and swept for both
+commanders by a multi-agent pass with two-lens verification of 108 proposed changes. A
+custom goldfish (scratch, not in repo) found Goreclaw faster through turn 6 and Beorn ahead
+after, with fewer losses to commander removal; the player picked Beorn.
+
+Player rules recorded: Roaming Throne stays in the Ur-Dragon. Every card on this deck's pull
+list is available (owned_additions.txt now carries the 35 shortfall lines, dated).
+
+`.buylist.csv` is CURATED (17 rows, each with a hand-picked Replaces): Maskwood Nexus, Ayula,
+The Earth King, Wilson, Tribute to the World Tree, Lumra (Core), then Craterhoof, The Great Henge,
+Emerald Medallion, Rampaging Yao Guai, Werebear, Evercoat Ursine, Owlbear Cub, Vastlands
+Scavenger, Castle Garenbrig, Boseiju, Argoth. All verified (deck-verify run 37678809885).
+**Caution:** optimize.py refreshes Replaces on rows it also proposes, so an optimize --apply
+will overwrite those picks with its own field-driven ones.
+
+Two optimizer bugs found and fixed while building it (tests added, each fails without its fix):
+1. Field % for a " // " card (adventure / prepare / MDFC) was read by the full name, so
+   Beorn, Reluctant Host (52% field) and Studious First-Year (79%) read as 0% and the first
+   was swapped for Grizzly Bears. `inc_of` / `field_knows` now use `mtglib.name_keys`.
+2. `_type_allowed("Instants")` also allowed Sorcery, a holdover from combined
+   "Instants & sorceries" headings, so `_tidy` re-filed sorceries under Instants on every
+   --apply. That is where the-ur-dragon's misfiled sorceries came from. Separate sections are
+   now exclusive; only a combined heading holds both. The existing misfiles in other decks are
+   NOT regrouped yet (deck_sections --all --apply would do it; awaiting the player's go-ahead).
+
 ## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
 
 The player also physically dismantled the Cloud deck, so `data/decks/cloud-ex-soldier.*` was
@@ -26,9 +59,7 @@ reference. `data/wishlist.md` still lists Bruce Banner shortfalls until the host
 refresh regenerates it from the priced private CSV. Do not regenerate it from the name-only
 snapshot, which would drop every price.
 
-A mono-green Beorn the Fierce / Goreclaw build is in progress with the player. Per the
-player, nothing goes into `data/decks/` until they say the list is finished, and Roaming
-Throne stays in the Ur-Dragon deck.
+The mono-green Beorn the Fierce build is finished and saved; see the section above.
 
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 
