@@ -64,6 +64,10 @@ Follow-up fixes the same day (player: "let's fix other issues"):
    unmodelled picks in .notes.md (Cosmic Cube, Earth's Mightiest Heroes, Ghalta the Unstoppable).
 8. edhrec.slugify stripped accents instead of folding them, so Bartolomé del Presidio queried
    "bartolom-del-presidio" (not a page) and ran with 0 field cards. Now folds to "bartolome".
+   Snapshot pulled after the fix (deck-verify run 37704875189): 296 field cards. The deck is a
+   study copy of a YouTube list, so it was NOT tuned. For the record, the optimizer would swap
+   Infernal Offering (7%) for Blood Artist (62%, shared) and Path of Ancestry for Isolated
+   Chapel; top-25 overlap is 11/25 (44%, under the 50% bar); draw 0 / removal 2 / ramp 5.
 
 ## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
 
