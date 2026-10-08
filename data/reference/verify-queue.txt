@@ -1,13 +1,18 @@
 # Verify queue — one card name per line. Pushed on a claude/** branch, this file
 # triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
 #
-# Cleared 2026-08-21 — the Treasure census is finished and written up. All 2,776
-# non-basic cards in the collection were verified against Scryfall across six
-# runs; the treasure-relevant text is in data/reference/treasure-verified-2026-08-21.txt
-# and the commander comparison is in docs/handoff.md.
+# Cleared 2026-08-30 — the Tinybones-analog scouting is finished and written up.
+# 38 cards were verified across deck-verify runs 33329008762 / 33329055024 /
+# 33329105195 / 33329112713 and the Tergrid re-dispatch; the verbatim text and
+# the ranked comparison live in data/reference/tinybones-verified-2026-08-30.txt,
+# and field snapshots for Tinybones (both printings) and Tergrid are committed
+# under data/reference/field/.
+#
+# Two memory errors this run caught, worth remembering: Tinybones, Trinket
+# Thief's payoff is a once-per-turn END STEP trigger that costs 1 life, not a
+# pay-{1} trigger on each discard; and the merged "Rankle and Torbran" DROPPED
+# Rankle's discard mode entirely.
 #
 # STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
 # thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
-# Foom, Pet Avengers, Parapet Thrasher) — though note the census above now
-# covers every card the player owns, so those texts ARE on disk in the corpus
-# the census produced if the run logs are still retrievable.
+# Foom, Pet Avengers, Parapet Thrasher).

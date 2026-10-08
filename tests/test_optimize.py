@@ -1357,3 +1357,143 @@ def test_tidy_runs_even_when_the_pass_proposes_no_swaps(tmp_path, monkeypatch):
     creatures = text.split("# --- Creatures ---")[1].split("# ---")[0]
     assert "Misplaced Rite" not in creatures, (
         "a typed Sorcery under Creatures must be re-filed by ANY apply")
+
+
+SPLIT_NAME_COLLECTION = """\
+1 Test Commander
+1 Weak Old Spell
+1 Adventurer Host // Little Errand
+1 Great New Spell
+13 Island
+"""
+
+SPLIT_NAME_DECK = """\
+# Title: T
+# Commander: Test Commander
+# Colors: U
+
+# --- Commander ---
+1 Test Commander
+
+# --- Sorceries ---
+1 Weak Old Spell
+1 Adventurer Host // Little Errand
+
+# --- Basics ---
+13 Island
+"""
+
+
+def test_field_percent_matches_a_split_named_card_by_its_front_face(tmp_path, monkeypatch):
+    """EDHREC keys adventure / prepare / MDFC cards by the front face only. A deck that
+    lists the full "A // B" name must still read the card's real field %. The bare-key
+    lookup read Beorn, Reluctant Host (52% of Beorn decks) as 0% and swapped it for
+    Grizzly Bears."""
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text(SPLIT_NAME_COLLECTION, encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {
+        mtglib._norm("Great New Spell"): 99, mtglib._norm("Adventurer Host"): 90})
+    p = _deck(tmp_path, SPLIT_NAME_DECK)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    cuts = [mtglib._norm(cut) for cut, *_ in r["swaps"]]
+    assert mtglib._norm("Adventurer Host // Little Errand") not in cuts
+    assert cuts == [mtglib._norm("Weak Old Spell")]
+
+
+def test_separate_instant_and_sorcery_sections_are_exclusive():
+    assert optimize._type_allowed("Instants") == {"Instant"}
+    assert optimize._type_allowed("Sorceries (7)") == {"Sorcery"}
+    assert optimize._type_allowed("Spells") == {"Instant", "Sorcery"}
+
+
+def test_tidy_never_pulls_sorceries_up_under_instants(tmp_path):
+    """With separate Instants and Sorceries sections, a sorcery already under
+    Sorceries must stay there. Before the fix every optimize --apply moved them under
+    Instants, because the Instants section also 'allowed' Sorcery and came first."""
+    cpath = tmp_path / "typed.csv"
+    cpath.write_text(
+        "Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID\n"
+        "1,Quick Trick,1,U,U,{U},Instant,,common,in000001\n"
+        "1,Slow Lore,2,G,G,{1}{G},Sorcery,,common,so000001\n"
+        "1,Big Plan,5,G,G,{3}{G}{G},Sorcery,,common,so000002\n", encoding="utf-8")
+    idx = mtglib.index_by_name(mtglib.load_collection(str(cpath)))
+    p = _deck(tmp_path, "# Commander: Test Commander\n\n# --- Instants ---\n1 Quick Trick\n"
+                        "\n# --- Sorceries ---\n1 Slow Lore\n1 Big Plan\n")
+    optimize._tidy(p, idx)
+    out = open(p, encoding="utf-8").read()
+    instants, sorceries = out.split("# --- Sorceries ---")
+    assert "Quick Trick" in instants
+    assert "Slow Lore" in sorceries and "Big Plan" in sorceries
+    assert "Slow Lore" not in instants and "Big Plan" not in instants
+
+
+def test_manual_add_protection_never_expires(tmp_path):
+    """A hand-added card stays protected however old the decision is. The 14-day
+    window belongs to the dashboard's NEW badge, not to the optimizer."""
+    import deckcore
+    deck = _deck(tmp_path)
+    stem = deck[:-4]
+    with open(f"{stem}.changes.csv", "w", encoding="utf-8", newline="\n") as f:
+        f.write("Card,Added,Replaced,Source\n"
+                "Grim Tutor,2020-01-01,Goblin Recruiter,manual-replace\n")
+    assert mtglib._norm("Grim Tutor") in optimize._manual_add_keys(deck)
+    # the dashboard's NEW badge still ages out on the default window
+    assert deckcore.load_changes(f"{stem}.changes.csv") == {}
+
+
+def test_append_buylist_keeps_a_curated_target_still_in_the_deck(tmp_path):
+    """A hand-picked Replaces that still names an in-deck card survives a re-proposal;
+    a blank cell is filled."""
+    (tmp_path / "d.txt").write_text("# Commander: Test Commander\n\n# --- Creatures ---\n"
+                                    "1 Chosen Target\n1 Optimizer Pick\n", encoding="utf-8")
+    bl = tmp_path / "d.buylist.csv"
+    bl.write_text("Card,Price,Tier,Replaces,Reason\n"
+                  "Curated Buy,,Core,Chosen Target,Hand-picked.\n"
+                  "Blank Buy,,Core,,No target yet.\n", encoding="utf-8")
+    optimize.append_buylist(str(tmp_path / "d.txt"), [
+        ("Optimizer Pick", 0, "Curated Buy", 80, "spell"),
+        ("Optimizer Pick", 0, "Blank Buy", 80, "spell")], "Test Commander")
+    text = bl.read_text(encoding="utf-8")
+    assert "Curated Buy,,Core,Chosen Target,Hand-picked." in text
+    assert "Blank Buy,,Core,Optimizer Pick,No target yet." in text
+
+
+def test_a_name_only_owned_row_does_not_erase_deck_attrs_types(tmp_path, monkeypatch):
+    """owned_additions.txt rows carry no type data. A typed card in the deck's own
+    .attrs.csv must still be valued from those types, not as an untyped value-0 card
+    the optimizer will happily cut."""
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text("1 Test Commander\n1 Big Typed Beast\n1 Great New Spell\n13 Island\n",
+                     encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    p = _deck(tmp_path, "# Title: T\n# Commander: Test Commander\n# Colors: U\n\n"
+                        "# --- Commander ---\n1 Test Commander\n\n"
+                        "# --- Creatures ---\n1 Big Typed Beast\n\n# --- Basics ---\n13 Island\n")
+    (tmp_path / "d.attrs.csv").write_text(
+        "Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power\n"
+        "Big Typed Beast,Creature,4,U,,draw,3,7\n", encoding="utf-8")
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {mtglib._norm("Great New Spell"): 30})
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    cuts = [mtglib._norm(cut) for cut, *_ in r["swaps"]]
+    assert mtglib._norm("Big Typed Beast") not in cuts
+
+
+def test_a_middling_field_card_cannot_cut_a_card_with_no_field_row(tmp_path, monkeypatch):
+    """No field row for the cut means its value is fit-only. A 35%-field card with no
+    fit edge must not replace it (Fog over Carnage Tyrant, beorn-the-fierce). A card
+    the field plays in most decks still can (see the split-name test above: 99%)."""
+    import deck_fit
+    cpath = tmp_path / "snapshot.txt"
+    cpath.write_text(SPLIT_NAME_COLLECTION, encoding="utf-8")
+    coll = mtglib.load_collection(str(cpath))
+    idx = mtglib.index_by_name(coll)
+    monkeypatch.setattr(deck_fit, "load_field", lambda *a, **k: {
+        mtglib._norm("Great New Spell"): 35, mtglib._norm("Adventurer Host"): 90})
+    p = _deck(tmp_path, SPLIT_NAME_DECK)
+    r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
+    assert r["swaps"] == []

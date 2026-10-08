@@ -55,6 +55,11 @@ LAND_TARGET = deckcore.LAND_TARGET
 BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
 
 
+# A field % at which "the field plays it in most decks" outweighs a cut the field
+# has no row for. See the no-field-row guard in optimize().
+STRONG_CONSENSUS = 50
+
+
 def card_value(name, ref, rep, ctx, refs, field):
     """Deprecated shim — the scorer lives in `deck_fit.card_value` now.
 
@@ -101,7 +106,7 @@ def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
     # the full path, or this reads a changes.csv relative to the process's cwd.
     path_stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv")
+        manual = {k for r in deckcore.manual_adds(f"{path_stem}.changes.csv", days=None)
                   for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
@@ -131,7 +136,7 @@ def _manual_add_keys(deck_path):
     take a deck out of the optimizer, it just means there is nothing to protect."""
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        return {k for r in deckcore.manual_adds(f"{stem}.changes.csv")
+        return {k for r in deckcore.manual_adds(f"{stem}.changes.csv", days=None)
                 for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         return set()
@@ -230,8 +235,9 @@ def write_buylist(deck_path, report, min_inclusion=40, overwrite=False):
 def append_buylist(deck_path, buy_swaps, commander=""):
     """Append buy recommendations to `<deck>.buylist.csv`, each mapped to the in-deck
     card it would replace. Existing rows are NEVER removed or reordered — hand-written
-    entries survive — but a re-mapped card's Replaces cell is refreshed so "when this
-    arrives, which card do I pull" stays true. Prices are left blank (no live feed).
+    entries survive. A re-proposed card's Replaces cell is only filled when it is blank
+    or stale (names a card no longer in the deck); a target that is still in the deck
+    is kept, because it may be a hand-picked one. Prices are left blank (no live feed).
 
     Runs even with NO buys to append: the stale-target sweep below is exactly what a
     deck needs after a run that proposes nothing, which is the common case for a deck
@@ -276,7 +282,14 @@ def append_buylist(deck_path, buy_swaps, commander=""):
     for cut, _inc_cut, add, inc_add, _kind in buy_swaps:
         k = mtglib._norm(add)
         if k in existing:
-            if (existing[k].get("Replaces") or "") != cut:
+            cur = (existing[k].get("Replaces") or "").strip()
+            # A target that still names a card IN THE DECK is a decision someone made
+            # (often by hand: the beorn-the-fierce buylist, 2026-10-07, was curated
+            # card by card and every apply overwrote it with field-driven picks). Only
+            # fill a blank or stale cell; the sweep above has already blanked stale ones.
+            if cur and in_deck and (mtglib.name_keys(cur) & in_deck):
+                continue
+            if cur != cut:
                 existing[k]["Replaces"] = cut
                 changed += 1
             continue
@@ -372,7 +385,10 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     cats = dict(rep.get("categories", {}))
 
     def inc_of(name):
-        return field.get(mtglib._norm(name), 0)
+        # name_keys, not the bare key: EDHREC keys an adventure / prepare / MDFC card by
+        # its FRONT face ("Beorn, Reluctant Host"), while a verified deck line carries the
+        # full "A // B" name. A bare lookup read 52% as 0% and cut the card (2026-10-07).
+        return max((field.get(k, 0) for k in mtglib.name_keys(name)), default=0)
 
     def field_knows(name):
         """True when the field actually HAS a row for this card.
@@ -382,7 +398,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         distinction CLAUDE.md calls load-bearing, and printing an absent value
         as `0% field` is a measurement claim about data we do not have — so
         every surface that shows an inclusion number asks this first."""
-        return mtglib._norm(name) in field
+        return any(k in field for k in mtglib.name_keys(name))
 
     def role_of(name):
         r = mtglib.lookup(idx, name)
@@ -398,6 +414,15 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     def value_of(name, ref=None):
         return card_value(name, mtglib.lookup(idx, name) if ref is None else ref,
                           rep, ctx, refs, field)
+
+    _fit_only = {}
+
+    def fit_only(name):
+        """Value with the field taken out: the units a no-field-row cut is valued in."""
+        if name not in _fit_only:
+            _fit_only[name] = deck_fit.card_value(name, mtglib.lookup(idx, name),
+                                                  rep, ctx, refs, {})
+        return _fit_only[name]
 
     # ---- candidates to bring IN ---------------------------------------------------------
     # Ranked by how much the field plays them, then by availability:
@@ -501,7 +526,12 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         # a pin stored as "a". Strict widening — same-spelling keys are in name_keys.
         if (mtglib.name_keys(c.name) & keep) or mtglib.is_basic(c.name):  # snow too
             continue
-        ref = mtglib.lookup(idx, c.name)
+        # The enriched card first: it carries the deck's own .attrs.csv types. A bare
+        # collection lookup can return a NAME-ONLY row (owned_additions.txt has no type
+        # data), which scored a typed 10/7 like Gigantic Big Bear as value 0 and put it
+        # up for a fit-driven cut (beorn-the-fierce, 2026-10-07).
+        e = enriched_by_key.get(k)
+        ref = e if (e is not None and e.has_type_data) else mtglib.lookup(idx, c.name)
         if not ref or is_land_in_deck(c.name):
             continue                      # lands handled by the manabase pass
         if c.name.lower() in notes:
@@ -571,6 +601,17 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 continue                  # not a clear enough upgrade, like-for-like units
             if inc_add < inc_cut:
                 continue                  # role repair may not overrule the field (above)
+            if (not field_knows(cut_name) and inc_add < STRONG_CONSENSUS
+                    and fit_only(add_name) - val_cut < margin):
+                # The field has NO row for the cut, so its value is fit-only, while the
+                # add's value may be its field %. That compares different units, and the
+                # veto above compares against a fake 0. Make the add win in the cut's own
+                # units. Without this, Fog (35% field, weak fit) was proposed over Carnage
+                # Tyrant, Hulking Raptor and Ghalta the Unstoppable in beorn-the-fierce,
+                # whose newer cards EDHREC has little data on (2026-10-07). A missing
+                # row can mean "rarely played" OR "too new to have data", so a card the
+                # field plays in most decks (STRONG_CONSENSUS) still gets through.
+                continue
             cut_role = role_of(cut_name)
             # keep role counts inside the template
             trial = dict(cats)
@@ -924,19 +965,27 @@ _TYPE_SECTIONS = [
     (("artifact",), {"Artifact"}),
     (("enchantment",), {"Enchantment"}),
     (("planeswalker",), {"Planeswalker"}),
-    (("instant", "sorcery", "sorceries", "spell"), {"Instant", "Sorcery"}),
+    # Separate EDHREC-style "Instants" / "Sorceries" sections (the 2026-08-11 convention)
+    # are exclusive. Only a COMBINED heading ("Instants & sorceries", "Spells") holds both;
+    # that case is matched first in _type_allowed. When "Instants" also allowed Sorcery,
+    # _tidy re-filed every sorcery into the first section that "allowed" it — so each
+    # optimize --apply pulled sorceries up under Instants (the-ur-dragon, beorn, 2026-10-07).
+    (("instant",), {"Instant"}),
+    (("sorcery", "sorceries"), {"Sorcery"}),
 ]
 # Where a card goes when no suitable section exists — created in this order, after the
 # existing ones. Type-based, which is the convention every decklist site uses.
 _FALLBACK_ORDER = [("Creature", "Creatures"), ("Planeswalker", "Planeswalkers"),
                    ("Artifact", "Artifacts"), ("Enchantment", "Enchantments"),
-                   ("Instant", "Instants & sorceries"), ("Sorcery", "Instants & sorceries"),
+                   ("Instant", "Instants"), ("Sorcery", "Sorceries"),
                    ("Land", "Lands")]
 
 
 def _type_allowed(section):
     """The card types a section may hold, or None if it isn't type-exclusive."""
     name = re.sub(r"\s*\(\d+\)\s*$", "", section).strip().lower()
+    if name.startswith("spell") or ("instant" in name and "sorcer" in name):
+        return {"Instant", "Sorcery"}               # a combined section holds both
     for words, types in _TYPE_SECTIONS:
         if any(name.startswith(w) for w in words):
             return types
@@ -1139,7 +1188,7 @@ def manual_adds_review(deck_path, coll):
     """
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     try:
-        rows = deckcore.manual_adds(f"{stem}.changes.csv")
+        rows = deckcore.manual_adds(f"{stem}.changes.csv", days=None)
     except Exception:
         return []
     # Only cards STILL IN the deck. `.changes.csv` is append-only history, so a card

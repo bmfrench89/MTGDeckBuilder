@@ -6,7 +6,88 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-08-21._
+_Last updated: 2026-10-07._
+
+## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
+
+**Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
+99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 11 /
+wipe 1. Singleton-clean, sections clean, no Game Changers, no combos (power.py: Bracket 2 by
+guardrails; plays at the low end of 3). EDHREC top-25 overlap 14/25 (56%).
+
+How it was built: the player photographed ~100 candidates, then every owned green/colorless
+card (633) was verified verbatim on the runner (deck-verify run 37654666265) and swept for both
+commanders by a multi-agent pass with two-lens verification of 108 proposed changes. A
+custom goldfish (scratch, not in repo) found Goreclaw faster through turn 6 and Beorn ahead
+after, with fewer losses to commander removal; the player picked Beorn.
+
+Player rules recorded: Roaming Throne stays in the Ur-Dragon. Every card on this deck's pull
+list is available (owned_additions.txt now carries the 35 shortfall lines, dated).
+
+`.buylist.csv` is CURATED (17 rows, each with a hand-picked Replaces): Maskwood Nexus, Ayula,
+The Earth King, Wilson, Tribute to the World Tree, Lumra (Core), then Craterhoof, The Great Henge,
+Emerald Medallion, Rampaging Yao Guai, Werebear, Evercoat Ursine, Owlbear Cub, Vastlands
+Scavenger, Castle Garenbrig, Boseiju, Argoth. All verified (deck-verify run 37678809885).
+**Caution:** optimize.py refreshes Replaces on rows it also proposes, so an optimize --apply
+will overwrite those picks with its own field-driven ones.
+
+Two optimizer bugs found and fixed while building it (tests added, each fails without its fix):
+1. Field % for a " // " card (adventure / prepare / MDFC) was read by the full name, so
+   Beorn, Reluctant Host (52% field) and Studious First-Year (79%) read as 0% and the first
+   was swapped for Grizzly Bears. `inc_of` / `field_knows` now use `mtglib.name_keys`.
+2. `_type_allowed("Instants")` also allowed Sorcery, a holdover from combined
+   "Instants & sorceries" headings, so `_tidy` re-filed sorceries under Instants on every
+   --apply. That is where the-ur-dragon's misfiled sorceries came from. Separate sections are
+   now exclusive; only a combined heading holds both. The existing misfiles (the-ur-dragon,
+   dina-essence-brewer) were regrouped with the player's go-ahead; no card changed.
+
+Follow-up fixes the same day (player: "let's fix other issues"):
+3. Manual-add protection expired after 14 days (the optimizer used the NEW-badge window), so a
+   hand-added card became cuttable two weeks later. The optimizer now reads manual adds with no
+   window. This was the "calendar time bomb" behind the two long-failing test_optimize tests:
+   they were right, the code was wrong. Suite is fully green.
+4. The optimizer valued cuts from the collection index, where an owned_additions.txt row is
+   name-only, so typed deck cards (Gigantic Big Bear, Carnage Tyrant...) scored 0 and were put up
+   for fit-driven cuts. Cuts now use the enriched card (deck .attrs.csv types) first.
+5. append_buylist overwrote a hand-picked Replaces on every apply. It now only fills a blank or
+   stale cell.
+6. mtglib read attrs type LINES by whole entry, so "Basic Land" was a nonland (manabase reported
+   6 lands for a 35-land list). Type lines are now read by word. Every existing deck's manabase,
+   power ranking and deck_stats output is byte-identical before and after.
+
+7. Fit-driven swaps against a cut with NO field row compared mixed units (the add's field % vs the
+   cut's fit-only value) and a fake 0 in the field veto. New guard: unless the add is in at least
+   STRONG_CONSENSUS (50%) of the field's decks, it must beat the cut on fit alone by the margin.
+   Every other deck's preview is unchanged (Thorin's Patchwork Banner -> The Misty Mountains Cold
+   still goes through). beorn-the-fierce also keeps dated manual-remove rows (Fog, Balduvian
+   Bears, Lightning Greaves (shroud stops Beorn's trigger), Metallic Mimic) and names its
+   unmodelled picks in .notes.md (Cosmic Cube, Earth's Mightiest Heroes, Ghalta the Unstoppable).
+8. edhrec.slugify stripped accents instead of folding them, so Bartolomé del Presidio queried
+   "bartolom-del-presidio" (not a page) and ran with 0 field cards. Now folds to "bartolome".
+   Snapshot pulled after the fix (deck-verify run 37704875189): 296 field cards. The deck is a
+   study copy of a YouTube list, so it was NOT tuned. For the record, the optimizer would swap
+   Infernal Offering (7%) for Blood Artist (62%, shared) and Path of Ancestry for Isolated
+   Chapel; top-25 overlap is 11/25 (44%, under the 50% bar); draw 0 / removal 2 / ramp 5.
+
+## Cloud, Ex-SOLDIER deck dismantled, 2026-10-07
+
+The player also physically dismantled the Cloud deck, so `data/decks/cloud-ex-soldier.*` was
+deleted the same way (recoverable from git history; no pins referenced it). Its copies, including
+Bugenhagen, Tireless Tracker and Bonders' Enclave, are free for the Beorn / Goreclaw build. The
+player has confirmed that every card on that build's pull list is available. Its
+`commanders.csv` row stays as reference; `data/wishlist.md` catches up on the next hosted refresh.
+
+## Bruce Banner deck dismantled, 2026-10-07
+
+The player physically dismantled the Bruce Banner // The Incredible Hulk deck, so
+`data/decks/bruce-banner-incredible-hulk.*` was deleted (recoverable from git history; no
+pins referenced it). Its copies are back in the pool. The card itself stays in
+`owned_additions.txt` because the player still owns it, and its `commanders.csv` row stays as
+reference. `data/wishlist.md` still lists Bruce Banner shortfalls until the hosted app's next
+refresh regenerates it from the priced private CSV. Do not regenerate it from the name-only
+snapshot, which would drop every price.
+
+The mono-green Beorn the Fierce build is finished and saved; see the section above.
 
 ## Treasure deck scouting — commander shortlist, 2026-08-21
 
@@ -46,8 +127,8 @@ player: it is Dwarf tribal *running on* Treasure, not a Treasure-theme deck.
 **Two traps worth keeping.**
 
 1. **The Smaug builds cannibalise the Ur-Dragon.** Smaug the Magnificent and Smaug the
-   Impenetrable are single copies already sleeved there; Fiery Emancipation's only copy is in
-   the brother's Bruce Banner gift deck. Smaug, Wicked Worm is the exception — 4 copies, 1
+   Impenetrable are single copies already sleeved there; Fiery Emancipation's only copy was in
+   the Bruce Banner deck (dismantled 2026-10-07, so it is free now). Smaug, Wicked Worm is the exception — 4 copies, 1
    committed.
 2. **Smaug the Impenetrable's infinite does NOT assemble today.** Indestructible +
    damage-into-Treasure loops with any repeatable symmetric pinger, but all four owned

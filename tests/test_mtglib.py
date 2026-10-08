@@ -650,3 +650,14 @@ def test_no_attrs_at_all_is_version_one(tmp_path):
     constructed from a bare decklist carries."""
     coll = _layered(tmp_path, "bare")
     assert mtglib.lookup(coll, "Sol Ring").flags_ver == 1
+
+
+def test_free_text_type_lines_from_attrs_are_read_by_word():
+    """A deck .attrs.csv carries one type LINE per card. "Basic Land" must be a land,
+    and a multi-type line must pick the right primary type."""
+    import mtglib
+    assert mtglib.Card(name="Forest", quantity=1, types=["Basic Land"]).is_land
+    assert mtglib.Card(name="Secret Tunnel", quantity=1, types=["Land — Cave"]).is_land
+    assert mtglib.Card(name="Myr", quantity=1, types=["Artifact Creature"]).primary_type == "Creature"
+    assert not mtglib.Card(name="Ox", quantity=1, types=["Creature — Ox"]).is_land
+    assert mtglib.Card(name="Sol Ring", quantity=1, types=["Artifact"]).primary_type == "Artifact"

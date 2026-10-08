@@ -50,7 +50,12 @@ def _is_basic(name):
 def slugify(name):
     """Commander name -> EDHREC slug. "Atraxa, Praetors' Voice" -> atraxa-praetors-voice.
     Uses the front face of a DFC/partner name; apostrophes drop, other punctuation -> '-'."""
-    n = mtglib.front_face(name).lower()
+    import unicodedata
+    # Fold accents first ("Bartolomé" -> "bartolome"). Stripping them instead gave
+    # "bartolom-del-presidio", a page EDHREC doesn't have, so that deck ran for
+    # weeks with 0 field cards and every snapshot run logged it as unreachable.
+    n = unicodedata.normalize("NFKD", mtglib.front_face(name))
+    n = "".join(ch for ch in n if not unicodedata.combining(ch)).lower()
     n = n.replace("'", "").replace("’", "")           # drop straight + curly apostrophes
     n = re.sub(r"[^a-z0-9]+", "-", n).strip("-")
     return n or "commander"
