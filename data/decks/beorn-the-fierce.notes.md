@@ -44,6 +44,16 @@ Selfless Safewright naming Bear protects every natural and converted Bear. Heroi
 Smuggler's Surprise (the {1} mode: power 4+ gets hexproof and indestructible) are the others. Keep
 two mana up after a big turn. Ezuri's Predation is the deck's only wipe, and it only hits their side.
 
+## Bracket path (target 3, room for 4)
+
+As built, the deck has no Game Changers, so the bracket rules put it at **Bracket 2**. In play
+it's a strong 2 or a light 3. The header declares **3** as the intent. The buy list's tiers are
+the path:
+- **Bracket 3** (1-3 Game Changers): Natural Order, Worldly Tutor, Biorhythm.
+- **Bracket 4** (4+): add Survival of the Fittest, Gaea's Cradle, Ancient Tomb.
+Crop Rotation is a Game Changer you already own (2 free copies). It's weak here on its own,
+but it fetches Gaea's Cradle at instant speed if you buy that.
+
 ## Win
 
 Overwhelming Stampede or Unnatural Growth on a wide board of converted Bears. Rogue's Passage and

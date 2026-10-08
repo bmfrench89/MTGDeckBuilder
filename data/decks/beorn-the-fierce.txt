@@ -2,6 +2,7 @@
 # Commander: Beorn the Fierce
 # Colors: G
 # Archetype: stompy
+# Bracket: 3
 # Source: hand-built with the player from photographed cards and a full owned-collection sweep; every card's text verified on the deck-verify runner (run 37654666265, 2026-10-07).
 
 # --- Commander ---
