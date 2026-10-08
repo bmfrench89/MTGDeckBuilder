@@ -12,8 +12,9 @@ _Last updated: 2026-10-07._
 
 **Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
 99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 11 /
-wipe 1. Singleton-clean, sections clean, no Game Changers, no combos (power.py: Bracket 2 by
-guardrails; plays at the low end of 3). EDHREC top-25 overlap 14/25 (56%).
+wipe 1. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
+`# Bracket: 3` (player target 3/4, 2026-10-08); power.py reports "Bracket 3 (your setting),
+detected 2" until owned Game Changers enter the 99. EDHREC top-25 overlap 14/25 (56%).
 
 How it was built: the player photographed ~100 candidates, then every owned green/colorless
 card (633) was verified verbatim on the runner (deck-verify run 37654666265) and swept for both
@@ -28,6 +29,11 @@ list is available (owned_additions.txt now carries the 35 shortfall lines, dated
 The Earth King, Wilson, Tribute to the World Tree, Lumra (Core), then Craterhoof, The Great Henge,
 Emerald Medallion, Rampaging Yao Guai, Werebear, Evercoat Ursine, Owlbear Cub, Vastlands
 Scavenger, Castle Garenbrig, Boseiju, Argoth. All verified (deck-verify run 37678809885).
+Bracket-path rows added 2026-10-08 (verified, run 37712566938), all Game Changers: Tier
+"Bracket 3" = Natural Order → Earth's Mightiest Heroes, Worldly Tutor → Loot, Exuberant
+Explorer, Biorhythm → Overwhelming Stampede; Tier "Bracket 4" = Survival of the Fittest →
+Rishkar's Expertise, Gaea's Cradle → Tranquil Thicket, Ancient Tomb → Reliquary Tower. 1–3 GCs
+in the 99 = Bracket 3, 4+ = Bracket 4. The notes' "Bracket path" section explains each.
 **Caution:** optimize.py refreshes Replaces on rows it also proposes, so an optimize --apply
 will overwrite those picks with its own field-driven ones.
 
