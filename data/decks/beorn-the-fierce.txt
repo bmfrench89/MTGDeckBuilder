@@ -44,7 +44,6 @@
 1 Mirkwood Pathmaker
 1 Ordinary Bear
 1 Llanowar Tribe
-1 Gwenna, Eyes of Gaea
 1 Hulk, Brutal Brawler
 1 Wood Elves
 
@@ -62,6 +61,7 @@
 1 Germination Practicum
 1 Earth's Mightiest Heroes
 1 Rishkar's Expertise
+1 It's Clobberin' Time!
 1 Overwhelming Stampede
 1 Ezuri's Predation
 1 Last March of the Ents

@@ -68,4 +68,4 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Last March of the Ents",Sorcery,8,G,,draw,3,
 "Tyvar's Stand",Instant,1,G,,,3,
 "Llanowar Tribe",Creature,3,G,G,dork;mana3,3,3
-"Gwenna, Eyes of Gaea",Creature,3,G,W U B R G,dork;mana-restricted;ramp,3,2
+"It's Clobberin' Time!",Sorcery,3,G,,removal,3,
