@@ -29,8 +29,8 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
   either one makes Beorn cost three.
 - Use Radagast's flash to cast Beorn at an opponent's end step, after they've had their chance
   to wipe the board.
-- Convert your biggest attacker, or a creature you're about to bite with (Ram Through, Punishing
-  Punch, Terrific Team-Up). Trample sends the extra damage to their face.
+- Convert your biggest attacker, or a creature you're about to bite with (Ram Through, Terrific
+  Team-Up, It's Clobberin' Time!). Trample sends the extra damage to their face.
 - **Never add shroud.** Lightning Greaves and Steely Resolve stop Beorn targeting your own
   creature. Swiftfoot Boots (hexproof) is safe.
 - Hulk, Brutal Brawler must attack every combat. Don't cast him into a board that eats him.
@@ -40,8 +40,8 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
 
 ## Wipe plan
 
-Selfless Safewright naming Bear protects every natural and converted Bear. Heroic Intervention and
-Smuggler's Surprise (the {1} mode: power 4+ gets hexproof and indestructible) are the others. Keep
+Selfless Safewright naming Bear protects every natural and converted Bear. Heroic Intervention,
+Tyvar's Stand (X=0 for one green: hexproof + indestructible on Beorn) and Smuggler's Surprise (the {1} mode: power 4+ gets hexproof and indestructible) are the others. Keep
 two mana up after a big turn. Ezuri's Predation is the deck's only wipe, and it only hits their side.
 
 ## Bracket path (target 3, room for 4)
@@ -55,6 +55,11 @@ Crop Rotation is a Game Changer you already own (2 free copies). It's weak here 
 but it fetches Gaea's Cradle at instant speed if you buy that.
 
 ## Win
+
+Last March of the Ents (2026-10-09) is the refuel: it draws cards equal to your greatest
+toughness (Beorn alone is 6, a Bear-anthemed Ghalta far more), then puts any number of creatures
+from hand onto the battlefield, uncounterable. Cast it with Beorn out so the toughness is there.
+
 
 Overwhelming Stampede or Unnatural Growth on a wide board of converted Bears. Rogue's Passage and
 Secret Tunnel push damage through (Beorn and any converted creature share the Bear type).

@@ -52,8 +52,7 @@
 1 Archdruid's Charm
 1 Ram Through
 1 Heroic Intervention
-1 Burrog Barrage
-1 Punishing Punch
+1 Tyvar's Stand
 1 Smuggler's Surprise
 1 Terrific Team-Up
 
@@ -65,6 +64,7 @@
 1 Rishkar's Expertise
 1 Overwhelming Stampede
 1 Ezuri's Predation
+1 Last March of the Ents
 
 # --- Artifacts ---
 1 Sol Ring
