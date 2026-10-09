@@ -50,7 +50,6 @@
 # --- Instants ---
 1 Beast Within
 1 Archdruid's Charm
-1 Flourishing Grapple
 1 Heroic Intervention
 1 Tyvar's Stand
 1 Collective Resistance
@@ -80,6 +79,7 @@
 1 Dancing from Dark to Dawn
 1 Unnatural Growth
 1 Kenrith's Transformation
+1 Elephant Grass
 
 # --- Lands ---
 1 Roiling Canopy

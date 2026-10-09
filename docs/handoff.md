@@ -11,12 +11,13 @@ _Last updated: 2026-10-07._
 ## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
 
 **Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
-99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 10 /
+99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 9 /
 wipe 1. 2026-10-09 manual swaps (player-photographed, owned): Last March of the Ents for Burrog
 Barrage, Tyvar's Stand for Punishing Punch. Then Llanowar Tribe for Selvala (2026-10-09; the player's choice,
-kept after Dina was dismantled). Then the player's own picks: Flourishing Grapple for Ram
-Through (verified: it only targets a RED or WHITE creature/planeswalker) and Collective
-Resistance for Smuggler's Surprise (its copy is in another deck), deck-verify run 37985914963. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
+kept after Dina was dismantled). Then the player's own picks: Elephant Grass for Ram Through (Flourishing
+Grapple, verified red/white-only, is the notes' sideboard card) and Collective
+Resistance for Smuggler's Surprise (its copy is in another deck), deck-verify runs 37985914963 /
+37986230313. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
 `# Bracket: 3` (player target 3/4, 2026-10-08); power.py reports "Bracket 3 (your setting),
 detected 2" until owned Game Changers enter the 99. EDHREC top-25 overlap 14/25 (56%).
 

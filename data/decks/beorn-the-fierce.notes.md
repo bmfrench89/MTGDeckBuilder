@@ -30,7 +30,7 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
 - Use Radagast's flash to cast Beorn at an opponent's end step, after they've had their chance
   to wipe the board.
 - Convert your biggest attacker, or a creature you're about to bite with (Terrific Team-Up,
-  It's Clobberin' Time!, or Flourishing Grapple against a red or white target only). Trample sends the extra damage to their face.
+  It's Clobberin' Time!). Trample sends the extra damage to their face.
 - **Never add shroud.** Lightning Greaves and Steely Resolve stop Beorn targeting your own
   creature. Swiftfoot Boots (hexproof) is safe.
 - Hulk, Brutal Brawler must attack every combat. Don't cast him into a board that eats him.
@@ -56,6 +56,18 @@ the path:
 - **Bracket 4** (4+): add Survival of the Fittest, Gaea's Cradle, Ancient Tomb.
 Crop Rotation is a Game Changer you already own (2 free copies). It's weak here on its own,
 but it fetches Gaea's Cradle at instant speed if you buy that.
+
+## Sideboard
+
+- **Flourishing Grapple** ({G} instant: a red or white creature/planeswalker loses all abilities,
+  then your creature deals damage equal to its power to it). Swap it in for Elephant Grass when
+  the table is heavy on red or white.
+
+## Elephant Grass
+
+Black creatures can't attack you; everyone else pays {2} per attacker. It buys time while the Bear
+board builds, but cumulative upkeep grows by {1} every turn (1, 2, 3…). Pay it for a few turns,
+then let it go once Beorn's board can block.
 
 ## Win
 
