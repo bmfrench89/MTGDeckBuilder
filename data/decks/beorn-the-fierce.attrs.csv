@@ -24,7 +24,7 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Ghalta, Primal Hunger",Creature,12,G,,,3,12
 "Beast Within",Instant,3,G,,removal,3,
 "Archdruid's Charm",Instant,3,G,,removal,3,
-"Ram Through",Instant,2,G,,removal,3,
+"Flourishing Grapple",Instant,1,G,,removal,3,
 "Selfless Safewright",Creature,5,G,,,3,4
 "Heroic Intervention",Instant,2,G,,,3,
 "Nature's Lore",Sorcery,2,G,,ramp,3,
@@ -55,7 +55,7 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Whiptongue Hydra",Creature,6,G,,removal,3,4
 "Mirkwood Pathmaker",Creature,3,G,,,3,*
 "Ordinary Bear",Creature,4,G,,,3,4
-"Smuggler's Surprise",Instant,1,G,,,3,
+"Collective Resistance",Instant,2,G,,removal,3,
 "Hulk, Brutal Brawler",Creature,4,G,,,3,4
 "Terrific Team-Up",Instant,4,G,,removal,3,
 "Wood Elves",Creature,3,G,,ramp,3,1

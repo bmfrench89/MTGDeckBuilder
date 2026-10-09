@@ -29,8 +29,8 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
   either one makes Beorn cost three.
 - Use Radagast's flash to cast Beorn at an opponent's end step, after they've had their chance
   to wipe the board.
-- Convert your biggest attacker, or a creature you're about to bite with (Ram Through, Terrific
-  Team-Up, It's Clobberin' Time!). Trample sends the extra damage to their face.
+- Convert your biggest attacker, or a creature you're about to bite with (Terrific Team-Up,
+  It's Clobberin' Time!, or Flourishing Grapple against a red or white target only). Trample sends the extra damage to their face.
 - **Never add shroud.** Lightning Greaves and Steely Resolve stop Beorn targeting your own
   creature. Swiftfoot Boots (hexproof) is safe.
 - Hulk, Brutal Brawler must attack every combat. Don't cast him into a board that eats him.
@@ -41,7 +41,10 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
 ## Wipe plan
 
 Selfless Safewright naming Bear protects every natural and converted Bear. Heroic Intervention,
-Tyvar's Stand (X=0 for one green: hexproof + indestructible on Beorn) and Smuggler's Surprise (the {1} mode: power 4+ gets hexproof and indestructible) are the others. Keep
+Tyvar's Stand (X=0 for one green: hexproof + indestructible on Beorn) and Collective
+Resistance (hexproof + indestructible on one creature; escalate {G} to also destroy an artifact
+and/or enchantment) are the others. Both save ONE creature, so lean on Safewright and Heroic
+Intervention against a wipe. Keep
 two mana up after a big turn. Ezuri's Predation is the deck's only wipe, and it only hits their side.
 
 ## Bracket path (target 3, room for 4)

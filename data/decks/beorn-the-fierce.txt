@@ -50,10 +50,10 @@
 # --- Instants ---
 1 Beast Within
 1 Archdruid's Charm
-1 Ram Through
+1 Flourishing Grapple
 1 Heroic Intervention
 1 Tyvar's Stand
-1 Smuggler's Surprise
+1 Collective Resistance
 1 Terrific Team-Up
 
 # --- Sorceries ---
