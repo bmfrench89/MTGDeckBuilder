@@ -53,3 +53,6 @@
 1 Unnatural Growth
 1 Verdant Kraken
 1 Whiptongue Hydra
+# 2026-10-09: player photographed these two for the Beorn deck (physical cards, owned).
+1 Last March of the Ents
+1 Tyvar's Stand

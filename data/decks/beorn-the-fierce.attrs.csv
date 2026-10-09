@@ -47,7 +47,6 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Bugenhagen, Wise Elder",Creature,2,G,W U B R G,dork;draw,3,1
 "Ghalta the Unstoppable",Creature,9,G,,,3,8
 "Cosmic Cube",Artifact,5,,,draw,3,
-"Burrog Barrage",Instant,2,G,,removal,3,
 "Beorn, Reluctant Host // Till and Tend",Creature,5,G,,,3,5
 "Earth's Mightiest Heroes",Sorcery,6,G,,,3,
 "Devil Dinosaur",Creature,4,G,,,3,5
@@ -57,7 +56,6 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Whiptongue Hydra",Creature,6,G,,removal,3,4
 "Mirkwood Pathmaker",Creature,3,G,,,3,*
 "Ordinary Bear",Creature,4,G,,,3,4
-"Punishing Punch",Instant,3,G,,removal,3,
 "Selvala, Heart of the Wilds",Creature,3,G,W U B R G,dork;draw,3,2
 "Smuggler's Surprise",Instant,1,G,,,3,
 "Hulk, Brutal Brawler",Creature,4,G,,,3,4
@@ -69,3 +67,5 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Secret Tunnel",Land,0,,C,,3,
 "Rogue's Passage",Land,0,,C,,3,
 "Reliquary Tower",Land,0,,C,,3,
+"Last March of the Ents",Sorcery,8,G,,draw,3,
+"Tyvar's Stand",Instant,1,G,,,3,
