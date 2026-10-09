@@ -43,25 +43,24 @@
 1 Whiptongue Hydra
 1 Mirkwood Pathmaker
 1 Ordinary Bear
-1 Selvala, Heart of the Wilds
+1 Llanowar Tribe
 1 Hulk, Brutal Brawler
 1 Wood Elves
 
 # --- Instants ---
 1 Beast Within
 1 Archdruid's Charm
-1 Ram Through
 1 Heroic Intervention
 1 Tyvar's Stand
-1 Smuggler's Surprise
+1 Collective Resistance
 1 Terrific Team-Up
 
 # --- Sorceries ---
 1 Nature's Lore
 1 Germination Practicum
 1 Earth's Mightiest Heroes
-1 It's Clobberin' Time!
 1 Rishkar's Expertise
+1 It's Clobberin' Time!
 1 Overwhelming Stampede
 1 Ezuri's Predation
 1 Last March of the Ents
@@ -80,6 +79,7 @@
 1 Dancing from Dark to Dawn
 1 Unnatural Growth
 1 Kenrith's Transformation
+1 Elephant Grass
 
 # --- Lands ---
 1 Roiling Canopy

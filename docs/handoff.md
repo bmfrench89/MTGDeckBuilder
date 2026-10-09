@@ -11,9 +11,13 @@ _Last updated: 2026-10-07._
 ## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
 
 **Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
-99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 13 (+ Beorn's 2 a combat) / removal 9 /
+99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 12 (+ Beorn's 2 a combat) / removal 9 /
 wipe 1. 2026-10-09 manual swaps (player-photographed, owned): Last March of the Ents for Burrog
-Barrage, Tyvar's Stand for Punishing Punch. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
+Barrage, Tyvar's Stand for Punishing Punch. Then Llanowar Tribe for Selvala (2026-10-09; the player's choice,
+kept after Dina was dismantled). Then the player's own picks: Elephant Grass for Ram Through (Flourishing
+Grapple, verified red/white-only, is the notes' sideboard card) and Collective
+Resistance for Smuggler's Surprise (its copy is in another deck), deck-verify runs 37985914963 /
+37986230313. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
 `# Bracket: 3` (player target 3/4, 2026-10-08); power.py reports "Bracket 3 (your setting),
 detected 2" until owned Game Changers enter the 99. EDHREC top-25 overlap 14/25 (56%).
 
@@ -159,68 +163,13 @@ pinger candidates, not four — Cave-In (one-shot sorcery) and Gangrenous Zombie
 
 Shortlist published as an artifact for the player; the deck build waits on their pick.
 
-## New deck — Dina, Essence Brewer (Witherbloom aristocrats), 2026-08-21
+## Dina, Essence Brewer deck dismantled, 2026-10-09
 
-The player asked whether the collection supports "Dina or Witherbloom". It holds **four**
-cards answering to those names, not two, and two are Secrets of Strixhaven (post-2025), so
-the choice was made on verbatim Scryfall text pulled by `deck-verify.yml` (run 32442182052)
-rather than memory — which had **Dina, Soul Steeper's second ability backwards** (it pumps
-Dina; it does not shrink a blocker) and Beledros at `{3}{B}{B}{G}{G}` instead of `{5}{B}{G}`.
-
-Ownership of each candidate's field, counted from four EDHREC snapshots this branch pulled
-down (basics excluded):
-
-| commander | decks | top-25 | top-50 | top-100 |
-|---|---:|---:|---:|---:|
-| **Dina, Essence Brewer** | 10,113 | **25 (100%)** | 49 (98%) | 81 (81%) |
-| Beledros Witherbloom | 4,628 | 20 (80%) | 31 (62%) | 51 (51%) |
-| Dina, Soul Steeper | 9,346 | 16 (64%) | 30 (60%) | 47 (47%) |
-| Witherbloom, the Balancer | 15,702 | 10 (40%) | 18 (36%) | 28 (28%) |
-
-Soul Steeper looks like the build and is not: its own engine is unowned (Essence Warden 69%,
-Marauding Blight-Priest 67%, Prosperous Innkeeper 53%, Deathgreeter 51%, Witherbloom
-Apprentice 45%). Essence Brewer's highest *missing* staple is Cauldron of Essence at 55%.
-Both Soul Steeper and Beledros ended up in the 99 anyway.
-
-**State:** `data/decks/dina-essence-brewer.txt` + `.notes.md` / `.attrs.csv` / `.changes.csv`.
-100 cards, singleton clean, sections clean, **25/25 field top-25**, optimizer idempotent.
-37 lands · B 25 sources vs Karsten 23, G 24 vs 19 · keepable 81% · commander mean T3.63 ·
-screw 15% · flood 0% · Bracket 3, one Game Changer (Crop Rotation) · ramp 11 / draw 8 /
-**removal 9** / Interaction 18.0/18.
-
-**Two process findings worth keeping:**
-
-1. **`deck_sections.py` must run AFTER `optimize.py`, not before.** The optimizer appends its
-   adds to whatever section it finds, so a regroup done before tuning is stale by the time
-   the deck is finished. The build pipeline is `auto_build -> deck_sections -> optimize
-   --apply -> deck_sections`.
-2. **`auto_build` selected this deck on the commander's TYPE LINE.** Dina is a *Dryad Druid*,
-   so `_tribe_and_support` read "druid", cleared `_TRIBAL_MIN = 12`, and ran the on-tribe
-   seeding pass; `deck_fit._theme_component` then pays +15 for "on-tribe (Druid)", worth up
-   to ~16 valuation points to a card with 0% field presence — enough to survive a pass that
-   otherwise demands a 25-point inclusion gain. Sixteen of 41 creature slots are Druids and
-   ten have under ~2% field presence. **This is not a defect to fix blind** — the deck still
-   scores 25/25 — but it is where the next round of cuts comes from, once those ten are
-   verified. They are queued in `data/reference/verify-queue.txt`.
-
-**Open, deliberately:** protection counts 0 and was left there (every curated option is
-committed elsewhere or scores negative fit on this commander). Recursion counts 0 largely as
-a display artifact — `resilience_staples.csv`'s recursion role has **zero green rows**, so a
-Golgari deck's ceiling on that axis is 2, and `resilience_axis` bands on `prot` alone.
-**Vito, Thorn of the Dusk Rose** is the one card worth buying: the only owned copy is
-load-bearing in `yshtola-nights-blessed`, and it is the magnitude-aware lifegain payoff this
-deck lacks (Soul Steeper drains 1 per lifegain *event*, regardless of size).
-
-**Round-2 verify queue: answered** (run 32450437172; text in
-`data/reference/dina-verified-2026-08-21.txt`, verdicts in the deck's `.notes.md`).
-**Final Act is a KEEP** — modal, and the creature mode *destroys*, so the deck's own death
-payoffs trigger off it; only an optional mode exiles graveyards (pilot note recorded).
-**Feral Appetite's `removal` flag is a false positive** (graveyard exile, not board
-removal), so true board removal is 8 — still in band, no swap forced. Verified text also
-confirms real recursion the counter can't see (Veinwitch Coven, Teacher's Pest, Sage of
-the Fang) and the free sac outlet (Umbral Collar Zealot). Three bench candidates named:
-Environmental Scientist, Mindful Biomancer, Old-Growth Educator. Queue is back to steady
-state (cleared).
+The player dismantled the Dina deck, so `data/decks/dina-essence-brewer.*` was deleted
+(recoverable from git history; no pins referenced it). Its copies, including Selvala, Heart of
+the Wilds, Gwenna, Eyes of Gaea and Sakura-Tribe Elder, are back in the pool. That also clears
+the Sakura-Tribe Elder shortfall with cosmic-spider-man. The field snapshot and the
+`commanders.csv` row stay as reference. The 2026-08-21 build history is in git.
 
 ## Ur-Dragon mana audit: six lands upgraded on verified text; ramp package confirmed (2026-08-20)
 

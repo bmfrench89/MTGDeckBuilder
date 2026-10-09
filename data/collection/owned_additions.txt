@@ -56,3 +56,8 @@
 # 2026-10-09: player photographed these two for the Beorn deck (physical cards, owned).
 1 Last March of the Ents
 1 Tyvar's Stand
+# 2026-10-09: Llanowar Tribe, photographed as Selvala's replacement in the Beorn deck (owned).
+1 Llanowar Tribe
+# 2026-10-09: the player's picks for the Beorn deck (owned).
+1 Flourishing Grapple
+1 Collective Resistance

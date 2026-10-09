@@ -29,19 +29,22 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
   either one makes Beorn cost three.
 - Use Radagast's flash to cast Beorn at an opponent's end step, after they've had their chance
   to wipe the board.
-- Convert your biggest attacker, or a creature you're about to bite with (Ram Through, Terrific
-  Team-Up, It's Clobberin' Time!). Trample sends the extra damage to their face.
+- Convert your biggest attacker, or a creature you're about to bite with (Terrific Team-Up,
+  It's Clobberin' Time!). Trample sends the extra damage to their face.
 - **Never add shroud.** Lightning Greaves and Steely Resolve stop Beorn targeting your own
   creature. Swiftfoot Boots (hexproof) is safe.
 - Hulk, Brutal Brawler must attack every combat. Don't cast him into a board that eats him.
-- Little Bear untaps Selvala, Heart of the Wilds for a second big mana activation.
+- Little Bear untaps Llanowar Tribe for three more green.
 - Verdant Kraken makes a Forest land creature on every player's upkeep, so it triggers Dancing
   from Dark to Dawn, Beorn's Hospitality and Tireless Tracker about four times a round.
 
 ## Wipe plan
 
 Selfless Safewright naming Bear protects every natural and converted Bear. Heroic Intervention,
-Tyvar's Stand (X=0 for one green: hexproof + indestructible on Beorn) and Smuggler's Surprise (the {1} mode: power 4+ gets hexproof and indestructible) are the others. Keep
+Tyvar's Stand (X=0 for one green: hexproof + indestructible on Beorn) and Collective
+Resistance (hexproof + indestructible on one creature; escalate {G} to also destroy an artifact
+and/or enchantment) are the others. Both save ONE creature, so lean on Safewright and Heroic
+Intervention against a wipe. Keep
 two mana up after a big turn. Ezuri's Predation is the deck's only wipe, and it only hits their side.
 
 ## Bracket path (target 3, room for 4)
@@ -53,6 +56,18 @@ the path:
 - **Bracket 4** (4+): add Survival of the Fittest, Gaea's Cradle, Ancient Tomb.
 Crop Rotation is a Game Changer you already own (2 free copies). It's weak here on its own,
 but it fetches Gaea's Cradle at instant speed if you buy that.
+
+## Sideboard
+
+- **Flourishing Grapple** ({G} instant: a red or white creature/planeswalker loses all abilities,
+  then your creature deals damage equal to its power to it). Swap it in for Elephant Grass when
+  the table is heavy on red or white.
+
+## Elephant Grass
+
+Black creatures can't attack you; everyone else pays {2} per attacker. It buys time while the Bear
+board builds, but cumulative upkeep grows by {1} every turn (1, 2, 3…). Pay it for a few turns,
+then let it go once Beorn's board can block.
 
 ## Win
 
