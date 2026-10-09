@@ -88,8 +88,8 @@ deck's favor, and the text audit *upgraded* several cards the counters undervalu
   Zealot — "Sacrifice another creature or artifact: Surveil 1", no mana cost, no tap. Also
   Viscera Seer and High Market. Merchant of Venom is an ETB edict that feeds Mazirek.
 - **The ten 0%-field Druids, read on text (sleeper-audit verdicts, no silent drops):**
-  Great Forest Druid (any-color dork — keep), Gwenna (two mana, creature-spend-only; 41
-  creatures here — keep), Merchant of Venom / Umbral Collar Zealot / Ribtruss Roaster /
+  Great Forest Druid (any-color dork — keep), Gwenna (moved to the Beorn deck 2026-10-09;
+  Springbloom Druid, 29% field, took the slot), Merchant of Venom / Umbral Collar Zealot / Ribtruss Roaster /
   Gorma / Teacher's Pest / Trystan (all real engine pieces on text — keep),
   **Environmental Scientist, Mindful Biomancer, Old-Growth Educator — BENCH**: fine
   bodies, weakest verified text in the 99, and the first cuts if the player wants slots.

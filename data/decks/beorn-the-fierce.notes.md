@@ -30,11 +30,13 @@ Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} w
 - Use Radagast's flash to cast Beorn at an opponent's end step, after they've had their chance
   to wipe the board.
 - Convert your biggest attacker, or a creature you're about to bite with (Ram Through, Terrific
-  Team-Up, It's Clobberin' Time!). Trample sends the extra damage to their face.
+  Team-Up). Trample sends the extra damage to their face.
 - **Never add shroud.** Lightning Greaves and Steely Resolve stop Beorn targeting your own
   creature. Swiftfoot Boots (hexproof) is safe.
 - Hulk, Brutal Brawler must attack every combat. Don't cast him into a board that eats him.
-- Little Bear untaps Selvala, Heart of the Wilds for a second big mana activation.
+- Little Bear untaps Llanowar Tribe for three more green. Gwenna, Eyes of Gaea untaps herself (and
+  grows) whenever you cast a power-5+ creature, but her mana only pays for creatures and creature
+  abilities: tap the Tribe and lands for Last March, Stampede and equipment.
 - Verdant Kraken makes a Forest land creature on every player's upkeep, so it triggers Dancing
   from Dark to Dawn, Beorn's Hospitality and Tireless Tracker about four times a round.
 

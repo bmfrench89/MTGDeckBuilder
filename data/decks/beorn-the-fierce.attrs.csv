@@ -50,13 +50,11 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Beorn, Reluctant Host // Till and Tend",Creature,5,G,,,3,5
 "Earth's Mightiest Heroes",Sorcery,6,G,,,3,
 "Devil Dinosaur",Creature,4,G,,,3,5
-"It's Clobberin' Time!",Sorcery,3,G,,removal,3,
 "Lizard, Connors's Curse",Creature,4,G,,removal,3,5
 "Little Bear",Creature,3,G,,,3,3
 "Whiptongue Hydra",Creature,6,G,,removal,3,4
 "Mirkwood Pathmaker",Creature,3,G,,,3,*
 "Ordinary Bear",Creature,4,G,,,3,4
-"Selvala, Heart of the Wilds",Creature,3,G,W U B R G,dork;draw,3,2
 "Smuggler's Surprise",Instant,1,G,,,3,
 "Hulk, Brutal Brawler",Creature,4,G,,,3,4
 "Terrific Team-Up",Instant,4,G,,removal,3,
@@ -69,3 +67,5 @@ Name,Type,MV,Colors,Produced,Flags,FlagsVer,Power
 "Reliquary Tower",Land,0,,C,,3,
 "Last March of the Ents",Sorcery,8,G,,draw,3,
 "Tyvar's Stand",Instant,1,G,,,3,
+"Llanowar Tribe",Creature,3,G,G,dork;mana3,3,3
+"Gwenna, Eyes of Gaea",Creature,3,G,W U B R G,dork;mana-restricted;ramp,3,2

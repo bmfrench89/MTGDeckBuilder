@@ -13,7 +13,9 @@ _Last updated: 2026-10-07._
 **Commander chosen by the player: Beorn the Fierce.** Goreclaw, Terror of Qal Sisma is in the
 99. 100 cards, 36 lands (30 Forest), ramp 16 / draw 13 (+ Beorn's 2 a combat) / removal 9 /
 wipe 1. 2026-10-09 manual swaps (player-photographed, owned): Last March of the Ents for Burrog
-Barrage, Tyvar's Stand for Punishing Punch. Singleton-clean, sections clean, no Game Changers, no combos. Header declares
+Barrage, Tyvar's Stand for Punishing Punch. Then Llanowar Tribe for Selvala (her copy lives in
+dina-essence-brewer) and Gwenna, Eyes of Gaea for It's Clobberin' Time! (the player's one
+Gwenna moved over from dina-essence-brewer, which took Springbloom Druid, 29% field, in her slot). Singleton-clean, sections clean, no Game Changers, no combos. Header declares
 `# Bracket: 3` (player target 3/4, 2026-10-08); power.py reports "Bracket 3 (your setting),
 detected 2" until owned Game Changers enter the 99. EDHREC top-25 overlap 14/25 (56%).
 

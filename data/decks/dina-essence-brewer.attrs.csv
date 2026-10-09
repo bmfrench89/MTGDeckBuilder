@@ -5,7 +5,6 @@ Great Forest Druid,Creature,2,G,W U B R G,dork;ramp,3,0
 Wight of the Reliquary,Creature,2,B G,,fetch:land;ramp,3,2
 Priest of Forgotten Gods,Creature,2,B,B,draw;mana2,3,1
 "Dina, Soul Steeper",Creature,2,B G,,,3,1
-"Gwenna, Eyes of Gaea",Creature,3,G,W U B R G,dork;mana-restricted;ramp,3,2
 Morbid Opportunist,Creature,3,B,,draw,3,1
 Pest Rescuer,Creature,3,G,,,3,2
 Smothering Abomination,Creature,4,B,,draw,3,4
@@ -87,3 +86,4 @@ Festering Thicket,Land,0,B G,B G,draw;etb-tapped,3,
 Path of Ancestry,Land,0,,W U B R G,etb-tapped,3,
 Forest,Land,0,G,G,,3,
 Swamp,Land,0,B,B,,3,
+"Springbloom Druid",Creature,3,G,,ramp,3,1
