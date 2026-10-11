@@ -100,7 +100,10 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 5
+REPORT_SCHEMA = 6
+# 6 (2026-10-11, audit track S): front-face-only costs, deck attrs Cost/Sub-types,
+# clock medians over ALL games, real commander recasts under disruption, free
+# spells on a no-mana turn — every cached report predates at least one of them.
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
@@ -195,9 +198,14 @@ def parse_cost(cost):
       `{2/W}` -> ({'W'}, 2)          payable by W, or by two generic
       `{C}`   -> ({'C'}, 0)          colorless is a real requirement, not generic
       `{X}`   -> nothing             X = 0, stated
-    Anything unrecognized degrades to one generic rather than raising."""
+    Anything unrecognized degrades to one generic rather than raising.
+
+    FRONT FACE ONLY (audit S1): an adventure / MDFC / split cost arrives as
+    `'{1}{B}{B} // {1}{B}{B}'` — two faces, one spell cast. Summing them compiled
+    Murderous Rider as {B}x4 plus two generic. The split is `mtglib.front_face`'s
+    `" // "` WITH spaces, never a bare `//`."""
     pips, generic = [], 0
-    for sym in _SYM_RE.findall(cost or ""):
+    for sym in _SYM_RE.findall(mtglib.front_face(cost or "")):
         s = sym.upper().strip()
         if s in ("X", "Y", "Z"):
             continue
@@ -722,7 +730,7 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                      if kind == "cmd")
     first_disc_used = False
 
-    def _discounted_generic(sc, is_commander_cast):
+    def _discounted_generic(sc, is_commander_cast, tax=0):
         d = 0
         if not is_commander_cast:
             for typ, n in cmd_disc:
@@ -737,7 +745,9 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                 elif kind == "first" and not first_disc_used and _disc_matches(sc, typ):
                     d += n
         # Reduction applies to the GENERIC portion only — colored pips are a floor.
-        return max(0, sc.generic - d)
+        # Commander tax is generic mana added to the total cost, so a reducer can
+        # eat into it too.
+        return max(0, sc.generic + tax - d)
 
     wipe_turn = None
     if disruption:
@@ -745,6 +755,13 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
         # Drawn from the DISRUPTION stream, never `rnd` — see the docstring.
         wipe_turn = (drnd or random.Random(0)).randint(lo, hi)
     wiped, removed, recasts = 0, 0, 0
+    # Commander zone state (audit S7). `cmd_in_play` is True while the commander is
+    # on the battlefield; disruption sends it back to the command zone and each
+    # trip adds `commander_tax` generic to the next cast (rule 903.8). Without
+    # disruption it never leaves, so the pure goldfish casts it exactly once —
+    # byte-identical to the model before recasts existed.
+    cmd_in_play, cmd_left = False, 0
+    cmd_tax = (disruption or {}).get("commander_tax", 0)
     # Counted separately from `board`, which disruption empties — the clock's coverage
     # gate asks "how many creatures did this deck CAST", not "how many survived".
     creature_casts = 0
@@ -763,7 +780,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             if wipe_turn == t and board:
                 wiped += 1
                 if commander is not None and any(sc is commander for sc, _ in board):
-                    recasts += 1          # it goes back to the command zone
+                    cmd_in_play = False   # it goes back to the command zone
+                    cmd_left += 1
                 board = []
             elif (t >= disruption["removal_from"] and board
                   and (t - disruption["removal_from"]) % disruption["removal_every"] == 0):
@@ -772,7 +790,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                 gone = board.pop(0)
                 removed += 1
                 if commander is not None and gone[0] is commander:
-                    recasts += 1
+                    cmd_in_play = False
+                    cmd_left += 1
         # Combat happens BEFORE this turn's land drop and casts: a creature cast on
         # turn N attacks on turn N+1, so the damage credited to turn t comes from the
         # board as it stood at the end of turn t-1.
@@ -811,13 +830,15 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
 
         perms = board + others
         units = _mana_units(in_play, producers, t, perms)
-        if not units and not any(c.ritual for c in hand):
-            continue
+        # No early exit on an empty pool (audit S11): a zero-cost spell (Ornithopter,
+        # a Mox, Lotus Petal) is castable with no mana at all, and the old
+        # `if not units: continue` stranded it in hand on every no-land turn.
         fired_any = False
-        # The commander goes down the moment it's payable — goldfish never recasts it,
-        # so commander tax is dead code by design and isn't modeled.
-        if commander is not None and commander_turn is None and commander.castable:
-            cg = _discounted_generic(commander, is_commander_cast=True)
+        # The commander goes down the moment it's payable. Under disruption it can
+        # come back from the command zone, paying {commander_tax} more per trip.
+        if commander is not None and not cmd_in_play and commander.castable:
+            cg = _discounted_generic(commander, is_commander_cast=True,
+                                     tax=cmd_tax * cmd_left)
             rem = _pay(commander.pips, cg, units)
             if rem is None:
                 # Rituals in hand (Dark Ritual) cast the commander a turn early.
@@ -830,7 +851,12 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                     fired_any = True
                     rem = _pay(commander.pips, cg, units)
             if rem is not None:
-                commander_turn, units = t, rem
+                units = rem
+                if commander_turn is None:
+                    commander_turn = t
+                else:
+                    recasts += 1
+                cmd_in_play = True
                 if commander.is_creature:
                     first_disc_used = True     # the first creature spell is spent
                     board.append((commander, t))
@@ -865,8 +891,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                     unknown_power_casts += 1
             if sc.key not in cast_turn:
                 cast_turn[sc.key] = t
-            if not units:
-                break
+            # No `break` on an empty pool: the pass is high-MV first, so once the
+            # mana runs out only free spells remain payable — and they still are.
         # One ritual-assisted cast per turn: the biggest spell still in hand that the
         # rituals make payable. Rituals are never cast for nothing.
         if any(c is not None and c.ritual for c in hand):
@@ -911,7 +937,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             "first_kill": first_kill, "table_kill": table_kill,
             "damage": dmg, "unknown_power_casts": unknown_power_casts,
             "creature_casts": creature_casts,
-            "wiped": wiped, "removed": removed, "recasts": recasts}
+            "wiped": wiped, "removed": removed, "recasts": recasts,
+            "commander_removed": cmd_left}
 
 
 # --------------------------------------------------------------------------- #
@@ -1098,6 +1125,20 @@ def _card_rows(compiled, records, games, turns):
     return rows
 
 
+def _median_censored(xs):
+    """Median over ALL games, a game that never got there counting as +infinity
+    (audit S2). None when that median is itself infinite — i.e. when fewer than
+    half the games got there at all.
+
+    The old median was taken over the games that DID kill only: a deck lethal in
+    48% of games by T8 printed "median T8" beside "by T8 48%", and a 60% deck's
+    "median" was really its 30th percentile. Censoring keeps every game in the
+    denominator, so the number means what "median" says."""
+    vals = [math.inf if x is None else x for x in xs]
+    m = _median(vals)
+    return None if m is None or math.isinf(m) else m
+
+
 def _median(xs):
     """Median of a list, or None. Kept local — the sim imports no stats module."""
     s = sorted(xs)
@@ -1156,8 +1197,9 @@ def _clock(compiled, records, games, turns):
         "creature_casts_per_game": round(total_creature_casts / games, 2),
         "kill_rate": round(len(firsts) / games, 4),
         "table_kill_rate": round(len(tables) / games, 4),
-        "median_first_kill": _median(firsts),
-        "median_table_kill": _median(tables),
+        # Over ALL games, non-kills as +inf; None when that median is infinite.
+        "median_first_kill": _median_censored([r["first_kill"] for r in records]),
+        "median_table_kill": _median_censored([r["table_kill"] for r in records]),
         "mean_damage_by_turn_end": round(_mean([r["damage"] for r in records]), 1),
         "p_first_kill_by": {str(t): round(sum(1 for x in firsts if x <= t) / games, 4)
                             for t in (4, 6, 8) if t <= turns},
@@ -1175,10 +1217,10 @@ def _clock(compiled, records, games, turns):
             "No clock: the sim never cast a creature, so there is no board to attack "
             "with. A deck that wins another way needs a different measure.")
         return out
-    # A median only exists if at least half the games got there; below that the
-    # honest statement is the rate, not a median drawn from the fast tail.
-    if out["median_first_kill"] is None or out["kill_rate"] < 0.5:
-        out["median_first_kill"] = None
+    # A median only exists if at least half the games got there (the censored
+    # median above is None otherwise); below that the honest statement is the
+    # rate, not a median drawn from the fast tail.
+    if out["median_first_kill"] is None:
         out["note"] = (f"Lethal presented in only {out['kill_rate'] * 100:.0f}% of "
                        f"games within {turns} turns — too few for a median. The rate "
                        "is the honest number here.")
@@ -1211,17 +1253,26 @@ def _disruption_report(records, games, disruption):
     wiped = sum(r["wiped"] for r in records)
     removed = sum(r["removed"] for r in records)
     recasts = sum(r["recasts"] for r in records)
+    cmd_removed = sum(r.get("commander_removed", 0) for r in records)
+    tax = disruption.get("commander_tax", 0)
     return {
         "profile": "standard",
         "wipes_per_game": round(wiped / games, 2),
         "removal_per_game": round(removed / games, 2),
+        # Trips to the command zone, and the recasts that actually resolved
+        # (with tax). The gap between the two is games the deck couldn't afford
+        # its commander back inside the horizon.
+        "commander_removals_per_game": round(cmd_removed / games, 2),
         "commander_recasts_per_game": round(recasts / games, 2),
+        "commander_tax": tax,
         "definition": (f"One board wipe on a turn drawn from "
                        f"{disruption['wipe_turns'][0]}-{disruption['wipe_turns'][1]}, "
                        f"spot removal on the biggest creature every "
                        f"{disruption['removal_every']} turns from turn "
                        f"{disruption['removal_from']}, and the commander returning to "
-                       f"the command zone when it is hit."),
+                       f"the command zone when it is hit — then recast when payable, "
+                       f"at +{tax} generic per previous trip (commander tax). "
+                       f"'Recasts' counts casts that actually resolved."),
         "caveat": ("A crude stand-in for opponents, not a simulation of them: it never "
                    "counters a spell, never reacts to what you are doing, and always "
                    "kills the biggest creature. Read it as 'can this deck rebuild', "
@@ -1300,6 +1351,12 @@ AB_METRICS = ("commander_by_t4", "commander_by_t6", "keepable", "screw", "flood"
               # first_kill_turn, which is the only metric here where that is true.
               "first_kill_turn", "damage_dealt")
 Z95 = 1.96
+# The turn each A/B metric is DEFINED at (audit S11). With `--turns` below it the
+# metric is not measurable — "commander by T6" over a 3-turn horizon read as
+# "commander by T3" under the T6 label, and screw/lands_t4 read missing turns as
+# zero lands — so the delta is None and the CLI says why, never a number.
+AB_METRIC_TURN = {"commander_by_t4": 4, "commander_by_t6": 6,
+                  "screw": SCREW_TURN, "lands_t4": 4, "flood": FLOOD_TURN}
 
 
 def _per_game(record):
@@ -1459,9 +1516,14 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
                             disruption=disruption)
 
     deltas = _paired_deltas(rec_a, rec_b, AB_METRICS)
+    gated = {m: need for m, need in AB_METRIC_TURN.items() if turns < need}
+    for m in gated:
+        deltas[m] = None
     n = len(seeds)
     return {"out": out_name, "in": ref.name, "games": n, "seed": seed,
             "copies": len(positions), "a": rep_a, "b": rep_b, "deltas": deltas,
+            # metric -> the turn it needs, for every metric this horizon can't reach.
+            "gated": gated,
             "definitions": dict(DEFINITIONS),
             "assumptions": rep_a["assumptions"] + [
                 "A/B uses common random numbers: both arms play the identical shuffles, "
@@ -1494,14 +1556,15 @@ def cache_key(deck_path, collection_path, games, seed, turns, mulligan):
            # is served forever without the new fields (the clock landed 2026-08-13).
            "schema": REPORT_SCHEMA}
     if collection_path:
-        d = os.path.dirname(collection_path) or "."
+        # EVERY file `mtglib.load_collection` reads — the base file, both
+        # owned_additions files and both attrs overlays — from mtglib's own list,
+        # so a new input can never be added there and forgotten here. Keyed on
+        # basename so the key stays stable when the same tree is reached by a
+        # different path. owned_additions.txt was missing until 2026-10-11 (audit
+        # S6): a player-confirmed card never reached a cached sim.
         key["collection"] = _stat(collection_path)
-        key["collection_attrs"] = _stat(os.path.join(d, "collection_attrs.csv"))
-        # The committed snapshot attrs overlay under the private file — a pulled
-        # refresh must invalidate cached sims, or the server keeps serving
-        # identity-approximation numbers labelled as enriched.
-        key["collection_attrs_snapshot"] = _stat(
-            os.path.join(d, "collection_attrs.snapshot.csv"))
+        key["collection_inputs"] = [[os.path.basename(p), _stat(p)]
+                                    for p in mtglib.collection_inputs(collection_path)]
     return key
 
 
@@ -1686,8 +1749,9 @@ def print_report(rep):
                 print(f"   table kill  median T{clk['median_table_kill']:g}  "
                       f"({rep['definitions']['table_kill']})")
             else:
-                print(f"   table kill  not reached within {clk['horizon']} turns "
-                      f"({_pct(clk['table_kill_rate'])} of games)")
+                print(f"   table kill  no median — reached in "
+                      f"{_pct(clk['table_kill_rate'])} of games within "
+                      f"{clk['horizon']} turns")
             if clk["bracket_hint"]:
                 print(f"   -> consistent with the Bracket {clk['bracket_hint']} "
                       f"expectation. {rep['definitions']['clock_bracket']}")
@@ -1705,7 +1769,8 @@ def print_report(rep):
     if dis:
         print(f"\nPHANTOM DISRUPTION ({dis['profile']}) — EXPERIMENT:")
         print(f"   {dis['wipes_per_game']} wipe(s) · {dis['removal_per_game']} removal "
-              f"· {dis['commander_recasts_per_game']} commander recast(s) per game")
+              f"· commander removed {dis.get('commander_removals_per_game', 0)} / "
+              f"recast {dis['commander_recasts_per_game']} (with tax) per game")
         print(f"   {dis['definition']}")
         print(f"   [!] {dis['caveat']}")
         delta = dis.get("delta")
@@ -1728,12 +1793,17 @@ def print_ab(ab):
           f"({ab['copies']} cop{'y' if ab['copies'] == 1 else 'ies'}, "
           f"{ab['games']:,} paired games, seed {ab['seed']})\n")
     print(f"  {'metric':<18}{'A':>8}{'B':>8}{'delta':>9}{'95% CI':>16}")
+    gated = ab.get("gated") or {}
     for m, d in ab["deltas"].items():
+        if d is None:
+            print(f"  {m:<18}{'n/a':>8}  (needs --turns >= {gated.get(m, '?')})")
+            continue
         print(f"  {m:<18}{d['a']:>8.3f}{d['b']:>8.3f}{d['delta']:>+9.3f}"
               f"   [{d['lo']:+.3f}, {d['hi']:+.3f}]"
               + ("  *" if d["significant"] else ""))
     print("\n  * the interval excludes zero. Unpaired intervals would be "
-          + ", ".join(f"{m} ±{d['unpaired_ci']:.3f}" for m, d in ab["deltas"].items())
+          + ", ".join(f"{m} ±{d['unpaired_ci']:.3f}" for m, d in ab["deltas"].items()
+                      if d is not None)
           + " — the pairing is what makes small deltas readable.")
     print("\nAssumptions:")
     for a in ab["assumptions"]:

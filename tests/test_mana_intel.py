@@ -640,7 +640,10 @@ def test_schema_bump_ships_with_the_assumptions_change():
     import goldfish
     # 5 (2026-10-11): rituals / Coffers / Nykthos / Crypt Ghast / Urborg production
     # and noncreature-permanent discounts (Jet Medallion) entered the model.
-    assert goldfish.REPORT_SCHEMA == 5
+    # 6 (2026-10-11, audit track S): front-face costs, deck attrs Cost/Sub-types,
+    # clock medians over all games, real commander recasts under disruption and
+    # free spells on a no-mana turn.
+    assert goldfish.REPORT_SCHEMA == 6
 
 
 def test_ab_arm_b_adjusts_the_fetch_flagged_list():
