@@ -224,6 +224,14 @@ land the hints miss) and proposed Hallowed Fountain as a spell BUY. Untyped coun
 reported in the CLI/report (`untyped`), never silently guessed around. Validate a tuned deck with EDHREC top-25 overlap — below ~50%
 means something is wrong, so say so rather than shipping quietly.
 
+### UI changes get UAT'd before merge — `webapp/uat/`
+Unit tests and fresh-browser screenshots passed the Arcane Ledger redesign (2026-10-11),
+and the player's installed phone still rendered the new page with the **old** stylesheet.
+Before merging anything that touches templates, CSS, JS or the service worker, run
+`webapp/uat/upgrade.js` (an installed app receiving the deploy — must PASS) and
+`webapp/uat/sweep.js` (every main page at phone / Fold / tablet / desktop), then read the
+screenshots. `webapp/uat/README.md` has the two commands.
+
 ### Network access degrades, never crashes
 Scryfall / EDHREC / Commander Spellbook are reachable from the player's machine but may be
 proxy-blocked in a sandbox. Those clients are disk-cached (`data/cache/`, gitignored) and
@@ -334,6 +342,10 @@ to the renderer changes the CLI output and the app identically — check both.
   labels, which fire when data is *absent*, not when it is *wrong*.
 - **`optimize.singleton_violations()` runs after every write** and the CLI prints
   `!! ILLEGAL`. Keep that check — this class of bug was silent for four commits.
+- **Templates reference static files only through `{{ asset('name') }}`.** It emits a
+  content-hashed URL (`/static/app.css?v=<hash>`); the service worker serves those
+  cache-first and plain `/static/` URLs network-first. A bare `/static/...` link is how a
+  deploy painted new markup with yesterday's CSS; `test_ui_ledger` fails on one.
 - **A dashboard must stay one self-contained file.** Assets in `scripts/assets/` are read by
   `_asset()` and inlined at render time; don't turn them into external links.
 - **The two surfaces open the card panel from different hooks.** App templates use

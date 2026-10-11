@@ -196,11 +196,14 @@ def role_meters_html(rep, ranges=None):
                 "in": "in range"}[st]
         top = max(hi + max(hi - lo, 4), n + 1)          # scale with headroom past hi
         pct = lambda v: f"{min(100.0, 100.0 * v / top):.1f}%"
+        # The status word sits BESIDE the number, not beside the label: a two-word
+        # label ("Board wipes") next to "in range" wrapped both into two lines at a
+        # five-across width (UAT on a Fold inner screen, 2026-10-11).
         out.append(
             f"<div class='rm' title='{esc(label)} {n} — target {lo}–{hi}'>"
-            f"<div class='rm-top'><span class='rm-label'>{esc(label)}</span>"
+            f"<div class='rm-label'>{esc(label)}</div>"
+            f"<div class='rm-row'><span class='rm-val'>{n}</span>"
             f"<span class='rm-st rm-{st}'>{esc(word)}</span></div>"
-            f"<div class='rm-val'>{n}</div>"
             f"<div class='rm-bar' aria-hidden='true'>"
             f"<span class='rm-band' style='left:{pct(lo)};width:{pct(hi - lo)}'></span>"
             f"<span class='rm-tick rm-{st}' style='left:{pct(n)}'></span></div>"
@@ -1327,12 +1330,11 @@ header .cmd {{ color:var(--gold); font-family:{t['head']}; font-size:var(--fs-sm
   gap:var(--sp-3); margin:0 0 var(--sp-5); }}
 .rm {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
   border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4); }}
-.rm-top {{ display:flex; justify-content:space-between; align-items:baseline;
-  gap:var(--sp-2); }}
 .rm-label {{ color:var(--muted); font-size:var(--fs-sm); }}
-.rm-st {{ font-size:var(--fs-2xs); font-weight:600; }}
-.rm-val {{ font-family:{t['mono']}; font-size:var(--fs-2xl); line-height:1.2;
-  margin:var(--sp-1) 0 var(--sp-2); }}
+.rm-row {{ display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-2); margin:var(--sp-1) 0 var(--sp-2); }}
+.rm-st {{ font-size:var(--fs-xs); font-weight:600; white-space:nowrap; }}
+.rm-val {{ font-family:{t['mono']}; font-size:var(--fs-2xl); line-height:1.2; }}
 .rm-bar {{ position:relative; height:8px; border-radius:4px; background:rgba(255,255,255,.08); }}
 .rm-band {{ position:absolute; top:0; bottom:0; border-radius:4px;
   background:rgba(255,255,255,.16); }}
@@ -1375,8 +1377,22 @@ summary.abtn::-webkit-details-marker {{ display:none; }}
   /* phone: the bar keeps Edit / Optimize / menu on one row; Table card moves in */
   .abtn.wide-only {{ display:none; }}
   .amenu-items a.narrow-only {{ display:flex; }}
-  .rm {{ padding:var(--sp-3); }}
+  /* Phone: the meters become one compact full-width row each (label + number +
+     status, then the bar with its target beside it). Two-up cards ran ~800px
+     before the decklist on a 412px screen; this is about half. */
+  .rmeters {{ grid-template-columns:1fr; gap:var(--sp-2); }}
+  .rm {{ display:grid; grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"label row" "bar target"; align-items:center;
+    column-gap:var(--sp-3); row-gap:var(--sp-2); padding:var(--sp-3) var(--sp-4); }}
+  .rm-label {{ grid-area:label; }}
+  .rm-row {{ grid-area:row; margin:0; justify-content:flex-end; gap:var(--sp-3); }}
   .rm-val {{ font-size:var(--fs-xl); }}
+  .rm-bar {{ grid-area:bar; }}
+  .rm-target {{ grid-area:target; margin:0; }}
+  /* the tile explainers keep two lines on a phone; the full text is in the tabs */
+  .tile-note {{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden; }}
+  .printbtn {{ min-height:40px; font-size:var(--fs-xs); }}
 }}
 section {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
   border-radius:var(--r-lg); padding:var(--sp-5); margin:var(--sp-4) 0; }}

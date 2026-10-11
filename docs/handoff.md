@@ -6,7 +6,34 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (Arcane Ledger UI overhaul)._
+_Last updated: 2026-10-11 (stale-CSS deploy bug fixed; UAT harness added)._
+
+## Deploy painted the new UI with the old CSS — fixed, 2026-10-11
+
+Right after #166 merged, the player's phone (installed PWA and Chrome tab) showed the new
+markup with the **old** `app.css`: teal "Deckbuilder", teal Decks pill, 300px nav icons,
+the nav spilled down the page. Cause: `sw.js` answered every `/static/` request
+cache-first, and pages linked plain `/static/app.css` — so the first open after any
+deploy used the previous version's cached stylesheet (it self-healed only after the new
+worker activated and the page was reloaded). Reproduced in a persistent Chromium profile
+(old UI installed → new UI deployed); invisible to unit tests and fresh browsers.
+
+Fix: every template asset goes through `asset()` → `/static/<name>?v=<sha256[:10]>`
+(`app.asset_url`, hashed per mtime+size); the worker serves `?v=` URLs cache-first
+(immutable) and plain `/static/` URLs network-first with an offline-only fallback; the
+precache bypasses the HTTP cache; the manifest is served by a route that fingerprints its
+icon URLs; nav icons carry their own `width`/`height`. Verified on the exact upgrade paths
+(old UI → fix, broken build → fix, fix → a later CSS-only deploy): correct on the FIRST
+open each time. The player only needs to sync — no cache clearing.
+
+UAT polish from the same pass: hover underline only on hover-capable devices (it stuck to
+tapped deck titles), deck-card Speed/Resilience in the body face, filter chips one
+swipeable row on phones, dashboard meters with the status beside the number (no wrapping
+at Fold width) and compact one-line rows on phones, tile notes clamped on phones, the
+add-card button restyled, bigger collection colour buttons/checkboxes, Sign out a real
+44px target, the Build Next "✓ BUILT" chip now plain text (Open deck sits beside it).
+
+**Run `webapp/uat/` before merging UI work** (CLAUDE.md "UI changes get UAT'd").
 
 ## UI overhaul — "Arcane Ledger", 2026-10-11
 

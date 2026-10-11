@@ -12,13 +12,15 @@
   </div>
 </header>
 
-<div class="row tight mb-4" id="deckfilters">
+<div class="filterbar mb-4" id="deckfilters">
   <input id="deckq" type="search" placeholder="Filter decks…" autocomplete="off"
-         class="grow-sm" aria-label="Filter decks by name or commander">
-  <a class="thchip on" data-f="all" href="#">All</a>
-  {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
-  <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">Ready to sleeve</a>
-  <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">Needs attention</a>
+         aria-label="Filter decks by name or commander">
+  <div class="chips" role="group" aria-label="Show">
+    <a class="thchip on" data-f="all" href="#">All</a>
+    {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
+    <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">Ready to sleeve</a>
+    <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">Needs attention</a>
+  </div>
   <span class="muted fs-xs" id="deckcount" aria-live="polite"></span>
 </div>
 

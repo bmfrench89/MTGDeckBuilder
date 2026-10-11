@@ -135,7 +135,7 @@ def _security_headers(resp):
 
 # Endpoints that must work logged-out: the login page itself, and the shell
 # assets the login page + installed PWA need before a session exists.
-_PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens"}
+_PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens", "web_manifest"}
 
 
 def _has_control_chars(s, space=True):
@@ -2132,6 +2132,60 @@ def _asset_version():
         except OSError:
             continue
     return str(newest)
+
+
+# Every asset a page references goes out under a CONTENT-FINGERPRINTED URL —
+# `/static/app.css?v=<hash of the file>` — via the `asset()` template global.
+#
+# Why (2026-10-11, the Arcane Ledger deploy): pages are always fetched fresh, but the
+# installed service worker answered `/static/app.css` from its cache, so the first
+# open after a deploy rendered the NEW markup with the OLD stylesheet — teal pills,
+# 300px icons, the nav spilled across the page (reproduced in a persistent Chromium
+# profile: old UI installed -> new UI deployed). With the hash in the URL a page can
+# only ever ask for the CSS/JS it was written against: a new deploy is a new URL,
+# which no cache — the worker's, the HTTP cache, an old worker that is still in
+# control — can answer with yesterday's file.
+_ASSET_DIRS = {"tokens.css": os.path.join(ROOT, "scripts", "assets")}
+_asset_hashes = {}
+
+
+def asset_url(name):
+    """`/static/<name>?v=<first 10 hex of the file's sha256>`.
+
+    Hashed per (path, mtime, size) so a page view costs one `stat` per asset and the
+    file is only re-read when it changed. A missing file yields the plain URL (it
+    will 404 exactly as before — the fingerprint never hides a broken reference)."""
+    path = os.path.join(_ASSET_DIRS.get(name, os.path.join(ROOT, "webapp", "static")), name)
+    try:
+        st = os.stat(path)
+    except OSError:
+        return f"/static/{name}"
+    key = (path, st.st_mtime_ns, st.st_size)
+    v = _asset_hashes.get(key)
+    if v is None:
+        with open(path, "rb") as f:
+            v = hashlib.sha256(f.read()).hexdigest()[:10]
+        _asset_hashes[key] = v
+    return f"/static/{name}?v={v}"
+
+
+app.jinja_env.globals["asset"] = asset_url
+
+
+@app.route("/static/manifest.webmanifest")
+def web_manifest():
+    """The PWA manifest, with its icon URLs fingerprinted like every other asset.
+
+    An installed app re-reads its manifest to decide whether the home-screen icon
+    changed; served raw, the icon URLs never change, so an old service worker could
+    keep answering them from its cache and the new icon would not arrive. Same file
+    on disk, URLs rewritten at serve time."""
+    with open(os.path.join(ROOT, "webapp", "static", "manifest.webmanifest"),
+              encoding="utf-8") as f:
+        body = f.read()
+    body = re.sub(r'"/static/([^"?]+)"', lambda m: f'"{asset_url(m.group(1))}"', body)
+    return Response(body, mimetype="application/manifest+json",
+                    headers={"Cache-Control": "no-cache"})
 
 
 @app.route("/sw.js")

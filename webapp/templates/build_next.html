@@ -35,8 +35,7 @@ deck for it — those sink to the bottom, and <b>+ variant</b> generates a secon
   <div>
     <div class="name"><span class="cardlink" data-card="{{ r.name }}">{{ r.name }}</span>
       <span class="muted mono fs-xs">[{{ r.colors }}]</span>
-      {% if r.built %}<a class="sb built" href="{{ url_for('deck', stem=r.built) }}"
-        title="You've already built this — open the deck">✓ BUILT</a>{% elif r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted fs-xs">· buy the commander</span>{% endif %}</div>
+      {% if r.built %}<span class="sb built" title="You've already built this — Open deck is on the right">✓ BUILT</span>{% elif r.owns_commander %}<span class="sb">OWN</span>{% else %}<span class="muted fs-xs">· buy the commander</span>{% endif %}</div>
     <div class="cmd">{{ r.archetypes|join(' · ') }}</div>
   </div>
   <div class="stat">

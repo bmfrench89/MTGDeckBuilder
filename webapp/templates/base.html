@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Deckbuilder">
-<link rel="manifest" href="/static/manifest.webmanifest">
-<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+<link rel="icon" href="{{ asset('icon.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ asset('icon-192.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/tokens.css">
-<link rel="stylesheet" href="/static/app.css">
-<link rel="stylesheet" href="/static/cardpanel.css">
+<link rel="stylesheet" href="{{ asset('tokens.css') }}">
+<link rel="stylesheet" href="{{ asset('app.css') }}">
+<link rel="stylesheet" href="{{ asset('cardpanel.css') }}">
 </head><body class="shell">
 {#- Icons are inline SVG paths so the shell needs no icon font or extra request. -#}
 {% set icons = {
@@ -31,10 +31,10 @@
 {% macro tab(key, endpoint, label, title='', secondary=false) -%}
   <a class="tab{{ ' secondary' if secondary }}{{ ' on' if page==key }}" href="{{ url_for(endpoint) }}"
      {%- if page==key %} aria-current="page"{% endif %}{% if title %} title="{{ title }}"{% endif %}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icons[key]|safe }}</svg>{{ label }}</a>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icons[key]|safe }}</svg>{{ label }}</a>
 {%- endmacro %}
 <nav class="rail" aria-label="Main">
-  <a class="brand" href="{{ url_for('index') }}"><img class="mark" src="/static/icon.svg" alt="" width="28" height="28">Deckbuilder</a>
+  <a class="brand" href="{{ url_for('index') }}"><img class="mark" src="{{ asset('icon.svg') }}" alt="" width="28" height="28">Deckbuilder</a>
   {{ tab('home', 'index', 'Decks') }}
   {{ tab('build', 'build_next', 'Build') }}
   {{ tab('collection', 'collection_view', 'Collection') }}
@@ -44,7 +44,7 @@
   {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck', secondary=true) }}
   {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone', secondary=true) }}
   <details class="more">
-    <summary aria-label="More pages"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{{ icons['more']|safe }}</svg>More</summary>
+    <summary aria-label="More pages"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{{ icons['more']|safe }}</svg>More</summary>
     <div class="more-items">
       {{ tab('shared', 'shared_view', 'Shared') }}
       {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck') }}
@@ -74,7 +74,7 @@
 <footer>Local app · your collection stays on your machine · grounded by the MTG deckbuilder toolkit</footer>
 </main>
 {% include "_cardpanel.html" %}
-<script src="/static/cardgrid.js" defer></script>
+<script src="{{ asset('cardgrid.js') }}" defer></script>
 <script>
   // Pop-over menus (<details class="menu">, the phone bar's More sheet): one open at a
   // time, and a tap anywhere else closes it — <details> alone stays open forever.

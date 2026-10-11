@@ -1,11 +1,10 @@
 /* Add-a-card picker. Spacing/type/radius come from tokens.css (the shared scale);
    only colour and font are theme-substituted, matching card_panel.css. */
 .ac { margin:0 0 var(--sp-4); }
-.ac-open { cursor:pointer; background:transparent; color:var(--accent);
-  border:1px dashed rgba(255,255,255,.25); border-radius:var(--r-pill);
-  padding:var(--sp-2) var(--sp-4); font-family:__MONO__; font-size:var(--fs-xs);
-  min-height:44px; }
-.ac-open:hover { border-color:var(--accent); border-style:solid; }
+.ac-open { cursor:pointer; background:rgba(255,255,255,.07); color:var(--text);
+  border:0; border-radius:var(--r-sm); padding:0 var(--sp-4);
+  font-family:__HEAD__; font-size:var(--fs-sm); min-height:44px; }
+.ac-open:hover { background:rgba(255,255,255,.12); }
 .ac-open:focus-visible { outline:2px solid var(--accent2); outline-offset:2px; }
 .ac-box { margin-top:var(--sp-3); padding:var(--sp-4);
   border:1px solid rgba(255,255,255,.12); border-radius:var(--r-md);
