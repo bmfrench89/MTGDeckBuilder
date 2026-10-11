@@ -26,6 +26,7 @@
 1 Archfiend of Depravity
 1 Vito, Thorn of the Dusk Rose
 1 Gray Merchant of Asphodel
+1 Braids, Arisen Nightmare
 
 # --- Instants ---
 1 Dark Ritual
@@ -55,7 +56,6 @@
 1 Hymn to Tourach
 1 Mind Twist
 1 Syphon Mind
-1 Night's Whisper
 1 Smallpox
 1 Toxic Deluge
 1 Feed the Swarm

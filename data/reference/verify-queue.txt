@@ -1,5 +1,5 @@
-# Tergrid Bracket 4 rebuild (2026-10-11): every non-basic in the three study decks.
-# Verbatim oracle text + commander legality + price estimate come back in the deck-verify log.
+# Tergrid Bracket 4 rebuild (2026-10-11): every card in the three study decks, commander included.
+# Verbatim oracle text + commander legality + cheapest-printing price estimate come back in the deck-verify log.
 Accursed Marauder
 Ancient Tomb
 Arcane Signet
@@ -12,6 +12,7 @@ Bloodghast
 Bojuka Bog
 Bolas's Citadel
 Bottomless Pit
+Braids, Arisen Nightmare
 Braids, Cabal Minion
 Burglar Rat
 Butcher of Malakir
@@ -24,11 +25,9 @@ Champion's Helm
 Chrome Mox
 Command Beacon
 Commander's Plate
-Cruel Celebrant
 Dark Deal
 Dark Ritual
 Dauthi Voidwalker
-Deadly Dispute
 Deadly Rollick
 Defense Grid
 Delirium Skeins
@@ -54,6 +53,7 @@ Grim Monolith
 Grim Tutor
 Hymn to Tourach
 Imperial Seal
+Innocent Blood
 Inquisition of Kozilek
 Jet Medallion
 Kaya's Ghostform
@@ -67,14 +67,12 @@ Malakir Rebirth
 Mana Vault
 Megrim
 Memory Jar
-Merciless Executioner
 Mind Twist
 Mindslicer
 Mithril Coat
 Mox Diamond
 Necrogen Mists
 Necropotence
-Night's Whisper
 Not Dead After All
 Nykthos, Shrine to Nyx
 Ophiomancer
@@ -89,19 +87,18 @@ Pitiless Plunderer
 Plaguecrafter
 Pox
 Rankle, Master of Pranks
-Reassembling Skeleton
 Sanguine Bond
 Sheoldred's Edict
 Sheoldred, Whispering One
 Sidisi, Undead Vizier
 Skullclamp
 Smallpox
-Smokestack
 Snuff Out
 Sol Ring
 Soul Shatter
 Swiftfoot Boots
 Syphon Mind
+Tergrid, God of Fright
 The One Ring
 The Raven Man
 Thoughtseize

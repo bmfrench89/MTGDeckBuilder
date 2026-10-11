@@ -24,6 +24,7 @@
 1 Tinybones, Trinket Thief
 1 Braids, Cabal Minion
 1 Accursed Marauder
+1 Braids, Arisen Nightmare
 
 # --- Instants ---
 1 Dark Ritual
@@ -69,7 +70,6 @@
 1 Arcane Signet
 1 Fellwar Stone
 1 Memory Jar
-1 Smokestack
 1 Bolas's Citadel
 1 The One Ring
 1 Geth's Grimoire
