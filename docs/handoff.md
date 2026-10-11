@@ -6,7 +6,46 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-07._
+_Last updated: 2026-10-11._
+
+## Three Tergrid study decks for review, built 2026-10-11
+
+**State:** `data/decks/tergrid-iron-fortress`, `tergrid-grave-pact-engine` and
+`tergrid-hellbent-lock`. Each has `.txt` + `.attrs.csv` + `.notes.md`. They are
+**research builds, not from the collection.** The player asked for options "not tied to my
+cards". Each deck uses only 18–19 owned nonbasic cards; Tergrid herself is not owned. They
+are review candidates: the player picks one, or none.
+
+| Deck | Angle | Game Changers | Top-25 field overlap |
+|---|---|---|---|
+| Iron Fortress | max protection (4 equipment, 6 return effects, player hexproof) | Tergrid + Opposition Agent | 80% |
+| Grave Pact Engine | Pact / Dictate / Butcher + free outlets + Myr-chain fodder | Tergrid + Braids, Cabal Minion | 68% |
+| Hellbent Lock | field-shaped discard stax | Tergrid only | 88% |
+
+All three are Bracket 3 (Tergrid is herself a Game Changer).
+
+**Goldfish** (3,000 games, seed 7): Tergrid on the battlefield by turn 5 in about 50% of
+games; mean landing turn 5.8; 17% screw.
+- **This understates the deck.** The sim models only artifact and creature mana. Dark
+  Ritual, Cabal Ritual, Cabal Coffers, Nykthos and Crypt Ghast's doubling aren't counted.
+
+**Optimizer:** previewed and **not applied**.
+- It kept proposing to swap one card for Lightning Greaves. That was rejected: shroud
+  blocks the deck's own targeted protection.
+- Every nonland card is now named in each deck's `.notes.md`, so `refresh --optimize`
+  won't churn these study copies.
+
+**Two findings worth a follow-up:**
+- `classify()` counts **0 removal** in all three decks because edicts ("sacrifices a
+  creature") aren't read as removal. `power.py`'s Interaction axis and the optimizer's
+  role template undercount every sacrifice deck.
+- `deck-verify.yml` gained a `deck_attrs` dispatch input. It enriches named deck files
+  into `.attrs.csv` on the runner, which is how a study deck of unowned cards gets a real
+  curve. The three Tergrid attrs files came from run 38141826643.
+
+**Verification:** every card's oracle text was verified on GitHub runners — 158 cards
+across runs 38138722782, 38139031278, 38139999873, 38140217987 and 38141826643. The
+EDHREC Tergrid snapshot was refreshed the same day (12,840 decks).
 
 ## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
 
