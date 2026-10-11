@@ -80,11 +80,7 @@ nav.rail .brand {
   color: var(--text); padding: 0 var(--sp-3) var(--sp-5); letter-spacing: -.01em;
 }
 nav.rail .brand:hover { text-decoration: none; }
-nav.rail .brand .mark {
-  width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--accent);
-  color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center;
-  font-size: var(--fs-sm);
-}
+nav.rail .brand .mark { width: 28px; height: 28px; flex: none; }   /* = static/icon.svg */
 nav.rail a.tab, nav.rail .more > summary {
   display: flex; align-items: center; gap: var(--sp-3); min-height: 44px;
   padding: 0 var(--sp-3); border-radius: var(--r-sm);

@@ -17,7 +17,7 @@
   overflow:hidden;transform:translateY(100%);
   transition:transform .26s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
 .cp-overlay.show .cp-sheet{transform:translateY(0)}
-@media(min-width:760px){.cp-overlay{align-items:center}.cp-sheet{border-radius:18px}}
+
 .cp-bar{display:flex;justify-content:center;position:relative;padding:var(--sp-3);flex:0 0 auto}
 .cp-grab{width:40px;height:4px;border-radius:3px;background:rgba(255,255,255,.25)}
 .cp-close{position:absolute;top:2px;right:12px;background:none;border:none;
@@ -80,3 +80,28 @@ figure.mc .staple{position:absolute;left:4px;bottom:22px;font-family:var(--font-
 figure.mc .staple.top100{background:#f5c542}
 figure.mc .staple.top500{background:#9fd67a}
 figure.mc .staple.top2k{background:rgba(255,255,255,.55)}
+
+/* Wide screens: a right-hand DRAWER (2026-10 Arcane Ledger), same markup and ids.
+   The info column is `display:contents`, so the name and tags sit beside a 150px
+   card image and every section after them runs the drawer's full width. Phones
+   and tablets keep the bottom sheet. */
+@media(min-width:900px){
+  .cp-overlay{align-items:stretch;justify-content:flex-end;background:rgba(0,0,0,.35);
+    -webkit-backdrop-filter:none;backdrop-filter:none}
+  .cp-sheet{width:480px;max-width:100%;max-height:none;height:100%;border-radius:0;
+    border:0;border-left:1px solid var(--edge,rgba(255,255,255,.12));
+    box-shadow:-18px 0 50px rgba(0,0,0,.5);transform:translateX(100%)}
+  .cp-overlay.show .cp-sheet{transform:translateX(0)}
+  .cp-bar{justify-content:flex-end;padding:var(--sp-2) var(--sp-3)}
+  .cp-grab{display:none}
+  .cp-close{position:static;min-width:44px;min-height:44px;border-radius:var(--r-sm);
+    background:var(--panel2);color:var(--text);font-size:var(--fs-xl)}
+  .cp-scroll{padding:var(--sp-2) var(--sp-5) var(--sp-7)}
+  .cp-grid{grid-template-columns:150px 1fr;column-gap:var(--sp-4);row-gap:0}
+  .cp-grid > div:first-child{grid-column:1;grid-row:1 / span 3}
+  .cp-grid > div:last-child{display:contents}
+  .cp-grid > div:last-child > #cp-name,.cp-grid > div:last-child > #cp-tags{grid-column:2}
+  .cp-grid > div:last-child > :not(#cp-name):not(#cp-tags){grid-column:1 / -1}
+  .cp-name{font-size:var(--fs-xl)}
+}
+

@@ -95,3 +95,36 @@
   .cm-info h3 { font-size:var(--fs-xl); }
   .cm-alts { grid-template-columns:repeat(3,1fr); }
 }
+
+/* ---------------------------------------------------------------------------
+   Wide screens: a right-hand DRAWER instead of a bottom sheet (2026-10 Arcane
+   Ledger). The deck stays visible beside the card you're reading, which is the
+   point of opening a card from a decklist. Pure CSS over the same markup — every
+   id the panel script fills is untouched, and phones keep the bottom sheet.
+   The header becomes image-beside-title: .cm-info is `display:contents`, so its
+   name/chips join the grid's second column next to a 150px card image, and every
+   section after them runs the drawer's full width.
+   --------------------------------------------------------------------------- */
+@media (min-width:900px) {
+  .cm-overlay { align-items:stretch; justify-content:flex-end; background:rgba(0,0,0,.35);
+    -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .cm-sheet { width:520px; max-width:100%; height:100%; border-radius:0;
+    border:0; border-left:1px solid rgba(255,255,255,.12);
+    box-shadow:-18px 0 50px rgba(0,0,0,.5); transform:translateX(100%); }
+  .cm-overlay.show .cm-sheet { transform:translateX(0); }
+  .cm-bar { text-align:right; padding:var(--sp-2) var(--sp-3); }
+  .cm-grab { display:none; }
+  .cm-close { position:static; min-width:44px; min-height:44px; border-radius:var(--r-sm);
+    background:rgba(255,255,255,.07); color:var(--text); }
+  .cm-scroll { padding:var(--sp-4) var(--sp-5) var(--sp-7); }
+  .cm-grid { grid-template-columns:150px 1fr; column-gap:var(--sp-4); row-gap:0; }
+  .cm-imgcol { position:static; grid-column:1; grid-row:1 / span 4; }
+  .cm-info { display:contents; }
+  .cm-info > h3, .cm-info > .cm-chips { grid-column:2; }
+  .cm-info > h3 { font-size:var(--fs-xl); }
+  .cm-info > .cm-chips { margin:var(--sp-2) 0 var(--sp-4); }
+  .cm-info > :not(h3):not(.cm-chips) { grid-column:1 / -1; }
+  .cm-imgmeta { margin-top:var(--sp-2); }
+  .cm-alts { grid-template-columns:repeat(3,1fr); }
+}
+

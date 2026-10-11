@@ -153,3 +153,65 @@ def test_secondary_actions_live_in_the_overflow_menu(env):
 def test_shell_nav_marks_the_current_page(env):
     html = env.get("/wishlist").get_data(as_text=True)
     assert re.search(r'class="tab on"[^>]*aria-current="page"', html)
+
+
+# --------------------------------------------------------------------------- #
+# card panel: a drawer on wide screens, a bottom sheet on phones — both surfaces
+# --------------------------------------------------------------------------- #
+import os
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _read(*parts):
+    return open(os.path.join(ROOT, *parts), encoding="utf-8").read()
+
+
+@pytest.mark.parametrize("path,sheet", [
+    (("scripts", "assets", "card_panel.css"), ".cm-sheet"),
+    (("webapp", "static", "cardpanel.css"), ".cp-sheet"),
+])
+def test_card_panel_is_a_drawer_on_wide_screens_only(path, sheet):
+    """Both panels (the dashboard's inlined one and the app's) must slide in from the
+    right on a wide screen and keep the bottom sheet below that breakpoint. A drawer
+    rule outside the media query would put a 480px side panel on a 390px phone."""
+    css = _read(*path)
+    m = re.search(r"@media\s*\(min-width:\s*900px\)\s*\{(.*)\}\s*$", css, re.S)
+    assert m, "no wide-screen drawer block"
+    wide = m.group(1)
+    assert "justify-content:flex-end" in wide.replace(" ", "")
+    assert "translateX(100%)" in wide
+    outside = css[:m.start()]
+    assert "translateY(100%)" in outside, "phones must keep the bottom sheet"
+    assert "translateX" not in outside
+
+
+def test_dashboard_panel_buttons_lost_the_old_cyan_fallback(deck_file, collection_file):
+    html = bd.generate(deck_file, collection_file, title="T", commander="C",
+                       sim=None, editable=True)["dashboard"]
+    # the default (Ledger) theme never names the old cyan; it reached the page only
+    # through the edit buttons' hardcoded var() fallback
+    assert "#5BE0D4" not in html
+
+
+# --------------------------------------------------------------------------- #
+# app icon: the SVG and the PNG generator draw the same mark
+# --------------------------------------------------------------------------- #
+def test_icon_svg_and_png_generator_share_the_geometry():
+    import make_icons
+    svg = _read("webapp", "static", "icon.svg")
+    for r, _colour in make_icons.DIAMONDS:
+        top = 256 - int(r)
+        assert f"M256 {top} " in svg, f"diamond r={r:g} missing from icon.svg"
+    assert "#F2B544" in svg and "#0F1115" in svg
+    assert make_icons.AMBER == (0xF2, 0xB5, 0x44) and make_icons.BG == (0x0F, 0x11, 0x15)
+
+
+def test_icon_render_puts_amber_at_the_centre_and_ink_in_the_ring():
+    import make_icons
+    size = 32
+    rgb = make_icons.render(size)
+    px = lambda x, y: tuple(rgb[(y * size + x) * 3:(y * size + x) * 3 + 3])
+    assert px(16, 16) == make_icons.AMBER              # the centre gem
+    assert px(16, 16 - 4) == make_icons.BG             # inside the ink diamond
+    assert px(16, 16 - 8) == make_icons.AMBER          # the outer gem

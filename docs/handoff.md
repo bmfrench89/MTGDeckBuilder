@@ -36,11 +36,19 @@ artboards: decks home, deck dashboard, card panel, phone, style tile). What ship
   (`app_bar`) adds ← All decks + Edit list / Optimize / Table card / ⋯ — a CLI or
   downloaded dashboard never gets it, and print hides it.
 - Guards: `tests/test_ui_ledger.py` (meter words + widened band, app-bar surface rule
-  and every app-bar link resolving, deck-card meters/identity/menu, nav current page).
+  and every app-bar link resolving, deck-card meters/identity/menu, nav current page,
+  drawer-only-on-wide-screens for both panels, icon SVG/PNG geometry agreement).
 
-Not done (follow-ups): the PWA icons (`icon.svg`/PNGs) still carry the old cyan web
-mark; the card panel was re-fonted and recoloured but not re-laid-out as the mockup's
-side drawer; the `/deck/<stem>/visual` page keeps its old layout.
+- **App icon**: a cut gem — three nested amber/ink/amber diamonds on graphite.
+  `icon.svg` and `scripts/make_icons.py` (`DIAMONDS`) share the geometry; the rail's
+  brand mark is the same SVG. Regenerate the PNGs with `python3 scripts/make_icons.py`.
+- **Card panel drawer**: at ≥900px both panels (dashboard `card_panel.css`, app
+  `cardpanel.css`) slide in from the right — image beside the title, sections full
+  width, a light backdrop so the deck stays readable. Under 900px it is still the
+  bottom sheet. Pure CSS over unchanged markup/ids (`display:contents` on the info
+  column). The edit buttons' hardcoded cyan fallback now falls back to the theme.
+
+Not done (follow-up): the `/deck/<stem>/visual` image page keeps its old layout.
 
 ## Whole-app audit shipped, 2026-10-11
 
