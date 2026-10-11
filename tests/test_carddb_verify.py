@@ -161,6 +161,35 @@ def test_price_is_an_estimate_of_one_printing_or_blank(monkeypatch, capsys):
     assert out.count("price:") == 1
 
 
+def test_unpriced_default_printing_falls_back_to_the_cheapest_priced_one(monkeypatch, capsys):
+    """Mox Diamond's default printing came back with no price, so a deck total left
+    out its most expensive card. With the fallback on (the CLI turns it on), an
+    unpriced card asks for its cheapest priced printing; a failed ask stays blank."""
+    fake_batch(monkeypatch, [LLANOWAR, SOL_RING])
+    asked = []
+
+    def request_json(url, data=None, retries=4):
+        asked.append(url)
+        assert url.startswith(carddb.SEARCH_URL), url
+        if "Llanowar" in carddb.urllib.parse.unquote(url):
+            return {"data": [{"set": "plst", "collector_number": "9", "prices": {}},
+                             {"set": "m19", "collector_number": "314",
+                              "prices": {"usd": "0.25"}}]}
+        raise carddb.urllib.error.HTTPError(url, 500, "boom", {}, None)
+    monkeypatch.setattr(carddb, "_request_json", request_json)
+    rows = carddb.verify_cards(["Llanowar Elves", "Sol Ring"], delay=0, price_fallback=True)
+    assert (rows[0]["price_usd"], rows[0]["price_printing"]) == ("0.25", "M19 314")
+    assert (rows[1]["price_usd"], rows[1]["price_printing"]) == ("", "")   # failed ask
+    assert len(asked) == 2
+    carddb.print_verified(rows[:1])
+    assert "price: ~$0.25 (estimate: Scryfall market for M19 314" in capsys.readouterr().out
+    # off by default: library callers never make the extra request
+    asked.clear()
+    fake_batch(monkeypatch, [LLANOWAR])
+    carddb.verify_cards(["Llanowar Elves"], delay=0, refresh=True)
+    assert asked == []
+
+
 @pytest.mark.parametrize("card,expected", [
     (SOL_RING, True), (BLACK_LOTUS, False), (NO_LEGALITIES, None)])
 def test_commander_legality_is_three_valued(monkeypatch, card, expected):
