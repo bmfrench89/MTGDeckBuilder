@@ -110,8 +110,9 @@ def cut_candidates(deck_path, collection, idx=None, decks_dir=None, limit=12,
                   for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
+    prot = set(prot) | deck_fit.protected_keys(deck_path, commander, enriched)
     out = deck_fit.cut_ranking(enriched, rep, ctx, refs, field,
-                               protected=set(prot) | manual, ranges=ranges,
+                               protected=prot | manual, ranges=ranges,
                                cats=dict(rep.get("categories") or {}), limit=limit)
     out.update({"stem": stem, "commander": commander})
     return out
@@ -401,8 +402,28 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         return any(k in field for k in mtglib.name_keys(name))
 
     def role_of(name):
-        r = mtglib.lookup(idx, name)
+        # The enriched card first — it carries the deck's own .attrs.csv types and
+        # flags. A bare collection lookup can return a name-only owned_additions row
+        # (role "other") or an older-FlagsVer row, so band accounting disagreed with
+        # the deck's own category counts (30 mismatches on Beorn; 2026-10-11, R3).
+        e = None
+        for k in mtglib.name_keys(name):
+            e = enriched_by_key.get(k)
+            if e is not None:
+                break
+        r = e if (e is not None and e.has_type_data) else mtglib.lookup(idx, name)
         return deck_fit.primary_role(r) if r else None
+
+    def band_ok_after(cut_role, add_role, counts):
+        """Would swapping keep every touched role inside its template band?"""
+        trial = dict(counts)
+        if cut_role:
+            trial[cut_role] = trial.get(cut_role, 0) - 1
+        if add_role:
+            trial[add_role] = trial.get(add_role, 0) + 1
+        return all(lo <= trial.get(role, 0) <= hi
+                   for role, (lo, hi) in ranges.items()
+                   if role in (cut_role, add_role)), trial
 
     # ONE value function for both sides of a swap. Cuts always used this blend
     # (field inclusion OR our own fit engine, whichever rates the card higher);
@@ -461,6 +482,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     for k, inc in field.items():
         if k in in_deck or mtglib.is_basic(k) or inc <= 0 or k in reserved:
             continue
+        if deck_fit.is_banned(k):
+            continue                      # never recommend a banned card (audit D1)
         if k in removed_by_hand:
             hold = removed_by_hand[k]
             manual_holds.append({"name": hold["name"], "inc": inc,
@@ -534,7 +557,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         ref = e if (e is not None and e.has_type_data) else mtglib.lookup(idx, c.name)
         if not ref or is_land_in_deck(c.name):
             continue                      # lands handled by the manabase pass
-        if c.name.lower() in notes:
+        if deck_fit.named_in_notes(c.name, notes):
             continue                      # named in the player's own game plan
         cuts.append((value_of(c.name, ref), inc_of(c.name), c.name))
     cuts.sort()                           # least valuable first
@@ -880,6 +903,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if inc_add < inc_cut:
                 continue     # same field veto as the owned pass: "buy this 9% card to
                              # replace your 20% card" is bad advice, not a shopping list
+            # Same role-band gate the owned pass applies: a Replaces target the tool
+            # would refuse to cut itself (Farseek, with ramp AT its floor) is advice
+            # it wouldn't take (2026-10-11 audit, R4).
+            if not band_ok_after(role_of(cut_name), role_of(add_name), cats)[0]:
+                continue
             buy_swaps.append((cut_name, inc_cut, add_name, inc_add, "spell"))
             used_buy.add(ck)
             used_buy_add |= akeys
@@ -1264,6 +1292,14 @@ def main():
     idx = mtglib.index_by_name(coll)
     refs = power.load_refs()
     paths = sorted(glob.glob(os.path.join(args.decks_dir, "*.txt"))) if args.all else [args.deck]
+    if args.all:
+        # Study copies are deliberate, unowned lists — `--all` (and refresh
+        # --optimize) must not tune them toward the collection. Name one with
+        # --deck to preview it on purpose (2026-10-11 audit, R11).
+        study = [p for p in paths if deck_conflicts.is_study_deck(p)]
+        for p in study:
+            print(f"skip study copy: {os.path.basename(p)}")
+        paths = [p for p in paths if p not in study]
     if not paths or paths == [None]:
         print("error: pass --deck or --all", file=sys.stderr)
         return 2

@@ -10,6 +10,7 @@ circle) and writes PNGs with `zlib` + `struct`.
 
   python3 scripts/make_icons.py
 """
+import argparse
 import math
 import os
 import struct
@@ -122,11 +123,20 @@ def write_png(path, rgb, size):
     return len(png)
 
 
-def main():
-    os.makedirs(OUT, exist_ok=True)
+def main(argv=None):
+    # A real parser, so `--help` (which every script in this repo takes) prints help
+    # instead of silently overwriting the tracked icons — it did, twice, during the
+    # 2026-10-11 audit (R16).
+    ap = argparse.ArgumentParser(
+        description="Regenerate webapp/static/icon-192.png and icon-512.png from "
+                    "the geometry of static/icon.svg (overwrites both files).")
+    ap.add_argument("--out", default=OUT, help="output directory (default: %(default)s)")
+    args = ap.parse_args(argv)
+    out_dir = args.out
+    os.makedirs(out_dir, exist_ok=True)
     for size in (192, 512):
         rgb = render(size)
-        path = os.path.join(OUT, f"icon-{size}.png")
+        path = os.path.join(out_dir, f"icon-{size}.png")
         n = write_png(path, rgb, size)
         print(f"wrote {os.path.relpath(path)} ({size}x{size}, {n:,} bytes)")
     return 0

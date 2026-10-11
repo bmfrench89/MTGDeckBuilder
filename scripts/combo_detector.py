@@ -173,13 +173,19 @@ def bracket_signal(detected):
     is flagged as a strong signal without forcing the bracket."""
     reasons, b4 = [], False
     for c in detected["complete"]:
+        # Say how many pieces it REALLY has: 12 three-piece lines (commander + two)
+        # were announced as "early two-card combo" (2026-10-11 audit, R7). The
+        # verdict is unchanged — the curated Early flag is what forces Bracket 4.
+        n = len(c.get("pieces") or ()) or 2
         if c["early"]:
             b4 = True
-            reasons.append(f"complete early two-card combo — {c['name']} → "
-                           f"{c['result']} (cheap 2-card infinite ⇒ Bracket 4)")
+            reasons.append(f"complete early {n}-card combo — {c['name']} → "
+                           f"{c['result']} (curated as an early, cheap infinite ⇒ "
+                           "Bracket 4)")
         else:
-            reasons.append(f"complete combo present — {c['name']} → {c['result']} "
-                           "(deterministic, but not a cheap 2-card line; verify speed)")
+            reasons.append(f"complete {n}-card combo present — {c['name']} → "
+                           f"{c['result']} (deterministic, but not curated as "
+                           "early; verify speed)")
     return b4, reasons
 
 
@@ -197,7 +203,8 @@ def _print_deck(label, detected):
     if comp:
         print(f"\n  Complete combo(s) in the deck ({len(comp)}):")
         for c in comp:
-            flag = "  ⚠ EARLY 2-CARD → Bracket 4" if c["early"] else ""
+            flag = (f"  ⚠ EARLY {len(c.get('pieces') or ()) or 2}-CARD → Bracket 4"
+                    if c["early"] else "")
             print(f"    • {c['name']} → {c['result']}{flag}")
             print(f"        {c['notes']}")
     if near:

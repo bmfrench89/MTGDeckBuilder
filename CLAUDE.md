@@ -95,7 +95,7 @@ other consumers do `sys.path.insert(0, <root>/scripts)` (see `webapp/app.py`, `t
 
 ```bash
 # Tests (the only dev dependency is pytest)
-pip install -r requirements-dev.txt && pytest          # 820 tests, ~25s, offline
+pip install -r requirements-dev.txt && pytest          # ~990 tests, ~40s, offline
 
 # Web app
 python3 -m venv .venv && source .venv/bin/activate
@@ -234,7 +234,7 @@ render in a real browser.
 ## Data formats
 
 **Deck** — `data/decks/<stem>.txt`: `# Key: value` headers (`Title`, `Commander`, `Colors`,
-`Archetype`, and optionally `Theme`, `Source`, `Deck`, `Note`), then `# --- Section ---`
+`Archetype`, and optionally `Theme`, `Source`, `Deck`, `Note`, `Study`), then `# --- Section ---`
 groups of `<qty> <card name>` lines. Section names are free-form to the parser, but the
 **convention (2026-08-11) is EDHREC-style type sections** — Commander, Creatures, Instants,
 Sorceries, Artifacts, Enchantments, Planeswalkers, Lands, Basics — kept in shape by
@@ -245,6 +245,11 @@ land denial) ride along in the card details on both surfaces. The dashboard grou
 decklist by the file's own sections, so **preserve them when editing**. Edits rewrite the
 file in place and must keep quantity, section, and comment lines intact (that's what
 `test_deck_edit.py` guards).
+
+**Study copies** — `# Study: yes` marks a deck kept for review, not sleeved from the
+collection (the Tergrid options, the Bartolomé deck tech). It commits no physical copies:
+`deck_conflicts.scan`, the free pool, the wishlist and `optimize --all` skip it
+(`deck_conflicts.is_study_deck`). Name it with `--deck` to analyze it on purpose.
 
 **Deck companions** (auto-detected next to `<stem>.txt`):
 `.notes.md` (game plan — markdown-lite; cards named here are protected from the optimizer),

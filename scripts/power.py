@@ -419,6 +419,9 @@ def assess(enriched, rep, refs, declared=None, clock=None,
     b4_combo, combo_reasons = combo_detector.bracket_signal(detected)
     if b4_combo and bracket < 4:
         bracket, name = 4, "Optimized"
+        # The "estimated Core (Bracket 2)" reason no longer describes the verdict;
+        # leaving it beside "⇒ Bracket 4" contradicted the result (audit R7).
+        reasons = [r for r in reasons if "estimated Core" not in r]
     for r in combo_reasons:
         reasons.append("⚠ " + r)
     if not detected["complete"] and len(combos) >= 2:

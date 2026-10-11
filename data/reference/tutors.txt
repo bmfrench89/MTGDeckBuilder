@@ -28,6 +28,14 @@ Merchant Scroll
 Eladamri's Call
 Spellseeker
 Rune-Scarred Demon
-Sylvan Tutor
 Natural Order
 Survival of the Fittest
+# 2026-10-11 — runner-verified "search your library for a card" tutors (deck-verify
+# 38140217987): they were missing, so power.py counted 1 tutor in a deck running 4.
+Profane Tutor
+Cruel Tutor
+Beseech the Mirror
+Final Parting
+Dark Petition
+Mastermind's Acquisition
+Sidisi, Undead Vizier

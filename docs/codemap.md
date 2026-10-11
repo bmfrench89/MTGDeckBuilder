@@ -202,6 +202,8 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply`. The role template is **archetype-aware** (`role_ranges` reads the deck's `# Archetype:` header — a control deck's 15 counterspells are correct, not nine over budget; unmatched words are reported, never silently ignored) and the **field has a veto over role repair**: a swap may never cut a card the field plays MORE than the incoming one, because template pressure arrives through `value_of`'s fit blend and can manufacture the 25-point margin on its own | mtglib, deckcore, deck_fit, deck_conflicts, power |
 | spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully — and **degrades cheaply**: a failure is remembered for `FAIL_TTL` (5 min) so an unreachable CSB costs one attempt per cooldown instead of one per deck-page view (it was 315 ms of every warm render, ceiling 25 s when a connection hangs). The remembered failure is never served AS data — callers still get the empty error payload they already label | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
+| proxy_sheet | Print-exact proxy sheets (63×88 mm, nine a page) for a deck — browser is the renderer (imported by `webapp/app.py`) | card_image, mtglib |
+| make_icons | Regenerates the PWA PNG icons from `icon.svg`'s geometry, stdlib-only; `--help` is safe, a plain run overwrites `webapp/static/icon-*.png` | — |
 
 ## Web app (`webapp/`)
 

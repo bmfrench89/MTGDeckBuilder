@@ -195,8 +195,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         if mtglib._norm(name) == cmd_key:
             continue
         card = mtglib.lookup(idx, name)
-        if not card:
-            continue
+        if not card or deck_fit.is_banned(card.name):
+            continue                      # banned cards never enter a build (audit D1)
         legal = _color_legal(card, identity)
         if legal is False:
             off_color += 1

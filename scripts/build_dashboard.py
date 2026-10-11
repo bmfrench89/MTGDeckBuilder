@@ -1727,10 +1727,8 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     # one extra pass over the list and no extra IO. None = the fit engine couldn't run.
     dead = None
     try:
-        prot, notes_text = set(), (notes or "").lower()
-        prot |= {mtglib._norm(commander)} if commander else set()
-        prot |= {mtglib._norm(c.name) for c in enriched
-                 if c.name.lower() in notes_text}
+        prot = deck_fit.protected_keys(deck_path or "", commander, enriched,
+                                       notes_text=notes or "")
         section_of = {mtglib._norm(n): label for label, cards in sections
                       for _q, n in cards}
         dead = deck_fit.dead_weight(enriched, rep, ctx, refs, protected=prot,
@@ -1775,7 +1773,7 @@ def main():
     ap.add_argument("--commander", default="")
     ap.add_argument("--subtitle", default="Commander (EDH) deck dashboard")
     ap.add_argument("--theme", default="default",
-                    help="yshtola | cloud | default")
+                    help=" | ".join(THEMES))
     ap.add_argument("--out", default="dashboard.html")
     ap.add_argument("--visual", action="store_true",
                     help="also write <out>-visual.html with card images")

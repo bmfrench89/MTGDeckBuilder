@@ -3,6 +3,7 @@
 # Colors: B
 # Archetype: aristocrats / repeatable edicts
 # Source: research build 2026-10-11 — NOT built from the collection (study copy, option 2 of 3). Card text verified on GitHub runners (deck-verify runs 38138722782, 38139031278, 38139999873, 38140217987); field % from the 2026-10-11 Tergrid snapshot.
+# Study: yes
 # Note: Option 2 of 3 — the sacrifice engine: Grave Pact / Dictate of Erebos / Butcher of Malakir plus free outlets and self-recurring fodder, so every death of yours becomes a steal.
 
 # --- Commander ---

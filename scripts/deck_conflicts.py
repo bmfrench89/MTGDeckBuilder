@@ -15,6 +15,7 @@ Usage:
 """
 import argparse
 import glob
+import re
 import json
 import os
 import sys
@@ -32,6 +33,23 @@ def deck_files(decks_dir):
     return sorted(glob.glob(os.path.join(decks_dir, "*.txt")))
 
 
+_STUDY_RE = re.compile(r"^#\s*study\s*:\s*(yes|true|1)\s*$", re.I | re.M)
+
+
+def is_study_deck(path):
+    """A STUDY COPY — a deck kept for review or analysis, not sleeved from the
+    collection (`# Study: yes` in its header). It holds no physical copies, so it
+    must not count toward cross-deck conflicts or lock cards out of the free pool:
+    three Tergrid study decks took the conflict count from 24 to 197 and pulled Sol
+    Ring out of auto_build's pool (2026-10-11 audit, R11)."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            head = "".join(next(f, "") for _ in range(40))
+    except OSError:
+        return False
+    return bool(_STUDY_RE.search(head))
+
+
 def deck_label(path):
     return os.path.splitext(os.path.basename(path))[0]
 
@@ -46,14 +64,17 @@ def _pin_of(name, pins):
     return None
 
 
-def scan(decks_dir, collection_index, skip=None):
+def scan(decks_dir, collection_index, skip=None, include_study=False):
     """Return {card_name: {'owned':n, 'total':n, 'decks':{deck:qty}}} for cards
     committed across decks, and the raw per-deck usage. `skip` (a deck stem) omits that
-    deck — used when REBUILDING it, so its own current cards count as available again."""
+    deck — used when REBUILDING it, so its own current cards count as available again.
+    Study copies (`# Study: yes`) commit nothing and are skipped unless asked for."""
     usage = defaultdict(lambda: {"decks": {}, "total": 0})
     canon = {}          # front-face key -> ONE display name per physical card.
     for path in deck_files(decks_dir):
         if skip and os.path.splitext(os.path.basename(path))[0] == skip:
+            continue
+        if not include_study and is_study_deck(path):
             continue
         label = deck_label(path)
         with open(path, encoding="utf-8") as f:

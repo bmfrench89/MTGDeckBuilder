@@ -85,10 +85,12 @@ as one mana each; ramp sorceries that make treasure are not `ramp`. And the
 is flagged `removal` exactly as "destroy target creature" is. That is the accepted
 heuristic (the module docstring's disclaimer is the contract), not an oversight:
 narrowing it would mean parsing targeting restrictions, which is a rules engine.
-`wipe` covers the two forms the vocabulary names and no others — the active-voice
-sweeper ("Blasphemous Act deals 13 damage to each creature") is missed here and
-caught by the curated `mtglib.WIPES` list instead, which is exactly the layering
-`classify()` relies on: curated first, flags only where curation is silent.
+`wipe` covers "destroy/exile all", "each creature gets -X/-X / is dealt", and
+(v4) the active-voice damage sweeper ("Anger of the Gods deals 3 damage to each
+creature"); the curated `mtglib.WIPES` list still wins where it speaks — the
+layering `classify()` relies on: curated first, flags only where curation is
+silent. Parenthesized REMINDER text is stripped before any regex runs (v4): it is
+never rules text, and treasure/cycling reminders were minting `dork`/`draw`.
 """
 
 import re
@@ -97,6 +99,9 @@ COLORS = "WUBRGC"
 
 VOCAB_VERSION = 4          # bump on ANY change to the vocabulary above
 # v4 (2026-10-11) — two gaps a mono-black study deck exposed:
+#   * reminder text "(…)" is stripped first (treasure → false dork/rock, cycling →
+#     false draw); the active-voice damage sweeper is a `wipe`; a blink of your own
+#     permanent ("exile target creature you control, then return it") is NOT removal.
 #   * `removal` also reads the EDICT text class on the same spell/enchantment
 #     faces: a player phrase ("each opponent", "target player", "each other
 #     player"…) then "sacrifices … creature(s)/planeswalker(s)" in one sentence
@@ -187,6 +192,14 @@ _REMOVAL_RE = re.compile(r"\b(?:destroy|exile) target\b")
 _WIPE_ALL_RE = re.compile(r"\b(?:destroy|exile) all\b")
 _WIPE_EACH_RE = re.compile(r"\b(?:all|each) creatures?\b[^.]{0,60}?"
                            r"(?:gets? -|is dealt|are dealt)")
+# v4: the ACTIVE-voice damage sweeper the docstring used to call out as missed —
+# "Anger of the Gods deals 3 damage to each creature" (2026-10-11 audit, R12).
+_WIPE_DAMAGE_RE = re.compile(r"deals? (?:\d+|x) damage to each (?:other )?creature")
+# Parenthesized reminder text is never rules text. Treasure's "(It's an artifact
+# with "{T}, Sacrifice this token: Add one mana of any color.")" made 22 one-shot
+# treasure makers read as permanent `dork`/`rock` producers, and cycling's
+# "(…, Discard this card: Draw a card.)" read as `draw` (2026-10-11 audit, R2/R12).
+_REMINDER_RE = re.compile(r"\([^()]*\)")
 # --- cost reduction (v3, spec docs/spec-cost-reduction.md) ----------------------
 # Sentence-scoped like everything else here. The eminence test is the phrase
 # "command zone" in the SAME sentence as the discount — that is the whole
@@ -227,6 +240,20 @@ _LANDS_ARE_RE = re.compile(
 # `.{0,40}` spans the qualifier a counterspell puts between the words —
 # "counter target creature spell", "counter target noncreature spell".
 _COUNTER_RE = re.compile(r"counter target .{0,40}spell")
+
+
+def _removal_sentence(t):
+    """Spot removal, read per sentence: "destroy/exile target …" — but not a
+    BLINK, where the same sentence returns the card ("Exile target creature you
+    control, then return it to the battlefield" — Ephemerate read as removal;
+    2026-10-11 audit, R12). The verb-not-victim rule otherwise stands: "destroy
+    target land you control" is still `removal` (see the module docstring)."""
+    for sentence in re.split(r"[.\n]", t):
+        if _REMOVAL_RE.search(sentence):
+            if re.search(r"\breturn (?:it|that card|them|those cards)\b", sentence):
+                continue
+            return True
+    return False
 
 
 def faces(c):
@@ -342,8 +369,8 @@ def derive_flags(c):
     amount = 1
     for type_line, text in faces(c):
         tl = (type_line or "").lower()
-        t = (text or "").lower()
-        if not t:
+        t = _REMINDER_RE.sub("", (text or "").lower())
+        if not t.strip():
             continue
         is_land = "land" in tl
 
@@ -389,10 +416,11 @@ def derive_flags(c):
         # destroy target creature") out of the removal count — that card is a
         # creature first, and classify()'s type fallback already says so.
         is_spell = "instant" in tl or "sorcery" in tl
-        if (is_spell or "enchantment" in tl) and (_REMOVAL_RE.search(t)
+        if (is_spell or "enchantment" in tl) and (_removal_sentence(t)
                                                   or _EDICT_RE.search(t)):
             flags.add("removal")
-        if is_spell and (_WIPE_ALL_RE.search(t) or _WIPE_EACH_RE.search(t)):
+        if is_spell and (_WIPE_ALL_RE.search(t) or _WIPE_EACH_RE.search(t)
+                         or _WIPE_DAMAGE_RE.search(t)):
             flags.add("wipe")
         if _COUNTER_RE.search(t):
             flags.add("counter")

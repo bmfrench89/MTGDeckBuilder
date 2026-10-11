@@ -150,7 +150,7 @@ The player owns **Smaug, Wicked Worm x2** (a treasure commander already verified
 `commanders.csv` with a saved field snapshot), plus Smaug the Magnificent, Smaug the
 Impenetrable, Hellkite Tyrant, The Reaver Cleaver and The Sackville-Bagginses — a complete
 owned treasure package that a commander-page scan finds immediately and a staples scan
-never will. The deck now exists (`data/decks/smaug-wicked-worm.txt`, 72/100, field 13/25).
+never will. The deck was built (`smaug-wicked-worm`, 72/100, field 13/25) and later dismantled (#152); it survives in git history.
 **Rule: count archetype support against the pool AND the owned-commander pages, never
 against a staples list alone.**
 
