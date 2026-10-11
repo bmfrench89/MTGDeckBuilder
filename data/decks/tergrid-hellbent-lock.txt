@@ -12,7 +12,6 @@
 
 # --- Creatures ---
 1 Grief
-1 Dauthi Voidwalker
 1 Orcish Bowmasters
 1 Opposition Agent
 1 Burglar Rat
@@ -25,6 +24,7 @@
 1 Braids, Cabal Minion
 1 Accursed Marauder
 1 Braids, Arisen Nightmare
+1 Liliana's Specter
 
 # --- Instants ---
 1 Dark Ritual

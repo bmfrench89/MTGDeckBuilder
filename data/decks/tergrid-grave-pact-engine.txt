@@ -25,7 +25,6 @@
 1 Accursed Marauder
 1 Orcish Bowmasters
 1 Opposition Agent
-1 Dauthi Voidwalker
 1 Braids, Cabal Minion
 1 Sidisi, Undead Vizier
 1 Butcher of Malakir
@@ -34,6 +33,7 @@
 1 Sheoldred, Whispering One
 1 Braids, Arisen Nightmare
 1 Rankle, Master of Pranks
+1 Midnight Reaper
 
 # --- Instants ---
 1 Dark Ritual

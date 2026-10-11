@@ -11,7 +11,6 @@
 1 Tergrid, God of Fright
 
 # --- Creatures ---
-1 Dauthi Voidwalker
 1 Grief
 1 Orcish Bowmasters
 1 Opposition Agent
@@ -43,6 +42,7 @@
 1 Soul Shatter
 1 Flare of Malice
 1 Malakir Rebirth
+1 Fatal Push
 
 # --- Sorceries ---
 1 Demonic Tutor

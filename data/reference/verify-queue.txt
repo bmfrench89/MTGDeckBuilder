@@ -27,7 +27,6 @@ Command Beacon
 Commander's Plate
 Dark Deal
 Dark Ritual
-Dauthi Voidwalker
 Deadly Rollick
 Defense Grid
 Delirium Skeins
@@ -38,6 +37,7 @@ Dictate of Erebos
 Duress
 Elderfang Disciple
 Exquisite Blood
+Fatal Push
 Feed the Swarm
 Feign Death
 Fellwar Stone
@@ -59,6 +59,7 @@ Jet Medallion
 Kaya's Ghostform
 Liliana of the Veil
 Liliana's Caress
+Liliana's Specter
 Liliana's Triumph
 Liliana, Dreadhorde General
 Liliana, Waker of the Dead
@@ -67,6 +68,7 @@ Malakir Rebirth
 Mana Vault
 Megrim
 Memory Jar
+Midnight Reaper
 Mind Twist
 Mindslicer
 Mithril Coat
