@@ -192,8 +192,9 @@ that an unreachable Scryfall reports UNVERIFIED instead of guessing), `test_rule
 (the CR parser against a `SAMPLE_CR` that replicates the official layout *including its
 duplicated Contents headings*, the cp1252 round-trip, and the blocked-network degrade),
 `test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination), `test_clips`
-(a clip never shows a card the deck doesn't play, a broken storyboard costs the Watch tab
-and never the page, captions can't break out of their script tag) and `test_agents`
+(a scene that shows or names a card the deck doesn't play is skipped and flagged, featured
+cards are protected from the optimizer, a broken storyboard costs the Watch tab and never
+the page, captions can't break out of their script tag) and `test_agents`
 (the `.claude/agents/` prompts nothing else executes — names, the Bash+Read tool limit,
 the grounding-rules path).
 CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
@@ -216,8 +217,8 @@ a second run on a tuned deck changes nothing, and that property is worth preserv
 
 Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥25-point
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
-basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` are never
-cut; role counts must stay in template range; lands only swap for lands; with no field data
+basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` or featured in
+its `.clips.json` are never cut; role counts must stay in template range; lands only swap for lands; with no field data
 the manabase is left alone. **Buy candidates never enter the 99** (2026-08-11, player
 request): decks are built from owned cards only, and each buy is instead appended to the
 deck's `.buylist.csv` with `Replaces` = the in-deck card to pull when it arrives —
@@ -275,8 +276,12 @@ lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.c
 each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`),
 `.clips.json` (the **Watch tab**: 30-60s animated how-to-play clips, scenes of the deck's own
 cards in zones with captions — validated by `clips.py` against the CURRENT list on every
-render, so a card that left the deck is dropped and the tab says the clips are out of date;
-opponents' cards are `ph` placeholders, never named; nothing is rendered to a video file).
+render. Captions name cards as `[[Card Name]]` (or `[[Card Name|shown text]]`), and a scene
+that shows OR names a card that left the deck is skipped while the tab says the clips are out
+of date. Every card a clip features is protected from the optimizer like a notes-named card,
+so automatic tuning never strands a scene. **When you change a deck that has clips, rewrite
+the stale scenes in the same change** — CI's `clips.py --all --check` fails until you do.
+Opponents' cards are `ph` placeholders, never named; nothing is rendered to a video file).
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks

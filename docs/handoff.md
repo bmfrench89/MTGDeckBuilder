@@ -14,15 +14,26 @@ _Last updated: 2026-10-11 (Watch tab prototype on Tergrid — Iron Fortress; Ter
 Deck) on both surfaces. It shows 30-60 second clips that play like video: cards slide
 between zones on a mock table (yours, an opponent's, the stack, a graveyard), with
 captions, a turn badge, a mana-pool badge, a scene bar and optional narration. Only
-`tergrid-iron-fortress` has clips so far: 4 clips, 2:54 in all (the pitch, land her
-early, keep her there, feed her and win). The player asked to watch this one on their
-phone before it rolls out to every deck.
+`tergrid-iron-fortress` has clips so far: 4 clips, 3:18 in all (the pitch, land her
+early, keep her there, feed her and win). The player watched the first version and liked
+it; the storyboard was rewritten the same day for the deck's $100-per-card list.
+
+**How clips follow deck changes** (the player's question, 2026-10-11):
+- Clips are re-rendered from the storyboard and the CURRENT list on every view, so card
+  art, frames and the scene list are never older than the deck.
+- Captions name cards as `[[Card]]`; a scene that shows or names a card the deck no
+  longer plays is SKIPPED, and the tab says the clips are out of date (kept even when
+  every scene is stale). The $100 rebuild proved it: two scenes went stale and were
+  caught, then rewritten.
+- Every card a clip features is protected from the optimizer like a notes-named card,
+  so automatic tuning (`refresh.py --optimize` on the server) never strands a scene.
+- A manual deck edit can still strand one. The banner says so, and CI's
+  `clips.py --all --check` fails a commit that leaves one. The story itself is written
+  by hand (by a session), so a plan change means rewriting scenes, not regenerating them.
 
 **How it fits together:**
-- `scripts/clips.py` is the grounding gate. Every card a scene shows must be in the
-  deck's CURRENT list; a card that left is dropped and reported STALE, and the tab shows
-  an out-of-date banner. Opponents' cards are `ph` placeholders, never named. Timing
-  and caption length are lint only. CI runs `clips.py --all --check`.
+- `scripts/clips.py` is the grounding gate (see above). Opponents' cards are `ph`
+  placeholders, never named. Timing and caption length are lint only.
 - `build_dashboard.clips_html` renders the tab. The player is
   `scripts/assets/clips_player.{js,css}` (namespace `wt-`, not the card panel's `cp-`),
   inlined only when a deck has clips, so other dashboards are byte-identical.
@@ -158,15 +169,16 @@ The player asked for "what would work best, even if that means I need to buy 99 
 each" and chose **Bracket 4, no limits**. These are study copies (`# Study: yes`,
 `# Bracket: 4`): they commit no physical copies, and the wishlist ignores their buylists.
 They are alternatives, each priced on its own — the player picks one. They are not three
-decks to sleeve at once: all three share 51 non-basic cards, Tergrid and most lands included.
+decks to sleeve at once: all three share 45 non-basic cards, Tergrid and most lands included.
 
 | Deck | Theory | Field top-25 | Goldfish T3 / T4 / T5 (floor) | Est. cost: all-in / to buy |
 |---|---|---|---|---|
-| Iron Fortress | turbo + protection-first: 11 fast mana, 6 tutors, 11 protection/return pieces, discard + edicts; Exquisite Blood + Vito | 68% | 18% / 37% / 57% | ~$3,051 / ~$2,990 (66 cards) |
+| Iron Fortress — **every card under $100** | protection-first: 10 sub-$100 fast-mana pieces, 6 tutors, 11 protection/return pieces, discard + edicts; Exquisite Blood + Vito | 72% | 12% / 28% / 50% | ~$956 / ~$895 (65 cards) |
 | Grave Pact Engine | aristocrats: Grave Pact / Dictate / Butcher, free outlets, Gravecrawler loops; Exquisite Blood + Sanguine Bond | 56% | 20% / 41% / 59% | ~$3,163 / ~$3,109 (65 cards) |
 | Hellbent Lock | discard stax: empty the hands, lock them, punish (Tinybones, Megrim, Liliana's Caress, Painful Quandary) | 76% | 18% / 36% / 57% | ~$2,972 / ~$2,930 (70 cards) |
 
-Each deck runs 15 Game Changers, counting Tergrid. `power.py` rates all three Bracket 4.
+Grave Pact and Hellbent run 15 Game Changers each, counting Tergrid; Iron Fortress runs 9
+after its cap. `power.py` rates all three Bracket 4.
 For Iron Fortress and Hellbent it adds "likely a Bracket 5 (cEDH) deck if tuned to a
 competitive metagame". The optimizer preview is "already aligned with the field — no
 changes": every nonland card is named in its deck's notes.
@@ -174,9 +186,25 @@ changes": every nonland card is named in its deck's notes.
 **Costs** are Scryfall market estimates for each card's cheapest printing (non-foil
 first). "To buy" counts only cards not in the collection snapshot. Each deck's notes list
 which owned cards are free and which are sleeved in another deck. Two cards are about half
-of each total: Mox Diamond ~$1,109 and Grim Monolith ~$478.
+of the Grave Pact and Hellbent totals: Mox Diamond ~$1,109 and Grim Monolith ~$478.
 
-**Shared B4 core:**
+**Iron Fortress under $100 per card** (player request, 2026-10-11, prices from deck-verify
+run 38184868187):
+- Out: Mox Diamond, Grim Monolith, Imperial Seal, Chrome Mox, Ancient Tomb, The One Ring.
+- In: Black Market Connections ($10.97 — Treasure, a card or a 3/2 each turn; the token
+  covers the fortress's edict hole), Basalt Monolith ($3.41), Insatiable Avarice ($5.43),
+  Mind Stone ($0.21, owned), Cabal Stronghold ($12.41) and Geth's Grimoire ($8.24).
+- Priciest card left: Mana Vault ~$92. Prices move daily, so it is the first to re-check.
+- What it cost: Tergrid by turn 4 fell 37% → 28% in the sim, a floor. A paired A/B kept
+  Basalt Monolith over Thought Vessel. The sim prefers Thought Vessel over Black Market
+  Connections (+1.9 points by turn 4) only because it can't see the Treasures, cards or
+  edict tokens.
+- Talisman of Dominance was a candidate until the verify run showed a {U}/{B} identity:
+  illegal under mono-black Tergrid.
+- Demonic Tutor ($12) and Vampiric Tutor ($51) are under the cap and stay. Alternatives
+  were verified and priced in the same run; see the session summary.
+
+**Shared B4 core** (Grave Pact and Hellbent; Iron Fortress keeps the sub-$100 part):
 - Fast mana: Sol Ring, Mana Vault, Grim Monolith, Chrome Mox, Mox Diamond, Lotus Petal,
   Ancient Tomb, Dark Ritual and Cabal Ritual.
 - Tutors: Demonic, Vampiric, Imperial Seal and Grim Tutor.

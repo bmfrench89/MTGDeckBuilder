@@ -35,13 +35,62 @@ DECK = ["Test Commander", "Sol Ring", "Arcane Signet", "Island", "Command Tower"
 # --------------------------------------------------------------------------- #
 # the gate
 # --------------------------------------------------------------------------- #
-def test_a_card_that_left_the_deck_is_dropped_and_reported_stale():
-    res = clips.validate(_story(_scene([{"name": "Sol Ring"}, {"name": "Mana Crypt"}]),
-                                _scene([{"name": "Sol Ring"}], dur=20)),
+def test_a_scene_showing_a_card_the_deck_lost_is_skipped_and_reported():
+    """Its caption was written around that card. Dropping only the card (the first
+    version) left captions like "Mox Diamond, Lotus Petal and Ancient Tomb" over cards
+    that were no longer there — so the whole scene goes, and says why."""
+    res = clips.validate(_story(_scene([{"name": "Sol Ring"}, {"name": "Mana Crypt"}],
+                                       head="Gone"),
+                                _scene([{"name": "Sol Ring"}], head="Kept", dur=20)),
                          DECK)
-    names = [c["name"] for c in res["clips"][0]["scenes"][0]["cards"]]
-    assert names == ["Sol Ring"], "a card not in the deck must never reach the player"
+    assert [s["head"] for s in res["clips"][0]["scenes"]] == ["Kept"]
+    assert len(res["stale"]) == 1
+    assert "Mana Crypt" in res["stale"][0] and "skipped" in res["stale"][0]
+
+
+def test_a_caption_naming_a_card_the_deck_lost_skips_its_scene_too():
+    res = clips.validate(_story(_scene([], head="Cast [[Mana Crypt]]", dur=8),
+                                _scene([], sub="then [[Sol Ring|the Ring]] and [[Fire]]",
+                                       dur=8)), DECK)
+    (scene,) = res["clips"][0]["scenes"]
+    assert scene["sub"] == "then the Ring and Fire", "brackets never reach the viewer"
     assert len(res["stale"]) == 1 and "Mana Crypt" in res["stale"][0]
+
+
+def test_a_clip_whose_every_scene_is_stale_is_hidden_and_says_so():
+    res = clips.validate(_story(_scene([{"name": "Mana Crypt"}], dur=10),
+                                _scene([], head="[[Mox Diamond]]", dur=10)), DECK)
+    assert res["clips"] == []
+    assert any("whole clip is hidden" in s for s in res["stale"])
+
+
+def test_featured_names_cover_scene_cards_and_caption_refs(deck_file):
+    _write_clips(deck_file, _story(
+        _scene([{"name": "Sol Ring"}, {"ph": "Their creature"}],
+               sub="with [[Arcane Signet|a Signet]]", say="[[Command Tower]]", dur=10),
+        _scene([], dur=10)))
+    assert clips.featured_names(deck_file) == ["Sol Ring", "Arcane Signet", "Command Tower"]
+    _write_clips(deck_file, "{broken")
+    assert clips.featured_names(deck_file) == []
+
+
+def test_cards_a_clip_features_are_protected_from_the_optimizer(deck_file, monkeypatch):
+    """An automatic tuning pass must never strand a scene: a featured card is curated
+    content, protected exactly like a card named in the deck's notes."""
+    import deck_fit
+    import deckcore
+    import mtglib
+    import optimize
+    monkeypatch.setattr(deckcore, "load_card_notes", lambda *a, **k: {})
+    _write_clips(deck_file, _story(_scene([{"name": "Sol Ring"}], sub="[[Arcane Signet]]",
+                                          dur=10), _scene([], dur=10)))
+    cards = [mtglib.Card(name=n) for n in ("Sol Ring", "Arcane Signet", "Command Tower")]
+    keep = deck_fit.protected_keys(deck_file, "Test Commander", cards, notes_text="")
+    assert {"sol ring", "arcane signet"} <= keep and "command tower" not in keep
+    _keep, notes = optimize._protected(deck_file, "Test Commander")
+    assert deck_fit.named_in_notes("Sol Ring", notes)
+    assert deck_fit.named_in_notes("Arcane Signet", notes)
+    assert not deck_fit.named_in_notes("Command Tower", notes)
 
 
 def test_names_resolve_to_the_decks_own_spelling_through_front_faces():
@@ -157,14 +206,25 @@ def test_watch_tab_renders_the_validated_storyboard(deck_file, collection_file):
         assert "<ol class='wt-outline'>" in html and "The pitch" in html
 
 
-def test_a_stale_card_puts_an_out_of_date_banner_on_the_tab(deck_file, collection_file):
-    _write_clips(deck_file, _story(_scene([{"name": "Sol Ring"}, {"name": "Mana Crypt"}], dur=8),
-                                   _scene([], dur=8)))
+def test_a_stale_scene_puts_an_out_of_date_banner_on_the_tab(deck_file, collection_file):
+    _write_clips(deck_file, _story(_scene([{"name": "Sol Ring"}, {"name": "Mana Crypt"}],
+                                          head="Gone", dur=8),
+                                   _scene([], head="Kept", dur=8)))
     html = _gen(deck_file, collection_file)
     assert "These clips are out of date" in html and "Mana Crypt" in html
+    assert "1 scene shows or names a card that has left the deck" in html
     data = json.loads(re.search(r"id='wt-data'>(.*?)</script>", html, re.S).group(1))
-    assert all(c.get("name") != "Mana Crypt"
-               for s in data["clips"][0]["scenes"] for c in s["cards"])
+    assert [s["head"] for s in data["clips"][0]["scenes"]] == ["Kept"]
+
+
+def test_a_fully_stale_storyboard_keeps_the_tab_to_say_why(deck_file, collection_file):
+    """The day a deck change strands every scene, the tab must not silently vanish."""
+    _write_clips(deck_file, _story(_scene([{"name": "Mana Crypt"}], dur=10),
+                                   _scene([], head="[[Mox Diamond]]", dur=10)))
+    html = _gen(deck_file, collection_file)
+    assert "<label for='tab-watch'>Watch</label>" in html
+    assert "These clips are out of date" in html
+    assert "wt-data" not in html and "clips_player.js" not in html   # no player to run
 
 
 def test_caption_text_cannot_break_out_of_the_payload(deck_file, collection_file):

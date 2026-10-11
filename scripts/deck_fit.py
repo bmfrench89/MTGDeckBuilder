@@ -13,6 +13,7 @@ import os
 import re
 
 import mtglib
+import clips as clipmod
 import deckcore
 
 REF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -498,7 +499,8 @@ def named_in_notes(name, notes_text):
 def protected_keys(deck_path, commander, cards, notes_text=None):
     """The ONE answer to "which cards in this deck must never be offered as a cut":
     the commander, basics, cards with a hand-written card_notes.csv entry, cards
-    named in the deck's .notes.md, and the player's own manual adds (.changes.csv).
+    named in the deck's .notes.md, cards its Watch-tab clips show or name
+    (.clips.json), and the player's own manual adds (.changes.csv).
 
     Shared by the optimizer's Cuts surface and the dashboard's dead-weight panel —
     the two had drifted (the webapp dropped notes-named cards, the dashboard
@@ -521,10 +523,11 @@ def protected_keys(deck_path, commander, cards, notes_text=None):
                   for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
     except Exception:
         manual = set()
+    featured = {k for n in clipmod.featured_names(deck_path) for k in mtglib.name_keys(n)}
     for c in cards:
         keys = set(mtglib.name_keys(c.name))
         if (mtglib.is_basic(c.name) or keys & curated or keys & manual
-                or named_in_notes(c.name, notes_text)):
+                or keys & featured or named_in_notes(c.name, notes_text)):
             keep |= keys
     return keep
 

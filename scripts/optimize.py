@@ -40,6 +40,7 @@ import sys
 
 import mtglib
 import deckcore
+import clips as clipmod
 import deck_conflicts
 import deck_fit
 import power
@@ -152,6 +153,12 @@ def _protected(deck_path, commander):
         notes = open(f"{stem}.notes.md", encoding="utf-8").read().lower()
     except OSError:
         notes = ""
+    # The Watch tab's storyboard is curated like the notes: a card a clip shows or
+    # names is part of the plan, and cutting it would strand its scene. Riding the
+    # notes text means every path below that honours notes honours clips too.
+    featured = clipmod.featured_names(deck_path)
+    if featured:
+        notes += "\n" + "\n".join(featured).lower()
     try:
         # ONLY hand-written notes count as "the player values this card". The loader also
         # returns machine-drafted notes (card_notes.generated.csv) which cover most of the

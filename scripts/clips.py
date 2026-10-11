@@ -10,9 +10,15 @@ every page view, so it cannot freeze an old version of the deck.
 
 This module is the grounding gate in front of the player:
 
-  * **Every card a scene shows must be in the deck's current list.** A card that has
-    left the deck is dropped from its scene and reported as STALE, and the Watch tab
-    says so — a clip never shows a card the deck no longer plays.
+  * **Every card a scene shows OR names must be in the deck's current list.** Captions
+    name cards as `[[Card Name]]` (or `[[Card Name|shown text]]`), and those references
+    are checked exactly like the cards on screen. A scene that shows or names a card the
+    deck no longer plays is SKIPPED and reported as STALE, and the Watch tab says so:
+    its caption was written around that card, so showing the scene without it (or
+    naming it) would be advice the deck can no longer follow.
+  * **The optimizer leaves featured cards alone.** `featured_names()` feeds the same
+    protection as a card named in `.notes.md` (`optimize._protected`,
+    `deck_fit.protected_keys`), so an automatic tuning pass can never strand a clip.
   * **Opponents' cards are never named.** A scene shows them as placeholders
     (`{"ph": "Their best creature"}`) — inventing an opponent's board would be
     inventing cards.
@@ -62,6 +68,8 @@ HEAD_MAX, SUB_MAX, PH_MAX = 80, 200, 40
 # nobody can finish reading.
 READ_WPS = 3.5
 _POOL_RE = re.compile(r"^[WUBRGC]{0,12}$")
+# [[Card Name]] or [[Card Name|shown text]] — the community's card-link notation.
+_REF_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]*))?\]\]")
 
 
 def clips_path(deck_path):
@@ -76,6 +84,41 @@ def _deck_index(deck_cards):
         for k in mtglib.name_keys(name):
             idx.setdefault(k, name)
     return idx
+
+
+def _refs(text):
+    """(name, shown) for every [[...]] card reference in a caption."""
+    return [(m.group(1).strip(), (m.group(2) or m.group(1)).strip())
+            for m in _REF_RE.finditer(text or "")]
+
+
+def _unref(text):
+    """Caption text as the viewer sees it: [[Name|shown]] -> shown, [[Name]] -> Name."""
+    return _REF_RE.sub(lambda m: (m.group(2) or m.group(1)).strip(), text or "")
+
+
+def featured_names(deck_path):
+    """Every card a deck's storyboard shows or names, read raw (no deck check).
+
+    The optimizer protects these like cards named in `.notes.md`: a clip is curated
+    content, and an automatic swap that cut a featured card would strand its scene.
+    Never raises; no file (or a broken one) means nothing to protect."""
+    try:
+        with open(clips_path(deck_path), encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, ValueError):
+        return []
+    names = []
+    for clip in (raw.get("clips") if isinstance(raw, dict) else None) or []:
+        for sc in (clip.get("scenes") if isinstance(clip, dict) else None) or []:
+            if not isinstance(sc, dict):
+                continue
+            for cd in sc.get("cards") or []:
+                if isinstance(cd, dict) and cd.get("name"):
+                    names.append(str(cd["name"]).strip())
+            for field in ("head", "sub", "say"):
+                names.extend(n for n, _shown in _refs(str(sc.get(field) or "")))
+    return list(dict.fromkeys(n for n in names if n))
 
 
 def _num(v, default=None):
@@ -126,13 +169,26 @@ def validate(raw, deck_cards, info=None, where="clips"):
             if not isinstance(sc, dict):
                 lint.append(f"{at}: not an object — skipped")
                 continue
+            # Everything this scene shows or names, checked BEFORE it is built: one
+            # card that left the deck makes the whole scene stale.
+            cards_raw = sc.get("cards") if isinstance(sc.get("cards"), list) else []
+            wanted = [str(cd.get("name") or "").strip() for cd in cards_raw
+                      if isinstance(cd, dict) and "name" in cd]
+            wanted += [n for f in ("head", "sub", "say")
+                       for n, _shown in _refs(str(sc.get(f) or ""))]
+            gone = [n for n in dict.fromkeys(wanted)
+                    if not any(k in deck for k in mtglib.name_keys(n))]
+            if gone:
+                stale.append(f"{at} skipped: {', '.join(gone)} "
+                             f"{'is' if len(gone) == 1 else 'are'} no longer in this deck")
+                continue
             dur = _num(sc.get("dur"), 5.0)
             if not DUR_MIN <= dur <= DUR_MAX:
                 lint.append(f"{at}: dur {dur:g}s is outside {DUR_MIN:g}-{DUR_MAX:g}s — clamped")
                 dur = min(max(dur, DUR_MIN), DUR_MAX)
-            head = str(sc.get("head") or "").strip()
-            sub = str(sc.get("sub") or "").strip()
-            say = str(sc.get("say") or "").strip()
+            head = _unref(str(sc.get("head") or "")).strip()
+            sub = _unref(str(sc.get("sub") or "")).strip()
+            say = _unref(str(sc.get("say") or "")).strip()
             if not head:
                 lint.append(f"{at}: no headline")
             if len(head) > HEAD_MAX:
@@ -195,10 +251,8 @@ def validate(raw, deck_cards, info=None, where="clips"):
                     name = str(cd.get("name") or "").strip()
                     canon = next((deck[k] for k in mtglib.name_keys(name) if k in deck),
                                  None)
-                    if canon is None:
-                        # The one finding a viewer must see: the deck changed under
-                        # the storyboard. Drop the card, never show it.
-                        stale.append(f"'{title}' scene {si}: {name} is no longer in this deck")
+                    if canon is None:      # unreachable: the scene gate ran first
+                        stale.append(f"{at}: {name} is no longer in this deck")
                         continue
                     key = str(cd.get("id") or canon)
                     card = {"name": canon, "zone": zone, "key": key}
@@ -219,7 +273,8 @@ def validate(raw, deck_cards, info=None, where="clips"):
             scenes.append(scene)
             total += dur
         if not scenes:
-            lint.append(f"'{title}': no playable scenes — skipped")
+            (stale if any(s.startswith(f"'{title}'") for s in stale) else lint).append(
+                f"'{title}': no playable scenes — the whole clip is hidden")
             continue
         if not CLIP_MIN <= total <= CLIP_MAX:
             lint.append(f"'{title}': runs {total:.0f}s (aim for {CLIP_MIN:.0f}-{CLIP_MAX:.0f}s)")
