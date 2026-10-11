@@ -1462,7 +1462,8 @@ def deck_delete(stem):
     if not m:
         abort(404)
     base = os.path.splitext(m["path"])[0]
-    for suffix in (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv"):
+    for suffix in (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv",
+                   ".clips.json"):
         try:
             os.remove(base + suffix)
         except OSError:
@@ -1724,7 +1725,8 @@ def _free_deck_stem(slug):
     deck's notes, changes log and buylist attached to the stranger. A stem is free
     only when NO companion file exists either: an orphaned `.notes.md` would
     otherwise attach itself to the new list the same way."""
-    companions = (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv")
+    companions = (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv",
+                  ".clips.json")
     n = 1
     while True:
         stem = slug if n == 1 else f"{slug}-{n}"

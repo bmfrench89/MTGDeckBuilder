@@ -61,6 +61,7 @@ had spent its effort hand-reasoning.
 | Power / bracket | `power.py` | assign a bracket by feel |
 | Combos present or one-away | `combo_detector.py` | |
 | Dashboard | `build_dashboard.py`, or `refresh.py` for all | hand-write HTML |
+| Watch-tab clips (animated how-to-play) | write `<deck>.clips.json`, then `clips.py --deck <path>` for the outline + warnings; `clips.py --all --check` runs in CI | show a card the deck doesn't play, or name an opponent's real card (use a `ph` placeholder); render a video file |
 | Buy list | `wishlist.py`, `<deck>.buylist.csv` | put an unowned card in the 99 |
 | Proxies / export | `proxy_sheet.py`, `export_manapool.py` | |
 

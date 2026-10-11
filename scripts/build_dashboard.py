@@ -35,6 +35,7 @@ import similar_commanders as simc
 import combo_detector
 import manabase
 import deckcore
+import clips as clipmod
 
 THEMES = {
     "default": {  # "Arcane Ledger" (2026-10 UI overhaul) — graphite + one amber
@@ -1108,6 +1109,79 @@ def add_card_css(t):
             .replace("__MONO__", t["mono"]))
 
 
+def _clip_info(enriched):
+    """name key -> {cost, type} for the clip player's card frames (drawn until the
+    card art arrives, and for good when it can't — a sandbox, an offline file)."""
+    info = {}
+    for c in enriched or []:
+        tl = " ".join(list(c.supertypes or []) + list(c.types or []))
+        if c.subtypes:
+            tl += " \u2014 " + " ".join(c.subtypes)
+        info[mtglib._norm(c.name)] = {"cost": (c.mana_cost or "").split(" // ")[0],
+                                      "type": tl.strip()}
+    return info
+
+
+def _clip_len(sec):
+    sec = int(round(sec))
+    return f"{sec // 60}:{sec % 60:02d}"
+
+
+def clips_html(clips):
+    """The Watch tab: the deck's .clips.json storyboard (validated by clips.py) as an
+    animated player, plus a plain outline for no-script and print. "" = no tab.
+
+    The payload is the VALIDATED storyboard, so a card that left the deck has already
+    been dropped; the banner says so instead of letting a clip quietly drift."""
+    if not clips or not clips.get("clips"):
+        return ""
+    cl = clips["clips"]
+    payload = (json.dumps({"clips": cl}, ensure_ascii=True)
+               .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
+    stale = clips.get("stale") or []
+    warn = ""
+    if stale:
+        n = len(stale)
+        warn = ("<div class='banner warn'><b>\u26a0 These clips are out of date:</b> "
+                f"{n} card{'s' if n != 1 else ''} they show left the deck and "
+                f"{'are' if n != 1 else 'is'} skipped. "
+                + esc("; ".join(stale[:3])) + ("…" if n > 3 else "") + "</div>")
+    outline = "".join(
+        f"<li><b>{esc(c['title'])}</b> ({_clip_len(c['total'])})<ol>"
+        + "".join(f"<li>{esc(s['head'])}" + (f" — {esc(s['sub'])}" if s.get("sub") else "")
+                  + "</li>" for s in c["scenes"])
+        + "</ol></li>" for c in cl)
+    first = cl[0]["scenes"][0]
+    total = sum(c["total"] for c in cl)
+    return f"""<section><h2>Watch: How to Play This Deck</h2>
+<p class='muted'>{len(cl)} short clip{'s' if len(cl) != 1 else ''} ({_clip_len(total)}),
+written from this deck's verified card text. Opponents' cards are stand-ins, never
+named.</p>{warn}
+<div class='wt' id='wt-root'>
+<div class='wt-chips' role='group' aria-label='Clips'></div>
+<div class='wt-stage'>
+<div class='wt-band wt-band-theirs'><b>Opponent</b></div>
+<div class='wt-band wt-band-mine'><b>You</b></div>
+<div class='wt-band wt-band-grave'><b>Graveyard</b></div>
+<div class='wt-badges' aria-hidden='true'></div>
+<button type='button' class='wt-over' aria-label='Play the clips'><span class='wt-big'
+aria-hidden='true'>&#9654;</span><span class='wt-overt'>Play</span></button>
+</div>
+<div class='wt-caps' aria-live='polite'><p class='wt-head'>{esc(first['head'])}</p><p
+class='wt-sub'>{esc(first.get('sub') or '')}</p></div>
+<div class='wt-ctrl'>
+<button type='button' class='wt-btn primary wt-play'>Play</button>
+<button type='button' class='wt-btn wt-restart' aria-label='Restart this clip'>&#8634;</button>
+<div class='wt-prog' role='group' aria-label='Scenes'></div>
+<span class='wt-time'>0:00 / {_clip_len(cl[0]['total'])}</span>
+<button type='button' class='wt-btn wt-voice'>Voice off</button>
+</div>
+</div>
+<ol class='wt-outline'>{outline}</ol>
+<script type='application/json' id='wt-data'>{payload}</script>
+</section>"""
+
+
 def tabs_block(groups):
     """CSS-only subtabs over the dashboard's sections. Returns (css, html).
 
@@ -1197,7 +1271,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
-                     dead=None, cuts=None, has_field=True, sim=None, ranges=None):
+                     dead=None, cuts=None, has_field=True, sim=None, ranges=None,
+                     clips=None):
     t = THEMES.get(theme, THEMES["default"])
     heading = t.get("heading", "var(--accent)")
     modal_css = card_modal_css(t)
@@ -1277,8 +1352,10 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
 
     # Grouping is presentation only — every section's generator is untouched, and the
     # order inside each tab matches the old top-to-bottom page order.
+    watch_sec = clips_html(clips)
     tab_css, tabs = tabs_block([
         ("deck",  "Deck",  deck_sec + own_sec),
+        ("watch", "Watch", watch_sec),
         ("mana",  mana_label,  curve_sec + pip_sec + mana_sec),
         ("power", "Power", power_sec + combo_sec + dead_sec + cuts_sec),
         ("buy",   "Buy",   buy_sec),
@@ -1519,6 +1596,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 {tab_css}
 {add_card_css(t) if editable else ''}
 {modal_css}
+{_asset('clips_player.css') if watch_sec else ''}
 /* ---------------------------------------------------------------------------
    PRINT — this block IS the PDF export.
 
@@ -1701,7 +1779,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 {tabs}
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
-</div>{modal_block}{IMG_LOADER}{TABS_JS}</body></html>"""
+</div>{modal_block}{IMG_LOADER}{TABS_JS}{('<script>' + _asset('clips_player.js') + '</script>') if watch_sec else ''}</body></html>"""
 
 
 def render_visual(title, deck, idx, theme, size="normal"):
@@ -1830,6 +1908,12 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     buylist = deckcore.buy_signals(load_buylist(f"{stem}.buylist.csv"),
                                    combos, missing, idx, deck=a["deck"])
     changes = deckcore.load_changes(f"{stem}.changes.csv")
+    # The Watch tab's storyboard, gated against the current list (clips.py drops and
+    # reports any card that has left the deck). A broken file costs the tab only.
+    try:
+        clips = clipmod.load(deck_path, [c.name for c in deck], _clip_info(enriched))
+    except Exception:
+        clips = None
 
     shared = None
     dd = decks_dir if decks_dir is not None else os.path.dirname(deck_path)
@@ -1924,6 +2008,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
                                  editable=editable, stem=url_stem, missing=missing,
                                  changes=changes, dead=dead, cuts=cuts,
                                  has_field=bool((ctx or {}).get("field")), sim=sim,
+                                 clips=clips,
                                  ranges=(ctx or {}).get("role_ranges")
                                  or deckcore.role_ranges((ctx or {}).get("archetype")))
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None

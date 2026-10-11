@@ -1,0 +1,135 @@
+/* --- Watch tab: animated deck clips (scripts/assets/clips_player.css) ---------
+   Inlined only into dashboards whose deck has a <stem>.clips.json. Colours come
+   from the surface's theme variables; sizes and spacing from tokens.css. Card
+   positions are computed by clips_player.js from the stage's real size. */
+.wt { margin:var(--sp-4) 0 var(--sp-3); }
+.wt-chips { display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-3); }
+.wt-chip { min-height:44px; padding:0 var(--sp-4); border-radius:var(--r-pill);
+  border:1px solid var(--line-strong); background:transparent; color:var(--muted);
+  font-family:var(--font-body); font-size:var(--fs-sm); cursor:pointer; }
+.wt-chip:hover { color:var(--text); border-color:var(--accent); }
+.wt-chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent);
+  color:var(--void); font-weight:600; }
+.wt-len { font-family:var(--font-mono); margin-left:var(--sp-2); opacity:.8; }
+
+.wt-stage { position:relative; width:100%; aspect-ratio:16 / 9; overflow:hidden;
+  border-radius:var(--r-lg); border:1px solid var(--line-strong); box-shadow:var(--el-2);
+  background:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.07), rgba(255,255,255,0) 62%),
+    var(--panel); touch-action:manipulation; }
+
+/* zone bands: drawn only while a scene uses them (JS sets geometry + .on) */
+.wt-band { position:absolute; border:1px dashed var(--line-strong); border-radius:var(--r-md);
+  opacity:0; transition:opacity .4s; pointer-events:none; }
+.wt-band.on { opacity:1; }
+.wt-band b { position:absolute; left:var(--sp-2); top:var(--sp-1); font-size:var(--fs-2xs);
+  letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+
+.wt-badges { position:absolute; right:var(--sp-3); top:var(--sp-3); display:flex;
+  gap:var(--sp-2); z-index:20; flex-wrap:wrap; justify-content:flex-end; }
+.wt-badge { display:inline-flex; align-items:center; gap:var(--sp-1); padding:var(--sp-1) var(--sp-3);
+  border-radius:var(--r-pill); background:rgba(0,0,0,.55); color:var(--text);
+  font-family:var(--font-mono); font-size:var(--fs-xs); box-shadow:var(--el-1); }
+.wt-pip { display:inline-flex; align-items:center; justify-content:center; width:1.5em;
+  height:1.5em; border-radius:50%; font-style:normal; font-weight:700;
+  font-size:var(--fs-2xs); }
+.wt-pip-W { background:#f4ecd2; color:#3b3524; }
+.wt-pip-U { background:#a9d4f0; color:#13324a; }
+.wt-pip-B { background:#2a2330; color:#e3d8f1; box-shadow:inset 0 0 0 1px #9b86bd; }
+.wt-pip-R { background:#f2a283; color:#4a1608; }
+.wt-pip-G { background:#9fd3a4; color:#123a18; }
+.wt-pip-C { background:#d4cfc6; color:#2a2620; }
+
+/* cards: absolutely positioned; JS sets width/height/transform/opacity */
+.wt-card { position:absolute; left:0; top:0; border-radius:4.8% / 3.4%; z-index:2;
+  transition:transform .7s cubic-bezier(.2,.8,.2,1), width .7s cubic-bezier(.2,.8,.2,1),
+    height .7s cubic-bezier(.2,.8,.2,1), opacity .45s ease; will-change:transform; }
+.wt-instant .wt-card, .wt-instant .wt-band { transition:none; }
+.wt-face { position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+  background:#15121f; box-shadow:0 6px 18px rgba(0,0,0,.5); }
+.wt-face img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  opacity:0; transition:opacity .3s; }
+.wt-card.has-img .wt-face img { opacity:1; }
+.wt-card.has-img .wt-frame { visibility:hidden; }
+.wt-frame { position:absolute; inset:0; display:flex; flex-direction:column; gap:4%;
+  padding:9% 8%; border-radius:inherit; border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg, var(--wt-tint, #2c2440) 0, #15121f 78%); }
+.wt-n { font-family:var(--font-body); font-weight:700; color:var(--text);
+  font-size:var(--wt-fs); line-height:1.15; overflow-wrap:break-word; }
+.wt-c { font-family:var(--font-mono); color:var(--gold); font-size:var(--wt-fs-sm); }
+.wt-t { margin-top:auto; color:var(--muted); font-size:var(--wt-fs-sm); line-height:1.2; }
+.wt-ty-creature { --wt-tint:#3d2f2b; } .wt-ty-instant { --wt-tint:#24304a; }
+.wt-ty-sorcery { --wt-tint:#3b2532; } .wt-ty-artifact { --wt-tint:#35353d; }
+.wt-ty-enchantment { --wt-tint:#2d3a2c; } .wt-ty-land { --wt-tint:#2f2b22; }
+.wt-ty-planeswalker { --wt-tint:#3a3320; }
+/* an opponent's card is never named: a hatched stand-in with a label */
+.wt-ph .wt-frame { align-items:center; justify-content:center; text-align:center;
+  border:1px dashed rgba(255,255,255,.4);
+  background:repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 8%, rgba(255,255,255,.015) 8% 16%),
+    #1c1826; }
+.wt-ph .wt-n { color:var(--muted); font-weight:600; }
+.fx-back .wt-frame { visibility:hidden; }
+.fx-back .wt-face { background:radial-gradient(circle at 50% 46%, #7a5a30 0 16%, #4a3219 17% 30%, #20160c 31%); }
+.fx-glow .wt-face { animation:wt-pulse 1.6s ease-in-out infinite; }
+@keyframes wt-pulse {
+  0%, 100% { box-shadow:0 0 0 2px var(--accent), 0 6px 18px rgba(0,0,0,.5); }
+  50% { box-shadow:0 0 0 3px var(--accent), 0 0 32px 6px rgba(255,214,140,.38); }
+}
+
+.wt-over { position:absolute; inset:0; z-index:30; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:var(--sp-2); width:100%; border:0;
+  background:rgba(0,0,0,.38); color:var(--text); cursor:pointer; font-family:var(--font-body); }
+.wt-over[hidden] { display:none; }
+.wt-big { display:flex; align-items:center; justify-content:center; width:84px; height:84px;
+  border-radius:var(--r-pill); background:var(--accent); color:var(--void);
+  font-size:var(--fs-2xl); box-shadow:var(--el-3); }
+.wt-overt { font-size:var(--fs-md); font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,.7); }
+
+.wt-caps { min-height:7.5em; padding:var(--sp-4) var(--sp-1) var(--sp-2); }
+.wt-head { margin:0; font-family:var(--font-display); font-size:var(--fs-xl); line-height:1.2;
+  color:var(--text); }
+.wt-sub { margin:var(--sp-2) 0 0; max-width:var(--measure); color:var(--muted);
+  font-size:var(--fs-md); }
+@media (min-width: 900px) { .wt-head { font-size:var(--fs-2xl); } }
+
+.wt-ctrl { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-2) var(--sp-3); }
+.wt-btn { min-height:44px; min-width:44px; padding:0 var(--sp-4); border:0;
+  border-radius:var(--r-pill); background:rgba(255,255,255,.08); color:var(--text);
+  font-family:var(--font-body); font-size:var(--fs-sm); cursor:pointer; }
+.wt-btn:hover { background:rgba(255,255,255,.14); }
+.wt-btn.primary { background:var(--accent); color:var(--void); font-weight:600; min-width:84px; }
+.wt-voice.on { box-shadow:inset 0 0 0 2px var(--accent); }
+.wt-prog { flex:1 1 200px; display:flex; gap:var(--sp-1); min-width:160px; }
+.wt-seg { position:relative; flex:1 1 0; min-width:24px; height:44px; padding:0; border:0;
+  background:transparent; cursor:pointer; }
+.wt-seg i { position:absolute; left:0; right:0; top:50%; height:6px; margin-top:-3px;
+  border-radius:var(--r-pill); background:rgba(255,255,255,.14); overflow:hidden; }
+.wt-seg i::after { content:""; position:absolute; left:0; top:0; bottom:0; width:var(--p, 0%);
+  background:var(--accent); }
+.wt-time { font-family:var(--font-mono); font-size:var(--fs-xs); color:var(--muted);
+  min-width:9ch; text-align:right; }
+
+/* Phones: overrides come after the base rules they replace (equal specificity —
+   the later rule wins). */
+@media (max-width: 640px) {
+  .wt-stage { aspect-ratio:4 / 5; }
+  /* one swipeable row of clips, and the scene bar on its own line above the buttons */
+  .wt-chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+    padding-bottom:var(--sp-1); }
+  .wt-chips::-webkit-scrollbar { display:none; }
+  .wt-chip { flex:0 0 auto; }
+  .wt-prog { order:-1; flex-basis:100%; }
+  /* the scene bar already shows position; the clock would push Voice to a 2nd row */
+  .wt-time { display:none; }
+  .wt-voice { margin-left:auto; }
+  .wt-ctrl { column-gap:var(--sp-2); }
+}
+
+/* No script, or printing: the storyboard as a readable outline */
+.wt-outline { color:var(--muted); font-size:var(--fs-sm); }
+.wt-outline b { color:var(--text); }
+.wt.wt-js ~ .wt-outline { display:none; }
+.wt:not(.wt-js) .wt-ctrl, .wt:not(.wt-js) .wt-chips { display:none; }
+@media print {
+  .wt { display:none; }
+  .wt.wt-js ~ .wt-outline { display:block; }
+}
