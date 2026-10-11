@@ -1,6 +1,6 @@
 # Spec — whole-app audit, 2026-10-11
 
-**Status:** IN PROGRESS. The tracker is the checkbox list at the bottom.
+**Status:** SHIPPED 2026-10-11 (all three tracks + integration). Follow-ups at the bottom.
 **Origin:** the Tergrid study decks exposed two silent undercounts: edicts read as 0
 removal, and goldfish ignored black's mana engines. Both were fixed in `60e8a47`. The player
 then asked for the same audit across the whole app. Four read-only auditors each covered
@@ -113,7 +113,28 @@ optimizer preview), and Tergrid attrs re-enrichment if oracle_flags output chang
 
 ## Tracker
 
-- [ ] Track S — S1–S11, D2
-- [ ] Track W — W1–W11
-- [ ] Track R — R1–R16, D1, D3–D6
-- [ ] Integration: suite green, deck sweep reviewed, docs updated
+- [x] Track S — S1–S11, D2 (`501a654`, `d2d9518`, `57d03ed`; goldfish REPORT_SCHEMA 6)
+- [x] Track W — W1–W11 (`5bceba7`; 68 tests in `tests/test_webapp_audit_w.py`)
+- [x] Track R — R1–R16, D1, D3–D6 (`0b29588`; `tests/test_audit_2026_10_roles.py`)
+- [x] Integration — suite 1072 green; deck sweep reviewed (`b2e28b1`). It caught two
+      regressions the unit tests could not see. Both came from R13's accent folding
+      meeting keys stored under the old `_norm`:
+      - committed field snapshots, now re-keyed on read;
+      - curated role literals, now normalized at import.
+      Only intended diffs remain: Bartolomé ramp 5→8, and Captain America buys 2→1
+      from the R4 band gate.
+
+## Follow-ups found during implementation (not yet scheduled)
+
+- **The deck-line quantity cap exists only in the app** (W11: 422 above 500).
+  `mtglib.parse_deck` and the CLIs still accept absurd quantities. The real guard
+  belongs in `scripts/`.
+- **The sim treats suspend-only cards as castable.** Profane Tutor (MV 0, no mana cost)
+  is castable for 0. `Card.mana_cost == ""` can't distinguish "no cost" from "unknown"
+  until an attrs file carries Cost — which S3 now makes possible.
+- **The app no longer lists deck files with spaces in their names** (W1's stem rule).
+  No committed deck is affected.
+- **`webapp/templates/build_deck.html`'s footnote still says sources come from colour
+  identity**, which S5/S9 made stale.
+- **The collection attrs snapshot is still FlagsVer 3.** It needs an `attrs-snapshot.yml`
+  run on main after the merge, so the v4 tokens reach owned cards.

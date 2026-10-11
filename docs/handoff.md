@@ -6,7 +6,42 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11._
+_Last updated: 2026-10-11 (whole-app audit shipped)._
+
+## Whole-app audit shipped, 2026-10-11
+
+`docs/spec-app-audit-2026-10.md` is the record: 45 reproduced findings, fixed across three
+tracks and an integration sweep. The suite is at 1,072 tests. Read the spec's
+**Follow-ups** list before starting new work in these areas. The changes that alter
+behavior a session might otherwise trust from memory:
+
+- **`_norm` folds accents and smart quotes.** Anything that STORES normalized keys must
+  re-derive them on read: field snapshots do this (`edhrec._renorm_snapshot`), and the
+  curated role sets are normalized at import.
+- **`# Study: yes`** marks a review-only deck. Conflicts, the free pool, the wishlist and
+  `optimize --all` skip it. The Tergrid options and the Bartolomé deck tech are marked.
+- **`data/reference/banned.txt`** lists 42 runner-verified banned cards. Every recommender
+  filters on it. It is not exhaustive: `carddb --verify` gives the live legality.
+- **`oracle_flags` v4:**
+  - reminder text is stripped before any rule runs (treasure and cycling no longer mint
+    dork/draw);
+  - damage sweepers count as `wipe`; a blink is not `removal`;
+  - edicts count as `removal`;
+  - the black-mana tokens feed goldfish.
+- **Goldfish is at REPORT_SCHEMA 6.**
+  - The kill medians count every game.
+  - Disruption recasts the commander with tax.
+  - Rituals, Coffers, Nykthos, Crypt Ghast, Urborg and noncreature cost reducers are
+    modeled.
+- **Deck `.attrs.csv` `Cost` / `Sub-types` columns are now read.** Pip demand from a
+  companion file is real. The `deck_stats.py` CLI applies the companion too.
+- **Web app hardening:**
+  - stem allow-list and realpath check;
+  - Origin/CSRF check on every write;
+  - one-copy Remove/Replace on basics;
+  - Build Next never overwrites an existing deck (`-2`, `-3`…);
+  - a safe collection upload, with a `.bak.private.csv` backup;
+  - a 500-copy line cap (422).
 
 ## Three Tergrid study decks for review, built 2026-10-11
 
