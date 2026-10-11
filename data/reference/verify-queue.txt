@@ -1,123 +1,17 @@
-# Tergrid Bracket 4 rebuild (2026-10-11): every card in the three study decks, commander included.
-# Verbatim oracle text + commander legality + cheapest-printing price estimate come back in the deck-verify log.
-Accursed Marauder
-Ancient Tomb
-Arcane Signet
-Archfiend of Depravity
-Ashnod's Altar
-Beseech the Mirror
-Bitterblossom
-Blood Artist
-Bloodghast
-Bojuka Bog
-Bolas's Citadel
-Bottomless Pit
-Braids, Arisen Nightmare
-Braids, Cabal Minion
-Burglar Rat
-Butcher of Malakir
-Cabal Coffers
-Cabal Ritual
-Carrion Feeder
-Castle Locthwain
-Cavern of Souls
-Champion's Helm
-Chrome Mox
-Command Beacon
-Commander's Plate
-Dark Deal
-Dark Ritual
-Deadly Rollick
-Defense Grid
-Delirium Skeins
-Demonic Gifts
-Demonic Tutor
-Diabolic Intent
-Dictate of Erebos
-Duress
-Elderfang Disciple
-Exquisite Blood
-Fatal Push
-Feed the Swarm
-Feign Death
-Fellwar Stone
-Flare of Malice
-Fleshbag Marauder
-Geier Reach Sanitarium
-Geth's Grimoire
-Grave Pact
-Gravecrawler
-Gray Merchant of Asphodel
-Grief
-Grim Monolith
-Grim Tutor
-Hymn to Tourach
-Imperial Seal
-Innocent Blood
-Inquisition of Kozilek
-Jet Medallion
-Kaya's Ghostform
-Liliana of the Veil
-Liliana's Caress
-Liliana's Specter
-Liliana's Triumph
-Liliana, Dreadhorde General
-Liliana, Waker of the Dead
-Lotus Petal
-Malakir Rebirth
-Mana Vault
-Megrim
-Memory Jar
-Midnight Reaper
-Mind Twist
-Mindslicer
-Mithril Coat
-Mox Diamond
-Necrogen Mists
-Necropotence
-Not Dead After All
-Nykthos, Shrine to Nyx
-Ophiomancer
-Opposition Agent
-Oppression
-Orcish Bowmasters
-Painful Quandary
-Phyrexian Altar
-Phyrexian Obliterator
-Phyrexian Tower
-Pitiless Plunderer
-Plaguecrafter
-Pox
-Rankle, Master of Pranks
-Sanguine Bond
-Sheoldred's Edict
-Sheoldred, Whispering One
-Sidisi, Undead Vizier
-Skullclamp
-Smallpox
-Snuff Out
-Sol Ring
-Soul Shatter
-Swiftfoot Boots
-Syphon Mind
-Tergrid, God of Fright
-The One Ring
-The Raven Man
-Thoughtseize
-Tinybones, Trinket Thief
-Torment of Hailfire
-Tourach, Dread Cantor
-Toxic Deluge
-Tyrite Sanctum
-Undying Evil
-Unmask
-Urborg, Tomb of Yawgmoth
-Urza's Saga
-Vampiric Tutor
-Village Rites
-Viscera Seer
-Vito, Thorn of the Dusk Rose
-War Room
-Waste Not
-Yawgmoth, Thran Physician
-Zulaport Cutthroat
+# Verify queue — one card name per line. Pushed on a claude/** branch, this file
+# triggers .github/workflows/deck-verify.yml (verbatim Scryfall text in the job log).
+#
+# Cleared 2026-10-11 — the Tergrid Bracket 4 rebuild is verified and written up.
+# All 121 cards in the three tergrid-* study decks were verified in deck-verify
+# run 38162140013, which also regenerated their .attrs.csv files. Each deck's
+# .notes.md cites the run; the cheapest-printing price estimates are in the
+# decks' .buylist.csv files.
+#
+# Memory errors this run caught: Tourach, Dread Cantor only GROWS on discards —
+# its own discard is a one-shot kicked ETB (two at random); Liliana's Caress is
+# life loss, not damage; Flare of Malice's free cost sacrifices a nontoken black
+# CREATURE, not a planeswalker; Cruel Celebrant is {W}{B}.
+#
+# STILL UNVERIFIED, if a future session needs them: 26 of the nonbasic cards in
+# thorin-king-of-durins-folk, and the Ur-Dragon deck's Marvel dragons (Fin Fang
+# Foom, Pet Avengers, Parapet Thrasher).

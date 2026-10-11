@@ -5,7 +5,7 @@
 # Bracket: 4
 # Source: theory build 2026-10-11 — Bracket 4, no budget, NOT built from the collection (study copy, option 1 of 3; the player buys the 99). Card text, legality and price estimates from the deck-verify GitHub runner; field % from the 2026-10-11 Tergrid snapshot.
 # Study: yes
-# Note: Option 1 of 3 (Bracket 4) — turbo Tergrid: fast mana and six tutors put her down on turns 1-3, ten protection pieces keep her there, and a dense discard/edict suite feeds her from the first trigger.
+# Note: Option 1 of 3 (Bracket 4) — turbo Tergrid: fast mana and six tutors put her down early, eleven protection pieces keep her there, and a dense discard/edict suite feeds her from the first trigger.
 
 # --- Commander ---
 1 Tergrid, God of Fright

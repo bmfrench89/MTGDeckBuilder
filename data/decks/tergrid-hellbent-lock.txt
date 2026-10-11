@@ -5,7 +5,7 @@
 # Bracket: 4
 # Source: theory build 2026-10-11 — Bracket 4, no budget, NOT built from the collection (study copy, option 3 of 3; the player buys the 99). Card text, legality and price estimates from the deck-verify GitHub runner; field % from the 2026-10-11 Tergrid snapshot.
 # Study: yes
-# Note: Option 3 of 3 (Bracket 4) — empty every hand by turn 3, keep it empty with repeating discard, punish the empty hand, and steal every permanent card the table is forced to drop.
+# Note: Option 3 of 3 (Bracket 4) — empty every hand early, keep it empty with repeating discard, punish the empty hand, and steal every permanent card the table is forced to drop.
 
 # --- Commander ---
 1 Tergrid, God of Fright

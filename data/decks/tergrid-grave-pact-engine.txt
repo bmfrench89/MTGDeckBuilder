@@ -5,7 +5,7 @@
 # Bracket: 4
 # Source: theory build 2026-10-11 — Bracket 4, no budget, NOT built from the collection (study copy, option 2 of 3; the player buys the 99). Card text, legality and price estimates from the deck-verify GitHub runner; field % from the 2026-10-11 Tergrid snapshot.
 # Study: yes
-# Note: Option 2 of 3 (Bracket 4) — the sacrifice engine: Grave Pact, Dictate, Butcher and Braids turn every death into a steal, and Gravecrawler with Phyrexian Altar or Pitiless Plunderer loops that into an infinite drain.
+# Note: Option 2 of 3 (Bracket 4) — the sacrifice engine: Grave Pact, Dictate and Butcher turn every death into an edict and every nontoken edict into a steal; Gravecrawler (with another Zombie) plus Phyrexian Altar, or Pitiless Plunderer and a free outlet, loops it into an infinite drain.
 
 # --- Commander ---
 1 Tergrid, God of Fright
@@ -49,9 +49,9 @@
 1 Liliana's Triumph
 1 Flare of Malice
 1 Soul Shatter
-1 Innocent Blood
 
 # --- Sorceries ---
+1 Innocent Blood
 1 Demonic Tutor
 1 Imperial Seal
 1 Grim Tutor

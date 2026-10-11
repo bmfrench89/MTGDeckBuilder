@@ -100,7 +100,9 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 6
+REPORT_SCHEMA = 7
+# 7 (2026-10-11): Cabal Coffers no longer named a dead fetchland in the
+# assumptions (its scale engine is modeled) — the cached text said otherwise.
 # 6 (2026-10-11, audit track S): front-face-only costs, deck attrs Cost/Sub-types,
 # clock medians over ALL games, real commander recasts under disruption, free
 # spells on a no-mana turn — every cached report predates at least one of them.
@@ -1008,9 +1010,13 @@ def _assumptions(compiled, mulligan, on_play, games):
     # Saying so beside the numbers is the whole honesty framework; hiding a
     # known-wrong model behind labels that only fire on ABSENT data was the
     # blind spot.
+    # A Coffers-class land also compiles to produces==set() (no plain {T}
+    # ability), but its mana IS modeled — the scale/devotion engines — so it is
+    # not a dead land and must not be named as one (REPORT_SCHEMA 7).
     dead_fetch_lands = sorted({sc.name for sc in compiled["library"]
                                if sc.is_land and sc.model == "exact"
-                               and not sc.produces})
+                               and not sc.produces
+                               and sc.scale is None and sc.devotion is None})
     # Cost reduction (REPORT_SCHEMA 4, 2026-08-20): say what IS modeled, because
     # for months nothing was and three wrong verdicts on one deck traced to it.
     disc_lines = []
