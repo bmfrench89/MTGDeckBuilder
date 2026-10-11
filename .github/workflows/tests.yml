@@ -34,6 +34,10 @@ jobs:
         run: |
           python3 scripts/deck_sections.py --all --check \
             --collection data/collection/collection_snapshot.txt
+      # Watch-tab storyboards: every card a committed clip shows must still be in
+      # its deck (the page would drop it and say so; CI says so first).
+      - name: Check deck clips
+        run: python3 scripts/clips.py --all --check
       # The analysis scripts are stdlib-only; this catches an accidental new dependency.
       - name: Check scripts import with no extra packages
         run: |

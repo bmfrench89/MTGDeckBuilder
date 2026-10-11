@@ -47,6 +47,7 @@ data/
   collection/     collection_snapshot.txt (committed, name-only) · collection.csv +
                   collection_attrs.csv (gitignored, private) · owned_additions.txt · pins.csv
   decks/          <stem>.txt + optional .notes.md / .buylist.csv / .attrs.csv / .changes.csv
+                  / .clips.json
   reference/      game_changers, tutors, combos.csv, card_notes.csv, commanders.csv, …
 docs/             codemap.md (architecture) · handoff.md (session history) ·
                   spec-interactive-analytics-ai.md (feature tracker) · research-roadmap.md ·
@@ -74,7 +75,8 @@ per-module table — read it before any structural change.
   `card_image`, `oracle_flags` (dict-in/set-out oracle derivation; `re` only — it
   imports nothing else in the repo), `goldfish` (seeded Monte Carlo for *sequenced*
   play — the questions `manabase`'s exact-but-unconditional closed forms cannot reach;
-  `deck_stats`/`deckcore` are imported inside its loader only).
+  `deck_stats`/`deckcore` are imported inside its loader only), `clips` (the Watch tab's
+  storyboard gate — every card a clip shows must be in the deck; mtglib only).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
@@ -123,6 +125,8 @@ python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $CO
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
 python3 scripts/deck_sections.py --all --collection $COLL --apply   # regroup decks into type sections
 python3 scripts/deck_sections.py --all --collection $COLL --check   # exit 3 on misfiled cards (CI runs this)
+python3 scripts/clips.py --deck data/decks/<stem>.txt               # a deck's Watch-tab clips: outline + warnings
+python3 scripts/clips.py --all --check                              # exit 3 on a stale card or lint (CI runs this)
 python3 scripts/carddb.py --collection $COLL --stats         # enrich via Scryfall API
 python3 scripts/carddb.py --verify "Sol Ring" --verify "Rejoinder" [--json]
                                                              # verify named cards' oracle text
@@ -187,7 +191,9 @@ determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidati
 that an unreachable Scryfall reports UNVERIFIED instead of guessing), `test_rules`
 (the CR parser against a `SAMPLE_CR` that replicates the official layout *including its
 duplicated Contents headings*, the cp1252 round-trip, and the blocked-network degrade),
-`test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination) and `test_agents`
+`test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination), `test_clips`
+(a clip never shows a card the deck doesn't play, a broken storyboard costs the Watch tab
+and never the page, captions can't break out of their script tag) and `test_agents`
 (the `.claude/agents/` prompts nothing else executes — names, the Bash+Read tool limit,
 the grounding-rules path).
 CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
@@ -266,7 +272,11 @@ collection (the Tergrid options, the Bartolomé deck tech). It commits no physic
 columns are the same contract as the collection file, carried by
 `deckcore.load_attrs`/`apply_attrs` under the same empty-vs-absent rule, which is what
 lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
-each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`).
+each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`),
+`.clips.json` (the **Watch tab**: 30-60s animated how-to-play clips, scenes of the deck's own
+cards in zones with captions — validated by `clips.py` against the CURRENT list on every
+render, so a card that left the deck is dropped and the tab says the clips are out of date;
+opponents' cards are `ph` placeholders, never named; nothing is rendered to a video file).
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks

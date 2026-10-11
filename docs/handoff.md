@@ -6,7 +6,43 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (Tergrid study decks rebuilt as Bracket 4 theory builds; stale-CSS deploy bug fixed)._
+_Last updated: 2026-10-11 (Watch tab prototype on Tergrid — Iron Fortress; Tergrid study decks rebuilt as Bracket 4 theory builds)._
+
+## Watch tab — animated how-to-play clips (prototype: Tergrid — Iron Fortress), 2026-10-11
+
+**State:** a deck with a `<stem>.clips.json` storyboard gets a **Watch** tab (second, after
+Deck) on both surfaces. It shows 30-60 second clips that play like video: cards slide
+between zones on a mock table (yours, an opponent's, the stack, a graveyard), with
+captions, a turn badge, a mana-pool badge, a scene bar and optional narration. Only
+`tergrid-iron-fortress` has clips so far: 4 clips, 2:54 in all (the pitch, land her
+early, keep her there, feed her and win). The player asked to watch this one on their
+phone before it rolls out to every deck.
+
+**How it fits together:**
+- `scripts/clips.py` is the grounding gate. Every card a scene shows must be in the
+  deck's CURRENT list; a card that left is dropped and reported STALE, and the tab shows
+  an out-of-date banner. Opponents' cards are `ph` placeholders, never named. Timing
+  and caption length are lint only. CI runs `clips.py --all --check`.
+- `build_dashboard.clips_html` renders the tab. The player is
+  `scripts/assets/clips_player.{js,css}` (namespace `wt-`, not the card panel's `cp-`),
+  inlined only when a deck has clips, so other dashboards are byte-identical.
+- Card art is borrowed from the decklist's already-resolved images, so the player
+  makes no Scryfall calls of its own. One batch lookup happens only when a card has
+  no decklist image. With no art (sandbox, offline file), a card is a named frame
+  showing its cost and type.
+- Narration is the browser's own speechSynthesis (no audio files). The button hides
+  where speech is unsupported. A scene waits up to 8s for its sentence to finish.
+- It pauses when the tab is hidden or the page is backgrounded, respects
+  reduced-motion, and prints and degrades without script to a plain outline.
+
+**Rollout, when the player says go:**
+- Write clips for the six real decks with notes (Beorn, Captain America, Cosmic
+  Spider-Man, Dina, The Ur-Dragon, Y'shtola) and the two other Tergrid options.
+- Thorin has no `.notes.md`, so it needs a game plan written first.
+- Write each storyboard from verified text only, then run `clips.py --deck … --check`.
+
+**Not built:** MP4 export. If it's ever wanted, record the same player on a GitHub
+runner, which can reach Scryfall for real art.
 
 ## Deploy painted the new UI with the old CSS — fixed, 2026-10-11
 
