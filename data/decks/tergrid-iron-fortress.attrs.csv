@@ -1,9 +1,10 @@
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
 Accursed Marauder,Creature,2,B,{1}{B},Zombie;Warrior,,,2,4
-Ancient Tomb,Land,0,,,,C,mana2,,4
 Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
 Archfiend of Depravity,Creature,5,B,{3}{B}{B},Demon,,,5,4
+Basalt Monolith,Artifact,3,,{3},,C,mana3;ramp;rock,,4
 Beseech the Mirror,Sorcery,4,B,{1}{B}{B}{B},,,,,4
+Black Market Connections,Enchantment,3,B,{2}{B},,,draw,,4
 Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
 Bolas's Citadel,Artifact,6,B,{3}{B}{B}{B},,,,,4
 Bottomless Pit,Enchantment,3,B,{1}{B}{B},,,,,4
@@ -12,10 +13,10 @@ Bottomless Pit,Enchantment,3,B,{1}{B}{B},,,,,4
 Burglar Rat,Creature,2,B,{1}{B},Rat,,,1,4
 Cabal Coffers,Land,0,B,,,B,scale:swamp:2,,4
 Cabal Ritual,Instant,2,B,{1}{B},,B,mana3;ritual:3,,4
+Cabal Stronghold,Land,0,B,,,B C,scale:basic-swamp:3,,4
 Castle Locthwain,Land,0,B,,,B,draw;etb-tapped-cond,,4
 Cavern of Souls,Land,0,,,,W U B R G C,mana-restricted,,4
 Champion's Helm,Artifact,3,,{3},Equipment,,,,4
-Chrome Mox,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Command Beacon,Land,0,,,,C,,,4
 Commander's Plate,Artifact,1,,{1},Equipment,,,,4
 Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
@@ -33,12 +34,12 @@ Feign Death,Instant,1,B,{B},,,,,4
 Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
 Flare of Malice,Instant,4,B,{2}{B}{B},,,removal,,4
 Geier Reach Sanitarium,Land,0,,,,C,,,4
+Geth's Grimoire,Artifact,4,,{4},Book,,draw,,4
 Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
 Grief,Creature,4,B,{2}{B}{B},Elemental;Incarnation,,,3,4
-Grim Monolith,Artifact,2,,{2},,C,mana3;ramp;rock,,4
 Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
 Hymn to Tourach,Sorcery,2,B,{B}{B},,,,,4
-Imperial Seal,Sorcery,1,B,{B},,,,,4
+Insatiable Avarice,Sorcery,1,B,{B},,,,,4
 Jet Medallion,Artifact,2,,{2},,,discount:black:1,,4
 Kaya's Ghostform,Enchantment,1,B,{B},Aura,,,,4
 Liliana of the Veil,Planeswalker,3,B,{1}{B}{B},Liliana,,,,4
@@ -47,9 +48,9 @@ Liliana's Triumph,Instant,2,B,{1}{B},,,removal,,4
 Lotus Petal,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Malakir Rebirth,Instant,1,B,{B},,B,etb-tapped,,4
 Mana Vault,Artifact,1,,{1},,C,mana3;ramp;rock,,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
 Mind Twist,Sorcery,1,B,{X}{B},,,,,4
 Mithril Coat,Artifact,3,,{3},Equipment,,,,4
-Mox Diamond,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Necrogen Mists,Enchantment,3,B,{2}{B},,,,,4
 Necropotence,Enchantment,3,B,{B}{B}{B},,,,,4
 Not Dead After All,Instant,1,B,{B},,,,,4
@@ -68,7 +69,6 @@ Swamp,Land,0,B,,Swamp,B,,,4
 Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
 Syphon Mind,Sorcery,4,B,{3}{B},,,draw,,4
 "Tergrid, God of Fright",Creature,5,B,{3}{B}{B} // {3}{B},God,,,4,4
-The One Ring,Artifact,4,,{4},,,draw,,4
 The Raven Man,Creature,2,B,{1}{B},Human;Wizard,,,2,4
 Thoughtseize,Sorcery,1,B,{B},,,,,4
 Torment of Hailfire,Sorcery,2,B,{X}{B}{B},,,,,4
