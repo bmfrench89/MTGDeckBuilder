@@ -45,8 +45,12 @@ on:
         description: "Cards to verify, separated by ' | '. Blank = read data/reference/verify-queue.txt."
         required: false
         default: ""
+      deck_attrs:
+        description: "Deck stems (space-separated) to enrich into data/decks/<stem>.attrs.csv. Blank = none."
+        required: false
+        default: ""
       commit:
-        description: "Commit the field snapshot back to this branch"
+        description: "Commit the field snapshot (and any deck attrs) back to this branch"
         type: boolean
         default: true
 
@@ -187,6 +191,30 @@ jobs:
         env:
           COMMANDER: ${{ inputs.commander }}
 
+      # A study deck built from cards the player does NOT own has no type/MV/
+      # production data anywhere: the collection attrs only cover owned cards, and
+      # Scryfall is unreachable from the sandbox that wrote the deck. Without a
+      # companion .attrs.csv the dashboard shows an empty curve and the role counts
+      # fall back to name heuristics. So the runner enriches the deck file itself,
+      # exactly as it enriches the collection. --min-match 100 makes an unresolvable
+      # name fail the run instead of writing a short file (a partial attrs file
+      # reads downstream as "not enriched yet" — see carddb's own guard).
+      - name: Enrich named decks into .attrs.csv
+        if: inputs.deck_attrs != ''
+        run: |
+          set -euo pipefail
+          for stem in ${DECK_ATTRS}; do
+            case "$stem" in
+              *[!a-z0-9-]*) echo "::error::bad deck stem: $stem"; exit 1 ;;
+            esac
+            test -f "data/decks/${stem}.txt" || { echo "::error::no deck data/decks/${stem}.txt"; exit 1; }
+            echo "===== ATTRS: ${stem} ====="
+            python3 scripts/carddb.py --collection "data/decks/${stem}.txt" \
+              --out "data/decks/${stem}.attrs.csv" --no-ids --min-match 100
+          done
+        env:
+          DECK_ATTRS: ${{ inputs.deck_attrs }}
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
@@ -205,6 +233,9 @@ jobs:
           git config user.name  "deck-verify-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/reference/field/
+          if [ -n "${DECK_ATTRS}" ]; then
+            for stem in ${DECK_ATTRS}; do git add "data/decks/${stem}.attrs.csv"; done
+          fi
           if git diff --cached --quiet; then
             echo "No snapshot changes — nothing to commit."
             exit 0
@@ -220,3 +251,5 @@ jobs:
           done
           echo "::error::could not push the snapshot after 3 attempts"
           exit 1
+        env:
+          DECK_ATTRS: ${{ inputs.deck_attrs }}
