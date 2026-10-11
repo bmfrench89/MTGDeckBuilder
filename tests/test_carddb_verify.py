@@ -146,6 +146,62 @@ def test_a_verified_row_carries_the_whole_contract(monkeypatch):
     assert row["reason"] == "" and row["source"] == "scryfall"
 
 
+def test_price_is_an_estimate_of_one_printing_or_blank(monkeypatch, capsys):
+    """A buy-everything study deck needs a cost, so --verify passes Scryfall's market
+    price through — labelled as an estimate. No price in the payload is a blank,
+    never a guessed number."""
+    priced = dict(SOL_RING, prices={"usd": None, "usd_foil": "3.50"})
+    fake_batch(monkeypatch, [priced, LLANOWAR])
+    rows = carddb.verify_cards(["Sol Ring", "Llanowar Elves"], delay=0)
+    assert rows[0]["price_usd"] == "3.50"          # falls through to the foil price
+    assert rows[0]["price_basis"] == "returned printing"
+    assert rows[1]["price_usd"] == "" and rows[1]["price_basis"] == ""
+    carddb.print_verified(rows)
+    out = capsys.readouterr().out
+    assert "price: ~$3.50 (estimate: Scryfall market, returned printing LTC 284" in out
+    assert out.count("price:") == 1
+
+
+def test_cheapest_price_is_the_true_minimum_nonfoil_first(monkeypatch, capsys):
+    """The first Tergrid costing priced Cabal Ritual at $14.30 — a foil-only Secret
+    Lair that Scryfall's price sort put first. The minimum is computed, non-foil
+    beats foil, foil is used only when no non-foil price exists, and a failed
+    search keeps the returned printing's own price."""
+    fake_batch(monkeypatch, [LLANOWAR, dict(SOL_RING, prices={"usd": "2.00"}),
+                             dict(BLACK_LOTUS, prices={})])
+    asked = []
+
+    def request_json(url, data=None, retries=4):
+        asked.append(url)
+        assert url.startswith(carddb.SEARCH_URL), url
+        name = carddb.urllib.parse.unquote_plus(url)
+        if "Llanowar" in name:
+            return {"data": [{"set": "sld", "collector_number": "1",
+                              "prices": {"usd": None, "usd_foil": "14.30"}},
+                             {"set": "m19", "collector_number": "314", "prices": {"usd": "0.40"}},
+                             {"set": "dom", "collector_number": "168", "prices": {"usd": "0.25"}}]}
+        if "Black Lotus" in name:      # foil-only card: the foil minimum is the answer
+            return {"data": [{"set": "x", "collector_number": "1", "prices": {"usd_foil": "9.00"}},
+                             {"set": "y", "collector_number": "2", "prices": {"usd_etched": "7.00"}}]}
+        raise carddb.urllib.error.HTTPError(url, 500, "boom", {}, None)
+    monkeypatch.setattr(carddb, "_request_json", request_json)
+    rows = carddb.verify_cards(["Llanowar Elves", "Sol Ring", "Black Lotus"], delay=0,
+                               cheapest_price=True)
+    assert (rows[0]["price_usd"], rows[0]["price_printing"], rows[0]["price_basis"]) == \
+        ("0.25", "DOM 168", "cheapest printing")
+    assert (rows[1]["price_usd"], rows[1]["price_basis"]) == ("2.00", "returned printing")
+    assert (rows[2]["price_usd"], rows[2]["price_printing"]) == ("7.00", "Y 2")
+    assert len(asked) == 3
+    # cached: asking again (the workflow's --json pass) makes no new search
+    asked.clear()
+    carddb.verify_cards(["Llanowar Elves"], delay=0, cheapest_price=True)
+    assert asked == []
+    # off by default: library callers never make the extra request
+    fake_batch(monkeypatch, [LLANOWAR])
+    carddb.verify_cards(["Llanowar Elves"], delay=0, refresh=True)
+    assert asked == []
+
+
 @pytest.mark.parametrize("card,expected", [
     (SOL_RING, True), (BLACK_LOTUS, False), (NO_LEGALITIES, None)])
 def test_commander_legality_is_three_valued(monkeypatch, card, expected):

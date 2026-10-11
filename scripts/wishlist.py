@@ -27,9 +27,18 @@ import deck_conflicts
 
 
 def load_buylists(decks_dir):
+    """Every deck's `.buylist.csv` rows — EXCEPT a study copy's (`# Study: yes`).
+
+    A study deck is a priced shopping list for a deck the player has not decided to
+    build (the Bracket 4 Tergrid rebuilds list all ~90 of their cards). CLAUDE.md
+    already promised the wishlist skips study decks; the conflict scan honoured it,
+    this reader did not, so one study buylist would have poured 90 rows into the
+    player's real wishlist."""
     rows = []
     for path in glob.glob(os.path.join(decks_dir, "*.buylist.csv")):
         deck = os.path.basename(path).split(".")[0]
+        if deck_conflicts.is_study_deck(os.path.join(decks_dir, deck + ".txt")):
+            continue
         with open(path, encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 card = (r.get("Card") or "").strip()

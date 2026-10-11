@@ -1312,6 +1312,25 @@ def test_urborg_makes_every_land_count_for_coffers():
     assert len(_units([_swamp()] * 3 + [urborg, coffers])) == 7
 
 
+def test_coffers_is_not_labeled_a_dead_fetchland():
+    """Coffers has no plain {T} ability, so it compiles to produces == set() — the
+    same shape as an enriched fetchland. Its mana IS modeled (the scale engine), so
+    the "Fetch effects are NOT modeled" line must not name it. 2026-10-11: every
+    Tergrid build's report called Cabal Coffers a dead fetchland one line above the
+    line saying Coffers was modeled."""
+    coffers = _enriched_land("Cabal Coffers", "B", ("scale:swamp:2",))
+    bear = C(name="Bear", quantity=1, mana_value=2.0, mana_cost="{1}{B}",
+             types=["Creature"], produced=set(), power=2)
+    cards = [coffers, _swamp(36), bear]
+    rep = goldfish.simulate(goldfish.compile_deck(cards), games=40, seed=1)
+    assert not any("Fetch effects" in a for a in rep["assumptions"])
+    # A real enriched fetchland beside it is still named — and Coffers still isn't.
+    wilds = _enriched_land("Evolving Wilds", "", ("ramp", "fetch:basic"))
+    rep2 = goldfish.simulate(goldfish.compile_deck(cards + [wilds]), games=40, seed=1)
+    line = next(a for a in rep2["assumptions"] if "Fetch effects" in a)
+    assert "Evolving Wilds" in line and "Cabal Coffers" not in line
+
+
 def test_stronghold_counts_basic_swamps_only_and_keeps_its_plain_tap():
     sh = _enriched_land("Cabal Stronghold", "BC", ("scale:basic-swamp:3",))
     assert goldfish.compile_card(sh).produces == frozenset("C")

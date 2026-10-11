@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (stale-CSS deploy bug fixed; UAT harness added)._
+_Last updated: 2026-10-11 (Tergrid study decks rebuilt as Bracket 4 theory builds; stale-CSS deploy bug fixed)._
 
 ## Deploy painted the new UI with the old CSS — fixed, 2026-10-11
 
@@ -97,11 +97,13 @@ behavior a session might otherwise trust from memory:
   - damage sweepers count as `wipe`; a blink is not `removal`;
   - edicts count as `removal`;
   - the black-mana tokens feed goldfish.
-- **Goldfish is at REPORT_SCHEMA 6.**
+- **Goldfish is at REPORT_SCHEMA 7.**
   - The kill medians count every game.
   - Disruption recasts the commander with tax.
   - Rituals, Coffers, Nykthos, Crypt Ghast, Urborg and noncreature cost reducers are
     modeled.
+  - Schema 7: Cabal Coffers is no longer named a "dead fetchland" in the
+    assumptions (it compiles with no plain tap, but its scale engine is modeled).
 - **Deck `.attrs.csv` `Cost` / `Sub-types` columns are now read.** Pip demand from a
   companion file is real. The `deck_stats.py` CLI applies the companion too.
 - **Web app hardening:**
@@ -112,52 +114,73 @@ behavior a session might otherwise trust from memory:
   - a safe collection upload, with a `.bak.private.csv` backup;
   - a 500-copy line cap (422).
 
-## Three Tergrid study decks for review, built 2026-10-11
+## Three Tergrid study decks — rebuilt as Bracket 4 theory builds, 2026-10-11
 
 **State:** `data/decks/tergrid-iron-fortress`, `tergrid-grave-pact-engine` and
-`tergrid-hellbent-lock`. Each has `.txt` + `.attrs.csv` + `.notes.md`. They are
-**research builds, not from the collection.** The player asked for options "not tied to my
-cards". Each deck uses only 18–19 owned nonbasic cards; Tergrid herself is not owned. They
-are review candidates: the player picks one, or none.
+`tergrid-hellbent-lock`, each with `.txt` + `.attrs.csv` + `.notes.md` + `.buylist.csv`.
+The player asked for "what would work best, even if that means I need to buy 99 cards for
+each" and chose **Bracket 4, no limits**. These are study copies (`# Study: yes`,
+`# Bracket: 4`): they commit no physical copies, and the wishlist ignores their buylists.
+They are alternatives, each priced on its own — the player picks one. They are not three
+decks to sleeve at once: all three share 51 non-basic cards, Tergrid and most lands included.
 
-| Deck | Angle | Game Changers | Top-25 field overlap |
-|---|---|---|---|
-| Iron Fortress | max protection (4 equipment, 6 return effects, player hexproof) | Tergrid + Opposition Agent | 80% |
-| Grave Pact Engine | Pact / Dictate / Butcher + free outlets + Myr-chain fodder | Tergrid + Braids, Cabal Minion | 68% |
-| Hellbent Lock | field-shaped discard stax | Tergrid only | 88% |
+| Deck | Theory | Field top-25 | Goldfish T3 / T4 / T5 (floor) | Est. cost: all-in / to buy |
+|---|---|---|---|---|
+| Iron Fortress | turbo + protection-first: 11 fast mana, 6 tutors, 11 protection/return pieces, discard + edicts; Exquisite Blood + Vito | 68% | 18% / 37% / 57% | ~$3,051 / ~$2,990 (66 cards) |
+| Grave Pact Engine | aristocrats: Grave Pact / Dictate / Butcher, free outlets, Gravecrawler loops; Exquisite Blood + Sanguine Bond | 56% | 20% / 41% / 59% | ~$3,163 / ~$3,109 (65 cards) |
+| Hellbent Lock | discard stax: empty the hands, lock them, punish (Tinybones, Megrim, Liliana's Caress, Painful Quandary) | 76% | 18% / 36% / 57% | ~$2,972 / ~$2,930 (70 cards) |
 
-All three are Bracket 3 (Tergrid is herself a Game Changer).
+Each deck runs 15 Game Changers, counting Tergrid. `power.py` rates all three Bracket 4.
+For Iron Fortress and Hellbent it adds "likely a Bracket 5 (cEDH) deck if tuned to a
+competitive metagame". The optimizer preview is "already aligned with the field — no
+changes": every nonland card is named in its deck's notes.
 
-**Goldfish** (3,000 games, seed 7, schema 5): Tergrid on the battlefield by turn 4 in
-about 30% of games and by turn 5 in 57–59%; mean landing turn 5.4–5.5; 17% screw. Before
-the v4 model these read 22% / 51% / 5.8.
+**Costs** are Scryfall market estimates for each card's cheapest printing (non-foil
+first). "To buy" counts only cards not in the collection snapshot. Each deck's notes list
+which owned cards are free and which are sleeved in another deck. Two cards are about half
+of each total: Mox Diamond ~$1,109 and Grim Monolith ~$478.
 
-**Optimizer:** previewed and **not applied**.
-- It kept proposing to swap one card for Lightning Greaves. That was rejected: shroud
-  blocks the deck's own targeted protection.
-- Every nonland card is now named in each deck's `.notes.md`, so `refresh --optimize`
-  won't churn these study copies.
+**Shared B4 core:**
+- Fast mana: Sol Ring, Mana Vault, Grim Monolith, Chrome Mox, Mox Diamond, Lotus Petal,
+  Ancient Tomb, Dark Ritual and Cabal Ritual.
+- Tutors: Demonic, Vampiric, Imperial Seal and Grim Tutor.
+- Card advantage: Necropotence, The One Ring and Bolas's Citadel.
+- Disruption: Opposition Agent and Orcish Bowmasters.
+- Braids, Cabal Minion and Braids, Arisen Nightmare. Arisen Nightmare is in 54% of
+  Tergrid decks, yet all three first drafts missed it.
 
-**Gaps found and closed the same day (commit 60e8a47):**
-- Edicts now count as removal. There are two layers: a curated `mtglib.REMOVAL` list,
-  and the oracle_flags v4 edict rule. The decks read 8 / 14 / 8 removal, where they
-  read 0 before.
-- `oracle_flags` v4 adds `ritual:`, `scale:`, `devotion:`, `extra:` and `lands-are:`
-  tokens. Goldfish schema 5 models Dark Ritual, Cabal Ritual, Cabal Coffers, Cabal
-  Stronghold, Nykthos, Crypt Ghast and Urborg.
-- Goldfish also now applies noncreature cost reducers. Jet Medallion was listed in the
-  report's assumptions but never actually applied.
-- **The collection snapshot attrs are still FlagsVer 3.** The new tokens reach owned
-  cards only after `attrs-snapshot.yml` re-enriches on main: dispatch it after the
-  merge, or wait for its next scheduled run. Until then the curated edict list carries
-  the removal fix, and the sim models none of the v4 production for owned cards.
-- `deck-verify.yml` gained a `deck_attrs` dispatch input. It enriches named deck files
-  into `.attrs.csv` on the runner, which is how a study deck of unowned cards gets a
-  real curve. The current Tergrid attrs (FlagsVer 4) came from run 38143027960.
+**Grounding catches during the build (from verified text):**
+- **Dauthi Voidwalker is out of all three.** It exiles cards headed to an opponent's
+  graveyard, and Tergrid takes cards *from a graveyard*.
+- **Cruel Celebrant is {W}{B}**, so it is off-identity. My first identity check used a
+  prefix match and let it into the Grave Pact draft. The strict check finds nothing else.
+- **Tourach, Dread Cantor is not a repeating discard.** It grows on discards; its own
+  discard is a one-shot when kicked.
+- **Liliana, Dreadhorde General and Midnight Reaper draw on every death, and the draws
+  are mandatory.** That caps the Gravecrawler loop at library size. It is flagged as a
+  trap in the notes.
+- **Grave Pact Engine's first draft hit only 40% of the field's top 25.** Braids, Arisen
+  Nightmare, Rankle, Soul Shatter and Innocent Blood took it to 56%.
 
-**Verification:** every card's oracle text was verified on GitHub runners — 158 cards
-across runs 38138722782, 38139031278, 38139999873, 38140217987 and 38141826643. The
-EDHREC Tergrid snapshot was refreshed the same day (12,840 decks).
+**Goldfish caveat:** the simulator makes rocks produce from the turn AFTER they resolve
+(a deliberate, documented pessimism) and keeps only 2–5-land hands. These decks' speed
+comes from 0- and 1-mana artifacts, so the numbers are a floor, by an unmeasured margin.
+A same-turn rock model would change every deck's published numbers; whether to build one
+is for the player to decide.
+
+**Tooling added for this:**
+- `carddb.py --verify` prints a price estimate per card: Scryfall market price of the
+  cheapest printing, non-foil first. Lookups are paced to Scryfall's search limit and
+  cached for a day.
+- `wishlist.py` skips study-deck buylists.
+- Goldfish REPORT_SCHEMA 7 stops calling Cabal Coffers a "dead fetchland" in its
+  assumptions.
+
+**Verification:** all 121 cards are verified in deck-verify run 38162140013, which also
+regenerated the three `.attrs.csv` files. The field snapshot (12,851 decks) is dated
+2026-10-11. Spellbook's full combo count was not run: it is network-blocked in the
+sandbox. The hosted app's assess packet runs it, and the Gravecrawler loop is not in the
+curated `combos.csv`.
 
 ## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
 

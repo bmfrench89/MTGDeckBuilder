@@ -1,81 +1,84 @@
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
 Accursed Marauder,Creature,2,B,{1}{B},Zombie;Warrior,,,2,4
+Ancient Tomb,Land,0,,,,C,mana2,,4
 Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
 Archfiend of Depravity,Creature,5,B,{3}{B}{B},Demon,,,5,4
 Beseech the Mirror,Sorcery,4,B,{1}{B}{B}{B},,,,,4
 Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Bolas's Citadel,Artifact,6,B,{3}{B}{B}{B},,,,,4
 Bottomless Pit,Enchantment,3,B,{1}{B}{B},,,,,4
+"Braids, Arisen Nightmare",Creature,3,B,{1}{B}{B},Nightmare,,draw,3,4
+"Braids, Cabal Minion",Creature,4,B,{2}{B}{B},Human;Minion,,,2,4
 Burglar Rat,Creature,2,B,{1}{B},Rat,,,1,4
 Cabal Coffers,Land,0,B,,,B,scale:swamp:2,,4
 Cabal Ritual,Instant,2,B,{1}{B},,B,mana3;ritual:3,,4
-Cabal Stronghold,Land,0,B,,,B C,scale:basic-swamp:3,,4
 Castle Locthwain,Land,0,B,,,B,draw;etb-tapped-cond,,4
 Cavern of Souls,Land,0,,,,W U B R G C,mana-restricted,,4
 Champion's Helm,Artifact,3,,{3},Equipment,,,,4
-Charcoal Diamond,Artifact,2,B,{2},,B,ramp;rock,,4
-Codex Shredder,Artifact,1,,{1},,,,,4
+Chrome Mox,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Command Beacon,Land,0,,,,C,,,4
 Commander's Plate,Artifact,1,,{1},Equipment,,,,4
-Crawlspace,Artifact,3,,{3},,,,,4
-Cruel Tutor,Sorcery,3,B,{2}{B},,,,,4
-Crypt Ghast,Creature,4,B,{3}{B},Spirit,B,extra:swamp,2,4
-Damnation,Sorcery,4,B,{2}{B}{B},,,wipe,,4
-Dark Deal,Sorcery,3,B,{2}{B},,,,,4
 Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
-Darkness,Instant,1,B,{B},,,,,4
+Deadly Rollick,Instant,4,B,{3}{B},,,removal,,4
 Defense Grid,Artifact,2,,{2},,,,,4
 Demonic Gifts,Instant,2,B,{1}{B},,,,,4
-Diabolic Tutor,Sorcery,4,B,{2}{B}{B},,,,,4
+Demonic Tutor,Sorcery,2,B,{1}{B},,,,,4
+Diabolic Intent,Sorcery,2,B,{1}{B},,,,,4
 Duress,Sorcery,1,B,{B},,,,,4
 Elderfang Disciple,Creature,2,B,{1}{B},Elf;Cleric,,,1,4
+Exquisite Blood,Enchantment,5,B,{4}{B},,,,,4
+Fatal Push,Instant,1,B,{B},,,removal,,4
+Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
 Feign Death,Instant,1,B,{B},,,,,4
 Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Flare of Malice,Instant,4,B,{2}{B}{B},,,removal,,4
 Geier Reach Sanitarium,Land,0,,,,C,,,4
-Geth's Grimoire,Artifact,4,,{4},Book,,draw,,4
-Geth's Verdict,Instant,2,B,{B}{B},,,removal,,4
-Imp's Mischief,Instant,2,B,{1}{B},,,,,4
+Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
+Grief,Creature,4,B,{2}{B}{B},Elemental;Incarnation,,,3,4
+Grim Monolith,Artifact,2,,{2},,C,mana3;ramp;rock,,4
+Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
+Hymn to Tourach,Sorcery,2,B,{B}{B},,,,,4
+Imperial Seal,Sorcery,1,B,{B},,,,,4
 Jet Medallion,Artifact,2,,{2},,,discount:black:1,,4
 Kaya's Ghostform,Enchantment,1,B,{B},Aura,,,,4
 Liliana of the Veil,Planeswalker,3,B,{1}{B}{B},Liliana,,,,4
 Liliana's Triumph,Instant,2,B,{1}{B},,,removal,,4
+"Liliana, Dreadhorde General",Planeswalker,6,B,{4}{B}{B},Liliana,,draw,,4
+Lotus Petal,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Malakir Rebirth,Instant,1,B,{B},,B,etb-tapped,,4
-Mask of Avacyn,Artifact,2,,{2},Equipment,,,,4
-Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
-Mindslicer,Creature,4,B,{2}{B}{B},Horror,,,4,4
-Mire in Misery,Sorcery,2,B,{1}{B},,,removal,,4
+Mana Vault,Artifact,1,,{1},,C,mana3;ramp;rock,,4
+Mind Twist,Sorcery,1,B,{X}{B},,,,,4
 Mithril Coat,Artifact,3,,{3},Equipment,,,,4
-Myr Retriever,Creature,2,,{2},Myr,,,1,4
-Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+Mox Diamond,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Necrogen Mists,Enchantment,3,B,{2}{B},,,,,4
-Night's Whisper,Sorcery,2,B,{1}{B},,,draw,,4
-No Mercy,Enchantment,4,B,{2}{B}{B},,,,,4
+Necropotence,Enchantment,3,B,{B}{B}{B},,,,,4
 Not Dead After All,Instant,1,B,{B},,,,,4
 "Nykthos, Shrine to Nyx",Land,0,,,,W U B R G C,devotion:2,,4
 Opposition Agent,Creature,3,B,{2}{B},Human;Rogue,,,3,4
-Phyrexian Arena,Enchantment,3,B,{1}{B}{B},,,draw,,4
+Orcish Bowmasters,Creature,2,B,{1}{B},Orc;Archer,,,1,4
 Phyrexian Obliterator,Creature,4,B,{B}{B}{B}{B},Phyrexian;Horror,,,5,4
-Phyrexian Tower,Land,0,B,,,B C,mana2,,4
 Plaguecrafter,Creature,3,B,{2}{B},Human;Shaman,,,3,4
-Profane Tutor,Sorcery,0,B,,,,,,4
 "Rankle, Master of Pranks",Creature,4,B,{2}{B}{B},Faerie;Rogue,,draw,3,4
-Sangromancer,Creature,4,B,{2}{B}{B},Vampire;Shaman,,,3,4
 Sheoldred's Edict,Instant,2,B,{1}{B},,,removal,,4
-Sign in Blood,Sorcery,2,B,{B}{B},,,,,4
 Smallpox,Sorcery,2,B,{B}{B},,,removal,,4
+Snuff Out,Instant,4,B,{3}{B},,,removal,,4
 Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Soul Shatter,Instant,3,B,{2}{B},,,removal,,4
 Swamp,Land,0,B,,Swamp,B,,,4
 Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
 Syphon Mind,Sorcery,4,B,{3}{B},,,draw,,4
 "Tergrid, God of Fright",Creature,5,B,{3}{B}{B} // {3}{B},God,,,4,4
-Thought Vessel,Artifact,2,,{2},,C,ramp;rock,,4
+The One Ring,Artifact,4,,{4},,,draw,,4
+The Raven Man,Creature,2,B,{1}{B},Human;Wizard,,,2,4
 Thoughtseize,Sorcery,1,B,{B},,,,,4
+Torment of Hailfire,Sorcery,2,B,{X}{B}{B},,,,,4
 Toxic Deluge,Sorcery,3,B,{2}{B},,,wipe,,4
 Tyrite Sanctum,Land,0,,,,C,,,4
 Undying Evil,Instant,1,B,{B},,,,,4
-Unholy Indenture,Enchantment,3,B,{2}{B},Aura,,,,4
+Unmask,Sorcery,4,B,{3}{B},,,,,4
 "Urborg, Tomb of Yawgmoth",Land,0,,,,B,lands-are:swamp,,4
 Urza's Saga,Land,0,,,Urza's;Saga,C,,,4
-Vona's Hunger,Instant,3,B,{2}{B},,,removal,,4
+Vampiric Tutor,Instant,1,B,{B},,,,,4
+"Vito, Thorn of the Dusk Rose",Creature,3,B,{2}{B},Vampire;Cleric,,,1,4
+War Room,Land,0,,,,C,draw,,4
 Waste Not,Enchantment,2,B,{1}{B},,B,draw;mana2,,4
-Witch's Cottage,Land,0,B,,Swamp,B,etb-tapped-cond,,4
-Witchbane Orb,Artifact,4,,{4},,,,,4
