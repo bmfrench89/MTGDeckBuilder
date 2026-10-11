@@ -1664,7 +1664,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
     # merged in the hub with provenance. A combo the deck is one card away from
     # completing IS a buy signal; it used to die inside the Combo Watch section.
     buylist = deckcore.buy_signals(load_buylist(f"{stem}.buylist.csv"),
-                                   combos, missing, idx)
+                                   combos, missing, idx, deck=a["deck"])
     changes = deckcore.load_changes(f"{stem}.changes.csv")
 
     shared = None
