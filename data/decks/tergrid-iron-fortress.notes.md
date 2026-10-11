@@ -80,9 +80,11 @@ Sanctum and return spells. **Geth's Verdict** stays as the instant-speed edict. 
 suggested buying Oppression over Damnation. Oppression is in option 3; this deck keeps
 **Damnation** as its second wipe.
 
-The classifier counts **0 removal** here because it doesn't read "sacrifices a creature" as
-removal. The real count is ten edicts. Treat the "removal" and "interaction" figures on the
-dashboard as undercounts.
+**Fixed the same day (oracle_flags v4, goldfish schema 5):** edicts now count as removal
+(the dashboard shows 8 removal and 2 wipes; Interaction scores 15.0, up from 3.0). The
+goldfish now models Dark Ritual, Cabal Ritual, Cabal Coffers, Cabal Stronghold, Nykthos,
+Crypt Ghast, Urborg and Jet Medallion. Tergrid by turn 4 rose from 22% to 30%, by turn 5
+from 50% to 57%, and the mean landing turn from 5.8 to 5.5.
 
 ## Card roles (every nonland card, for review)
 - **Ramp:** Sol Ring, Arcane Signet, Jet Medallion, Mind Stone, Charcoal Diamond, Thought Vessel, Fellwar Stone, Dark Ritual, Cabal Ritual, Crypt Ghast

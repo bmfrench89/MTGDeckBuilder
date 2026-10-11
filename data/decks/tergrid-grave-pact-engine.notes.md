@@ -79,8 +79,11 @@ Geth's Grimoire and Elderfang Disciple over **Archon of Cruelty**, **Chainer's E
 **Codex Shredder**. Those three stay: they're the repeatable edict, the flashback edict and
 the any-card recursion this build depends on.
 
-The classifier counts **0 removal** because it doesn't read edicts as removal. The real
-count is twelve edicts plus three Pact engines.
+**Fixed the same day (oracle_flags v4, goldfish schema 5):** edicts now count as removal
+(14 removal plus 1 wipe; Interaction scores 18.0, up from 3.0). The goldfish now models the
+rituals, Coffers, Stronghold, Nykthos, Crypt Ghast, Urborg and Jet Medallion. Tergrid by
+turn 4 rose from 20% to 30%, by turn 5 from 49% to 57%, and the mean landing turn from 5.8
+to 5.45.
 
 ## Card roles (every nonland card, for review)
 - **Ramp:** Sol Ring, Arcane Signet, Jet Medallion, Mind Stone, Charcoal Diamond, Thought Vessel, Ashnod's Altar, Dark Ritual, Cabal Ritual, Crypt Ghast

@@ -24,10 +24,9 @@ are review candidates: the player picks one, or none.
 
 All three are Bracket 3 (Tergrid is herself a Game Changer).
 
-**Goldfish** (3,000 games, seed 7): Tergrid on the battlefield by turn 5 in about 50% of
-games; mean landing turn 5.8; 17% screw.
-- **This understates the deck.** The sim models only artifact and creature mana. Dark
-  Ritual, Cabal Ritual, Cabal Coffers, Nykthos and Crypt Ghast's doubling aren't counted.
+**Goldfish** (3,000 games, seed 7, schema 5): Tergrid on the battlefield by turn 4 in
+about 30% of games and by turn 5 in 57–59%; mean landing turn 5.4–5.5; 17% screw. Before
+the v4 model these read 22% / 51% / 5.8.
 
 **Optimizer:** previewed and **not applied**.
 - It kept proposing to swap one card for Lightning Greaves. That was rejected: shroud
@@ -35,13 +34,22 @@ games; mean landing turn 5.8; 17% screw.
 - Every nonland card is now named in each deck's `.notes.md`, so `refresh --optimize`
   won't churn these study copies.
 
-**Two findings worth a follow-up:**
-- `classify()` counts **0 removal** in all three decks because edicts ("sacrifices a
-  creature") aren't read as removal. `power.py`'s Interaction axis and the optimizer's
-  role template undercount every sacrifice deck.
+**Gaps found and closed the same day (commit 60e8a47):**
+- Edicts now count as removal. There are two layers: a curated `mtglib.REMOVAL` list,
+  and the oracle_flags v4 edict rule. The decks read 8 / 14 / 8 removal, where they
+  read 0 before.
+- `oracle_flags` v4 adds `ritual:`, `scale:`, `devotion:`, `extra:` and `lands-are:`
+  tokens. Goldfish schema 5 models Dark Ritual, Cabal Ritual, Cabal Coffers, Cabal
+  Stronghold, Nykthos, Crypt Ghast and Urborg.
+- Goldfish also now applies noncreature cost reducers. Jet Medallion was listed in the
+  report's assumptions but never actually applied.
+- **The collection snapshot attrs are still FlagsVer 3.** The new tokens reach owned
+  cards only after `attrs-snapshot.yml` re-enriches on main: dispatch it after the
+  merge, or wait for its next scheduled run. Until then the curated edict list carries
+  the removal fix, and the sim models none of the v4 production for owned cards.
 - `deck-verify.yml` gained a `deck_attrs` dispatch input. It enriches named deck files
-  into `.attrs.csv` on the runner, which is how a study deck of unowned cards gets a real
-  curve. The three Tergrid attrs files came from run 38141826643.
+  into `.attrs.csv` on the runner, which is how a study deck of unowned cards gets a
+  real curve. The current Tergrid attrs (FlagsVer 4) came from run 38143027960.
 
 **Verification:** every card's oracle text was verified on GitHub runners — 158 cards
 across runs 38138722782, 38139031278, 38139999873, 38140217987 and 38141826643. The
