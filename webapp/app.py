@@ -466,6 +466,43 @@ def _invalidate_after_write(resp):
 # --------------------------------------------------------------------------- #
 # Routes
 # --------------------------------------------------------------------------- #
+# Display order for a colour identity — WUBRG, the order every MTG product prints.
+_WUBRG = "WUBRG"
+
+
+def _deck_pips(meta, idx):
+    """The deck's colours, WUBRG-ordered, for its card stripe and pips: the
+    `# Colors:` header (the same `_deck_identity` read the add-card check uses), else
+    the commander card's identity from the collection. Empty when neither is known —
+    the card then shows no pips rather than guessing colourless."""
+    letters = _deck_identity("# Colors: " + (meta.get("colors") or ""))
+    if not letters and meta.get("commander"):
+        card = mtglib.lookup(idx, meta["commander"])
+        letters = set(getattr(card, "identity", None) or ()) if card else set()
+    return [c for c in _WUBRG if c in letters]
+
+
+def _role_meters(rep, archetype):
+    """Lands / Ramp / Removal / Draw against THIS deck's template band
+    (deckcore.role_ranges, widened by its `# Archetype:` words) — the same judgment
+    the optimizer and the dashboard use, so the home page cannot disagree with them.
+    Each row carries the status word as well as the colour."""
+    if not rep:
+        return []
+    ranges = dict(deckcore.role_ranges(deckcore.archetype_words(archetype or "")),
+                  lands=deckcore.LAND_RANGE)
+    cats = rep.get("categories") or {}
+    out = []
+    for key, label in (("lands", "Lands"), ("ramp", "Ramp"),
+                       ("removal", "Removal"), ("draw", "Draw")):
+        n = rep.get("lands", 0) if key == "lands" else cats.get(key, 0)
+        lo, hi = ranges[key]
+        st = "short" if n < lo else ("over" if n > hi else "in")
+        word = {"short": f"{lo - n} short", "over": f"{n - hi} over", "in": "in range"}[st]
+        out.append({"label": label, "n": n, "lo": lo, "hi": hi, "status": st, "word": word})
+    return out
+
+
 @app.route("/")
 def index():
     """Deck leaderboard. Each row carries a small health summary so the page answers
@@ -485,15 +522,16 @@ def index():
     rows = []
     for m in list_decks():
         qty_error = _qty_message(m["absurd_qty"]) if m["absurd_qty"] else None
-        res = None
+        res, rep = None, None
         if not qty_error:                 # an absurd quantity is never simulated
             try:
                 # COLLECTION rides along so the CRISPI speed axis gets its combat
                 # clock (goldfish, disk-cached); without it every leaderboard row
                 # would silently read "unmeasured" — found in the Phase A revalidation.
-                res = power.build_for_deck(m["path"], idx, collection_path=COLLECTION)
+                res, rep = power.build_for_deck(m["path"], idx, collection_path=COLLECTION,
+                                                with_report=True)
             except Exception:
-                res = None
+                res, rep = None, None
         try:
             deck = mtglib.parse_deck(open(m["path"], encoding="utf-8").read())
             total = sum(c.quantity for c in deck)
@@ -506,7 +544,10 @@ def index():
             total, to_buy = None, 0
         label = deck_conflicts.deck_label(m["path"])
         rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
-                     "contested": short_by_deck.get(label, 0), "qty_error": qty_error})
+                     "contested": short_by_deck.get(label, 0), "qty_error": qty_error,
+                     "roles": _role_meters(rep, m.get("archetype")),
+                     "identity": _deck_pips(m, idx),
+                     "study": deck_conflicts.is_study_deck(m["path"])})
     # Phase D: the 0-100 composite is gone, so the leaderboard sorts on shipped
     # axes — bracket, then how fast the deck actually wins, then interaction.
     # Explainable in one sentence, which the composite never was.

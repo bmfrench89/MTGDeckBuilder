@@ -62,7 +62,7 @@ self.addEventListener('fetch', (e) => {
       `<!doctype html><meta charset="utf-8">
        <meta name="viewport" content="width=device-width,initial-scale=1">
        <title>Server unreachable</title>
-       <style>body{background:#0b0d13;color:#e8ecf5;font-family:system-ui,sans-serif;
+       <style>body{background:#0F1115;color:#ECEEF2;font-family:system-ui,sans-serif;
          display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:24px}
          .b{max-width:32ch;text-align:center}h1{color:#5BE0D4;font-size:1.4rem;margin:0 0 12px}
          p{color:#8a93a8;line-height:1.5;margin:0 0 8px}code{color:#E8B84B}</style>

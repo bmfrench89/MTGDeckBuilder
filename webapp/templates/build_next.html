@@ -27,7 +27,7 @@ deck for it — those sink to the bottom, and <b>+ variant</b> generates a secon
   <a class="thchip {{ 'on' if a==arch }}" href="{{ url_for('build_next', archetype=a) }}">{{ a }}</a>
   {% endfor %}
 </div>
-<div class="decklist">
+<div class="rowlist">
 {% set maxn = rows[0].support_n if rows else 1 %}
 {% for r in rows %}
 <div class="deckrow">

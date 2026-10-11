@@ -37,12 +37,21 @@ import manabase
 import deckcore
 
 THEMES = {
-    "default": {
-        "void": "#0d1117", "panel": "#161b22", "accent": "#58a6ff",
-        "accent2": "#3fb950", "warn": "#d29922", "text": "#e6edf3",
-        "muted": "#8b949e", "gold": "#d9b26a",
-        "display": "'Georgia', serif", "head": "'Trebuchet MS', sans-serif",
-        "mono": "'Consolas', monospace", "fonts_link": "",
+    "default": {  # "Arcane Ledger" (2026-10 UI overhaul) — graphite + one amber
+        "void": "#0F1115", "panel": "#171A21", "accent": "#F2B544",
+        "accent2": "#9FD3F2", "warn": "#F2A39A", "text": "#ECEEF2",
+        "muted": "#A9B0BD", "gold": "#FFD27A",
+        # Headings in the text colour, not the accent: amber is kept for the one
+        # thing to press (and the active tab), so it never competes with a title.
+        "heading": "#ECEEF2", "value": "#ECEEF2", "chart": "#7C8798",
+        "display": "'Space Grotesk', system-ui, sans-serif",
+        "head": "'IBM Plex Sans', system-ui, sans-serif",
+        "mono": "'IBM Plex Mono', Consolas, monospace",
+        # Offline-safe: with no network the stacks above fall back to system fonts.
+        "fonts_link": ("https://fonts.googleapis.com/css2?"
+                       "family=Space+Grotesk:wght@500;600;700&"
+                       "family=IBM+Plex+Sans:wght@400;500;600&"
+                       "family=IBM+Plex+Mono:wght@400;500&display=swap"),
     },
     "yshtola": {  # dark FFXIV Esper aesthetic
         "void": "#0B0E1A", "panel": "#141a2e", "accent": "#5BE0D4",
@@ -136,7 +145,7 @@ def curve_svg(curve, t):
         y = h - pad - bh
         parts.append(
             f"<rect x='{x}' y='{y}' width='{bw}' height='{bh}' rx='4' "
-            f"fill='{t['accent']}' opacity='0.85'></rect>")
+            f"fill='{t.get('chart', t['accent'])}' opacity='0.85'></rect>")
         parts.append(
             f"<text x='{x + bw/2:.0f}' y='{y - 6}' fill='{t['text']}' "
             f"font-size='13' text-anchor='middle'>{v}</text>")
@@ -158,6 +167,82 @@ def stat_tile(label, value, note=""):
     cls = "tile-val tile-val--text" if (" " in v or len(v) > 6) else "tile-val"
     return (f"<div class='tile'><div class='{cls}'>{esc(value)}</div>"
             f"<div class='tile-label'>{esc(label)}</div>{note_html}</div>")
+
+
+# The role-count status colours. Validated as a set for colour-blind separation on a
+# dark panel (dataviz palette validator, 2026-10-11) and ALWAYS paired with a word.
+STATUS_COLOURS = {"in": ("#3A9BD0", "#7CC4EC"), "short": ("#D2732C", "#F0A066"),
+                  "over": ("#8A70E0", "#B7A5F5")}
+ROLE_METERS = (("lands", "Lands"), ("ramp", "Ramp"), ("removal", "Removal"),
+               ("draw", "Card draw"), ("wipe", "Board wipes"))
+
+
+def role_meters_html(rep, ranges=None):
+    """Lands + the four core roles as range meters: the band is this deck's template
+    (archetype-widened, `deckcore.role_ranges`), the tick is the deck. Replaces the
+    bare Ramp/Removal/Draw number tiles, which showed a count with no target — the
+    player had to remember that 7 draw is one short. The status is a WORD beside the
+    colour ("1 short"), so the meter never relies on colour alone."""
+    table = dict(ranges or deckcore.role_ranges(), lands=deckcore.LAND_RANGE)
+    cats = rep.get("categories") or {}
+    out = []
+    for key, label in ROLE_METERS:
+        if key not in table:
+            continue
+        n = rep.get("lands", 0) if key == "lands" else cats.get(key, 0)
+        lo, hi = table[key]
+        st = "short" if n < lo else ("over" if n > hi else "in")
+        word = {"short": f"{lo - n} short", "over": f"{n - hi} over",
+                "in": "in range"}[st]
+        top = max(hi + max(hi - lo, 4), n + 1)          # scale with headroom past hi
+        pct = lambda v: f"{min(100.0, 100.0 * v / top):.1f}%"
+        out.append(
+            f"<div class='rm' title='{esc(label)} {n} — target {lo}–{hi}'>"
+            f"<div class='rm-top'><span class='rm-label'>{esc(label)}</span>"
+            f"<span class='rm-st rm-{st}'>{esc(word)}</span></div>"
+            f"<div class='rm-val'>{n}</div>"
+            f"<div class='rm-bar' aria-hidden='true'>"
+            f"<span class='rm-band' style='left:{pct(lo)};width:{pct(hi - lo)}'></span>"
+            f"<span class='rm-tick rm-{st}' style='left:{pct(n)}'></span></div>"
+            f"<div class='rm-target'>Target {lo}–{hi}</div></div>")
+    return f"<div class='rmeters'>{''.join(out)}</div>" if out else ""
+
+
+def app_bar(stem, editable):
+    """The web app's chrome for a saved deck: a way back to the deck list and the
+    deck's own actions. Emitted only on the editable (app) surface — a downloaded or
+    CLI dashboard has no server for these links to reach, the same rule as the
+    add-card picker and the bracket form."""
+    if not (editable and stem):
+        return ""
+    s = esc(stem)
+    return (
+        "<div class='appbar'>"
+        "<nav aria-label='Breadcrumb' class='crumbs'>"
+        "<a href='/'><span aria-hidden='true'>&larr;&nbsp;</span>All decks</a></nav>"
+        "<div class='appacts'>"
+        f"<a class='abtn primary' href='/deck/{s}/edit'>Edit list</a>"
+        f"<form method='post' action='/deck/{s}/optimize' onsubmit=\"return confirm("
+        "'Tune this deck toward what the field plays? Your commander, basics and "
+        "game-plan cards are protected, and every change is revertable.');\">"
+        "<button class='abtn' type='submit' title='Optimize against EDHREC'>"
+        "&#9889; Optimize</button></form>"
+        f"<a class='abtn wide-only' href='/deck/{s}/table-card'>Table card</a>"
+        "<details class='amenu'><summary class='abtn' aria-label='More deck actions'>"
+        "&#8943;</summary><div class='amenu-items'>"
+        f"<a class='narrow-only' href='/deck/{s}/table-card'>Table card</a>"
+        f"<a href='/deck/{s}/assess'>Assess</a>"
+        f"<a href='/deck/{s}/mulligan'>Mulligan practice</a>"
+        f"<a href='/deck/{s}/visual'>Card images</a>"
+        f"<a href='/export/deck/{s}.txt'>Export .txt</a>"
+        f"<a href='/export/deck/{s}.html'>Report</a>"
+        f"<a href='/deck/{s}/proxies?buylist=1'>Proxies</a>"
+        "</div></details></div></div>"
+        # <details> never closes itself: a tap elsewhere or Escape closes the menu.
+        "<script>(function(){var m=document.querySelector('.amenu');if(!m)return;"
+        "document.addEventListener('click',function(e){if(m.open&&!m.contains(e.target))"
+        "m.open=false;});document.addEventListener('keydown',function(e){"
+        "if(e.key==='Escape')m.open=false;});})();</script>")
 
 
 def pip_table(rep):
@@ -1041,8 +1126,8 @@ def tabs_block(groups):
     css, inputs, nav, panels = [], [], [], []
     for i, (k, lab, html) in enumerate(live):
         css.append(f"#tab-{k}:checked ~ .tabpanel[data-tab='{k}'] {{ display:block; }}")
-        css.append(f"#tab-{k}:checked ~ .tabs label[for='tab-{k}'] {{ background:var(--accent); "
-                   "color:#000; border-color:var(--accent); font-weight:700; }")
+        css.append(f"#tab-{k}:checked ~ .tabs label[for='tab-{k}'] {{ color:var(--text); "
+                   "border-bottom-color:var(--accent); font-weight:600; }")
         # the radio stays in the tab order (native arrow-key radiogroup nav); the focus
         # ring is drawn on its label, since the input itself is visually clipped away.
         css.append(f"#tab-{k}:focus-visible ~ .tabs label[for='tab-{k}'] "
@@ -1109,17 +1194,15 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      sections, notes=None, buylist=None, shared=None,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
-                     dead=None, cuts=None, has_field=True, sim=None):
+                     dead=None, cuts=None, has_field=True, sim=None, ranges=None):
     t = THEMES.get(theme, THEMES["default"])
+    heading = t.get("heading", "var(--accent)")
     modal_css = card_modal_css(t)
     modal_block = card_modal_block(details or {}, editable=editable, stem=stem)
     fonts = (f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
              f"<link href='{t['fonts_link']}' rel='stylesheet'>"
              if t["fonts_link"] else "")
-    cats = rep["categories"]
-    tiles = [stat_tile("Total", rep["total_cards"], "incl. commander"),
-             stat_tile("Lands", rep["lands"],
-                       deck_stats._flag("lands", rep["lands"]).strip("()"))]
+    tiles = [stat_tile("Total", rep["total_cards"], "incl. commander")]
     if rep.get("deck_value") is not None:
         tiles.append(stat_tile("Value", f"${rep['deck_value']:,.0f}", "market est"))
     if assessment:
@@ -1137,10 +1220,8 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
         tiles.append(stat_tile("Consistency",
                                cn.get("label", "—").split(" (")[0],
                                cn.get("detail", "")))
-    tiles += [stat_tile("Ramp", cats.get("ramp", 0)),
-              stat_tile("Removal", cats.get("removal", 0)),
-              stat_tile("Draw", cats.get("draw", 0))]
     tiles = "".join(tiles)
+    meters = role_meters_html(rep, ranges)
 
     power_sec = (f"<section><h2>Power &amp; Bracket</h2>{power_html(assessment)}"
                  f"{bracket_form(stem, editable, assessment)}"
@@ -1218,31 +1299,89 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
 * {{ box-sizing:border-box; }}
 body {{ margin:0; background:var(--void); color:var(--text);
   font-family:{t['head']}; line-height:1.5; }}
-.wrap {{ max-width:960px; margin:0 auto; padding:var(--sp-6) var(--sp-5) var(--sp-8); }}
+.wrap {{ max-width:1080px; margin:0 auto; padding:var(--sp-6) var(--sp-5) var(--sp-8); }}
 header h1 {{ font-family:{t['display']}; font-size:var(--fs-3xl); margin:0 0 var(--sp-1);
-  color:var(--accent); letter-spacing:.5px; }}
+  color:{heading}; letter-spacing:-.01em; line-height:1.1; }}
 header .sub {{ color:var(--muted); font-size:var(--fs-md); }}
-header .cmd {{ color:var(--gold); font-family:{t['mono']}; font-size:var(--fs-sm);
-  margin-top:6px; }}
-.printbtn {{ margin-top:var(--sp-3); cursor:pointer; background:transparent;
-  color:var(--accent); border:1px solid rgba(255,255,255,.25);
-  border-radius:var(--r-pill); padding:var(--sp-2) var(--sp-4);
-  font-family:{t['mono']}; font-size:var(--fs-xs); min-height:44px; }}
-.printbtn:hover {{ border-color:var(--accent); }}
+header .cmd {{ color:var(--gold); font-family:{t['head']}; font-size:var(--fs-sm);
+  font-weight:600; margin-top:6px; }}
+.printbtn {{ margin-top:var(--sp-3); cursor:pointer; background:rgba(255,255,255,.07);
+  color:var(--text); border:0; border-radius:var(--r-sm); padding:0 var(--sp-4);
+  font-family:{t['head']}; font-size:var(--fs-sm); min-height:44px; }}
+.printbtn:hover {{ background:rgba(255,255,255,.12); }}
 .tiles {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
   gap:var(--sp-3); margin:var(--sp-6) 0; }}
 .tile {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
-  border-radius:var(--r-md); padding:var(--sp-4); text-align:center; }}
-.tile-val {{ font-family:{t['display']}; font-size:var(--fs-2xl); color:var(--accent2);
-  line-height:1; }}
-.tile-val--text {{ font-size:var(--fs-lg); line-height:1.25; overflow-wrap:break-word; }}
-.tile-label {{ color:var(--muted); text-transform:uppercase; font-size:var(--fs-2xs);
-  letter-spacing:1.5px; margin-top:6px; }}
-.tile-note {{ color:var(--muted); font-size:var(--fs-2xs); margin-top:4px; }}
+  border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4); text-align:left;
+  display:flex; flex-direction:column; }}
+/* label above value, value in the mono face so digits line up across tiles */
+.tile-val {{ order:2; font-family:{t['mono']}; font-size:var(--fs-2xl);
+  color:{t.get('value', 'var(--accent2)')}; line-height:1.2; margin-top:var(--sp-1); }}
+.tile-val--text {{ font-family:{t['head']}; font-weight:600; font-size:var(--fs-lg);
+  line-height:1.3; overflow-wrap:break-word; }}
+.tile-label {{ order:1; color:var(--muted); font-size:var(--fs-sm); }}
+.tile-note {{ order:3; color:var(--muted); font-size:var(--fs-2xs); margin-top:var(--sp-1);
+  line-height:1.4; }}
+/* --- role range meters: band = this deck's template, tick = the deck --- */
+.rmeters {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:var(--sp-3); margin:0 0 var(--sp-5); }}
+.rm {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4); }}
+.rm-top {{ display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-2); }}
+.rm-label {{ color:var(--muted); font-size:var(--fs-sm); }}
+.rm-st {{ font-size:var(--fs-2xs); font-weight:600; }}
+.rm-val {{ font-family:{t['mono']}; font-size:var(--fs-2xl); line-height:1.2;
+  margin:var(--sp-1) 0 var(--sp-2); }}
+.rm-bar {{ position:relative; height:8px; border-radius:4px; background:rgba(255,255,255,.08); }}
+.rm-band {{ position:absolute; top:0; bottom:0; border-radius:4px;
+  background:rgba(255,255,255,.16); }}
+.rm-tick {{ position:absolute; top:-3px; width:4px; height:14px; margin-left:-2px;
+  border-radius:2px; }}
+.rm-target {{ color:var(--muted); font-size:var(--fs-2xs); margin-top:var(--sp-2); }}
+.rm-st.rm-in {{ color:{STATUS_COLOURS['in'][1]}; }}
+.rm-st.rm-short {{ color:{STATUS_COLOURS['short'][1]}; }}
+.rm-st.rm-over {{ color:{STATUS_COLOURS['over'][1]}; }}
+.rm-tick.rm-in {{ background:{STATUS_COLOURS['in'][0]}; }}
+.rm-tick.rm-short {{ background:{STATUS_COLOURS['short'][0]}; }}
+.rm-tick.rm-over {{ background:{STATUS_COLOURS['over'][0]}; }}
+/* --- app bar (editable surface only): back to the deck list + deck actions --- */
+.appbar {{ display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:center;
+  justify-content:space-between; margin:0 0 var(--sp-5); }}
+.crumbs {{ display:flex; gap:var(--sp-2); color:var(--muted); font-size:var(--fs-sm); }}
+.crumbs a {{ color:var(--muted); text-decoration:none; min-height:44px;
+  display:inline-flex; align-items:center; }}
+.crumbs a:hover {{ color:var(--text); }}
+.appacts {{ display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:center; }}
+.appacts form {{ margin:0; }}
+.abtn {{ display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  min-height:44px; padding:0 var(--sp-4); border-radius:var(--r-sm); border:0;
+  background:rgba(255,255,255,.07); color:var(--text); font:inherit;
+  font-size:var(--fs-sm); text-decoration:none; cursor:pointer; list-style:none; }}
+.abtn:hover {{ background:rgba(255,255,255,.12); }}
+.abtn.primary {{ background:var(--accent); color:#000; font-weight:600; }}
+.abtn.primary:hover {{ filter:brightness(1.08); }}
+summary.abtn::-webkit-details-marker {{ display:none; }}
+.amenu {{ position:relative; }}
+.amenu-items {{ position:absolute; right:0; top:calc(100% + var(--sp-2)); z-index:30;
+  min-width:200px; padding:var(--sp-2); background:var(--panel);
+  border:1px solid rgba(255,255,255,.12); border-radius:var(--r-md);
+  box-shadow:var(--el-3); display:flex; flex-direction:column; }}
+.amenu-items a {{ min-height:40px; display:flex; align-items:center; padding:0 var(--sp-3);
+  border-radius:var(--r-sm); color:var(--text); text-decoration:none; font-size:var(--fs-sm); }}
+.amenu-items a:hover {{ background:rgba(255,255,255,.07); }}
+.amenu-items a.narrow-only {{ display:none; }}
+@media (max-width:560px) {{
+  /* phone: the bar keeps Edit / Optimize / menu on one row; Table card moves in */
+  .abtn.wide-only {{ display:none; }}
+  .amenu-items a.narrow-only {{ display:flex; }}
+  .rm {{ padding:var(--sp-3); }}
+  .rm-val {{ font-size:var(--fs-xl); }}
+}}
 section {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
   border-radius:var(--r-lg); padding:var(--sp-5); margin:var(--sp-4) 0; }}
-section h2 {{ font-family:{t['display']}; margin:0 0 var(--sp-3); color:var(--accent);
-  font-size:var(--fs-xl); }}
+section h2 {{ font-family:{t['display']}; margin:0 0 var(--sp-3); color:{heading};
+  font-size:var(--fs-xl); font-weight:600; }}
 table.data {{ width:100%; border-collapse:collapse; font-family:{t['mono']};
   font-size:var(--fs-sm); }}
 table.data th, table.data td {{ text-align:left; padding:var(--sp-2) var(--sp-3);
@@ -1349,17 +1488,16 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 /* --- subtabs: state lives in :checked, so the file needs no JS to work --- */
 .tabinput {{ position:absolute; width:1px; height:1px; overflow:hidden;
   clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }}
-.tabs {{ display:flex; gap:var(--sp-2); overflow-x:auto; -webkit-overflow-scrolling:touch;
-  position:sticky; top:0; z-index:5; padding:var(--sp-3) 0;
+.tabs {{ display:flex; gap:var(--sp-1); overflow-x:auto; -webkit-overflow-scrolling:touch;
+  position:sticky; top:0; z-index:5; padding:var(--sp-2) 0 0;
   background:var(--void); border-bottom:1px solid rgba(255,255,255,.08);
   scrollbar-width:none; }}
 .tabs::-webkit-scrollbar {{ display:none; }}
 .tabs label {{ flex:none; cursor:pointer; user-select:none; white-space:nowrap;
   min-height:44px; display:inline-flex; align-items:center;
-  padding:var(--sp-2) var(--sp-4); border:1px solid rgba(255,255,255,.18);
-  border-radius:var(--r-pill); color:var(--text); font-family:{t['mono']};
-  font-size:var(--fs-xs); letter-spacing:.5px; }}
-.tabs label:hover {{ border-color:var(--accent); }}
+  padding:0 var(--sp-4); border:0; border-bottom:2px solid transparent;
+  color:var(--muted); font-family:{t['head']}; font-size:var(--fs-sm); }}
+.tabs label:hover {{ color:var(--text); }}
 .tabpanel {{ display:none; }}
 .tabpanel > section:first-child {{ margin-top:var(--sp-4); }}
 {tab_css}
@@ -1412,7 +1550,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
      BOTH surfaces and is only `hidden` by attribute, so printing with a card open
      would otherwise drop a position:fixed sheet over the report (Chrome paints it
      on page 1, Firefox repeats it on every page). --- */
-  .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn, .printbtn,
+  .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn, .printbtn, .appbar,
   #cardmodal, .cm-overlay {{ display:none !important; }}
 
   /* --- structure: one tab per page turns the report into chapters, and every
@@ -1456,6 +1594,14 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   header .sub, .tile-label, .tile-note, .muted, h3 .count, .mv.dim, .pr,
   .buytable td.br, .tier, .imgnote, footer {{ color:#444; }}
   .tile {{ background:none; border:1px solid #ccc; }}
+  /* Range meters: the word ("1 short") carries the status on paper; the band and
+     tick are the data, so they keep their colour (exact) on a light track. */
+  .rm {{ background:none; border:1px solid #ccc; }}
+  .rm-val {{ color:#000; }}
+  .rm-label, .rm-target {{ color:#444; }}
+  .rm-st {{ color:#000 !important; }}
+  .rm-bar {{ background:#e6e6e6; }} .rm-band {{ background:#bbb; }}
+  .rm-bar, .rm-band, .rm-tick {{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
   .cardlink {{ border-bottom:none; text-decoration:none; }}
   code {{ background:none; border:1px solid #ccc; }}
   .banner.warn {{ background:none; border:1px solid #000; }}
@@ -1521,6 +1667,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   .explain > p {{ display:block !important; }}
 }}
 </style></head><body><div class="wrap">
+{app_bar(stem, editable)}
 <header>
   <h1>{esc(title)}</h1>
   <div class="sub">{esc(subtitle)}</div>
@@ -1534,6 +1681,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
 </header>
 {health_strip}
 <div class="tiles">{tiles}</div>
+{meters}
 {tabs}
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
@@ -1759,7 +1907,9 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
                                  similar, details, combos, mana,
                                  editable=editable, stem=url_stem, missing=missing,
                                  changes=changes, dead=dead, cuts=cuts,
-                                 has_field=bool((ctx or {}).get("field")), sim=sim)
+                                 has_field=bool((ctx or {}).get("field")), sim=sim,
+                                 ranges=(ctx or {}).get("role_ranges")
+                                 or deckcore.role_ranges((ctx or {}).get("archetype")))
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None
     return {"dashboard": dashboard, "visual": visual,
             "assessment": assessment, "report": rep}

@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}MTG Deckbuilder{% endblock %}</title>
-<meta name="theme-color" content="#0b0d13">
+<meta name="theme-color" content="#0F1115">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,29 +12,59 @@
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/tokens.css">
 <link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/cardpanel.css">
-</head><body>
-<nav>
-  <span class="brand">🕸 MTG Deckbuilder</span>
-  <a class="tab {{ 'on' if page=='home' }}" href="{{ url_for('index') }}">Decks</a>
-  <a class="tab {{ 'on' if page=='build' }}" href="{{ url_for('build_next') }}">Build Next</a>
-  <a class="tab {{ 'on' if page=='wishlist' }}" href="{{ url_for('wishlist_view') }}">Wishlist</a>
-  <a class="tab {{ 'on' if page=='shared' }}" href="{{ url_for('shared_view') }}">Shared</a>
-  <a class="tab {{ 'on' if page=='pins' }}" href="{{ url_for('pins_page') }}"
-     title="Physical copies reserved for one deck">Pins</a>
-  <a class="tab {{ 'on' if page=='collection' }}" href="{{ url_for('collection_view') }}">Collection</a>
-  <a class="tab {{ 'on' if page=='mobile' }}" href="{{ url_for('mobile') }}"
-     title="Install on your phone">Mobile</a>
-  {% if auth_enabled %}
-  <form method="post" action="{{ url_for('logout') }}" class="push">
-    <button class="linkbtn" type="submit" title="Sign out on this device">Sign out</button>
-  </form>
-  {% endif %}
+</head><body class="shell">
+{#- Icons are inline SVG paths so the shell needs no icon font or extra request. -#}
+{% set icons = {
+  'home': '<rect x="4" y="3" width="13" height="17" rx="2"/><path d="M19 6v13a2 2 0 0 1-2 2H8"/>',
+  'build': '<path d="M12 4v16M4 12h16"/>',
+  'collection': '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',
+  'wishlist': '<path d="M5 4h14l-1.5 11H6.5z"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/>',
+  'shared': '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+  'pins': '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
+  'mobile': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  'more': '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+} %}
+{% macro tab(key, endpoint, label, title='', secondary=false) -%}
+  <a class="tab{{ ' secondary' if secondary }}{{ ' on' if page==key }}" href="{{ url_for(endpoint) }}"
+     {%- if page==key %} aria-current="page"{% endif %}{% if title %} title="{{ title }}"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icons[key]|safe }}</svg>{{ label }}</a>
+{%- endmacro %}
+<nav class="rail" aria-label="Main">
+  <a class="brand" href="{{ url_for('index') }}"><span class="mark" aria-hidden="true">◆</span>Deckbuilder</a>
+  {{ tab('home', 'index', 'Decks') }}
+  {{ tab('build', 'build_next', 'Build') }}
+  {{ tab('collection', 'collection_view', 'Collection') }}
+  {{ tab('wishlist', 'wishlist_view', 'Wishlist') }}
+  <div class="rail-label">Across decks</div>
+  {{ tab('shared', 'shared_view', 'Shared', secondary=true) }}
+  {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck', secondary=true) }}
+  {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone', secondary=true) }}
+  <details class="more">
+    <summary aria-label="More pages"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{{ icons['more']|safe }}</svg>More</summary>
+    <div class="more-items">
+      {{ tab('shared', 'shared_view', 'Shared') }}
+      {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck') }}
+      {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone') }}
+      {% if auth_enabled %}
+      <form method="post" action="{{ url_for('logout') }}">
+        <button class="linkbtn" type="submit">Sign out</button>
+      </form>
+      {% endif %}
+    </div>
+  </details>
+  <div class="foot">
+    {% if auth_enabled %}
+    <form method="post" action="{{ url_for('logout') }}">
+      <button class="linkbtn" type="submit" title="Sign out on this device">Sign out</button>
+    </form>
+    {% endif %}
+  </div>
 </nav>
-<div class="wrap">
+<main class="wrap">
 {% with msgs = get_flashed_messages(with_categories=true) %}
   {% if msgs %}<div class="flashes">
     {% for cat, m in msgs %}<p class="flash flash-{{ cat }}">{{ m }}</p>{% endfor %}
@@ -42,10 +72,26 @@
 {% endwith %}
 {% block content %}{% endblock %}
 <footer>Local app · your collection stays on your machine · grounded by the MTG deckbuilder toolkit</footer>
-</div>
+</main>
 {% include "_cardpanel.html" %}
 <script src="/static/cardgrid.js" defer></script>
 <script>
+  // Pop-over menus (<details class="menu">, the phone bar's More sheet): one open at a
+  // time, and a tap anywhere else closes it — <details> alone stays open forever.
+  (function () {
+    var all = [].slice.call(document.querySelectorAll('details.menu, details.more'));
+    all.forEach(function (m) {
+      m.addEventListener('toggle', function () {
+        if (m.open) all.forEach(function (o) { if (o !== m) o.open = false; });
+      });
+    });
+    document.addEventListener('click', function (e) {
+      all.forEach(function (m) { if (m.open && !m.contains(e.target)) m.open = false; });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') all.forEach(function (m) { m.open = false; });
+    });
+  })();
   // Register the service worker so "Add to Home Screen" behaves like an app. It only
   // caches the static shell — deck and collection pages always hit the network, because
   // showing you a stale decklist would be worse than showing an error.

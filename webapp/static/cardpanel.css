@@ -1,8 +1,10 @@
 /* Site-wide clickable card + bottom-sheet detail panel (Phase 0).
    Reuses the theme CSS variables defined in base.html. */
-.cardlink{color:var(--accent);cursor:pointer;text-decoration:none;
-  border-bottom:1px dotted rgba(255,255,255,.3)}
-.cardlink:hover{color:var(--accent2);border-bottom-color:var(--accent2);text-decoration:none}
+/* Card names read as text with a dotted underline; amber is saved for actions and
+   only arrives on hover, so a page full of card names isn't a page full of accent. */
+.cardlink{color:var(--text);cursor:pointer;text-decoration:none;
+  border-bottom:1px dotted rgba(255,255,255,.35)}
+.cardlink:hover{color:var(--accent);border-bottom-color:var(--accent);text-decoration:none}
 .cardlink:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 
 .cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;
@@ -26,16 +28,16 @@
 @media(max-width:640px){.cp-grid{grid-template-columns:1fr}}
 .cp-img{width:100%;border-radius:4.75%/3.5%;background:rgba(255,255,255,.05);
   aspect-ratio:5/7;object-fit:cover;display:block}
-.cp-imgmeta{color:var(--muted);font-family:'JetBrains Mono',monospace;
+.cp-imgmeta{color:var(--muted);font-family:var(--font-mono);
   font-size:var(--fs-2xs);margin-top:8px;line-height:1.7}
-.cp-name{font-family:'Oswald',sans-serif;color:var(--accent);font-size:var(--fs-xl);margin:2px 0}
+.cp-name{font-family:var(--font-display);color:var(--text);font-weight:600;font-size:var(--fs-xl);margin:2px 0}
 .cp-tags{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin:var(--sp-1) 0 2px}
-.cp-tag{font-family:'JetBrains Mono',monospace;font-size:var(--fs-2xs);font-weight:700;
+.cp-tag{font-family:var(--font-mono);font-size:var(--fs-2xs);font-weight:700;
   padding:1px 8px;border-radius:var(--r-pill);background:var(--panel2);color:var(--muted)}
-.cp-tag.own{background:var(--accent2);color:#000}
+.cp-tag.own{background:#15302A;color:#7FD9A4}
 .cp-tag.buy{background:transparent;border:1px solid rgba(255,255,255,.2)}
-.cp-h{font-family:'Oswald',sans-serif;color:var(--gold);text-transform:uppercase;
-  letter-spacing:1px;font-size:var(--fs-2xs);margin:var(--sp-4) 0 5px;
+.cp-h{font-family:var(--font-body);color:var(--faint,var(--muted));text-transform:uppercase;
+  letter-spacing:.08em;font-weight:600;font-size:var(--fs-2xs);margin:var(--sp-4) 0 5px;
   border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:3px}
 .cp-oracle{white-space:pre-wrap;font-size:var(--fs-sm);margin:0}
 .cp-loading{color:var(--muted);font-style:italic}
@@ -45,13 +47,13 @@
 .cp-combo .early{color:var(--warn);font-weight:700;font-size:var(--fs-2xs);margin-left:6px}
 .cp-buy{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:10px}
 .cp-buy a{display:inline-block;padding:var(--sp-2) 12px;border-radius:var(--r-pill);
-  border:1px solid rgba(255,255,255,.2);font-family:'Rajdhani',sans-serif;font-size:var(--fs-xs)}
+  border:1px solid rgba(255,255,255,.2);font-family:var(--font-body);font-size:var(--fs-xs)}
 .cp-buy a:hover{border-color:var(--accent);text-decoration:none}
 
 /* Pin control: reserve the physical copy for one deck. Mirrors .cp-buy's pill shape so
    the panel reads as one system; every size/space value is a token (test_design_tokens). */
 .cp-pin{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;margin-top:var(--sp-2)}
-.cp-pin select,.cp-pin-btn{font-family:'Rajdhani',sans-serif;font-size:var(--fs-xs);
+.cp-pin select,.cp-pin-btn{font-family:var(--font-body);font-size:var(--fs-xs);
   padding:var(--sp-2) 12px;border-radius:var(--r-pill);background:var(--panel2);
   color:inherit;border:1px solid rgba(255,255,255,.2)}
 .cp-pin-btn{cursor:pointer}
@@ -66,13 +68,13 @@ figure.mc img{width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:4.75%/3
   background:rgba(255,255,255,.05);display:block}
 figure.mc:hover img{filter:brightness(1.08)}
 figure.mc:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:6%}
-figure.mc .qty{position:absolute;top:4px;right:4px;background:var(--accent);color:#000;
-  font-family:'JetBrains Mono',monospace;font-size:var(--fs-2xs);font-weight:700;padding:0 5px;border-radius:var(--r-sm)}
-figure.mc figcaption{font-family:'JetBrains Mono',monospace;font-size:var(--fs-2xs);color:var(--muted);
+figure.mc .qty{position:absolute;top:4px;right:4px;background:var(--accent);color:var(--accent-ink,#000);
+  font-family:var(--font-mono);font-size:var(--fs-2xs);font-weight:700;padding:0 5px;border-radius:var(--r-sm)}
+figure.mc figcaption{font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--muted);
   margin-top:3px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* "how staple is this" — EDHREC rank badge (Collection grid). Bottom-left so it never
    collides with the .qty badge in the top-right. */
-figure.mc .staple{position:absolute;left:4px;bottom:22px;font-family:'JetBrains Mono',monospace;
+figure.mc .staple{position:absolute;left:4px;bottom:22px;font-family:var(--font-mono);
   font-size:var(--fs-2xs);font-weight:700;letter-spacing:.5px;padding:1px 5px;border-radius:var(--r-sm);
   color:#000;background:rgba(255,255,255,.75);pointer-events:none}
 figure.mc .staple.top100{background:#f5c542}

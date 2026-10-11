@@ -534,18 +534,22 @@ def clock_for_deck(deck_path, collection_path):
 
 
 def build_for_deck(deck_path, coll_index, ref_dir=REF_DIR_DEFAULT,
-                   collection_path=None):
+                   collection_path=None, with_report=False):
+    """The assessment for one deck file. `with_report=True` returns
+    `(assessment, report)` so a caller that also shows role counts (the web app's
+    deck cards) reads the SAME analysis rather than running a second one."""
     with open(deck_path, encoding="utf-8") as f:
         deck = mtglib.parse_deck(f.read())
     enriched, missing = deck_stats.analyze(deck, coll_index)
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
     deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = deck_stats.build_report(deck, enriched, missing, coll_index)
-    return assess(enriched, rep, load_refs(ref_dir),
-                  declared=read_declared_bracket(deck_path),
-                  clock=clock_for_deck(deck_path, collection_path),
-                  resilience_staples=load_resilience_staples(ref_dir),
-                  declared_resilience=read_declared_resilience(deck_path))
+    res = assess(enriched, rep, load_refs(ref_dir),
+                 declared=read_declared_bracket(deck_path),
+                 clock=clock_for_deck(deck_path, collection_path),
+                 resilience_staples=load_resilience_staples(ref_dir),
+                 declared_resilience=read_declared_resilience(deck_path))
+    return (res, rep) if with_report else res
 
 
 _SPEED_ORDER = {"combo-early": 0, "combo-setup": 1, "combat": 2,

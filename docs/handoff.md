@@ -6,7 +6,41 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (whole-app audit shipped)._
+_Last updated: 2026-10-11 (Arcane Ledger UI overhaul)._
+
+## UI overhaul — "Arcane Ledger", 2026-10-11
+
+The player picked the **Arcane Ledger** direction from the mockup canvas (five
+artboards: decks home, deck dashboard, card panel, phone, style tile). What shipped:
+
+- **Theme** (`webapp/static/app.css`): graphite grounds (#0F1115 / #171A21 / #1E222B),
+  ONE amber accent (#F2B544) reserved for the primary action, links and the active
+  tab; Space Grotesk headings, IBM Plex Sans body, IBM Plex Mono for every number.
+  Card names are text-coloured with a dotted underline (amber only on hover). Status
+  colours `--in/--short/--over` (#3A9BD0 / #D2732C / #8A70E0, palette-validated) always
+  travel with a word. `tokens.css` is untouched — still colour- and font-free.
+- **Shell** (`base.html`): a left rail on ≥900px (Decks · Build · Collection ·
+  Wishlist, then Shared · Pins · Phone); under 900px it becomes a bottom tab bar with a
+  More sheet. `details.menu` / `details.more` close on outside tap or Escape.
+- **Decks home** (`index.html`): a card grid — colour-identity stripe + WUBRG pips,
+  bracket badge, Study-copy badge, one status line (ready / N to buy / contested),
+  Lands·Ramp·Removal·Draw against the deck's **archetype-widened** band
+  (`app._role_meters` → `deckcore.role_ranges`), speed + resilience, and Open / Edit /
+  ⋯ (the ten secondary actions). `power.build_for_deck(..., with_report=True)` hands
+  back the report so the page does not analyse each deck twice.
+- **Deck dashboard** (`build_dashboard`): the `default` theme IS Ledger now (themed
+  decks keep their own palette; optional theme keys `heading` / `value` / `chart`).
+  The bare Ramp/Removal/Draw tiles became **range meters** (`role_meters_html`, Lands +
+  4 roles, band = template, word = status); tabs are underline tabs; tiles put label
+  over a mono value. On the app surface only (`editable=True`) an **app bar**
+  (`app_bar`) adds ← All decks + Edit list / Optimize / Table card / ⋯ — a CLI or
+  downloaded dashboard never gets it, and print hides it.
+- Guards: `tests/test_ui_ledger.py` (meter words + widened band, app-bar surface rule
+  and every app-bar link resolving, deck-card meters/identity/menu, nav current page).
+
+Not done (follow-ups): the PWA icons (`icon.svg`/PNGs) still carry the old cyan web
+mark; the card panel was re-fonted and recoloured but not re-laid-out as the mockup's
+side drawer; the `/deck/<stem>/visual` page keeps its old layout.
 
 ## Whole-app audit shipped, 2026-10-11
 
