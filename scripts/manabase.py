@@ -9,8 +9,18 @@ Your Spells?", 2022): a reliably castable single-pip color wants ~19 sources and
 double-pip card wants more (~23+; ~30 to have both by turn 2).
 
 Grounding / honesty:
-  * Source counts come from each land/rock's color IDENTITY — an approximation of
-    what it actually taps for (good for basics, duals, signets; rough for oddballs).
+  * Source counts are LANDS only (rocks and dorks are not counted), taken from
+    `deck_stats.build_report`: each land counts for what it ACTUALLY taps for
+    (`Card.produced`, written by carddb enrichment) and falls back to its color
+    identity only when it was never enriched — `basis['identity_lands']` counts
+    those, and every surface labels the approximation. Lands whose mana carries a
+    spend restriction are counted apart (`restricted`), never as sources.
+  * Pip demand reads the FRONT face's cost only (an adventure / MDFC / split cost
+    "{1}{B}{B} // {1}{B}{B}" is one spell, not six pips), and a hybrid pip is
+    satisfied by a source of EITHER colour: `{B/G}` needs one B-or-G source, so its
+    castability is checked against the union of those colours' lands.
+  * A color with zero pip demand has no Karsten target to miss: its status is
+    "n/a", never "low" (a mono-B deck's lone Command Tower is not a white problem).
   * The probabilities here are UNCONDITIONAL (not mulligan-adjusted the way
     Karsten's published tables are), so read them as a consistent relative guide,
     not the exact % Karsten prints.
@@ -20,6 +30,7 @@ Grounding / honesty:
 See docs/spec-interactive-analytics-ai.md (Phase 2).
 """
 import math
+import re
 
 import mtglib
 
@@ -234,6 +245,49 @@ def fetch_census(enriched):
     return {"rows": rows, "total_fetchers": total, "unknown": unknown}
 
 
+_SYMBOL_RE = re.compile(r"\{([^}]+)\}")
+
+
+def pip_groups(mana_cost):
+    """A cost's colored requirements -> {frozenset(options): count}, FRONT face only.
+
+    One symbol is one pip, payable by any letter in its option set: `{B}` ->
+    {B}, `{B/G}` -> {B, G} (hybrid), `{G/W/P}` -> {G, W}, `{W/P}` -> {W}
+    (Phyrexian: paying life is the fallback, not the plan), `{2/W}` -> {W} (the
+    conservative read, as before). Generic, `{C}`, `{X}` and anything without a
+    color letter is no colored requirement. Kept here rather than in mtglib because
+    `mtglib.pip_counts` deliberately splits a hybrid pip into halves for aggregate
+    Karsten DEMAND; the castability check needs the opposite view — "this one pip
+    is payable by B or by G" (audit S9)."""
+    out = {}
+    for sym in _SYMBOL_RE.findall(mtglib.front_face(mana_cost or "")):
+        opts = frozenset(ch for ch in sym.upper() if ch in "WUBRG")
+        if opts:
+            out[opts] = out.get(opts, 0) + 1
+    return out
+
+
+def _land_colors(card):
+    """The colors one land contributes as a SOURCE — the exact rule
+    `deck_stats.build_report` counts by (produced when enriched, else color
+    identity; a verified spend-restricted land is no source), so a union count
+    built from it agrees with the per-color counts in the report."""
+    if "mana-restricted" in card.flags and card.flags_ver >= 2:
+        return set()
+    if card.produced is not None:
+        return {p for p in card.produced if p in "WUBRG"}
+    return set(card.colors or card.identity or ())
+
+
+def _union_sources(enriched, colors, sources):
+    """Lands that tap for at least one of `colors`. A single color reads the
+    report's own count, so a mono-color requirement is checked exactly as before."""
+    if len(colors) == 1:
+        return sources.get(next(iter(colors)), 0)
+    return sum(c.quantity for c in enriched
+               if c.is_land and _land_colors(c) & colors)
+
+
 def analyze(rep, enriched, deck=DECK):
     """Consistency report from a deck_stats report (color_sources / pip_demand /
     double_pips / lands) + the enriched card list. Returns None-ish flags when the
@@ -244,6 +298,9 @@ def analyze(rep, enriched, deck=DECK):
     doubles = rep.get("double_pips") or {}
     lands = rep.get("lands") or 0
     have_colors = bool(sources or demand)
+    # Demand KNOWN (the report carries pip data) vs unknown (name-only: no costs).
+    # Only a known zero earns "n/a"; unknown demand keeps the source-count check.
+    demand_known = rep.get("pip_demand") is not None
 
     colors = []
     for col in "WUBRG":
@@ -255,6 +312,10 @@ def analyze(rep, enriched, deck=DECK):
         # Pass/fail follows Karsten's recommended SOURCE COUNT (the cited guideline);
         # the exact probabilities below are shown as informational context.
         ok = src >= target
+        # A color nothing in the deck asks for cannot be under target (audit S5):
+        # mono-B Tergrid's one W-producing land used to print "W ... <-- LOW".
+        status = ("n/a" if (demand_known and not dem)
+                  else "ok" if ok else "low")
         colors.append({
             "color": col, "sources": src, "demand": round(dem, 1), "double_pips": dbl,
             # Spend-restricted sources of this color, counted apart (Phase B1):
@@ -263,7 +324,7 @@ def analyze(rep, enriched, deck=DECK):
             # hiding them would be its own lie. Always present, 0 when none.
             "restricted": restricted_src.get(col, 0),
             "p_open": round(odds["ge1_open"], 2), "p_two_t3": round(odds["ge2_by_t3"], 2),
-            "karsten_target": target, "status": "ok" if ok else "low",
+            "karsten_target": target, "status": status,
         })
 
     # per-card castable-on-curve check (unconditional hypergeometric)
@@ -274,13 +335,20 @@ def analyze(rep, enriched, deck=DECK):
         turn = max(1, int(math.ceil(c.mana_value)))
         seen = cards_seen(turn)
         worst = None
-        for col, need in mtglib.pip_counts(c.mana_cost).items():
-            need_i = int(math.ceil(need))
-            if need_i <= 0:
-                continue
-            p = hypergeom_at_least(deck, sources.get(col, 0), seen, need_i)
+        groups = pip_groups(c.mana_cost)
+        # One check per distinct option set: how many of this cost's pips does
+        # that set have to cover? Every pip whose options fit INSIDE it. For a
+        # mono-colored cost that is exactly the old per-color count; a hybrid
+        # set ({B/G}x3) is checked once, against the union of B and G lands,
+        # instead of as a full requirement for each color (audit S9).
+        for opts in sorted(groups, key=lambda o: (len(o), sorted("WUBRG".index(x)
+                                                                  for x in o))):
+            need_i = sum(n for o, n in groups.items() if o <= opts)
+            p = hypergeom_at_least(deck, _union_sources(enriched, opts, sources),
+                                   seen, need_i)
             if worst is None or p < worst["p"]:
-                worst = {"color": col, "p": p, "pips": need_i}
+                worst = {"color": "/".join(col for col in "WUBRG" if col in opts),
+                         "p": p, "pips": need_i}
         if worst and worst["p"] < OK_OPEN:
             risky.append({"name": c.name, "mv": c.mana_value, "color": worst["color"],
                           "pips": worst["pips"], "p": round(worst["p"], 2)})
@@ -339,7 +407,8 @@ if __name__ == "__main__":
               f">=3 in opener {lo['ge3_open']*100:.0f}% · >=4 by turn 4 {lo['ge4_by_t4']*100:.0f}%")
     print("\nColor sources vs demand (Karsten target · P>=1 opener):")
     for c in a["colors"]:
-        flag = "  <-- LOW" if c["status"] == "low" else ""
+        flag = ("  <-- LOW" if c["status"] == "low"
+                else "  (no demand)" if c["status"] == "n/a" else "")
         restr = f" (+{c['restricted']} restricted)" if c.get("restricted") else ""
         print(f"  {c['color']}: {c['sources']:>2} src{restr} · demand {c['demand']:>4} · "
               f"target ~{c['karsten_target']} · P {c['p_open']*100:>3.0f}%"

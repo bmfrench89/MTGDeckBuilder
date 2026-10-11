@@ -46,7 +46,12 @@ _MECHANICS = [
     (r"win the game", "can just win the game outright"),
     (r"search your library", "tutors up exactly the piece you need"),
     (r"counter target", "counters a spell"),
-    (r"destroy all|exile all|each creature|all creatures", "sweeps the board"),
+    # Tight on purpose (2026-10-11 audit, D4): the loose "each creature|all
+    # creatures" drafted "sweeps the board" for Propaganda, Kid Loki and Clever
+    # Concealment. Same text classes oracle_flags reads as `wipe`, plus mass bounce.
+    (r"destroy all|exile all|return all (?:other |nonland )?(?:creatures|permanents)"
+     r"|(?:all|each) creatures?\b[^.]{0,60}?(?:gets? -|is dealt|are dealt)"
+     r"|deals? (?:\d+|x) damage to each (?:other )?creature", "sweeps the board"),
     (r"(destroy|exile) target", "removes a problem permanent"),
     (r"draw (a card|\w+ cards)", "draws you cards"),
     (r"add \{|mana of any", "produces mana"),
@@ -95,6 +100,9 @@ def _fetch_oracle(names, sleep=0.25):
 
 def _mechanic(oracle):
     low = (oracle or "").lower()
+    # Reminder text is never rules text: cycling's "(…, Discard this card: Draw a
+    # card.)" drafted "draws you cards" for cycling lands (audit D4).
+    low = re.sub(r"\([^()]*\)", "", low)
     for pat, phrase in _MECHANICS:
         if re.search(pat, low):
             return phrase

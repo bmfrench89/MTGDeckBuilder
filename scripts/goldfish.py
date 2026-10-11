@@ -100,7 +100,10 @@ DISRUPTION = {
 
 # Report-shape version. `cache_key` includes it, so adding a field to the payload
 # invalidates every cached sim instead of serving old entries that silently lack it.
-REPORT_SCHEMA = 4
+REPORT_SCHEMA = 6
+# 6 (2026-10-11, audit track S): front-face-only costs, deck attrs Cost/Sub-types,
+# clock medians over ALL games, real commander recasts under disruption, free
+# spells on a no-mana turn — every cached report predates at least one of them.
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "..", "data", "cache", "goldfish")
@@ -141,11 +144,16 @@ class SimCard:
     """One physical copy, compiled. Immutable; shared across games and both A/B arms."""
     __slots__ = ("name", "key", "mv", "pips", "generic", "is_land", "produces",
                  "amount", "etb_tapped", "is_producer", "castable", "model",
-                 "is_creature", "power", "discounts", "typewords")
+                 "is_creature", "power", "discounts", "typewords",
+                 "ritual", "scale", "devotion", "extra", "lands_are",
+                 "is_permanent", "is_basic", "colorset")
 
     def __init__(self, name, key, mv, pips, generic, is_land, produces, amount,
                  etb_tapped, is_producer, castable, model,
-                 is_creature=False, power=None, discounts=(), typewords=frozenset()):
+                 is_creature=False, power=None, discounts=(), typewords=frozenset(),
+                 ritual=None, scale=None, devotion=None, extra=(),
+                 lands_are=frozenset(), is_permanent=False, is_basic=False,
+                 colorset=frozenset()):
         self.name, self.key, self.mv = name, key, mv
         self.pips, self.generic = pips, generic
         self.is_land, self.produces, self.amount = is_land, produces, amount
@@ -161,6 +169,21 @@ class SimCard:
         # spell each turn). `typewords` holds lowercased subtype AND type words so
         # "dragon spells", "vehicle spells" and "artifact spells" all match.
         self.discounts, self.typewords = discounts, typewords
+        # Black-mana production (oracle_flags v4, REPORT_SCHEMA 5):
+        #   ritual    (n, colors)  — an instant/sorcery that adds n mana when cast
+        #   scale     (type, basic_only, cost, colors) — Cabal Coffers / Stronghold
+        #   devotion  cost         — Nykthos
+        #   extra     ((type, colors), …) — Crypt Ghast: each <type> land tapped for
+        #             mana adds one more
+        #   lands_are frozenset of land types every land gains (Urborg)
+        self.ritual, self.scale, self.devotion = ritual, scale, devotion
+        self.extra, self.lands_are = extra, lands_are
+        # Devotion and battlefield discounts read noncreature permanents too.
+        self.is_permanent, self.is_basic = is_permanent, is_basic
+        # The card's colours, for "<colour> spells" discounts: read off the compiled
+        # pips, or — when the data has no mana cost (a deck .attrs.csv carries MV
+        # but no Cost column) — off the card's recorded colours / identity.
+        self.colorset = colorset
 
     def __repr__(self):                                    # pragma: no cover - debug
         return f"<SimCard {self.name} mv={self.mv} model={self.model}>"
@@ -175,9 +198,14 @@ def parse_cost(cost):
       `{2/W}` -> ({'W'}, 2)          payable by W, or by two generic
       `{C}`   -> ({'C'}, 0)          colorless is a real requirement, not generic
       `{X}`   -> nothing             X = 0, stated
-    Anything unrecognized degrades to one generic rather than raising."""
+    Anything unrecognized degrades to one generic rather than raising.
+
+    FRONT FACE ONLY (audit S1): an adventure / MDFC / split cost arrives as
+    `'{1}{B}{B} // {1}{B}{B}'` — two faces, one spell cast. Summing them compiled
+    Murderous Rider as {B}x4 plus two generic. The split is `mtglib.front_face`'s
+    `" // "` WITH spaces, never a bare `//`."""
     pips, generic = [], 0
-    for sym in _SYM_RE.findall(cost or ""):
+    for sym in _SYM_RE.findall(mtglib.front_face(cost or "")):
         s = sym.upper().strip()
         if s in ("X", "Y", "Z"):
             continue
@@ -213,6 +241,9 @@ def _parse_discounts(flags):
     return tuple(out)
 
 
+_COLOR_WORDS = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
+
+
 def _disc_matches(sc, typ):
     """Does a '<typ> spells' discount apply to this card? "creature"/"noncreature"
     read the creature bit; anything else is a lowercased subtype or type word
@@ -225,6 +256,10 @@ def _disc_matches(sc, typ):
         return sc.is_creature
     if typ == "noncreature":
         return not sc.is_creature
+    if typ in _COLOR_WORDS:
+        # "Black spells you cast…" (Jet Medallion). A spell's colour is read off its
+        # compiled pips — a hybrid pip counts for both halves, as the rules do.
+        return _COLOR_WORDS[typ] in sc.colorset
     return typ in sc.typewords
 
 
@@ -235,6 +270,44 @@ def _amount(flags):
     if "mana2" in flags:
         return 2
     return 1
+
+
+_RITUAL_TOKEN_RE = re.compile(r"ritual:(\d+)$")
+_SCALE_TOKEN_RE = re.compile(r"scale:(basic-)?([a-z]+):(\d+)$")
+_DEVOTION_TOKEN_RE = re.compile(r"devotion:(\d+)$")
+_EXTRA_TOKEN_RE = re.compile(r"extra:([a-z]+)$")
+_LANDS_ARE_TOKEN_RE = re.compile(r"lands-are:([a-z]+)$")
+_PERMANENT_TYPES = frozenset({"creature", "artifact", "enchantment", "planeswalker",
+                              "battle"})
+
+
+def _production_tokens(flags):
+    """flags -> (ritual_n, scale, devotion_cost, extra_types, lands_are). Unknown
+    or absent tokens yield None/empty: an attrs file enriched before v4 simply
+    models none of this, which is exactly the pre-v4 behavior."""
+    ritual_n = scale = devotion = None
+    extra, lands_are = [], set()
+    for f in flags:
+        m = _RITUAL_TOKEN_RE.match(f)
+        if m:
+            ritual_n = int(m.group(1))
+            continue
+        m = _SCALE_TOKEN_RE.match(f)
+        if m:
+            scale = (m.group(2), bool(m.group(1)), int(m.group(3)))
+            continue
+        m = _DEVOTION_TOKEN_RE.match(f)
+        if m:
+            devotion = int(m.group(1))
+            continue
+        m = _EXTRA_TOKEN_RE.match(f)
+        if m:
+            extra.append(m.group(1))
+            continue
+        m = _LANDS_ARE_TOKEN_RE.match(f)
+        if m:
+            lands_are.add(m.group(1))
+    return ritual_n, scale, devotion, tuple(sorted(extra)), frozenset(lands_are)
 
 
 def compile_card(card):
@@ -289,7 +362,32 @@ def compile_card(card):
             generic = int(card.mana_value)     # attrs with an MV but no Cost column
         castable = model != "none"
 
+    # v4 production tokens. Only the ENRICHED tier carries flags, so the identity
+    # fallback never models any of this — degrade, never guess.
+    ritual_n, scale_t, devotion, extra_types, lands_are = _production_tokens(flags)
+    colors = (frozenset(p for p in produced if p in _COLORS) if produced is not None
+              else frozenset())
+    ritual = None
+    if ritual_n and not is_land and castable:
+        ritual = (ritual_n, colors or frozenset(card.identity or card.colors)
+                  or frozenset("C"))
+    scale = None
+    if is_land and (scale_t or devotion is not None):
+        # A Coffers-class land's own {T} ability is whatever is LEFT once the scaled
+        # colour is removed: Cabal Coffers ({B} only) has none, Cabal Stronghold and
+        # Nykthos keep their plain {T}: Add {C}. Scryfall's produced_mana lists the
+        # union, so without this split Coffers would also tap for a free {B}.
+        base = produces & frozenset("C")
+        if scale_t:
+            scale = (scale_t[0], scale_t[1], scale_t[2],
+                     (produces - frozenset("C")) or frozenset("B"))
+        produces = base
+        is_producer = bool(produces)
+    extra = tuple((typ, colors or frozenset("B")) for typ in extra_types)
+
     is_creature = bool(card.types) and any(t.lower() == "creature" for t in card.types)
+    typewords = (frozenset(x.lower() for x in (card.subtypes or ()))
+                 | frozenset(t.lower() for t in (card.types or ())))
     return SimCard(name=card.name, key=mtglib._norm(card.name), mv=card.mana_value,
                    pips=pips, generic=generic, is_land=is_land, produces=produces,
                    amount=amount, etb_tapped=etb, is_producer=is_producer,
@@ -297,8 +395,15 @@ def compile_card(card):
                    is_creature=is_creature,
                    power=card.power if is_creature else None,
                    discounts=_parse_discounts(flags),
-                   typewords=frozenset(x.lower() for x in (card.subtypes or ()))
-                   | frozenset(t.lower() for t in (card.types or ())))
+                   typewords=typewords,
+                   ritual=ritual, scale=scale, devotion=devotion, extra=extra,
+                   lands_are=lands_are,
+                   is_permanent=(not is_land) and bool(typewords & _PERMANENT_TYPES),
+                   is_basic=is_land and mtglib.is_basic(card.name),
+                   colorset=(frozenset(l for opts, _a in pips for l in opts
+                                       if l in _COLORS)
+                             or frozenset(x for x in (card.colors or card.identity
+                                                      or ()) if x in _COLORS)))
 
 
 def compile_deck(enriched, commander_name=""):
@@ -406,22 +511,106 @@ def _pay(pips, generic, units):
     return avail
 
 
-def _mana_units(lands, producers, turn):
-    """What's available this turn: `[frozenset_of_options, ...]`, one entry per mana."""
+def _spend_cheapest(units, n, keep):
+    """Remove `n` units for a generic activation cost, cheapest first: colorless,
+    then mana that can already make `keep`, then the least flexible of the rest —
+    so converting mana into `keep`-coloured mana never strands a pip only the
+    spent unit could pay. None if there aren't `n` units."""
+    if len(units) < n:
+        return None
+    order = sorted(range(len(units)),
+                   key=lambda i: (units[i] != frozenset("C"),
+                                  not (units[i] <= (keep | frozenset("C"))),
+                                  len(units[i])))
+    drop = set(order[:n])
+    return [u for i, u in enumerate(units) if i not in drop]
+
+
+def _devotion(perms, letter):
+    """Mana symbols of `letter` among the permanents on the battlefield (a hybrid
+    pip counts for each of its colours, as the rules do)."""
+    return sum(1 for sc in perms for opts, _alt in sc.pips if letter in opts)
+
+
+def _mana_units(lands, producers, turn, perms=()):
+    """What's available this turn: `[frozenset_of_options, ...]`, one entry per mana.
+
+    `perms` are the permanents on the battlefield as `(SimCard, turn_entered)` — the
+    commander, creatures and noncreature permanents the sim cast. They feed the v4
+    production model: Crypt Ghast-style extra mana (from the turn AFTER it lands,
+    the same pessimism rocks get), Cabal Coffers / Stronghold scaling and Nykthos
+    devotion. With no v4 tokens in the deck this is byte-identical to before."""
     units = []
+    lands_are = set()
+    for sc, _entered in lands:
+        lands_are |= sc.lands_are
+
+    def is_type(sc, typ):
+        return typ in sc.typewords or typ in lands_are
+
+    extra = [x for sc, entered in perms if entered < turn for x in sc.extra]
+    activators = []
     for sc, entered in lands:
         if sc.etb_tapped and entered == turn:
             continue                     # it came down tapped; nothing this turn
+        if sc.scale is not None or sc.devotion is not None:
+            activators.append(sc)        # decided after the plain mana is counted
+            continue
         if not sc.produces:
             continue                     # enriched and genuinely produces nothing
         for _ in range(sc.amount):
             units.append(sc.produces)
+        for typ, colors in extra:
+            if is_type(sc, typ):
+                units.append(colors)     # "tap a Swamp for mana, add an additional {B}"
     for sc, cast_turn in producers:
         if cast_turn >= turn:
             continue                     # active the turn AFTER it resolves
         for _ in range(sc.amount):
             units.append(sc.produces)
+    # Coffers-class and devotion lands: activate only when it beats the plain {T}
+    # ability, paying the activation from the cheapest mana already counted.
+    for sc in activators:
+        base_n = sc.amount if sc.produces else 0
+        gain, colors, cost = 0, frozenset(), 0
+        if sc.scale is not None:
+            typ, basic_only, cost, colors = sc.scale
+            gain = sum(1 for lsc, _e in lands
+                       if is_type(lsc, typ) and (lsc.is_basic or not basic_only))
+        if sc.devotion is not None:
+            best = max(((_devotion([p for p, _e in perms], c), c) for c in _COLORS),
+                       default=(0, "B"))
+            if best[0] - sc.devotion > gain - cost:
+                gain, colors, cost = best[0], frozenset(best[1]), sc.devotion
+        rest = _spend_cheapest(units, cost, colors) if gain - cost > base_n else None
+        if rest is not None:
+            units = rest + [colors] * gain
+        elif sc.produces:
+            units.extend([sc.produces] * sc.amount)
     return units
+
+
+def _fire_rituals(hand, units, pips, generic):
+    """Can rituals in hand make (pips, generic) payable this turn? Fires them one at a
+    time (hand order, cheapest first) until the cost is payable; returns
+    (units_after_rituals, [hand indices fired]) or None — in which case nothing is
+    committed. Only called when the cost is NOT payable without help, so a ritual is
+    never spent for nothing (a stated pilot approximation)."""
+    idx = sorted((j for j, c in enumerate(hand)
+                  if c is not None and c.ritual is not None),
+                 key=lambda j: (hand[j].mv or 0, j))
+    u, fired = list(units), []
+    for j in idx:
+        r = hand[j]
+        rem = _pay(r.pips, r.generic, u)
+        if rem is None:
+            continue
+        n, colors = r.ritual
+        u = rem + [colors] * n
+        fired.append(j)
+        if _pay(pips, generic, u) is not None:
+            return u, fired
+    return None
 
 
 def _bottom(hand, n):
@@ -526,6 +715,10 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
     # sickness) and every turn thereafter, unblocked, for its printed power. Damage
     # is cumulative and uncontested — see `_assumptions`.
     board = []
+    # Noncreature permanents the sim cast (rocks, enchantments, equipment): they
+    # never attack, but devotion and battlefield cost reducers (Jet Medallion) read
+    # them. Disruption only touches `board` — creatures — as before.
+    others = []
     # Cost reduction. Eminence ("cmd") works FROM THE COMMAND ZONE — verified on
     # The Ur-Dragon, runner run 32367856797 — so it is active from turn one whether
     # or not the commander is ever cast. Its "other" wording means it never
@@ -537,13 +730,13 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                      if kind == "cmd")
     first_disc_used = False
 
-    def _discounted_generic(sc, is_commander_cast):
+    def _discounted_generic(sc, is_commander_cast, tax=0):
         d = 0
         if not is_commander_cast:
             for typ, n in cmd_disc:
                 if _disc_matches(sc, typ):
                     d += n
-        for bsc, _t in board:
+        for bsc, _t in board + others:
             if bsc is sc:
                 continue
             for kind, typ, n in bsc.discounts:
@@ -552,7 +745,9 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                 elif kind == "first" and not first_disc_used and _disc_matches(sc, typ):
                     d += n
         # Reduction applies to the GENERIC portion only — colored pips are a floor.
-        return max(0, sc.generic - d)
+        # Commander tax is generic mana added to the total cost, so a reducer can
+        # eat into it too.
+        return max(0, sc.generic + tax - d)
 
     wipe_turn = None
     if disruption:
@@ -560,6 +755,13 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
         # Drawn from the DISRUPTION stream, never `rnd` — see the docstring.
         wipe_turn = (drnd or random.Random(0)).randint(lo, hi)
     wiped, removed, recasts = 0, 0, 0
+    # Commander zone state (audit S7). `cmd_in_play` is True while the commander is
+    # on the battlefield; disruption sends it back to the command zone and each
+    # trip adds `commander_tax` generic to the next cast (rule 903.8). Without
+    # disruption it never leaves, so the pure goldfish casts it exactly once —
+    # byte-identical to the model before recasts existed.
+    cmd_in_play, cmd_left = False, 0
+    cmd_tax = (disruption or {}).get("commander_tax", 0)
     # Counted separately from `board`, which disruption empties — the clock's coverage
     # gate asks "how many creatures did this deck CAST", not "how many survived".
     creature_casts = 0
@@ -578,7 +780,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             if wipe_turn == t and board:
                 wiped += 1
                 if commander is not None and any(sc is commander for sc, _ in board):
-                    recasts += 1          # it goes back to the command zone
+                    cmd_in_play = False   # it goes back to the command zone
+                    cmd_left += 1
                 board = []
             elif (t >= disruption["removal_from"] and board
                   and (t - disruption["removal_from"]) % disruption["removal_every"] == 0):
@@ -587,7 +790,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                 gone = board.pop(0)
                 removed += 1
                 if commander is not None and gone[0] is commander:
-                    recasts += 1
+                    cmd_in_play = False
+                    cmd_left += 1
         # Combat happens BEFORE this turn's land drop and casts: a creature cast on
         # turn N attacks on turn N+1, so the damage credited to turn t comes from the
         # board as it stood at the end of turn t-1.
@@ -624,16 +828,35 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
         if t == FLOOD_TURN:
             flood_seen = lands_seen
 
-        units = _mana_units(in_play, producers, t)
-        if not units:
-            continue
-        # The commander goes down the moment it's payable — goldfish never recasts it,
-        # so commander tax is dead code by design and isn't modeled.
-        if commander is not None and commander_turn is None and commander.castable:
-            rem = _pay(commander.pips,
-                       _discounted_generic(commander, is_commander_cast=True), units)
+        perms = board + others
+        units = _mana_units(in_play, producers, t, perms)
+        # No early exit on an empty pool (audit S11): a zero-cost spell (Ornithopter,
+        # a Mox, Lotus Petal) is castable with no mana at all, and the old
+        # `if not units: continue` stranded it in hand on every no-land turn.
+        fired_any = False
+        # The commander goes down the moment it's payable. Under disruption it can
+        # come back from the command zone, paying {commander_tax} more per trip.
+        if commander is not None and not cmd_in_play and commander.castable:
+            cg = _discounted_generic(commander, is_commander_cast=True,
+                                     tax=cmd_tax * cmd_left)
+            rem = _pay(commander.pips, cg, units)
+            if rem is None:
+                # Rituals in hand (Dark Ritual) cast the commander a turn early.
+                hit = _fire_rituals(hand, units, commander.pips, cg)
+                if hit is not None:
+                    units, fired = hit
+                    for j in fired:
+                        cast_turn.setdefault(hand[j].key, t)
+                        hand[j] = None
+                    fired_any = True
+                    rem = _pay(commander.pips, cg, units)
             if rem is not None:
-                commander_turn, units = t, rem
+                units = rem
+                if commander_turn is None:
+                    commander_turn = t
+                else:
+                    recasts += 1
+                cmd_in_play = True
                 if commander.is_creature:
                     first_disc_used = True     # the first creature spell is spent
                     board.append((commander, t))
@@ -643,10 +866,11 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
         # ONE pass, highest mana value first. No restart-after-a-cast is needed:
         # paying for something only ever removes mana, so a card that couldn't be paid
         # for a moment ago can't become payable later in the same turn.
-        cast_any = False
+        cast_any = fired_any
+        hand = [c for c in hand if c is not None]
         for j in sorted(range(len(hand)), key=lambda j: (-(hand[j].mv or 0), j)):
             sc = hand[j]
-            if sc.is_land or not sc.castable:
+            if sc is None or sc.is_land or not sc.castable or sc.ritual is not None:
                 continue
             rem = _pay(sc.pips, _discounted_generic(sc, is_commander_cast=False),
                        units)
@@ -657,6 +881,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             cast_any = True
             if sc.is_producer:
                 producers.append((sc, t))
+            if sc.is_permanent and not sc.is_creature:
+                others.append((sc, t))
             if sc.is_creature:
                 first_disc_used = True
                 board.append((sc, t))
@@ -665,7 +891,39 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
                     unknown_power_casts += 1
             if sc.key not in cast_turn:
                 cast_turn[sc.key] = t
-            if not units:
+            # No `break` on an empty pool: the pass is high-MV first, so once the
+            # mana runs out only free spells remain payable — and they still are.
+        # One ritual-assisted cast per turn: the biggest spell still in hand that the
+        # rituals make payable. Rituals are never cast for nothing.
+        if any(c is not None and c.ritual for c in hand):
+            for j in sorted(range(len(hand)), key=lambda j: (-((hand[j].mv or 0)
+                                                               if hand[j] else 0), j)):
+                sc = hand[j]
+                if (sc is None or sc.is_land or not sc.castable
+                        or sc.ritual is not None):
+                    continue
+                g = _discounted_generic(sc, is_commander_cast=False)
+                hit = _fire_rituals(hand, units, sc.pips, g)
+                if hit is None:
+                    continue
+                units, fired = hit
+                for k in fired:
+                    cast_turn.setdefault(hand[k].key, t)
+                    hand[k] = None
+                units = _pay(sc.pips, g, units)
+                hand[j] = None
+                cast_any = True
+                if sc.is_producer:
+                    producers.append((sc, t))
+                if sc.is_permanent and not sc.is_creature:
+                    others.append((sc, t))
+                if sc.is_creature:
+                    first_disc_used = True
+                    board.append((sc, t))
+                    creature_casts += 1
+                    if sc.power is None:
+                        unknown_power_casts += 1
+                cast_turn.setdefault(sc.key, t)
                 break
         if cast_any:
             hand = [c for c in hand if c is not None]
@@ -679,7 +937,8 @@ def play_game(rnd, commander, library, turns=TURNS, mulligan=True, on_play=True,
             "first_kill": first_kill, "table_kill": table_kill,
             "damage": dmg, "unknown_power_casts": unknown_power_casts,
             "creature_casts": creature_casts,
-            "wiped": wiped, "removed": removed, "recasts": recasts}
+            "wiped": wiped, "removed": removed, "recasts": recasts,
+            "commander_removed": cmd_left}
 
 
 # --------------------------------------------------------------------------- #
@@ -706,6 +965,37 @@ def _run(compiled, seeds, turns, mulligan, on_play, disruption=None):
 
 def _mean(xs):
     return (sum(xs) / len(xs)) if xs else 0.0
+
+
+def _production_lines(compiled):
+    """One clause per v4 production mechanic the deck actually contains, naming the
+    cards — said beside the numbers because for months none of it was modeled and
+    a mono-black deck read a full turn slower than it plays."""
+    cards = compiled["library"] + ([compiled["commander"]]
+                                   if compiled.get("commander") else [])
+
+    def names(pred):
+        ns = sorted({sc.name for sc in cards if pred(sc)})
+        return ", ".join(ns[:4]) + (", …" if len(ns) > 4 else "")
+
+    out = []
+    if any(sc.ritual for sc in cards):
+        out.append(f"rituals ({names(lambda sc: sc.ritual)}) are cast only when they "
+                   "make the commander or the biggest spell in hand payable that turn, "
+                   "one assisted cast per turn; threshold-style upgrades are ignored")
+    if any(sc.scale for sc in cards):
+        out.append(f"{names(lambda sc: sc.scale)} add one mana per land of the named "
+                   "type (Urborg counted) when that beats their plain tap ability, "
+                   "paying the activation from the cheapest mana")
+    if any(sc.devotion is not None for sc in cards):
+        out.append(f"{names(lambda sc: sc.devotion is not None)} adds devotion to "
+                   "the best colour across every permanent the sim cast")
+    if any(sc.extra for sc in cards):
+        out.append(f"{names(lambda sc: sc.extra)} adds one mana per land of its type "
+                   "tapped, from the turn after it lands")
+    if any(sc.lands_are for sc in cards):
+        out.append(f"{names(lambda sc: sc.lands_are)} gives every land its type")
+    return out
 
 
 def _assumptions(compiled, mulligan, on_play, games):
@@ -764,8 +1054,9 @@ def _assumptions(compiled, mulligan, on_play, games):
         f"{cov['none']} with no data.",
         "Mana rocks and dorks produce from the turn AFTER they resolve — a deliberate "
         "pessimism that costs Sol Ring one turn.",
-        "Ramp sorceries (Cultivate, Rampant Growth) add no mana; only artifact and "
-        "creature producers are modeled.",
+        "Ramp sorceries (Cultivate, Rampant Growth) add no mana; artifact and "
+        "creature producers are modeled, plus the production listed below when the "
+        "deck's attrs carry it (FlagsVer 4).",
         "Land drops are untapped-first then color-greedy, and spells are cast "
         "highest-mana-value-first. That's a stated pilot approximation.",
         f"Seeded Monte Carlo over {games:,} games — distinct from the exact "
@@ -790,6 +1081,9 @@ def _assumptions(compiled, mulligan, on_play, games):
                         + ") find no lands")
         out.append("[!] Fetch effects are NOT modeled: " + "; ".join(bits) + ". "
                    "Their numbers here understate them.")
+    prod = _production_lines(compiled)
+    if prod:
+        out.append("Production modeled (oracle_flags v4): " + "; ".join(prod) + ".")
     if disc_lines:
         out.append("Cost reduction modeled (generic portion only; colored pips are "
                    "a floor): " + "; ".join(sorted(disc_lines)) + ".")
@@ -829,6 +1123,20 @@ def _card_rows(compiled, records, games, turns):
     for r in rows:
         r.pop("_p")
     return rows
+
+
+def _median_censored(xs):
+    """Median over ALL games, a game that never got there counting as +infinity
+    (audit S2). None when that median is itself infinite — i.e. when fewer than
+    half the games got there at all.
+
+    The old median was taken over the games that DID kill only: a deck lethal in
+    48% of games by T8 printed "median T8" beside "by T8 48%", and a 60% deck's
+    "median" was really its 30th percentile. Censoring keeps every game in the
+    denominator, so the number means what "median" says."""
+    vals = [math.inf if x is None else x for x in xs]
+    m = _median(vals)
+    return None if m is None or math.isinf(m) else m
 
 
 def _median(xs):
@@ -889,8 +1197,9 @@ def _clock(compiled, records, games, turns):
         "creature_casts_per_game": round(total_creature_casts / games, 2),
         "kill_rate": round(len(firsts) / games, 4),
         "table_kill_rate": round(len(tables) / games, 4),
-        "median_first_kill": _median(firsts),
-        "median_table_kill": _median(tables),
+        # Over ALL games, non-kills as +inf; None when that median is infinite.
+        "median_first_kill": _median_censored([r["first_kill"] for r in records]),
+        "median_table_kill": _median_censored([r["table_kill"] for r in records]),
         "mean_damage_by_turn_end": round(_mean([r["damage"] for r in records]), 1),
         "p_first_kill_by": {str(t): round(sum(1 for x in firsts if x <= t) / games, 4)
                             for t in (4, 6, 8) if t <= turns},
@@ -908,10 +1217,10 @@ def _clock(compiled, records, games, turns):
             "No clock: the sim never cast a creature, so there is no board to attack "
             "with. A deck that wins another way needs a different measure.")
         return out
-    # A median only exists if at least half the games got there; below that the
-    # honest statement is the rate, not a median drawn from the fast tail.
-    if out["median_first_kill"] is None or out["kill_rate"] < 0.5:
-        out["median_first_kill"] = None
+    # A median only exists if at least half the games got there (the censored
+    # median above is None otherwise); below that the honest statement is the
+    # rate, not a median drawn from the fast tail.
+    if out["median_first_kill"] is None:
         out["note"] = (f"Lethal presented in only {out['kill_rate'] * 100:.0f}% of "
                        f"games within {turns} turns — too few for a median. The rate "
                        "is the honest number here.")
@@ -944,17 +1253,26 @@ def _disruption_report(records, games, disruption):
     wiped = sum(r["wiped"] for r in records)
     removed = sum(r["removed"] for r in records)
     recasts = sum(r["recasts"] for r in records)
+    cmd_removed = sum(r.get("commander_removed", 0) for r in records)
+    tax = disruption.get("commander_tax", 0)
     return {
         "profile": "standard",
         "wipes_per_game": round(wiped / games, 2),
         "removal_per_game": round(removed / games, 2),
+        # Trips to the command zone, and the recasts that actually resolved
+        # (with tax). The gap between the two is games the deck couldn't afford
+        # its commander back inside the horizon.
+        "commander_removals_per_game": round(cmd_removed / games, 2),
         "commander_recasts_per_game": round(recasts / games, 2),
+        "commander_tax": tax,
         "definition": (f"One board wipe on a turn drawn from "
                        f"{disruption['wipe_turns'][0]}-{disruption['wipe_turns'][1]}, "
                        f"spot removal on the biggest creature every "
                        f"{disruption['removal_every']} turns from turn "
                        f"{disruption['removal_from']}, and the commander returning to "
-                       f"the command zone when it is hit."),
+                       f"the command zone when it is hit — then recast when payable, "
+                       f"at +{tax} generic per previous trip (commander tax). "
+                       f"'Recasts' counts casts that actually resolved."),
         "caveat": ("A crude stand-in for opponents, not a simulation of them: it never "
                    "counters a spell, never reacts to what you are doing, and always "
                    "kills the biggest creature. Read it as 'can this deck rebuild', "
@@ -1033,6 +1351,12 @@ AB_METRICS = ("commander_by_t4", "commander_by_t6", "keepable", "screw", "flood"
               # first_kill_turn, which is the only metric here where that is true.
               "first_kill_turn", "damage_dealt")
 Z95 = 1.96
+# The turn each A/B metric is DEFINED at (audit S11). With `--turns` below it the
+# metric is not measurable — "commander by T6" over a 3-turn horizon read as
+# "commander by T3" under the T6 label, and screw/lands_t4 read missing turns as
+# zero lands — so the delta is None and the CLI says why, never a number.
+AB_METRIC_TURN = {"commander_by_t4": 4, "commander_by_t6": 6,
+                  "screw": SCREW_TURN, "lands_t4": 4, "flood": FLOOD_TURN}
 
 
 def _per_game(record):
@@ -1192,9 +1516,14 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
                             disruption=disruption)
 
     deltas = _paired_deltas(rec_a, rec_b, AB_METRICS)
+    gated = {m: need for m, need in AB_METRIC_TURN.items() if turns < need}
+    for m in gated:
+        deltas[m] = None
     n = len(seeds)
     return {"out": out_name, "in": ref.name, "games": n, "seed": seed,
             "copies": len(positions), "a": rep_a, "b": rep_b, "deltas": deltas,
+            # metric -> the turn it needs, for every metric this horizon can't reach.
+            "gated": gated,
             "definitions": dict(DEFINITIONS),
             "assumptions": rep_a["assumptions"] + [
                 "A/B uses common random numbers: both arms play the identical shuffles, "
@@ -1227,14 +1556,15 @@ def cache_key(deck_path, collection_path, games, seed, turns, mulligan):
            # is served forever without the new fields (the clock landed 2026-08-13).
            "schema": REPORT_SCHEMA}
     if collection_path:
-        d = os.path.dirname(collection_path) or "."
+        # EVERY file `mtglib.load_collection` reads — the base file, both
+        # owned_additions files and both attrs overlays — from mtglib's own list,
+        # so a new input can never be added there and forgotten here. Keyed on
+        # basename so the key stays stable when the same tree is reached by a
+        # different path. owned_additions.txt was missing until 2026-10-11 (audit
+        # S6): a player-confirmed card never reached a cached sim.
         key["collection"] = _stat(collection_path)
-        key["collection_attrs"] = _stat(os.path.join(d, "collection_attrs.csv"))
-        # The committed snapshot attrs overlay under the private file — a pulled
-        # refresh must invalidate cached sims, or the server keeps serving
-        # identity-approximation numbers labelled as enriched.
-        key["collection_attrs_snapshot"] = _stat(
-            os.path.join(d, "collection_attrs.snapshot.csv"))
+        key["collection_inputs"] = [[os.path.basename(p), _stat(p)]
+                                    for p in mtglib.collection_inputs(collection_path)]
     return key
 
 
@@ -1419,8 +1749,9 @@ def print_report(rep):
                 print(f"   table kill  median T{clk['median_table_kill']:g}  "
                       f"({rep['definitions']['table_kill']})")
             else:
-                print(f"   table kill  not reached within {clk['horizon']} turns "
-                      f"({_pct(clk['table_kill_rate'])} of games)")
+                print(f"   table kill  no median — reached in "
+                      f"{_pct(clk['table_kill_rate'])} of games within "
+                      f"{clk['horizon']} turns")
             if clk["bracket_hint"]:
                 print(f"   -> consistent with the Bracket {clk['bracket_hint']} "
                       f"expectation. {rep['definitions']['clock_bracket']}")
@@ -1438,7 +1769,8 @@ def print_report(rep):
     if dis:
         print(f"\nPHANTOM DISRUPTION ({dis['profile']}) — EXPERIMENT:")
         print(f"   {dis['wipes_per_game']} wipe(s) · {dis['removal_per_game']} removal "
-              f"· {dis['commander_recasts_per_game']} commander recast(s) per game")
+              f"· commander removed {dis.get('commander_removals_per_game', 0)} / "
+              f"recast {dis['commander_recasts_per_game']} (with tax) per game")
         print(f"   {dis['definition']}")
         print(f"   [!] {dis['caveat']}")
         delta = dis.get("delta")
@@ -1461,12 +1793,17 @@ def print_ab(ab):
           f"({ab['copies']} cop{'y' if ab['copies'] == 1 else 'ies'}, "
           f"{ab['games']:,} paired games, seed {ab['seed']})\n")
     print(f"  {'metric':<18}{'A':>8}{'B':>8}{'delta':>9}{'95% CI':>16}")
+    gated = ab.get("gated") or {}
     for m, d in ab["deltas"].items():
+        if d is None:
+            print(f"  {m:<18}{'n/a':>8}  (needs --turns >= {gated.get(m, '?')})")
+            continue
         print(f"  {m:<18}{d['a']:>8.3f}{d['b']:>8.3f}{d['delta']:>+9.3f}"
               f"   [{d['lo']:+.3f}, {d['hi']:+.3f}]"
               + ("  *" if d["significant"] else ""))
     print("\n  * the interval excludes zero. Unpaired intervals would be "
-          + ", ".join(f"{m} ±{d['unpaired_ci']:.3f}" for m, d in ab["deltas"].items())
+          + ", ".join(f"{m} ±{d['unpaired_ci']:.3f}" for m, d in ab["deltas"].items()
+                      if d is not None)
           + " — the pairing is what makes small deltas readable.")
     print("\nAssumptions:")
     for a in ab["assumptions"]:

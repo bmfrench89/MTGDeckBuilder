@@ -5,7 +5,7 @@
 <div class="sub">{{ unique }} unique cards · {{ copies }} copies
 {% if has_price %}· <span class="gold">~${{ '%.2f'|format(total) }}</span> MARKET value{% endif %}</div>
 
-<div class="card mt-4" style="border-left:3px solid {{ '#3fb950' if carddb.on and carddb.pct >= 60 else '#d29922' }}">
+<div class="card mt-4" style="border-left:3px solid {{ 'var(--in)' if carddb.on and carddb.pct >= 60 else 'var(--short)' }}">
   {% if carddb.on %}
     <b class="good">Card DB: enriched{% if carddb.source == 'snapshot' %}
     (committed snapshot — name-resolved, no printing ids){% else %}

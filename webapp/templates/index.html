@@ -1,77 +1,124 @@
 {% extends "base.html" %}
 {% block title %}Decks · MTG Deckbuilder{% endblock %}
 {% block content %}
-<h1>Your Decks</h1>
-<div class="sub">Ranked by power. Each row shows whether the deck is ready to sleeve —
-open one for its full dashboard.</div>
-
-<div class="row tight mb-4" id="deckfilters">
-  <input id="deckq" type="text" placeholder="Filter decks…" autocomplete="off" class="grow-sm">
-  <a class="thchip on" data-f="all" href="#">all</a>
-  {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
-  <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">ready to sleeve</a>
-  <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">needs attention</a>
-  <span class="muted fs-xs" id="deckcount"></span>
-</div>
-
-<div class="decklist">
-{% for d in decks %}
-<div class="deckrow" data-name="{{ (d.title ~ ' ' ~ d.commander)|lower }}"
-     data-bracket="{{ d.assess.bracket if d.assess else '' }}"
-     data-ready="{{ '1' if (d.total == 100 and not d.to_buy and not d.contested) else '0' }}">
-  <div class="rank">{{ loop.index }}</div>
+<header class="pagehead">
   <div>
-    <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
-    <div class="cmd">{{ d.commander }}</div>
-    <div class="health">
-      {% if d.total and d.total != 100 %}
-        <span class="tag alert">{{ d.total }} cards</span>
-      {% endif %}
-      {% if d.to_buy %}
-        <span class="tag buy">{{ d.to_buy }} to buy</span>
-      {% endif %}
-      {% if d.contested %}
-        <span class="tag alert" title="Cards this deck shares beyond the copies you own">
-          ⇄ {{ d.contested }} contested</span>
-      {% endif %}
-      {% if d.total == 100 and not d.to_buy and not d.contested %}
-        <span class="tag">✓ ready to sleeve</span>
-      {% endif %}
-    </div>
-  </div>
-  <div class="stat">
-    {% if d.assess %}
-      <span class="pill b{{ d.assess.bracket }}">B{{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
-      <span class="pw">{{ d.assess.speed.short }}</span>
-      <span class="muted fs-xs">{{ d.assess.resilience.label }}</span>
-    {% else %}<span class="muted">—</span>{% endif %}
-    <a class="btn sm" href="{{ url_for('deck', stem=d.stem) }}">Open</a>
+    <h1>Your decks</h1>
+    <div class="sub">Ranked by bracket, then speed. Each card shows whether the deck is
+      ready to sleeve and how its core roles sit against their targets.</div>
   </div>
   <div class="acts">
-    <a href="{{ url_for('deck_visual', stem=d.stem) }}">Images</a>
-    <a href="{{ url_for('export_deck', stem=d.stem) }}"
-       title="ManaPool-ready list — quantity + card name, one per line">.txt</a>
-    <a href="{{ url_for('export_deck_html', stem=d.stem) }}"
-       title="Self-contained HTML report — opens anywhere; card images need an internet connection; print it (Ctrl+P) to save as PDF">Report</a>
-    <a href="{{ url_for('deck_proxies', stem=d.stem, buylist=1) }}"
-       title="Print-exact 63×88mm playtest proxies of this deck's buylist — sleeve them over the cards they'd replace and play before you buy. Print at 100% scale.">Proxies</a>
-    <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
-       title="Deck + all analytics, to hand to a coaching session">Assess</a>
-    <a href="{{ url_for('deck_mulligan', stem=d.stem) }}"
-       title="Practise keep/ship decisions on this deck's real hands">Mulligan</a>
-    <a href="{{ url_for('deck_table_card', stem=d.stem) }}"
-       title="One screen for the Rule 0 conversation — bracket, Game Changers, combos, speed">🃏 Table card</a>
-    <a href="{{ url_for('deck_edit', stem=d.stem) }}">Edit</a>
-    <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}" class="push"
-      onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">
-      <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
-    </form>
-    <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
-      onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; and its notes/buy-list/history? Git keeps the history, so this is recoverable from the repo — but the files go now.');">
-      <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>
-    </form>
+    <a class="btn" href="{{ url_for('build_next') }}">+ Build a deck</a>
   </div>
+</header>
+
+<div class="row tight mb-4" id="deckfilters">
+  <input id="deckq" type="search" placeholder="Filter decks…" autocomplete="off"
+         class="grow-sm" aria-label="Filter decks by name or commander">
+  <a class="thchip on" data-f="all" href="#">All</a>
+  {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
+  <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">Ready to sleeve</a>
+  <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">Needs attention</a>
+  <span class="muted fs-xs" id="deckcount" aria-live="polite"></span>
 </div>
+
+{% set pipbg = {'W': '#F4EBC9', 'U': '#5AA9E6', 'B': '#8C7FA8', 'R': '#E5654B', 'G': '#4FAE6E'} %}
+{% set colornames = {'W': 'white', 'U': 'blue', 'B': 'black', 'R': 'red', 'G': 'green'} %}
+<div class="decklist">
+{% for d in decks %}
+{% set ready = d.total == 100 and not d.to_buy and not d.contested and not d.qty_error %}
+{% set ident = d.identity or [] %}
+<article class="deckcard" data-name="{{ (d.title ~ ' ' ~ d.commander)|lower }}"
+     data-bracket="{{ d.assess.bracket if d.assess else '' }}"
+     data-ready="{{ '1' if ready else '0' }}" aria-labelledby="dk-{{ d.stem }}">
+  <span class="stripe" aria-hidden="true"
+    {%- if ident|length == 1 %} style="background:{{ pipbg[ident[0]] }}"
+    {%- elif ident|length > 1 %} style="background:linear-gradient(90deg{% for c in ident %}, {{ pipbg[c] }}{% endfor %})"{% endif %}></span>
+  <div class="top">
+    <div style="min-width:0">
+      <div class="name" id="dk-{{ d.stem }}"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
+      <div class="cmd">{{ d.commander }}</div>
+    </div>
+    {% if ident %}<span class="pips" role="img"
+      aria-label="Colour identity: {% for c in ident %}{{ colornames[c] }}{{ ', ' if not loop.last }}{% endfor %}">
+      {%- for c in ident %}<span class="pipc {{ c }}" aria-hidden="true">{{ c }}</span>{% endfor %}</span>{% endif %}
+  </div>
+
+  <div class="badges">
+    {% if d.assess %}
+      <span class="pill b{{ d.assess.bracket }}">Bracket {{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
+    {% endif %}
+    {% if d.study %}<span class="tag" title="# Study: yes — kept for review, holds no physical copies">Study copy</span>{% endif %}
+  </div>
+
+  <div class="status">
+    {% if d.qty_error %}
+      <span class="bad" title="{{ d.qty_error }}">⚠ Fix the quantity typo in Edit</span>
+    {% elif ready %}
+      <span class="ok">✓ Ready to sleeve</span>
+    {% else %}
+      {% set issues = [] %}
+      {% if d.total and d.total != 100 %}{% set _ = issues.append(d.total ~ ' cards') %}{% endif %}
+      {% if d.to_buy %}{% set _ = issues.append(d.to_buy ~ ' to buy') %}{% endif %}
+      {% if d.contested %}{% set _ = issues.append('⇄ ' ~ d.contested ~ ' contested') %}{% endif %}
+      <span class="bad"{% if d.contested %} title="Cards this deck shares beyond the copies you own"{% endif %}>{{ issues|join(' · ') if issues else 'Needs attention' }}</span>
+    {% endif %}
+  </div>
+
+  {% if d.roles %}
+  <div class="roles" aria-label="Core roles against their targets">
+    {% for r in d.roles %}
+    <div class="role" title="{{ r.label }} {{ r.n }} — target {{ r.lo }}–{{ r.hi }}, {{ r.word }}">
+      <div class="v">{{ r.n }}</div>
+      <div class="l"><span class="dot st-{{ r.status }}" aria-hidden="true"></span>{{ r.label }}</div>
+      <span class="sr-only">{{ r.word }}, target {{ r.lo }}–{{ r.hi }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if d.assess %}
+  <div class="axes">
+    <span>Speed <b>{{ d.assess.speed.short }}</b></span>
+    <span>Resilience <b>{{ d.assess.resilience.short }}</b></span>
+  </div>
+  {% endif %}
+
+  <div class="foot">
+    <a class="btn" href="{{ url_for('deck', stem=d.stem) }}">Open</a>
+    <a class="btn ghost" href="{{ url_for('deck_edit', stem=d.stem) }}">Edit</a>
+    <details class="menu">
+      <summary aria-label="More actions for {{ d.title }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+      </summary>
+      <div class="items">
+        <a href="{{ url_for('deck_table_card', stem=d.stem) }}"
+           title="One screen for the Rule 0 conversation — bracket, Game Changers, combos, speed">Table card</a>
+        <a href="{{ url_for('deck_assess_page', stem=d.stem) }}"
+           title="Deck + all analytics, to hand to a coaching session">Assess</a>
+        <a href="{{ url_for('deck_mulligan', stem=d.stem) }}"
+           title="Practise keep/ship decisions on this deck's real hands">Mulligan practice</a>
+        <a href="{{ url_for('deck_visual', stem=d.stem) }}">Card images</a>
+        <hr>
+        <a href="{{ url_for('export_deck', stem=d.stem) }}"
+           title="ManaPool-ready list — quantity + card name, one per line">Export .txt</a>
+        <a href="{{ url_for('export_deck_html', stem=d.stem) }}"
+           title="Self-contained HTML report — opens anywhere; card images need an internet connection; print it (Ctrl+P) to save as PDF">Report</a>
+        <a href="{{ url_for('deck_proxies', stem=d.stem, buylist=1) }}"
+           title="Print-exact 63×88mm playtest proxies of this deck's buylist — sleeve them over the cards they'd replace and play before you buy. Print at 100% scale.">Proxies</a>
+        <hr>
+        <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}"
+          onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every change is revertable.');">
+          <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
+        </form>
+        <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
+          onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; and its notes/buy-list/history? Git keeps the history, so this is recoverable from the repo — but the files go now.');">
+          <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>
+        </form>
+      </div>
+    </details>
+  </div>
+</article>
 {% endfor %}
 </div>
 
@@ -114,7 +161,7 @@ open one for its full dashboard.</div>
 (function () {
   // Client-side: the whole list is already on the page, so filtering is instant and
   // doesn't cost a round-trip (or re-run every deck's analysis).
-  var rows = [].slice.call(document.querySelectorAll('.deckrow'));
+  var rows = [].slice.call(document.querySelectorAll('.deckcard'));
   var chips = [].slice.call(document.querySelectorAll('#deckfilters .thchip'));
   var q = document.getElementById('deckq'), count = document.getElementById('deckcount');
   var active = 'all';

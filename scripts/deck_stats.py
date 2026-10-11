@@ -34,12 +34,47 @@ def read(path):
         return f.read()
 
 
+# What each basic land taps for, by the land type its name carries. Wastes has no
+# basic land type and taps for colourless.
+_BASIC_MANA = {"plains": "W", "island": "U", "swamp": "B", "mountain": "R",
+               "forest": "G", "wastes": "C"}
+
+
+def basic_land_card(name, quantity=1):
+    """A synthesized Card for a basic land the collection lookup missed (audit S10).
+
+    Basics are always owned in unlimited quantity (grounding rule #9) and the export
+    deliberately omits them, so a deck running 20 Snow-Covered Swamps used to carry
+    20 lands with no colour at all — zero black sources from the deck's own
+    manabase, mislabelled as "enriched before the restriction vocabulary". A basic's
+    rules text is fixed by its name, so this is a fact, not a guess: Land type,
+    Basic (and Snow) supertypes, its basic land subtype, and `produced` set to the
+    one colour it taps for (Wastes: {C}). Identity stays empty — basics have none."""
+    low = name.strip().lower()
+    snow = low.startswith("snow-covered ")
+    base = low[len("snow-covered "):] if snow else low
+    sub = base.capitalize()
+    return mtglib.Card(
+        name=name, quantity=quantity, mana_value=0.0, mana_cost="",
+        types=["Land"], subtypes=[] if base == "wastes" else [sub],
+        supertypes=["Basic", "Snow"] if snow else ["Basic"],
+        produced={_BASIC_MANA[base]})
+
+
 def analyze(deck_cards, coll_index):
-    # Enrich deck cards from the collection where possible.
+    """Enrich deck cards from the collection -> (enriched, missing).
+
+    A basic land the collection does not list is synthesized by
+    `basic_land_card` and is NOT reported missing: basics are always owned, and a
+    "missing" basic would surface as a BUY badge for a card the player has
+    hundreds of."""
     enriched = []
     missing = []
     for d in deck_cards:
         ref = mtglib.lookup(coll_index, d.name)
+        if ref is None and mtglib.is_basic(d.name):
+            enriched.append(basic_land_card(d.name, d.quantity))
+            continue
         if ref is None:
             missing.append(d)
             enriched.append(d)  # keep, but unknown data
@@ -114,9 +149,12 @@ def build_report(deck_cards, enriched, missing, coll_index):
     double = Counter()
     if have_cost:
         for c in nonland:
-            for color, n in mtglib.pip_counts(c.mana_cost).items():
+            # Front face only (audit S1): an adventure / MDFC / split cost string
+            # "{1}{B}{B} // {1}{B}{B}" is two faces' costs, and you cast ONE.
+            cost = mtglib.front_face(c.mana_cost or "")
+            for color, n in mtglib.pip_counts(cost).items():
                 pips[color] += n * c.quantity
-            dp = mtglib.is_double_pip(c.mana_cost)
+            dp = mtglib.is_double_pip(cost)
             if dp:
                 double[dp] += c.quantity
 
@@ -154,7 +192,15 @@ def build_report(deck_cards, enriched, missing, coll_index):
             for color in prod:
                 restricted[color] += c.quantity
             continue
-        if c.flags_ver < 2:
+        # "Enriched before the restriction vocabulary" is a claim about ENRICHED
+        # cards (audit S10). A land with produced=None was never enriched — it is
+        # already counted, and labelled, as identity_lands — and a basic the
+        # collection doesn't list was synthesized by `basic_land_card` from its
+        # name, not enriched at all (and a basic can never carry a restriction).
+        # Counting either here printed a label that was simply false.
+        synthesized = (mtglib.is_basic(c.name)
+                       and mtglib.lookup(coll_index or {}, c.name) is None)
+        if c.flags_ver < 2 and c.produced is not None and not synthesized:
             basis["restriction_unknown_lands"] += c.quantity
         for color in prod:
             sources[color] += c.quantity
@@ -300,6 +346,11 @@ def main():
 
     coll_index = mtglib.index_by_name(coll)
     enriched, missing = analyze(deck_cards, coll_index)
+    # The deck's own `.attrs.csv` companion, exactly as manabase.py's CLI and
+    # deckcore.analyze_deck apply it (audit S4). Without it this CLI reported a
+    # 35-land deck as 27-28 lands on a name-only collection.
+    stem = args.deck[:-4] if args.deck.endswith(".txt") else args.deck
+    deckcore.apply_attrs(enriched, deckcore.load_attrs(f"{stem}.attrs.csv"))
     rep = build_report(deck_cards, enriched, missing, coll_index)
 
     if args.json:

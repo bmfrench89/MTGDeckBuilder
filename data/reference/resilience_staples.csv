@@ -40,3 +40,30 @@ recursion,Angelic Renewal
 recursion,Gift of Immortality
 recursion,Haunted Crossroads
 recursion,Along the Crooked Way
+# 2026-10-11 additions (whole-app audit R10) — verbatim text read from deck-verify runs
+# 38138722782 and 38139031278 (the Tergrid protection research). Equipment and lands
+# that keep a permanent untargetable/indestructible are protection; Imp's Mischief
+# redirects the removal spell itself. Effects that return the creature when it dies
+# (or is exiled, for Ghostform) are recursion by this file's own Role definition.
+protection,Champion's Helm
+protection,Commander's Plate
+protection,Mithril Coat
+protection,Mask of Avacyn
+protection,Mirror Shield
+protection,Whispersilk Cloak
+protection,Shield of Kaldra
+protection,Tyrite Sanctum
+protection,Imp's Mischief
+recursion,Kaya's Ghostform
+recursion,Unholy Indenture
+recursion,Feign Death
+recursion,Undying Malice
+recursion,Undying Evil
+recursion,Not Dead After All
+recursion,Supernatural Stamina
+recursion,Fake Your Own Death
+recursion,Demonic Gifts
+recursion,Malakir Rebirth
+recursion,Reanimate
+recursion,Animate Dead
+recursion,Necromancy

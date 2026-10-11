@@ -638,7 +638,12 @@ def test_schema_bump_ships_with_the_assumptions_change():
     decks keep the old list until an unrelated mtime change. Pin the current
     value: any change to what a report says must arrive with a bump."""
     import goldfish
-    assert goldfish.REPORT_SCHEMA == 4
+    # 5 (2026-10-11): rituals / Coffers / Nykthos / Crypt Ghast / Urborg production
+    # and noncreature-permanent discounts (Jet Medallion) entered the model.
+    # 6 (2026-10-11, audit track S): front-face costs, deck attrs Cost/Sub-types,
+    # clock medians over all games, real commander recasts under disruption and
+    # free spells on a no-mana turn.
+    assert goldfish.REPORT_SCHEMA == 6
 
 
 def test_ab_arm_b_adjusts_the_fetch_flagged_list():

@@ -12,13 +12,17 @@ Config via env: MTG_COLLECTION, MTG_DECKS_DIR, MTG_PORT.
 """
 import hashlib
 import hmac
+import json
 import os
 import re
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import timedelta
+from urllib.parse import quote, unquote, urlsplit
 
 from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, send_from_directory, session, url_for)
@@ -134,13 +138,80 @@ def _security_headers(resp):
 _PUBLIC_ENDPOINTS = {"login", "static", "service_worker", "shared_tokens"}
 
 
+def _has_control_chars(s, space=True):
+    """True when `s` carries a C0 control character or DEL (and, with `space`, a
+    space) — the bytes that turn a redirect target into something else: a header
+    split, or a tab/newline the browser silently strips."""
+    lo = 0x21 if space else 0x20
+    return any(ord(ch) < lo or ord(ch) == 0x7F for ch in s)
+
+
 def _safe_next(target):
     """Only ever redirect within the app — an absolute URL here would be an
-    open-redirect hole on a public host. Backslashes are normalized first:
-    browsers treat '/\\evil.example' as '//evil.example' (protocol-relative)."""
-    t = (target or "").replace("\\", "/")
-    return target if t and t.startswith("/") and not t.startswith("//") \
-        else url_for("index")
+    open-redirect hole on a public host.
+
+    Checked on the value as received (already decoded once by Werkzeug) AND on its
+    percent-decoded form (W5): browsers strip tab/newline from URLs, so
+    `/\\t/evil.example` collapses to the protocol-relative `//evil.example`, a
+    `%09` is one decode away from the same, and a raw newline used to 500 inside
+    Werkzeug's header check. The received value may hold no whitespace at all; the
+    decoded form may hold an encoded space (`/build-next/The%20Ur-Dragon/deck` is a
+    real page) but no control character. Backslashes are normalized first:
+    browsers treat '/\\evil.example' as '//evil.example'. What survives is a plain
+    local path: no scheme, no netloc, one leading slash."""
+    raw = target if isinstance(target, str) else ""
+    home = url_for("index")
+    if not raw:
+        return home
+    for form, no_space in ((raw, True), (unquote(raw), False)):
+        if _has_control_chars(form, space=no_space):
+            return home
+        t = form.replace("\\", "/")
+        try:
+            parts = urlsplit(t)
+        except ValueError:
+            return home
+        if parts.scheme or parts.netloc or not t.startswith("/") or t.startswith("//"):
+            return home
+    return raw
+
+
+_UNSAFE_METHODS_EXEMPT = ("GET", "HEAD", "OPTIONS")
+
+
+@app.before_request
+def _reject_cross_site_writes():
+    """CSRF brake that works with no password set (W4).
+
+    SameSite=Lax only protects a session cookie, and the default local/LAN app has
+    no session at all — so a page on any other site could POST to
+    /deck/<stem>/delete and the browser would deliver it. Browsers stamp every
+    state-changing request with `Origin` (and modern ones with `Sec-Fetch-Site`),
+    so a write whose Origin names another host, or that the browser itself labels
+    cross-site, is refused. A request carrying neither header (curl, the test
+    client, scripts) is not a browser being tricked, and passes.
+
+    `X-Forwarded-Host` is honoured as an alternative match for a tunnel that
+    rewrites Host: a cross-site page cannot set that header without a CORS
+    preflight this app never grants, so trusting it does not reopen the hole."""
+    if request.method in _UNSAFE_METHODS_EXEMPT:
+        return None
+    if (request.headers.get("Sec-Fetch-Site") or "").strip().lower() == "cross-site":
+        abort(403)
+    origin = request.headers.get("Origin")
+    if origin is None:
+        return None
+    try:
+        origin_host = urlsplit(origin.strip()).netloc.lower()
+    except ValueError:
+        origin_host = ""
+    allowed = {(request.host or "").lower()}
+    fwd = request.headers.get("X-Forwarded-Host")
+    if fwd:
+        allowed.add(fwd.split(",")[0].strip().lower())
+    if not origin_host or origin_host not in allowed:
+        abort(403)
+    return None
 
 
 @app.before_request
@@ -149,7 +220,12 @@ def _require_login():
             or request.endpoint in _PUBLIC_ENDPOINTS:
         return None
     if request.method == "GET":
-        return redirect(url_for("login", next=request.full_path.rstrip("?")))
+        # request.path is DECODED (`/build-next/The Ur-Dragon/deck`); re-quote it so
+        # the round trip through ?next= survives _safe_next's no-whitespace rule.
+        back = quote(request.path)
+        if request.query_string:
+            back += "?" + request.query_string.decode("latin-1")
+        return redirect(url_for("login", next=back))
     abort(401)  # unauthenticated POSTs get a hard no, not a redirect-to-form
 
 
@@ -245,9 +321,84 @@ def _hdr(text, key, default=""):
     return m.group(1).strip() if m else default
 
 
-def deck_meta(stem):
+# A deck stem is a FILE NAME, never a path (W1). `<stem>` in a route accepts any
+# character but '/', and on Windows a backslash IS a separator: a stem of
+# `..\..\collection\owned_additions` resolved outside data/decks/ and the Delete
+# route removed it. The allow-list is what _deck_slug and every committed deck
+# already produce.
+_STEM_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
+
+# A real deck line holds at most ~99 copies (a basics line in a 100-card deck).
+# Engines expand quantities card by card — goldfish builds a library list, the
+# dashboard renders a figure per copy — so a typo'd `10000 Swamp` took 12 s to
+# render and a 20-digit quantity exhausted memory (W11). Above this bound the app
+# refuses to analyse the deck and names the line to fix.
+MAX_DECK_QTY = 500
+
+
+def _deck_path(stem):
+    """`DECKS_DIR/<stem>.txt` if `stem` is a plain deck name that resolves inside
+    DECKS_DIR, else None. The realpath check is the second lock: it also refuses a
+    symlink planted in data/decks/ that points elsewhere."""
+    if not isinstance(stem, str) or not _STEM_RE.match(stem) or ".." in stem:
+        return None
     path = os.path.join(DECKS_DIR, f"{stem}.txt")
-    if not os.path.exists(path):
+    base = os.path.realpath(DECKS_DIR)
+    real = os.path.realpath(path)
+    try:
+        if os.path.commonpath([base, real]) != base or os.path.dirname(real) != base:
+            return None
+    except ValueError:            # different drives on Windows
+        return None
+    return path
+
+
+def _absurd_quantities(text):
+    """[(line number, qty text, card)] for every card line above MAX_DECK_QTY."""
+    bad = []
+    for i, raw in enumerate(text.splitlines(), 1):
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        m = mtglib._QTY_RE.match(s)
+        if m and int(m.group(1)) > MAX_DECK_QTY:
+            bad.append((i, m.group(1), m.group(2)))
+    return bad
+
+
+def _qty_message(bad):
+    i, q, name = bad[0]
+    q_show = q if len(q) <= 12 else q[:12] + "…"
+    more = len(bad) - 1
+    return (f"Line {i} reads “{q_show} {name}” — more than {MAX_DECK_QTY} copies "
+            "of one card isn't a deck, so it was not analysed"
+            + (f" ({more} more line(s) like it)" if more else "")
+            + ". Fix the quantity in the deck editor.")
+
+
+def _analysable_deck(stem, api=False):
+    """deck_meta for a route that ANALYSES the deck: 404 when missing, and a
+    readable 422 refusal (never a hang or an OOM) when a quantity is absurd. The
+    editor, delete, bracket and pin routes use plain deck_meta, so the player can
+    always reach the bad line and fix it."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    if m["absurd_qty"]:
+        msg = _qty_message(m["absurd_qty"])
+        if api:
+            abort(Response(json.dumps({"ok": False, "error": msg}), status=422,
+                           mimetype="application/json"))
+        edit = url_for("deck_edit", stem=stem)
+        abort(Response(f"<h2>This deck needs a fix</h2><p>{escape(msg)}</p>"
+                       f'<p><a href="{edit}">Open the editor</a></p>',
+                       status=422, mimetype="text/html"))
+    return m
+
+
+def deck_meta(stem):
+    path = _deck_path(stem)
+    if path is None or not os.path.exists(path):
         return None
     text = open(path, encoding="utf-8").read()
     return {
@@ -258,13 +409,16 @@ def deck_meta(stem):
         # Read for the Rule-0 table card's identity line; both are optional headers.
         "colors": _hdr(text, "Colors"),
         "archetype": _hdr(text, "Archetype"),
+        "absurd_qty": _absurd_quantities(text),
     }
 
 
 def list_decks():
     stems = sorted(os.path.splitext(os.path.basename(p))[0]
                    for p in _glob_txt(DECKS_DIR))
-    return [deck_meta(s) for s in stems]
+    # A file whose name isn't a valid stem can't be opened by any route (W1), so it
+    # isn't listed either — a row whose every link 404s helps nobody.
+    return [m for m in (deck_meta(s) for s in stems) if m]
 
 
 def _glob_txt(d):
@@ -312,6 +466,43 @@ def _invalidate_after_write(resp):
 # --------------------------------------------------------------------------- #
 # Routes
 # --------------------------------------------------------------------------- #
+# Display order for a colour identity — WUBRG, the order every MTG product prints.
+_WUBRG = "WUBRG"
+
+
+def _deck_pips(meta, idx):
+    """The deck's colours, WUBRG-ordered, for its card stripe and pips: the
+    `# Colors:` header (the same `_deck_identity` read the add-card check uses), else
+    the commander card's identity from the collection. Empty when neither is known —
+    the card then shows no pips rather than guessing colourless."""
+    letters = _deck_identity("# Colors: " + (meta.get("colors") or ""))
+    if not letters and meta.get("commander"):
+        card = mtglib.lookup(idx, meta["commander"])
+        letters = set(getattr(card, "identity", None) or ()) if card else set()
+    return [c for c in _WUBRG if c in letters]
+
+
+def _role_meters(rep, archetype):
+    """Lands / Ramp / Removal / Draw against THIS deck's template band
+    (deckcore.role_ranges, widened by its `# Archetype:` words) — the same judgment
+    the optimizer and the dashboard use, so the home page cannot disagree with them.
+    Each row carries the status word as well as the colour."""
+    if not rep:
+        return []
+    ranges = dict(deckcore.role_ranges(deckcore.archetype_words(archetype or "")),
+                  lands=deckcore.LAND_RANGE)
+    cats = rep.get("categories") or {}
+    out = []
+    for key, label in (("lands", "Lands"), ("ramp", "Ramp"),
+                       ("removal", "Removal"), ("draw", "Draw")):
+        n = rep.get("lands", 0) if key == "lands" else cats.get(key, 0)
+        lo, hi = ranges[key]
+        st = "short" if n < lo else ("over" if n > hi else "in")
+        word = {"short": f"{lo - n} short", "over": f"{n - hi} over", "in": "in range"}[st]
+        out.append({"label": label, "n": n, "lo": lo, "hi": hi, "status": st, "word": word})
+    return out
+
+
 @app.route("/")
 def index():
     """Deck leaderboard. Each row carries a small health summary so the page answers
@@ -330,22 +521,33 @@ def index():
 
     rows = []
     for m in list_decks():
-        try:
-            # COLLECTION rides along so the CRISPI speed axis gets its combat
-            # clock (goldfish, disk-cached); without it every leaderboard row
-            # would silently read "unmeasured" — found in the Phase A revalidation.
-            res = power.build_for_deck(m["path"], idx, collection_path=COLLECTION)
-        except Exception:
-            res = None
+        qty_error = _qty_message(m["absurd_qty"]) if m["absurd_qty"] else None
+        res, rep = None, None
+        if not qty_error:                 # an absurd quantity is never simulated
+            try:
+                # COLLECTION rides along so the CRISPI speed axis gets its combat
+                # clock (goldfish, disk-cached); without it every leaderboard row
+                # would silently read "unmeasured" — found in the Phase A revalidation.
+                res, rep = power.build_for_deck(m["path"], idx, collection_path=COLLECTION,
+                                                with_report=True)
+            except Exception:
+                res, rep = None, None
         try:
             deck = mtglib.parse_deck(open(m["path"], encoding="utf-8").read())
             total = sum(c.quantity for c in deck)
-            to_buy = sum(1 for c in deck if mtglib.lookup(idx, c.name) is None)
+            # Basics are always owned, in unlimited quantity (grounding rule #9,
+            # mtglib.is_basic) — the export deliberately omits them, so a lookup
+            # miss on a Forest is an artifact, not a card to buy (W8).
+            to_buy = sum(1 for c in deck if mtglib.lookup(idx, c.name) is None
+                         and not mtglib.is_basic(c.name))
         except Exception:
             total, to_buy = None, 0
         label = deck_conflicts.deck_label(m["path"])
         rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
-                     "contested": short_by_deck.get(label, 0)})
+                     "contested": short_by_deck.get(label, 0), "qty_error": qty_error,
+                     "roles": _role_meters(rep, m.get("archetype")),
+                     "identity": _deck_pips(m, idx),
+                     "study": deck_conflicts.is_study_deck(m["path"])})
     # Phase D: the 0-100 composite is gone, so the leaderboard sorts on shipped
     # axes — bracket, then how fast the deck actually wins, then interaction.
     # Explainable in one sentence, which the composite never was.
@@ -364,9 +566,7 @@ def index():
 
 @app.route("/deck/<stem>")
 def deck(stem):
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     res = bd.generate(m["path"], COLLECTION, title=m["title"],
                       commander=m["commander"], theme=m["theme"], decks_dir=DECKS_DIR,
                       editable=True)
@@ -392,9 +592,7 @@ def deck(stem):
 
 @app.route("/deck/<stem>/visual")
 def deck_visual(stem):
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     res = bd.generate(m["path"], COLLECTION, title=m["title"], commander=m["commander"],
                       theme=m["theme"], decks_dir=DECKS_DIR, size="small", want_visual=True)
     return res["visual"]
@@ -407,6 +605,14 @@ def deck_edit(stem):
         abort(404)
     if request.method == "POST":
         text = request.form.get("content", "")
+        bad = _absurd_quantities(text)
+        if bad:
+            # Refuse the save but keep what the player typed in the box, so the
+            # fix is one edit away rather than a retype (W11).
+            flash(_qty_message(bad).replace("so it was not analysed",
+                                            "so nothing was saved"), "warn")
+            return render_template("edit.html", meta=m, content=text,
+                                   page="decks"), 400
         with open(m["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(text.replace("\r\n", "\n"))
         _invalidate(stem)
@@ -497,7 +703,9 @@ def _section_of_card(lines, keys):
 
 def _edit_deck_card(path, action, name, replacement=None, section=None, types=None):
     """Line-based edit of a deck .txt: remove, replace, or add a single card, preserving
-    quantity, section, and everything else. Returns True if a line changed.
+    section, comments and everything else. Each action moves exactly ONE copy: a
+    multi-copy line is decremented, and a replacement always arrives as `1 <card>`.
+    Returns True if a line changed.
 
     `types` (the REPLACEMENT card's type list, when the caller knows it) lets a
     replace re-file: writing the incoming card at the outgoing card's line put a
@@ -515,9 +723,14 @@ def _edit_deck_card(path, action, name, replacement=None, section=None, types=No
         # line) and the misfile bug (a basic sitting under Lands/Creatures) — and
         # it comes from the very flow that misfiled White Auracite and Risky
         # Shortcut. Drop the outgoing line, then merge into the basic's own line.
+        #
+        # Only when the outgoing card was actually found (W6): inserting
+        # unconditionally turned a stale panel click into a 101st card while the
+        # route reported "nothing was changed".
         dropped = _edit_deck_card(path, "remove", name)
-        lines = open(path, encoding="utf-8").read().split("\n")
-        _insert_deck_card(path, lines, replacement, section="Basics")
+        if dropped:
+            lines = open(path, encoding="utf-8").read().split("\n")
+            _insert_deck_card(path, lines, replacement, section="Basics")
         return dropped
     if action == "replace" and replacement and types:
         target = deckcore.type_bucket(replacement, types)
@@ -538,7 +751,7 @@ def _edit_deck_card(path, action, name, replacement=None, section=None, types=No
         if not changed and s and not s.startswith("#"):
             m = mtglib._QTY_RE.match(s)   # shared parser — '1x Name' must not no-op
             cardname = m.group(2) if m else s
-            qty = m.group(1) if m else "1"
+            qty = int(m.group(1)) if m else 1
             # name_keys, not raw _norm: the panel's data-key can carry EITHER form of
             # a DFC name (decklist figures key the deck file's form, EDHREC/field rows
             # key what the snapshot emits — often the front face alone), so an exact
@@ -546,11 +759,20 @@ def _edit_deck_card(path, action, name, replacement=None, section=None, types=No
             # "Smaug, the Great Calamity". The route's own singleton guard already
             # matches both keys; the editor must agree with it.
             if mtglib.name_keys(cardname) & keys:
+                # Remove and Replace act on ONE copy (W2). A multi-copy line — a
+                # basics line above all — is decremented in place, never dropped:
+                # Remove on `21 Swamp` used to delete all 21, and Replace wrote the
+                # outgoing quantity onto the incoming card (`21 Unknown Card`).
+                indent = ln[:len(ln) - len(ln.lstrip())]
                 if action == "remove":
                     changed = True
+                    if qty > 1:
+                        out.append(f"{indent}{qty - 1} {cardname}")
                     continue
                 if action == "replace" and replacement:
-                    out.append(f"{qty} {replacement}")
+                    if qty > 1:
+                        out.append(f"{indent}{qty - 1} {cardname}")
+                    out.append(f"{indent}1 {replacement}")
                     changed = True
                     continue
         out.append(ln)
@@ -558,6 +780,22 @@ def _edit_deck_card(path, action, name, replacement=None, section=None, types=No
         with open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write("\n".join(out))
     return changed
+
+
+def _unsafe_line_value(*values):
+    """True when any value would break out of the ONE line it is written to (W9).
+
+    Deck files, owned_additions.txt and pins.csv are line-oriented, so a name
+    carrying `\\n` became extra lines: `Fake Card\\n99 Mana Crypt` in the collection
+    form recorded 99 Mana Crypts, and the same trick in Replace slipped a second
+    copy past the singleton guard. Any C0 control character (or DEL) is refused —
+    no real card name has one."""
+    return any(v and any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in v)
+               for v in values)
+
+
+_LINE_VALUE_ERROR = ("A card name can't contain a line break or other control "
+                     "character — nothing was changed.")
 
 
 def _log_manual_change(deck_path, card, replaced="", source="manual-add"):
@@ -597,6 +835,13 @@ def _validate_add(meta, stem, name, idx=None):
     if idx is None:
         _, idx = collection_index()
     card = mtglib.lookup(idx, name)
+    if card is None and mtglib.is_basic(name):
+        # Basics are always owned, in unlimited quantity (grounding rule #9): the
+        # export deliberately omits them, so a lookup miss is not "you don't own
+        # a Swamp" (W8). A synthesized, type-only card — no identity, so the
+        # color check below never fires on it, same as an untyped snapshot row.
+        card = mtglib.Card(name=" ".join(name.split()).title(), quantity=0,
+                           types=["Land"], supertypes=["Basic"])
     if card is None:
         return None, (f"You don't own a card called “{name}”. Add it to the "
                       "collection first (or check the spelling)."), None
@@ -638,6 +883,8 @@ def deck_card(stem):
     action = request.form.get("action", "")
     name = request.form.get("name", "").strip()
     replacement = request.form.get("replacement", "").strip() or None
+    if _unsafe_line_value(name, replacement):
+        return _LINE_VALUE_ERROR, 400
     if action == "replace" and replacement:
         # The same front-face-aware singleton guard the Add path enforces — minus the
         # card being replaced (swapping A for A's other face is still one copy), and
@@ -690,13 +937,13 @@ def deck_add(stem):
 
     JSON rather than a redirect so the picker can show the verdict at the moment it's
     actionable — and so a rejection explains itself instead of silently doing nothing."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem, api=True)
     name = request.form.get("name", "").strip()
     section = (request.form.get("section") or "").strip() or None
     if not name:
         return jsonify({"ok": False, "error": "No card name given."}), 400
+    if _unsafe_line_value(name, section):
+        return jsonify({"ok": False, "error": _LINE_VALUE_ERROR}), 400
     coll, idx = collection_index()      # ONE load for validate + advise
     card, err, warn = _validate_add(m, stem, name, idx=idx)
     if err:
@@ -724,9 +971,7 @@ def deck_add(stem):
 def api_deck_advise(stem):
     """Read-only fit opinion for any card against this deck — used by the add picker
     before committing, and by the panel for cards the player added by hand."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem, api=True)
     name = (request.args.get("name") or "").strip()
     if not name:
         return jsonify({"error": "name required"}), 400
@@ -816,9 +1061,7 @@ def deck_proxies(stem):
     Geometry and images live in scripts/proxy_sheet.py — one code path with the
     CLI, like every other spoke. Rendered inline (no attachment): the flow is
     open -> print at 100%, not save."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     cells, title = px.build(deck=m["path"], collection=COLLECTION,
                             missing=bool(request.args.get("missing")),
                             buylist=bool(request.args.get("buylist")))
@@ -838,9 +1081,7 @@ def export_deck_html(stem):
     (`scripts/` is stdlib-only, and card images are browser hotlinks that a
     server-side renderer could not fetch); the browser's own print dialog has the
     images and paginates properly, so Ctrl+P on this file is the export."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     res = bd.generate(m["path"], COLLECTION, title=m["title"],
                       commander=m["commander"], theme=m["theme"],
                       decks_dir=DECKS_DIR, editable=False)
@@ -857,6 +1098,7 @@ def _assess_packet(m):
     no opinions — the coaching happens in Claude Code on the player's subscription."""
     a = deckcore.analyze_deck(m["path"], COLLECTION)
     rep, missing, idx = a["report"], a["missing"], a["idx"]
+    deck_cards = a["deck"]          # captured now: `a` is reused as a loop name below
     assessment, mana, combos = a["assessment"], a["mana"], a["combos"]
 
     L = [f"=== ASSESSMENT PACKET — {m['title']} ===",
@@ -1040,7 +1282,7 @@ def _assess_packet(m):
     except Exception:
         pass
     buys = deckcore.buy_signals(deckcore.load_buylist(f"{stem_path}.buylist.csv"),
-                                merged_combos, missing, idx)
+                                merged_combos, missing, idx, deck=deck_cards)
     if buys:
         L.append("-- CARDS TO BUY (merged: curated buylist + combo pieces + unowned decklist) --")
         for r in buys:
@@ -1077,6 +1319,8 @@ def deck_pin(stem):
     if not m:
         abort(404)
     name = request.form.get("name", "").strip()
+    if _unsafe_line_value(name):
+        return _LINE_VALUE_ERROR, 400
     if name:
         pins = deckcore.load_pins()
         key = deckcore.pin_key(name)          # canonical, so every engine sees it
@@ -1186,6 +1430,10 @@ def pins_move():
     # message would sit in the session and pop as a stale toast on whatever full page the
     # player loads next, describing a pin they changed minutes ago somewhere else.
     wants_json = bool(request.form.get("json"))
+    if _unsafe_line_value(key, target):
+        if wants_json:
+            return jsonify({"ok": False, "error": _LINE_VALUE_ERROR}), 400
+        return _LINE_VALUE_ERROR, 400
     k = deckcore.pin_key(key)             # canonical, so every engine sees it
     pins = deckcore.load_pins() if key else {}
     if key:
@@ -1236,9 +1484,7 @@ def deck_delete(stem):
 def deck_assess_page(stem):
     """The assessment as a readable page. Same numbers as the .txt export, which stays
     around because pasting a plain block into a coaching session is a different job."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     coll, idx = collection_index()
     a = deckcore.analyze_deck(m["path"], coll)
     try:
@@ -1305,9 +1551,7 @@ def deck_table_card(stem):
     bracket as a conversation aid, so this is the artifact the system asks for and no
     surveyed tool generates. Degrades honestly: a source that isn't reachable is named
     as unavailable rather than silently omitted."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     coll, idx = collection_index()
     a = deckcore.analyze_deck(m["path"], coll)
     assessment = a.get("assessment")
@@ -1347,9 +1591,7 @@ def deck_mulligan(stem):
     The sim's verdict is shown AFTER the call with the reasoning behind it, and it is
     framed as a heuristic to compare against rather than a correct answer — the rule
     reads land counts, not card quality, and the page says so."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     return render_template("mulligan.html", meta=m, page="decks")
 
 
@@ -1359,14 +1601,17 @@ def api_deck_hand(stem):
 
     Seeded by an explicit `seed` so a hand is reproducible (and so a test can pin
     one); the page draws a fresh seed per hand."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem, api=True)
     try:
         seed = int(request.args.get("seed") or 0)
     except ValueError:
         seed = 0
-    mulls = max(0, min(goldfish.MULL_FLOOR, int(request.args.get("mulls") or 0)))
+    try:
+        # Parsed inside the try (W11): `?mulls=abc` used to raise straight into a
+        # 500 page, which the trainer's fetch() can't read as JSON.
+        mulls = max(0, min(goldfish.MULL_FLOOR, int(request.args.get("mulls") or 0)))
+    except ValueError:
+        return jsonify({"error": "mulls must be a whole number"}), 400
     coll, _idx = collection_index()
     try:
         compiled, _idx2 = goldfish.load_for_ab(m["path"], coll,
@@ -1408,9 +1653,7 @@ def api_deck_ab(stem):
     landed, but only from the CLI; the Replace flow is where the player is actually
     choosing. Advisory and non-blocking: the panel shows it beside the button and the
     edit proceeds whatever this says (or fails to say)."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem, api=True)
     out_name = (request.args.get("out") or "").strip()
     in_name = (request.args.get("in") or "").strip()
     if not out_name or not in_name:
@@ -1440,9 +1683,7 @@ def api_deck_ab(stem):
 
 @app.route("/deck/<stem>/assess.txt")
 def deck_assess(stem):
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     text = _assess_packet(m)
     return text if request.args.get("raw") else _txt(text, f"{stem}-assessment.txt")
 
@@ -1475,6 +1716,24 @@ def _deck_slug(name):
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "deck"
 
 
+def _free_deck_stem(slug):
+    """(`stem`, path) for a NEW deck: `slug`, else `slug-2`, `slug-3`, … (W3).
+
+    Build Next's Save used to write straight to `<slug>.txt`, so saving a draft for
+    a commander you had already built replaced the hand-tuned list — and left that
+    deck's notes, changes log and buylist attached to the stranger. A stem is free
+    only when NO companion file exists either: an orphaned `.notes.md` would
+    otherwise attach itself to the new list the same way."""
+    companions = (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv")
+    n = 1
+    while True:
+        stem = slug if n == 1 else f"{slug}-{n}"
+        base = os.path.join(DECKS_DIR, stem)
+        if not any(os.path.exists(base + sfx) for sfx in companions):
+            return stem, base + ".txt"
+        n += 1
+
+
 @app.route("/build-next/<path:commander>/deck")
 def build_deck(commander):
     """Full deck auto-built from the owned pool for this commander (Phase 3 v1).
@@ -1496,16 +1755,22 @@ def build_deck_export(commander):
 
 @app.route("/build-next/<path:commander>/save", methods=["POST"])
 def build_deck_save(commander):
-    """Write the auto-built draft to data/decks/, then tune it against what the field
-    actually plays so a NEW deck lands optimized. (Manual edits are deliberately left
-    alone — see /deck/<stem>/optimize.)"""
+    """Write the auto-built draft to data/decks/ as a NEW deck (`<slug>`, or
+    `<slug>-2`, `-3`, … when that name is taken — an existing deck is never
+    overwritten), then tune it against what the field actually plays so it lands
+    optimized. (Manual edits are deliberately left alone — see
+    /deck/<stem>/optimize.)"""
     coll, idx = collection_index()
     d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None),
                          skip_deck=_deck_slug(commander))
-    stem = _deck_slug(commander)
-    path = os.path.join(DECKS_DIR, f"{stem}.txt")
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
+    stem, path = _free_deck_stem(_deck_slug(commander))
+    # "x" (exclusive create), not "w": a deck saved between the free-name check
+    # and here is never clobbered either.
+    with open(path, "x", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
+    if stem != _deck_slug(commander):
+        flash(f"You already have a “{_deck_slug(commander)}” deck, so this draft was "
+              f"saved alongside it as “{stem}” — nothing was overwritten.", "info")
     try:
         r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
         if r.get("illegal"):
@@ -1572,9 +1837,7 @@ def _flash_optimize(r):
 @app.route("/deck/<stem>/optimize", methods=["POST"])
 def deck_optimize(stem):
     """Tune an existing deck toward the field on demand (the ⚡ Optimize button)."""
-    m = deck_meta(stem)
-    if not m:
-        abort(404)
+    m = _analysable_deck(stem)
     coll, idx = collection_index()
     try:
         r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
@@ -1668,6 +1931,16 @@ def collection_view():
 def collection_add():
     name = request.form.get("name", "").strip()
     qty = request.form.get("qty", "1").strip() or "1"
+    if _unsafe_line_value(name):
+        flash(_LINE_VALUE_ERROR, "warn")
+        return redirect(url_for("collection_view"))
+    # Digits only, 1..99 (W9): `-5` and `lots` were written verbatim, and the
+    # parser read `lots Arcane Signet` as a phantom card named exactly that.
+    if not (qty.isascii() and qty.isdigit() and 1 <= int(qty) <= 99):
+        flash(f"Quantity must be a whole number from 1 to 99 (got “{qty[:20]}”) — "
+              "nothing was added.", "warn")
+        return redirect(url_for("collection_view"))
+    qty = str(int(qty))
     if name:
         header_needed = not os.path.exists(ADDITIONS)
         with open(ADDITIONS, "a", encoding="utf-8") as f:
@@ -1691,11 +1964,76 @@ def collection_upload():
     f = request.files.get("csv")
     if f and f.filename:
         global COLLECTION
-        f.save(COLLECTION_CSV)
+        err = _install_upload(f, COLLECTION_CSV)
+        if err:
+            flash(f"Upload refused — {err} Your previous collection is unchanged.",
+                  "warn")
+            return redirect(url_for("collection_view"))
         COLLECTION = COLLECTION_CSV
         _invalidate()             # a whole new collection — nothing cached survives
         flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
     return redirect(url_for("collection_view"))
+
+
+def _upload_backup_path(dest):
+    """Where the previous collection goes. Named `*.private.csv` on purpose: that
+    pattern is already gitignored, so the backup of a priced export can never be
+    swept into a commit (a plain `collection.csv.bak` is NOT ignored)."""
+    base, _ext = os.path.splitext(dest)
+    return f"{base}.bak.private.csv"
+
+
+def _install_upload(fileobj, dest):
+    """Validate an uploaded export on a temp copy, then swap it in atomically (W7).
+
+    The old route saved straight over the private CSV: a PNG or a cp1252 export
+    replaced the collection and then 500'd every page (load_collection reads
+    UTF-8), with no copy of what was there before. Now: save to a temp file in the
+    SAME directory (so os.replace is atomic), decode as UTF-8 — or as cp1252,
+    re-saved as UTF-8, since that is what Excel on Windows writes — parse it with
+    the app's own parser, and demand at least one card. Only then is the previous
+    file kept as a backup and the new one moved into place. Returns None on
+    success, else a sentence saying why nothing changed."""
+    d = os.path.dirname(dest) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".upload-", suffix=".tmp", dir=d)
+    os.close(fd)
+    try:
+        fileobj.save(tmp)
+        with open(tmp, "rb") as fh:
+            raw = fh.read()
+        if b"\x00" in raw:
+            return "that file is binary, not a CSV or text export."
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                text = raw.decode("cp1252")
+            except UnicodeDecodeError:
+                return "the file isn't readable text (neither UTF-8 nor Windows-1252)."
+            with open(tmp, "w", encoding="utf-8", newline="") as fh:
+                fh.write(text)
+        try:
+            cards = mtglib.parse_collection(text)
+        except Exception:
+            cards = []
+        first = next((ln.strip() for ln in text.splitlines() if ln.strip()), "")
+        if (cards and mtglib.detect_format(text) == "namelist"
+                and first.count(",") >= 2 and not mtglib._QTY_RE.match(first)):
+            # A CSV the parser didn't recognise falls through to the name-list
+            # reader, which then takes every ROW as a card name ("a,b,c").
+            return ("that CSV has no Name/Quantity header row the app recognises "
+                    "(export from Archidekt or ManaPool with headers).")
+        if not cards:
+            return "no cards were found in that file."
+        if os.path.exists(dest):
+            shutil.copy2(dest, _upload_backup_path(dest))
+        os.replace(tmp, dest)
+        tmp = None
+        return None
+    finally:
+        if tmp and os.path.exists(tmp):
+            os.remove(tmp)
 
 
 @app.route("/refresh", methods=["POST"])
@@ -1704,7 +2042,14 @@ def refresh():
     subprocess.run([sys.executable, os.path.join(ROOT, "scripts/refresh.py"),
                     "--collection", COLLECTION, "--decks-dir", DECKS_DIR],
                    cwd=ROOT, capture_output=True, text=True)
-    return redirect(request.referrer or url_for("index"))
+    # Back to the page the button was on — but only its PATH, through the same
+    # local-only check as login's ?next= (W10): the raw Referer is whatever the
+    # requesting page says it is, including another site.
+    try:
+        back = urlsplit(request.referrer or "").path
+    except ValueError:            # e.g. a malformed IPv6 host in the header
+        back = ""
+    return redirect(_safe_next(back))
 
 
 @app.route("/sync", methods=["POST"])

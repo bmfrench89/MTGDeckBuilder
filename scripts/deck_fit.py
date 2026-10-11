@@ -48,8 +48,37 @@ def section_role(label):
     return None
 
 
+_BANNED = None
+
+
+def load_banned(path=None):
+    """`_norm` keys of runner-verified Commander-banned cards (data/reference/banned.txt).
+    Not exhaustive — see that file's header; a missing file is an empty set."""
+    global _BANNED
+    if path is None and _BANNED is not None:
+        return _BANNED
+    p = path or os.path.join(REF_DIR, "banned.txt")
+    out = set()
+    try:
+        with open(p, encoding="utf-8") as f:
+            for ln in f:
+                ln = ln.strip()
+                if ln and not ln.startswith("#"):
+                    out |= set(mtglib.name_keys(ln))
+    except OSError:
+        pass
+    if path is None:
+        _BANNED = out
+    return out
+
+
+def is_banned(name):
+    return bool(set(mtglib.name_keys(name)) & load_banned())
+
+
 def load_role_staples(path=None):
-    """role -> list of {name, colors(set of WUBRG letters the card needs)}."""
+    """role -> list of {name, colors(set of WUBRG letters the card needs)}.
+    Banned cards are dropped — a recommender must never suggest one (audit D1)."""
     path = path or os.path.join(REF_DIR, "role_staples.csv")
     out = {}
     if not os.path.exists(path):
@@ -60,7 +89,7 @@ def load_role_staples(path=None):
         for r in csv.DictReader(lines):
             role = (r.get("Role") or "").strip().lower()
             card = (r.get("Card") or "").strip()
-            if not role or not card:
+            if not role or not card or is_banned(card):
                 continue
             colors = set((r.get("Colors") or "").strip().upper()) & set("WUBRG")
             out.setdefault(role, []).append({"name": card, "colors": colors})
@@ -368,7 +397,7 @@ def better_alternatives(card, ctx, idx, refs, curated_alts, in_deck, staples):
 
     def add(name, why_default):
         k = mtglib._norm(name)
-        if k in seen or k == mtglib._norm(card.name):
+        if k in seen or k == mtglib._norm(card.name) or is_banned(name):
             return
         seen.add(k)
         ref = mtglib.lookup(idx, name)
@@ -413,17 +442,22 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
     scored = []
     for c in enriched:
         k = mtglib._norm(c.name)
-        if k in protected or c.is_land or not c.types:
+        if c.is_land or not c.types:
             continue
         fit = assess_card(c, rep, ctx, refs, (section_of or {}).get(k))
         pts = {r["label"]: r["pts"] for r in fit["reasons"]}
-        scored.append((c, fit, pts))
+        # Protected cards still define the deck's MIDDLE — they are part of the
+        # list — they just can't be flagged. Dropping them from the median let a
+        # wider protected set (the shared protected_keys, 2026-10-11) move the bar.
+        scored.append((c, fit, pts, bool(set(mtglib.name_keys(c.name)) & protected)))
     if len(scored) < 4:                   # too small a sample to call anything an outlier
         return []
     ranked = sorted(s[1]["score"] for s in scored)
     median = ranked[len(ranked) // 2]
     out = []
-    for c, fit, pts in scored:
+    for c, fit, pts, is_prot in scored:
+        if is_prot:
+            continue
         if pts.get("Theme", 0) > 7 or pts.get("Power", 0) > 7:
             continue                      # has a theme tie or real muscle — not dead
         if pts.get("Role need", 0) >= ROLE_PTS_HEALTHY:
@@ -451,6 +485,50 @@ def dead_weight(enriched, rep, ctx, refs, protected=None, section_of=None, limit
     return out[:limit] if limit else out
 
 
+def named_in_notes(name, notes_text):
+    """Is this card named in the deck's own .notes.md? Matched on every name key
+    (full name AND front face), against folded notes text — a deck line "A // B"
+    must be protected by notes that say "A" (2026-10-11 audit, R1)."""
+    if not notes_text:
+        return False
+    folded = mtglib._norm(notes_text)
+    return any(k and k in folded for k in mtglib.name_keys(name))
+
+
+def protected_keys(deck_path, commander, cards, notes_text=None):
+    """The ONE answer to "which cards in this deck must never be offered as a cut":
+    the commander, basics, cards with a hand-written card_notes.csv entry, cards
+    named in the deck's .notes.md, and the player's own manual adds (.changes.csv).
+
+    Shared by the optimizer's Cuts surface and the dashboard's dead-weight panel —
+    the two had drifted (the webapp dropped notes-named cards, the dashboard
+    skipped card_notes and manual adds; 2026-10-11 audit, R8). Returns `_norm`
+    name keys (every key of each protected card)."""
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    if notes_text is None:
+        try:
+            notes_text = open(f"{stem}.notes.md", encoding="utf-8").read()
+        except OSError:
+            notes_text = ""
+    keep = set(mtglib.name_keys(commander)) if commander else set()
+    try:
+        curated = {k for k, v in deckcore.load_card_notes().items()
+                   if not (isinstance(v, dict) and v.get("generated"))}
+    except Exception:
+        curated = set()
+    try:
+        manual = {k for r in deckcore.manual_adds(f"{stem}.changes.csv", days=None)
+                  for k in mtglib.name_keys(r.get("name") or r.get("key") or "")}
+    except Exception:
+        manual = set()
+    for c in cards:
+        keys = set(mtglib.name_keys(c.name))
+        if (mtglib.is_basic(c.name) or keys & curated or keys & manual
+                or named_in_notes(c.name, notes_text)):
+            keep |= keys
+    return keep
+
+
 def card_value(name, ref, rep, ctx, refs, field):
     """What one card is worth to THIS deck: `max(field %, (fit-60)x2)`.
 
@@ -458,7 +536,11 @@ def card_value(name, ref, rep, ctx, refs, field):
     Cuts surface ranks by. One scorer, two consumers — a second implementation would
     drift, which is exactly what the codemap's card-knowledge-flow rule exists to
     prevent. `optimize.card_value` is a shim onto this."""
-    inc = field.get(mtglib._norm(name), 0) if field else 0
+    # name_keys, not the bare key: a deck line "A // B" must find a field row keyed
+    # by its front face — Studious First-Year // Rampant Growth (78% field) was
+    # valued 16 and offered up as a buy-swap's Replaces (2026-10-11 audit, R1).
+    inc = max((field.get(k, 0) for k in mtglib.name_keys(name)), default=0) \
+        if field else 0
     fit = (assess_card(ref, rep, ctx, refs)["score"]
            if (ref and ref.types) else 0)
     return max(inc, (fit - 60) * 2)       # fit 85 -> 50, fit 70 -> 20, fit <=60 -> 0
@@ -489,7 +571,7 @@ def cut_ranking(enriched, rep, ctx, refs, field, protected=None, ranges=None,
         n = mtglib._norm(c.name)
         keys = set(mtglib.name_keys(c.name))
         val = card_value(c.name, c, rep, ctx, refs, field)
-        known = n in (field or {})
+        known = any(k in (field or {}) for k in keys)
         role = primary_role(c)
         state = None
         if role and role in ranges:

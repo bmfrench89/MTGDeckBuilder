@@ -507,3 +507,87 @@ def test_discounts_never_fire_on_taxes_riders_or_opponents():
     opp = card("Weird Gift", "Enchantment",
                "Dragon spells your opponents cast cost {1} less to cast.")
     assert not any(f.startswith("discount") for f in oracle_flags.derive_flags(opp))
+
+
+# --------------------------------------------------------------------------- #
+# v4 (2026-10-11): edicts read as removal, and black's mana engines get tokens.
+# Texts are the VERBATIM runner-verified oracle text (deck-verify runs
+# 38138722782 / 38139999873 / 38140217987 / 38141826643).
+# --------------------------------------------------------------------------- #
+def test_vocab_version_is_four():
+    assert oracle_flags.VOCAB_VERSION == 4
+
+
+def test_edict_spells_and_enchantments_read_as_removal():
+    for name, tl, text in (
+        ("Liliana's Triumph", "Instant",
+         "Each opponent sacrifices a creature of their choice. If you control a "
+         "Liliana planeswalker, each opponent also discards a card."),
+        ("Chainer's Edict", "Sorcery",
+         "Target player sacrifices a creature of their choice.\nFlashback {5}{B}{B}"),
+        ("Smallpox", "Sorcery",
+         "Each player loses 1 life, discards a card, sacrifices a creature of their "
+         "choice, then sacrifices a land of their choice."),
+        ("Grave Pact", "Enchantment",
+         "Whenever a creature you control dies, each other player sacrifices a "
+         "creature of their choice."),
+        ("Mire in Misery", "Sorcery",
+         "Each opponent sacrifices a creature or enchantment of their choice."),
+    ):
+        assert "removal" in oracle_flags.derive_flags(card(name, tl, text)), name
+
+
+def test_the_casters_own_sacrifice_and_non_creature_edicts_are_not_removal():
+    village = card("Village Rites", "Instant",
+                   "As an additional cost to cast this spell, sacrifice a creature.\n"
+                   "Draw two cards.")
+    torment = card("Torment of Hailfire", "Sorcery",
+                   "Repeat the following process X times. Each opponent loses 3 life "
+                   "unless that player sacrifices a nonland permanent of their choice "
+                   "or discards a card.")
+    assert "removal" not in oracle_flags.derive_flags(village)
+    assert "removal" not in oracle_flags.derive_flags(torment)
+
+
+def test_etb_edict_creatures_stay_type_gated():
+    """Same policy as an ETB 'destroy target creature': the creature is a creature
+    first. The curated REMOVAL list carries the ones that matter."""
+    fleshbag = card("Fleshbag Marauder", "Creature — Zombie Warrior",
+                    "When this creature enters, each player sacrifices a creature of "
+                    "their choice.")
+    assert "removal" not in oracle_flags.derive_flags(fleshbag)
+
+
+def test_rituals_carry_the_first_add_clause_only():
+    dark = card("Dark Ritual", "Instant", "Add {B}{B}{B}.", produced=["B"])
+    cabal = card("Cabal Ritual", "Instant",
+                 "Add {B}{B}{B}.\nThreshold — Add {B}{B}{B}{B}{B} instead if there "
+                 "are seven or more cards in your graveyard.", produced=["B"])
+    assert "ritual:3" in oracle_flags.derive_flags(dark)
+    assert "ritual:3" in oracle_flags.derive_flags(cabal)   # threshold ignored
+    # A permanent's "{T}: Add" is never a ritual.
+    assert not any(f.startswith("ritual:") for f in oracle_flags.derive_flags(SOL_RING))
+
+
+def test_black_mana_engine_tokens():
+    coffers = card("Cabal Coffers", "Land",
+                   "{2}, {T}: Add {B} for each Swamp you control.", produced=["B"])
+    stronghold = card("Cabal Stronghold", "Land",
+                      "{T}: Add {C}.\n{3}, {T}: Add {B} for each basic Swamp you "
+                      "control.", produced=["B", "C"])
+    nykthos = card("Nykthos, Shrine to Nyx", "Legendary Land",
+                   "{T}: Add {C}.\n{2}, {T}: Choose a color. Add an amount of mana of "
+                   "that color equal to your devotion to that color. (Your devotion to "
+                   "a color is the number of mana symbols of that color in the mana "
+                   "costs of permanents you control.)")
+    ghast = card("Crypt Ghast", "Creature — Spirit",
+                 "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each "
+                 "opponent loses 1 life and you gain that much life.)\nWhenever you tap "
+                 "a Swamp for mana, add an additional {B}.", produced=["B"])
+    urborg = card("Urborg, Tomb of Yawgmoth", "Legendary Land",
+                  "Each land is a Swamp in addition to its other land types.")
+    assert "scale:swamp:2" in oracle_flags.derive_flags(coffers)
+    assert "scale:basic-swamp:3" in oracle_flags.derive_flags(stronghold)
+    assert "devotion:2" in oracle_flags.derive_flags(nykthos)
+    assert "extra:swamp" in oracle_flags.derive_flags(ghast)
+    assert "lands-are:swamp" in oracle_flags.derive_flags(urborg)

@@ -3,89 +3,57 @@
 
 Android launchers want PNGs; an SVG-only manifest often falls back to a generic globe
 when you "Add to Home Screen". Rather than add an imaging dependency to a stdlib-only
-toolkit, this rasterises the icon's geometry directly (it's lines, an octagon and a
-circle) and writes PNGs with `zlib` + `struct`.
+toolkit, this rasterises the icon's geometry directly and writes PNGs with `zlib` +
+`struct`.
 
-4x supersampling gives clean edges. Rerun after changing icon.svg:
+The geometry is three nested diamonds (the Arcane Ledger mark), so the
+rasteriser is one comparison per pixel. 4x supersampling gives clean edges.
+Rerun after changing icon.svg:
 
   python3 scripts/make_icons.py
 """
+import argparse
 import math
 import os
 import struct
 import zlib
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "webapp", "static")
-BG = (0x0b, 0x0d, 0x13)
-ACCENT = (0x5B, 0xE0, 0xD4)
-DOT = (0xE2, 0x3B, 0x4E)
+BG = (0x0F, 0x11, 0x15)      # Arcane Ledger ink
+AMBER = (0xF2, 0xB5, 0x44)   # the one accent
 SS = 4                      # supersampling factor
 
-
-def _blend(dst, i, rgb, a):
-    """Alpha-composite a colour onto the RGB buffer at pixel index i."""
-    if a <= 0:
-        return
-    a = min(1.0, a)
-    for c in range(3):
-        dst[i * 3 + c] = int(dst[i * 3 + c] * (1 - a) + rgb[c] * a)
-
-
-def _seg_dist(px, py, x1, y1, x2, y2):
-    """Distance from a point to a line segment — used to draw round-capped strokes."""
-    dx, dy = x2 - x1, y2 - y1
-    if dx == 0 and dy == 0:
-        return math.hypot(px - x1, py - y1)
-    t = max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
-    return math.hypot(px - (x1 + t * dx), py - (y1 + t * dy))
+# The mark: nested diamonds |x-256| + |y-256| <= r, alternating amber / ink /
+# amber — the same three paths as static/icon.svg. Everything sits inside the
+# central 80% circle, so the maskable variant survives any launcher's crop.
+DIAMONDS = ((160.0, AMBER), (80.0, BG), (30.0, AMBER))
 
 
 def render(size):
     """Draw the icon at `size` px (supersampled), return an RGB bytearray."""
     n = size * SS
     scale = n / 512.0
-    buf = bytearray()
-    for _ in range(n * n):
-        buf += bytes(BG)
-
-    cx = cy = 256.0
-    spokes = [(256, 70), (256, 442), (70, 256), (442, 256),
-              (124, 124), (388, 124), (124, 388), (388, 388)]
-    oct_out = [(256, 132), (360, 152), (380, 256), (360, 360),
-               (256, 380), (152, 360), (132, 256), (152, 152)]
-    oct_in = [(256, 180), (322, 196), (336, 256), (322, 316),
-              (256, 332), (190, 316), (176, 256), (190, 196)]
-
-    def ring(pts):
-        return [(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts))]
-
-    strokes = ([((cx, cy), p, 0.9) for p in spokes]
-               + [(a, b, 0.5) for a, b in ring(oct_out)]
-               + [(a, b, 0.7) for a, b in ring(oct_in)])
-    half = 5.0 * scale                      # stroke-width 10 in the SVG
     radius = 96.0 * scale                   # the background's rounded corners
-
+    buf = bytearray(n * n * 3)
     for y in range(n):
+        py = (y + 0.5) / scale
+        gy = y + 0.5
         for x in range(n):
-            i = y * n + x
-            px, py = (x + 0.5) / scale, (y + 0.5) / scale
-            # rounded-rect mask: knock the corners out to transparent-looking bg
-            gx, gy = x + 0.5, y + 0.5
-            for ox, oy in ((radius, radius), (n - radius, radius),
-                           (radius, n - radius), (n - radius, n - radius)):
-                if ((gx < radius) == (ox == radius)) and ((gy < radius) == (oy == radius)):
-                    if math.hypot(gx - ox, gy - oy) > radius:
-                        buf[i * 3:i * 3 + 3] = bytes((0, 0, 0))
-                    break
-            best = 0.0
-            for a, b, op in strokes:
-                d = _seg_dist(px, py, a[0], a[1], b[0], b[1]) * scale
-                if d <= half:
-                    best = max(best, op)
-            if best:
-                _blend(buf, i, ACCENT, best)
-            if math.hypot(px - cx, py - cy) <= 30.0:
-                _blend(buf, i, DOT, 1.0)
+            px = (x + 0.5) / scale
+            gx = x + 0.5
+            rgb = BG
+            # rounded-rect mask: corners outside the radius go black
+            cx = radius if gx < radius else (n - radius if gx > n - radius else None)
+            cy = radius if gy < radius else (n - radius if gy > n - radius else None)
+            if cx is not None and cy is not None and math.hypot(gx - cx, gy - cy) > radius:
+                rgb = (0, 0, 0)
+            else:
+                d = abs(px - 256.0) + abs(py - 256.0)
+                for r, colour in DIAMONDS:
+                    if d <= r:
+                        rgb = colour
+            i = (y * n + x) * 3
+            buf[i], buf[i + 1], buf[i + 2] = rgb
     return _downsample(buf, n, size)
 
 
@@ -122,11 +90,20 @@ def write_png(path, rgb, size):
     return len(png)
 
 
-def main():
-    os.makedirs(OUT, exist_ok=True)
+def main(argv=None):
+    # A real parser, so `--help` (which every script in this repo takes) prints help
+    # instead of silently overwriting the tracked icons — it did, twice, during the
+    # 2026-10-11 audit (R16).
+    ap = argparse.ArgumentParser(
+        description="Regenerate webapp/static/icon-192.png and icon-512.png from "
+                    "the geometry of static/icon.svg (overwrites both files).")
+    ap.add_argument("--out", default=OUT, help="output directory (default: %(default)s)")
+    args = ap.parse_args(argv)
+    out_dir = args.out
+    os.makedirs(out_dir, exist_ok=True)
     for size in (192, 512):
         rgb = render(size)
-        path = os.path.join(OUT, f"icon-{size}.png")
+        path = os.path.join(out_dir, f"icon-{size}.png")
         n = write_png(path, rgb, size)
         print(f"wrote {os.path.relpath(path)} ({size}x{size}, {n:,} bytes)")
     return 0

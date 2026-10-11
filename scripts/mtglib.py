@@ -19,6 +19,7 @@ import csv
 import io
 import os
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -132,6 +133,10 @@ def _parse_colorish(value: str) -> set:
             out.add(tok)
         elif tok in {"WHITE", "BLUE", "BLACK", "RED", "GREEN"}:
             out.add(tok[0])
+        elif len(tok) > 1 and set(tok) <= set(_COLOR_LETTERS):
+            # A run of letters ("WUBRG", "BG") — written by hand into a deck
+            # .attrs.csv, it used to parse as COLOURLESS (2026-10-11 audit, D3).
+            out |= set(tok)
     return out
 
 
@@ -439,7 +444,13 @@ def overlay_attrs(cards: list, attrs_text: str) -> int:
             continue
         n += 1
         if c_type and (row.get(c_type) or "").strip():
-            card.types = _split_multi(row[c_type])
+            new_types = _split_multi(row[c_type])
+            # carddb writes ONE primary type ("Creature" for an Artifact Creature).
+            # Never let it downgrade a richer list the export already carries —
+            # artifact discounts stopped matching artifact creatures (audit S8).
+            have = {t.lower() for t in (card.types or ())}
+            if not (have and {t.lower() for t in new_types} <= have):
+                card.types = new_types
         mv = _to_float(row.get(c_mv)) if c_mv else None
         if mv is not None:
             card.mana_value = mv
@@ -576,8 +587,21 @@ def index_by_name(cards: list) -> dict:
     return idx
 
 
+_QUOTE_FOLD = str.maketrans({"\u2019": "'", "\u2018": "'", "\u02bc": "'",
+                             "\u201c": '"', "\u201d": '"'})
+
+
 def _norm(name: str) -> str:
-    return re.sub(r"\s+", " ", name.strip().lower())
+    """The one name key every lookup shares: case-, whitespace-, quote- and
+    accent-insensitive. Folding is SYMMETRIC — every side of every lookup goes
+    through here — so it can only merge spellings of one card, never split them.
+    It closes two real misses: an iOS smart-quote `Nature’s Lore` matched nothing,
+    and `Bartolome` vs `Bartolomé` silently degraded 45 combo rows (2026-08-19)."""
+    s = name.strip().lower().translate(_QUOTE_FOLD)
+    if not s.isascii():
+        s = "".join(ch for ch in unicodedata.normalize("NFKD", s)
+                    if not unicodedata.combining(ch))
+    return re.sub(r"\s+", " ", s)
 
 
 def lookup(idx: dict, name: str):
@@ -590,6 +614,13 @@ def lookup(idx: dict, name: str):
 _SYMBOL_RE = re.compile(r"\{([^}]+)\}")
 
 
+def _front_cost(mana_cost) -> str:
+    """The FRONT face's cost. A split/adventure/MDFC cost arrives as
+    "{1}{B}{B} // {1}{B}{B}"; summing both faces scored Murderous Rider as B×4
+    (2026-10-11 audit, S1). Splits on " // " WITH spaces, never a bare "//"."""
+    return (mana_cost or "").split(" // ")[0]
+
+
 def pip_counts(mana_cost: str) -> dict:
     """Return {W,U,B,R,G: count} of colored pips in a mana cost string.
 
@@ -600,7 +631,7 @@ def pip_counts(mana_cost: str) -> dict:
     hybrid-Phyrexian cards.) Mono Phyrexian {W/P} stays a full W pip: paying life is
     the fallback, not the plan."""
     out = {c: 0.0 for c in "WUBRG"}
-    for sym in _SYMBOL_RE.findall(mana_cost or ""):
+    for sym in _SYMBOL_RE.findall(_front_cost(mana_cost)):
         s = sym.upper()
         letters = [ch for ch in s if ch in _COLOR_LETTERS]
         for ch in letters:
@@ -611,7 +642,7 @@ def pip_counts(mana_cost: str) -> dict:
 def is_double_pip(mana_cost: str) -> Optional[str]:
     """If a cost has 2+ pips of a single color, return that color, else None."""
     counts = {c: 0 for c in "WUBRG"}
-    for sym in _SYMBOL_RE.findall(mana_cost or ""):
+    for sym in _SYMBOL_RE.findall(_front_cost(mana_cost)):
         s = sym.upper()
         if s in _COLOR_LETTERS:
             counts[s] += 1
@@ -719,14 +750,24 @@ RAMP = {
     "sakura-tribe elder", "llanowar elves", "elvish mystic", "gilded goose",
     "wood elves",
     "priest of titania", "solemn simulacrum", "burnished hart", "wayfarer's bauble",
-    "pilgrim's eye", "skyscanner", "archaeomancer's map", "springbloom druid",
+    "archaeomancer's map", "springbloom druid",
     "wild growth", "grow from the ashes", "explorer's scope", "coveted jewel",
+    # 2026-10-11 audit (R9/R15) — the mana-rock cycles, so a deck whose attrs carry
+    # no Flags column doesn't count them as bare "artifact" (Orzhov Signet, Prismatic
+    # Lens and Talisman of Indulgence runner-verified in run 38145434671; the cycles
+    # share one template each). Smothering Tithe makes Treasure — it is ramp, not draw.
+    "boros signet", "dimir signet", "golgari signet", "gruul signet", "izzet signet",
+    "orzhov signet", "selesnya signet", "simic signet",
+    "talisman of curiosity", "talisman of impulse", "talisman of resilience",
+    "talisman of unity",
+    "charcoal diamond", "fire diamond", "marble diamond", "prismatic lens",
+    "smothering tithe",
 }
 DRAW = {
     "rhystic study", "mystic remora", "night's whisper", "sign in blood",
     "read the bones", "tome of legends", "staff of the storyteller", "skullclamp",
     "mask of memory", "staggering insight", "dig through time", "sphinx's revelation",
-    "syphon mind", "syphon soul", "ambition's cost", "opportunity", "prosperity",
+    "syphon mind", "ambition's cost", "opportunity", "prosperity",
     "brainstorm", "frantic search", "think twice", "winged words", "insight",
     "kindred discovery", "coastal piracy", "reconnaissance mission", "horn of greed",
     "visions of beyond", "harmonize", "sublime epiphany",
@@ -737,7 +778,11 @@ DRAW = {
     # repeatable engines that draw off a deck's own payoffs rather than saying "draw a
     # card" on a cheap spell — these were being scored as generic enchantments, which
     # under-counted card advantage in decks built around big creatures.
-    "up the beanstalk", "temur ascendancy", "esper sentinel", "smothering tithe",
+    "up the beanstalk", "temur ascendancy", "esper sentinel",
+    # Skyscanner: "When this creature enters, draw a card" (runner-verified run
+    # 38145434671) — it was curated as RAMP. Pilgrim's Eye (basic land to HAND) and
+    # Syphon Soul (no draw at all) were removed from RAMP/DRAW the same day (R5).
+    "skyscanner",
     "guardian project", "beast whisperer", "garruk's uprising", "elemental bond",
     "colossal majesty", "the great henge", "toski, bearer of secrets",
 }
@@ -757,13 +802,25 @@ REMOVAL = {
     "swift end", "dark banishing", "befoul", "smite", "rending volley",
     # 2026-08-11 sleeper audit — texts verified:
     "web up", "mjölnir, hammer of thor",
+    # Casualties of War is five TARGETED destroys, not a sweeper (was in WIPES; R5).
+    "casualties of war",
+    # 2026-10-11 edicts — runner-verified (deck-verify 38139999873 / 38140217987).
+    # Curated, not just derived, because the derived edict rule (oracle_flags v4)
+    # only reaches an attrs file after re-enrichment, and because the ETB-edict
+    # CREATURES are type-gated out of the derived layer on purpose — the same
+    # reason `murderous rider` is listed above.
+    "liliana's triumph", "sheoldred's edict", "diabolic edict", "chainer's edict",
+    "geth's verdict", "innocent blood", "barter in blood", "mire in misery",
+    "vona's hunger", "tergrid's shadow",
+    "fleshbag marauder", "plaguecrafter", "accursed marauder",
+    "merciless executioner", "demon's disciple", "archon of cruelty",
 }
 WIPES = {
     "blasphemous act", "toxic deluge", "cleansing nova", "austere command",
     "vanquish the horde", "time wipe", "extinction event", "final judgment",
     "cave-in", "pyroclasm", "wave of reckoning", "deadly tempest",
     "tragic arrogance", "culling ritual", "crux of fate", "planar collapse",
-    "reign of the pit", "casualties of war",
+    "reign of the pit",
     # 2026-08-11 sleeper audit — text verified (drain + destroy all creatures):
     "villainous wrath",
     # 2026-08-15 sleeper audit — runner-verified: "3 damage to each non-Dragon
@@ -775,8 +832,17 @@ COUNTERS = {
     "counterspell", "force of will", "misdirection", "arcane denial", "negate",
     "essence scatter", "memory lapse", "miscalculation", "power sink", "daze",
     "spell snare", "spell blast", "absorb", "sublime epiphany", "remove soul",
-    "thwart", "annul", "misstep",
+    "thwart", "annul",
+    # "misstep" removed (R5): it is a tap-down sorcery. Mental Misstep is the
+    # counter (runner-verified, run 38145434671).
+    "mental misstep",
 }
+
+# Curated names go through the SAME key function every lookup uses. Written as
+# literals, "mjölnir, hammer of thor" stopped matching the moment _norm learned to
+# fold accents (2026-10-11 integration sweep: Captain America lost a removal).
+RAMP, DRAW, REMOVAL, WIPES, COUNTERS = (
+    {_norm(n) for n in s} for s in (RAMP, DRAW, REMOVAL, WIPES, COUNTERS))
 
 # Layer 2: what an oracle-derived flag means in role terms. The curated lists above
 # are hand-maintained and every new set outgrows them; `Card.flags` (written by
@@ -792,6 +858,14 @@ FLAG_ROLES = {
     "removal": "removal",
     "wipe": "wipe",
     "counter": "counter",
+}
+# Payload-carrying tokens (oracle_flags v4) map by PREFIX. A ritual is one-shot
+# ramp and a Crypt Ghast-style "add an additional" doubler is ramp; the land-only
+# production tokens (`scale:`, `devotion:`, `lands-are:`) need no entry because
+# classify() returns "land" before it ever reads a land's flags.
+FLAG_ROLE_PREFIXES = {
+    "ritual:": "ramp",
+    "extra:": "ramp",
 }
 
 
@@ -838,6 +912,9 @@ def classify(card: Card) -> set:
     if not roles and card.flags:
         for f in card.flags:
             role = FLAG_ROLES.get(f)
+            if role is None:
+                role = next((r for p, r in FLAG_ROLE_PREFIXES.items()
+                             if f.startswith(p)), None)
             if role:
                 roles.add(role)
     # light type-based fallback

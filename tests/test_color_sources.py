@@ -111,9 +111,12 @@ def test_a_mixed_attrs_file_splits_the_buckets(tmp_path):
     attrs = "\n".join(ln for ln in ATTRS_ENRICHED.splitlines()
                       if not ln.startswith("Vault")) + "\n"
     rep, _ = _report(tmp_path, attrs, name="mixed")
+    # restriction_unknown counts ENRICHED lands only (audit S10, 2026-10-11): the
+    # identity-tier Vault was never enriched, so "enriched before the restriction
+    # vocabulary" is false for it — it already carries the identity label instead.
     assert rep["color_sources_basis"] == {"produced_lands": 8, "identity_lands": 1,
                                           "restricted_lands": 0,
-                                          "restriction_unknown_lands": 9}
+                                          "restriction_unknown_lands": 8}
     assert rep["color_sources"] == {"U": 8, "W": 1, "B": 1}
 
 

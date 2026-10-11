@@ -74,18 +74,29 @@ def score(coll_index, commanders, support, built=None):
     built = built or {}
     rows = []
     for c in commanders:
-        owned_support = {}
+        owned_support, unknown_identity = {}, 0
+        allowed = set(c["colors"])
         for arch in c["archetypes"]:
             for name in support.get(arch, []):
                 ref = mtglib.lookup(coll_index, name)
-                if ref:
-                    owned_support[name] = ref.quantity
+                if not ref:
+                    continue
+                # Only cards the commander can actually PLAY. Support was counted
+                # with no identity check, so mono-B Doctor Doom was credited with
+                # Counterspell and Swords to Plowshares (2026-10-11 audit, R14).
+                ident = ref.identity or ref.colors
+                if ident and not set(ident) <= allowed:
+                    continue
+                if not ident and not ref.has_type_data:
+                    unknown_identity += 1   # name-only row: can't tell — say so
+                owned_support[name] = ref.quantity
         depth = color_depth(c["colors"], coll_index)
         owns_cmd = mtglib.lookup(coll_index, c["name"]) is not None
         rows.append({
             "name": c["name"], "colors": "".join(sorted(c["colors"])) or "C",
             "archetypes": sorted(c["archetypes"]),
             "support_n": len(owned_support),
+            "support_unknown_identity": unknown_identity,
             "support_cards": sorted(owned_support, key=lambda n: -owned_support[n]),
             "depth": round(depth, 1),
             "owns_commander": owns_cmd,

@@ -1277,3 +1277,131 @@ def test_assumptions_name_the_discount_model_both_ways():
     plain = _dragon_deck()
     rep2 = goldfish.simulate(plain, games=50, seed=1)
     assert any("No cost reduction detected" in a for a in rep2["assumptions"])
+
+
+# --------------------------------------------------------------------------- #
+# REPORT_SCHEMA 5 — black's mana engines (oracle_flags v4) and noncreature
+# battlefield discounts. Before this, a mono-black deck's Dark Ritual, Cabal
+# Coffers, Nykthos, Crypt Ghast and Jet Medallion all modeled as nothing.
+# --------------------------------------------------------------------------- #
+def _swamp(qty=1, basic=True, name="Swamp"):
+    return C(name=name if basic else "Typed Swamp", quantity=qty, mana_value=0.0,
+             colors=set(), identity={"B"}, types=["Land"], subtypes=["Swamp"],
+             produced={"B"}, flags=set())
+
+
+def _units(cards, turn=2, perms=()):
+    lands = [(goldfish.compile_card(c), 1) for c in cards]
+    return goldfish._mana_units(lands, [], turn, perms)
+
+
+def test_coffers_adds_one_per_swamp_when_it_beats_nothing():
+    coffers = _enriched_land("Cabal Coffers", "B", ("scale:swamp:2",))
+    assert goldfish.compile_card(coffers).produces == frozenset()   # no free {B}
+    # 4 Swamps tap for 4; Coffers spends 2 of them and adds 4 → 6.
+    assert len(_units([_swamp()] * 4 + [coffers])) == 6
+    # 2 Swamps: activating would net zero, so it stays untapped (and adds nothing).
+    assert len(_units([_swamp()] * 2 + [coffers])) == 2
+
+
+def test_urborg_makes_every_land_count_for_coffers():
+    coffers = _enriched_land("Cabal Coffers", "B", ("scale:swamp:2",))
+    urborg = _enriched_land("Urborg, Tomb of Yawgmoth", "B", ("lands-are:swamp",))
+    # 3 Swamps + Urborg tap for 4; with Urborg every land (Coffers too) is a Swamp,
+    # so Coffers counts 5, spends 2 → 4 - 2 + 5 = 7.
+    assert len(_units([_swamp()] * 3 + [urborg, coffers])) == 7
+
+
+def test_stronghold_counts_basic_swamps_only_and_keeps_its_plain_tap():
+    sh = _enriched_land("Cabal Stronghold", "BC", ("scale:basic-swamp:3",))
+    assert goldfish.compile_card(sh).produces == frozenset("C")
+    # 4 basics: activation nets 4-3 = 1, no better than {T}: Add {C} → plain tap.
+    assert len(_units([_swamp()] * 4 + [sh])) == 5
+    # 6 basics: 6 - 3 = 3 beats the plain 1 → 6 - 3 + 6 = 9.
+    assert len(_units([_swamp()] * 6 + [sh])) == 9
+    # A typed nonbasic Swamp does not count for "basic Swamp".
+    assert len(_units([_swamp(basic=False)] * 6 + [sh])) == 7
+
+
+def test_crypt_ghast_doubles_swamps_from_the_turn_after_it_lands():
+    ghast = goldfish.compile_card(C(name="Crypt Ghast", quantity=1, mana_value=4.0,
+                                    identity={"B"}, mana_cost="{3}{B}",
+                                    types=["Creature"], produced={"B"},
+                                    flags={"extra:swamp"}))
+    swamps = [_swamp()] * 3
+    assert len(_units(swamps, turn=2, perms=[(ghast, 2)])) == 3   # same turn: no
+    assert len(_units(swamps, turn=3, perms=[(ghast, 2)])) == 6
+
+
+def test_nykthos_adds_devotion_when_it_beats_its_plain_tap():
+    nyk = _enriched_land("Nykthos, Shrine to Nyx", "C", ("devotion:2",))
+    big = goldfish.compile_card(C(name="Tergrid", quantity=1, mana_value=5.0,
+                                  identity={"B"}, mana_cost="{3}{B}{B}",
+                                  types=["Creature"], produced=set()))
+    two = goldfish.compile_card(C(name="Rankle", quantity=1, mana_value=4.0,
+                                  identity={"B"}, mana_cost="{2}{B}{B}",
+                                  types=["Creature"], produced=set()))
+    swamps = [_swamp()] * 3
+    # Devotion 2: 2 - 2 = 0, not better than {C} → 3 + 1.
+    assert len(_units(swamps + [nyk], perms=[(big, 1)])) == 4
+    # Devotion 4: 4 - 2 = 2 > 1 → 3 - 2 + 4 = 5.
+    assert len(_units(swamps + [nyk], perms=[(big, 1), (two, 1)])) == 5
+
+
+def test_rituals_cast_the_commander_early_and_never_for_nothing():
+    def deck(spell):
+        return [_swamp(qty=40),
+                C(name=spell, quantity=59, mana_value=1.0, identity={"B"},
+                  mana_cost="{B}", types=["Instant"], produced={"B"},
+                  flags={"ritual:3"} if spell == "Dark Ritual" else set()),
+                C(name="Cmd", quantity=1, mana_value=5.0, identity={"B"},
+                  mana_cost="{3}{B}{B}", types=["Legendary", "Creature"],
+                  produced=set())]
+    plain = goldfish.simulate(goldfish.compile_deck(deck("Duress"), "Cmd"),
+                              games=300, seed=3)
+    ritual = goldfish.simulate(goldfish.compile_deck(deck("Dark Ritual"), "Cmd"),
+                               games=300, seed=3)
+    assert plain["p_cast_by"]["4"] == 0.0      # five lands needed, no help
+    assert ritual["p_cast_by"]["3"] > 0.5      # 3 lands + one ritual = 5 mana
+    assert any("rituals" in a for a in ritual["assumptions"])
+    assert not any("rituals" in a for a in plain["assumptions"])
+
+
+def test_fire_rituals_commits_nothing_when_it_cannot_reach_the_cost():
+    r = goldfish.compile_card(C(name="Dark Ritual", quantity=1, mana_value=1.0,
+                                identity={"B"}, mana_cost="{B}", types=["Instant"],
+                                produced={"B"}, flags={"ritual:3"}))
+    hand = [r]
+    pips, generic = goldfish.parse_cost("{9}{B}")
+    assert goldfish._fire_rituals(hand, [frozenset("B")], pips, generic) is None
+    assert hand == [r]
+
+
+def test_a_noncreature_colour_discount_applies_from_the_battlefield():
+    """Jet Medallion ("Black spells you cast cost {1} less") is an ARTIFACT — the
+    sim only read creature discounts and had no colour words, so it listed the
+    reduction in its assumptions while never applying it."""
+    medallion = C(name="Jet Medallion", quantity=1, mana_value=2.0, identity=set(),
+                  mana_cost="{2}", types=["Artifact"], produced=set(),
+                  flags={"discount:black:1"})
+    filler = C(name="Filler", quantity=58, mana_value=7.0, identity={"B"},
+               mana_cost="{7}{B}", types=["Sorcery"], produced=set())
+
+    def deck(with_medallion):
+        cards = [_swamp(qty=40), filler,
+                 C(name="Cmd", quantity=1, mana_value=5.0, identity={"B"},
+                   mana_cost="{3}{B}{B}", types=["Legendary", "Creature"],
+                   produced=set())]
+        cards.append(medallion if with_medallion else
+                     C(name="Blank", quantity=1, mana_value=2.0, identity=set(),
+                       mana_cost="{2}", types=["Artifact"], produced=set()))
+        return cards
+    a = goldfish.compile_deck(deck(False), "Cmd")
+    b = goldfish.compile_deck(deck(True), "Cmd")
+    sb = next(sc for sc in b["library"] if sc.name == "Jet Medallion")
+    cmd = b["commander"]
+    assert goldfish._disc_matches(cmd, "black")
+    ra = goldfish.simulate(a, games=600, seed=11)
+    rb = goldfish.simulate(b, games=600, seed=11)
+    assert rb["p_cast_by"]["4"] > ra["p_cast_by"]["4"]
+    assert sb.is_permanent and not sb.is_creature

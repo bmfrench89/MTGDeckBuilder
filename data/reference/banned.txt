@@ -1,0 +1,53 @@
+# Commander-banned cards — every name here came back "commander-legal: NO" from
+# Scryfall on a GitHub runner (deck-verify run 38145434671, 2026-10-11). The
+# recommenders (role staples, curated alternatives, optimizer adds/buys, auto_build)
+# filter on it, because nothing did before and the app was suggesting Dockside
+# Extortionist and Jeweled Lotus (2026-10-11 audit, D1).
+#
+# NOT exhaustive and not a legality oracle: the banlist changes. The authoritative
+# check is `carddb.py --verify "<name>"` (or deck-verify.yml), which prints the live
+# commander legality. Checked and still LEGAL in that run (do not add): Biorhythm,
+# Lutri the Spellchaser, Sway of the Stars, Worldfire, Coalition Victory, Gifts
+# Ungiven, Panoptic Mirror, Braids Cabal Minion.
+Ancestral Recall
+Balance
+Black Lotus
+Channel
+Chaos Orb
+Dockside Extortionist
+Emrakul, the Aeons Torn
+Erayo, Soratami Ascendant
+Falling Star
+Fastbond
+Flash
+Golos, Tireless Pilgrim
+Griselbrand
+Hullbreacher
+Iona, Shield of Emeria
+Jeweled Lotus
+Karakas
+Leovold, Emissary of Trest
+Library of Alexandria
+Limited Resources
+Mana Crypt
+Mox Emerald
+Mox Jet
+Mox Pearl
+Mox Ruby
+Mox Sapphire
+Nadu, Winged Wisdom
+Paradox Engine
+Primeval Titan
+Prophet of Kruphix
+Recurring Nightmare
+Rofellos, Llanowar Emissary
+Shahrazad
+Sundering Titan
+Sylvan Primordial
+Time Vault
+Time Walk
+Tinker
+Tolarian Academy
+Trade Secrets
+Upheaval
+Yawgmoth's Bargain

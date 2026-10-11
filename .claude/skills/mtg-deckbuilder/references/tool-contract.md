@@ -22,6 +22,7 @@ The egress proxy answers 403 to Scryfall, EDHREC, Commander Spellbook and YouTub
 | Need | Do this | NEVER |
 |---|---|---|
 | Verbatim oracle text for any card | append names to `data/reference/verify-queue.txt`, commit, push the `claude/**` branch → **`deck-verify.yml`** runs `carddb.py --verify` on a runner and pushes results back; read them with `get_job_logs` | web-search cards one at a time. Past **3** cards this is a defect |
+| Card data (type/MV/production) for a deck of cards the collection lacks | dispatch **`deck-verify.yml`** with `deck_attrs: <stem> …` — the runner enriches `data/decks/<stem>.txt` into `<stem>.attrs.csv` and commits it to the branch | hand-write an `.attrs.csv`, or ship a study deck with an empty curve |
 | Fresh EDHREC field data | same push — `deck-verify.yml` also snapshots every commander in `data/decks/` | hand-roll a field analysis, or call a deck "unsupported" on stale data |
 | Enrich the whole collection | **`attrs-snapshot.yml`** (weekly + on snapshot change) | commit a hand-built attrs file |
 | "how many combos does this deck have?" | **`spellbook.py`** — Commander Spellbook's FULL combo DB, present and one-away | count combos by hand. A session hand-counted a deck's 44 engines because this was never consulted; it is blocked in the sandbox, so **run it where network exists and say so** |

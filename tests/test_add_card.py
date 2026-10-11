@@ -269,8 +269,9 @@ def test_replace_with_a_new_card_still_works_and_is_logged(client):
                                              "name": "Arcane Signet",
                                              "replacement": "Counterspell"})
     text = _deck_text(client)
-    assert "Counterspell" in text and "Arcane Signet" not in text
-    log = (client._decks / "testdeck.changes.csv").read_text(encoding="utf-8")
+    # The fixture runs `2 Arcane Signet`; Replace moves ONE copy (W2), so one stays.
+    assert "\n1 Counterspell\n" in text and "\n1 Arcane Signet\n" in text
+    log =(client._decks / "testdeck.changes.csv").read_text(encoding="utf-8")
     assert "manual-replace" in log
 
 

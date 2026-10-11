@@ -85,17 +85,48 @@ as one mana each; ramp sorceries that make treasure are not `ramp`. And the
 is flagged `removal` exactly as "destroy target creature" is. That is the accepted
 heuristic (the module docstring's disclaimer is the contract), not an oversight:
 narrowing it would mean parsing targeting restrictions, which is a rules engine.
-`wipe` covers the two forms the vocabulary names and no others — the active-voice
-sweeper ("Blasphemous Act deals 13 damage to each creature") is missed here and
-caught by the curated `mtglib.WIPES` list instead, which is exactly the layering
-`classify()` relies on: curated first, flags only where curation is silent.
+`wipe` covers "destroy/exile all", "each creature gets -X/-X / is dealt", and
+(v4) the active-voice damage sweeper ("Anger of the Gods deals 3 damage to each
+creature"); the curated `mtglib.WIPES` list still wins where it speaks — the
+layering `classify()` relies on: curated first, flags only where curation is
+silent. Parenthesized REMINDER text is stripped before any regex runs (v4): it is
+never rules text, and treasure/cycling reminders were minting `dork`/`draw`.
 """
 
 import re
 
 COLORS = "WUBRGC"
 
-VOCAB_VERSION = 3          # bump on ANY change to the vocabulary above
+VOCAB_VERSION = 4          # bump on ANY change to the vocabulary above
+# v4 (2026-10-11) — two gaps a mono-black study deck exposed:
+#   * reminder text "(…)" is stripped first (treasure → false dork/rock, cycling →
+#     false draw); the active-voice damage sweeper is a `wipe`; a blink of your own
+#     permanent ("exile target creature you control, then return it") is NOT removal.
+#   * `removal` also reads the EDICT text class on the same spell/enchantment
+#     faces: a player phrase ("each opponent", "target player", "each other
+#     player"…) then "sacrifices … creature(s)/planeswalker(s)" in one sentence
+#     (Liliana's Triumph, Innocent Blood, Grave Pact). Before v4 every edict
+#     classified as a bare "spell", so a deck of ten edicts read as 0 removal.
+#     A sacrifice the CASTER pays ("As an additional cost … sacrifice a
+#     creature") has no third-person subject and does not match.
+#   * five black-mana tokens the goldfish sim reads (production the old model
+#     could not see, so it reported such decks slower than they are):
+#       ritual:<n>             an Instant/Sorcery face that ADDS mana itself —
+#                              <n> is the FIRST Add clause (Cabal Ritual's
+#                              threshold upgrade is ignored: pessimism, stated)
+#       scale:<type>:<cost>    a LAND face "{cost}, {T}: Add {X} for each <type>
+#                              you control" (Cabal Coffers → scale:swamp:2);
+#                              "basic <type>" → scale:basic-<type>:<cost>
+#                              (Cabal Stronghold → scale:basic-swamp:3)
+#       devotion:<cost>        a LAND face "{cost}, {T}: Choose a color. Add …
+#                              equal to your devotion" (Nykthos → devotion:2)
+#       extra:<type>           "Whenever you tap a <type> for mana, add an
+#                              additional {X}" (Crypt Ghast → extra:swamp)
+#       lands-are:<type>       "Each land is a <type> in addition to its other
+#                              land types" (Urborg → lands-are:swamp)
+#     <type> is one of the five basic land types. Anything the grammar can't
+#     express matches NOTHING (same policy as the v3 discounts: a missed token
+#     degrades to the old behavior; a wrong one lies).
 # v3 adds cost-reduction tokens (spec: docs/spec-cost-reduction.md). Grammar mirrors
 # fetch:* — colon-joined, machine-readable, one token per discount:
 #   discount-cmd:<type>:<n>    eminence-class: "As long as ~ is in the command zone
@@ -161,6 +192,14 @@ _REMOVAL_RE = re.compile(r"\b(?:destroy|exile) target\b")
 _WIPE_ALL_RE = re.compile(r"\b(?:destroy|exile) all\b")
 _WIPE_EACH_RE = re.compile(r"\b(?:all|each) creatures?\b[^.]{0,60}?"
                            r"(?:gets? -|is dealt|are dealt)")
+# v4: the ACTIVE-voice damage sweeper the docstring used to call out as missed —
+# "Anger of the Gods deals 3 damage to each creature" (2026-10-11 audit, R12).
+_WIPE_DAMAGE_RE = re.compile(r"deals? (?:\d+|x) damage to each (?:other )?creature")
+# Parenthesized reminder text is never rules text. Treasure's "(It's an artifact
+# with "{T}, Sacrifice this token: Add one mana of any color.")" made 22 one-shot
+# treasure makers read as permanent `dork`/`rock` producers, and cycling's
+# "(…, Discard this card: Draw a card.)" read as `draw` (2026-10-11 audit, R2/R12).
+_REMINDER_RE = re.compile(r"\([^()]*\)")
 # --- cost reduction (v3, spec docs/spec-cost-reduction.md) ----------------------
 # Sentence-scoped like everything else here. The eminence test is the phrase
 # "command zone" in the SAME sentence as the discount — that is the whole
@@ -172,9 +211,49 @@ _DISC_STATIC_RE = re.compile(
 _DISC_FIRST_RE = re.compile(
     r"the first ([a-z]+) spell you cast each turn costs \{(\d+)\} less")
 
+# v4 edicts. The subject must be a PLAYER phrase, so the caster's own additional
+# cost ("sacrifice a creature") never reads as removal; `[^.]*?` keeps subject,
+# verb and victim inside one sentence, so Smallpox's "Each player loses 1 life,
+# discards a card, sacrifices a creature" still matches while Torment of
+# Hailfire's "sacrifices a nonland permanent" (no creature/planeswalker) doesn't.
+_EDICT_RE = re.compile(
+    r"\b(?:each (?:other )?(?:player|opponent)|target (?:player|opponent))\b"
+    r"[^.]*?\bsacrifices\b[^.]{0,40}?\b(?:creatures?|planeswalkers?)\b")
+
+# v4 black-mana production (see the VOCAB_VERSION note).
+_LAND_TYPES_ALT = "plains|island|swamp|mountain|forest"
+# A spell that adds mana itself: an Add clause at the start of the text or of a
+# sentence/line — never one behind a cost colon ("{T}: Add" is a permanent).
+_RITUAL_RE = re.compile(r"(?:^|[.\n]\s*)add ((?:\{[wubrgc]\})+)")
+_SCALE_RE = re.compile(
+    r"\{(\d+)\}, \{t\}: add \{[wubrgc]\} for each (basic )?"
+    rf"({_LAND_TYPES_ALT}) you control")
+_DEVOTION_RE = re.compile(
+    r"\{(\d+)\}, \{t\}: choose a color\. add an amount of mana of that color "
+    r"equal to your devotion to that color")
+_EXTRA_RE = re.compile(
+    rf"whenever you tap an? ({_LAND_TYPES_ALT}) for mana, add an additional "
+    r"\{[wubrgc]\}")
+_LANDS_ARE_RE = re.compile(
+    rf"each land is an? ({_LAND_TYPES_ALT}) in addition to its other land types")
+
 # `.{0,40}` spans the qualifier a counterspell puts between the words —
 # "counter target creature spell", "counter target noncreature spell".
 _COUNTER_RE = re.compile(r"counter target .{0,40}spell")
+
+
+def _removal_sentence(t):
+    """Spot removal, read per sentence: "destroy/exile target …" — but not a
+    BLINK, where the same sentence returns the card ("Exile target creature you
+    control, then return it to the battlefield" — Ephemerate read as removal;
+    2026-10-11 audit, R12). The verb-not-victim rule otherwise stands: "destroy
+    target land you control" is still `removal` (see the module docstring)."""
+    for sentence in re.split(r"[.\n]", t):
+        if _REMOVAL_RE.search(sentence):
+            if re.search(r"\breturn (?:it|that card|them|those cards)\b", sentence):
+                continue
+            return True
+    return False
 
 
 def faces(c):
@@ -290,8 +369,8 @@ def derive_flags(c):
     amount = 1
     for type_line, text in faces(c):
         tl = (type_line or "").lower()
-        t = (text or "").lower()
-        if not t:
+        t = _REMINDER_RE.sub("", (text or "").lower())
+        if not t.strip():
             continue
         is_land = "land" in tl
 
@@ -337,9 +416,11 @@ def derive_flags(c):
         # destroy target creature") out of the removal count — that card is a
         # creature first, and classify()'s type fallback already says so.
         is_spell = "instant" in tl or "sorcery" in tl
-        if (is_spell or "enchantment" in tl) and _REMOVAL_RE.search(t):
+        if (is_spell or "enchantment" in tl) and (_removal_sentence(t)
+                                                  or _EDICT_RE.search(t)):
             flags.add("removal")
-        if is_spell and (_WIPE_ALL_RE.search(t) or _WIPE_EACH_RE.search(t)):
+        if is_spell and (_WIPE_ALL_RE.search(t) or _WIPE_EACH_RE.search(t)
+                         or _WIPE_DAMAGE_RE.search(t)):
             flags.add("wipe")
         if _COUNTER_RE.search(t):
             flags.add("counter")
@@ -358,6 +439,23 @@ def derive_flags(c):
             m = _DISC_STATIC_RE.search(sentence)
             if m and "command zone" not in sentence:
                 flags.add(f"discount:{m.group(1)}:{m.group(2)}")
+
+        # Black-mana production (v4). Land-only tokens read the land face's own text.
+        if is_spell:
+            m = _RITUAL_RE.search(t)
+            if m:
+                flags.add(f"ritual:{len(_MANA_SYM_RE.findall(m.group(1)))}")
+        if is_land:
+            for m in _SCALE_RE.finditer(t):
+                typ = ("basic-" if m.group(2) else "") + m.group(3)
+                flags.add(f"scale:{typ}:{m.group(1)}")
+            m = _DEVOTION_RE.search(t)
+            if m:
+                flags.add(f"devotion:{m.group(1)}")
+        for m in _EXTRA_RE.finditer(t):
+            flags.add(f"extra:{m.group(1)}")
+        for m in _LANDS_ARE_RE.finditer(t):
+            flags.add(f"lands-are:{m.group(1)}")
 
         if not is_land or taps_for_mana:
             amount = max(amount, _mana_added(t))

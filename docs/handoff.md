@@ -6,7 +6,131 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-07._
+_Last updated: 2026-10-11 (Arcane Ledger UI overhaul)._
+
+## UI overhaul — "Arcane Ledger", 2026-10-11
+
+The player picked the **Arcane Ledger** direction from the mockup canvas (five
+artboards: decks home, deck dashboard, card panel, phone, style tile). What shipped:
+
+- **Theme** (`webapp/static/app.css`): graphite grounds (#0F1115 / #171A21 / #1E222B),
+  ONE amber accent (#F2B544) reserved for the primary action, links and the active
+  tab; Space Grotesk headings, IBM Plex Sans body, IBM Plex Mono for every number.
+  Card names are text-coloured with a dotted underline (amber only on hover). Status
+  colours `--in/--short/--over` (#3A9BD0 / #D2732C / #8A70E0, palette-validated) always
+  travel with a word. `tokens.css` is untouched — still colour- and font-free.
+- **Shell** (`base.html`): a left rail on ≥900px (Decks · Build · Collection ·
+  Wishlist, then Shared · Pins · Phone); under 900px it becomes a bottom tab bar with a
+  More sheet. `details.menu` / `details.more` close on outside tap or Escape.
+- **Decks home** (`index.html`): a card grid — colour-identity stripe + WUBRG pips,
+  bracket badge, Study-copy badge, one status line (ready / N to buy / contested),
+  Lands·Ramp·Removal·Draw against the deck's **archetype-widened** band
+  (`app._role_meters` → `deckcore.role_ranges`), speed + resilience, and Open / Edit /
+  ⋯ (the ten secondary actions). `power.build_for_deck(..., with_report=True)` hands
+  back the report so the page does not analyse each deck twice.
+- **Deck dashboard** (`build_dashboard`): the `default` theme IS Ledger now (themed
+  decks keep their own palette; optional theme keys `heading` / `value` / `chart`).
+  The bare Ramp/Removal/Draw tiles became **range meters** (`role_meters_html`, Lands +
+  4 roles, band = template, word = status); tabs are underline tabs; tiles put label
+  over a mono value. On the app surface only (`editable=True`) an **app bar**
+  (`app_bar`) adds ← All decks + Edit list / Optimize / Table card / ⋯ — a CLI or
+  downloaded dashboard never gets it, and print hides it.
+- Guards: `tests/test_ui_ledger.py` (meter words + widened band, app-bar surface rule
+  and every app-bar link resolving, deck-card meters/identity/menu, nav current page,
+  drawer-only-on-wide-screens for both panels, icon SVG/PNG geometry agreement).
+
+- **App icon**: a cut gem — three nested amber/ink/amber diamonds on graphite.
+  `icon.svg` and `scripts/make_icons.py` (`DIAMONDS`) share the geometry; the rail's
+  brand mark is the same SVG. Regenerate the PNGs with `python3 scripts/make_icons.py`.
+- **Card panel drawer**: at ≥900px both panels (dashboard `card_panel.css`, app
+  `cardpanel.css`) slide in from the right — image beside the title, sections full
+  width, a light backdrop so the deck stays readable. Under 900px it is still the
+  bottom sheet. Pure CSS over unchanged markup/ids (`display:contents` on the info
+  column). The edit buttons' hardcoded cyan fallback now falls back to the theme.
+
+Not done (follow-up): the `/deck/<stem>/visual` image page keeps its old layout.
+
+## Whole-app audit shipped, 2026-10-11
+
+`docs/spec-app-audit-2026-10.md` is the record: 45 reproduced findings, fixed across three
+tracks and an integration sweep. The suite is at 1,072 tests. Read the spec's
+**Follow-ups** list before starting new work in these areas. The changes that alter
+behavior a session might otherwise trust from memory:
+
+- **`_norm` folds accents and smart quotes.** Anything that STORES normalized keys must
+  re-derive them on read: field snapshots do this (`edhrec._renorm_snapshot`), and the
+  curated role sets are normalized at import.
+- **`# Study: yes`** marks a review-only deck. Conflicts, the free pool, the wishlist and
+  `optimize --all` skip it. The Tergrid options and the Bartolomé deck tech are marked.
+- **`data/reference/banned.txt`** lists 42 runner-verified banned cards. Every recommender
+  filters on it. It is not exhaustive: `carddb --verify` gives the live legality.
+- **`oracle_flags` v4:**
+  - reminder text is stripped before any rule runs (treasure and cycling no longer mint
+    dork/draw);
+  - damage sweepers count as `wipe`; a blink is not `removal`;
+  - edicts count as `removal`;
+  - the black-mana tokens feed goldfish.
+- **Goldfish is at REPORT_SCHEMA 6.**
+  - The kill medians count every game.
+  - Disruption recasts the commander with tax.
+  - Rituals, Coffers, Nykthos, Crypt Ghast, Urborg and noncreature cost reducers are
+    modeled.
+- **Deck `.attrs.csv` `Cost` / `Sub-types` columns are now read.** Pip demand from a
+  companion file is real. The `deck_stats.py` CLI applies the companion too.
+- **Web app hardening:**
+  - stem allow-list and realpath check;
+  - Origin/CSRF check on every write;
+  - one-copy Remove/Replace on basics;
+  - Build Next never overwrites an existing deck (`-2`, `-3`…);
+  - a safe collection upload, with a `.bak.private.csv` backup;
+  - a 500-copy line cap (422).
+
+## Three Tergrid study decks for review, built 2026-10-11
+
+**State:** `data/decks/tergrid-iron-fortress`, `tergrid-grave-pact-engine` and
+`tergrid-hellbent-lock`. Each has `.txt` + `.attrs.csv` + `.notes.md`. They are
+**research builds, not from the collection.** The player asked for options "not tied to my
+cards". Each deck uses only 18–19 owned nonbasic cards; Tergrid herself is not owned. They
+are review candidates: the player picks one, or none.
+
+| Deck | Angle | Game Changers | Top-25 field overlap |
+|---|---|---|---|
+| Iron Fortress | max protection (4 equipment, 6 return effects, player hexproof) | Tergrid + Opposition Agent | 80% |
+| Grave Pact Engine | Pact / Dictate / Butcher + free outlets + Myr-chain fodder | Tergrid + Braids, Cabal Minion | 68% |
+| Hellbent Lock | field-shaped discard stax | Tergrid only | 88% |
+
+All three are Bracket 3 (Tergrid is herself a Game Changer).
+
+**Goldfish** (3,000 games, seed 7, schema 5): Tergrid on the battlefield by turn 4 in
+about 30% of games and by turn 5 in 57–59%; mean landing turn 5.4–5.5; 17% screw. Before
+the v4 model these read 22% / 51% / 5.8.
+
+**Optimizer:** previewed and **not applied**.
+- It kept proposing to swap one card for Lightning Greaves. That was rejected: shroud
+  blocks the deck's own targeted protection.
+- Every nonland card is now named in each deck's `.notes.md`, so `refresh --optimize`
+  won't churn these study copies.
+
+**Gaps found and closed the same day (commit 60e8a47):**
+- Edicts now count as removal. There are two layers: a curated `mtglib.REMOVAL` list,
+  and the oracle_flags v4 edict rule. The decks read 8 / 14 / 8 removal, where they
+  read 0 before.
+- `oracle_flags` v4 adds `ritual:`, `scale:`, `devotion:`, `extra:` and `lands-are:`
+  tokens. Goldfish schema 5 models Dark Ritual, Cabal Ritual, Cabal Coffers, Cabal
+  Stronghold, Nykthos, Crypt Ghast and Urborg.
+- Goldfish also now applies noncreature cost reducers. Jet Medallion was listed in the
+  report's assumptions but never actually applied.
+- **The collection snapshot attrs are still FlagsVer 3.** The new tokens reach owned
+  cards only after `attrs-snapshot.yml` re-enriches on main: dispatch it after the
+  merge, or wait for its next scheduled run. Until then the curated edict list carries
+  the removal fix, and the sim models none of the v4 production for owned cards.
+- `deck-verify.yml` gained a `deck_attrs` dispatch input. It enriches named deck files
+  into `.attrs.csv` on the runner, which is how a study deck of unowned cards gets a
+  real curve. The current Tergrid attrs (FlagsVer 4) came from run 38143027960.
+
+**Verification:** every card's oracle text was verified on GitHub runners — 158 cards
+across runs 38138722782, 38139031278, 38139999873, 38140217987 and 38141826643. The
+EDHREC Tergrid snapshot was refreshed the same day (12,840 decks).
 
 ## beorn-the-fierce — "Bear Den" (mono-G stompy), built 2026-10-07
 

@@ -370,13 +370,20 @@ def role_ranges_with_unknown(archetype=None):
 
 
 def load_attrs(path):
-    """Optional name -> {type, mv, colors, produced, flags, power} map, so a deck can
-    carry its own card data without the full collection CSV.
+    """Optional name -> {type, mv, colors, cost, subtypes, produced, flags, power}
+    map, so a deck can carry its own card data without the full collection CSV.
 
-    `Name,Type,MV,Colors[,Produced,Flags,Power]` — the three optional columns are the
-    same contract `collection_attrs.csv` uses (spec-engine-upgrades §4.2;
-    spec-table-ready Phase 1 for Power), and the **empty-vs-absent rule is
-    load-bearing** here too. `csv.DictReader` hands back `None` for a column that
+    `Name,Type,MV,Colors[,Cost,Sub-types,Produced,Flags,Power,FlagsVer]` — the
+    optional columns are the same contract `collection_attrs.csv` uses
+    (spec-engine-upgrades §4.2; spec-table-ready Phase 1 for Power), and the
+    **empty-vs-absent rule is load-bearing** here too.
+
+    `Cost` and `Sub-types` were silently dropped until 2026-10-11 (audit S3): a
+    study deck carrying 70 black pips in its Cost column read as 12, and goldfish
+    compiled Cabal Ritual as two generic. Both are carried as `None` when the
+    column is absent and as the raw cell otherwise; `apply_attrs` writes them
+    only when the cell is non-empty, because an empty cost/subtype cell is not
+    evidence the card has none (a land's blank Cost is already the default). `csv.DictReader` hands back `None` for a column that
     isn't in the header and `''` for a present-but-blank cell, and this map preserves
     exactly that: `None` stays None so `apply_attrs` leaves `Card.produced` alone
     (unknown → every consumer falls back and says so), while `''` parses to an empty
@@ -398,6 +405,8 @@ def load_attrs(path):
                 "type": (r.get("Type") or "").strip(),
                 "mv": mv,
                 "colors": (r.get("Colors") or "").strip(),
+                "cost": r.get("Cost"),              # None = column absent
+                "subtypes": r.get("Sub-types"),     # ';'-joined, None = absent
                 "produced": r.get("Produced"),      # None = column absent, keep it
                 "flags": r.get("Flags"), "flags_ver": r.get("FlagsVer"),
                 "power": r.get("Power"),            # verbatim; '*' stays '*'
@@ -443,10 +452,52 @@ def load_card_notes(path=None, include_generated=True):
     return out
 
 
+# The card-type words a `Type` cell can carry. Supertypes (Basic, Legendary, Snow)
+# and anything after an em-dash (subtypes) are not card types and are dropped.
+_CARD_TYPE_WORDS = ("Artifact", "Battle", "Creature", "Enchantment", "Instant",
+                    "Kindred", "Land", "Planeswalker", "Sorcery", "Tribal")
+
+
+def _parse_type_cell(cell):
+    """An attrs `Type` cell -> the list of card types it names.
+
+    carddb writes ONE primary type per row ("Creature"), but hand-made and
+    older companions carry full type lines ("Artifact Creature", "Basic Land —
+    Swamp") or `;`-joined lists ("Artifact;Creature"). All of them parse to
+    every card type named, in printed order. A cell naming no known card type
+    survives verbatim as a one-element list — the pre-2026-10-11 behaviour, so an
+    odd cell degrades rather than vanishing."""
+    head = re.split(r"\s+[\u2014-]\s+", cell, maxsplit=1)[0]
+    words = [w for w in re.split(r"[;,/\s]+", head) if w]
+    known = {t.lower(): t for t in _CARD_TYPE_WORDS}
+    out = []
+    for w in words:
+        t = known.get(w.lower())
+        if t and t not in out:
+            out.append(t)
+    return out or [cell]
+
+
+def _merge_types(existing, cell):
+    """The type list after overlaying an attrs `Type` cell (audit S8).
+
+    Never DOWNGRADES: when every type the cell names is already in the card's
+    existing list, the existing (richer or equal) list stands. carddb's one-word
+    primary type used to replace `["Artifact", "Creature"]` with `["Creature"]`,
+    and then "artifact spells cost {1} less" never matched an artifact creature
+    although the assumptions said it did. A cell naming a type the card does not
+    have is new information and replaces the list, as before."""
+    parsed = _parse_type_cell(cell)
+    have = mtglib.Card(name="", types=list(existing or []))._type_words()
+    if existing and {t.lower() for t in parsed} <= have:
+        return existing
+    return parsed
+
+
 def apply_attrs(enriched, attrs):
-    """Overlay type/MV/colors — and, when the companion carries them, the
-    production-aware `Produced`/`Flags` and the printed `Power` — onto enriched deck
-    cards.
+    """Overlay type/MV/colors/cost/subtypes — and, when the companion carries them,
+    the production-aware `Produced`/`Flags` and the printed `Power` — onto enriched
+    deck cards.
 
     A deck-level `.attrs.csv` is what makes the enriched mana model (and the goldfish
     clock) reachable on a fresh clone that only has the name-only snapshot. Absent
@@ -463,11 +514,17 @@ def apply_attrs(enriched, attrs):
             continue
         n += 1
         if a["type"]:
-            c.types = [a["type"]]
+            c.types = _merge_types(c.types, a["type"])
         if a["mv"] is not None:
             c.mana_value = a["mv"]
         if a["colors"]:
             c.identity = mtglib._parse_colorish(a["colors"])
+        # Cost / Sub-types (audit S3): written only from a non-empty cell, so an
+        # absent column AND a blank cell both leave what the collection knew.
+        if (a.get("cost") or "").strip():
+            c.mana_cost = a["cost"].strip()
+        if (a.get("subtypes") or "").strip():
+            c.subtypes = [t.strip() for t in a["subtypes"].split(";") if t.strip()]
         if a.get("produced") is not None:
             c.produced = mtglib._parse_produced(a["produced"])
         if a.get("flags") is not None:
@@ -579,7 +636,9 @@ def basics_by_demand(n, identity, cards):
     for card in cards:
         if getattr(card, "is_land", False) or not getattr(card, "mana_cost", ""):
             continue
-        for col, pips in mtglib.pip_counts(card.mana_cost).items():
+        # Front face only (audit S1): "{1}{B}{B} // {1}{B}{B}" is ONE spell's cost
+        # printed twice, not six pips of demand.
+        for col, pips in mtglib.pip_counts(mtglib.front_face(card.mana_cost)).items():
             if col in demand:
                 demand[col] += pips
     tot = sum(demand.values())
@@ -834,7 +893,7 @@ def load_role_staples_safe():
         return {}
 
 
-def buy_signals(buylist, combos, missing, idx=None):
+def buy_signals(buylist, combos, missing, idx=None, deck=None):
     """ONE merged 'cards to buy' list from every engine that knows about a gap.
 
     The Buy view exists to answer 'what should I spend money on for this deck' —
@@ -849,10 +908,40 @@ def buy_signals(buylist, combos, missing, idx=None):
     `source`: 'curated' (always wins dedupe — the player wrote it), 'combo'
     (an unowned piece completing a combo), 'decklist' (in the list, unowned).
     Dedupe is front-face aware, like every membership test in this repo.
+
+    **Nothing the player already has is a buy** (audit D2, 2026-10-11). The Buy
+    view listed owned cards — three of them already in the 99 — because a curated
+    row outlives the purchase it asked for. So every row is dropped when:
+      * the card is a basic (`mtglib.is_basic` — always owned, grounding rule #9);
+      * `idx` (the collection index) holds at least one copy of it;
+      * `deck` (the deck's cards or names) already runs it AND the card is not one
+        of the `missing` decklist cards — an in-deck card that is not missing is
+        owned by definition, whatever the caller's `idx` says.
+    The unowned decklist cards (`missing`) are exactly the in-deck rows that
+    remain: they are the BUY badge, and the one in-deck case that is a real buy.
+    `idx=None` and `deck=None` skip their checks, so a caller without them gets
+    the old merge, minus basics.
     """
     rows, seen = [], set()
+    missing_keys = set()
+    for c in (missing or []):
+        missing_keys |= mtglib.name_keys(getattr(c, "name", c))
+    deck_keys = set()
+    for c in (deck or []):
+        deck_keys |= mtglib.name_keys(getattr(c, "name", c))
+
+    def _have(name):
+        if mtglib.is_basic(name):
+            return True
+        ref = mtglib.lookup(idx, name) if idx else None
+        if ref is not None and (ref.quantity or 0) > 0:
+            return True
+        keys = mtglib.name_keys(name)
+        return bool(keys & deck_keys) and not (keys & missing_keys)
 
     def _add(row):
+        if not row["card"] or _have(row["card"]):
+            return
         keys = mtglib.name_keys(row["card"])
         if keys & seen:
             return
