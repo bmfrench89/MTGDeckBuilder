@@ -191,3 +191,28 @@ def test_make_icons_help_writes_nothing(tmp_path, capsys):
     with pytest.raises(SystemExit):
         make_icons.main(["--help", "--out", str(tmp_path)])
     assert list(tmp_path.iterdir()) == []
+
+
+# --- R13 follow-up: committed field snapshots were keyed by the OLD _norm ------------
+def test_field_snapshot_keys_are_renormalized_on_read():
+    """Folding accents in _norm would orphan every accented key stored in a
+    committed snapshot — Thorin's top buys (Fíli and Kíli, Glóin) silently lost
+    their field % in the integration sweep until snapshots were re-keyed on read."""
+    import edhrec
+    snap = {"inclusion": {"fíli and kíli, joyous": 87, "sol ring": 90},
+            "synergy": {"fíli and kíli, joyous": 40},
+            "names": {"fíli and kíli, joyous": "Fíli and Kíli, Joyous"},
+            "lands": ["mines of moria"]}
+    out = edhrec._renorm_snapshot(snap)
+    k = mtglib._norm("Fíli and Kíli, Joyous")
+    assert out["inclusion"][k] == 87 and out["synergy"][k] == 40
+    assert out["names"][k] == "Fíli and Kíli, Joyous"
+
+
+def test_curated_lists_use_the_same_key_function_as_lookups():
+    """A literal 'mjölnir' in REMOVAL silently stopped matching the folded key."""
+    for curated in (mtglib.RAMP, mtglib.DRAW, mtglib.REMOVAL, mtglib.WIPES,
+                    mtglib.COUNTERS):
+        assert all(n == mtglib._norm(n) for n in curated)
+    assert mtglib.classify(mtglib.Card(name="Mjölnir, Hammer of Thor",
+                                       types=["Artifact"])) == {"removal"}

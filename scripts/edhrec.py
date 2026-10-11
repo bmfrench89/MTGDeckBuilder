@@ -240,9 +240,35 @@ def _snapshot_path(slug):
 def _load_snapshot(slug):
     try:
         with open(_snapshot_path(slug), encoding="utf-8") as f:
-            return json.load(f)
+            snap = json.load(f)
     except Exception:
         return None
+    return _renorm_snapshot(snap)
+
+
+def _renorm_snapshot(snap):
+    """Re-key a committed snapshot with TODAY's `mtglib._norm`. Its keys were
+    normalized when it was written; when `_norm` learned to fold accents and smart
+    quotes (2026-10-11), every accented key ("fíli and kíli, joyous") stopped
+    matching the folded lookups and those cards silently lost their field % —
+    Thorin's two highest-field buys vanished. Stored keys are a cache of a function,
+    so they are re-derived on read rather than trusted."""
+    if not isinstance(snap, dict):
+        return snap
+    for key in ("inclusion", "synergy"):
+        m = snap.get(key)
+        if isinstance(m, dict):
+            out = {}
+            for k, v in m.items():
+                nk = mtglib._norm(k)
+                if nk not in out or (v or 0) > (out[nk] or 0):
+                    out[nk] = v
+            snap[key] = out
+    if isinstance(snap.get("names"), dict):
+        snap["names"] = {mtglib._norm(k): v for k, v in snap["names"].items()}
+    if isinstance(snap.get("lands"), list):
+        snap["lands"] = sorted({mtglib._norm(k) for k in snap["lands"]})
+    return snap
 
 
 def _distill(rec):

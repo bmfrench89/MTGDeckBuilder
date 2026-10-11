@@ -275,7 +275,8 @@
   }
   function editCard(action, replacement){
     if(!EDITABLE || !curKey) return;
-    if(action==='remove' && !confirm('Remove '+curKey+' from this deck?')) return;
+    // One copy per click: a basics line (21 Swamp) loses one, not the whole line.
+    if(action==='remove' && !confirm('Remove one copy of '+curKey+' from this deck?')) return;
     var f=new FormData(); f.append('action', action); f.append('name', curKey);
     if(replacement) f.append('replacement', replacement);
     fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f})

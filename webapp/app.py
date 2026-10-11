@@ -1057,6 +1057,7 @@ def _assess_packet(m):
     no opinions — the coaching happens in Claude Code on the player's subscription."""
     a = deckcore.analyze_deck(m["path"], COLLECTION)
     rep, missing, idx = a["report"], a["missing"], a["idx"]
+    deck_cards = a["deck"]          # captured now: `a` is reused as a loop name below
     assessment, mana, combos = a["assessment"], a["mana"], a["combos"]
 
     L = [f"=== ASSESSMENT PACKET — {m['title']} ===",
@@ -1240,7 +1241,7 @@ def _assess_packet(m):
     except Exception:
         pass
     buys = deckcore.buy_signals(deckcore.load_buylist(f"{stem_path}.buylist.csv"),
-                                merged_combos, missing, idx)
+                                merged_combos, missing, idx, deck=deck_cards)
     if buys:
         L.append("-- CARDS TO BUY (merged: curated buylist + combo pieces + unowned decklist) --")
         for r in buys:

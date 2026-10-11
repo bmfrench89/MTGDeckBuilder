@@ -838,6 +838,12 @@ COUNTERS = {
     "mental misstep",
 }
 
+# Curated names go through the SAME key function every lookup uses. Written as
+# literals, "mjölnir, hammer of thor" stopped matching the moment _norm learned to
+# fold accents (2026-10-11 integration sweep: Captain America lost a removal).
+RAMP, DRAW, REMOVAL, WIPES, COUNTERS = (
+    {_norm(n) for n in s} for s in (RAMP, DRAW, REMOVAL, WIPES, COUNTERS))
+
 # Layer 2: what an oracle-derived flag means in role terms. The curated lists above
 # are hand-maintained and every new set outgrows them; `Card.flags` (written by
 # carddb via oracle_flags, see that module for the vocabulary) covers the tail.
