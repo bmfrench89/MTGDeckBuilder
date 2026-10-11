@@ -623,6 +623,12 @@ def _price_usd(c):
 
 
 SEARCH_URL = "https://api.scryfall.com/cards/search"
+# Scryfall rate-limits /cards/search harder than /cards/collection (about two requests a
+# second), and a 429 there starts a ~30 s cooldown — so price lookups are paced to it
+# and cached for a day (prices move daily). The deck-verify workflow runs --verify twice
+# (text, then --json); the cache makes the second pass free.
+SEARCH_DELAY = 0.55
+PRICE_TTL = 24 * 3600
 
 
 def _cheapest_printing_price(name):
@@ -801,9 +807,16 @@ def verify_cards(names, cache_dir=None, refresh=False, delay=0.1, cheapest_price
             r = rows[i]
             if not r["found"]:
                 continue
-            if delay:
-                time.sleep(delay)
-            price, where = _cheapest_printing_price(r["name"])
+            pkey = _verify_key(r["name"]) + "#cheapest"
+            hit = None if refresh else _cache_get(pkey, cache_dir, ttl=PRICE_TTL)
+            if hit:
+                price, where = hit.get("price", ""), hit.get("where", "")
+            else:
+                if delay:
+                    time.sleep(max(delay, SEARCH_DELAY))
+                price, where = _cheapest_printing_price(r["name"])
+                if price:
+                    _cache_put(pkey, {"price": price, "where": where}, cache_dir)
             if price:       # a failed search keeps the returned printing's price
                 r["price_usd"], r["price_printing"] = price, where
                 r["price_basis"] = "cheapest printing"

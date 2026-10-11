@@ -192,8 +192,11 @@ def test_cheapest_price_is_the_true_minimum_nonfoil_first(monkeypatch, capsys):
     assert (rows[1]["price_usd"], rows[1]["price_basis"]) == ("2.00", "returned printing")
     assert (rows[2]["price_usd"], rows[2]["price_printing"]) == ("7.00", "Y 2")
     assert len(asked) == 3
-    # off by default: library callers never make the extra request
+    # cached: asking again (the workflow's --json pass) makes no new search
     asked.clear()
+    carddb.verify_cards(["Llanowar Elves"], delay=0, cheapest_price=True)
+    assert asked == []
+    # off by default: library callers never make the extra request
     fake_batch(monkeypatch, [LLANOWAR])
     carddb.verify_cards(["Llanowar Elves"], delay=0, refresh=True)
     assert asked == []
