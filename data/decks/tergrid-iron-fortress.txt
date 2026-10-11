@@ -3,7 +3,7 @@
 # Colors: B
 # Archetype: protection-first discard/edict
 # Bracket: 4
-# Source: theory build 2026-10-11 — Bracket 4, no budget, NOT built from the collection (study copy, option 1 of 3; the player buys the 99). Card text, legality and price estimates from the deck-verify GitHub runner; field % from the 2026-10-11 Tergrid snapshot.
+# Source: theory build 2026-10-11 — Bracket 4, NOT built from the collection (study copy, option 1 of 3; the player buys the 99). Re-tuned the same day to a $100-per-card cap at Scryfall cheapest-printing estimates: Mox Diamond, Grim Monolith, Imperial Seal, Chrome Mox, Ancient Tomb and The One Ring out. Card text, legality and price estimates from the deck-verify GitHub runner; field % from the 2026-10-11 Tergrid snapshot.
 # Study: yes
 # Note: Option 1 of 3 (Bracket 4) — turbo Tergrid: fast mana and six tutors put her down early, eleven protection pieces keep her there, and a dense discard/edict suite feeds her from the first trigger.
 
@@ -46,7 +46,7 @@
 
 # --- Sorceries ---
 1 Demonic Tutor
-1 Imperial Seal
+1 Insatiable Avarice
 1 Grim Tutor
 1 Diabolic Intent
 1 Beseech the Mirror
@@ -64,14 +64,13 @@
 # --- Artifacts ---
 1 Sol Ring
 1 Mana Vault
-1 Grim Monolith
-1 Chrome Mox
-1 Mox Diamond
+1 Basalt Monolith
+1 Mind Stone
 1 Lotus Petal
 1 Jet Medallion
 1 Arcane Signet
 1 Fellwar Stone
-1 The One Ring
+1 Geth's Grimoire
 1 Bolas's Citadel
 1 Mithril Coat
 1 Swiftfoot Boots
@@ -80,6 +79,7 @@
 1 Defense Grid
 
 # --- Enchantments ---
+1 Black Market Connections
 1 Necropotence
 1 Waste Not
 1 Necrogen Mists
@@ -92,7 +92,7 @@
 1 Liliana, Dreadhorde General
 
 # --- Lands ---
-1 Ancient Tomb
+1 Cabal Stronghold
 1 Cabal Coffers
 1 Urborg, Tomb of Yawgmoth
 1 Nykthos, Shrine to Nyx
