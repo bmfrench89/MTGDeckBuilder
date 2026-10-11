@@ -661,3 +661,25 @@ def test_free_text_type_lines_from_attrs_are_read_by_word():
     assert mtglib.Card(name="Myr", quantity=1, types=["Artifact Creature"]).primary_type == "Creature"
     assert not mtglib.Card(name="Ox", quantity=1, types=["Creature — Ox"]).is_land
     assert mtglib.Card(name="Sol Ring", quantity=1, types=["Artifact"]).primary_type == "Artifact"
+
+
+def test_curated_edicts_classify_as_removal():
+    """2026-10-11: a Tergrid deck with ten edicts read as 0 removal — every edict fell
+    through to the bare 'spell'/'creature' type bucket."""
+    for name, types in (("Liliana's Triumph", ["Instant"]),
+                        ("Sheoldred's Edict", ["Instant"]),
+                        ("Innocent Blood", ["Sorcery"]),
+                        ("Plaguecrafter", ["Creature"]),
+                        ("Fleshbag Marauder", ["Creature"])):
+        assert mtglib.classify(mtglib.Card(name=name, types=types)) == {"removal"}, name
+
+
+def test_ritual_and_extra_mana_tokens_map_to_ramp():
+    ritual = mtglib.Card(name="Unlisted Ritual", types=["Instant"], flags={"ritual:3"})
+    ghast = mtglib.Card(name="Unlisted Ghast", types=["Creature"],
+                        flags={"extra:swamp"})
+    assert mtglib.classify(ritual) == {"ramp"}
+    assert mtglib.classify(ghast) == {"ramp"}
+    # Land-only production tokens never reach the flag layer: a land is a land.
+    coffers = mtglib.Card(name="Odd Coffers", types=["Land"], flags={"scale:swamp:2"})
+    assert mtglib.classify(coffers) == {"land"}

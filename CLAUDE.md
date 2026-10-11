@@ -266,7 +266,11 @@ v1: `etb-tapped`, `etb-tapped-cond`, `rock`, `dork`, `ramp`, `draw`,
 `mana2`/`mana3`, `removal`, `wipe`, `counter`; v2 adds `fetch:*` and
 `mana-restricted`; v3 adds the cost-reduction tokens `discount-cmd:<type>:<n>`,
 `discount:<type>:<n>`, `discount-first:<type>:<n>` — see
-`docs/spec-cost-reduction.md`), `Power` is the front face's printed power verbatim, and
+`docs/spec-cost-reduction.md`; v4 reads edicts ("each opponent sacrifices a
+creature") as `removal` and adds black's mana engines for the goldfish sim —
+`ritual:<n>`, `scale:[basic-]<type>:<cost>` (Cabal Coffers/Stronghold),
+`devotion:<cost>` (Nykthos), `extra:<type>` (Crypt Ghast), `lands-are:<type>`
+(Urborg)), `Power` is the front face's printed power verbatim, and
 `FlagsVer` is the vocabulary version that produced the Flags cell — flags and
 their version are ONE write, so a file whose Flags column arrives without a
 FlagsVer reads as version 1 (pre-v2), never as verified-current. **The

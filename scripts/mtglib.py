@@ -757,6 +757,16 @@ REMOVAL = {
     "swift end", "dark banishing", "befoul", "smite", "rending volley",
     # 2026-08-11 sleeper audit — texts verified:
     "web up", "mjölnir, hammer of thor",
+    # 2026-10-11 edicts — runner-verified (deck-verify 38139999873 / 38140217987).
+    # Curated, not just derived, because the derived edict rule (oracle_flags v4)
+    # only reaches an attrs file after re-enrichment, and because the ETB-edict
+    # CREATURES are type-gated out of the derived layer on purpose — the same
+    # reason `murderous rider` is listed above.
+    "liliana's triumph", "sheoldred's edict", "diabolic edict", "chainer's edict",
+    "geth's verdict", "innocent blood", "barter in blood", "mire in misery",
+    "vona's hunger", "tergrid's shadow",
+    "fleshbag marauder", "plaguecrafter", "accursed marauder",
+    "merciless executioner", "demon's disciple", "archon of cruelty",
 }
 WIPES = {
     "blasphemous act", "toxic deluge", "cleansing nova", "austere command",
@@ -792,6 +802,14 @@ FLAG_ROLES = {
     "removal": "removal",
     "wipe": "wipe",
     "counter": "counter",
+}
+# Payload-carrying tokens (oracle_flags v4) map by PREFIX. A ritual is one-shot
+# ramp and a Crypt Ghast-style "add an additional" doubler is ramp; the land-only
+# production tokens (`scale:`, `devotion:`, `lands-are:`) need no entry because
+# classify() returns "land" before it ever reads a land's flags.
+FLAG_ROLE_PREFIXES = {
+    "ritual:": "ramp",
+    "extra:": "ramp",
 }
 
 
@@ -838,6 +856,9 @@ def classify(card: Card) -> set:
     if not roles and card.flags:
         for f in card.flags:
             role = FLAG_ROLES.get(f)
+            if role is None:
+                role = next((r for p, r in FLAG_ROLE_PREFIXES.items()
+                             if f.startswith(p)), None)
             if role:
                 roles.add(role)
     # light type-based fallback
