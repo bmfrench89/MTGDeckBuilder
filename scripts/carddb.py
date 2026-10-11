@@ -555,7 +555,7 @@ NAMED_URL = "https://api.scryfall.com/cards/named"
 # the card-verifier agent's table) reads these names and nothing else.
 VERIFY_FIELDS = ("requested", "found", "name", "mana_cost", "type_line", "oracle_text",
                  "color_identity", "legal_commander", "set", "collector_number",
-                 "scryfall_uri", "reason", "source")
+                 "scryfall_uri", "reason", "source", "price_usd")
 
 
 def _verify_key(name):
@@ -609,6 +609,18 @@ def _legal_commander(c):
     return None if not legal else legal == "legal"
 
 
+def _price_usd(c):
+    """Scryfall's market price for THE PRINTING it returned, as a string ("12.34"), or
+    "" when it has none. An ESTIMATE, never a quote: it is one printing's price on the
+    day the card was fetched (cached up to VERIFY_TTL), and other printings of the same
+    card can cost far more or far less. Every consumer must label it that way."""
+    prices = c.get("prices") or {}
+    for key in ("usd", "usd_foil", "usd_etched"):
+        if prices.get(key):
+            return str(prices[key])
+    return ""
+
+
 def _verified_row(requested, c, source):
     return {"requested": requested, "found": True, "name": c.get("name", "") or "",
             "mana_cost": c.get("mana_cost") or _face_costs(c),
@@ -619,14 +631,15 @@ def _verified_row(requested, c, source):
             "legal_commander": _legal_commander(c),
             "set": (c.get("set") or "").upper(),
             "collector_number": str(c.get("collector_number") or ""),
-            "scryfall_uri": c.get("scryfall_uri") or "", "reason": "", "source": source}
+            "scryfall_uri": c.get("scryfall_uri") or "", "reason": "", "source": source,
+            "price_usd": _price_usd(c)}
 
 
 def _unverified_row(requested, reason):
     return {"requested": requested, "found": False, "name": "", "mana_cost": "",
             "type_line": "", "oracle_text": "", "color_identity": "",
             "legal_commander": None, "set": "", "collector_number": "",
-            "scryfall_uri": "", "reason": reason, "source": ""}
+            "scryfall_uri": "", "reason": reason, "source": "", "price_usd": ""}
 
 
 def _face_costs(c):
@@ -759,6 +772,9 @@ def print_verified(rows, out=print):
         out(f'  {r["type_line"]}')
         out(f'  identity: {r["color_identity"] or "colorless"} · commander-legal: {legal}'
             f' · {r["set"]} {r["collector_number"]} · via {r["source"]}')
+        if r.get("price_usd"):
+            out(f'  price: ~${r["price_usd"]} (estimate: Scryfall market for '
+                f'{r["set"]} {r["collector_number"]}; other printings vary)')
         for line in (r["oracle_text"] or "(no oracle text)").split("\n"):
             out(f'  | {line}')
         if r["scryfall_uri"]:

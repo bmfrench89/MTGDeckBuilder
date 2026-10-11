@@ -146,6 +146,21 @@ def test_a_verified_row_carries_the_whole_contract(monkeypatch):
     assert row["reason"] == "" and row["source"] == "scryfall"
 
 
+def test_price_is_an_estimate_of_one_printing_or_blank(monkeypatch, capsys):
+    """A buy-everything study deck needs a cost, so --verify passes Scryfall's market
+    price through — labelled as an estimate for the printing it returned. No price in
+    the payload is a blank, never a guessed number."""
+    priced = dict(SOL_RING, prices={"usd": None, "usd_foil": "3.50"})
+    fake_batch(monkeypatch, [priced, LLANOWAR])
+    rows = carddb.verify_cards(["Sol Ring", "Llanowar Elves"], delay=0)
+    assert rows[0]["price_usd"] == "3.50"          # falls through to the foil price
+    assert rows[1]["price_usd"] == ""              # LLANOWAR carries no prices block
+    carddb.print_verified(rows)
+    out = capsys.readouterr().out
+    assert "price: ~$3.50 (estimate: Scryfall market for LTC 284" in out
+    assert out.count("price:") == 1
+
+
 @pytest.mark.parametrize("card,expected", [
     (SOL_RING, True), (BLACK_LOTUS, False), (NO_LEGALITIES, None)])
 def test_commander_legality_is_three_valued(monkeypatch, card, expected):
