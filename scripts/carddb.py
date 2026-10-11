@@ -555,7 +555,8 @@ NAMED_URL = "https://api.scryfall.com/cards/named"
 # the card-verifier agent's table) reads these names and nothing else.
 VERIFY_FIELDS = ("requested", "found", "name", "mana_cost", "type_line", "oracle_text",
                  "color_identity", "legal_commander", "set", "collector_number",
-                 "scryfall_uri", "reason", "source", "price_usd", "price_printing")
+                 "scryfall_uri", "reason", "source", "price_usd", "price_printing",
+                 "price_basis")
 
 
 def _verify_key(name):
@@ -625,23 +626,34 @@ SEARCH_URL = "https://api.scryfall.com/cards/search"
 
 
 def _cheapest_printing_price(name):
-    """(price, "SET NUM") for the cheapest printing of `name` that has a USD market
-    price, or ("", "") — one /cards/search request, prints sorted by price.
+    """(price, "SET NUM") for the CHEAPEST printing of `name`, or ("", "") — one
+    /cards/search request over every printing.
 
-    The fallback for a card whose DEFAULT printing carries no price (a promo, a
-    foil-only special), which on the first Tergrid costing was 9 of 122 cards —
-    Mox Diamond among them, so the deck total silently undercounted by its most
-    expensive card. A failed request is a blank, never a guess."""
-    q = urllib.parse.urlencode({"q": f'!"{name}"', "unique": "prints",
-                                "order": "usd", "dir": "asc"})
+    The minimum is computed here, never read off Scryfall's sort order: ordering by
+    price put printings with no non-foil price first, and taking the first priced
+    one returned a $14.30 Secret Lair foil for a $1 Cabal Ritual. Non-foil prices
+    win; a foil/etched price is used only for a card that has no non-foil price at
+    all. A failed request is a blank, never a guess."""
+    q = urllib.parse.urlencode({"q": f'!"{name}"', "unique": "prints"})
     try:
         page = _request_json(f"{SEARCH_URL}?{q}")
     except Exception:
         return "", ""
+    best = {}
     for p in page.get("data") or []:
-        price = _price_usd(p)
-        if price:
-            return price, f'{(p.get("set") or "").upper()} {p.get("collector_number") or ""}'.strip()
+        prices = p.get("prices") or {}
+        where = f'{(p.get("set") or "").upper()} {p.get("collector_number") or ""}'.strip()
+        for tier, keys in ((0, ("usd",)), (1, ("usd_foil", "usd_etched"))):
+            for k in keys:
+                try:
+                    v = float(prices.get(k) or "")
+                except ValueError:
+                    continue
+                if tier not in best or v < best[tier][0]:
+                    best[tier] = (v, prices[k], where)
+    for tier in (0, 1):
+        if tier in best:
+            return str(best[tier][1]), best[tier][2]
     return "", ""
 
 
@@ -659,7 +671,8 @@ def _verified_row(requested, c, source):
             "price_usd": _price_usd(c),
             "price_printing": (f'{(c.get("set") or "").upper()} '
                                f'{c.get("collector_number") or ""}'.strip()
-                               if _price_usd(c) else "")}
+                               if _price_usd(c) else ""),
+            "price_basis": "returned printing" if _price_usd(c) else ""}
 
 
 def _unverified_row(requested, reason):
@@ -667,7 +680,7 @@ def _unverified_row(requested, reason):
             "type_line": "", "oracle_text": "", "color_identity": "",
             "legal_commander": None, "set": "", "collector_number": "",
             "scryfall_uri": "", "reason": reason, "source": "", "price_usd": "",
-            "price_printing": ""}
+            "price_printing": "", "price_basis": ""}
 
 
 def _face_costs(c):
@@ -708,7 +721,7 @@ def _fetch_named_fuzzy(name):
         raise
 
 
-def verify_cards(names, cache_dir=None, refresh=False, delay=0.1, price_fallback=False):
+def verify_cards(names, cache_dir=None, refresh=False, delay=0.1, cheapest_price=False):
     """Verify card NAMES against Scryfall. Returns one dict per requested name, in
     the order asked, shaped by VERIFY_FIELDS.
 
@@ -783,13 +796,17 @@ def verify_cards(names, cache_dir=None, refresh=False, delay=0.1, price_fallback
             rows[i] = _unverified_row(
                 n, "no Scryfall match (exact or fuzzy) — treat the name as unverified")
 
-    if price_fallback:                       # cost a buy list: no blank prices left
+    if cheapest_price:      # cost a buy list: the cheapest printing, for every card
         for i in sorted(rows):
             r = rows[i]
-            if r["found"] and not r["price_usd"]:
-                if delay:
-                    time.sleep(delay)
-                r["price_usd"], r["price_printing"] = _cheapest_printing_price(r["name"])
+            if not r["found"]:
+                continue
+            if delay:
+                time.sleep(delay)
+            price, where = _cheapest_printing_price(r["name"])
+            if price:       # a failed search keeps the returned printing's price
+                r["price_usd"], r["price_printing"] = price, where
+                r["price_basis"] = "cheapest printing"
 
     return [rows[i] for i in range(len(names))]
 
@@ -809,8 +826,9 @@ def print_verified(rows, out=print):
         out(f'  identity: {r["color_identity"] or "colorless"} · commander-legal: {legal}'
             f' · {r["set"]} {r["collector_number"]} · via {r["source"]}')
         if r.get("price_usd"):
-            out(f'  price: ~${r["price_usd"]} (estimate: Scryfall market for '
-                f'{r.get("price_printing") or "this printing"}; other printings vary)')
+            out(f'  price: ~${r["price_usd"]} (estimate: Scryfall market, '
+                f'{r.get("price_basis") or "returned printing"} '
+                f'{r.get("price_printing") or ""}; prices move daily)')
         for line in (r["oracle_text"] or "(no oracle text)").split("\n"):
             out(f'  | {line}')
         if r["scryfall_uri"]:
@@ -916,7 +934,7 @@ def main():
                  "silently ignore them, which is worse than refusing")
 
     if args.verify:
-        rows = verify_cards(args.verify, refresh=args.refresh, price_fallback=True)
+        rows = verify_cards(args.verify, refresh=args.refresh, cheapest_price=True)
         if args.json:
             print(json.dumps(rows, indent=2))
         else:
