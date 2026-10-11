@@ -24,6 +24,9 @@ open one for its full dashboard.</div>
     <div class="name"><a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a></div>
     <div class="cmd">{{ d.commander }}</div>
     <div class="health">
+      {% if d.qty_error %}
+        <span class="tag alert" title="{{ d.qty_error }}">⚠ quantity typo — fix in Edit</span>
+      {% endif %}
       {% if d.total and d.total != 100 %}
         <span class="tag alert">{{ d.total }} cards</span>
       {% endif %}

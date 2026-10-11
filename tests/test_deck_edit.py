@@ -15,12 +15,18 @@ def test_remove_deletes_only_that_card(deck_file):
     assert "Command Tower" in text
 
 
-def test_replace_preserves_quantity(deck_file):
-    # "2 Arcane Signet" -> the replacement must keep the 2
+def test_replace_moves_exactly_one_copy(deck_file):
+    """W2 (2026-10 audit): this test used to demand `2 Arcane Signet` -> `2 Fellwar
+    Stone`, which is the same rule that turned `21 Swamp` into `21 Unknown Card`.
+    Replace swaps ONE copy: the line is decremented and the incoming card arrives
+    as `1 <card>` directly beneath it, so the deck total never moves."""
+    before = read(deck_file)
     assert app._edit_deck_card(deck_file, "replace", "Arcane Signet", "Fellwar Stone") is True
     text = read(deck_file)
-    assert "2 Fellwar Stone" in text
-    assert "Arcane Signet" not in text
+    assert "\n1 Arcane Signet\n1 Fellwar Stone\n" in text
+    assert "2 Fellwar Stone" not in text
+    total = lambda t: sum(c.quantity for c in app.mtglib.parse_deck(t))
+    assert total(text) == total(before)
 
 
 def test_replace_preserves_sections_and_headers(deck_file):
