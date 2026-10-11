@@ -215,3 +215,84 @@ def test_icon_render_puts_amber_at_the_centre_and_ink_in_the_ring():
     assert px(16, 16) == make_icons.AMBER              # the centre gem
     assert px(16, 16 - 4) == make_icons.BG             # inside the ink diamond
     assert px(16, 16 - 8) == make_icons.AMBER          # the outer gem
+
+
+# --------------------------------------------------------------------------- #
+# asset fingerprinting — the fix for "new page, old stylesheet" after a deploy
+# --------------------------------------------------------------------------- #
+# The 2026-10-11 Arcane Ledger deploy rendered the new markup with the OLD app.css
+# on the player's phone: the installed service worker answered /static/app.css from
+# its cache (reproduced in a persistent Chromium profile, old UI -> new UI). Pages
+# now reference every asset by a content-hashed URL, so no cache can pair a page
+# with a stylesheet it was not written against.
+TEMPLATES = os.path.join(ROOT, "webapp", "templates")
+
+
+def test_no_template_references_an_unfingerprinted_static_asset():
+    bare = []
+    for fn in sorted(os.listdir(TEMPLATES)):
+        text = _read("webapp", "templates", fn)
+        for m in re.finditer(r'(?:href|src)="(/static/[^"]+)"', text):
+            bare.append(f"{fn}: {m.group(1)}")
+    assert not bare, "use {{ asset('...') }} — a bare /static/ URL can be served stale: " + "; ".join(bare)
+
+
+def test_asset_url_changes_exactly_when_the_content_changes(tmp_path, monkeypatch):
+    import app as appmod
+    f = tmp_path / "probe.css"
+    monkeypatch.setitem(appmod._ASSET_DIRS, "probe.css", str(tmp_path))
+    f.write_text("body{color:red}", encoding="utf-8")
+    one = appmod.asset_url("probe.css")
+    assert re.fullmatch(r"/static/probe\.css\?v=[0-9a-f]{10}", one)
+    assert appmod.asset_url("probe.css") == one                       # stable
+    f.write_text("body{color:blue;}", encoding="utf-8")
+    two = appmod.asset_url("probe.css")
+    assert two != one, "edited stylesheet kept its old URL — caches would serve the old file"
+    assert appmod.asset_url("missing.css") == "/static/missing.css"   # never hides a 404
+
+
+@pytest.mark.parametrize("url", ["/", "/wishlist", "/deck/ledger/edit", "/login"])
+def test_rendered_pages_load_only_fingerprinted_assets_that_resolve(env, url, monkeypatch):
+    if url == "/login":                       # the gate page renders only with auth on
+        import app as appmod
+        monkeypatch.setattr(appmod, "PASSWORD", "secret")
+    html = env.get(url).get_data(as_text=True)
+    refs = re.findall(r'(?:href|src)="(/static/[^"]+)"', html)
+    assert refs, "page references no static assets?"
+    for r in refs:
+        assert "?v=" in r, f"{url}: {r} is not fingerprinted"
+        assert env.get(r).status_code == 200, r
+
+
+def test_service_worker_never_answers_a_plain_static_url_from_cache_first():
+    """Fingerprinted (?v=) URLs may be cache-first — they are immutable. A PLAIN
+    /static/ URL must go to the network first, the cache only when offline; that path
+    being cache-first is exactly what served yesterday's app.css after a deploy."""
+    sw = _read("webapp", "static", "sw.js")
+    static = sw[sw.index("if (url.pathname.startsWith('/static/'))"):]
+    static = static[:static.index("\n  }\n") + 4]
+    assert "url.searchParams.has('v')" in static
+    plain = static[static.index("} else {"):]
+    assert "fetch(e.request)" in plain and "caches.match" not in plain.split(".catch")[0]
+    assert "ignoreSearch: true" in static, "offline fallback must find the precached copy"
+    assert "cache: 'reload'" in sw, "the precache must bypass the HTTP cache"
+
+
+def test_manifest_serves_fingerprinted_icons_logged_out(tmp_path, monkeypatch, collection_file):
+    import app as appmod
+    monkeypatch.setattr(appmod, "PASSWORD", "secret")     # auth ON, no session
+    appmod.app.config["TESTING"] = True
+    r = appmod.app.test_client().get("/static/manifest.webmanifest")
+    assert r.status_code == 200 and r.mimetype == "application/manifest+json"
+    import json
+    icons = json.loads(r.get_data(as_text=True))["icons"]
+    assert icons and all(re.search(r"\?v=[0-9a-f]{10}$", i["src"]) for i in icons)
+
+
+def test_nav_icons_carry_their_own_size():
+    """Defence in depth: if a stylesheet ever fails to load, an inline SVG with no
+    width/height renders hundreds of pixels wide — the giant icons in the player's
+    screenshot. Every icon in the shell states its own size."""
+    base = _read("webapp", "templates", "base.html")
+    svgs = re.findall(r"<svg[^>]*>", base)
+    assert svgs and all('width="' in s and 'height="' in s for s in svgs), svgs

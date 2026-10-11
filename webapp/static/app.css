@@ -56,7 +56,9 @@ body {
 }
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* Hover styling only where a pointer can hover: on a touch screen :hover sticks to
+   whatever was tapped last and left a stray underline on a deck title (UAT 2026-10-11). */
+@media (hover: hover) { a:hover { text-decoration: underline; } }
 
 
 /* ---------- shell: left rail on wide screens, bottom tab bar on phones ---------- */
@@ -100,7 +102,9 @@ nav.rail .rail-label { padding: var(--sp-4) var(--sp-3) var(--sp-1); color: var(
   font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .08em; }
 nav.rail .foot { margin-top: auto; padding: var(--sp-3); color: var(--faint);
   font-size: var(--fs-xs); }
-nav.rail .foot .linkbtn { color: var(--faint); }
+nav.rail .foot .linkbtn { color: var(--faint); min-height: 44px; display: inline-flex;
+  align-items: center; font-size: var(--fs-sm); }
+nav.rail .foot .linkbtn:hover { color: var(--text); }
 
 @media (max-width: 899px) {
   /* Phone/tablet: the rail becomes a bottom tab bar — Decks, Build, Collection,
@@ -258,7 +262,24 @@ textarea { font-family: var(--font-mono); font-size: var(--fs-xs); }
 input::placeholder, textarea::placeholder { color: var(--faint); }
 input:focus, textarea:focus, select:focus { border-color: var(--accent); outline: none; }
 textarea { width: 100%; min-height: 60vh; }
-.chk { accent-color: var(--accent); width: 16px; height: 16px; min-height: 0; }
+.chk { accent-color: var(--accent); width: 20px; height: 20px; min-height: 0; }
+label:has(> .chk) { display: inline-flex; align-items: center; gap: var(--sp-2);
+  min-height: 44px; cursor: pointer; }
+
+/* ---------- filter bar: search + chips ---------- */
+.filterbar { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.filterbar input { flex: 0 1 240px; }
+.filterbar .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+@media (max-width: 640px) {
+  /* Phone: search on its own line, the chips one swipeable row (they used to wrap
+     into three rows above the first deck). */
+  .filterbar input { flex: 1 1 100%; }
+  .filterbar .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; width: calc(100% + 2 * var(--sp-4));
+    margin: 0 calc(-1 * var(--sp-4)); padding: 0 var(--sp-4); }
+  .filterbar .chips::-webkit-scrollbar { display: none; }
+  .filterbar .thchip { flex: none; white-space: nowrap; }
+}
 
 /* ---------- decks home: page head + card grid ---------- */
 .pagehead { display: flex; flex-wrap: wrap; gap: var(--sp-4); align-items: flex-end;
@@ -297,7 +318,7 @@ textarea { width: 100%; min-height: 60vh; }
                      font-size: var(--fs-2xs); }
 .deckcard .axes { color: var(--muted); font-size: var(--fs-xs); display: flex; gap: var(--sp-3);
                   flex-wrap: wrap; }
-.deckcard .axes b { color: var(--text); font-family: var(--font-mono); font-weight: 500; }
+.deckcard .axes b { color: var(--text); font-weight: 600; }
 .deckcard .foot { display: flex; align-items: center; gap: var(--sp-2); position: relative;
                   z-index: 1; }
 .deckcard .foot .btn { flex: 1; }
@@ -380,7 +401,7 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 .collctl select, .collctl input[type=text] { background: var(--panel2); color: var(--text);
   border:1px solid var(--line-strong); border-radius: var(--r-sm);
   padding: var(--sp-2) var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-xs); }
-.colorbtn { width:32px; height:32px; border-radius:50%; border:1px solid var(--line-strong);
+.colorbtn { width:40px; height:40px; min-height:0; border-radius:50%; border:1px solid var(--line-strong);
   cursor:pointer; font-weight:700; font-family: var(--font-mono); font-size: var(--fs-xs);
   background: var(--panel2); color: var(--muted); transition: background .15s ease, color .15s ease; }
 .colorbtn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -390,7 +411,9 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 
 /* "you already built this" chip on Build Next — distinct from the OWN chip, which only
    ever meant "you own the commander card". Links to the existing deck. */
-.sb.built { background: var(--accent2); color: #0B1B2A; text-decoration: none; }
+.sb.built { background: var(--accent2); color: #0B1B2A; text-decoration: none;
+  padding: var(--sp-1) var(--sp-2); }
+.deckrow .stat .linkbtn { min-height: 44px; display: inline-flex; align-items: center; }
 .sb.built:hover { filter: brightness(1.1); text-decoration: none; }
 
 /* ---- assessment page ---------------------------------------------------- */
