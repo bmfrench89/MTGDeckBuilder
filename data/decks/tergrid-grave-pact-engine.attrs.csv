@@ -10,6 +10,7 @@ Blood Artist,Creature,2,B,{1}{B},Vampire,,,0,4
 Bloodghast,Creature,2,B,{B}{B},Vampire;Spirit,,,2,4
 Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
 Bolas's Citadel,Artifact,6,B,{3}{B}{B}{B},,,,,4
+"Braids, Arisen Nightmare",Creature,3,B,{1}{B}{B},Nightmare,,draw,3,4
 "Braids, Cabal Minion",Creature,4,B,{2}{B}{B},Human;Minion,,,2,4
 Butcher of Malakir,Creature,7,B,{5}{B}{B},Vampire;Warrior,,,5,4
 Cabal Coffers,Land,0,B,,,B,scale:swamp:2,,4
@@ -19,10 +20,7 @@ Castle Locthwain,Land,0,B,,,B,draw;etb-tapped-cond,,4
 Cavern of Souls,Land,0,,,,W U B R G C,mana-restricted,,4
 Chrome Mox,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Command Beacon,Land,0,,,,C,,,4
-Cruel Celebrant,Creature,2,B W,{W}{B},Vampire,,,1,4
 Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
-Dauthi Voidwalker,Creature,2,B,{B}{B},Dauthi;Rogue,,,3,4
-Deadly Dispute,Instant,2,B,{1}{B},,W U B R G,draw,,4
 Deadly Rollick,Instant,4,B,{3}{B},,,removal,,4
 Demonic Gifts,Instant,2,B,{1}{B},,,,,4
 Demonic Tutor,Sorcery,2,B,{1}{B},,,,,4
@@ -40,13 +38,14 @@ Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
 Grim Monolith,Artifact,2,,{2},,C,mana3;ramp;rock,,4
 Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
 Imperial Seal,Sorcery,1,B,{B},,,,,4
+Innocent Blood,Sorcery,1,B,{B},,,removal,,4
 Jet Medallion,Artifact,2,,{2},,,discount:black:1,,4
 Kaya's Ghostform,Enchantment,1,B,{B},Aura,,,,4
 Liliana's Triumph,Instant,2,B,{1}{B},,,removal,,4
 "Liliana, Dreadhorde General",Planeswalker,6,B,{4}{B}{B},Liliana,,draw,,4
 Lotus Petal,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Mana Vault,Artifact,1,,{1},,C,mana3;ramp;rock,,4
-Merciless Executioner,Creature,3,B,{2}{B},Orc;Warrior,,,3,4
+Midnight Reaper,Creature,3,B,{2}{B},Zombie;Knight,,draw,3,4
 Mithril Coat,Artifact,3,,{3},Equipment,,,,4
 Mox Diamond,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Necropotence,Enchantment,3,B,{B}{B}{B},,,,,4
@@ -58,7 +57,7 @@ Phyrexian Altar,Artifact,3,,{3},,W U B R G,,,4
 Phyrexian Tower,Land,0,B,,,B C,mana2,,4
 Pitiless Plunderer,Creature,4,B,{3}{B},Human;Pirate,W U B R G,,1,4
 Plaguecrafter,Creature,3,B,{2}{B},Human;Shaman,,,3,4
-Reassembling Skeleton,Creature,2,B,{1}{B},Skeleton;Warrior,,,1,4
+"Rankle, Master of Pranks",Creature,4,B,{2}{B}{B},Faerie;Rogue,,draw,3,4
 Sanguine Bond,Enchantment,5,B,{3}{B}{B},,,,,4
 Sheoldred's Edict,Instant,2,B,{1}{B},,,removal,,4
 "Sheoldred, Whispering One",Creature,7,B,{5}{B}{B},Phyrexian;Praetor,,,6,4
@@ -67,6 +66,7 @@ Skullclamp,Artifact,1,,{1},Equipment,,draw,,4
 Smallpox,Sorcery,2,B,{B}{B},,,removal,,4
 Snuff Out,Instant,4,B,{3}{B},,,removal,,4
 Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Soul Shatter,Instant,3,B,{2}{B},,,removal,,4
 Swamp,Land,0,B,,Swamp,B,,,4
 Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
 "Tergrid, God of Fright",Creature,5,B,{3}{B}{B} // {3}{B},God,,,4,4

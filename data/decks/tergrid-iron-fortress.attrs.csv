@@ -7,6 +7,7 @@ Beseech the Mirror,Sorcery,4,B,{1}{B}{B}{B},,,,,4
 Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
 Bolas's Citadel,Artifact,6,B,{3}{B}{B}{B},,,,,4
 Bottomless Pit,Enchantment,3,B,{1}{B}{B},,,,,4
+"Braids, Arisen Nightmare",Creature,3,B,{1}{B}{B},Nightmare,,draw,3,4
 "Braids, Cabal Minion",Creature,4,B,{2}{B}{B},Human;Minion,,,2,4
 Burglar Rat,Creature,2,B,{1}{B},Rat,,,1,4
 Cabal Coffers,Land,0,B,,,B,scale:swamp:2,,4
@@ -18,7 +19,6 @@ Chrome Mox,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Command Beacon,Land,0,,,,C,,,4
 Commander's Plate,Artifact,1,,{1},Equipment,,,,4
 Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
-Dauthi Voidwalker,Creature,2,B,{B}{B},Dauthi;Rogue,,,3,4
 Deadly Rollick,Instant,4,B,{3}{B},,,removal,,4
 Defense Grid,Artifact,2,,{2},,,,,4
 Demonic Gifts,Instant,2,B,{1}{B},,,,,4
@@ -27,6 +27,7 @@ Diabolic Intent,Sorcery,2,B,{1}{B},,,,,4
 Duress,Sorcery,1,B,{B},,,,,4
 Elderfang Disciple,Creature,2,B,{1}{B},Elf;Cleric,,,1,4
 Exquisite Blood,Enchantment,5,B,{4}{B},,,,,4
+Fatal Push,Instant,1,B,{B},,,removal,,4
 Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
 Feign Death,Instant,1,B,{B},,,,,4
 Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
@@ -51,7 +52,6 @@ Mithril Coat,Artifact,3,,{3},Equipment,,,,4
 Mox Diamond,Artifact,0,,{0},,W U B R G,ramp;rock,,4
 Necrogen Mists,Enchantment,3,B,{2}{B},,,,,4
 Necropotence,Enchantment,3,B,{B}{B}{B},,,,,4
-Night's Whisper,Sorcery,2,B,{1}{B},,,draw,,4
 Not Dead After All,Instant,1,B,{B},,,,,4
 "Nykthos, Shrine to Nyx",Land,0,,,,W U B R G C,devotion:2,,4
 Opposition Agent,Creature,3,B,{2}{B},Human;Rogue,,,3,4
