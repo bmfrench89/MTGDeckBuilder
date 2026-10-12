@@ -6,7 +6,37 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (Watch tab prototype on Tergrid — Iron Fortress; Tergrid study decks rebuilt as Bracket 4 theory builds)._
+_Last updated: 2026-10-12 (three specs written: Watch voice + controls, card intake, second login)._
+
+## Spec'd, not started — three player asks, 2026-10-12
+
+The player asked for a less robotic narrator, play/stop buttons, a way to catalog a
+big batch of new cards, and a login for their brother. Each now has a spec, with the
+player's decisions recorded in it. **No code has changed yet.**
+
+- **`docs/spec-watch-voice-and-controls.md`**
+  - **Controls (measured):** tapping the picture while it plays does nothing, and there
+    is no Stop. The fix is video-style controls.
+  - **Voice (from the code):** the player never picks a voice and speaks at 1.05×.
+    - The fix starts with ranking the device's own voices.
+    - Then comes free recorded narration on the runner: Kokoro or Piper, picked by the
+      player after an audition.
+  - **Free only** was the player's choice.
+- **`docs/spec-card-intake.md`**
+  - Batch entry with a preview step, and card data filled in the same day.
+  - **Reconcile on upload:** `merge_collection` *adds* `owned_additions` quantities on
+    top of the export, so cards later re-exported are counted twice today.
+  - A "New arrivals" review that uses the sleeper audit.
+  - **This batch:** the player is pasting a big list into the session. Run it through
+    spec §2: parse, verify on the runner, add a dated batch block to
+    `owned_additions.txt`, refresh the attrs, run the sleeper audit, and show the swap
+    table before applying anything.
+- **`docs/spec-second-login.md`**
+  - The player chose **edit too, labeled**: the member gets the owner's powers, minus
+    the People page and (proposed) Upload.
+  - `.changes.csv` gains `By`.
+  - Deck-editor saves get diffed and logged (they log nothing today).
+  - `data/activity.csv` records deck-level actions.
 
 ## Watch tab — animated how-to-play clips (prototype: Tergrid — Iron Fortress), 2026-10-11
 
