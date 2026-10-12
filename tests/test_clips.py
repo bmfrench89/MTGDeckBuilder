@@ -9,6 +9,8 @@ import json
 import os
 import re
 
+import pytest
+
 import build_dashboard as bd
 import clips
 
@@ -260,3 +262,93 @@ def test_player_css_braces_balance():
         depth += {"{": 1, "}": -1}.get(ch, 0)
         assert depth >= 0, "a closing brace with nothing open"
     assert depth == 0, "an unclosed block"
+
+
+# --------------------------------------------------------------------------- #
+# Video-style controls + the narrator (docs/spec-watch-voice-and-controls.md A, B)
+# --------------------------------------------------------------------------- #
+def test_the_player_has_video_controls_with_labels(deck_file, collection_file):
+    _write_clips(deck_file, _story(_scene([{"name": "Sol Ring"}], head="Go", dur=8),
+                                   _scene([], head="Again", dur=8)))
+    html = _gen(deck_file, collection_file)
+    for label in ("Previous scene", "Play", "Stop", "Next scene", "Narration off",
+                  "Choose a voice"):
+        assert f"aria-label='{label}'" in html, label
+    assert "wt-restart" not in html, "Stop + Play replaced the restart button"
+    # the bar sits under the picture and ABOVE the captions
+    assert html.index("class='wt-stage'") < html.index("class='wt-ctrl'") \
+        < html.index("class='wt-caps'")
+    assert "class='wt-flash'" in html and "class='wt-voices' hidden" in html
+
+
+def test_every_scene_carries_its_spoken_line():
+    res = clips.validate(_story(
+        _scene([], head="Cast [[Sol Ring|the Ring]]", sub="It taps for {C}{C}.", dur=8),
+        _scene([], head="Ignored", say="Say {3}{U}{U} instead", dur=8)), DECK, pron=[])
+    a, b = res["clips"][0]["scenes"]
+    assert a["speak"] == "Cast the Ring. It taps for colorless, colorless."
+    assert b["speak"] == "Say three, blue, blue instead"
+
+
+@pytest.mark.parametrize("text, said", [
+    ("{3}{B}{B}", "three, black, black"),
+    ("{W/U} or {2/W}", "white or blue or two or white"),
+    ("{B/P}", "phyrexian black"),
+    ("{T}: add {G}", "tap: add green"),
+    ("Put a +1/+1 counter", "Put a plus one plus one counter"),
+    ("It gets −2/−2", "It gets minus two minus two"),
+    ("MV 3, ETB tapped", "mana value 3, enters tapped"),
+    ("[[Fire // Ice|Fire]] — then", "Fire, then"),
+])
+def test_spoken_reads_symbols_the_way_a_player_says_them(text, said):
+    assert clips.spoken(text) == said
+
+
+def test_pronunciations_apply_as_whole_words_and_the_list_starts_empty():
+    pron = [("Tergrid", "Tur-grid")]
+    assert clips.spoken("Tergrid's ally, not Tergridz", pron) == "Tur-grid's ally, not Tergridz"
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "data", "reference", "pronunciations.csv")
+    with open(path, encoding="utf-8") as f:
+        assert f.read().strip() == "Word,Say as", \
+            "entries are added only when the player hears a name said wrong"
+    assert clips.load_pronunciations(path) == []
+
+
+def _node(script):
+    import shutil
+    import subprocess
+    if not shutil.which("node"):
+        pytest.skip("node is not installed")
+    js = os.path.join(os.path.dirname(bd.__file__), "assets", "clips_player.js")
+    out = subprocess.run(["node", "-e", f"const S=require({json.dumps(js)});{script}"],
+                         capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout)
+
+
+def test_voice_ranking_prefers_natural_voices_in_english():
+    voices = [{"name": "Microsoft David Desktop - English (United States)", "lang": "en-US"},
+              {"name": "Microsoft Aria Online (Natural) - English (United States)",
+               "lang": "en-US"},
+              {"name": "Samantha", "lang": "en-US"},
+              {"name": "Samantha (Enhanced)", "lang": "en-US"},
+              {"name": "Google UK English Female", "lang": "en-GB"},
+              {"name": "Thomas", "lang": "fr-FR"},
+              {"name": "Zarvox", "lang": "en-US"},
+              {"name": "eSpeak English", "lang": "en"}]
+    order = _node(f"console.log(JSON.stringify(S.rank({json.dumps(voices)}).map(v => v.name)))")
+    assert order.index("Microsoft Aria Online (Natural) - English (United States)") < \
+        order.index("Microsoft David Desktop - English (United States)")
+    assert order.index("Samantha (Enhanced)") < order.index("Samantha")
+    assert "Thomas" not in order, "the menu lists English voices only"
+    assert order[-2:] == ["Zarvox", "eSpeak English"] or set(order[-2:]) == {
+        "Zarvox", "eSpeak English"}, "novelty and eSpeak voices rank last"
+
+
+def test_sentence_splitter_keeps_names_and_costs_whole():
+    parts = _node("console.log(JSON.stringify(S.sentences("
+                  "'Tap Mana Vault. Then cast {3}{B}{B}. Dr. Strange waits! "
+                  "B.F.M. is big. Pay 1.5 more.')))")
+    assert parts == ["Tap Mana Vault.", "Then cast {3}{B}{B}.", "Dr. Strange waits!",
+                     "B.F.M. is big.", "Pay 1.5 more."]

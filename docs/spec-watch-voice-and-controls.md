@@ -1,7 +1,14 @@
 # Spec — Watch tab: video-style controls and a natural narrator
 
-**Status:** ☐ spec'd 2026-10-12, not started · code today: `scripts/assets/clips_player.{js,css}`,
-`build_dashboard.clips_html`, `scripts/clips.py` · tests today: `tests/test_clips.py`
+**Status:** ◐ Parts A and B shipped 2026-10-12 — `scripts/assets/clips_player.{js,css}`
+(control bar ⏮ ▶/❚❚ ■ ⏭ under the picture, tap-to-pause with a flashed icon, Stop, S key,
+narration choice remembered per device, `WT_SPEECH.rank` / `.sentences` exported for Node
+tests, the voice menu with "Hear it" and the device tips), `build_dashboard.clips_html`,
+`scripts/clips.py` (`spoken()` builds every scene's `speak` line; `pronunciations.csv`
+starts empty) · tests in `tests/test_clips.py`. Part C (recorded narration) waits on the
+audition run (§5 step 2); Media Session lands with it. Phone layout as shipped: the scene
+bar and the voice-menu button share the first line, ⏮ ▶ ■ ⏭ and 🔊 the second, so every
+target stays 44 px on a 344 px Fold cover screen.
 
 **Player ask (2026-10-12):** "Can the voice of the video sound less robotic and can we
 add play/stop buttons to the videos? Or is that too difficult."
