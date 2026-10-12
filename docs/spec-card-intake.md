@@ -39,10 +39,15 @@
    quantities. Once a later export includes those same cards, they are counted twice and
    nothing warns about it. Ownership figures that lie are the one thing this project
    can't have (grounding rule #1).
+3. **Upload replaces everything.** Suppose a file holding only the new cards goes
+   through the Upload button. The whole collection becomes just those cards, so every
+   deck suddenly shows most of its cards as unowned. A backup is kept, but restoring it
+   isn't a button, and nothing warns before the swap.
 
 ## 2. Now: this batch (a session, no new code)
 
-The player pastes the list into the session, and the session does the following.
+The player gives the session the list, either pasted or attached as a file. **It must
+not go through the site's Upload button** (gap 3). The session then does the following.
 
 1. **Parse** with the existing list parser.
    - Also strip the markers it doesn't know yet: foil and etched tags (`*F*`, `*E*`,
@@ -63,8 +68,8 @@ The player pastes the list into the session, and the session does the following.
    1 Sol Ring
    …
    ```
-   The list is read as *new copies* on top of what the site already counts. That is what
-   "added" means today.
+   **Player-confirmed (2026-10-12): every card on the list is new.** Each row adds copies
+   on top of what the site already counts, and replaces nothing.
 4. **Fill in card data.** Dispatch the attrs refresh so types, colors and mana value
    appear for sessions. The hosted app re-enriches on its next sync.
 5. **Review against the decks** with the sleeper audit
@@ -116,6 +121,18 @@ not build a scanner.
     `# retired 2026-10-20 (in export): 1 Sol Ring`.
   - A row that is only partly covered keeps the remaining quantity.
   - Nothing changes without the tap.
+- **Upload guard** (fixes gap 3).
+  - Relabel the existing button "Replace my whole collection (full export)" so it says
+    what it does.
+  - Before replacing, compare the file with the current collection. The app stops and
+    asks when either is true:
+    - the file has fewer than half the current unique cards;
+    - most of the current cards are missing from it.
+  - The question reads: "This file has 214 cards and your collection has 3,209. Is it a
+    batch of new cards, or a full replacement?"
+  - **Add as a batch** sends the same file through the batch flow above.
+    **Replace my collection** goes ahead as it does today.
+  - Add as a batch is the default. Nothing is replaced without that second tap.
 
 ## 4. Review against the decks, in the app
 
@@ -161,6 +178,14 @@ covers the latest batch, plus anything newer than N days.
 - Nothing is retired without confirmation.
 - A retired row is no longer counted.
 - A partly covered row keeps its remainder.
+
+**Upload guard**
+
+- A small file sent to Replace triggers the question, and the collection is unchanged
+  until the second tap.
+- Add as a batch takes the same file to the preview, and the collection CSV is untouched.
+- A full export of normal size replaces the collection as it does today, with no extra
+  question.
 
 **`new_arrivals`**
 

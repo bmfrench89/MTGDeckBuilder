@@ -27,10 +27,14 @@ player's decisions recorded in it. **No code has changed yet.**
   - **Reconcile on upload:** `merge_collection` *adds* `owned_additions` quantities on
     top of the export, so cards later re-exported are counted twice today.
   - A "New arrivals" review that uses the sleeper audit.
-  - **This batch:** the player is pasting a big list into the session. Run it through
-    spec §2: parse, verify on the runner, add a dated batch block to
-    `owned_additions.txt`, refresh the attrs, run the sleeper audit, and show the swap
-    table before applying anything.
+  - **This batch:** the player will give the session a big list, pasted or as a file.
+    The player confirmed that **every card on it is new**, so add copies on top of the
+    current count and replace nothing.
+    - Never route it through the site's Upload button, which replaces the whole
+      collection (spec gap 3).
+    - Run it through spec §2: parse, verify on the runner, add a dated batch block to
+      `owned_additions.txt`, refresh the attrs, run the sleeper audit, and show the swap
+      table before applying anything.
 - **`docs/spec-second-login.md`**
   - The player chose **edit too, labeled**: the member gets the owner's powers, minus
     the People page and (proposed) Upload.
