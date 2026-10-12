@@ -1,0 +1,190 @@
+{
+ "scenes": [
+  "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+  "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+  "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming."
+ ],
+ "takes": [
+  {
+   "voice": "af_heart",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "af_heart-1.mp3",
+   "ms": 5750,
+   "cpu_s": 4.15
+  },
+  {
+   "voice": "af_heart",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "af_heart-2.mp3",
+   "ms": 7975,
+   "cpu_s": 5.5
+  },
+  {
+   "voice": "af_heart",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "af_heart-3.mp3",
+   "ms": 12450,
+   "cpu_s": 8.51
+  },
+  {
+   "voice": "af_bella",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "af_bella-1.mp3",
+   "ms": 6250,
+   "cpu_s": 4.1
+  },
+  {
+   "voice": "af_bella",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "af_bella-2.mp3",
+   "ms": 8400,
+   "cpu_s": 5.59
+  },
+  {
+   "voice": "af_bella",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "af_bella-3.mp3",
+   "ms": 13300,
+   "cpu_s": 8.85
+  },
+  {
+   "voice": "am_michael",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "am_michael-1.mp3",
+   "ms": 6300,
+   "cpu_s": 4.08
+  },
+  {
+   "voice": "am_michael",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "am_michael-2.mp3",
+   "ms": 8575,
+   "cpu_s": 5.49
+  },
+  {
+   "voice": "am_michael",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "am_michael-3.mp3",
+   "ms": 14275,
+   "cpu_s": 9.76
+  },
+  {
+   "voice": "bm_george",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "bm_george-1.mp3",
+   "ms": 6250,
+   "cpu_s": 3.97
+  },
+  {
+   "voice": "bm_george",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "bm_george-2.mp3",
+   "ms": 8525,
+   "cpu_s": 5.45
+  },
+  {
+   "voice": "bm_george",
+   "engine": "kokoro-82m",
+   "licence": "Apache-2.0",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "bm_george-3.mp3",
+   "ms": 13600,
+   "cpu_s": 9.04
+  },
+  {
+   "voice": "en_US-ryan-high",
+   "engine": "piper",
+   "licence": "CC BY-NC-SA 4.0",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "en_US-ryan-high-1.mp3",
+   "ms": 4865,
+   "cpu_s": 2.46
+  },
+  {
+   "voice": "en_US-ryan-high",
+   "engine": "piper",
+   "licence": "CC BY-NC-SA 4.0",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "en_US-ryan-high-2.mp3",
+   "ms": 6536,
+   "cpu_s": 3.35
+  },
+  {
+   "voice": "en_US-ryan-high",
+   "engine": "piper",
+   "licence": "CC BY-NC-SA 4.0",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "en_US-ryan-high-3.mp3",
+   "ms": 11111,
+   "cpu_s": 5.78
+  },
+  {
+   "voice": "en_GB-alan-medium",
+   "engine": "piper",
+   "licence": "See URL",
+   "scene": 1,
+   "text": "Tergrid, Iron Fortress. What your opponents sacrifice or discard becomes yours.",
+   "file": "en_GB-alan-medium-1.mp3",
+   "ms": 5631,
+   "cpu_s": 0.45
+  },
+  {
+   "voice": "en_GB-alan-medium",
+   "engine": "piper",
+   "licence": "See URL",
+   "scene": 2,
+   "text": "Make them sacrifice. Sheoldred's Edict, in its nontoken mode: each opponent sacrifices a nontoken creature.",
+   "file": "en_GB-alan-medium-2.mp3",
+   "ms": 8359,
+   "cpu_s": 0.66
+  },
+  {
+   "voice": "en_GB-alan-medium",
+   "engine": "piper",
+   "licence": "See URL",
+   "scene": 3,
+   "text": "Fast mana, with every card under a hundred dollars. Sol Ring, Mana Vault, Lotus Petal, Dark Ritual and Cabal Ritual start fast. Basalt Monolith and Mind Stone keep the mana coming.",
+   "file": "en_GB-alan-medium-3.mp3",
+   "ms": 13363,
+   "cpu_s": 1.04
+  }
+ ],
+ "failed": []
+}
