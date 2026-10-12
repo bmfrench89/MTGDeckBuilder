@@ -27,6 +27,28 @@ player's decisions recorded in it. **No code has changed yet.**
   - **Reconcile on upload:** `merge_collection` *adds* `owned_additions` quantities on
     top of the export, so cards later re-exported are counted twice today.
   - A "New arrivals" review that uses the sleeper audit.
+  - **First batch done (2026-10-12): three precons.** The player bought Wretched Ranks
+    and Tramplesaurus Rex (FDC) and Multiverse Reforged (FRC).
+    - The official lists came from MTGJSON via the new `precon.py` /
+      `deck-verify.yml precons:` input, and are in `data/reference/precons/`.
+    - All 224 non-basic names are verified on the runner.
+    - Added as a dated block in `owned_additions.txt`: 196 copies, about $160 estimated.
+      **Tramplesaurus Rex is the SAME box as Beorn's 2026-10-07 photographs**
+      (player-confirmed), so only its 40 cards not already logged were added.
+    - Shared-card shortages went from 83 to 74.
+    - **Swaps are ON HOLD**: the player is still uploading more cards and wants one
+      review at the end. The shortlist from the sleeper audit:
+      - Spider-Man: Arasta → University Campus and Arachnogenesis → Scarlet Spider,
+        Kaine (its own buylist plan).
+      - Captain America: Flawless Maneuver → Visions of Beyond.
+      - Kami: Geier Reach Sanitarium → War Room.
+      - Bench:
+        - Niv-Mizzet, Ghost Counsel for Y'shtola (lifegain → cards; needs a cut);
+        - Birds of Paradise for the Ur-Dragon (a goldfish A/B showed a tiny gain and
+          it costs a Dragon);
+        - Chromatic Lantern for Spider-Man (no cut ever named);
+        - nothing beats Beorn's current list.
+    - Re-run the pass with every batch in, then present one table.
   - **This batch:** the player will give the session a big list, pasted or as a file.
     The player confirmed that **every card on it is new**, so add copies on top of the
     current count and replace nothing.
