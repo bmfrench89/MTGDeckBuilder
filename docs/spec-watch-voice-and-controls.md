@@ -1,7 +1,7 @@
 # Spec — Watch tab: video-style controls and a natural narrator
 
 **Status:** ◐ Parts A and B shipped 2026-10-12 (PR #174). Part C: the audition ran
-2026-10-12 and its plumbing is built; recording waits on **the player's pick**.
+2026-10-12, the player picked Kokoro `af_heart`, and the runner records the takes.
 - Parts A + B — `scripts/assets/clips_player.{js,css}` (control bar ⏮ ▶/❚❚ ■ ⏭ under the
   picture, tap-to-pause, Stop, S key, remembered narration, `WT_SPEECH.rank` / `.sentences`
   for Node tests, the voice menu), `build_dashboard.clips_html`, `clips.spoken()` +
@@ -18,9 +18,9 @@
   `/narration/<stem>/<file>` (manifest-listed files only, immutable, 206 ranges), `sw.js`
   hands-off, the player's `<audio>` playback with preload + Media Session, the tab note for
   unrecorded scenes, and `clips.py --check` treating a missing take as a note.
-- **Next:** the player picks a voice → write `data/reference/narration.json` (e.g.
-  `{"engine": "kokoro-82m", "model": "v1.0", "voice": "af_heart", "speed": 1.0}`) and
-  push; `narrate.yml` records every Iron Fortress scene and commits the takes.
+- **The pick (player, 2026-10-12): Kokoro `af_heart`** (Apache-2.0), written to
+  `data/reference/narration.json`; `narrate.yml` records every scene with clips and
+  commits the takes. A deck can still override it with a top-level `"voice"`.
 
 **Player ask (2026-10-12):** "Can the voice of the video sound less robotic and can we
 add play/stop buttons to the videos? Or is that too difficult."
