@@ -9,6 +9,8 @@ re-analyzes instantly. Keep the <code># Title / # Theme / # Commander</code> hea
   <div class="row mt-3">
     <button class="btn" type="submit">Save &amp; view dashboard</button>
     <a class="btn ghost" href="{{ url_for('deck', stem=meta.stem) }}">Cancel</a>
+    <a class="btn ghost" href="{{ url_for('deck_import', target=meta.stem) }}"
+       title="Paste a whole list; it's checked before it replaces this one">Paste a new list…</a>
   </div>
 </form>
 {% endblock %}

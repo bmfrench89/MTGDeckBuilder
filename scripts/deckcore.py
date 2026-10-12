@@ -988,8 +988,10 @@ def new_arrivals(coll, decks_dir, days=30, now=None, limit=12):
         text = open(p, encoding="utf-8").read()
         for c in mtglib.parse_deck(text):
             in_decks |= mtglib.name_keys(c.name)
-        m = re.match(r"(.+)", mtglib.deck_header(text, "Colors?"))
-        ids = set((m.group(1) if m else "").replace(",", " ").upper().split())
+        # Letters, not whitespace-split words: `# Colors: WB` (Bartolomé's header)
+        # split into the single token "WB", which no card identity is a subset of,
+        # so that deck could never be offered as a home.
+        ids = set(re.findall(r"[WUBRG]", mtglib.deck_header(text, "Colors?").upper()))
         deck_ids[os.path.splitext(os.path.basename(p))[0]] = ids
     out = []
     for c in coll:
@@ -1003,3 +1005,143 @@ def new_arrivals(coll, decks_dir, days=30, now=None, limit=12):
         out.append({"name": c.name, "qty": c.quantity, "date": d, "fits": fits})
     out.sort(key=lambda r: (r["date"], r["name"]), reverse=True)
     return out[:limit]
+
+
+def _deck_engine_summary(path, text, limit=700):
+    """A few lines on what a deck is trying to do, for a review packet: its
+    `# Note:` header lines when it has them, else the opening of its .notes.md.
+    Quoted, never paraphrased — the engine read is the session's job."""
+    notes = [ln.split(":", 1)[1].strip() for ln in text.splitlines()
+             if re.match(r"^#\s*Note\s*:", ln)]
+    if notes:
+        out = " ".join(notes)
+    else:
+        try:
+            body = open(os.path.splitext(path)[0] + ".notes.md", encoding="utf-8").read()
+        except OSError:
+            body = ""
+        out = " ".join(ln.strip() for ln in body.splitlines()
+                       if ln.strip() and not ln.startswith("#"))
+    return (out[:limit].rsplit(" ", 1)[0] + " …") if len(out) > limit else out
+
+
+def arrivals_review(coll, decks_dir, collection, days=30, now=None, field_fn=None):
+    """The "New arrivals" review (docs/spec-card-intake.md §4): the latest batch plus
+    anything newer than `days`, each card with the decks that could play it and two
+    signals per deck — the field % (EDHREC inclusion for that commander) and the
+    deck-fit score. Both are a PRIOR: the sleeper audit's rule is that field % is a
+    prior and reading the card against the deck's engine is the verdict, which is
+    why the packet this feeds goes to a session rather than to the optimizer.
+
+    Only cards in no sleeved deck are listed (a study copy holds no physical cards,
+    so a card that only sits in one is still unplaced). Homes are the sleeved decks
+    whose `# Colors:` header covers the card's identity. A card with no colour data
+    (the name-only snapshot) gets no homes and `nameonly: True` — never a guess.
+
+    -> {"since", "latest", "cards": [{name, qty, date, identity, nameonly,
+        homes: [{stem, title, commander, field_pct, fit, band}]}], "decks": [...]}"""
+    import datetime
+    import glob
+    import deck_fit
+    import power
+    now = (now or datetime.date.today().isoformat())[:10]
+    cutoff = (datetime.date.fromisoformat(now) - datetime.timedelta(days=days)).isoformat()
+    latest = max((c.date_added[:10] for c in coll if c.date_added), default="")
+    since = min(cutoff, latest) if latest else cutoff
+    decks, placed = [], set()
+    for p in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
+        try:
+            text = open(p, encoding="utf-8").read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        if mtglib.deck_header(text, "Study").strip().lower().startswith("y"):
+            continue
+        for c in mtglib.parse_deck(text):
+            placed |= mtglib.name_keys(c.name)
+        cmd = re.split(r"\s{2,}|\(", mtglib.deck_header(text, "Commander"))[0].strip()
+        decks.append({"stem": os.path.splitext(os.path.basename(p))[0], "path": p,
+                      "text": text, "commander": cmd,
+                      "title": mtglib.deck_header(text, "Title") or cmd,
+                      "identity": set(re.findall(
+                          r"[WUBRG]", mtglib.deck_header(text, "Colors?").upper()))})
+    cards = []
+    for c in coll:
+        d = (c.date_added or "")[:10]
+        if not d or d < since or mtglib.is_basic(c.name):
+            continue
+        if mtglib.name_keys(c.name) & placed:
+            continue
+        known = bool(c.types) or bool(c.identity)
+        cards.append({"card": c, "name": c.name, "qty": c.quantity, "date": d,
+                      "identity": "".join(x for x in "WUBRG" if x in (c.identity or ())),
+                      "nameonly": not known, "homes": []})
+    if any(not r["nameonly"] for r in cards):
+        refs = power.load_refs()
+        for dk in decks:
+            if not dk["identity"]:
+                continue
+            fits = [r for r in cards if not r["nameonly"]
+                    and set(r["card"].identity or ()) <= dk["identity"]]
+            if not fits:
+                continue
+            try:
+                a = analyze_deck(dk["path"], collection)
+                field = (field_fn or deck_fit.load_field)(dk["commander"], a["idx"]) \
+                    if dk["commander"] else {}
+                ctx = deck_fit.deck_context(dk["path"], a["enriched"], dk["commander"],
+                                            field=field)
+            except Exception:
+                continue
+            for r in fits:
+                fit = deck_fit.assess_card(r["card"], a["report"], ctx, refs)
+                pct = max((field.get(k) or 0 for k in mtglib.name_keys(r["name"])),
+                          default=0) if field else None
+                r["homes"].append({"stem": dk["stem"], "title": dk["title"],
+                                   "commander": dk["commander"],
+                                   "field_pct": pct, "has_field": bool(field),
+                                   "fit": fit["score"], "band": fit["band"]})
+    for r in cards:
+        r["homes"].sort(key=lambda h: (-(h["field_pct"] or 0), -h["fit"], h["title"]))
+        best = r["homes"][0] if r["homes"] else None
+        r["best"] = ((best["field_pct"] or 0), best["fit"]) if best else (-1, -1)
+        del r["card"]
+    cards.sort(key=lambda r: (-r["best"][0], -r["best"][1], r["name"]))
+    return {"since": since, "latest": latest, "now": now, "cards": cards,
+            "decks": [{k: v for k, v in dk.items() if k != "text"} | {
+                "engine": _deck_engine_summary(dk["path"], dk["text"])}
+                for dk in decks]}
+
+
+def arrivals_packet(review, top=8):
+    """The "Copy review packet" text — the batch, each deck's top candidates and
+    its engine summary — for a Claude session to do the engine read and come back
+    with swap / wishlist / bench / skip per card (card-review-method.md)."""
+    cards = review["cards"]
+    out = [f"# New arrivals review packet — {review['now']}",
+           "# Field % = how often EDHREC decks for that commander run the card. The fit",
+           "# score is the app's heuristic. Both are a PRIOR, not a verdict: read each",
+           "# card's verified text against the deck's engine (the sleeper audit,",
+           "# .claude/skills/mtg-deckbuilder/references/card-review-method.md) and give",
+           "# every card a verdict — swap / wishlist / bench / skip. None silently dropped.",
+           "",
+           f"## Arrivals not in any sleeved deck — since {review['since']} "
+           f"({len(cards)} cards, {sum(r['qty'] for r in cards)} copies)"]
+    for r in sorted(cards, key=lambda x: x["name"].lower()):
+        homes = ", ".join(h["stem"] for h in r["homes"]) or (
+            "no colour data — can't place" if r["nameonly"] else "no deck in its colours")
+        out.append(f"{r['qty']} {r['name']}  [{r['date']}] -> {homes}")
+    for dk in review["decks"]:
+        rows = [(r, h) for r in cards for h in r["homes"] if h["stem"] == dk["stem"]]
+        if not rows:
+            continue
+        rows.sort(key=lambda t: (-(t[1]["field_pct"] or 0), -t[1]["fit"]))
+        colors = "".join(x for x in "WUBRG" if x in dk["identity"]) or "C"
+        out += ["", f"## {dk['title']} — {dk['commander']} ({colors}) · {len(rows)} legal "
+                    f"arrivals, top {min(top, len(rows))}"]
+        if dk.get("engine"):
+            out.append(f"Engine (from the deck's notes): {dk['engine']}")
+        for r, h in rows[:top]:
+            pct = (f"field {h['field_pct']}%" if h["has_field"] else "no field data")
+            out.append(f"- {r['name']}: {pct} · fit {h['fit']} ({h['band']})")
+    return "\n".join(out) + "\n"
+

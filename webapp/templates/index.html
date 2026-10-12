@@ -8,6 +8,7 @@
       ready to sleeve and how its core roles sit against their targets.</div>
   </div>
   <div class="acts">
+    <a class="btn ghost" href="{{ url_for('deck_import') }}">Import a list</a>
     <a class="btn" href="{{ url_for('build_next') }}">+ Build a deck</a>
   </div>
 </header>
@@ -127,7 +128,8 @@
 {% if arrivals %}
 <div class="card mb-4">
   <h3 class="mt-0">🆕 New arrivals — not in a deck yet</h3>
-  <div class="sub" style="margin-bottom:var(--sp-2)">From your latest export's purchase dates.
+  <div class="sub" style="margin-bottom:var(--sp-2)">From your latest export's purchase dates and
+    the batches you've added. <a href="{{ url_for('collection_arrivals') }}">Review them all</a>.
     Tap a name for details; add it from the deck's own page so it counts as your call
     (manual adds are protected from the optimizer).</div>
   <div class="row tight">

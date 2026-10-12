@@ -51,6 +51,7 @@ import edhrec
 import spellbook
 import optimize
 import goldfish
+import intake
 import proxy_sheet as px
 
 import sync
@@ -1894,12 +1895,22 @@ def collection_view():
     top = sorted(priced, key=lambda c: -c.price)[:20]
     cards = _collection_cards(coll, DECKS_DIR)
     types = sorted({r["type"] for r in cards if r["type"]})
-    additions = []
+    # owned_additions.txt holds hundreds of rows after a big pickup: summarise it
+    # (row count + the latest dated batch) instead of printing every line.
+    additions = {"rows": 0, "copies": 0, "latest": ""}
     if os.path.exists(ADDITIONS):
-        for ln in open(ADDITIONS, encoding="utf-8"):
-            s = ln.strip()
-            if s and not s.startswith("#"):
-                additions.append(s)
+        adds_text = open(ADDITIONS, encoding="utf-8").read()
+        rows = intake.addition_rows(adds_text)
+        additions["rows"] = len(rows)
+        additions["copies"] = sum(r["qty"] for r in rows)
+        heads = [ln.strip()[1:].strip(" -") for ln in adds_text.splitlines()
+                 if intake.BATCH_RE.match(ln.strip())]
+        additions["latest"] = heads[-1] if heads else ""
+    reconcile = (_read_json(_reconcile_path()) or {}).get("plan") or []
+    try:
+        arrivals = deckcore.new_arrivals(coll, DECKS_DIR, limit=10_000)
+    except Exception:
+        arrivals = []
     attrs_path = os.path.join(ROOT, "data/collection/collection_attrs.csv")
     enriched_n = sum(1 for c in coll if c.types)
     # Production coverage is a SEPARATE number from type coverage: an attrs file
@@ -1925,6 +1936,7 @@ def collection_view():
     return render_template("collection.html", unique=len(coll),
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
+                           reconcile=reconcile, arrivals=arrivals,
                            carddb=carddb, cards=cards, types=types,
                            enrich_status=enrich_bg.status_view(), page="collection")
 
@@ -1955,26 +1967,505 @@ def collection_add():
 
 @app.route("/collection/upload", methods=["POST"])
 def collection_upload():
-    """Save the uploaded export, then enrich it in the BACKGROUND.
+    """Replace the whole collection with a full export — behind the Upload guard.
 
-    Enrichment is ~1 Scryfall request per 75 cards — minutes for a real
-    collection. Running it inline held the browser open for the whole of that and
-    spent one request's worth of a shared CPU quota on it; on this host that is a
-    timeout, not a slow page. The upload itself is unchanged and deliberately
-    untouched: it writes the PRIVATE, gitignored CSV and never the tracked
+    The file is validated into a PENDING copy first (`_install_upload` into a
+    gitignored `*.private.csv`), then compared with the current collection. A file
+    that looks like a handful of new cards rather than a full export stops here and
+    asks (docs/spec-card-intake.md §3): Upload used to swap a 214-card batch in for a
+    3,209-card collection with no question, and every deck then read as unowned.
+    A normal full export goes straight through, as before.
+
+    Enrichment still runs in the BACKGROUND (minutes of Scryfall round-trips), and
+    the upload still writes only the PRIVATE, gitignored CSV — never the tracked
     name-only snapshot (that separation closed a real leak — see CLAUDE.md)."""
     f = request.files.get("csv")
-    if f and f.filename:
-        global COLLECTION
-        err = _install_upload(f, COLLECTION_CSV)
-        if err:
-            flash(f"Upload refused — {err} Your previous collection is unchanged.",
-                  "warn")
-            return redirect(url_for("collection_view"))
-        COLLECTION = COLLECTION_CSV
-        _invalidate()             # a whole new collection — nothing cached survives
-        flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
+    if not (f and f.filename):
+        return redirect(url_for("collection_view"))
+    pending = _pending_upload_path()
+    err = _install_upload(f, pending)
+    _drop(_upload_backup_path(pending))   # a backup of a pending file is noise
+    if err:
+        _drop(pending)
+        flash(f"Upload refused — {err} Your previous collection is unchanged.", "warn")
+        return redirect(url_for("collection_view"))
+    with open(pending, encoding="utf-8") as fh:
+        new_cards = mtglib.parse_collection(fh.read())
+    current = _raw_collection_cards()
+    # Judged against the collection the player SEES (export + added batches), so the
+    # question quotes the same card count as the Collection page.
+    partial, facts = intake.upload_looks_partial(collection_index()[0], new_cards)
+    if partial:
+        return render_template("upload_guard.html", facts=facts, page="collection")
+    return _replace_collection_from(pending, current)
+
+
+@app.route("/collection/upload/decide", methods=["POST"])
+def collection_upload_decide():
+    """The guard's second tap. "batch" (the default) sends the SAME file to the
+    batch preview and leaves the collection CSV untouched; "replace" goes ahead."""
+    pending = _pending_upload_path()
+    if not os.path.exists(pending):
+        flash("That upload has expired — choose the file again.", "warn")
+        return redirect(url_for("collection_view"))
+    if request.form.get("choice") == "replace":
+        return _replace_collection_from(pending, _raw_collection_cards())
+    with open(pending, encoding="utf-8") as fh:
+        text = fh.read()
+    _drop(pending)                # it may carry prices; the batch keeps names only
+    return _batch_preview(text, source="uploaded file")
+
+
+def _replace_collection_from(pending, previous_cards):
+    """Move a validated pending export into place (previous file kept as the
+    gitignored backup), offer to retire batch rows it now carries, and start
+    background enrichment."""
+    global COLLECTION
+    os.makedirs(os.path.dirname(COLLECTION_CSV) or ".", exist_ok=True)
+    if os.path.exists(COLLECTION_CSV):
+        shutil.copy2(COLLECTION_CSV, _upload_backup_path(COLLECTION_CSV))
+    os.replace(pending, COLLECTION_CSV)
+    COLLECTION = COLLECTION_CSV
+    _invalidate()                 # a whole new collection — nothing cached survives
+    try:
+        with open(COLLECTION_CSV, encoding="utf-8") as fh:
+            new_cards = mtglib.parse_collection(fh.read())
+        adds = open(ADDITIONS, encoding="utf-8").read() if os.path.exists(ADDITIONS) else ""
+        plan = intake.reconcile_plan(previous_cards, new_cards, adds)
+    except Exception:
+        plan = []
+    if plan:
+        _write_json(_reconcile_path(), {"plan": plan, "when": time.time()})
+    else:
+        _drop(_reconcile_path())
+    flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
     return redirect(url_for("collection_view"))
+
+
+@app.route("/collection/reconcile", methods=["POST"])
+def collection_reconcile():
+    """One tap retires the batch rows the new export carries (commented out with
+    the date, never deleted); "keep" dismisses the offer and changes nothing."""
+    data = _read_json(_reconcile_path()) or {}
+    plan = data.get("plan") or []
+    _drop(_reconcile_path())
+    if request.form.get("action") != "retire" or not plan:
+        flash("Kept every added card as it was.", "info")
+        return redirect(url_for("collection_view"))
+    if not os.path.exists(ADDITIONS):
+        return redirect(url_for("collection_view"))
+    retired, skipped = intake.apply_retire(ADDITIONS, plan)
+    _invalidate()
+    msg = f"Retired {retired} card(s) now carried by your export — nothing counts twice."
+    if skipped:
+        msg += (f" {skipped} row(s) were left alone because the file changed since "
+                "the upload.")
+    flash(msg, "info")
+    return redirect(url_for("collection_view"))
+
+
+# ---- batch entry (paste → preview → confirm → write) -------------------------
+_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
+MAX_PASTE_BYTES = 2 * 1024 * 1024
+
+
+def _intake_dir():
+    """Where previews and the reconcile offer wait for their confirm tap: the
+    gitignored `data/cache/intake/`, derived from the collection CSV's folder so a
+    test's tmp collection keeps them in tmp too."""
+    return os.path.join(os.path.dirname(os.path.dirname(COLLECTION_CSV)), "cache", "intake")
+
+
+def _pending_upload_path():
+    # `*.private.csv` is gitignored: a pending upload is a priced export.
+    return os.path.join(os.path.dirname(COLLECTION_CSV), "pending-upload.private.csv")
+
+
+def _reconcile_path():
+    return os.path.join(_intake_dir(), "reconcile.json")
+
+
+def _drop(path):
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+def _write_json(path, obj):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".part"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f)
+    os.replace(tmp, path)
+
+
+def _read_json(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
+def _save_preview(kind, payload):
+    """Park a preview server-side and hand back a token, so the confirm writes
+    EXACTLY what was previewed — never a re-parse, never a tampered form."""
+    import secrets
+    d = _intake_dir()
+    os.makedirs(d, exist_ok=True)
+    now = time.time()
+    for name in os.listdir(d):            # previews older than a day are abandoned
+        p = os.path.join(d, name)
+        if name.startswith(("batch-", "deck-")) and now - os.path.getmtime(p) > 86400:
+            _drop(p)
+    token = secrets.token_urlsafe(12)
+    _write_json(os.path.join(d, f"{kind}-{token}.json"), payload)
+    return token
+
+
+def _load_preview(kind, token):
+    if not _TOKEN_RE.match(token or ""):
+        return None, None
+    path = os.path.join(_intake_dir(), f"{kind}-{token}.json")
+    return _read_json(path), path
+
+
+def _raw_collection_cards():
+    """The base collection file as parsed, WITHOUT owned_additions — the
+    "previous export" the reconcile compares a new one against."""
+    try:
+        with open(COLLECTION, encoding="utf-8") as fh:
+            return mtglib.parse_collection(fh.read())
+    except (OSError, UnicodeDecodeError):
+        return []
+
+
+def _verify_names(names):
+    """THE network call of card intake (Scryfall: exact batch, then fuzzy). Its own
+    function so tests stand in front of it."""
+    import carddb
+    return carddb.verify_cards(names)
+
+
+def _known_names(coll):
+    """Names the app already trusts, for resolving offline: the collection plus
+    the committed attrs snapshot's canonical names."""
+    extra = []
+    snap = os.path.join(ROOT, "data/collection/collection_attrs.snapshot.csv")
+    try:
+        import csv as _csv
+        with open(snap, encoding="utf-8") as f:
+            extra = [r.get("Name", "") for r in _csv.DictReader(f)]
+    except OSError:
+        pass
+    return intake.known_names(coll, extra)
+
+
+def _read_paste():
+    """The pasted text, or an attached .txt/.csv (UTF-8, else Windows-1252)."""
+    text = request.form.get("text", "") or ""
+    f = request.files.get("file")
+    if f and f.filename:
+        raw = f.read(MAX_PASTE_BYTES + 1)
+        if len(raw) > MAX_PASTE_BYTES or b"\x00" in raw:
+            return None, "that file is too large or isn't text."
+        try:
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            try:
+                text = raw.decode("cp1252")
+            except UnicodeDecodeError:
+                return None, "that file isn't readable text."
+    if len(text.encode("utf-8")) > MAX_PASTE_BYTES:
+        return None, "that list is too long for one batch."
+    return text, None
+
+
+def _batch_preview(text, source="pasted list"):
+    rows = intake.parse_text(text)
+    if not rows:
+        flash("No card lines found — paste one card per line, like “1 Sol Ring”.", "warn")
+        return redirect(url_for("collection_view"))
+    coll, _idx = collection_index()
+    entries = intake.resolve(rows, verify=_verify_names, known=_known_names(coll))
+    token = _save_preview("batch", {"entries": entries, "source": source})
+    return render_template("batch_preview.html", entries=entries, token=token,
+                           s=intake.summary(entries), source=source,
+                           page="collection")
+
+
+@app.route("/collection/batch", methods=["POST"])
+def collection_batch():
+    """Step 1 of "Add a batch": parse + resolve and SHOW it. Writes nothing."""
+    text, err = _read_paste()
+    if err:
+        flash(f"Nothing added — {err}", "warn")
+        return redirect(url_for("collection_view"))
+    return _batch_preview(text, source="uploaded file" if request.files.get("file")
+                          and request.files["file"].filename else "pasted list")
+
+
+@app.route("/collection/batch/confirm", methods=["POST"])
+def collection_batch_confirm():
+    """Step 2: write exactly the previewed ✓ rows (plus each ticked "did you mean")
+    as one dated block in owned_additions.txt, then enrich in the background."""
+    data, path = _load_preview("batch", request.form.get("token"))
+    if not data:
+        flash("That preview has expired — paste the list again.", "warn")
+        return redirect(url_for("collection_view"))
+    rows = intake.accepted(data["entries"], request.form.getlist("take"))
+    _drop(path)
+    if not rows:
+        flash("Nothing to add — no line resolved to a card.", "warn")
+        return redirect(url_for("collection_view"))
+    label = "pasted list" if data.get("source") == "pasted list" else "uploaded file"
+    copies, distinct = intake.append_batch(ADDITIONS, rows, label)
+    _invalidate()             # owned_additions feeds EVERY deck's analysis
+    flash(f"Added {copies} card(s) ({distinct} distinct) as a dated batch. "
+          + enrich_bg.start(COLLECTION, COLLECTION_ATTRS), "info")
+    return redirect(url_for("collection_view") + "#arrivals")
+
+
+@app.route("/collection/arrivals")
+def collection_arrivals():
+    """The New arrivals review: the latest batch and anything newer than 30 days,
+    each card with the decks that can play it, field % and fit — a PRIOR, labelled
+    as one. Its own page because scoring every arrival against every deck costs a
+    few seconds the Collection page shouldn't pay on each visit."""
+    coll, _idx = collection_index()
+    review = deckcore.arrivals_review(coll, DECKS_DIR, COLLECTION)
+    return render_template("arrivals.html", r=review, page="collection")
+
+
+@app.route("/collection/arrivals.txt")
+def collection_arrivals_txt():
+    coll, _idx = collection_index()
+    review = deckcore.arrivals_review(coll, DECKS_DIR, COLLECTION)
+    return Response(deckcore.arrivals_packet(review), mimetype="text/plain")
+
+
+# ---- deck import (a list the player built outside the app) -------------------
+def _deck_choices():
+    import glob
+    out = []
+    for p in sorted(glob.glob(os.path.join(DECKS_DIR, "*.txt"))):
+        stem = os.path.splitext(os.path.basename(p))[0]
+        m = deck_meta(stem)
+        if m:
+            out.append({"stem": stem, "title": m["title"]})
+    return out
+
+
+@app.route("/decks/import", methods=["GET"])
+def deck_import():
+    """Paste (or attach) a deck list: a new deck, or a new list for an existing one."""
+    target = request.args.get("target", "")
+    return render_template("deck_import.html", decks=_deck_choices(),
+                           target=target if deck_meta(target) else "", page="home")
+
+
+@app.route("/decks/import", methods=["POST"])
+def deck_import_preview():
+    """Parse + resolve the list and show the import report. Writes nothing."""
+    text, err = _read_paste()
+    if err:
+        flash(f"Nothing imported — {err}", "warn")
+        return redirect(url_for("deck_import"))
+    target = request.form.get("target", "")
+    if target and not deck_meta(target):
+        abort(404)
+    title = (request.form.get("title") or "").strip()[:120]
+    typed_cmd = (request.form.get("commander") or "").strip()[:200]
+    if _unsafe_line_value(title, typed_cmd):
+        flash(_LINE_VALUE_ERROR, "warn")
+        return redirect(url_for("deck_import"))
+    rows = intake.parse_text(text)
+    if not typed_cmd:
+        typed_cmd = next((r["name"] for r in rows if r.get("commander") and not r["error"]), "")
+    if not typed_cmd and target:
+        typed_cmd = deck_meta(target)["commander"]
+    if typed_cmd and not any(mtglib._norm(r["name"]) == mtglib._norm(typed_cmd)
+                             for r in rows):
+        rows.insert(0, {"line": None, "raw": typed_cmd, "qty": 1, "name": typed_cmd,
+                        "section": "commander", "commander": True, "error": ""})
+    if not [r for r in rows if not r["error"]]:
+        flash("No card lines found — paste one card per line, like “1 Sol Ring”.", "warn")
+        return redirect(url_for("deck_import", target=target))
+    coll, idx = collection_index()
+    entries = intake.resolve(rows, verify=_verify_names, known=_known_names(coll))
+    cmd = None
+    cmd_from_first = False
+    if typed_cmd:
+        cmd = next((e for e in entries if e["status"] == "ok"
+                    and intake.same_card(typed_cmd, e["name"])), None)
+    else:
+        # Nothing names the commander: a list whose FIRST card is a legendary
+        # creature almost always leads with it (Moxfield and EDHREC copies do).
+        # Shown as "taken from the first line" on the preview, never saved silently.
+        first = next((e for e in entries if e["status"] in ("ok", "basic")), None)
+        tl = (first or {}).get("type_line", "").split(" // ")[0].lower()
+        if first and first["status"] == "ok" and "legendary" in tl and "creature" in tl:
+            cmd, cmd_from_first = first, True
+            first["commander"] = True
+    identity = None
+    colors = ""
+    if cmd:
+        ident = set(re.findall(r"[WUBRG]", (cmd.get("identity") or "").upper()))
+        if not ident and not cmd.get("type_line"):
+            ref = mtglib.lookup(idx, cmd["name"])
+            ident = set(ref.identity or ()) if ref is not None else set()
+            known = ref is not None and bool(ref.types or ref.identity)
+        else:
+            known = True
+        if known:
+            identity = ident
+            colors = " ".join(c for c in "WUBRG" if c in ident)
+    committed = {}
+    for name, u in deck_conflicts.scan(DECKS_DIR, idx, skip=target or None).items():
+        for k in mtglib.name_keys(name):
+            committed[k] = dict(u["decks"])
+    report = intake.deck_report(entries, cmd["name"] if cmd else "", idx,
+                                identity=identity, committed=committed)
+    # A deck you already have for this commander: importing it as NEW would make
+    # every card read as "shared with" the old copy of itself. Offer the replace.
+    same_cmd = []
+    if cmd and not target:
+        same_cmd = [d for d in _deck_choices()
+                    if intake.same_card(deck_meta(d["stem"])["commander"] or "-", cmd["name"])]
+    token = _save_preview("deck", {"entries": entries, "commander": cmd["name"] if cmd else "",
+                                   "typed_commander": typed_cmd, "title": title,
+                                   "target": target, "colors": colors,
+                                   "same_cmd": [d["stem"] for d in same_cmd]})
+    return render_template("deck_import_preview.html", entries=entries, token=token,
+                           same_cmd=same_cmd, cmd_from_first=cmd_from_first,
+                           cmd=cmd, typed_cmd=typed_cmd, title=title or (cmd or {}).get("name", ""),
+                           target=deck_meta(target) if target else None, colors=colors,
+                           r=report, s=intake.summary(entries),
+                           outside=intake.OUTSIDE_DECK, page="home")
+
+
+def _import_cards(entries, take):
+    """[(qty, name, entry)] for the deck: every resolved card, each ticked
+    suggestion, and basic lands — never a sideboard/maybeboard line."""
+    take = {int(i) for i in take if str(i).isdigit()}
+    rows, at = [], {}
+    for i, e in enumerate(entries):
+        if e.get("section") in intake.OUTSIDE_DECK:
+            continue
+        if e["status"] == "ok":
+            name = e["name"]
+        elif e["status"] == "suggest" and i in take:
+            name = e["suggest"]
+        elif e["status"] == "basic":
+            name = e["name"].title()
+        else:
+            continue
+        k = mtglib._norm(name)
+        if k in at:
+            rows[at[k]][0] += e["qty"]
+        else:
+            at[k] = len(rows)
+            rows.append([e["qty"], name, e])
+    return [tuple(r) for r in rows]
+
+
+@app.route("/decks/import/confirm", methods=["POST"])
+def deck_import_confirm():
+    """Write the previewed list: a NEW deck (never over an existing one), or a new
+    list for the chosen deck — its headers, notes and companions stay, and the
+    difference is logged as the player's own adds/removals, which the optimizer
+    never undoes."""
+    data, path = _load_preview("deck", request.form.get("token"))
+    if not data:
+        flash("That preview has expired — paste the list again.", "warn")
+        return redirect(url_for("deck_import"))
+    commander = data.get("commander") or ""
+    if not commander:
+        flash("Name the commander (and check it resolves) before saving.", "warn")
+        return redirect(url_for("deck_import", target=data.get("target") or ""))
+    cards = _import_cards(data["entries"], request.form.getlist("take"))
+    coll, idx = collection_index()
+    from datetime import date
+    target = data.get("target") or ""
+    swap_in = request.form.get("replace_stem") or ""
+    if swap_in and swap_in in (data.get("same_cmd") or []):
+        target = swap_in          # "replace the list of my existing deck instead"
+    if target:
+        m = deck_meta(target)
+        if not m:
+            abort(404)
+        stem, deck_path = target, m["path"]
+        old = {mtglib._norm(c.name): c.name
+               for c in mtglib.parse_deck(open(deck_path, encoding="utf-8").read())}
+        import deck_sections
+        header, _cmd, _entries = deck_sections.parse_file(deck_path)
+        header = _set_header(header, "Commander", commander)
+        if data.get("colors"):
+            header = _set_header(header, "Colors", data["colors"])
+        text = intake.deck_text(cards, commander, idx=idx, header_lines=header)
+        with open(deck_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        new = {mtglib._norm(n): n for _q, n, _e in cards}
+        new.setdefault(mtglib._norm(commander), commander)
+        for k, n in new.items():
+            if k not in old and not mtglib.is_basic(n):
+                _log_manual_change(deck_path, n, source="manual-add")
+        for k, n in old.items():
+            if k not in new and not mtglib.is_basic(n):
+                _log_manual_change(deck_path, "", replaced=n, source="manual-remove")
+        flash(f"Replaced the list of {m['title']}: {len(set(new) - set(old))} card(s) in, "
+              f"{len(set(old) - set(new))} out. Those choices are yours — the optimizer "
+              "won't undo them.", "info")
+    else:
+        title = data.get("title") or commander
+        stem, deck_path = _free_deck_stem(_deck_slug(title))
+        text = intake.deck_text(cards, commander, title=title, colors=data.get("colors", ""),
+                                source=f"imported in the app {date.today().isoformat()} "
+                                       "(the player's own list)", idx=idx)
+        with open(deck_path, "x", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        flash(f"Saved “{title}” as a new deck.", "info")
+    _drop(path)
+    if request.form.get("add_unowned"):
+        short = []
+        for q, n, _e in cards:
+            if mtglib.is_basic(n):
+                continue
+            ref = mtglib.lookup(idx, n)
+            need = q - (ref.quantity if ref is not None else 0)
+            if need > 0:
+                short.append((need, n))
+        if short:
+            copies, distinct = intake.append_batch(
+                ADDITIONS, short, f"cards for the imported {data.get('title') or commander} deck",
+                note=("Player-confirmed at deck import (\"I own these\"): the copies the",
+                      "collection lacked for a deck they built. New copies on top of the export;",
+                      "a future export that carries them is offered for retirement",
+                      "(docs/spec-card-intake.md §3)."))
+            flash(f"Added {copies} card(s) you own to your collection as a dated batch. "
+                  + enrich_bg.start(COLLECTION, COLLECTION_ATTRS), "info")
+    bad = optimize.singleton_violations(deck_path)
+    if bad:
+        flash("!! Commander allows one copy: " + ", ".join(f"{q}x {n}" for q, n in bad)
+              + " — fix it in the editor.", "warn")
+    _invalidate(stem)
+    return redirect(url_for("deck", stem=stem))
+
+
+def _set_header(header_lines, key, value):
+    """Set `# Key: value` in a deck's header block, replacing the first existing
+    line for that key (same shape mtglib.deck_header reads) or appending one."""
+    out, done = [], False
+    for ln in header_lines:
+        if not done and re.match(rf"^#[ \t]*{key}[ \t]*:", ln, re.IGNORECASE):
+            out.append(f"# {key}: {value}")
+            done = True
+        else:
+            out.append(ln)
+    if not done:
+        out.append(f"# {key}: {value}")
+    return out
 
 
 def _upload_backup_path(dest):

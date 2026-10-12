@@ -1,9 +1,13 @@
 # Spec — Card intake: batch entry, card data, and review against the decks
 
-**Status:** ☐ spec'd 2026-10-12, not started · code today: `webapp/app.py`
-(`/collection/add`, `/collection/upload`, `_install_upload`), `webapp/enrich_bg.py`,
-`mtglib._parse_namelist` / `merge_collection`, `deckcore.new_arrivals`,
-`.github/workflows/attrs-snapshot.yml`
+**Status:** ☑ shipped 2026-10-12 — `scripts/intake.py` (parser, resolver, batch block,
+reconcile, Upload guard, deck text) · `webapp/app.py` (`/collection/batch` → `/confirm`,
+`/collection/upload` + `/upload/decide`, `/collection/reconcile`, `/collection/arrivals[.txt]`,
+and the deck import `/decks/import` → `/confirm`) · `mtglib.parse_additions` (batch dates) ·
+`deckcore.arrivals_review` / `arrivals_packet` · tests `tests/test_intake.py`,
+`tests/test_intake_app.py`. §2's session path is now `intake.py <list> --verified <json>
+--write` (no scratch scripts). The deck import was added on the player's ask the same day
+("I want to be able to mass import a simple list of cards for the deck list too") — see §7.
 
 **Player ask (2026-10-12):** "I've also added a lot of cards that need cataloging."
 
@@ -202,3 +206,25 @@ covers the latest batch, plus anything newer than N days.
 
 - Should "New arrivals" also look at cards that sat unplaced for a long time? Proposed
   no: the full-pool sleeper audit already covers those, on request.
+
+## 7. Deck import (shipped with §3, 2026-10-12)
+
+**Player ask:** "I want to be able to mass import a simple list of cards for the deck list
+too." Decks → **Import a list** (`/decks/import`), and **Paste a new list…** in the deck editor.
+
+- Same parser and resolver as the batch. Sideboard / Maybeboard / Tokens sections (Arena,
+  Moxfield, MTGO `SIDEBOARD:`, Archidekt `[Maybeboard{noDeck}]`) are left out and listed.
+- **The commander** is the typed name, else a line the list marks (`Commander` heading,
+  `*CMDR*`, Archidekt `[Commander]`, our own `# --- Commander ---`), else — shown as "taken
+  from the first line" — a first card that is a legendary creature. Nothing is saved
+  without one.
+- **The preview** reports the count (100 expected), more-than-one copies (Scryfall's "any
+  number of cards named" text exempts Relentless Rats and friends), off-identity cards,
+  unowned cards, and cards shared with other decks (a badge, never a blocker — rule #8).
+- **"I own these"** (unticked by default) appends the shortfall as its own dated batch.
+- **Save as a new deck** never overwrites: a taken name gets `-2`. Importing a commander you
+  already have a deck for offers **Replace the list of <deck>** instead.
+- **Replacing a list** keeps the deck's headers, notes and companions, re-sections by type,
+  and logs every difference as the player's own `manual-add` / `manual-remove`, so the
+  optimizer never undoes them. The optimizer is never run on an import.
+

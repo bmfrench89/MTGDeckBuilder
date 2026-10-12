@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Preview batch · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Preview: add these cards?</h1>
+<div class="sub">Nothing is saved until you confirm. Only ✓ lines (and any “did you mean” you
+  tick) are added, as one dated batch in <code>owned_additions.txt</code> — names and
+  quantities only.</div>
+
+<div class="card mt-4 mb-4">
+  <b class="good">✓ {{ s.ok_copies }} card(s), {{ s.ok_distinct }} distinct</b> ready to add
+  {% if s.priced %}· <span class="gold">~${{ '%.2f'|format(s.value) }}</span>
+    <span class="muted fs-xs">estimate, one printing each</span>{% endif %}
+  {% if s.suggest %}<br><b class="warn">? {{ s.suggest }}</b> spelled differently from Scryfall — tick the ones you mean{% endif %}
+  {% if s.missing %}<br><b class="warn">✗ {{ s.missing }}</b> line(s) not added — fix them and paste just those again{% endif %}
+  {% if s.offline %}<br><b class="warn">… {{ s.offline }}</b> couldn't be checked (Scryfall unreachable) — try again later{% endif %}
+  {% if s.basics %}<br><span class="muted">– {{ s.basics }} basic land(s) left out: they're always owned, never tracked.</span>{% endif %}
+</div>
+
+<form method="post" action="{{ url_for('collection_batch_confirm') }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <div class="card tablewrap mb-4">
+  <table>
+    <thead><tr><th></th><th>Qty</th><th>Card</th><th>~$</th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+    <tr>
+      <td>{% if e.status == 'ok' %}<span class="good" title="resolved">✓</span>
+          {% elif e.status == 'suggest' %}<label title="Add the suggested card"><input type="checkbox" class="chk" name="take" value="{{ loop.index0 }}"> ?</label>
+          {% elif e.status == 'basic' %}<span class="muted">–</span>
+          {% elif e.status == 'offline' %}<span class="warn">…</span>
+          {% else %}<span class="warn">✗</span>{% endif %}</td>
+      <td>{{ e.qty }}</td>
+      <td>{% if e.status == 'ok' %}<span class="cardlink" data-card="{{ e.name }}">{{ e.name }}</span>
+          {% elif e.status == 'suggest' %}{{ e.typed[0] }} → <b>{{ e.suggest }}</b>?
+          {% else %}{{ e.name }}{% endif %}
+        {% set note = e.reason if (e.status != 'ok' or e.source == 'local') else '' %}
+        {% if note or (e.status == 'ok' and e.typed[0] != e.name) %}
+        <div class="muted fs-xs">{% if e.status == 'ok' and e.typed[0] != e.name %}you typed “{{ e.typed|join('”, “') }}” {% endif %}{{ note }}{% if e.lines and e.lines[0] and e.status != 'ok' %} · line {{ e.lines|join(', ') }}{% endif %}</div>
+        {% endif %}</td>
+      <td>{% if e.price %}${{ '%.2f'|format(e.price) }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="row">
+    <button class="btn" type="submit">Add these to my collection</button>
+    <a class="btn ghost" href="{{ url_for('collection_view') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

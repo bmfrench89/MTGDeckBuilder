@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Preview import · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Preview: {{ title or 'your deck' }}</h1>
+<div class="sub">{% if target %}This list replaces the cards in <b>{{ target.title }}</b> — its notes and
+  settings stay, and every card you add or take out is logged as your own call.
+  {% else %}This becomes a new deck.{% endif %} Nothing is saved until you confirm.</div>
+
+<div class="card mt-4 mb-4">
+  {% if cmd %}
+    <b>Commander:</b> <span class="cardlink" data-card="{{ cmd.name }}">{{ cmd.name }}</span>
+    {% if colors %}<span class="muted">· colors {{ colors }}</span>{% elif cmd.type_line %}<span class="muted">· colorless</span>{% endif %}
+    {% if cmd_from_first %}<div class="muted fs-xs">Taken from the first line of your list. Not right?
+      Start over and type the commander's name.</div>{% endif %}
+  {% else %}
+    <b class="warn">No commander yet.</b>
+    {% if typed_cmd %}“{{ typed_cmd }}” didn't resolve to a card — go back and fix the spelling.
+    {% else %}Go back and name the commander.{% endif %}
+  {% endif %}
+  <br><b class="{{ 'good' if r.total == 100 else 'warn' }}">{{ r.total }} card{{ 's' if r.total != 1 }}</b>
+  {% if r.total != 100 %}<span class="muted">— a Commander deck is exactly 100, commander included</span>{% endif %}
+  {% if s.basics %}<span class="muted">· includes {{ s.basics }} basic land(s), always owned</span>{% endif %}
+  {% if s.suggest %}<br><b class="warn">? {{ s.suggest }}</b> spelled differently from Scryfall — tick the ones you mean below{% endif %}
+  {% if s.missing %}<br><b class="warn">✗ {{ s.missing }}</b> line(s) didn't match a card and won't be saved{% endif %}
+  {% if s.offline %}<br><b class="warn">… {{ s.offline }}</b> couldn't be checked (Scryfall unreachable) and won't be saved{% endif %}
+  {% if r.left_out %}<br><span class="muted">Left out (sideboard / maybeboard): {{ r.left_out|join(', ') }}</span>{% endif %}
+  {% if r.singleton %}<br><b class="warn">More than one copy:</b> {{ r.singleton|join(', ') }} — Commander allows one of each.{% endif %}
+  {% if r.off_identity %}<br><b class="warn">Outside the commander's colors:</b> {{ r.off_identity|join(', ') }}{% endif %}
+</div>
+
+<form method="post" action="{{ url_for('deck_import_confirm') }}">
+  <input type="hidden" name="token" value="{{ token }}">
+
+  {% if same_cmd %}
+  <div class="card mb-4" style="border-left:3px solid var(--short)">
+    <b>You already have a deck for {{ cmd.name }}:</b>
+    {% for d in same_cmd %}<a href="{{ url_for('deck', stem=d.stem) }}">{{ d.title }}</a>{{ ', ' if not loop.last }}{% endfor %}.
+    If this list is that deck as you play it now, replace its list instead — its notes stay,
+    and the cards you changed are logged as your own picks.
+    <div class="row mt-3">
+      {% for d in same_cmd %}
+      <button class="btn" type="submit" name="replace_stem" value="{{ d.stem }}">Replace the list of {{ d.title }}</button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card mb-4">
+    <h2 class="mt-0">Ownership</h2>
+    {% if not r.unowned %}
+      <p class="good">Every card is in your collection.</p>
+    {% else %}
+      <p>{{ r.unowned|length }} card{{ 's' if r.unowned|length != 1 }} aren't in your collection
+        (or not enough copies):</p>
+      <div class="muted fs-xs mb-3">{% for u in r.unowned %}<span class="cardlink" data-card="{{ u.name }}">{{ u.name }}</span>{% if u.own %} (own {{ u.own }}, need {{ u.need }}){% endif %}{{ ' · ' if not loop.last }}{% endfor %}</div>
+      <label><input type="checkbox" class="chk" name="add_unowned" value="1">
+        I own these — add them to my collection too (as a dated batch)</label>
+    {% endif %}
+    {% if r.shared %}
+      <details class="mt-3"{{ ' open' if r.shared|length <= 8 }}>
+        <summary>{{ r.shared|length }} card{{ 's' if r.shared|length != 1 }} shared with other decks
+          <span class="muted fs-xs">(you'd need more copies to sleeve both at once)</span></summary>
+        <div class="muted fs-xs mt-2">{% for u in r.shared %}{{ u.name }} <span class="faint">→ {{ u.decks|join(', ') }}</span>{{ ' · ' if not loop.last }}{% endfor %}</div>
+      </details>
+    {% endif %}
+  </div>
+
+  {% set problems = entries|selectattr('status', 'in', ['suggest', 'missing', 'error', 'offline'])|list %}
+  {% if problems %}
+  <div class="card tablewrap mb-4">
+    <h2 class="mt-0">Lines to check</h2>
+    <table><tbody>
+    {% for e in entries %}{% if e.status in ['suggest', 'missing', 'error', 'offline'] %}
+    <tr>
+      <td>{% if e.status == 'suggest' %}<label><input type="checkbox" class="chk" name="take" value="{{ loop.index0 }}"> ?</label>{% else %}<span class="warn">{{ '…' if e.status == 'offline' else '✗' }}</span>{% endif %}</td>
+      <td>{{ e.qty }}</td>
+      <td>{% if e.status == 'suggest' %}{{ e.typed[0] }} → <b>{{ e.suggest }}</b>?{% else %}{{ e.name }}{% endif %}</td>
+      <td class="muted fs-xs">{{ e.reason }}{% if e.lines and e.lines[0] %} · line {{ e.lines|join(', ') }}{% endif %}</td>
+    </tr>
+    {% endif %}{% endfor %}
+    </tbody></table>
+  </div>
+  {% endif %}
+
+  <details class="card mb-4">
+    <summary>The full list ({{ entries|selectattr('status', 'in', ['ok', 'basic'])|list|length }} lines)</summary>
+    <div class="fs-xs mt-3">
+    {% for e in entries %}{% if e.status in ['ok', 'basic'] %}
+      <div>{{ e.qty }} {% if e.status == 'ok' %}<span class="cardlink" data-card="{{ e.name }}">{{ e.name }}</span>{% else %}{{ e.name|title }}{% endif %}
+        {% if e.section in outside %}<span class="faint">({{ e.section }} — left out)</span>{% endif %}</div>
+    {% endif %}{% endfor %}
+    </div>
+  </details>
+
+  <div class="row">
+    <button class="btn" type="submit"{{ ' disabled' if not cmd }}>{{ 'Save the new list' if target else 'Save as a new deck' }}</button>
+    <a class="btn ghost" href="{{ url_for('deck_import', target=target.stem if target else '') }}">Start over</a>
+  </div>
+</form>
+{% endblock %}
