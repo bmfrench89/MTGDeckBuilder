@@ -6,7 +6,76 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-11 (Watch tab prototype on Tergrid — Iron Fortress; Tergrid study decks rebuilt as Bracket 4 theory builds)._
+_Last updated: 2026-10-12 (three specs written: Watch voice + controls, card intake, second login)._
+
+## Spec'd, not started — three player asks, 2026-10-12
+
+The player asked for a less robotic narrator, play/stop buttons, a way to catalog a
+big batch of new cards, and a login for their brother. Each now has a spec, with the
+player's decisions recorded in it. **No code has changed yet.**
+
+- **`docs/spec-watch-voice-and-controls.md`**
+  - **Controls (measured):** tapping the picture while it plays does nothing, and there
+    is no Stop. The fix is video-style controls.
+  - **Voice (from the code):** the player never picks a voice and speaks at 1.05×.
+    - The fix starts with ranking the device's own voices.
+    - Then comes free recorded narration on the runner: Kokoro or Piper, picked by the
+      player after an audition.
+  - **Free only** was the player's choice.
+- **`docs/spec-card-intake.md`**
+  - Batch entry with a preview step, and card data filled in the same day.
+  - **Reconcile on upload:** `merge_collection` *adds* `owned_additions` quantities on
+    top of the export, so cards later re-exported are counted twice today.
+  - A "New arrivals" review that uses the sleeper audit.
+  - **First batch done (2026-10-12): three precons.** The player bought Wretched Ranks
+    and Tramplesaurus Rex (FDC) and Multiverse Reforged (FRC).
+    - The official lists came from MTGJSON via the new `precon.py` /
+      `deck-verify.yml precons:` input, and are in `data/reference/precons/`.
+    - All 224 non-basic names are verified on the runner.
+    - Added as a dated block in `owned_additions.txt`: 196 copies, about $160 estimated.
+      **Tramplesaurus Rex is the SAME box as Beorn's 2026-10-07 photographs**
+      (player-confirmed), so only its 40 cards not already logged were added.
+    - Shared-card shortages went from 83 to 74.
+    - **Swaps are ON HOLD**: the player is still uploading more cards and wants one
+      review at the end. The shortlist from the sleeper audit:
+      - Spider-Man: Arasta → University Campus and Arachnogenesis → Scarlet Spider,
+        Kaine (its own buylist plan).
+      - Captain America: Flawless Maneuver → Visions of Beyond.
+      - Kami: Geier Reach Sanitarium → War Room.
+      - Bench:
+        - Niv-Mizzet, Ghost Counsel for Y'shtola (lifegain → cards; needs a cut);
+        - Birds of Paradise for the Ur-Dragon (a goldfish A/B showed a tiny gain and
+          it costs a Dragon);
+        - Chromatic Lantern for Spider-Man (no cut ever named);
+        - nothing beats Beorn's current list.
+    - Re-run the pass with every batch in, then present one table.
+  - **Second batch done (2026-10-12): the player's card orders.** It covers 11 TCGplayer
+    orders (transcribed from screenshots, 2026-09-19 to 09-28) and 5 of 6 uploaded order
+    exports.
+    - All 296 names were verified on the runner (run 38193552788).
+    - Added as a dated block: 306 copies, about $590 estimated.
+    - The sixth export was skipped: the player confirmed it is the August Y'shtola
+      purchase, already in the 2026-08-20 export.
+    - The refunded 8-card order was confirmed fully received.
+    - One export was the entire Bartolomé deck. **Bartolomé is now a real deck**: the
+      study flag was dropped, all 100 cards are owned, and it adds no new shortages.
+      Shared-card shortages: 74 → 73.
+    - Order CSVs and screenshots are NOT committed: they hold prices, sellers and the
+      player's address. Only names and quantities went into `owned_additions.txt`.
+  - **This batch:** the player will give the session a big list, pasted or as a file.
+    The player confirmed that **every card on it is new**, so add copies on top of the
+    current count and replace nothing.
+    - Never route it through the site's Upload button, which replaces the whole
+      collection (spec gap 3).
+    - Run it through spec §2: parse, verify on the runner, add a dated batch block to
+      `owned_additions.txt`, refresh the attrs, run the sleeper audit, and show the swap
+      table before applying anything.
+- **`docs/spec-second-login.md`**
+  - The player chose **edit too, labeled**: the member gets the owner's powers, minus
+    the People page and (proposed) Upload.
+  - `.changes.csv` gains `By`.
+  - Deck-editor saves get diffed and logged (they log nothing today).
+  - `data/activity.csv` records deck-level actions.
 
 ## Watch tab — animated how-to-play clips (prototype: Tergrid — Iron Fortress), 2026-10-11
 
@@ -135,7 +204,8 @@ behavior a session might otherwise trust from memory:
   re-derive them on read: field snapshots do this (`edhrec._renorm_snapshot`), and the
   curated role sets are normalized at import.
 - **`# Study: yes`** marks a review-only deck. Conflicts, the free pool, the wishlist and
-  `optimize --all` skip it. The Tergrid options and the Bartolomé deck tech are marked.
+  `optimize --all` skip it. The Tergrid options are marked. Bartolomé was too, until the
+  player bought its cards on 2026-10-12; it is now a real deck.
 - **`data/reference/banned.txt`** lists 42 runner-verified banned cards. Every recommender
   filters on it. It is not exhaustive: `carddb --verify` gives the live legality.
 - **`oracle_flags` v4:**
@@ -1168,10 +1238,9 @@ host is required — which is why Y'shtola, not a new Yahenni deck, is the cheap
 Method written up as `.claude/skills/mtg-deckbuilder/references/combo-shapes.md` (read cards
 for the SLOT they fill — outlet / loop / returner / payoff) and linked from SKILL.md.
 
-⚠ **Known wart:** the study deck `bartolome-del-presidio-600-combos` lives in `data/decks/`,
-so `deck_conflicts` now counts it as a real deck (Generous Gift reads "committed 3"). It is
-a reference list, not a sleeved deck. If that noise matters, move it or teach
-`deck_conflicts` to skip decks whose `# Source:` marks them as study copies.
+✓ **Resolved:** `bartolome-del-presidio-600-combos` was a study copy that inflated
+`deck_conflicts`. `# Study: yes` fixed the noise. As of 2026-10-12 it is a real, sleeved
+deck: the player bought all 100 cards.
 
 ## Combo KB taught the Bartolomé lattice (2026-08-19)
 

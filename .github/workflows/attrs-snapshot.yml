@@ -25,7 +25,12 @@ on:
                                 # group below serializes them regardless
   push:
     branches: [main]
-    paths: ["data/collection/collection_snapshot.txt"]  # fresh export → fresh attrs
+    paths:
+      - "data/collection/collection_snapshot.txt"   # fresh export → fresh attrs
+      # A dated batch of new cards (load_collection merges it into the snapshot
+      # this job enriches), so sessions get the new cards' data the day the batch
+      # merges instead of at Monday's cron.
+      - "data/collection/owned_additions.txt"
     # DELIBERATELY NOT triggered by scripts/carddb.py or scripts/oracle_flags.py.
     # A shape change (a new column like Power, 2026-08-13) does need a regenerated
     # snapshot — but carddb.py is edited often for reasons that change no column at

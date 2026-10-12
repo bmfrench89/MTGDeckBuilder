@@ -1,0 +1,94 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+"Akroma, Angel of Fury",Creature,8,R,{5}{R}{R}{R},Angel,,,6,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archfiend of Despair,Creature,8,B,{6}{B}{B},Demon,,,6,4
+Archon of Cruelty,Creature,8,B,{6}{B}{B},Archon,,draw,6,4
+"Avacyn, Angel of Horror",Creature,8,B,{5}{B}{B}{B},Angel,,,8,4
+Azorius Signet,Artifact,2,U W,{2},,W U,mana2;ramp;rock,,4
+Battlefield Forge,Land,0,R W,,,W R C,,,4
+Brainstorm,Instant,1,U,{U},,,draw,,4
+Brainsurge,Instant,3,U,{2}{U},,,draw,,4
+Caves of Koilos,Land,0,B W,,,W B C,,,4
+Chromatic Lantern,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+Clifftop Retreat,Land,0,R W,,,W R,etb-tapped-cond,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Contaminated Landscape,Land,0,B U W,,,C,fetch:basic-island;fetch:basic-plains;fetch:basic-swamp;ramp,,4
+Currency Converter,Artifact,1,,{1},,,draw,,4
+Cursed Mirror,Artifact,3,R,{2}{R},,R,ramp;rock,,4
+"Dack Fayden, Helping Hand",Creature,6,W,{4}{W}{W},Human;Advisor,,,4,4
+Darksteel Angel,Creature,9,,{9},Angel,,,4,4
+Despark,Instant,2,B W,{W}{B},,,removal,,4
+Dimir Signet,Artifact,2,B U,{2},,U B,mana2;ramp;rock,,4
+Dreadhorde Invasion,Enchantment,2,B,{1}{B},,,,,4
+Drowned Catacomb,Land,0,B U,,,U B,etb-tapped-cond,,4
+"Elspeth, Sun's Champion",Planeswalker,6,W,{4}{W}{W},Elspeth,,,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Fact or Fiction,Instant,4,U,{3}{U},,,,,4
+Fatehold Charm,Instant,2,U W,{W}{U},,,draw,,4
+Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Fetid Heath,Land,0,B W,,,W B C,mana3,,4
+Flawless Maneuver,Instant,3,W,{2}{W},,,,,4
+"Ginger, Queen of Sweets",Creature,6,,{6},Food;Noble,,,6,4
+Glacial Fortress,Land,0,U W,,,W U,etb-tapped-cond,,4
+Grand Crescendo,Instant,2,W,{X}{W}{W},,,,,4
+Island,Land,0,U,,Island,U,,,4
+Isolated Chapel,Land,0,B W,,,W B,etb-tapped-cond,,4
+Izzet Signet,Artifact,2,R U,{2},,U R,mana2;ramp;rock,,4
+"Jace, Multiverse Architect",Planeswalker,5,B R U W,{1}{W}{U}{B}{R},Jace,,draw,,4
+"Jhoira, Weatherlight Corsair",Creature,6,B,{4}{B}{B},Human;Pirate,,,4,4
+Kher Keep,Land,0,R,,,C,,,4
+Lingering Souls,Sorcery,3,B W,{2}{W},,,,,4
+Martial Coup,Sorcery,2,W,{X}{W}{W},,,wipe,,4
+Mass Polymorph,Sorcery,6,U,{5}{U},,,wipe,,4
+"Memnarch, the Warden",Creature,10,,{10},Wizard,,draw,8,4
+Mountain,Land,0,R,,Mountain,R,,,4
+Mystic Gate,Land,0,U W,,,W U C,mana3,,4
+"Nissa, Leyline Tamer",Creature,7,B R U W,{3}{W}{U}{B}{R},Elf;Wizard,,draw,5,4
+"Niv-Mizzet, Ghost Counsel",Creature,6,B W,{2}{W}{W}{B}{B},Spirit;Dragon,,,4,4
+"Ob Nixilis, the Ascended",Creature,7,W,{5}{W}{W},Angel,,,4,4
+Occult Epiphany,Instant,1,U,{X}{U},,,draw,,4
+"Omnath, Locus of the Void",Creature,7,,{7},Elemental,C,mana2,6,4
+Overlord of the Mistmoors,Creature,7,W,{5}{W}{W},Avatar;Horror,,,6,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+Perilous Landscape,Land,0,R U W,,,C,fetch:basic-island;fetch:basic-mountain;fetch:basic-plains;ramp,,4
+Plains,Land,0,W,,Plains,W,,,4
+Plan for All Outcomes,Enchantment,4,U,{3}{U},,,,,4
+Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
+Proteus Staff,Artifact,3,U,{3},,,,,4
+Radiant Summit,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,4
+Rakdos Signet,Artifact,2,B R,{2},,B R,mana2;ramp;rock,,4
+Reflecting Pool,Land,0,,,,W U B R G,,,4
+Restless Anchorage,Land,0,U W,,,W U,etb-tapped,,4
+Restless Spire,Land,0,R U,,,U R,etb-tapped,,4
+Secure the Wastes,Instant,1,W,{X}{W},,,,,4
+Serra's Emissary,Creature,7,W,{4}{W}{W}{W},Angel,,,7,4
+Shark Typhoon,Enchantment,6,U,{5}{U},,,,,4
+Shivan Reef,Land,0,R U,,,U R C,,,4
+Skrelv's Hive,Enchantment,2,W,{1}{W},,,,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Staff of the Storyteller,Artifact,2,W,{1}{W},,,draw,,4
+Stroke of Midnight,Instant,3,W,{2}{W},,,removal,,4
+Sulfur Falls,Land,0,R U,,,U R,etb-tapped-cond,,4
+Sulfurous Springs,Land,0,B R,,,B R C,,,4
+Sunfall,Sorcery,5,W,{3}{W}{W},,,wipe,,4
+Sunken Ruins,Land,0,B U,,,U B C,mana3,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Synthetic Destiny,Instant,6,U,{4}{U}{U},,,wipe,,4
+Talisman of Creativity,Artifact,2,R U,{2},,U R C,ramp;rock,,4
+Talisman of Dominance,Artifact,2,B U,{2},,U B C,ramp;rock,,4
+Talisman of Indulgence,Artifact,2,B R,{2},,B R C,ramp;rock,,4
+Talisman of Progress,Artifact,2,U W,{2},,W U C,ramp;rock,,4
+"Tamiyo, Upriser Crowned",Creature,6,R W,{4}{R}{W},Moonfolk;Warrior,,,3,4
+Teferi's Reproach,Instant,3,W,{2}{W},,,,,4
+The Ur-Sphinx,Creature,9,B U W,{6}{W}{U}{B},Sphinx;Avatar,,discount-cmd:sphinx:1,10,4
+Turbulent Crater,Land,0,B R,,Swamp;Mountain,B R,etb-tapped-cond,,4
+Turbulent Shore,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
+Turbulent Wetlands,Land,0,B U,,Island;Swamp,U B,etb-tapped-cond,,4
+Underground River,Land,0,B U,,,U B C,,,4
+"Venser, Fervent Forger",Creature,6,R,{4}{R}{R},Human;Sorcerer,,,5,4
+Whirlwind of Thought,Enchantment,4,R U W,{1}{U}{R}{W},,,draw,,4
+White Sun's Twilight,Sorcery,2,W,{X}{W}{W},,,wipe,,4
+Windcrag Siege,Enchantment,3,R W,{1}{R}{W},,,,,4

@@ -1,0 +1,70 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Arachnogenesis,Instant,3,G,{2}{G},,,,,4
+Arasta of the Endless Web,Creature,4,G,{2}{G}{G},Spider,,,3,4
+Beast Whisperer,Creature,4,G,{2}{G}{G},Elf;Druid,,draw,2,4
+Beast Within,Instant,3,G,{2}{G},,,removal,,4
+Birds of Paradise,Creature,1,G,{G},Bird,W U B R G,dork;ramp,0,4
+Bite Down,Instant,2,G,{1}{G},,,,,4
+Bonders' Enclave,Land,0,,,,C,draw,,4
+Carnage Tyrant,Creature,6,G,{4}{G}{G},Dinosaur,,,7,4
+Challenger Troll,Creature,5,G,{4}{G},Troll,,,6,4
+Clifftop Lookout,Creature,3,G,{2}{G},Frog;Scout,,,1,4
+Collective Resistance,Instant,2,G,{1}{G},,,removal,,4
+Colossal Majesty,Enchantment,3,G,{2}{G},,,draw,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+Curious Altisaur,Creature,4,G,{3}{G},Dinosaur,,draw,2,4
+Dungrove Elder,Creature,3,G,{2}{G},Treefolk,,,*,4
+Elder Gargaroth,Creature,5,G,{3}{G}{G},Beast,,draw,6,4
+Elemental Bond,Enchantment,3,G,{2}{G},,,draw,,4
+Elvish Mystic,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Ezuri's Predation,Sorcery,8,G,{5}{G}{G}{G},,,,,4
+Forest,Land,0,G,,Forest,G,,,4
+Fyndhorn Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Garruk's Packleader,Creature,5,G,{4}{G},Beast,,draw,4,4
+Garruk's Uprising,Enchantment,3,G,{2}{G},,,draw,,4
+"Ghalta, Primal Hunger",Creature,12,G,{10}{G}{G},Elder;Dinosaur,,,12,4
+Gigantosaurus,Creature,5,G,{G}{G}{G}{G}{G},Dinosaur,,,10,4
+"Goreclaw, Terror of Qal Sisma",Creature,4,G,{3}{G},Bear,,,4,4
+Harmonize,Sorcery,4,G,{2}{G}{G},,,draw,,4
+Hulking Raptor,Creature,4,G,{2}{G}{G},Dinosaur,G,mana2,5,4
+Ilysian Caryatid,Creature,2,G,{1}{G},Plant,W U B R G,dork;ramp,1,4
+Kenrith's Transformation,Enchantment,2,G,{1}{G},Aura,,draw,,4
+Llanowar Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Llanowar Tribe,Creature,3,G,{G}{G}{G},Elf;Druid,G,dork;mana3;ramp,3,4
+"Loot, Exuberant Explorer",Creature,3,G,{2}{G},Beast;Noble,,,1,4
+Managorger Hydra,Creature,3,G,{2}{G},Hydra,,,1,4
+Monstrous Onslaught,Sorcery,5,G,{3}{G}{G},,,,,4
+Mosswort Bridge,Land,0,G,,,G,etb-tapped,,4
+Overwhelming Stampede,Sorcery,5,G,{3}{G}{G},,,,,4
+Paradise Druid,Creature,2,G,{1}{G},Elf;Druid,W U B R G,dork;ramp,2,4
+Pugnacious Hammerskull,Creature,3,G,{2}{G},Dinosaur,,,6,4
+Ram Through,Instant,2,G,{1}{G},,,,,4
+Regal Imperiosaur,Creature,3,G,{1}{G}{G},Dinosaur,,,5,4
+Rhonas the Indomitable,Creature,3,G,{2}{G},God,,,5,4
+Rhonas's Monument,Artifact,3,,{3},,,discount:creature:1,,4
+Ripjaw Raptor,Creature,4,G,{2}{G}{G},Dinosaur,,draw,4,4
+Rishkar's Expertise,Sorcery,6,G,{4}{G}{G},,,,,4
+"Rishkar, Peema Renegade",Creature,3,G,{2}{G},Elf;Druid,G,dork;ramp,2,4
+Rogue's Passage,Land,0,,,,C,,,4
+Scavenger Grounds,Land,0,,,Desert,C,,,4
+Scavenging Ooze,Creature,2,G,{1}{G},Ooze,,,2,4
+Scrapshooter,Creature,3,G,{1}{G}{G},Raccoon;Archer,,,4,4
+Shamanic Revelation,Sorcery,5,G,{3}{G}{G},,,draw,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Steel Leaf Champion,Creature,3,G,{G}{G}{G},Elf;Knight,,,5,4
+Surrak and Goreclaw,Creature,6,G,{4}{G}{G},Human;Bear,,,6,4
+"Surrak, the Hunt Caller",Creature,4,G,{2}{G}{G},Human;Warrior,,,5,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Tamiyo's Safekeeping,Instant,1,G,{G},,,,,4
+Tangleweave Armor,Artifact,4,G,{2}{G}{G},Equipment,,,,4
+"Terrian, World Tyrant",Creature,5,G,{2}{G}{G}{G},Dinosaur;Ooze,,,9,4
+Thickest in the Thicket,Enchantment,5,G,{3}{G}{G},,,draw,,4
+Thrashing Brontodon,Creature,3,G,{1}{G}{G},Dinosaur,,,3,4
+Tranquil Thicket,Land,0,G,,,G,etb-tapped,,4
+Unnatural Growth,Enchantment,5,G,{1}{G}{G}{G}{G},,,,,4
+Verdant Sun's Avatar,Creature,7,G,{5}{G}{G},Dinosaur;Avatar,,,5,4
+War Room,Land,0,,,,C,draw,,4
+Whiptongue Hydra,Creature,6,G,{5}{G},Lizard;Hydra,,,4,4
+Whisperer of the Wilds,Creature,2,G,{1}{G},Human;Shaman,G,dork;mana2;ramp,0,4
+Witch's Clinic,Land,0,,,,C,,,4
+"Yeva, Nature's Herald",Creature,4,G,{2}{G}{G},Elf;Shaman,,,4,4

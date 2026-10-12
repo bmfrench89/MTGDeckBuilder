@@ -1,9 +1,10 @@
 # Bartolomé del Presidio — "600 Infinite Combos"
 
-Study copy of the deck from the YouTube deck tech **"1 Deck, 27 Dollars, 600 Infinite
-COMBOS"** (`youtu.be/1Yusxsud5BE`). **Not built from this collection** — the ownership
-check flags 56 of the 100 cards as not owned. It is here so the repo's engines can
-score a real combo deck and so `combos.csv` learns the lattice.
+The deck from the YouTube deck tech **"1 Deck, 27 Dollars, 600 Infinite COMBOS"**
+(`youtu.be/1Yusxsud5BE`). **A real, sleeved deck since 2026-10-12.** It began as a study
+copy, when the ownership check flagged 56 of the 100 cards as not owned. Then the player
+bought the full list, and all 100 cards are now owned (see the 2026-10-12 orders batch in
+`owned_additions.txt`). Its cards are now committed like any other deck's.
 
 ## The one idea
 

@@ -49,6 +49,10 @@ on:
         description: "Deck stems (space-separated) to enrich into data/decks/<stem>.attrs.csv. Blank = none."
         required: false
         default: ""
+      precons:
+        description: "Official precon names to fetch from MTGJSON, separated by ' | ' (e.g. 'Wretched Ranks | Multiverse Reforged'). Blank = none."
+        required: false
+        default: ""
       commit:
         description: "Commit the field snapshot (and any deck attrs) back to this branch"
         type: boolean
@@ -74,6 +78,29 @@ jobs:
       # Stdlib-only by design (CLAUDE.md: scripts/ takes no third-party deps),
       # so there is deliberately no pip install step here.
 
+      # A bought precon is ~100 cards nobody may name from memory (a new product is
+      # past any model's training, and web summaries of a list disagree on counts).
+      # MTGJSON publishes the official lists; precon.py renders each one into
+      # data/reference/precons/<slug>.txt and queues its non-basic names for the
+      # verify step below, so every card comes back with verbatim text and a price
+      # in this same run.
+      - name: Fetch precon decklists
+        if: inputs.precons != ''
+        run: |
+          set -euo pipefail
+          ARGS=()
+          IFS='|' read -ra RAW <<< "${PRECONS}"
+          for n in "${RAW[@]}"; do
+            n="$(printf '%s' "$n" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [ -n "$n" ]; then ARGS+=("$n"); fi
+          done
+          echo "===== PRECON DECKLISTS ====="
+          python3 scripts/precon.py "${ARGS[@]}" --out-dir data/reference/precons \
+            --names-out /tmp/precon-names.txt
+          echo "===== END PRECON DECKLISTS ====="
+        env:
+          PRECONS: ${{ inputs.precons }}
+
       # Verbatim oracle text for every card the sandbox could not confirm. The
       # LOG is the deliverable — a session reads it back with get_job_logs — and
       # the JSON goes to an artifact so nothing depends on log formatting.
@@ -89,6 +116,10 @@ jobs:
             echo "source: data/reference/verify-queue.txt"
           else
             : > /tmp/raw.txt
+          fi
+          if [ -f /tmp/precon-names.txt ]; then
+            cat /tmp/precon-names.txt >> /tmp/raw.txt
+            echo "plus $(wc -l < /tmp/precon-names.txt) name(s) from the fetched precons"
           fi
           # An EMPTY queue is the STEADY STATE, not an error — a session clears it
           # once every answer is written up. Strip comments and blanks with sed,
@@ -215,6 +246,23 @@ jobs:
         env:
           DECK_ATTRS: ${{ inputs.deck_attrs }}
 
+      # Card data for the precon lists, the same way a study deck gets its
+      # .attrs.csv — so a session can review the new cards (types, colors, mana
+      # value, what they tap for) before the collection's own attrs catch up. A
+      # name that will not resolve is a WARNING here, not a failed job: the lists
+      # themselves must still be committed so the session can read and fix them.
+      - name: Enrich precon lists into .attrs.csv
+        if: inputs.precons != ''
+        run: |
+          set -uo pipefail
+          for f in data/reference/precons/*.txt; do
+            [ -f "$f" ] || continue
+            echo "===== ATTRS: ${f} ====="
+            python3 scripts/carddb.py --collection "$f" --out "${f%.txt}.attrs.csv" \
+              --no-ids --min-match 100 \
+              || echo "::warning::carddb could not resolve every card in ${f} — read the log above"
+          done
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
@@ -223,6 +271,7 @@ jobs:
           path: |
             verify-results.json
             data/reference/field/
+            data/reference/precons/
           if-no-files-found: warn
 
       # Push ONLY to the branch this ran on. Never to main — see the header
@@ -233,6 +282,7 @@ jobs:
           git config user.name  "deck-verify-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/reference/field/
+          if [ -d data/reference/precons ]; then git add data/reference/precons/; fi
           if [ -n "${DECK_ATTRS}" ]; then
             for stem in ${DECK_ATTRS}; do git add "data/decks/${stem}.attrs.csv"; done
           fi
