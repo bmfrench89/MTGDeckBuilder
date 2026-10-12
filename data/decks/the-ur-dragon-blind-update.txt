@@ -1,0 +1,117 @@
+# Title: The Ur-Dragon — blind update (study)
+# Commander: The Ur-Dragon
+# Colors: W U B R G
+# Archetype: dragon tribal
+# Source: Claude's blind fresh pass 2026-10-12 — the logged Ur-Dragon plus six swaps, built without seeing the player's upgraded list; for comparison, not the sleeved deck
+# Study: yes
+
+# --- Commander ---
+1 The Ur-Dragon
+
+# --- Creatures ---
+1 Savage Ventmaw
+1 Smaug, Wicked Worm
+1 Ureni, the Song Unending
+1 Dragonlord Dromoka
+1 Lathliss, Dragon Queen
+1 Miirym, Sentinel Wyrm
+1 Rith, Liberated Primeval
+1 Hellkite Courser
+1 Scourge of Valkas
+1 Fin Fang Foom
+1 Ureni of the Unwritten
+1 Atarka, World Render
+1 Scourge of the Throne
+1 Hellkite Tyrant
+1 Ganax, Astral Hunter
+1 Scalelord Reckoner
+1 Silumgar, the Drifting Death
+1 Wrathful Red Dragon
+1 Smaug the Impenetrable
+1 Broodcaller Scourge
+1 Lozhan, Dragons' Legacy
+1 Dragonlord Silumgar
+1 Dragon Broodmother
+1 Sylvia Brightspear
+1 Neriv, Heart of the Storm
+1 Dragonhawk, Fate's Tempest
+1 Radagast of Rhosgobel
+1 Atsushi, the Blazing Sky
+1 Ao, the Dawn Sky
+1 Wood Elves
+1 Sarkhan, Soul Aflame
+1 Dragonspeaker Shaman
+1 Smaug the Magnificent
+1 Roaming Throne
+
+# --- Instants ---
+1 Chaos Warp
+1 Mana Drain
+1 Assassin's Trophy
+1 Vendetta
+1 Counterspell
+1 Path to Exile
+1 Swords to Plowshares
+1 Heroic Intervention
+
+# --- Sorceries ---
+1 Insatiable Avarice
+1 Rampant Growth
+1 Cultivate
+1 Farseek
+1 Crux of Fate
+1 Nature's Lore
+1 Blasphemous Act
+1 Desolation of Smaug
+1 Grim Tutor
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Sol Ring
+1 Fellwar Stone
+1 Lightning Greaves
+1 Chromatic Lantern
+
+# --- Enchantments ---
+1 Up the Beanstalk
+1 Temur Ascendancy
+1 Kindred Discovery
+1 Dragon Tempest
+1 Rhythm of the Wild
+1 Rhystic Study
+1 Call the Spirit Dragons
+
+# --- Lands ---
+1 Command Tower
+1 Haven of the Spirit Dragon
+1 Dark Fortress
+1 Stormcarved Coast
+1 Horizon of Progress
+1 Reflecting Pool
+1 Prairie Stream
+1 Turbulent Steppe
+1 Exotic Orchard
+1 Path of Ancestry
+1 Fabled Passage
+1 Secluded Courtyard
+1 Maelstrom of the Spirit Dragon
+1 Twilight Mire
+1 Willowrush Verge
+1 Sunbillow Verge
+1 Spectator Seating
+1 Training Compound
+1 Hidden Lair
+1 Sunscorched Divide
+1 Deserted Beach
+1 Rootbound Crag
+1 Scattered Groves
+1 Jungle Shrine
+1 Riverpyre Verge
+1 Turbulent Fen
+
+# --- Basics ---
+2 Forest
+2 Island
+4 Mountain
+1 Plains
+1 Swamp

@@ -1,0 +1,102 @@
+# Title: Giada, Font of Hope — blind build (study)
+# Commander: Giada, Font of Hope
+# Colors: W
+# Archetype: angel tribal
+# Source: Claude's blind build 2026-10-12 — auto_build + optimize, then a hand pass on verified text against the Giada field; for comparison with the player's own Giada, not the sleeved deck
+# Study: yes
+
+# --- Commander ---
+1 Giada, Font of Hope
+
+# --- Creatures ---
+1 Exemplar of Light
+1 Battle Angels of Tyr
+1 Firemane Commando
+1 Inspiring Overseer
+1 Youthful Valkyrie
+1 Angel of Vitality
+1 Archangel of Tithes
+1 Righteous Valkyrie
+1 Angel of Finality
+1 Angel of Jubilation
+1 Angelic Field Marshal
+1 Gisela, the Broken Blade
+1 Linvala, Keeper of Silence
+1 Metropolis Reformer
+1 Thraben Watcher
+1 Lyra Dawnbringer
+1 Valkyrie Harbinger
+1 Angelic Curator
+1 Serra Paragon
+1 Millikin
+1 Bishop of Wings
+1 Angel of Destiny
+1 Sephara, Sky's Blade
+1 Baneslayer Angel
+1 Karmic Guide
+1 Shattered Angel
+1 Starfield Shepherd
+1 Serra Ascendant
+1 Avacyn, Angel of Hope
+1 Bruna, the Fading Light
+1 Emeria Angel
+1 Vanguard Seraph
+1 Serra's Emissary
+
+# --- Instants ---
+1 Galadriel's Dismissal
+1 Flawless Maneuver
+1 Swords to Plowshares
+1 Path to Exile
+1 Disenchant
+1 Destroy Evil
+1 Generous Gift
+1 Valorous Stance
+1 Akroma's Will
+1 Rebuff the Wicked
+1 Stroke of Midnight
+
+# --- Sorceries ---
+1 Austere Command
+
+# --- Artifacts ---
+1 The Book of Exalted Deeds
+1 Swiftfoot Boots
+1 Sol Ring
+1 Arcane Signet
+1 Mind Stone
+1 Sword of the Animist
+1 Fellwar Stone
+1 The Mind Stone
+1 Wayfarer's Bauble
+1 Mask of Memory
+1 Tome of Legends
+1 Lightning Greaves
+1 Pearl Medallion
+
+# --- Enchantments ---
+1 Gleaming Splendor
+1 Court of Grace
+1 Angelic Accord
+1 Authority of the Consuls
+
+# --- Lands ---
+1 Seraph Sanctuary
+1 Path of Ancestry
+1 Bonders' Enclave
+1 Emeria, the Sky Ruin
+1 Myriad Landscape
+1 Windbrisk Heights
+1 Mistveil Plains
+1 Command Tower
+1 Scavenger Grounds
+1 Temple of the False God
+1 Rogue's Passage
+1 Exotic Orchard
+1 Villainous Hideout
+1 Avengers Tower
+1 Country Roads
+1 Study Hall
+
+# --- Basics ---
+21 Plains
