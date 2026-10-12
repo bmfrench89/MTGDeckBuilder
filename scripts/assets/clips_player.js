@@ -6,13 +6,81 @@
  * captions into something that reads like a clip. Narration is opt-in and uses
  * the browser's own speechSynthesis, so there are no audio files.
  *
+ * Controls behave like a video's (docs/spec-watch-voice-and-controls.md Part A):
+ * tap the picture to play/pause, ⏮ ▶/❚❚ ■ ⏭ under it, S stops, ←/→ step scenes.
+ * The voice (Part B) is the best English voice the DEVICE has, ranked by
+ * WT_SPEECH.rank — a pure function, unit-tested in Node — and the player can pick
+ * another; the spoken text itself is built once in Python (clips.spoken).
+ *
  * Card art is borrowed from the decklist's images, which card_images.html already
  * resolves in one batch — the player adds no Scryfall requests of its own unless a
  * card has no decklist image at all (one batch POST, then nothing). Until art
  * arrives, and in a sandbox where it never will, a card is drawn as a named frame.
  */
+var WT_SPEECH = (function () {
+  'use strict';
+  // English first; within English, how natural the engine sounds; then the region.
+  var REGION = ['en-us', 'en-gb', 'en-au', 'en-ca', 'en-ie', 'en-in'];
+  var NOVELTY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|princess|bruce|agnes|vicki)\b/i;
+  function lang(v) { return String((v && v.lang) || '').replace('_', '-').toLowerCase(); }
+  function isEnglish(v) { return lang(v).indexOf('en') === 0; }
+  function quality(v) {
+    var n = String((v && v.name) || '');
+    if (/compact|espeak/i.test(n) || NOVELTY.test(n)) return -1;
+    if (/natural|neural|online/i.test(n)) return 3;
+    if (/premium|enhanced/i.test(n)) return 2;
+    if (/google/i.test(n)) return 1;
+    return 0;
+  }
+  function region(v) {
+    var i = REGION.indexOf(lang(v));
+    return i < 0 ? REGION.length : i;
+  }
+  /** The device's English voices, best first. Pure: takes getVoices()'s list. */
+  function rank(voices) {
+    return Array.prototype.slice.call(voices || []).filter(isEnglish).sort(function (a, b) {
+      return (quality(b) - quality(a)) || (region(a) - region(b)) ||
+        ((b['default'] ? 1 : 0) - (a['default'] ? 1 : 0)) ||
+        String(a.name).localeCompare(String(b.name));
+    });
+  }
+  var ABBR = /(?:^|\s)(?:dr|mr|mrs|ms|st|vs|etc|e\.g|i\.e)\.$/i;
+  /** Text -> sentences, one utterance each: natural pauses between them, and no
+   * single utterance long enough for Chrome to drop (~15 s). Keeps "Mana Vault."
+   * and "{3}{B}{B}" whole, and does not break after "Dr." or an initial ("B.F.M."). */
+  function sentences(text) {
+    var t = String(text || '').replace(/\s+/g, ' ').trim(), out = [], start = 0;
+    for (var i = 0; i < t.length; i++) {
+      var ch = t.charAt(i);
+      if ((ch === '.' || ch === '!' || ch === '?') && t.charAt(i + 1) === ' ') {
+        var piece = t.slice(start, i + 1);
+        var nxt = t.charAt(i + 2);
+        if (ABBR.test(piece) || /(?:^|[\s.])[A-Z]\.$/.test(piece) || !/[A-Z0-9"\u201c(\[{]/.test(nxt)) continue;
+        out.push(piece.trim());
+        start = i + 2;
+      }
+    }
+    if (start < t.length) out.push(t.slice(start).trim());
+    // Very long sentences are split again at a comma or semicolon.
+    var res = [];
+    out.forEach(function (s) {
+      while (s.length > 220) {
+        var cut = Math.max(s.lastIndexOf(', ', 200), s.lastIndexOf('; ', 200));
+        if (cut < 40) break;
+        res.push(s.slice(0, cut + 1).trim());
+        s = s.slice(cut + 2);
+      }
+      if (s) res.push(s);
+    });
+    return res.filter(function (s) { return s.length; });
+  }
+  return { rank: rank, sentences: sentences, quality: quality };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
+
 (function () {
   'use strict';
+  if (typeof document === 'undefined') return;
   var root = document.getElementById('wt-root');
   var dataEl = document.getElementById('wt-data');
   if (!root || !dataEl) return;
@@ -23,11 +91,22 @@
 
   var stage = root.querySelector('.wt-stage');
   var headEl = root.querySelector('.wt-head'), subEl = root.querySelector('.wt-sub');
-  var playBtn = root.querySelector('.wt-play'), restartBtn = root.querySelector('.wt-restart');
+  var playBtn = root.querySelector('.wt-play'), stopBtn = root.querySelector('.wt-stop');
+  var prevBtn = root.querySelector('.wt-prev'), nextBtn = root.querySelector('.wt-next');
   var voiceBtn = root.querySelector('.wt-voice'), prog = root.querySelector('.wt-prog');
+  var menuBtn = root.querySelector('.wt-vmenu'), menu = root.querySelector('.wt-voices');
+  var vsel = root.querySelector('.wt-vsel'), vtry = root.querySelector('.wt-vtry');
   var timeEl = root.querySelector('.wt-time'), chipsEl = root.querySelector('.wt-chips');
   var over = root.querySelector('.wt-over'), overT = root.querySelector('.wt-overt');
-  var badges = root.querySelector('.wt-badges');
+  var badges = root.querySelector('.wt-badges'), flashEl = root.querySelector('.wt-flash');
+  var ICON = {
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+    on: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+  };
+  // Per-device memory, never required: storage can be blocked or throw.
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
   var bands = {
     theirs: root.querySelector('.wt-band-theirs'),
     mine: root.querySelector('.wt-band-mine'),
@@ -36,10 +115,11 @@
   var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   var synth = window.speechSynthesis;
   var CAN_SPEAK = !!(synth && window.SpeechSynthesisUtterance);
-  if (!CAN_SPEAK) voiceBtn.hidden = true;
+  if (!CAN_SPEAK) { voiceBtn.hidden = true; menuBtn.hidden = true; }
 
   var ci = 0, si = 0, elapsed = 0, playing = false, last = 0, raf = 0, atEnd = false;
-  var voiceOn = false, speaking = false;
+  var voiceOn = CAN_SPEAK && store('wt-narration') === '1', speaking = false, talkId = 0;
+  var voices = [], voice = null;
   var els = {};
 
   /* ---------- card art ---------- */
@@ -289,23 +369,65 @@
       badges.appendChild(p);
     }
   }
+  // Fallback only: clips.py sends every scene's `speak` line (clips.spoken) — the
+  // same words a recorded narrator will say. A payload from before that field
+  // existed still gets its symbols read as words here.
   function sayable(t) {
     var M = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless', T: 'tap' };
     return t.replace(/\{([^}]+)\}/g, function (_, s) { return (M[s] || s) + ' '; })
       .replace(/−/g, 'minus ').replace(/[…·]/g, ', ').replace(/\s+/g, ' ').trim();
   }
+  function loadVoices() {
+    if (!CAN_SPEAK) return;
+    var list = WT_SPEECH.rank(synth.getVoices());
+    if (!list.length) {
+      // Some engines fill the list late (voiceschanged re-runs this); until then
+      // say so rather than show an empty picker.
+      if (!vsel.options.length) {
+        var o = document.createElement('option');
+        o.textContent = 'No English voices found yet';
+        vsel.appendChild(o);
+      }
+      vsel.disabled = vtry.disabled = true;
+      return;
+    }
+    vsel.disabled = vtry.disabled = false;
+    voices = list;
+    var want = store('wt-voice-pick');
+    voice = list.filter(function (v) { return v.voiceURI === want || v.name === want; })[0] || list[0];
+    vsel.textContent = '';
+    list.forEach(function (v, i) {
+      var o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = v.name + ' (' + v.lang + ')' + (i === 0 ? ' — best on this device' : '');
+      if (v === voice) o.selected = true;
+      vsel.appendChild(o);
+    });
+  }
+  function talk(text, done) {
+    var parts = WT_SPEECH.sentences(text), id = ++talkId, left = parts.length;
+    if (!left) { if (done) done(); return; }
+    parts.forEach(function (p) {
+      var u = new SpeechSynthesisUtterance(p);
+      if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+      u.rate = 1.0;
+      u.onend = u.onerror = function () {
+        if (id !== talkId) return;          // a newer line has taken over
+        if (--left === 0 && done) done();
+      };
+      synth.speak(u);
+    });
+  }
   function speak(sc) {
     if (!voiceOn || !CAN_SPEAK) return;
     try { synth.cancel(); } catch (e) {}
-    var u = new SpeechSynthesisUtterance(sayable(sc.say || (sc.head + (sc.sub ? '. ' + sc.sub : ''))));
-    u.lang = 'en-US';
-    u.rate = 1.05;
     speaking = true;
-    u.onend = u.onerror = function () { speaking = false; };
-    synth.speak(u);
+    talk(sc.speak || sayable(sc.say || (sc.head + (sc.sub ? '. ' + sc.sub : ''))),
+      function () { speaking = false; });
   }
   function hush() {
     speaking = false;
+    talkId++;
     if (CAN_SPEAK) { try { synth.cancel(); } catch (e) {} }
   }
   function showScene(animate) {
@@ -410,6 +532,10 @@
       over.hidden = false;
     }
   }
+  function setPlayIcon() {
+    playBtn.innerHTML = playing ? ICON.pause : ICON.play;
+    playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  }
   function play() {
     if (playing) return;
     if (atEnd) {
@@ -420,7 +546,7 @@
     playing = true;
     last = 0;
     over.hidden = true;
-    playBtn.textContent = 'Pause';
+    setPlayIcon();
     speak(scene());
     raf = requestAnimationFrame(tick);
   }
@@ -428,35 +554,94 @@
     playing = false;
     cancelAnimationFrame(raf);
     hush();
-    playBtn.textContent = 'Play';
+    setPlayIcon();
   }
   function seek(c, s) {
     var was = playing;
     pause();
     atEnd = false;
+    over.hidden = true;
     if (c !== ci) loadClip(c);
     si = s;
     elapsed = 0;
     showScene(true);
     if (was) play();
   }
+  // Stop: silence, back to scene 1 of THIS clip, and the big Play button again.
+  function stop() {
+    pause();
+    atEnd = false;
+    si = 0;
+    elapsed = 0;
+    showScene(false);
+    over.querySelector('.wt-big').innerHTML = ICON.play;
+    overT.textContent = 'Play · ' + CLIPS[ci].title;
+    over.hidden = false;
+  }
+  function next() {
+    if (si + 1 < CLIPS[ci].scenes.length) seek(ci, si + 1);
+    else if (ci + 1 < CLIPS.length) seek(ci + 1, 0);
+  }
+  function prev() {
+    seek(ci, si > 0 ? si - 1 : 0);        // on scene 1: restart the clip
+  }
+  function flash(kind) {
+    if (!flashEl || REDUCED) return;
+    flashEl.innerHTML = ICON[kind];
+    flashEl.classList.remove('go');
+    flashEl.getBoundingClientRect();
+    flashEl.classList.add('go');
+  }
+  function setVoice(on) {
+    voiceOn = on;
+    store('wt-narration', on ? '1' : '0');
+    voiceBtn.innerHTML = on ? ICON.on : ICON.off;
+    voiceBtn.setAttribute('aria-label', on ? 'Narration on' : 'Narration off');
+    voiceBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    voiceBtn.classList.toggle('on', on);
+    if (on && playing) speak(scene()); else if (!on) hush();
+  }
 
   /* ---------- controls ---------- */
   playBtn.addEventListener('click', function () { if (playing) pause(); else play(); });
   over.addEventListener('click', play);
-  restartBtn.addEventListener('click', function () { seek(ci, 0); play(); });
-  voiceBtn.addEventListener('click', function () {
-    voiceOn = !voiceOn;
-    voiceBtn.classList.toggle('on', voiceOn);
-    voiceBtn.textContent = voiceOn ? 'Voice on' : 'Voice off';
-    if (voiceOn && playing) speak(scene()); else hush();
+  stopBtn.addEventListener('click', stop);
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+  // Tap the picture: play/pause, with the icon flashed in the middle like a video.
+  stage.addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('.wt-over')) return;
+    if (playing) { pause(); flash('pause'); } else { play(); flash('play'); }
+  });
+  voiceBtn.addEventListener('click', function () { setVoice(!voiceOn); });
+  menuBtn.addEventListener('click', function () {
+    var open = menu.hidden;
+    menu.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) loadVoices();
+  });
+  vsel.addEventListener('change', function () {
+    voice = voices[Number(vsel.value)] || voice;
+    if (voice) store('wt-voice-pick', voice.voiceURI || voice.name);
+  });
+  vtry.addEventListener('click', function () {
+    if (!CAN_SPEAK) return;
+    hush();
+    talk('Sol Ring taps for two colorless mana.');
   });
   root.addEventListener('keydown', function (ev) {
-    if (ev.target && ev.target.tagName === 'BUTTON' && (ev.key === ' ' || ev.key === 'Enter')) return;
+    if (ev.target && /^(BUTTON|SELECT)$/.test(ev.target.tagName) && (ev.key === ' ' || ev.key === 'Enter')) return;
+    if (ev.target && ev.target.tagName === 'SELECT') return;
     if (ev.key === 'k' || ev.key === ' ') { ev.preventDefault(); if (playing) pause(); else play(); }
-    else if (ev.key === 'ArrowRight' && si + 1 < CLIPS[ci].scenes.length) seek(ci, si + 1);
-    else if (ev.key === 'ArrowLeft' && si > 0) seek(ci, si - 1);
+    else if (ev.key === 's' || ev.key === 'S') { ev.preventDefault(); stop(); }
+    else if (ev.key === 'ArrowRight') next();
+    else if (ev.key === 'ArrowLeft') prev();
   });
+  if (CAN_SPEAK) {
+    loadVoices();
+    if (synth.addEventListener) synth.addEventListener('voiceschanged', loadVoices);
+    else synth.onvoiceschanged = loadVoices;
+  }
 
   // Never play to a hidden tab or a backgrounded page.
   document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); });
@@ -478,6 +663,8 @@
   buildChips();
   buildProgress();
   showScene(false);
+  setPlayIcon();
+  setVoice(voiceOn);
   overT.textContent = 'Play · ' + CLIPS.length + ' clips · ' +
     fmt(CLIPS.reduce(function (a, c) { return a + c.total; }, 0));
 })();

@@ -97,6 +97,75 @@ def _unref(text):
     return _REF_RE.sub(lambda m: (m.group(2) or m.group(1)).strip(), text or "")
 
 
+# ---------------------------------------------------------------------------
+# The spoken line (docs/spec-watch-voice-and-controls.md Part B §4): built ONCE
+# here, so the device voice and a future recorded narrator say the same words.
+# ---------------------------------------------------------------------------
+PRONUNCIATIONS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                              "data", "reference", "pronunciations.csv")
+_NUM_WORDS = ("zero one two three four five six seven eight nine ten eleven twelve "
+              "thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty").split()
+_SYM_WORDS = {"W": "white", "U": "blue", "B": "black", "R": "red", "G": "green",
+              "C": "colorless", "T": "tap", "Q": "untap", "S": "snow", "E": "energy",
+              "X": "X", "Y": "Y", "P": "phyrexian"}
+_SYM_RUN_RE = re.compile(r"(?:\{[^{}]{1,6}\})+")
+_PT_RE = re.compile(r"([+\-\u2212])(\d+)/([+\-\u2212])(\d+)")
+
+
+def _sym_word(sym):
+    """One mana symbol as said aloud: {3} three, {B} black, {W/U} white or blue,
+    {2/W} two or white, {B/P} phyrexian black."""
+    parts = [p.strip().upper() for p in sym.split("/")]
+    if len(parts) == 2 and parts[1] == "P":
+        return "phyrexian " + _sym_word(parts[0])
+    if len(parts) > 1:
+        return " or ".join(_sym_word(p) for p in parts)
+    p = parts[0]
+    if p.isdigit():
+        n = int(p)
+        return _NUM_WORDS[n] if n < len(_NUM_WORDS) else p
+    return _SYM_WORDS.get(p, p.lower())
+
+
+def load_pronunciations(path=PRONUNCIATIONS):
+    """[(word, say as)] from `pronunciations.csv` (`Word,Say as`), longest first.
+    The list starts EMPTY on purpose: an entry is added only when the player hears a
+    name said wrong — a guessed pronunciation is a guess. Missing file = no list."""
+    import csv
+    try:
+        with open(path, encoding="utf-8") as f:
+            rows = [((r.get("Word") or "").strip(), (r.get("Say as") or "").strip())
+                    for r in csv.DictReader(f)]
+    except OSError:
+        return []
+    return sorted([(w, s) for w, s in rows if w and s], key=lambda t: -len(t[0]))
+
+
+def spoken(text, pron=()):
+    """Caption text -> what the narrator says. `[[Card|shown]]` -> shown; mana symbols
+    as words (`{3}{B}{B}` -> "three, black, black"); `+1/+1` -> "plus one plus one";
+    MV -> mana value, ETB -> enters; the pronunciation list last (whole words)."""
+    t = _unref(text or "")
+    for word, say in pron:
+        # Whole words, possessives included ("Tergrid's"), never inside a longer word.
+        t = re.sub(r"(?<![\w'])" + re.escape(word) + r"(?!\w)", say, t, flags=re.IGNORECASE)
+    t = _SYM_RUN_RE.sub(lambda m: " " + ", ".join(
+        _sym_word(x) for x in re.findall(r"\{([^{}]+)\}", m.group(0))) + " ", t)
+
+    def _pt(m):
+        sign = lambda c: "plus" if c == "+" else "minus"
+        num = lambda d: _NUM_WORDS[int(d)] if int(d) < len(_NUM_WORDS) else d
+        return f"{sign(m.group(1))} {num(m.group(2))} {sign(m.group(3))} {num(m.group(4))}"
+    t = _PT_RE.sub(_pt, t)
+    t = re.sub(r"\bMV\b", "mana value", t)
+    t = re.sub(r"\bETBs?\b", "enters", t)
+    t = t.replace("\u2212", "minus ").replace("\u2014", ", ").replace("\u2026", ", ") \
+         .replace("\u00b7", ", ")
+    t = re.sub(r"\s+([,.;:!?])", r"\1", t)
+    t = re.sub(r",\s*,", ",", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
 def featured_names(deck_path):
     """Every card a deck's storyboard shows or names, read raw (no deck check).
 
@@ -129,13 +198,17 @@ def _num(v, default=None):
     return f if f == f else default          # NaN is not a number here
 
 
-def validate(raw, deck_cards, info=None, where="clips"):
+def validate(raw, deck_cards, info=None, where="clips", pron=None):
     """Clean a parsed storyboard against the deck. Returns
     {"clips": [...], "stale": [...], "lint": [...], "total": seconds}.
 
     `deck_cards` is the deck's card names (any spelling `mtglib` understands);
     `info` optionally maps a name key to {"cost": str, "type": str} so the player
-    can draw a card frame before (or without) the card art."""
+    can draw a card frame before (or without) the card art. Every scene gets a
+    `speak` line (`spoken()`), with `pron` the pronunciation list (default: the
+    repo's `pronunciations.csv`)."""
+    if pron is None:
+        pron = load_pronunciations()
     stale, lint = [], []
     out = {"clips": [], "stale": stale, "lint": lint, "total": 0.0}
     if not isinstance(raw, dict):
@@ -202,6 +275,10 @@ def validate(raw, deck_cards, info=None, where="clips"):
             scene = {"dur": round(dur, 2), "head": head, "sub": sub, "cards": []}
             if say:
                 scene["say"] = say
+            raw_say = str(sc.get("say") or "").strip() or (
+                str(sc.get("head") or "").strip()
+                + (". " + str(sc.get("sub") or "").strip() if sc.get("sub") else ""))
+            scene["speak"] = spoken(raw_say, pron)
             turn = sc.get("turn")
             if turn is not None:
                 t = _num(turn)

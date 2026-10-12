@@ -332,7 +332,9 @@ every consumer honours it — `deck_conflicts`, `optimize` and `deck_stats.owned
 **Reference** — `data/reference/*.csv|.txt` are hand-editable knowledge: `combos.csv`
 (`Pieces` are `;`-separated so card-name commas survive), `card_notes.csv` (curated "why it
 works" — always beats `card_notes.generated.csv`), `game_changers.txt` (the verified 53-card
-WotC list), `commanders.csv`, `role_staples.csv`, `archetype_support.csv`.
+WotC list), `commanders.csv`, `role_staples.csv`, `archetype_support.csv`,
+`pronunciations.csv` (`Word,Say as` for the Watch tab's narrator — empty on purpose; add a
+row only when the player hears a name said wrong, never a guessed pronunciation).
 
 ## Web app notes
 

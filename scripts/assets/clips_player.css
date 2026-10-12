@@ -84,14 +84,41 @@
   font-size:var(--fs-2xl); box-shadow:var(--el-3); }
 .wt-overt { font-size:var(--fs-md); font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,.7); }
 
-.wt-caps { min-height:7.5em; padding:var(--sp-4) var(--sp-1) var(--sp-2); }
+/* tap-to-pause feedback: the icon flashes in the middle and fades, like a video */
+.wt-flash { position:absolute; left:50%; top:50%; z-index:25; width:72px; height:72px;
+  margin:-36px 0 0 -36px; border-radius:var(--r-pill); background:rgba(0,0,0,.55);
+  color:var(--text); display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; }
+.wt-flash svg { width:36px; height:36px; fill:currentColor; }
+.wt-flash.go { animation:wt-flash .6s ease-out; }
+@keyframes wt-flash { 0% { opacity:1; transform:scale(.9); } 100% { opacity:0; transform:scale(1.25); } }
+.wt-stage { cursor:pointer; }
+
+.wt-caps { min-height:7.5em; padding:var(--sp-3) var(--sp-1) var(--sp-2); }
 .wt-head { margin:0; font-family:var(--font-display); font-size:var(--fs-xl); line-height:1.2;
   color:var(--text); }
 .wt-sub { margin:var(--sp-2) 0 0; max-width:var(--measure); color:var(--muted);
   font-size:var(--fs-md); }
 @media (min-width: 900px) { .wt-head { font-size:var(--fs-2xl); } }
 
-.wt-ctrl { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-2) var(--sp-3); }
+/* The control bar sits on the picture's bottom edge (above the captions), so the
+   picture and its buttons read as one player. */
+.wt-ctrl { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-2) var(--sp-3);
+  margin-top:var(--sp-2); }
+.wt-ic { display:inline-flex; align-items:center; justify-content:center; width:44px;
+  padding:0; }
+.wt-ic svg { width:20px; height:20px; fill:currentColor; }
+.wt-btn.primary.wt-ic { min-width:52px; width:52px; }
+.wt-voices { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3);
+  margin-top:var(--sp-2); padding:var(--sp-3); border-radius:var(--r-md);
+  background:rgba(255,255,255,.05); }
+.wt-voices[hidden] { display:none; }
+.wt-vlabel { display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-sm);
+  color:var(--muted); flex:1 1 240px; min-width:0; }
+.wt-vsel { flex:1 1 auto; width:0; min-width:0; min-height:44px; max-width:100%; padding:0 var(--sp-2);
+  border:1px solid var(--line-strong); border-radius:var(--r-md); background:var(--panel);
+  color:var(--text); font-family:var(--font-body); font-size:var(--fs-sm); }
+.wt-vtip { flex-basis:100%; margin:0; color:var(--muted); font-size:var(--fs-xs); }
 .wt-btn { min-height:44px; min-width:44px; padding:0 var(--sp-4); border:0;
   border-radius:var(--r-pill); background:rgba(255,255,255,.08); color:var(--text);
   font-family:var(--font-body); font-size:var(--fs-sm); cursor:pointer; }
@@ -117,18 +144,25 @@
     padding-bottom:var(--sp-1); }
   .wt-chips::-webkit-scrollbar { display:none; }
   .wt-chip { flex:0 0 auto; }
-  .wt-prog { order:-1; flex-basis:100%; }
+  /* Line 1: the scene bar + the voice-menu button. Line 2: ⏮ ▶ ■ ⏭ 🔊 — five 44px
+     targets, which still fit the ~245px a 344px Fold cover screen leaves the stage. */
+  .wt-prog { order:-2; flex:1 1 calc(100% - 52px); min-width:0; }
+  .wt-seg { min-width:0; }      /* a long clip's segments must never spill over the button */
+  .wt-vmenu { order:-1; }
+  .wt-btn.primary.wt-ic { min-width:44px; width:44px; }
   /* the scene bar already shows position; the clock would push Voice to a 2nd row */
   .wt-time { display:none; }
   .wt-voice { margin-left:auto; }
-  .wt-ctrl { column-gap:var(--sp-2); }
+  /* six 44px buttons must fit a 344px Fold cover screen on one line */
+  .wt-ctrl { column-gap:var(--sp-1); }
 }
 
 /* No script, or printing: the storyboard as a readable outline */
 .wt-outline { color:var(--muted); font-size:var(--fs-sm); }
 .wt-outline b { color:var(--text); }
 .wt.wt-js ~ .wt-outline { display:none; }
-.wt:not(.wt-js) .wt-ctrl, .wt:not(.wt-js) .wt-chips { display:none; }
+.wt:not(.wt-js) .wt-ctrl, .wt:not(.wt-js) .wt-chips,
+.wt:not(.wt-js) .wt-voices { display:none; }
 @media print {
   .wt { display:none; }
   .wt.wt-js ~ .wt-outline { display:block; }

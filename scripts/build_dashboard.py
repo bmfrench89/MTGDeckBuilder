@@ -1173,18 +1173,37 @@ named.</p>{warn}
 <div class='wt-band wt-band-mine'><b>You</b></div>
 <div class='wt-band wt-band-grave'><b>Graveyard</b></div>
 <div class='wt-badges' aria-hidden='true'></div>
+<span class='wt-flash' aria-hidden='true'></span>
 <button type='button' class='wt-over' aria-label='Play the clips'><span class='wt-big'
 aria-hidden='true'>&#9654;</span><span class='wt-overt'>Play</span></button>
 </div>
-<div class='wt-caps' aria-live='polite'><p class='wt-head'>{esc(first['head'])}</p><p
-class='wt-sub'>{esc(first.get('sub') or '')}</p></div>
 <div class='wt-ctrl'>
-<button type='button' class='wt-btn primary wt-play'>Play</button>
-<button type='button' class='wt-btn wt-restart' aria-label='Restart this clip'>&#8634;</button>
+<button type='button' class='wt-btn wt-ic wt-prev' aria-label='Previous scene'><svg viewBox='0 0 24 24'
+aria-hidden='true'><path d='M6 5h2v14H6zM20 5v14L9 12z'/></svg></button>
+<button type='button' class='wt-btn wt-ic primary wt-play' aria-label='Play'><svg viewBox='0 0 24 24'
+aria-hidden='true'><path d='M7 5v14l12-7z'/></svg></button>
+<button type='button' class='wt-btn wt-ic wt-stop' aria-label='Stop'><svg viewBox='0 0 24 24'
+aria-hidden='true'><path d='M6 6h12v12H6z'/></svg></button>
+<button type='button' class='wt-btn wt-ic wt-next' aria-label='Next scene'><svg viewBox='0 0 24 24'
+aria-hidden='true'><path d='M16 5h2v14h-2zM4 5v14l11-7z'/></svg></button>
 <div class='wt-prog' role='group' aria-label='Scenes'></div>
 <span class='wt-time'>0:00 / {_clip_len(cl[0]['total'])}</span>
-<button type='button' class='wt-btn wt-voice'>Voice off</button>
+<button type='button' class='wt-btn wt-ic wt-voice' aria-label='Narration off' aria-pressed='false'></button>
+<button type='button' class='wt-btn wt-ic wt-vmenu' aria-label='Choose a voice'
+aria-expanded='false'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z'
+fill='none' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/><path d='M8 10h8M8 13h5' stroke='currentColor'
+stroke-width='1.8' stroke-linecap='round'/></svg></button>
 </div>
+<div class='wt-voices' hidden>
+<label class='wt-vlabel'>Voice <select class='wt-vsel'></select></label>
+<button type='button' class='wt-btn wt-vtry'>Hear it</button>
+<p class='wt-vtip'>These are the voices your device has. For a more natural one —
+<b>Android:</b> Settings → Text-to-speech → choose <i>Speech Services by Google</i> and download
+its high-quality English voice. <b>iPhone:</b> Settings → Accessibility → Spoken Content → Voices
+→ English → download an <i>Enhanced</i> or <i>Premium</i> voice. It appears here once installed.</p>
+</div>
+<div class='wt-caps' aria-live='polite'><p class='wt-head'>{esc(first['head'])}</p><p
+class='wt-sub'>{esc(first.get('sub') or '')}</p></div>
 </div>
 <ol class='wt-outline'>{outline}</ol>
 <script type='application/json' id='wt-data'>{payload}</script>
