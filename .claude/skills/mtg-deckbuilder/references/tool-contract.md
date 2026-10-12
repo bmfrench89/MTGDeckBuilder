@@ -65,6 +65,7 @@ had spent its effort hand-reasoning.
 | Combos present or one-away | `combo_detector.py` | |
 | Dashboard | `build_dashboard.py`, or `refresh.py` for all | hand-write HTML |
 | Watch-tab clips (animated how-to-play) | write `<deck>.clips.json` (name cards in captions as `[[Card]]` so they're checked), then `clips.py --deck <path>` for the outline + warnings; `clips.py --all --check` runs in CI — after changing a deck with clips, rewrite the stale scenes it reports | show a card the deck doesn't play, or name an opponent's real card (use a `ph` placeholder); render a video file |
+| The Watch tab's narrator voice (recorded, free) | push a change to `.github/narrate/` or dispatch **`narrate-audition.yml`** — a runner records the same Iron Fortress scenes in six open-source voices (Kokoro-82M, Piper) into `data/narration/audition/` for the player to pick by ear; spoken text comes from `clips.spoken` | pick the voice for the player, synthesize audio in the sandbox, use a paid voice API, or let `data/narration/audition/` reach main |
 | Buy list | `wishlist.py`, `<deck>.buylist.csv` | put an unowned card in the 99 |
 | Proxies / export | `proxy_sheet.py`, `export_manapool.py` | |
 

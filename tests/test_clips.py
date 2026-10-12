@@ -299,6 +299,8 @@ def test_every_scene_carries_its_spoken_line():
     ("It gets −2/−2", "It gets minus two minus two"),
     ("MV 3, ETB tapped", "mana value 3, enters tapped"),
     ("[[Fire // Ice|Fire]] — then", "Fire, then"),
+    ("A wrath is coming —. Destroy all creatures.", "A wrath is coming. Destroy all creatures."),
+    ("Ready?. Go", "Ready? Go"),
 ])
 def test_spoken_reads_symbols_the_way_a_player_says_them(text, said):
     assert clips.spoken(text) == said

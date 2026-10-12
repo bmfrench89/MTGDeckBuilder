@@ -163,6 +163,10 @@ def spoken(text, pron=()):
          .replace("\u00b7", ", ")
     t = re.sub(r"\s+([,.;:!?])", r"\1", t)
     t = re.sub(r",\s*,", ",", t)
+    # A headline ending in a dash or colon, joined to its caption with ". ", must
+    # not be read as "coming,. Destroy": the stronger stop wins.
+    t = re.sub(r"[,;:]+\s*([.!?])", r"\1", t)
+    t = re.sub(r"([.!?])\s*\.", r"\1", t)
     return re.sub(r"\s+", " ", t).strip()
 
 
