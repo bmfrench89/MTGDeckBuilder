@@ -1,0 +1,69 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Ambition's Cost,Sorcery,4,B,{3}{B},,,draw,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Army of the Damned,Sorcery,8,B,{5}{B}{B}{B},,,,,4
+"Ayara, First of Locthwain",Creature,3,B,{B}{B}{B},Elf;Noble,,draw,2,4
+Bad Moon,Enchantment,2,B,{1}{B},,,,,4
+Barren Moor,Land,0,B,,,B,etb-tapped,,4
+Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Bontu's Monument,Artifact,3,,{3},,,discount:creature:1,,4
+Carrion Feeder,Creature,1,B,{B},Zombie,,,1,4
+Castle Locthwain,Land,0,B,,,B,draw;etb-tapped-cond,,4
+Cemetery Reaper,Creature,3,B,{1}{B}{B},Zombie,,,2,4
+Cemetery Recruitment,Sorcery,2,B,{1}{B},,,draw,,4
+Champion of the Perished,Creature,1,B,{B},Zombie,,,1,4
+Charcoal Diamond,Artifact,2,B,{2},,B,ramp;rock,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+Consumed by Greed,Instant,3,B,{1}{B}{B},,,removal,,4
+Consuming Corruption,Instant,2,B,{B}{B},,,,,4
+Cryptbreaker,Creature,1,B,{B},Zombie,,draw,1,4
+Death Baron,Creature,3,B,{1}{B}{B},Zombie;Wizard,,,2,4
+Diregraf Colossus,Creature,3,B,{2}{B},Zombie;Giant,,,2,4
+Endless Ranks of the Dead,Enchantment,4,B,{2}{B}{B},,,,,4
+Eternal Taskmaster,Creature,2,B,{1}{B},Zombie,,,2,4
+Fleshbag Marauder,Creature,3,B,{2}{B},Zombie;Warrior,,,3,4
+Geier Reach Sanitarium,Land,0,,,,C,,,4
+Ghoulcaller Gisa,Creature,5,B,{3}{B}{B},Human;Wizard,,,3,4
+Go for the Throat,Instant,2,B,{1}{B},,,removal,,4
+God-Eternal Bontu,Creature,5,B,{3}{B}{B},Zombie;God,,,5,4
+Grave Titan,Creature,6,B,{4}{B}{B},Giant,,,6,4
+Graveborn Muse,Creature,4,B,{2}{B}{B},Zombie;Spirit,,draw,3,4
+Gravecrawler,Creature,1,B,{B},Zombie,,,2,4
+Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
+Headless Rider,Creature,3,B,{2}{B},Zombie,,,3,4
+Infernal Idol,Artifact,3,B,{3},,B,draw;ramp;rock,,4
+"Josu Vess, Lich Knight",Creature,4,B,{2}{B}{B},Zombie;Knight,,,4,4
+"Kalitas, Traitor of Ghet",Creature,4,B,{2}{B}{B},Vampire;Warrior,,,3,4
+Liliana's Mastery,Enchantment,5,B,{3}{B}{B},,,,,4
+Liliana's Reaver,Creature,4,B,{2}{B}{B},Zombie,,,4,4
+Lord of the Accursed,Creature,3,B,{2}{B},Zombie,,,2,4
+Lord of the Undead,Creature,3,B,{1}{B}{B},Zombie,,,2,4
+Marchesa's Decree,Enchantment,4,B,{3}{B},,,,,4
+Memorial to Folly,Land,0,B,,,B,etb-tapped,,4
+Midnight Reaper,Creature,3,B,{2}{B},Zombie;Knight,,draw,3,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mire Triton,Creature,2,B,{1}{B},Zombie;Merfolk,,,2,4
+Moan of the Unhallowed,Sorcery,4,B,{2}{B}{B},,,,,4
+Mutilate,Sorcery,4,B,{2}{B}{B},,,wipe,,4
+Necrotic Hex,Sorcery,7,B,{6}{B},,,removal,,4
+Night's Whisper,Sorcery,2,B,{1}{B},,,draw,,4
+Noxious Ghoul,Creature,5,B,{3}{B}{B},Zombie,,,3,4
+Open the Graves,Enchantment,5,B,{3}{B}{B},,,,,4
+Oversold Cemetery,Enchantment,2,B,{1}{B},,,,,4
+Patchwork Banner,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+Phyrexian Arena,Enchantment,3,B,{1}{B}{B},,,draw,,4
+Razorlash Transmogrant,Creature,2,B,{2},Zombie,,,3,4
+Sign in Blood,Sorcery,2,B,{B}{B},,,,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Soulless One,Creature,4,B,{3}{B},Zombie;Avatar,,,*,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Syphon Flesh,Sorcery,5,B,{4}{B},,,removal,,4
+Tendrils of Corruption,Instant,4,B,{3}{B},,,,,4
+Undead Augur,Creature,2,B,{B}{B},Zombie;Wizard,,draw,2,4
+Undead Butler,Creature,2,B,{1}{B},Zombie,,,1,4
+Undead Warchief,Creature,4,B,{2}{B}{B},Zombie,,discount:zombie:1,1,4
+Vengeful Dead,Creature,4,B,{3}{B},Zombie,,,3,4
+Wight of Precinct Six,Creature,2,B,{1}{B},Zombie,,,1,4
+Witch's Cottage,Land,0,B,,Swamp,B,etb-tapped-cond,,4
+Withering Torment,Instant,3,B,{2}{B},,,removal,,4
+"Zul Ashur, Lich Lord",Creature,2,B,{1}{B},Zombie;Warlock,,,2,4
