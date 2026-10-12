@@ -1,0 +1,78 @@
+# narrate — record the Watch tab's narration in the voice the player picked
+# (docs/spec-watch-voice-and-controls.md Part C). A scene is recorded only when its
+# spoken text (or the voice) has no take yet, so a caption edit re-records one scene.
+#
+# Runs where clips or the voice change. On a working branch it commits back to that
+# branch (the deck-verify.yml pattern); on main it commits to main, like
+# field-snapshots.yml, so a merged deck never waits on a person. No voice chosen yet
+# (no data/reference/narration.json) → the job records nothing and commits nothing.
+name: narrate
+
+on:
+  push:
+    branches: ["main", "claude/**", "ccr-*"]
+    paths:
+      - "data/decks/*.clips.json"
+      - "data/reference/narration.json"
+      - "data/reference/pronunciations.csv"
+      - "scripts/clips.py"
+      - "scripts/narration.py"
+      - ".github/narrate/synthesize.py"
+      - ".github/workflows/narrate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: narrate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  narrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Anything to record?
+        id: plan
+        run: |
+          if [ ! -f data/reference/narration.json ]; then
+            echo "No narrator chosen yet — nothing to record."; echo "todo=0" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          n=$(python3 scripts/narration.py --plan --json | python3 -c \
+            "import json,sys; d=json.load(sys.stdin); print(sum(len(v['record'])+len(v['prune']) for v in d.values()))")
+          echo "todo=$n" >> "$GITHUB_OUTPUT"; echo "$n take(s) to record or prune"
+
+      - uses: actions/setup-python@v5
+        if: steps.plan.outputs.todo != '0'
+        with:
+          python-version: "3.12"
+
+      - name: Voice runtimes
+        if: steps.plan.outputs.todo != '0'
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q espeak-ng ffmpeg
+          python -m pip install -q --upgrade pip
+          python -m pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -q "kokoro>=0.9" soundfile piper-tts
+
+      - name: Record
+        if: steps.plan.outputs.todo != '0'
+        run: python .github/narrate/synthesize.py
+
+      - name: Commit the takes back to this branch
+        if: steps.plan.outputs.todo != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/narration
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "Narration: record the Watch tab's changed scenes (runner)"
+          for i in 1 2 3 4; do
+            git pull --rebase -q origin "${{ github.ref_name }}" && \
+              git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

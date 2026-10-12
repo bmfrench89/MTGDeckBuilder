@@ -424,6 +424,20 @@ def main(argv=None):
             continue
         report[stem] = res
         problems += len(res["stale"]) + len(res["lint"])
+        # Recorded narration (Part C): a scene with no take yet is a WARNING, never a
+        # problem — the runner records it on the next push, and failing CI here would
+        # block unrelated deck edits.
+        unrecorded = 0
+        try:
+            import narration
+            cfg = narration.load_config()
+            if cfg:
+                unrecorded = narration.attach(
+                    json.loads(json.dumps(res)), stem,
+                    narration.deck_voice(cfg, json.load(open(clips_path(deck_path),
+                                                             encoding="utf-8"))))
+        except Exception:
+            unrecorded = 0
         if args.json:
             continue
         print(f"{stem}: {len(res['clips'])} clip(s), {_fmt(res['total'])} in all")
@@ -435,6 +449,9 @@ def main(argv=None):
             print(f"  STALE {w}")
         for w in res["lint"]:
             print(f"  lint  {w}")
+        if unrecorded:
+            print(f"  note  {unrecorded} scene(s) have no recorded narration yet — the "
+                  "device voice reads them until narrate.yml records them (not a failure)")
     if args.json:
         print(json.dumps(report, indent=1, ensure_ascii=False))
     if args.check and problems:

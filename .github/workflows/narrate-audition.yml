@@ -3,17 +3,15 @@
 #
 # Runs on a GitHub runner because the voice models (Kokoro-82M, Piper) have to be
 # downloaded and the sandbox can't. Like deck-verify.yml it only ever pushes back to the
-# branch it ran on, and it triggers on PUSH to a working branch: `workflow_dispatch` only
-# works once a workflow is on the default branch. The audition files are for listening,
-# not for main — delete data/narration/audition/ before the Part C PR merges.
+# branch it ran on (dispatch it with that branch as the ref). The audition files are for
+# listening, not for main — publish them for the player, then delete
+# data/narration/audition/ before the branch's PR merges.
 name: narrate-audition
 
 on:
-  push:
-    branches: ["claude/**", "ccr-*"]
-    paths:
-      - ".github/workflows/narrate-audition.yml"
-      - ".github/narrate/**"
+  # Dispatch only. The first audition ran on push from the branch that added this file
+  # (run 38290628219, 2026-10-12); a push trigger left in place would re-record and
+  # commit a new set of listening files every time this workflow is edited.
   workflow_dispatch:
 
 permissions:
