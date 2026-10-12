@@ -1,0 +1,77 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Academy Ruins,Land,0,U,,,C,,,4
+Aetherize,Instant,4,U,{3}{U},,,,,4
+An Offer You Can't Refuse,Instant,1,U,{U},,W U B R G,counter,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archaeomancer,Creature,4,U,{2}{U}{U},Human;Wizard,,,1,4
+Black Vise,Artifact,1,,{1},,,,,4
+Blast Zone,Land,0,,,,C,,,4
+Blink of an Eye,Instant,2,U,{1}{U},,,draw,,4
+Bonders' Enclave,Land,0,,,,C,draw,,4
+Brainstorm,Instant,1,U,{U},,,draw,,4
+Castle Vantress,Land,0,U,,,U,etb-tapped-cond,,4
+Counterspell,Instant,2,U,{U}{U},,,counter,,4
+Curse of the Swine,Sorcery,2,U,{X}{U}{U},,,,,4
+Cyclonic Rift,Instant,2,U,{1}{U},,,,,4
+Dictate of Kruphix,Enchantment,3,U,{1}{U}{U},,,,,4
+Dramatic Accusation,Enchantment,3,U,{2}{U},Aura,,,,4
+Ebony Owl Netsuke,Artifact,2,,{2},,,,,4
+Enchanted River's Grasp,Enchantment,3,U,{2}{U},Aura,,,,4
+Evacuation,Instant,5,U,{3}{U}{U},,,,,4
+Everflowing Chalice,Artifact,0,,{0},,C,ramp;rock,,4
+Exclude,Instant,3,U,{2}{U},,,counter;draw,,4
+Fabricate,Sorcery,3,U,{2}{U},,,,,4
+Fact or Fiction,Instant,4,U,{3}{U},,,,,4
+Faerie Mastermind,Creature,2,U,{1}{U},Faerie;Rogue,,draw,2,4
+Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Field of Ruin,Land,0,,,,C,,,4
+Folio of Fancies,Artifact,2,U,{1}{U},Book,,,,4
+Forced Fruition,Enchantment,6,U,{4}{U}{U},,,draw,,4
+Halimar Depths,Land,0,U,,,U,etb-tapped,,4
+Howling Mine,Artifact,2,,{2},,,,,4
+Imprisoned in the Moon,Enchantment,3,U,{2}{U},Aura,C,,,4
+Into the Roil,Instant,2,U,{1}{U},,,draw,,4
+Iron Maiden,Artifact,3,,{3},,,,,4
+Island,Land,0,U,,Island,U,,,4
+"Jin-Gitaxias, Progress Tyrant",Creature,7,U,{5}{U}{U},Phyrexian;Praetor,,,5,4
+Kami of the Crescent Moon,Creature,2,U,{U}{U},Spirit,,,1,4
+Kappa Cannoneer,Creature,6,U,{5}{U},Turtle;Warrior,,,4,4
+Lonely Sandbar,Land,0,U,,,U,etb-tapped,,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mulldrifter,Creature,5,U,{4}{U},Elemental,,draw,2,4
+Murmuring Mystic,Creature,4,U,{3}{U},Human;Wizard,,,1,4
+Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+Mystic Confluence,Instant,5,U,{3}{U}{U},,,counter;draw,,4
+Mystic Remora,Enchantment,1,U,{U},,,draw,,4
+Mystic Sanctuary,Land,0,U,,Island,U,etb-tapped-cond,,4
+"Padeem, Consul of Innovation",Creature,4,U,{3}{U},Vedalken;Artificer,,draw,1,4
+Palladium Myr,Creature,3,,{3},Myr,C,dork;mana2;ramp;rock,2,4
+Pongify,Instant,1,U,{U},,,removal,,4
+Preordain,Sorcery,1,U,{U},,,draw,,4
+Propaganda,Enchantment,3,U,{2}{U},,,,,4
+Prosperity,Sorcery,1,U,{X}{U},,,,,4
+Psychosis Crawler,Creature,5,,{5},Phyrexian;Horror,,draw,*,4
+Pull from Tomorrow,Instant,2,U,{X}{U}{U},,,draw,,4
+Rapid Hybridization,Instant,1,U,{U},,,removal,,4
+Reality Shift,Instant,2,U,{1}{U},,,removal,,4
+River's Rebuke,Sorcery,6,U,{4}{U}{U},,,,,4
+Rogue's Passage,Land,0,,,,C,,,4
+Scrawling Crawler,Creature,3,,{3},Phyrexian;Construct,,,3,4
+"Skysovereign, Consul Flagship",Artifact,5,,{5},Vehicle,,,6,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Spellskite,Creature,2,U,{2},Phyrexian;Horror,,,0,4
+Sublime Epiphany,Instant,6,U,{4}{U}{U},,,counter,,4
+Swan Song,Instant,1,U,{U},,,counter,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Sword of War and Peace,Artifact,3,,{3},Equipment,,,,4
+Teferi's Puzzle Box,Artifact,4,,{4},,,,,4
+Temple Bell,Artifact,3,,{3},,,,,4
+Thopter Fabricator,Artifact,3,U,{2}{U},Vehicle,,,4,4
+Thought Vessel,Artifact,2,,{2},,C,ramp;rock,,4
+Thran Dynamo,Artifact,4,,{4},,C,mana3;ramp;rock,,4
+Unauthorized Exit,Instant,2,U,{1}{U},,,,,4
+Viseling,Creature,4,,{4},Phyrexian;Construct,,,2,4
+War Room,Land,0,,,,C,draw,,4
+Whir of Invention,Instant,3,U,{X}{U}{U}{U},,,,,4
+Windfall,Sorcery,3,U,{2}{U},,,,,4
+Worn Powerstone,Artifact,3,,{3},,C,mana2;ramp;rock,,4

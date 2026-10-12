@@ -23,8 +23,12 @@ their real Ur-Dragon, so on those the blind pass and the player agree.
 - **Goldfish blind spot.** Goldfish scores Ureni and Scourge as slightly slower: +0.04 and
   +0.03 turns to the first kill. It counts printed power and mana cost, but it does not
   model attack or ETB triggers or extra combats. The verdict comes from the verified text.
-- **Reflecting Pool data gap.** Its attrs row has an empty Produced cell. "Any type a land
-  you control could produce" is not modeled, so the simulator undervalues it.
+- **Reflecting Pool is modeled as a five-colour land.** That is Scryfall's own production
+  data (W U B R G), carried by the attrs snapshot since 2026-10-12. The real card makes only
+  what your other lands could make, so the model is slightly generous when Pool is your only
+  land. Re-run with that data, swapping Pool back to Cinder Glade over 4,000 identical
+  shuffles makes the first kill +0.04 turns slower and costs about 1 damage. So the swap
+  stands.
 - **The automatic rebuild did worse.** `auto_build` from the pool cut notes-protected engine
   pieces (Dragon Broodmother and the cost-reducer dragons) and added filler. That is why
   this is an update of the logged list, not a rebuild.
