@@ -559,3 +559,7 @@
 1 Scourge of the Throne
 1 Shattered Angel
 1 The Arkenstone // Seek the Heart
+
+# 2026-10-12: player confirmed owning Insatiable Avarice — it is sleeved in their upgraded
+# Ur-Dragon (not yet synced to data/decks). Not in the export or any batch above.
+1 Insatiable Avarice
