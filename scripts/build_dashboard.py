@@ -241,6 +241,8 @@ def app_bar(stem, editable):
         f"<a href='/export/deck/{s}.txt'>Export .txt</a>"
         f"<a href='/export/deck/{s}.html'>Report</a>"
         f"<a href='/deck/{s}/proxies?buylist=1'>Proxies</a>"
+        f"<a href='/deck/{s}/changes'>Changes</a>"
+        f"<a href='/decks/import?target={s}'>Paste a new list</a>"
         "</div></details></div></div>"
         # <details> never closes itself: a tap elsewhere or Escape closes the menu.
         "<script>(function(){var m=document.querySelector('.amenu');if(!m)return;"
@@ -479,7 +481,8 @@ def _new_badge(k, changes):
     ago = c["days_ago"]
     when = "today" if ago == 0 else ("yesterday" if ago == 1 else f"{ago} days ago")
     why = f" — replaced {c['replaced']}" if c.get("replaced") else ""
-    return (f"<span class='nb' title='Added {when} ({c['added']}){esc(why)}'>NEW</span>")
+    who = f" by {c['by']}" if c.get("by") else ""
+    return (f"<span class='nb' title='Added{esc(who)} {when} ({c['added']}){esc(why)}'>NEW</span>")
 
 
 def sections_html(sections, enriched, shared=None, images=True, size="small",

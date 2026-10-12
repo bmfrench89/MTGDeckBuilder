@@ -39,12 +39,15 @@ fi
 # wishlist.md / manapool-wishlist.txt ARE runtime-edited (the ↻ Rebuild button runs
 # refresh.py): leaving them unstaged dirtied the tree and made every subsequent
 # `git pull --rebase` fail, wedging the daily sync until a console cleanup.
+# data/activity.csv is the labelled log of deck-level actions (docs/spec-second-login.md);
+# data/private/ (member accounts) is deliberately NOT here and never may be.
 TRACKED_DATA=(
   data/decks
   data/collection/owned_additions.txt
   data/collection/pins.csv
   data/wishlist.md
   data/manapool-wishlist.txt
+  data/activity.csv
 )
 
 present=()
@@ -59,7 +62,10 @@ fi
 if git diff --cached --quiet; then
   echo "sync: no deck changes to commit"
 else
-  git commit -m "Deck edits from the hosted app"
+  # Who changed what, per person, from the staged change logs ("Ben: 3 changes ·
+  # Sam: 2"); empty when nothing is labelled, and a failure never blocks the commit.
+  summary="$(python3 webapp/sync_summary.py 2>/dev/null || true)"
+  git commit -m "Deck edits from the hosted app" -m "$summary"
   echo "sync: committed deck edits"
 fi
 

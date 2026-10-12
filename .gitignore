@@ -15,6 +15,10 @@ dashboard.html
 data/collection/collection.csv
 data/collection/*.private.csv
 
+# Member accounts (password hashes) — server-only, never committed, never synced
+# (docs/spec-second-login.md). sync_server.sh names its paths explicitly too.
+data/private/
+
 # Scratch
 scratch/
 *.tmp

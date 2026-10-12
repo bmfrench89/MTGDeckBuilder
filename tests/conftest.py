@@ -30,6 +30,18 @@ def _enrich_status_in_tmp(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
+def _no_real_member_accounts(tmp_path_factory, monkeypatch):
+    """Member accounts live in data/private/users.json on a real server. A test must
+    never read the player's (a developer machine may have one) nor write one: point
+    the store at an empty tmp path, and clear the in-memory lockout counters."""
+    import users
+    monkeypatch.setattr(users, "PATH", str(tmp_path_factory.mktemp("users") / "users.json"))
+    users._fails.clear()
+    yield
+    users._fails.clear()
+
+
+@pytest.fixture(autouse=True)
 def _clean_memo():
     """Start (and leave) every test with an empty analysis memo.
 

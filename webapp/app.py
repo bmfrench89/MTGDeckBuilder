@@ -24,7 +24,7 @@ import time
 from datetime import timedelta
 from urllib.parse import quote, unquote, urlsplit
 
-from flask import (Flask, Response, abort, flash, jsonify, redirect,
+from flask import (Flask, Response, abort, flash, g, jsonify, redirect,
                    render_template, request, send_from_directory, session, url_for)
 from markupsafe import escape
 
@@ -56,6 +56,7 @@ import proxy_sheet as px
 
 import sync
 import enrich_bg
+import users
 
 
 def _txt(text, filename):
@@ -215,11 +216,29 @@ def _reject_cross_site_writes():
     return None
 
 
+def _session_valid():
+    """A signed-in session that is still good. The owner's (and every pre-members
+    cookie, which carries `authed` but no name) is good until MTG_PASSWORD changes.
+    A member's is good while the member exists, is enabled and the stored `ver`
+    matches — "Sign out everywhere" and Disable bump it, so an old cookie fails on
+    its very next request without touching anyone else's."""
+    if not session.get("authed"):
+        return False
+    who = session.get("who") or users.OWNER_KEY
+    if who == users.OWNER_KEY:
+        return True
+    m = users.member(who)
+    return bool(m and not m.get("disabled") and int(m.get("ver", 1)) == session.get("ver"))
+
+
 @app.before_request
 def _require_login():
-    if not PASSWORD or session.get("authed") \
-            or request.endpoint in _PUBLIC_ENDPOINTS:
+    if not PASSWORD or request.endpoint in _PUBLIC_ENDPOINTS:
         return None
+    if _session_valid():
+        return None
+    if session.get("authed"):
+        session.clear()                   # a member signed out everywhere / disabled
     if request.method == "GET":
         # request.path is DECODED (`/build-next/The Ur-Dragon/deck`); re-quote it so
         # the round trip through ?next= survives _safe_next's no-whitespace rule.
@@ -232,17 +251,40 @@ def _require_login():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if not PASSWORD or session.get("authed"):
+    """The owner signs in with MTG_PASSWORD and a blank name (or their own name);
+    a member with their name and their own password (docs/spec-second-login.md)."""
+    if not PASSWORD or _session_valid():
         return redirect(_safe_next(request.args.get("next")))
     error = None
     if request.method == "POST":
-        if hmac.compare_digest(request.form.get("password", ""), PASSWORD):
+        name = (request.form.get("name") or "").strip()[:64]
+        pw = request.form.get("password", "")
+        key = users.key_of(name) or users.OWNER_KEY
+        owner_names = {users.OWNER_KEY, users.key_of(users.owner_display())}
+        if users.locked(key):
+            time.sleep(0.6)
+            error = "Too many wrong tries for that name — wait 15 minutes."
+        elif key in owner_names and hmac.compare_digest(pw, PASSWORD):
+            users.clear_failures(key)
+            session.clear()
             session.permanent = True
             session["authed"] = True
+            session["who"] = users.OWNER_KEY
             return redirect(_safe_next(request.form.get("next")))
-        time.sleep(0.6)  # blunt but effective brake on password guessing
-        error = "Wrong password."
-    return render_template("login.html", error=error,
+        else:
+            m = users.check_member(name, pw) if key not in owner_names else None
+            if m:
+                users.clear_failures(key)
+                session.clear()
+                session.permanent = True
+                session["authed"] = True
+                session["who"] = m["name"]
+                session["ver"] = int(m.get("ver", 1))
+                return redirect(_safe_next(request.form.get("next")))
+            users.note_failure(key)
+            time.sleep(0.6)  # blunt but effective brake on password guessing
+            error = "Wrong name or password." if users.exists() else "Wrong password."
+    return render_template("login.html", error=error, named=users.exists(),
                            next=request.values.get("next", "/"))
 
 
@@ -252,9 +294,76 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _me():
+    """(key, display name, role) of whoever is using the app. With no password the
+    app is single-user and that is the owner."""
+    who = (session.get("who") if PASSWORD else None) or users.OWNER_KEY
+    if who == users.OWNER_KEY:
+        return users.OWNER_KEY, users.owner_display(), "owner"
+    m = users.member(who) or {}
+    return who, m.get("display") or who, "member"
+
+
+def _by():
+    """The `By` label for a change: the signed-in person's display name — but only
+    once named members exist (users.json). Single-password mode writes exactly what
+    it always wrote, which is the spec's back-compat promise."""
+    return _me()[1] if users.exists() else ""
+
+
+def _owner_only():
+    if _me()[2] != "owner":
+        abort(403)
+
+
+def _may_replace_collection():
+    if _me()[2] == "owner":
+        return True
+    data = users.load() or {}
+    return bool(data.get("members_can_upload"))
+
+
+def _note(action, deck="", detail=""):
+    """Queue one activity-log row for this request; written after a successful
+    response (see _write_activity), so a refused write logs nothing."""
+    g.setdefault("activity", []).append((action, deck, detail))
+
+
+def _activity_path():
+    return os.path.join(os.path.dirname(os.path.abspath(DECKS_DIR)), "activity.csv")
+
+
+@app.after_request
+def _write_activity(resp):
+    """`data/activity.csv` (When,By,Action,Deck,Detail): deck-level actions, labelled.
+    Only with named members (users.json) — and sign-ins are never logged. The sync
+    commits it so a Claude session can read who changed what."""
+    rows = g.pop("activity", None)
+    if not rows or resp.status_code >= 400 or not users.exists():
+        return resp
+    try:
+        import csv as _csv
+        from datetime import datetime, timezone
+        path = _activity_path()
+        new = not os.path.exists(path)
+        when = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+        with open(path, "a", encoding="utf-8", newline="") as f:
+            w = _csv.writer(f)
+            if new:
+                w.writerow(["When", "By", "Action", "Deck", "Detail"])
+            for action, deck, detail in rows:
+                w.writerow([when, _by(), action, deck,
+                            re.sub(r"[\x00-\x1f\x7f]", " ", str(detail))[:200]])
+    except OSError:
+        pass                      # a full disk must not fail the edit it describes
+    return resp
+
+
 @app.context_processor
 def _auth_flags():
-    return {"auth_enabled": bool(PASSWORD)}
+    key, display, role = _me()
+    return {"auth_enabled": bool(PASSWORD), "me_name": display, "me_role": role,
+            "named_users": users.exists()}
 
 
 def _explain_block(explain, *keys):
@@ -614,12 +723,40 @@ def deck_edit(stem):
                                             "so nothing was saved"), "warn")
             return render_template("edit.html", meta=m, content=text,
                                    page="decks"), 400
+        old_text = open(m["path"], encoding="utf-8").read()
         with open(m["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(text.replace("\r\n", "\n"))
+        n_in, n_out = _log_editor_diff(m["path"], old_text, text)
+        if n_in or n_out:
+            _note("edit list", stem, f"{n_in} in, {n_out} out")
         _invalidate(stem)
         return redirect(url_for("deck", stem=stem))
     content = open(m["path"], encoding="utf-8").read()
     return render_template("edit.html", meta=m, content=content, page="decks")
+
+
+def _log_editor_diff(deck_path, old_text, new_text):
+    """Log what a full-text editor save changed, as the player's own picks.
+
+    The editor used to record nothing, so a card typed in there had none of the
+    protection a card-panel Add gets — the optimizer could cut it on the next ⚡.
+    Each card that appeared is a `manual-add`, each that left a `manual-remove`
+    (docs/spec-second-login.md §4). Basics are quantities, never decisions."""
+    from datetime import date
+
+    def cards(text):
+        out = {}
+        for c in mtglib.parse_deck(text):
+            if not mtglib.is_basic(c.name):
+                out.setdefault(mtglib._norm(mtglib.front_face(c.name)), c.name)
+        return out
+    before, after = cards(old_text), cards(new_text.replace("\r\n", "\n"))
+    today = date.today().isoformat()
+    rows = [(after[k], today, "", "manual-add") for k in after if k not in before]
+    rows += [("", today, before[k], "manual-remove") for k in before if k not in after]
+    stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
+    deckcore.append_changes(f"{stem}.changes.csv", rows, by=_by())
+    return (sum(1 for k in after if k not in before), sum(1 for k in before if k not in after))
 
 
 # The one section-header parser lives in the deckcore hub; the picker's labels and the
@@ -805,16 +942,10 @@ def _log_manual_change(deck_path, card, replaced="", source="manual-add"):
     Two things fall out of this one row: the dashboard's existing NEW badge lights up,
     and `Source` marks the card as the PLAYER's decision, which is what lets the advisor
     offer an opinion on it without the optimizer ever touching it."""
-    import csv as _csv
     from datetime import date
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
-    path = f"{stem}.changes.csv"
-    exists = os.path.exists(path)
-    with open(path, "a", encoding="utf-8", newline="") as f:
-        w = _csv.writer(f)
-        if not exists:
-            w.writerow(["Card", "Added", "Replaced", "Source"])
-        w.writerow([card, date.today().isoformat(), replaced, source])
+    deckcore.append_changes(f"{stem}.changes.csv",
+                            [(card, date.today().isoformat(), replaced, source)], by=_by())
 
 
 def _deck_identity(text):
@@ -919,6 +1050,7 @@ def deck_card(stem):
             if action == "replace" and replacement:
                 _log_manual_change(m["path"], replacement, replaced=name,
                                    source="manual-replace")
+                _note("replace card", stem, f"{name} -> {replacement}")
             elif action == "remove":
                 # A bare Remove is as much a player decision as a Replace, and the
                 # never-re-add rule reads the LOG — unlogged, the optimizer could
@@ -928,6 +1060,7 @@ def deck_card(stem):
                 # NEW badge and manual-adds advisory are untouched.
                 _log_manual_change(m["path"], "", replaced=name,
                                    source="manual-remove")
+                _note("remove card", stem, name)
             _invalidate(stem)
     return redirect(url_for("deck", stem=stem))
 
@@ -951,6 +1084,7 @@ def deck_add(stem):
         return jsonify({"ok": False, "error": err}), 400
     _edit_deck_card(m["path"], "add", card.name, section=section)
     _log_manual_change(m["path"], card.name, source="manual-add")
+    _note("add card", stem, card.name)
     _invalidate(stem)                   # the deck changed — drop it before the
                                         # singleton check and the advise below
     illegal = []
@@ -1327,8 +1461,10 @@ def deck_pin(stem):
         key = deckcore.pin_key(name)          # canonical, so every engine sees it
         if request.form.get("action") == "unpin":
             pins.pop(key, None)
+            _note("unpin", stem, name)
         else:
             pins[key] = stem                      # pinning elsewhere MOVES the pin
+            _note("pin", stem, name)
         deckcore.save_pins(pins)
     return redirect(url_for("deck", stem=stem))
 
@@ -1372,6 +1508,7 @@ def deck_bracket(stem):
     raw = (request.form.get("bracket") or "").strip()
     if raw in ("1", "2", "3", "4", "5"):
         _set_deck_header(m["path"], "Bracket", raw)
+        _note("set bracket", stem, raw)
         _invalidate(stem)
         flash(f"Bracket set to {raw} for this deck. The detected bracket is still "
               "shown beside it.", "info")
@@ -1440,11 +1577,13 @@ def pins_move():
     if key:
         if target in ("", "none"):
             pins.pop(k, None)
+            _note("release pin", "", key)
             if not wants_json:
                 flash(f"Released the pin on {key} — every deck can use that copy again.",
                       "info")
         else:
             pins[k] = target                    # one deck per card: this MOVES it
+            _note("move pin", target, key)
             if not wants_json:
                 flash(f"{key} is now reserved for {target}.", "info")
         deckcore.save_pins(pins)
@@ -1474,6 +1613,7 @@ def deck_delete(stem):
     left = {c: d for c, d in pins.items() if d != stem}
     if len(left) != len(pins):
         deckcore.save_pins(left)
+    _note("delete deck", stem, m["title"])
     # The deck's files are gone; its cached analysis would outlive it. (Pin
     # writes need no invalidation of their own — `analyze_deck` never reads pins;
     # they reach the optimizer through `pinned_elsewhere` and the dashboard
@@ -1771,11 +1911,12 @@ def build_deck_save(commander):
     # and here is never clobbered either.
     with open(path, "x", encoding="utf-8", newline="\n") as f:
         f.write(auto_build.deck_text(d))
+    _note("new deck (Build Next)", stem, commander)
     if stem != _deck_slug(commander):
         flash(f"You already have a “{_deck_slug(commander)}” deck, so this draft was "
               f"saved alongside it as “{stem}” — nothing was overwritten.", "info")
     try:
-        r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True)
+        r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True, by=_by())
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
         _flash_optimize(r)
@@ -1843,7 +1984,8 @@ def deck_optimize(stem):
     m = _analysable_deck(stem)
     coll, idx = collection_index()
     try:
-        r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True)
+        r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True, by=_by())
+        _note("optimize", stem, f"{len(r.get('swaps') or []) + len(r.get('land_swaps') or [])} change(s)")
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
         _flash_optimize(r)
@@ -1961,6 +2103,7 @@ def collection_add():
             if header_needed:
                 f.write("# Player-confirmed ownership not in the export yet.\n")
             f.write(f"{qty} {name}\n")
+        _note("add to collection", "", f"{qty} {name}")
         _invalidate()             # owned_additions feeds EVERY deck's analysis
     return redirect(url_for("collection_view"))
 
@@ -1979,6 +2122,8 @@ def collection_upload():
     Enrichment still runs in the BACKGROUND (minutes of Scryfall round-trips), and
     the upload still writes only the PRIVATE, gitignored CSV — never the tracked
     name-only snapshot (that separation closed a real leak — see CLAUDE.md)."""
+    if not _may_replace_collection():
+        abort(403)
     f = request.files.get("csv")
     if not (f and f.filename):
         return redirect(url_for("collection_view"))
@@ -2004,6 +2149,8 @@ def collection_upload():
 def collection_upload_decide():
     """The guard's second tap. "batch" (the default) sends the SAME file to the
     batch preview and leaves the collection CSV untouched; "replace" goes ahead."""
+    if not _may_replace_collection():
+        abort(403)
     pending = _pending_upload_path()
     if not os.path.exists(pending):
         flash("That upload has expired — choose the file again.", "warn")
@@ -2026,6 +2173,7 @@ def _replace_collection_from(pending, previous_cards):
         shutil.copy2(COLLECTION_CSV, _upload_backup_path(COLLECTION_CSV))
     os.replace(pending, COLLECTION_CSV)
     COLLECTION = COLLECTION_CSV
+    _note("replace collection")
     _invalidate()                 # a whole new collection — nothing cached survives
     try:
         with open(COLLECTION_CSV, encoding="utf-8") as fh:
@@ -2046,6 +2194,8 @@ def _replace_collection_from(pending, previous_cards):
 def collection_reconcile():
     """One tap retires the batch rows the new export carries (commented out with
     the date, never deleted); "keep" dismisses the offer and changes nothing."""
+    if not _may_replace_collection():
+        abort(403)
     data = _read_json(_reconcile_path()) or {}
     plan = data.get("plan") or []
     _drop(_reconcile_path())
@@ -2055,6 +2205,7 @@ def collection_reconcile():
     if not os.path.exists(ADDITIONS):
         return redirect(url_for("collection_view"))
     retired, skipped = intake.apply_retire(ADDITIONS, plan)
+    _note("retire batch rows", "", f"{retired} cop(ies) now in the export")
     _invalidate()
     msg = f"Retired {retired} card(s) now carried by your export — nothing counts twice."
     if skipped:
@@ -2221,6 +2372,7 @@ def collection_batch_confirm():
         return redirect(url_for("collection_view"))
     label = "pasted list" if data.get("source") == "pasted list" else "uploaded file"
     copies, distinct = intake.append_batch(ADDITIONS, rows, label)
+    _note("add a batch", "", f"{copies} cards ({distinct} distinct)")
     _invalidate()             # owned_additions feeds EVERY deck's analysis
     flash(f"Added {copies} card(s) ({distinct} distinct) as a dated batch. "
           + enrich_bg.start(COLLECTION, COLLECTION_ATTRS), "info")
@@ -2414,6 +2566,8 @@ def deck_import_confirm():
         for k, n in old.items():
             if k not in new and not mtglib.is_basic(n):
                 _log_manual_change(deck_path, "", replaced=n, source="manual-remove")
+        _note("replace list (import)", stem,
+              f"{len(set(new) - set(old))} in, {len(set(old) - set(new))} out")
         flash(f"Replaced the list of {m['title']}: {len(set(new) - set(old))} card(s) in, "
               f"{len(set(old) - set(new))} out. Those choices are yours — the optimizer "
               "won't undo them.", "info")
@@ -2425,6 +2579,7 @@ def deck_import_confirm():
                                        "(the player's own list)", idx=idx)
         with open(deck_path, "x", encoding="utf-8", newline="\n") as f:
             f.write(text)
+        _note("new deck (import)", stem, commander)
         flash(f"Saved “{title}” as a new deck.", "info")
     _drop(path)
     if request.form.get("add_unowned"):
@@ -2551,7 +2706,99 @@ def sync_now():
     console path). Synchronous — ~10 s — so the redirect lands with the status
     freshly written; any needed reload is deferred past the redirect."""
     sync.run("manual", reload_delay=sync.RELOAD_DELAY)
+    _note("sync")
     return redirect(url_for("index") + "#maint")
+
+
+# ---- people (owner only) and the labels they leave -----------------------------
+@app.route("/people", methods=["GET"])
+def people():
+    """Add a member, reset their password, sign them out everywhere, or disable
+    them — docs/spec-second-login.md §2. Owner only, by definition."""
+    _owner_only()
+    data = users.load() or {}
+    return render_template("people.html", members=users.members(data),
+                           owner_display=users.owner_display(data),
+                           can_upload=bool(data.get("members_can_upload")),
+                           gated=bool(PASSWORD), page="people")
+
+
+@app.route("/people", methods=["POST"])
+def people_post():
+    _owner_only()
+    action = request.form.get("action", "")
+    name = (request.form.get("name") or "").strip()
+    pw = request.form.get("password") or ""
+    if _unsafe_line_value(name, request.form.get("display", "")):
+        flash(_LINE_VALUE_ERROR, "warn")
+        return redirect(url_for("people"))
+    if action == "add":
+        err = users.add_member(name, pw, request.form.get("display") or name)
+        if err:
+            flash(err, "warn")
+        else:
+            flash(f"Added {name}. Give them the password in person or by text — it isn't "
+                  "shown again.", "info")
+            _note("add member", "", name)
+    elif action == "reset":
+        if users.reset_password(name, pw):
+            flash(f"New password set for {name}; their old sessions are signed out.", "info")
+            _note("reset member password", "", name)
+        else:
+            flash("Choose a password of at least 8 characters.", "warn")
+    elif action == "signout":
+        users.sign_out_everywhere(name)
+        flash(f"{name} is signed out on every device.", "info")
+        _note("sign member out", "", name)
+    elif action in ("disable", "enable"):
+        users.set_disabled(name, action == "disable")
+        flash(f"{name} is {'disabled' if action == 'disable' else 'enabled'}.", "info")
+        _note(f"{action} member", "", name)
+    elif action == "remove":
+        if users.remove(name):
+            flash(f"Removed {name}. Their past changes keep their label.", "info")
+            _note("remove member", "", name)
+    elif action == "owner":
+        users.set_owner_display(request.form.get("display") or "")
+        flash("Saved your display name.", "info")
+    elif action == "upload":
+        users.set_members_can_upload(request.form.get("allowed") == "1")
+        flash("Saved.", "info")
+    return redirect(url_for("people"))
+
+
+@app.route("/activity")
+def activity():
+    """The last 100 deck-level actions, newest first (owner only)."""
+    _owner_only()
+    import csv as _csv
+    rows = []
+    try:
+        with open(_activity_path(), encoding="utf-8") as f:
+            rows = list(_csv.DictReader(f))
+    except OSError:
+        pass
+    return render_template("activity.html", rows=list(reversed(rows))[:100],
+                           page="people")
+
+
+@app.route("/deck/<stem>/changes")
+def deck_changes(stem):
+    """Who changed what in this deck, and when — the deck's `.changes.csv`, newest
+    first. Rows from before named members existed (and from the optimizer CLI or a
+    session) have no name, and say so rather than guessing one."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    import csv as _csv
+    rows = []
+    try:
+        with open(os.path.splitext(m["path"])[0] + ".changes.csv", encoding="utf-8") as f:
+            rows = list(_csv.DictReader(f))
+    except OSError:
+        pass
+    return render_template("changes.html", meta=m, rows=list(reversed(rows))[:200],
+                           page="home")
 
 
 @app.route("/api/card/<path:name>")

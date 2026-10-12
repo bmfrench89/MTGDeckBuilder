@@ -231,6 +231,8 @@ move) · `/deck/<stem>/bracket` (the player's bracket setting)
 · `/api/deck/<stem>/ab` (paired swap preview behind shift-click in the card panel —
 **disk-cached** by `goldfish.ab_for_deck`, so the second look at a swap is a file read).
 
+**Named members (2026-10-12):** `users.py` is the member store (`data/private/users.json`, scrypt hashes, per-name lockout, `ver` for sign-out-everywhere); `app.py`'s `_session_valid` / `_me` / `_by` decide who is acting, `_note` queues a row that `_write_activity` appends to `data/activity.csv` after a successful response, and every `.changes.csv` write goes through `deckcore.append_changes` with `by=`. `sync_summary.py` turns the staged labels into the sync commit's "Changes by person" line.
+
 **Background work — two modules, one pattern.** `sync.py` (daily git sync) and
 `enrich_bg.py` (collection enrichment after an upload) both use: a daemon thread, a
 JSON status file under `data/cache/`, an already-running guard, and a **stale-status

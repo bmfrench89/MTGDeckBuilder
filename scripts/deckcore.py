@@ -128,8 +128,69 @@ def load_changes(path, days=NEW_CARD_DAYS):
             if prev is None or ago < prev["days_ago"]:   # keep the most recent entry
                 out[k] = {"name": name, "added": added.isoformat(), "days_ago": ago,
                           "replaced": (r.get("Replaced") or "").strip(),
-                          "source": (r.get("Source") or "").strip()}
+                          "source": (r.get("Source") or "").strip(),
+                          "by": (r.get("By") or "").strip()}
     return out
+
+
+CHANGES_HEADER = ("Card", "Added", "Replaced", "Source")
+
+
+def _changes_header(path):
+    try:
+        with open(path, encoding="utf-8", newline="") as f:
+            first = f.readline()
+    except OSError:
+        return None
+    return [h.strip() for h in next(csv.reader([first]), [])] if first.strip() else None
+
+
+def _add_by_column(path):
+    """Rewrite an old four-column `.changes.csv` with a fifth `By` column, ATOMICALLY
+    (temp file + os.replace). Every existing row keeps its values and gets an empty
+    `By`, so a five-value row never sits under a four-name header — which is exactly
+    what an append-only "just add a column" would have produced."""
+    import tempfile
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = list(csv.reader(f))
+    if not rows:
+        return
+    head = rows[0] + ["By"]
+    body = [r + [""] * (len(rows[0]) - len(r)) + [""] for r in rows[1:] if r]
+    d = os.path.dirname(path) or "."
+    fd, tmp = tempfile.mkstemp(prefix=".changes-", suffix=".tmp", dir=d)
+    with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(head)
+        w.writerows(body)
+    os.replace(tmp, path)
+
+
+def append_changes(path, rows, by=""):
+    """THE writer for `<deck>.changes.csv` — the optimizer, the card panel and the
+    editor all append through here. `rows` are (Card, Added, Replaced, Source).
+
+    `by` labels who made the change (docs/spec-second-login.md §4). It is written only
+    when given — CLI and session runs leave it out — and the first labelled write to
+    an old four-column file migrates the header in place. A file that already has
+    `By` gets an empty cell from an unlabelled writer, never a short row. Every
+    reader uses csv.DictReader, so the column is invisible to code that ignores it."""
+    rows = [list(r) for r in rows]
+    if not rows:
+        return 0
+    header = _changes_header(path) if os.path.exists(path) else None
+    has_by = bool(header) and "By" in header
+    if by and header and not has_by:
+        _add_by_column(path)
+        has_by = True
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        if not header:
+            w.writerow(list(CHANGES_HEADER) + (["By"] if by else []))
+            has_by = bool(by)
+        for r in rows:
+            w.writerow(r[:4] + ([by] if has_by else []))
+    return len(rows)
 
 
 MANUAL_SOURCES = ("manual-add", "manual-replace", "manual-remove")

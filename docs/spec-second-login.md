@@ -1,9 +1,14 @@
 # Spec — A second login: a named member whose edits are labeled
 
-**Status:** ☐ spec'd 2026-10-12, not started · builds on `docs/spec-auth-gate.md` (the
-shared-password gate, shipped 2026-08-10) · code today: the "access gate" block in
-`webapp/app.py`, `webapp/templates/login.html`, `webapp/sync.py`, `sync_server.sh` ·
-tests today: `tests/test_auth.py`, `tests/test_sync.py`
+**Status:** ☑ shipped 2026-10-12 — `webapp/users.py` (the store, scrypt hashes, lockout,
+sign-out-everywhere via `ver`) · `webapp/app.py` (member sign-in, `_session_valid`, `_me` /
+`_by`, `/people`, `/activity`, `/deck/<stem>/changes`, Replace/reconcile owner-only, the
+`_note` → `data/activity.csv` writer, editor-save diffs) · `deckcore.append_changes` (THE
+`.changes.csv` writer: optional `By`, atomic header migration) · `optimize(..., by=)` ·
+`webapp/sync_summary.py` + `sync_server.sh` (activity.csv synced, per-person commit body;
+`data/private/` gitignored and never in the path list) · tests `tests/test_members.py`.
+As built: `By` and the activity log are written only once `users.json` exists (the
+back-compat promise); editor saves are diffed into manual-add/-remove rows for everyone.
 
 **Player ask (2026-10-12):** "I want to create a user login for my brother when he uses
 the site."

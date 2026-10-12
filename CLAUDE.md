@@ -276,8 +276,10 @@ cards on 2026-10-12). It commits no physical copies:
 (`Name,Type,MV,Colors[,Produced,Flags]` — curve without the full CSV; the two optional
 columns are the same contract as the collection file, carried by
 `deckcore.load_attrs`/`apply_attrs` under the same empty-vs-absent rule, which is what
-lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.csv` (`Card,Added,Replaced,Source` — appended by
-each applying optimizer run; the dashboard badges anything from the last 14 days as `NEW`),
+lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.csv` (`Card,Added,Replaced,Source[,By]` — appended by
+each applying optimizer run and every app edit, editor saves included, always through
+`deckcore.append_changes`; `By` appears once named members exist; the dashboard badges
+anything from the last 14 days as `NEW`),
 `.clips.json` (the **Watch tab**: 30-60s animated how-to-play clips, scenes of the deck's own
 cards in zones with captions — validated by `clips.py` against the CURRENT list on every
 render. Captions name cards as `[[Card Name]]` (or `[[Card Name|shown text]]`), and a scene
@@ -349,7 +351,17 @@ Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<st
 `/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health` ·
 `/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) · `/collection/upload/decide`
 (the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
-`/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one).
+`/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one) ·
+`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes`.
+
+**Named members** (docs/spec-second-login.md): `webapp/users.py` keeps member accounts in
+`data/private/users.json` — gitignored, mode 0600, never synced. The owner still signs in
+with `MTG_PASSWORD`; a member signs in with a name and their own password and can do
+everything except the People page and (unless allowed) replacing the collection. Once that
+file exists, every change the app writes carries `By` (`.changes.csv`'s optional fifth
+column, written through `deckcore.append_changes`) and deck-level actions go to
+`data/activity.csv`, which the sync commits. With no file, none of that happens — the app is
+the single-password app it always was.
 
 The saved-deck dashboard is editable (`build_dashboard.generate(..., editable=True)`);
 CLI-rendered dashboards keep `editable=False`. Both surfaces share `generate()`, so a change

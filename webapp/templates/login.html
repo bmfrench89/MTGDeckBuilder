@@ -14,7 +14,7 @@
   .gate { min-height: 100svh; display: flex; align-items: center; justify-content: center;
           padding: var(--sp-5); }
   .gate .card { width: 100%; max-width: 360px; }
-  .gate input[type=password] { width: 100%; box-sizing: border-box; }
+  .gate input[type=password], .gate input[type=text] { width: 100%; box-sizing: border-box; }
 </style>
 </head><body>
 <div class="gate">
@@ -26,8 +26,15 @@
     </div>
     <form method="post" action="{{ url_for('login') }}" class="stack">
       <input type="hidden" name="next" value="{{ next }}">
+      {% if named %}
+      <input type="text" name="name" placeholder="Name (blank for the owner)" autofocus
+             autocomplete="username" autocapitalize="none" aria-label="Name">
+      <input type="password" name="password" placeholder="Password"
+             autocomplete="current-password" aria-label="Password">
+      {% else %}
       <input type="password" name="password" placeholder="Password" autofocus
              autocomplete="current-password" aria-label="Password">
+      {% endif %}
       {% if error %}<div class="warn fs-sm">{{ error }}</div>{% endif %}
       <button class="btn" type="submit">Sign in</button>
     </form>
