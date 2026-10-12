@@ -47,6 +47,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Recorded narration: hands off. Audio is fetched with Range requests, and a worker
+  // in that path is a known way to break playback on iPhone. The files are immutable,
+  // so the browser's own HTTP cache does the job.
+  if (url.pathname.startsWith('/narration/')) return;
 
   // Static assets. Pages reference them by CONTENT-FINGERPRINTED URL
   // (`/static/app.css?v=<hash>`, app.py's `asset()`), and that is what makes caching

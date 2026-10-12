@@ -1,14 +1,26 @@
 # Spec — Watch tab: video-style controls and a natural narrator
 
-**Status:** ◐ Parts A and B shipped 2026-10-12 — `scripts/assets/clips_player.{js,css}`
-(control bar ⏮ ▶/❚❚ ■ ⏭ under the picture, tap-to-pause with a flashed icon, Stop, S key,
-narration choice remembered per device, `WT_SPEECH.rank` / `.sentences` exported for Node
-tests, the voice menu with "Hear it" and the device tips), `build_dashboard.clips_html`,
-`scripts/clips.py` (`spoken()` builds every scene's `speak` line; `pronunciations.csv`
-starts empty) · tests in `tests/test_clips.py`. Part C (recorded narration) waits on the
-audition run (§5 step 2); Media Session lands with it. Phone layout as shipped: the scene
-bar and the voice-menu button share the first line, ⏮ ▶ ■ ⏭ and 🔊 the second, so every
-target stays 44 px on a 344 px Fold cover screen.
+**Status:** ◐ Parts A and B shipped 2026-10-12 (PR #174). Part C: the audition ran
+2026-10-12 and its plumbing is built; recording waits on **the player's pick**.
+- Parts A + B — `scripts/assets/clips_player.{js,css}` (control bar ⏮ ▶/❚❚ ■ ⏭ under the
+  picture, tap-to-pause, Stop, S key, remembered narration, `WT_SPEECH.rank` / `.sentences`
+  for Node tests, the voice menu), `build_dashboard.clips_html`, `clips.spoken()` +
+  `pronunciations.csv` (empty). Phones: scene bar + voice menu on line one, ⏮ ▶ ■ ⏭ 🔊 on two.
+- Part C audition (`narrate-audition.yml`, run 38290628219): all six voices installed and
+  recorded on a CPU runner. Kokoro ≈ 0.7 s of CPU per second of speech, Piper faster;
+  18 takes = 1.3 MB. Licences from the runner: Kokoro voices Apache-2.0; Piper
+  `en_US-ryan-high` CC BY-NC-SA 4.0 (non-commercial); `en_GB-alan-medium` **not stated**
+  (its MODEL_CARD only links to the mimic3 voice). The listening page for the player:
+  https://claude.ai/artifact/UehzzbKevQJxkWv1w2mvXE
+- Part C plumbing — `scripts/narration.py` (content hash, manifest, plan/prune, `attach`
+  re-timing scenes to max(dur, take + 0.4 s)), `.github/narrate/synthesize.py` +
+  `narrate.yml` (no `data/reference/narration.json` → records nothing), the app route
+  `/narration/<stem>/<file>` (manifest-listed files only, immutable, 206 ranges), `sw.js`
+  hands-off, the player's `<audio>` playback with preload + Media Session, the tab note for
+  unrecorded scenes, and `clips.py --check` treating a missing take as a note.
+- **Next:** the player picks a voice → write `data/reference/narration.json` (e.g.
+  `{"engine": "kokoro-82m", "model": "v1.0", "voice": "af_heart", "speed": 1.0}`) and
+  push; `narrate.yml` records every Iron Fortress scene and commits the takes.
 
 **Player ask (2026-10-12):** "Can the voice of the video sound less robotic and can we
 add play/stop buttons to the videos? Or is that too difficult."

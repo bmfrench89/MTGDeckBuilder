@@ -679,7 +679,8 @@ def deck(stem):
     m = _analysable_deck(stem)
     res = bd.generate(m["path"], COLLECTION, title=m["title"],
                       commander=m["commander"], theme=m["theme"], decks_dir=DECKS_DIR,
-                      editable=True)
+                      editable=True, narration_url=url_for("narration_file", stem=stem,
+                                                           name="x")[:-1])
     html = res["dashboard"]
     # Surface the singleton guard on the primary surface. optimize() computes this
     # after every applying run, but the POST routes discard the report — so a
@@ -2942,6 +2943,28 @@ def service_worker():
     js = js.replace("__ASSET_VERSION__", _asset_version())
     return Response(js, mimetype="application/javascript",
                     headers={"Cache-Control": "no-cache"})
+
+
+_TAKE_RE = re.compile(r"^[0-9a-f]{16}\.mp3$")
+
+
+@app.route("/narration/<stem>/<name>")
+def narration_file(stem, name):
+    """One recorded take (docs/spec-watch-voice-and-controls.md Part C), behind the
+    login like everything else. Only a file the deck's manifest lists is served — a
+    content-hash name, so no path traversal and nothing else in the folder leaks —
+    and it is cached forever: the name changes whenever the words or the voice do.
+    send_from_directory answers Range requests (206), which phones need for audio."""
+    if _deck_path(stem) is None or not _TAKE_RE.match(name):
+        abort(404)
+    import narration
+    takes = narration.load_manifest(stem).get("takes") or {}
+    if not any(t.get("file") == name for t in takes.values()):
+        abort(404)
+    resp = send_from_directory(os.path.join(narration.NARRATION_DIR, stem), name,
+                               mimetype="audio/mpeg", conditional=True)
+    resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return resp
 
 
 @app.route("/static/tokens.css")

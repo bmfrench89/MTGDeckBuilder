@@ -79,7 +79,9 @@ per-module table — read it before any structural change.
   storyboard gate — every card a clip shows must be in the deck; mtglib only), `intake`
   (card intake + deck import: parse a pasted list or CSV, resolve every line through
   `carddb.verify_cards`, write a dated batch to `owned_additions.txt`, reconcile a new
-  export against the batches, the Upload guard).
+  export against the batches, the Upload guard), `narration` (the Watch tab's recorded
+  narration: which scenes still need a take in the chosen voice, content-hashed files,
+  scene timing; the synthesis itself runs only on a runner — `narrate.yml`).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
@@ -352,7 +354,9 @@ Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<st
 `/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) · `/collection/upload/decide`
 (the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
 `/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one) ·
-`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes`.
+`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes` ·
+`/narration/<stem>/<file>` (a deck's recorded narration — manifest-listed takes only,
+immutable caching; the service worker never touches it).
 
 **Named members** (docs/spec-second-login.md): `webapp/users.py` keeps member accounts in
 `data/private/users.json` — gitignored, mode 0600, never synced. The owner still signs in

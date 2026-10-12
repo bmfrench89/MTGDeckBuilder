@@ -84,8 +84,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
   var root = document.getElementById('wt-root');
   var dataEl = document.getElementById('wt-data');
   if (!root || !dataEl) return;
-  var CLIPS;
-  try { CLIPS = (JSON.parse(dataEl.textContent) || {}).clips || []; } catch (e) { return; }
+  var CLIPS, AUDIO_BASE = '';
+  try {
+    var DATA = JSON.parse(dataEl.textContent) || {};
+    CLIPS = DATA.clips || [];
+    AUDIO_BASE = DATA.audio || '';
+  } catch (e) { return; }
   if (!CLIPS.length) return;
   root.classList.add('wt-js');
 
@@ -115,10 +119,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
   var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   var synth = window.speechSynthesis;
   var CAN_SPEAK = !!(synth && window.SpeechSynthesisUtterance);
-  if (!CAN_SPEAK) { voiceBtn.hidden = true; menuBtn.hidden = true; }
+  // Recorded narration (Part C): one <audio> element reused for every scene, the
+  // next scene's take preloaded. Only on the app surface, which serves the files.
+  var HAS_TAKES = !!AUDIO_BASE && CLIPS.some(function (c) {
+    return c.scenes.some(function (s) { return s.audio; });
+  });
+  var audioEl = HAS_TAKES ? new Audio() : null, preEl = HAS_TAKES ? new Audio() : null;
+  if (audioEl) { audioEl.preload = 'auto'; preEl.preload = 'auto'; }
+  if (!CAN_SPEAK) menuBtn.hidden = true;
+  if (!CAN_SPEAK && !HAS_TAKES) voiceBtn.hidden = true;
 
   var ci = 0, si = 0, elapsed = 0, playing = false, last = 0, raf = 0, atEnd = false;
-  var voiceOn = CAN_SPEAK && store('wt-narration') === '1', speaking = false, talkId = 0;
+  // Narration defaults ON once recordings exist (the Play tap is the permission
+  // phones need); after that each device's own choice wins.
+  var pref = store('wt-narration');
+  var voiceOn = pref === null ? HAS_TAKES : (pref === '1' && (CAN_SPEAK || HAS_TAKES));
+  var speaking = false, talkId = 0;
   var voices = [], voice = null;
   var els = {};
 
@@ -418,8 +434,29 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
       synth.speak(u);
     });
   }
+  function takeUrl(sc) { return sc && sc.audio && AUDIO_BASE ? AUDIO_BASE + sc.audio.file : ''; }
+  function preloadNext() {
+    if (!preEl) return;
+    var sc = CLIPS[ci].scenes[si + 1] || (CLIPS[ci + 1] && CLIPS[ci + 1].scenes[0]);
+    var u = takeUrl(sc);
+    if (u && preEl.getAttribute('src') !== u) preEl.setAttribute('src', u);
+  }
   function speak(sc) {
-    if (!voiceOn || !CAN_SPEAK) return;
+    if (!voiceOn) return;
+    var u = takeUrl(sc);
+    if (u && audioEl) {
+      if (CAN_SPEAK) { try { synth.cancel(); } catch (e) {} }
+      speaking = true;
+      if (audioEl.getAttribute('src') !== u) audioEl.setAttribute('src', u);
+      try { audioEl.currentTime = 0; } catch (e) {}
+      var id = ++talkId;
+      audioEl.onended = audioEl.onerror = function () { if (id === talkId) speaking = false; };
+      var pr = audioEl.play();
+      if (pr && pr.catch) pr.catch(function () { if (id === talkId) speaking = false; });
+      preloadNext();
+      return;
+    }
+    if (!CAN_SPEAK) return;
     try { synth.cancel(); } catch (e) {}
     speaking = true;
     talk(sc.speak || sayable(sc.say || (sc.head + (sc.sub ? '. ' + sc.sub : ''))),
@@ -428,6 +465,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
   function hush() {
     speaking = false;
     talkId++;
+    if (audioEl) { try { audioEl.pause(); } catch (e) {} }
     if (CAN_SPEAK) { try { synth.cancel(); } catch (e) {} }
   }
   function showScene(animate) {
@@ -547,14 +585,40 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
     last = 0;
     over.hidden = true;
     setPlayIcon();
-    speak(scene());
+    // Resume a paused take where it stopped; anything else starts the scene's line.
+    var u = takeUrl(scene());
+    if (voiceOn && u && audioEl && audioEl.getAttribute('src') === u && audioEl.currentTime > 0
+        && !audioEl.ended && elapsed > 0) {
+      speaking = true;
+      var pr = audioEl.play();
+      if (pr && pr.catch) pr.catch(function () { speaking = false; });
+    } else {
+      speak(scene());
+    }
+    mediaState();
     raf = requestAnimationFrame(tick);
   }
   function pause() {
     playing = false;
     cancelAnimationFrame(raf);
-    hush();
+    speaking = false;
+    talkId++;
+    if (audioEl) { try { audioEl.pause(); } catch (e) {} }   // kept, so Play resumes it
+    if (CAN_SPEAK) { try { synth.cancel(); } catch (e) {} }
     setPlayIcon();
+    mediaState();
+  }
+  // Lock screen and headphone buttons — they only reach a page that is playing an
+  // <audio> element, so this is wired only when the deck has recorded takes.
+  function mediaState() {
+    if (!HAS_TAKES || !('mediaSession' in navigator)) return;
+    try {
+      if (window.MediaMetadata) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: CLIPS[ci].title, artist: document.title.split(' · ')[0] || 'Deck clips' });
+      }
+      navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+    } catch (e) {}
   }
   function seek(c, s) {
     var was = playing;
@@ -637,6 +701,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = WT_SPEECH;
     else if (ev.key === 'ArrowRight') next();
     else if (ev.key === 'ArrowLeft') prev();
   });
+  if (HAS_TAKES && 'mediaSession' in navigator) {
+    var acts = { play: play, pause: pause, stop: function () { stop(); },
+                 previoustrack: function () { prev(); }, nexttrack: function () { next(); } };
+    Object.keys(acts).forEach(function (k) {
+      try { navigator.mediaSession.setActionHandler(k, acts[k]); } catch (e) {}
+    });
+  }
   if (CAN_SPEAK) {
     loadVoices();
     if (synth.addEventListener) synth.addEventListener('voiceschanged', loadVoices);

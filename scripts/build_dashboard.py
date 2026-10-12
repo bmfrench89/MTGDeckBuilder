@@ -1156,7 +1156,13 @@ def clips_html(clips):
         return (f"<section><h2>Watch: How to Play This Deck</h2>{warn}"
                 "<p class='muted'>No clip can play until its storyboard is rewritten "
                 "for the current list.</p></section>")
-    payload = (json.dumps({"clips": cl}, ensure_ascii=True)
+    if clips.get("narration_missing"):
+        n = clips["narration_missing"]
+        warn += (f"<p class='muted fs-xs'>{n} scene{'s' if n != 1 else ''} use"
+                 f"{'' if n != 1 else 's'} your device's voice until "
+                 f"{'they are' if n != 1 else 'it is'} re-recorded.</p>")
+    payload = (json.dumps({"clips": cl, "audio": clips.get("audio_base") or ""},
+                          ensure_ascii=True)
                .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
     outline = "".join(
         f"<li><b>{esc(c['title'])}</b> ({_clip_len(c['total'])})<ol>"
@@ -1889,7 +1895,7 @@ _SIM_UNSET = object()   # "not passed" — distinct from an explicit sim=None
 def generate(deck_path, collection_path, title="Commander Deck", commander="",
              subtitle="Commander (EDH) deck dashboard", theme="default",
              decks_dir=None, size="normal", want_visual=False, editable=False,
-             sim=_SIM_UNSET):
+             sim=_SIM_UNSET, narration_url=None):
     """Load a deck + collection and return rendered HTML. Shared by the CLI and
     the web app. Returns {'dashboard': str, 'visual': str|None, 'assessment': dict|None,
     'report': dict}.
@@ -1945,6 +1951,20 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
         clips = clipmod.load(deck_path, [c.name for c in deck], _clip_info(enriched))
     except Exception:
         clips = None
+    # Recorded narration (spec Part C) only where a server can hand out the files:
+    # the app's deck page passes `narration_url`. A downloaded or CLI dashboard is one
+    # self-contained file, so it keeps the device voice and the authored timings.
+    if clips and narration_url:
+        try:
+            import narration
+            raw = json.load(open(clipmod.clips_path(deck_path), encoding="utf-8"))
+            voice = narration.deck_voice(narration.load_config(), raw)
+            if voice:
+                narration.attach(clips, os.path.splitext(os.path.basename(deck_path))[0],
+                                 voice)
+                clips["audio_base"] = narration_url
+        except Exception:
+            pass                       # narration is a nicety; the clip still plays
 
     shared = None
     dd = decks_dir if decks_dir is not None else os.path.dirname(deck_path)
