@@ -403,9 +403,49 @@ def parse_deck(text: str) -> list:
     return _parse_namelist(text)
 
 
+# A dated line in owned_additions.txt: the batch header the app and sessions write
+# (`# --- Batch 2026-10-12 · pasted list · 214 cards ---`) or an older dated note
+# (`# 2026-10-07: Beorn the Fierce deck…`). Rows below it arrived on that date.
+ADDITIONS_DATE_RE = re.compile(r"^#\s*(?:---\s*Batch\s+)?(\d{4}-\d{2}-\d{2})\b")
+
+
+def parse_additions(text: str) -> list:
+    """`owned_additions.txt` -> list[Card], each carrying the date its rows arrived.
+
+    Same row grammar as the name-list parser (it IS that parser, one line at a time);
+    the only addition is the date: a row's `date_added` is the nearest dated header
+    above it, so the new-arrivals view sees a batch the way it already sees an
+    export's Date Bought column. A non-batch `# --- … ---` header resets it, and
+    `# retired … (in export): …` lines are comments like any other. Undated rows
+    keep "" — never today's date, which would be a guess."""
+    cards, date = {}, ""
+    for raw in (text or "").splitlines():
+        s = raw.strip()
+        if not s:
+            continue
+        if s.startswith("#"):
+            m = ADDITIONS_DATE_RE.match(s)
+            if m:
+                date = m.group(1)
+            elif re.match(r"^#\s*---", s):
+                date = ""
+            continue
+        for c in _parse_namelist(s):
+            c.date_added = date
+            prev = cards.get(c.name)
+            if prev is None:
+                cards[c.name] = c
+            else:
+                prev.quantity += c.quantity
+                if date > prev.date_added:
+                    prev.date_added = date
+    return list(cards.values())
+
+
 def merge_collection(cards: list, extra: list) -> list:
     """Merge player-confirmed extra ownership into a parsed collection (in place).
-    Adds quantities for cards already present; appends new ones."""
+    Adds quantities for cards already present; appends new ones. The newer
+    acquisition date wins, so a batch row dates a card the export already had."""
     idx = {_norm(c.name): c for c in cards}
     for e in extra:
         k = _norm(e.name)
@@ -413,6 +453,8 @@ def merge_collection(cards: list, extra: list) -> list:
             idx[k].quantity += e.quantity
             if e.price is not None and idx[k].price is None:
                 idx[k].price = e.price
+            if e.date_added and e.date_added > idx[k].date_added:
+                idx[k].date_added = e.date_added
         else:
             cards.append(e)
             idx[k] = e
@@ -554,7 +596,12 @@ def _load_collection(path: str) -> list:
         ep = os.path.join(d, extra)
         if os.path.exists(ep):
             with open(ep, encoding="utf-8") as f:
-                merge_collection(cards, parse_collection(f.read()))
+                text = f.read()
+            # The .txt is the dated-batch file; a .csv goes through the CSV reader
+            # (which already reads a Date Bought column if it has one).
+            merge_collection(cards, parse_additions(text)
+                             if ep.endswith(".txt") and detect_format(text) != "csv"
+                             else parse_collection(text))
     for attrs in ATTRS_OVERLAYS:
         ap = os.path.join(d, attrs)
         if os.path.exists(ap):

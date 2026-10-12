@@ -262,6 +262,18 @@ textarea { font-family: var(--font-mono); font-size: var(--fs-xs); }
 input::placeholder, textarea::placeholder { color: var(--faint); }
 input:focus, textarea:focus, select:focus { border-color: var(--accent); outline: none; }
 textarea { width: 100%; min-height: 60vh; }
+/* Paste boxes (batch add, deck import) sit beside other controls — a full 60vh would
+   push the submit button off a phone screen. */
+textarea.pastebox { min-height: 30vh; }
+/* A labelled form field: the label text above its control, full width. */
+label.field { display: flex; flex-direction: column; gap: var(--sp-1); }
+label.field > input, label.field > select, label.field > textarea { width: 100%; }
+/* New arrivals: one block per card, its candidate decks listed under it (a table
+   squeezed the deck names into a one-word column on a phone). */
+.arrival { padding: var(--sp-3) 0; border-bottom: 1px solid var(--edge); }
+.arrival:last-child { border-bottom: 0; }
+.arrival .homes { list-style: none; margin: var(--sp-1) 0 0; padding: 0; }
+.arrival .homes li { padding: var(--sp-1) 0; }
 .chk { accent-color: var(--accent); width: 20px; height: 20px; min-height: 0; }
 label:has(> .chk) { display: inline-flex; align-items: center; gap: var(--sp-2);
   min-height: 44px; cursor: pointer; }

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Import a deck list · MTG Deckbuilder{% endblock %}
+{% block content %}
+<h1>Import a deck list</h1>
+<div class="sub">Built a deck at the table? Paste its list — one card per line — and it becomes a
+  deck here: ownership check, shared cards, curve, bracket and all. You'll see a preview
+  before anything is saved.</div>
+
+<form method="post" action="{{ url_for('deck_import_preview') }}" enctype="multipart/form-data"
+      class="card mt-4">
+  <div class="grid">
+    <label class="field">Commander
+      <input type="text" name="commander" placeholder="e.g. Giada, Font of Hope" autocomplete="off">
+      <span class="muted fs-xs">Leave blank if your list marks it (a “Commander” heading, *CMDR*, or
+        Archidekt's [Commander]).</span>
+    </label>
+    <label class="field"><span>Deck name <span class="muted fs-xs">(optional)</span></span>
+      <input type="text" name="title" placeholder="defaults to the commander's name" autocomplete="off">
+    </label>
+  </div>
+  <label class="field mt-3">Save as
+    <select name="target">
+      <option value="">a new deck</option>
+      {% for d in decks %}<option value="{{ d.stem }}"{{ ' selected' if d.stem == target }}>the new list for: {{ d.title }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="field mt-3">The list
+    <textarea name="text" class="pastebox" spellcheck="false"
+      placeholder="1 Giada, Font of Hope&#10;1 Sol Ring&#10;1 Lyra Dawnbringer&#10;20 Plains"></textarea>
+  </label>
+  <p class="muted fs-xs">Any common format works: <code>1 Sol Ring</code>, <code>1x Sol Ring</code>,
+    Moxfield / Arena / Archidekt exports with set codes and foil marks, or a bare card name per
+    line. Sideboard and Maybeboard sections are left out.</p>
+  <div class="row filepick mt-3">
+    <input type="file" name="file" id="deckfile" accept=".txt,.csv,.dek,text/plain,text/csv">
+    <label for="deckfile" class="btn ghost">Or attach a file…</label>
+    <span id="deckname" class="muted fs-xs">No file chosen</span>
+    <button class="btn" type="submit">Preview</button>
+  </div>
+  <script>
+    (function(){var f=document.getElementById('deckfile'),n=document.getElementById('deckname');
+      if(f)f.addEventListener('change',function(){
+        n.textContent=(f.files&&f.files[0])?f.files[0].name:'No file chosen';});})();
+  </script>
+</form>
+{% endblock %}

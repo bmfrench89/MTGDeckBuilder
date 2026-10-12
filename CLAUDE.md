@@ -76,7 +76,10 @@ per-module table — read it before any structural change.
   imports nothing else in the repo), `goldfish` (seeded Monte Carlo for *sequenced*
   play — the questions `manabase`'s exact-but-unconditional closed forms cannot reach;
   `deck_stats`/`deckcore` are imported inside its loader only), `clips` (the Watch tab's
-  storyboard gate — every card a clip shows must be in the deck; mtglib only).
+  storyboard gate — every card a clip shows must be in the deck; mtglib only), `intake`
+  (card intake + deck import: parse a pasted list or CSV, resolve every line through
+  `carddb.verify_cards`, write a dated batch to `owned_additions.txt`, reconcile a new
+  export against the batches, the Upload guard).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
@@ -308,7 +311,12 @@ nothing (Maze of Ith → `Card.produced == set()`), while an *absent column* mea
 unknown (`Card.produced is None`) and every consumer must fall back to color identity
 **and say so**. Conflating the two is a bug, not a rounding error.
 `load_collection` auto-merges `collection_attrs.csv` (derived) and `owned_additions.txt`
-(player-confirmed cards the export missed — the player's word beats the export).
+(player-confirmed cards the export missed — the player's word beats the export). Its rows
+sit in dated blocks (`# --- Batch 2026-10-12 · <what> · N cards ---`, written by
+`intake.py` or the app's Add a batch); `mtglib.parse_additions` dates each row from the
+block above it, which is what the New arrivals review reads. A batch a later export
+carries is retired by commenting its rows out (`# retired <date> (in export): …`), never by
+deleting them — and never through the site's Upload, which replaces the whole collection.
 `pins.csv` (`Card,Deck`) reserves a physical copy for one deck; other decks treat it as
 unavailable.
 
@@ -336,7 +344,10 @@ Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<st
 (remove/replace) · `/deck/<stem>/optimize` · `/deck/<stem>/pin` · `/deck/<stem>/assess[.txt]`
 (coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` (+ `/add`,
 `/upload`) · `/wishlist` · `/shared` · `/api/card/<name>` · `/api/collection/search` ·
-`/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health`.
+`/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health` ·
+`/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) · `/collection/upload/decide`
+(the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
+`/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one).
 
 The saved-deck dashboard is editable (`build_dashboard.generate(..., editable=True)`);
 CLI-rendered dashboards keep `editable=False`. Both surfaces share `generate()`, so a change

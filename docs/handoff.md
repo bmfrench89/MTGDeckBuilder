@@ -6,7 +6,19 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-12 (blind Ur-Dragon + Giada builds published as study copies; waiting on the player's real lists)._
+_Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind Ur-Dragon + Giada study copies still waiting on the player's real lists)._
+
+## New in the app (2026-10-12): card intake + deck import
+
+`docs/spec-card-intake.md` (§3, §4, §7) is shipped. `scripts/intake.py` is the engine.
+- **Collection → Add a batch**: paste or attach new cards → preview (✓ / ? / ✗ per line)
+  → one dated batch in `owned_additions.txt`. Sessions use `intake.py <list> --verified
+  <runner json> --write --label "…"`. No more scratch batch scripts.
+- **Replace my whole collection** (the old Upload) now stops and asks when the file looks
+  like a few new cards, and offers to **retire** batch rows a new full export carries.
+- **New arrivals** (`/collection/arrivals`, + a text packet for a session's engine read):
+  the latest batch + 30 days, each card's legal decks with field % and fit (a prior).
+- **Decks → Import a list**: the player's own list → a new deck or a new list for one.
 
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 
@@ -22,7 +34,13 @@ Giada, Font of Hope (#2)**. The plan is to compare it with what they actually bu
 - They have Galadriel's Dismissal and Gleaming Splendor in Giada. `thorin-king-of-durins-folk.txt`
   still lists Gleaming Splendor (1 owned), so Thorin's list is probably stale too.
 
-**Next step: get their Ur-Dragon, Giada, Killian (and Thorin) lists.**
+**Next step: get their Ur-Dragon, Giada, Killian (and Thorin) lists.** The player can now
+log them themselves: Decks → **Import a list** (`/decks/import`). A new commander becomes a
+new deck; picking "the new list for: The Ur-Dragon" (or importing a commander that already
+has a deck and tapping **Replace the list of …**) swaps the list in place and logs every
+difference as a manual add/remove. If they paste lists into a session instead, verify the
+names on the runner and follow the same shape (tool-contract.md, "Log a deck the PLAYER
+built").
 1. Diff each list against the blind builds.
 2. Log the real lists as the real decks (`giada-font-of-hope`, `killian-decisive-mentor`).
 3. Update `the-ur-dragon`, and update Y'shtola for the cards that moved out.

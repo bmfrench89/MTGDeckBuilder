@@ -40,37 +40,87 @@
   {% endif %}
 </div>
 
+{% if reconcile %}
+<div class="card mb-4" id="reconcile" style="border-left:3px solid var(--short)">
+  {% set rc = reconcile|sum(attribute='covered') %}
+  <h2 class="mt-0">Already in your new export?</h2>
+  <p>{{ reconcile|length }} card row(s) you added by hand ({{ rc }} cop{{ 'y' if rc == 1 else 'ies' }})
+    are now carried by the export you just uploaded. Retire them so they aren't counted twice?
+    Each row is commented out with today's date, never deleted.</p>
+  <details class="mb-3"><summary class="muted fs-xs">Show the rows</summary>
+    <div class="muted fs-xs mt-2">{% for r in reconcile %}{{ r.covered }}{% if r.covered < r.qty %} of {{ r.qty }}{% endif %} {{ r.name }}{{ ' · ' if not loop.last }}{% endfor %}</div>
+  </details>
+  <form method="post" action="{{ url_for('collection_reconcile') }}" class="row">
+    <button class="btn" type="submit" name="action" value="retire">Retire them</button>
+    <button class="btn ghost" type="submit" name="action" value="keep">Keep them</button>
+  </form>
+</div>
+{% endif %}
+
 <div class="grid mb-4">
+  <div class="card" id="batch">
+    <h2 class="mt-0">Add a batch of new cards</h2>
+    <p class="muted">Paste a list, one card per line (<code>1 Sol Ring</code>,
+      <code>2x Arcane Signet</code>, Moxfield/Arena lines like <code>1 Sol Ring (C21) 263 *F*</code>),
+      or attach a CSV of just the new cards (ManaBox, Moxfield, TCGplayer…). You'll see a
+      preview before anything is saved. Basic lands are skipped — they're always owned.</p>
+    <form method="post" action="{{ url_for('collection_batch') }}" enctype="multipart/form-data">
+      <textarea name="text" class="pastebox" spellcheck="false"
+        placeholder="1 Sol Ring&#10;2x Arcane Signet&#10;Counterspell"></textarea>
+      <div class="row filepick mt-3">
+        <input type="file" name="file" id="batchfile" accept=".txt,.csv,text/plain,text/csv">
+        <label for="batchfile" class="btn ghost">Or attach a file…</label>
+        <span id="batchname" class="muted fs-xs">No file chosen</span>
+        <button class="btn" type="submit">Preview</button>
+      </div>
+    </form>
+    <div class="muted mt-3 fs-xs">Added by hand so far: {{ additions.rows }} rows ·
+      {{ additions.copies }} copies{% if additions.latest %} · latest batch: {{ additions.latest }}{% endif %}.
+      Saved to <code>owned_additions.txt</code> and merged everywhere.</div>
+  </div>
   <div class="card">
-    <h2 class="mt-0">Upload a new export</h2>
-    <p class="muted">Replace <code>collection.csv</code> with a fresh Archidekt/ManaBox export.
+    <h2 class="mt-0">Own one card the export missed?</h2>
+    <p class="muted">Add it here (your word beats the export).</p>
+    <form method="post" action="{{ url_for('collection_add') }}">
+      <div class="row"><input type="number" name="qty" value="1" min="1" style="width:60px">
+        <input type="text" name="name" placeholder="Card name" style="flex:1" required>
+        <button class="btn" type="submit">Add</button></div>
+    </form>
+    <h2>Replace my whole collection</h2>
+    <p class="muted">For a <b>full</b> export only (Archidekt, ManaBox, Sorted…) — it replaces
+      <code>collection.csv</code>. A file that looks like a few new cards stops and asks first.
       Stays on this machine.</p>
     <form method="post" action="{{ url_for('collection_upload') }}" enctype="multipart/form-data">
       <div class="row filepick" >
         <input type="file" name="csv" id="csvfile" accept=".csv" required>
         <label for="csvfile" class="btn ghost">Choose file…</label>
         <span id="csvname" class="muted fs-xs">No file chosen</span>
-        <button class="btn" type="submit">Upload</button>
+        <button class="btn ghost" type="submit">Replace my whole collection</button>
       </div>
     </form>
     <script>
-      (function(){var f=document.getElementById('csvfile'),n=document.getElementById('csvname');
+      (function(){[['csvfile','csvname'],['batchfile','batchname']].forEach(function(p){
+        var f=document.getElementById(p[0]),n=document.getElementById(p[1]);
         if(f)f.addEventListener('change',function(){
-          n.textContent=(f.files&&f.files[0])?f.files[0].name:'No file chosen';});})();
+          n.textContent=(f.files&&f.files[0])?f.files[0].name:'No file chosen';});});})();
     </script>
   </div>
-  <div class="card">
-    <h2 class="mt-0">Own something the export missed?</h2>
-    <p class="muted">Add it here (your word beats the export). Saved to
-      <code>owned_additions.txt</code> and merged everywhere.</p>
-    <form method="post" action="{{ url_for('collection_add') }}">
-      <div class="row"><input type="number" name="qty" value="1" min="1" style="width:60px">
-        <input type="text" name="name" placeholder="Card name" style="flex:1" required>
-        <button class="btn" type="submit">Add</button></div>
-    </form>
-    {% if additions %}<div class="muted mt-3 fs-xs">
-      Added: {{ additions|join(' · ') }}</div>{% endif %}
+</div>
+
+<div class="card mb-4" id="arrivals">
+  <h2 class="mt-0">🆕 New arrivals</h2>
+  {% if arrivals %}
+  <p>{{ arrivals|length }} card(s) from the last 30 days aren't in any deck yet.
+    The review lists the decks each one is legal in, with the field % and fit score — a
+    starting point, not a verdict.</p>
+  <div class="row">
+    <a class="btn" href="{{ url_for('collection_arrivals') }}">Review new arrivals</a>
+    <a class="btn ghost" href="{{ url_for('collection_arrivals_txt') }}">Copy review packet (text)</a>
   </div>
+  {% else %}
+  <p class="muted">Nothing new in the last 30 days that isn't already in a deck. Cards you add
+    as a batch, or an export with purchase dates, show up here.</p>
+  {% endif %}
 </div>
 
 <h2>Browse your collection</h2>

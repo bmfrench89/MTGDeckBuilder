@@ -315,7 +315,11 @@ def test_cp1252_upload_is_resaved_as_utf8(env):
     raw = "Quantity,Name\n1,Lim-Dûl the Necromancer\n1,Jötun Grunt\n".encode("cp1252")
     with pytest.raises(UnicodeDecodeError):
         raw.decode("utf-8")
-    assert _upload(env, raw).status_code == 302
+    # Two cards against a nine-card collection trips the Upload guard
+    # (spec-card-intake.md §3); the second tap is what replaces.
+    assert _upload(env, raw).status_code == 200
+    assert env.client.post("/collection/upload/decide",
+                           data={"choice": "replace"}).status_code == 302
     text = (env.coll_dir / "collection.csv").read_text(encoding="utf-8")
     assert "Lim-Dûl the Necromancer" in text
     assert env.app.COLLECTION == str(env.coll_dir / "collection.csv")
