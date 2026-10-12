@@ -259,3 +259,303 @@
 1 Thrashing Brontodon
 1 Whisperer of the Wilds
 1 Swiftfoot Boots
+
+# --- Batch 2026-10-12 · the player's card orders · 306 cards (289 distinct) ---
+# 11 TCGplayer orders (2026-09-19 to 2026-09-28, from the player's order-history
+# screenshots) and 5 order exports the player uploaded on 2026-10-12. A sixth export
+# (Talion, Norn's Annex, Bloodchief Ascension, Ghostly Prison, Teferi, Lotho, Dismember,
+# Grim Tutor) is left out: the player confirmed it is the August Y'shtola purchase,
+# already in the 2026-08-20 export. One export is the whole Bartolomé del Presidio deck,
+# which the player is now building for real. Every name verified on Scryfall
+# (deck-verify run 38193552788). Player-confirmed: new copies on top of the export.
+# When a future export already carries these cards, retire this block so nothing
+# counts twice (docs/spec-card-intake.md §3, reconcile on upload).
+1 Path of Ancestry
+1 Noble's Purse
+3 Arcane Signet
+2 Changing Loyalty
+2 Orzhov Basilica
+1 Stitcher's Supplier
+1 Werefox Bodyguard
+1 Generous Gift
+1 Throne of the Grim Captain // The Grim Captain
+1 Crow of Dark Tidings
+1 Gift of Immortality
+1 Infernal Offering
+1 Valgavoth's Faithful
+1 Intercessor's Arrest
+1 Agent of the Iron Throne
+1 Dakmor Salvage
+1 Demonic Bargain
+1 Unburial Rites
+1 Boonweaver Giant
+1 Sun Titan
+1 Scavenger's Talent
+1 Conduit Pylons
+3 Myriad Landscape
+2 Bojuka Bog
+1 Fiend Hunter
+1 Hidden Grotto
+1 Corpse Augur
+1 Sevinne's Reclamation
+1 Charcoal Diamond
+1 Redemption Choir
+1 The Warring Triad
+1 Bartolomé del Presidio
+1 Brotherhood Outcast
+1 Dusk // Dawn
+2 Orzhov Signet
+1 Final Parting
+2 Mind Stone
+1 Great Hall of the Citadel
+1 Seal from Existence
+1 Memorial to Folly
+1 Shepherd of the Cosmos
+1 Angel of Indemnity
+1 Leonin Relic-Warder
+1 Unseal the Necropolis
+1 Zulaport Cutthroat
+1 Marionette Apprentice
+1 Body Snatcher
+1 Undead Butler
+1 Disenchant
+2 Command Tower
+1 Bound in Gold
+1 Another Chance
+2 Minion's Return
+1 Wake the Dead
+2 Talisman of Hierarchy
+1 Dread Return
+2 Kaya's Ghostform
+1 Bastion of Remembrance
+1 Fungal Fortitude
+1 Corpse Churn
+1 Necrogen Communion
+1 Prismatic Lens
+1 Diresight
+1 Surveillance Room
+1 Danitha, Benalia's Hope
+1 Dimir House Guard
+1 Ash Barrens
+1 Exotic Orchard
+1 Millikin
+1 Mariposa Military Base
+1 Gnawing Vermin
+2 Rogue's Passage
+1 Angelic Renewal
+1 Funeral Rites
+1 Paramecia Coloniex
+2 Tainted Field
+1 Ninja Teen
+1 Wayfarer's Bauble
+1 Summon Undead
+1 Dark Deal
+1 Blasphemous Edict
+1 Mindslicer
+1 Geth's Grimoire
+1 Sangromancer
+1 Send in the Pest
+1 Liliana's Specter
+1 Defile
+1 Plaguecrafter
+1 Syphon Mind
+1 Rankle, Master of Pranks
+1 Hymn to Tourach
+1 Necrogoyf
+1 Hopeless Nightmare
+2 Sol Ring
+1 Feed the Swarm
+1 Cerebral Confiscation
+1 Gray Merchant of Asphodel
+1 Vicious Rumors
+1 Mind Rake
+1 Oppression
+1 Bandit's Talent
+1 Winter Moon
+1 Raiders' Wake
+1 Aclazotz, Deepest Betrayal // Temple of the Dead
+1 Tinybones Joins Up
+1 Duress
+1 Hecteyes
+1 Fanatic of the Harrowing
+1 Nezumi Informant
+1 Tourach, Dread Cantor
+1 The Raven Man
+1 Megrim
+1 Gonti, Night Minister
+1 Tinybones, Bauble Burglar
+1 Delirium Skeins
+1 Liliana's Caress
+1 Asylum Visitor
+1 Pilfer
+1 Elderfang Disciple
+1 Pox Plague
+1 Consuming Corruption
+1 Dark Ritual
+1 Geier Reach Sanitarium
+1 Rankle's Prank
+1 Phyrexian Arena
+1 Withering Torment
+1 Refurbished Familiar
+1 Jet Medallion
+1 Virus Beetle
+1 Fell Specter
+1 Burglar Rat
+1 Painful Quandary
+1 Infernal Grasp
+1 Fake Your Own Death
+1 Waste Not
+1 Let's Play a Game
+1 Murder
+1 Entropic Battlecruiser
+1 Sheoldred's Edict
+1 Smallpox
+2 Swiftfoot Boots
+1 Liliana of the Veil
+1 Songbirds' Blessing
+1 Parasitic Impetus
+1 Stab Wound
+1 Spirit Mantle
+1 Ethereal Armor
+1 Vampiric Link
+1 Grievous Wound
+1 Redemption Arc
+1 Planar Disruption
+1 Pearl-Ear, Imperial Advisor
+1 Anguished Unmaking
+1 Sram, Senior Edificer
+1 Mesa Enchantress
+1 Angelic Gift
+1 Killian, Ink Duelist
+1 Path to Exile
+1 Winds of Rath
+1 Nurgle's Rot
+1 Starfield Mystic
+1 All That Glitters
+1 Fetid Heath
+1 Sage's Reverie
+1 Archon of Sun's Grace
+1 Retether
+1 Swords to Plowshares
+1 Hateful Eidolon
+1 Open the Armory
+1 Heliod's Pilgrim
+1 Temple of Silence
+1 Timely Ward
+1 Eiganjo Dynastorian // Replenish
+1 Shineshadow Snarl
+1 Ghoulish Impetus
+1 Sheltered by Ghosts
+1 Kor Spiritdancer
+1 Scoured Barrens
+1 Hyena Umbra
+1 Orzhov Guildgate
+1 Isolated Chapel
+1 Danitha Capashen, Paragon
+1 Ashiok's Reaper
+1 Angelic Destiny
+1 Scriv, the Obligator
+1 Inkshield
+1 Commander's Sphere
+1 Sigil of the Empty Throne
+1 Rune of Mortality
+1 Neva, Stalked by Nightmares
+1 Not Dead After All
+1 Transcendent Envoy
+1 Darksteel Mutation
+1 Desolate Mire
+1 Eriette's Whisper
+1 Hero of Iroas
+1 Caves of Koilos
+1 Eidolon of Countless Battles
+1 Killian, Decisive Mentor
+1 Coercive Impetus
+1 Spirit Link
+1 Martial Impetus
+1 Clawing Torment
+1 Ghostly Prison
+1 Sigarda's Splendor
+1 Righteous Valkyrie
+1 Avacyn, Angel of Hope
+1 Firemane Commando
+1 Linvala, Keeper of Silence
+1 Lyra Dawnbringer
+1 Bishop of Wings
+1 Pearl Medallion
+1 Angel of Finality
+1 Exemplar of Light
+1 The Wind Crystal
+1 Authority of the Consuls
+1 Serra's Emissary
+1 Angelic Accord
+1 Court of Grace
+1 Valkyrie Harbinger
+1 Youthful Valkyrie
+1 Angel of Vitality
+1 Thraben Watcher
+1 The Book of Exalted Deeds
+1 Serra the Benevolent
+1 Giada, Font of Hope
+1 Akroma's Will
+1 Rebuff the Wicked
+1 Windbrisk Heights
+1 Metropolis Reformer
+1 Archangel of Tithes
+1 Angel of Destiny
+1 Grand Abolisher
+1 Inspiring Overseer
+1 Flare of Fortitude
+1 Seraph Sanctuary
+1 Starfield Shepherd
+1 Serra Ascendant
+1 Angel of Jubilation
+1 Temple of the False God
+1 Angelic Field Marshal
+1 Isperia, Supreme Judge
+1 Sphinx of Foresight
+1 Elenda and Azor
+1 Sphinx of the Final Word
+1 Master of Predicaments
+1 Curator of Mysteries
+1 Dream Eater
+1 Atemsis, All-Seeing
+1 Ethersworn Sphinx
+1 Leyline of Transformation
+1 Dream Trawler
+1 Sphinx Sovereign
+1 Sphinx of Forgotten Lore
+1 Sphinx of the Steel Wind
+1 Tivit, Seller of Secrets
+1 Sunbond
+1 Maskwood Nexus
+1 Rise of the Dark Realms
+1 Azorius Signet
+1 Riddlemaster Sphinx
+1 Diabolic Tutor
+1 Windreader Sphinx
+1 Sphinx of the Second Sun
+1 Maddening Cacophony
+1 Medomai the Ageless
+1 Consecrated Sphinx
+1 Azor, the Lawbringer
+1 Unesh, Criosphinx Sovereign
+1 Raffine, Scheming Seer
+1 Magister Sphinx
+1 Goreclaw, Terror of Qal Sisma
+1 Sandstone Oracle
+1 Yennett, Cryptic Sovereign
+1 Dazzling Sphinx
+1 Defiler of Dreams
+1 Scholar of the Lost Trove
+1 Enigma Sphinx
+1 Ureni of the Unwritten
+1 Baneslayer Angel
+1 Battle Angels of Tyr
+1 Bruna, the Fading Light
+1 Elspeth Resplendent
+1 Gisela, the Broken Blade
+1 Heliod's Intervention
+1 Idyllic Tutor
+1 Scourge of the Throne
+1 Shattered Angel
+1 The Arkenstone // Seek the Heart

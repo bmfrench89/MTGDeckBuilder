@@ -262,7 +262,8 @@ file in place and must keep quantity, section, and comment lines intact (that's 
 `test_deck_edit.py` guards).
 
 **Study copies** — `# Study: yes` marks a deck kept for review, not sleeved from the
-collection (the Tergrid options, the Bartolomé deck tech). It commits no physical copies:
+collection (the Tergrid options; the Bartolomé deck tech was one until the player bought its
+cards on 2026-10-12). It commits no physical copies:
 `deck_conflicts.scan`, the free pool, the wishlist and `optimize --all` skip it
 (`deck_conflicts.is_study_deck`). Name it with `--deck` to analyze it on purpose.
 

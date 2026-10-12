@@ -49,6 +49,19 @@ player's decisions recorded in it. **No code has changed yet.**
         - Chromatic Lantern for Spider-Man (no cut ever named);
         - nothing beats Beorn's current list.
     - Re-run the pass with every batch in, then present one table.
+  - **Second batch done (2026-10-12): the player's card orders.** It covers 11 TCGplayer
+    orders (transcribed from screenshots, 2026-09-19 to 09-28) and 5 of 6 uploaded order
+    exports.
+    - All 296 names were verified on the runner (run 38193552788).
+    - Added as a dated block: 306 copies, about $590 estimated.
+    - The sixth export was skipped: the player confirmed it is the August Y'shtola
+      purchase, already in the 2026-08-20 export.
+    - The refunded 8-card order was confirmed fully received.
+    - One export was the entire Bartolomé deck. **Bartolomé is now a real deck**: the
+      study flag was dropped, all 100 cards are owned, and it adds no new shortages.
+      Shared-card shortages: 74 → 73.
+    - Order CSVs and screenshots are NOT committed: they hold prices, sellers and the
+      player's address. Only names and quantities went into `owned_additions.txt`.
   - **This batch:** the player will give the session a big list, pasted or as a file.
     The player confirmed that **every card on it is new**, so add copies on top of the
     current count and replace nothing.
@@ -191,7 +204,8 @@ behavior a session might otherwise trust from memory:
   re-derive them on read: field snapshots do this (`edhrec._renorm_snapshot`), and the
   curated role sets are normalized at import.
 - **`# Study: yes`** marks a review-only deck. Conflicts, the free pool, the wishlist and
-  `optimize --all` skip it. The Tergrid options and the Bartolomé deck tech are marked.
+  `optimize --all` skip it. The Tergrid options are marked. Bartolomé was too, until the
+  player bought its cards on 2026-10-12; it is now a real deck.
 - **`data/reference/banned.txt`** lists 42 runner-verified banned cards. Every recommender
   filters on it. It is not exhaustive: `carddb --verify` gives the live legality.
 - **`oracle_flags` v4:**
@@ -1224,10 +1238,9 @@ host is required — which is why Y'shtola, not a new Yahenni deck, is the cheap
 Method written up as `.claude/skills/mtg-deckbuilder/references/combo-shapes.md` (read cards
 for the SLOT they fill — outlet / loop / returner / payoff) and linked from SKILL.md.
 
-⚠ **Known wart:** the study deck `bartolome-del-presidio-600-combos` lives in `data/decks/`,
-so `deck_conflicts` now counts it as a real deck (Generous Gift reads "committed 3"). It is
-a reference list, not a sleeved deck. If that noise matters, move it or teach
-`deck_conflicts` to skip decks whose `# Source:` marks them as study copies.
+✓ **Resolved:** `bartolome-del-presidio-600-combos` was a study copy that inflated
+`deck_conflicts`. `# Study: yes` fixed the noise. As of 2026-10-12 it is a real, sleeved
+deck: the player bought all 100 cards.
 
 ## Combo KB taught the Bartolomé lattice (2026-08-19)
 

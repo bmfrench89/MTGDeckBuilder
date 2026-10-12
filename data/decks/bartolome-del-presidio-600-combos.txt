@@ -3,8 +3,7 @@
 # Colors: WB
 # Archetype: aristocrats combo
 # Theme: sacrifice-loop combo
-# Source: YouTube deck tech "1 Deck, 27 Dollars, 600 Infinite COMBOS" (youtu.be/1Yusxsud5BE) — study copy, NOT a build from the collection
-# Study: yes
+# Source: YouTube deck tech "1 Deck, 27 Dollars, 600 Infinite COMBOS" (youtu.be/1Yusxsud5BE) — the player bought the full list (2026-10-12 orders batch); a sleeved deck since 2026-10-12, no longer a study copy
 # Note: The whole deck is one idea. Bartolomé is a FREE, unlimited sacrifice outlet in
 # Note: the command zone. Pair any "aura/enchantment that returns the creature when it
 # Note: dies" with any "creature whose ETB returns that permanent from the graveyard"
