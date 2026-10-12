@@ -20,11 +20,11 @@ _Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind U
   the latest batch + 30 days, each card's legal decks with field % and fit (a prior).
 - **Decks → Import a list**: the player's own list → a new deck or a new list for one.
 - **Watch tab**: video-style controls (⏮ ▶ ■ ⏭, tap to pause) and the device's best voice
-  with a picker. **Recorded narration is built and waits on the player's pick:** the
-  audition page (six free voices, three Iron Fortress lines) is
-  https://claude.ai/artifact/UehzzbKevQJxkWv1w2mvXE. When they choose, write
-  `data/reference/narration.json` and push — `narrate.yml` records the scenes. Ryan's licence
-  is non-commercial; Alan's isn't stated, so steer away from Alan unless it's checked.
+  with a picker. **Recorded narration: the player picked Kokoro `af_heart`** (2026-10-12,
+  from the audition page https://claude.ai/artifact/UehzzbKevQJxkWv1w2mvXE).
+  `data/reference/narration.json` holds it; `narrate.yml` records any scene whose spoken
+  text has no take and commits `data/narration/` — a caption edit re-records only that
+  scene.
 - **A second login** (`docs/spec-second-login.md`): the owner adds the brother on the
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
