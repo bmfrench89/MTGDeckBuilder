@@ -6,7 +6,68 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-12 (three specs written: Watch voice + controls, card intake, second login)._
+_Last updated: 2026-10-12 (blind Ur-Dragon + Giada builds published as study copies; waiting on the player's real lists)._
+
+## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
+
+The player asked for a fresh pass on their two top decks: **The Ur-Dragon (#1) and
+Giada, Font of Hope (#2)**. The plan is to compare it with what they actually built.
+
+**Their real decks are NOT logged.** The player said:
+- They upgraded the Ur-Dragon, moving in Mana Drain, Grim Tutor and Insatiable Avarice
+  from Y'shtola. `the-ur-dragon.txt` is still the old list.
+- They built Giada (angels) and Killian, Decisive Mentor (W/B auras, "basically everything"
+  from the SOC-heavy order export plus their own lands).
+- Y'shtola is no longer #1, so her cards may move to other decks.
+- They have Galadriel's Dismissal and Gleaming Splendor in Giada. `thorin-king-of-durins-folk.txt`
+  still lists Gleaming Splendor (1 owned), so Thorin's list is probably stale too.
+
+**Next step: get their Ur-Dragon, Giada, Killian (and Thorin) lists.**
+1. Diff each list against the blind builds.
+2. Log the real lists as the real decks (`giada-font-of-hope`, `killian-decisive-mentor`).
+3. Update `the-ur-dragon`, and update Y'shtola for the cards that moved out.
+
+**Published study copies (`# Study: yes`, they commit nothing):**
+- **`the-ur-dragon-blind-update`**: the logged list plus 6 swaps.
+  - In: Ureni of the Unwritten, Scourge of the Throne, Mana Drain, Grim Tutor,
+    Insatiable Avarice, Reflecting Pool.
+  - Out: Pet Avengers, Parapet Thrasher, Dragonlord Ojutai, Seal of Cleansing,
+    Zurgo and Ojutai, Cinder Glade.
+  - The blind pass independently picked the player's own three moves.
+- **`giada-blind-build`**: `auto_build` + `optimize`, then a hand pass.
+  - 31 Angels, 37 lands, 19/25 of the field's top 25, Bracket 2.
+  - The player's two catches (Galadriel's Dismissal, Gleaming Splendor) were added
+    afterwards.
+
+Each has a notes.md with the reasoning and caveats.
+
+**Lessons from this pass:**
+- **`auto_build` alone was worse than the tuned Ur-Dragon.** It cut notes-protected engine
+  pieces and filled with junk (HULK SMASH!, Tremor). Upgrade a tuned list rather than
+  rebuild it.
+- **The optimizer's 25-point gate held every real Giada staple** (Book of Exalted Deeds,
+  Court of Grace, Akroma's Will…) behind 0% filler. The hand pass did the work.
+- **Sweep the whole free pool for low-% sleepers.** The player caught two 8% cards the pass
+  missed.
+- **Goldfish blind spots:** attack/ETB triggers, extra combats, Angel tokens and Giada's
+  counters. Ureni and Scourge read as small goldfish downgrades for that reason.
+
+**Data gaps found:**
+1. **Reflecting Pool** has an empty `Produced` cell, so it reads as producing nothing. Its
+   "any type a land you control could produce" text isn't modeled. Fix it in
+   `oracle_flags`/`carddb`.
+2. **About 50 Kami-of-the-Crescent-Moon cards are untyped in the sandbox.** The deck was
+   built on the server from the private CSV, and the committed snapshot is from 2026-08-20.
+   The snapshot refresh path needs a fresh export, or a server-side push of names and
+   quantities.
+
+**Build-pool model (scratch, re-creatable):**
+- Y'shtola treated as a donor.
+- Cosmic Spider-Man deleted from the app on 2026-10-12, so its cards are free.
+- Killian's order reserved.
+
+The earlier swap shortlist below (Spider-Man rows) is moot because that deck was dismantled.
+
 
 ## Spec'd, not started — three player asks, 2026-10-12
 
