@@ -79,14 +79,20 @@ Each has a notes.md with the reasoning and caveats.
 - **Goldfish blind spots:** attack/ETB triggers, extra combats, Angel tokens and Giada's
   counters. Ureni and Scourge read as small goldfish downgrades for that reason.
 
-**Data gaps found:**
-1. **Reflecting Pool** has an empty `Produced` cell, so it reads as producing nothing. Its
-   "any type a land you control could produce" text isn't modeled. Fix it in
-   `oracle_flags`/`carddb`.
-2. **About 50 Kami-of-the-Crescent-Moon cards are untyped in the sandbox.** The deck was
-   built on the server from the private CSV, and the committed snapshot is from 2026-08-20.
-   The snapshot refresh path needs a fresh export, or a server-side push of names and
-   quantities.
+**Data gaps found, both closed:**
+1. **Reflecting Pool now reads W U B R G.** The empty cell came from a goldfish run made
+   before the 2026-10-12 attrs snapshot (`bc4b4be`) carried the card. That snapshot uses
+   Scryfall's own `produced_mana`, so no `oracle_flags` change was needed. It is slightly
+   generous when Pool is the only land. The Ur-Dragon blind-update caveat was rewritten.
+   Re-run: Pool → Cinder Glade makes the first kill +0.04 turns slower, so the swap stands.
+2. **Kami of the Crescent Moon is typed.** A `deck-verify` run with
+   `deck_attrs: kami-of-the-crescent-moon` matched 76/76 cards and wrote
+   `kami-of-the-crescent-moon.attrs.csv`. Untyped 50 → 0, curve 20 → 64 spells, and lands
+   33 → 36 (three lands had been counted as spells).
+   - **Still stale in the sandbox: ownership.** The name-only `collection_snapshot.txt` is
+     from 2026-08-20 and lacks 51 of the deck's cards. An attrs file adds types, never
+     ownership. The server reads the full CSV and is unaffected; only a fresh export
+     refreshes the snapshot.
 
 **Build-pool model (scratch, re-creatable):**
 - Y'shtola treated as a donor.
