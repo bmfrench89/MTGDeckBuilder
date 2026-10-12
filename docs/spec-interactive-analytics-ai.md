@@ -49,7 +49,7 @@ opponent / game simulation remains out of scope (tier 2 deferred, tier 3 rejecte
 | 9 | Rules layer (`scripts/rules.py` + `scripts/rulings.py`) — the tool behind "never from memory" | ☑ CR fetch/parse/lookup/search/glossary + per-card rulings + the skill's retrieve→read→cite discipline | #95 |
 | 10 | Watch tab: video-style controls (tap to pause, Stop, scene steps) + a natural narrator (device-voice ranking now, free recorded narration after an audition) — `docs/spec-watch-voice-and-controls.md` | ◐ Parts A + B shipped 2026-10-12 (controls, voice ranking + picker, per-sentence speech, `clips.spoken`); Part C waits on the voice audition | — |
 | 11 | Card intake: paste-a-batch with preview, card data the same day, reconcile-on-upload (no double counts), New arrivals review — `docs/spec-card-intake.md` · plus **deck import** (paste the player's own list → a new deck, or a new list for an existing one) | ☑ Shipped 2026-10-12: `scripts/intake.py` + Collection → Add a batch, the Upload guard, reconcile, `/collection/arrivals` (+ packet), `/decks/import` | — |
-| 12 | Second login: a named member with the owner's powers (minus People/Upload), every edit labeled `By` — `docs/spec-second-login.md` | ☐ Spec'd 2026-10-12 | — |
+| 12 | Second login: a named member with the owner's powers (minus People/Upload), every edit labeled `By` — `docs/spec-second-login.md` | ☑ Shipped 2026-10-12: People page, member sign-in + lockout + sign-out-everywhere, `By` on every change, editor diffs logged, `data/activity.csv`, per-deck Changes page | — |
 
 **Also shipped (not in the phase list):** Build Next redesigned to the Decks style + a
 "build any commander" box (Scryfall color-identity lookup → any commander, #22); ManaPool

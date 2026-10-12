@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}People · MTG Deckbuilder{% endblock %}
+{% block content %}
+<header class="pagehead">
+  <div>
+    <h1>People</h1>
+    <div class="sub">Who can sign in besides you. A member can do everything you can except
+      this page{% if not can_upload %} and replacing your whole collection{% endif %} — and
+      every change they make is labelled with their name.</div>
+  </div>
+  <div class="acts"><a class="btn ghost" href="{{ url_for('activity') }}">Activity</a></div>
+</header>
+
+{% if not gated %}
+<div class="card mb-4 warn">This copy of the app has no password (MTG_PASSWORD isn't set), so
+  nobody signs in and member accounts can't be used. Set the password on the server first.</div>
+{% endif %}
+
+<div class="card mb-4">
+  <h2 class="mt-0">You</h2>
+  <form method="post" action="{{ url_for('people_post') }}" class="row">
+    <input type="hidden" name="action" value="owner">
+    <label class="field" style="flex:1"><span>Your display name <span class="muted fs-xs">(shown on your changes, and committed with them — pick one you're happy to see in the repo)</span></span>
+      <input type="text" name="display" value="{{ owner_display if owner_display != 'owner' else '' }}" maxlength="40" placeholder="e.g. Ben"></label>
+    <button class="btn ghost" type="submit">Save</button>
+  </form>
+  <p class="muted fs-xs mt-3">You sign in with the site password and a blank name (or this name).
+    Changing the site password signs <b>everyone</b> out, members included.</p>
+</div>
+
+<div class="card mb-4">
+  <h2 class="mt-0">Members</h2>
+  {% if not members %}<p class="muted">No members yet.</p>{% endif %}
+  {% for m in members %}
+  <div class="arrival">
+    <div><b>{{ m.display }}</b> <span class="muted fs-xs">· signs in as “{{ m.name }}”{% if m.disabled %} · <span class="warn">disabled</span>{% endif %}</span></div>
+    <div class="row mt-2">
+      <form method="post" action="{{ url_for('people_post') }}">
+        <input type="hidden" name="name" value="{{ m.name }}">
+        <button class="btn ghost sm" name="action" value="signout" type="submit">Sign out everywhere</button>
+        {% if m.disabled %}<button class="btn ghost sm" name="action" value="enable" type="submit">Enable</button>
+        {% else %}<button class="btn ghost sm" name="action" value="disable" type="submit">Disable</button>{% endif %}
+        <button class="btn danger sm" name="action" value="remove" type="submit"
+          onclick="return confirm('Remove {{ m.display }}? Their past changes keep their name.');">Remove</button>
+      </form>
+      <form method="post" action="{{ url_for('people_post') }}" class="row">
+        <input type="hidden" name="name" value="{{ m.name }}">
+        <input type="password" name="password" placeholder="New password" minlength="8" autocomplete="new-password" aria-label="New password for {{ m.display }}">
+        <button class="btn ghost sm" name="action" value="reset" type="submit">Reset password</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card mb-4">
+  <h2 class="mt-0">Add a member</h2>
+  <form method="post" action="{{ url_for('people_post') }}" class="stack">
+    <input type="hidden" name="action" value="add">
+    <div class="grid">
+      <label class="field">Sign-in name<input type="text" name="name" required maxlength="32" autocomplete="off" placeholder="e.g. sam"></label>
+      <label class="field">Display name<input type="text" name="display" maxlength="40" autocomplete="off" placeholder="shown on their changes"></label>
+      <label class="field">Password<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    </div>
+    <p class="muted fs-xs">Give them the password in person or by text — never in a chat or a screenshot.
+      They install the app from the sign-in page and stay signed in for 90 days.</p>
+    <div><button class="btn" type="submit">Add member</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <form method="post" action="{{ url_for('people_post') }}" class="row">
+    <input type="hidden" name="action" value="upload">
+    <label><input type="checkbox" class="chk" name="allowed" value="1"{{ ' checked' if can_upload }}>
+      Members may replace the whole collection (Collection → Replace)</label>
+    <button class="btn ghost sm" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

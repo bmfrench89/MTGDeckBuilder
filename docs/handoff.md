@@ -8,7 +8,7 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind Ur-Dragon + Giada study copies still waiting on the player's real lists)._
 
-## New in the app (2026-10-12): card intake + deck import
+## New in the app (2026-10-12): card intake, deck import, Watch controls, a second login
 
 `docs/spec-card-intake.md` (§3, §4, §7) is shipped. `scripts/intake.py` is the engine.
 - **Collection → Add a batch**: paste or attach new cards → preview (✓ / ? / ✗ per line)
@@ -19,6 +19,11 @@ _Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind U
 - **New arrivals** (`/collection/arrivals`, + a text packet for a session's engine read):
   the latest batch + 30 days, each card's legal decks with field % and fit (a prior).
 - **Decks → Import a list**: the player's own list → a new deck or a new list for one.
+- **Watch tab**: video-style controls (⏮ ▶ ■ ⏭, tap to pause) and the device's best voice
+  with a picker. Recorded narration (spec Part C) still waits on a voice audition run.
+- **A second login** (`docs/spec-second-login.md`): the owner adds the brother on the
+  People page; from then on every change says who made it (`By`, `data/activity.csv`).
+  One-time setup is in that spec's §5 — the player picks their own display name there.
 
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 

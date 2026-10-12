@@ -316,8 +316,9 @@ def append_buylist(deck_path, buy_swaps, commander=""):
 
 
 def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
-             max_swaps=40, owned_only=False, include_buys=True, buy_threshold=55):
-    """Return a report dict; writes the deck file when apply=True."""
+             max_swaps=40, owned_only=False, include_buys=True, buy_threshold=55, by=""):
+    """Return a report dict; writes the deck file when apply=True. `by` labels the
+    `.changes.csv` rows an applying run writes (the app's signed-in person)."""
     refs = refs or power.load_refs()
     stem = os.path.splitext(os.path.basename(deck_path))[0]
     text = open(deck_path, encoding="utf-8").read()
@@ -946,7 +947,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
               "role_deadlock": role_deadlock}
     if apply and (swaps or land_swaps):
         _write(deck_path, swaps, land_swaps)
-        record_changes(deck_path, swaps, land_swaps)
+        record_changes(deck_path, swaps, land_swaps, by=by)
     if apply:
         # _tidy on EVERY apply, not only when this pass wrote swaps. It is idempotent
         # and cheap, and gating it on our own changes left everyone else's misfiles
@@ -1165,30 +1166,24 @@ def _tidy(deck_path, idx):
         f.write("\n".join(out).rstrip("\n") + "\n")
 
 
-def record_changes(deck_path, swaps, land_swaps):
+def record_changes(deck_path, swaps, land_swaps, by=""):
     """Append what this run changed to `<deck>.changes.csv`.
 
     The optimizer already knows exactly which cards it brought in, so writing it down is
     nearly free — and it's the only way the dashboard can tell a card that arrived this
     morning from one that's been in the list for months. Appending (rather than
-    overwriting) keeps the deck's history."""
-    import csv
+    overwriting) keeps the deck's history. `by` is who pressed ⚡ in the app (empty for
+    the CLI and sessions); deckcore.append_changes owns the file format."""
     from datetime import date
     rows = [(add, cut, avail) for cut, _v, add, _i, avail in swaps]
     rows += [(add, cut, avail) for cut, add, avail in land_swaps]
     if not rows:
         return 0
     stem = deck_path[:-4] if deck_path.endswith(".txt") else deck_path
-    path = f"{stem}.changes.csv"
-    exists = os.path.exists(path)
-    with open(path, "a", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        if not exists:
-            w.writerow(["Card", "Added", "Replaced", "Source"])
-        today = date.today().isoformat()
-        for add, cut, avail in rows:
-            w.writerow([add, today, cut, avail])
-    return len(rows)
+    today = date.today().isoformat()
+    return deckcore.append_changes(f"{stem}.changes.csv",
+                                   [(add, today, cut, avail) for add, cut, avail in rows],
+                                   by=by)
 
 
 def _write(deck_path, swaps, land_swaps):

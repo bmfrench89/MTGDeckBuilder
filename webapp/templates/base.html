@@ -27,6 +27,7 @@
   'pins': '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
   'mobile': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
   'more': '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+  'people': '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/>',
 } %}
 {% macro tab(key, endpoint, label, title='', secondary=false) -%}
   <a class="tab{{ ' secondary' if secondary }}{{ ' on' if page==key }}" href="{{ url_for(endpoint) }}"
@@ -43,12 +44,14 @@
   {{ tab('shared', 'shared_view', 'Shared', secondary=true) }}
   {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck', secondary=true) }}
   {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone', secondary=true) }}
+  {% if auth_enabled and me_role == 'owner' %}{{ tab('people', 'people', 'People', 'Who can sign in', secondary=true) }}{% endif %}
   <details class="more">
     <summary aria-label="More pages"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{{ icons['more']|safe }}</svg>More</summary>
     <div class="more-items">
       {{ tab('shared', 'shared_view', 'Shared') }}
       {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck') }}
       {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone') }}
+      {% if auth_enabled and me_role == 'owner' %}{{ tab('people', 'people', 'People', 'Who can sign in') }}{% endif %}
       {% if auth_enabled %}
       <form method="post" action="{{ url_for('logout') }}">
         <button class="linkbtn" type="submit">Sign out</button>
@@ -57,6 +60,7 @@
     </div>
   </details>
   <div class="foot">
+    {% if auth_enabled and named_users %}<div class="muted fs-xs mb-2">Signed in as {{ me_name }}</div>{% endif %}
     {% if auth_enabled %}
     <form method="post" action="{{ url_for('logout') }}">
       <button class="linkbtn" type="submit" title="Sign out on this device">Sign out</button>
