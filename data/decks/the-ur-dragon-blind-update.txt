@@ -1,8 +1,8 @@
-# Title: The Ur-Dragon — blind update (study)
+# Title: The Ur-Dragon — best build (study)
 # Commander: The Ur-Dragon
 # Colors: W U B R G
 # Archetype: dragon tribal
-# Source: Claude's blind fresh pass 2026-10-12 — the logged Ur-Dragon plus six swaps, built without seeing the player's upgraded list; for comparison, not the sleeved deck
+# Source: Claude's best-from-the-collection build, refreshed 2026-10-13: the 2026-10-12 blind update plus Birds of Paradise, Beast Within, Scavenger Regent and three slow lands; built as a set with the Giada and Thorin builds so no card is used past its owned count; for comparison with the player's sleeved deck
 # Study: yes
 
 # --- Commander ---
@@ -27,7 +27,6 @@
 1 Scalelord Reckoner
 1 Silumgar, the Drifting Death
 1 Wrathful Red Dragon
-1 Smaug the Impenetrable
 1 Broodcaller Scourge
 1 Lozhan, Dragons' Legacy
 1 Dragonlord Silumgar
@@ -38,13 +37,14 @@
 1 Radagast of Rhosgobel
 1 Atsushi, the Blazing Sky
 1 Ao, the Dawn Sky
-1 Wood Elves
+1 Birds of Paradise
 1 Sarkhan, Soul Aflame
 1 Dragonspeaker Shaman
-1 Smaug the Magnificent
+1 Scavenger Regent // Exude Toxin
 1 Roaming Throne
 
 # --- Instants ---
+1 Beast Within
 1 Chaos Warp
 1 Mana Drain
 1 Assassin's Trophy
@@ -108,10 +108,12 @@
 1 Jungle Shrine
 1 Riverpyre Verge
 1 Turbulent Fen
+1 Haunted Ridge
+1 Rockfall Vale
+1 Overgrown Farmland
 
 # --- Basics ---
 2 Forest
 2 Island
-4 Mountain
-1 Plains
+2 Mountain
 1 Swamp

@@ -145,6 +145,22 @@ Not for Beorn:
 
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 
+**2026-10-13 update: three "best from the collection" study builds now exist, for the player to
+compare with their own decks.** They are `the-ur-dragon-blind-update`, `giada-blind-build`
+(both refreshed with the new arrivals) and **`thorin-blind-build` (new)**.
+- They were built as one set: no card is used past its owned count across the three, with
+  the live decks committed, Y'shtola as a donor and the Killian order reserved.
+- Ur-Dragon: +Birds of Paradise, Beast Within, Scavenger Regent and three slow lands. 21/25
+  of the field's top 25. Bracket 3.
+- Giada: +7 free field cards. 19/25. Bracket 2.
+- Thorin: auto_build's Dwarf core plus 12 hand swaps for the field's free staples. 30
+  Dwarves, 21/25, Bracket 2.
+- The logged `thorin-king-of-durins-folk` is an OLD auto-draft that misses An Unexpected
+  Party (80% field), The Arkenstone (67%) and others. The player's real Thorin is still
+  unlogged.
+- Each build's notes.md has the reasoning. **Next: the player compares and logs their real
+  lists** (Decks → Import a list).
+
 The player asked for a fresh pass on their two top decks: **The Ur-Dragon (#1) and
 Giada, Font of Hope (#2)**. The plan is to compare it with what they actually built.
 
