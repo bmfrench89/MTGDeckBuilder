@@ -77,6 +77,14 @@
     <div class="muted mt-3 fs-xs">Added by hand so far: {{ additions.rows }} rows ·
       {{ additions.copies }} copies{% if additions.latest %} · latest batch: {{ additions.latest }}{% endif %}.
       Saved to <code>owned_additions.txt</code> and merged everywhere.</div>
+    {% if additions.copies %}
+    <div class="row mt-3">
+      <a class="btn ghost" href="{{ url_for('export_additions') }}" download>Download added cards</a>
+      <span class="muted fs-xs">One <code>1 Sol Ring</code> line per card, to import into
+        Archidekt or ManaPool. Your next full export then carries them, and the upload offers
+        to retire these rows so nothing counts twice.</span>
+    </div>
+    {% endif %}
   </div>
   <div class="card">
     <h2 class="mt-0">Own one card the export missed?</h2>

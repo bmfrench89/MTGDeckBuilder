@@ -349,3 +349,54 @@ def test_a_leading_legendary_creature_is_offered_as_the_commander(env):
     assert "Commander:</b>" in html and "Taken from the first line" in html
     html = _import(env, "1 Counterspell\n1 Test Commander\n")
     assert "No commander yet" in html, "a nonlegendary first line is never promoted"
+
+
+# --------------------------------------------------------------------------- #
+# Download added cards — the round trip to the player's own collection site
+# --------------------------------------------------------------------------- #
+ADDS = """\
+# Player-confirmed ownership not in the export yet.
+
+# --- Batch 2026-10-12 · the player's card orders · 5 cards (4 distinct) ---
+2 Rhystic Study
+1 Sol Ring
+1 Forest
+# retired 2026-10-13 (in export): 1 Mana Crypt
+1 Fire // Ice
+
+# --- Batch 2026-10-13 · one more · 1 card ---
+1 Rhystic Study
+"""
+
+
+def test_added_cards_download_as_an_import_list(env):
+    env.adds.write_text(ADDS, encoding="utf-8")
+    r = env.client.get("/export/additions.txt")
+    assert r.status_code == 200 and r.mimetype == "text/plain"
+    assert "attachment" in r.headers["Content-Disposition"]
+    assert "added-cards-" in r.headers["Content-Disposition"]
+    lines = r.get_data(as_text=True).strip().splitlines()
+    assert lines == ["1 Fire // Ice", "3 Rhystic Study", "1 Sol Ring"], \
+        "summed per card, sorted; a retired row and a basic never appear"
+    assert not any(ln.startswith("#") for ln in lines), "importers choke on comments"
+
+
+def test_no_additions_file_is_an_empty_list_not_an_error(env):
+    r = env.client.get("/export/additions.txt")
+    assert r.status_code == 200 and r.get_data(as_text=True).strip() == ""
+
+
+def test_the_download_button_shows_only_when_there_is_something_to_download(env):
+    assert "Download added cards" not in env.client.get("/collection").get_data(as_text=True)
+    env.adds.write_text(ADDS, encoding="utf-8")
+    html = env.client.get("/collection").get_data(as_text=True)
+    assert "Download added cards" in html and "/export/additions.txt" in html
+
+
+def test_the_cli_writes_the_same_list(env, capsys, monkeypatch):
+    import export_manapool as ex
+    env.adds.write_text(ADDS, encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["export_manapool.py", "--additions", str(env.adds)])
+    assert ex.main() == 0
+    assert capsys.readouterr().out.strip().splitlines() == \
+        ["1 Fire // Ice", "3 Rhystic Study", "1 Sol Ring"]

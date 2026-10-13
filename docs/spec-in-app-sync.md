@@ -125,8 +125,17 @@ apply cleanly.)
 - It does not replace the GitHub Action (`field-snapshots.yml`) — that still
   *produces* fresh snapshots on GitHub's side; this closes the *delivery* to the
   server, which the Action alone never could.
-- It does not sync the private collection CSV — gitignored, travels only via the
-  app's upload page, exactly as before.
+- It does not sync the private collection CSV. That file is gitignored and arrives
+  only through the app's upload page, exactly as before. What the sync DOES carry
+  (2026-10-13) is a projection of it: `webapp/sync_snapshot.py` rewrites the committed
+  `collection_snapshot.txt` from it before staging. The rewrite holds names and
+  quantities only, never folds in `owned_additions.txt`, refuses a partial-looking
+  export, and writes nothing when the cards are unchanged. It runs **only while an
+  anonymous `git ls-remote` of origin is refused**. The probe strips the token from the
+  URL and turns credential helpers off, so a public repo, or one whose privacy can't be
+  proven, never gets a fresh copy. A changed list reaching main fires
+  `attrs-snapshot.yml`, so sessions and Actions see the collection the app sees.
+  Guarded by `tests/test_sync_snapshot.py`.
 - It does not touch decks, run the optimizer, or rebuild anything — it is git
   plumbing only.
 - It does not poll or busy-wait — zero cost between requests; a day with no
