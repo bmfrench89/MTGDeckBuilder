@@ -29,13 +29,22 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: Reality Fracture uploads in progress (2026-10-13), NO deck assessments
+## START HERE: Reality Fracture uploads done for now (2026-10-13), audit next
 
-The player is photographing their Reality Fracture (FRA) cards in several uploads.
-**Standing instruction: add each upload to the collection, and do not assess or swap any
-deck until the player says the uploads are finished.** Then run one combined sleeper audit.
-Each upload is verified on deck-verify and written as its own dated batch in
-`owned_additions.txt`.
+The player photographed their Reality Fracture (FRA) cards in six uploads and called the
+sixth "the last one for now". Each upload was verified on deck-verify and written as its
+own dated batch in `owned_additions.txt` (uploads 1-6: 9 + 9 + 9 + 8 + 8 + 8 = **51 cards**).
+No deck was assessed while the uploads came in. **Next: one combined sleeper audit of the
+FRA cards against every deck** (`card-review-method.md`). Present the swap table first and
+apply nothing until the player agrees.
+
+Waiting on the player's word (copies NOT added, each the same printing as an earlier upload):
+- Entrust the Spark (FRA 131), already in upload 2.
+- Solarium Sentry (FRA 148), already in upload 4.
+
+Different printings of the same card count as separate physical copies: Haunted Ridge,
+Null Summoner, Solitary Cell and Puppet Crafting each have two (upload 6's note lists the
+collector numbers).
 
 ## Backlog: target architecture (2026-10-13), the player will review
 

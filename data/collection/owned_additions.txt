@@ -667,3 +667,18 @@
 1 Vraska, Soul of Stone
 1 Haunted Ridge
 1 Theorist's Sanctum
+
+# --- Batch 2026-10-13 · Reality Fracture cards photographed by the player (upload 6) · 8 cards (8 distinct) ---
+# One photographed FRA page. Text verified on deck-verify run 38446934903.
+# Four are SECOND copies in a different printing, so each is a new physical card:
+# Haunted Ridge (borderless FRA 398; upload 5 has FRA 180), Null Summoner (showcase
+# FRA 353; upload 2 has FRA 142), Solitary Cell (showcase FRA 355; upload 2 has
+# FRA 149), Puppet Crafting (showcase FRA 373; the binder batch has FRA 111).
+1 Geist of Saint Thalia
+1 Thalia, the Survivor
+1 Haunted Ridge
+1 Warrior's Blades
+1 Marwyn, the Clearcutter
+1 Null Summoner
+1 Solitary Cell
+1 Puppet Crafting
