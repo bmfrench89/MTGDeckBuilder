@@ -29,6 +29,38 @@ _Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind U
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
+## Binder batch + Beorn swap proposal (2026-10-13) — WAITING ON THE PLAYER
+
+The player photographed four binder pages, mostly cards for Beorn. All 24 names were
+verified on deck-verify run 38334003819. A 22-card batch is in `owned_additions.txt`. The
+batch note records the judgement calls:
+- Thraben Watcher, Dream Eater and Elspeth Resplendent were left out. Their printings match
+  the 2026-10-12 orders, so they are those orders arriving.
+- Kept on the player's word, to confirm: Brainstorm, Sphinx of Enlightenment, Karmic Guide,
+  Emeria Angel and Swan Song. All five may be copies the export or the Kami deck already counts.
+
+**Proposed Beorn swaps, NOT applied.** The incumbents were verified on run 38334358379.
+The player is to OK them first (card-review-method step 7):
+
+| In (field %) | Out (field %) |
+|---|---|
+| Ayula, Queen Among Bears (86%) | Regal Imperiosaur (–, a Dinosaur lord) |
+| The Earth King (74%) | Ordinary Bear (49%, a vanilla 4-mana Bear) |
+| Rampaging Yao Guai (57%) | Carnage Tyrant (–) |
+| The Earth Crystal (25%) | Rhonas's Monument (31%) |
+| Hexhaven Invigorator (–) | Devil Dinosaur (–) |
+| Kogla, the Titan Ape (–; 46% under Goreclaw) | Terrian, World Tyrant (–, vanilla 9-power) |
+
+- EDHREC top-25 overlap goes from 14/25 to 17/25.
+- Hulk stays. The buylist had it as Yao Guai's slot, but The Earth Crystal doubles Hulk's
+  per-attack counters.
+- Bench: Krosan Grip, Simulacrum Shaper, Hungering Puppetbeast. Skip: Gardenize (Dina at
+  15% is the better home), Puppet Crafting, Hunter's Axe, Carnivorous Cultivator, Marwyn.
+- **To apply:** write the six swaps; log them `Source=manual-replace`; update the
+  `.notes.md` natural-Bear list and engine lines; mark the four buylist rows bought. Then
+  dispatch deck-verify with `deck_attrs: beorn-the-fierce` (the new cards need types) and
+  validate (deck_stats, power --rank, optimizer preview must not revert).
+
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 
 The player asked for a fresh pass on their two top decks: **The Ur-Dragon (#1) and

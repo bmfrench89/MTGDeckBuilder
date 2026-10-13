@@ -563,3 +563,37 @@
 # 2026-10-12: player confirmed owning Insatiable Avarice — it is sleeved in their upgraded
 # Ur-Dragon (not yet synced to data/decks). Not in the export or any batch above.
 1 Insatiable Avarice
+
+# --- Batch 2026-10-13 · binder pages photographed by the player · 22 cards (21 distinct) ---
+# Four binder pages the player photographed. Text verified on deck-verify run 38334003819.
+# Sphinx's Tutelage, Brainstorm and Sphinx of Enlightenment appear in two of the photos
+# (same printings, re-shot); counted ONCE each. Gardenize x2 is two physical cards (one
+# borderless, one regular). Ayula is the Fallout Pip-Boy printing, flavor-named "Ruzka,
+# Terror of Point Lookout".
+# NOT added again: Thraben Watcher (MH2), Dream Eater (MKC) and Elspeth Resplendent were
+# photographed in the printings the 2026-10-12 card-orders batch already logged: the
+# orders arriving, not new copies.
+# Kept on the player's word, to confirm: Brainstorm (1995 printing), Sphinx of
+# Enlightenment, Karmic Guide and Emeria Angel each had 1 copy in the 2026-08-20 export,
+# and Kami of the Crescent Moon already runs a Swan Song.
+1 The Earth King
+1 Kogla, the Titan Ape
+1 Ayula, Queen Among Bears
+1 Sphinx of Enlightenment
+1 Brainstorm
+1 Krosan Grip
+1 Sphinx's Tutelage
+1 Rampaging Yao Guai
+1 The Earth Crystal
+1 Swan Song
+1 Karmic Guide
+1 Angel of the Ruins
+1 Emeria Angel
+1 Hexhaven Invigorator
+1 Simulacrum Shaper
+1 Puppet Crafting
+2 Gardenize
+1 Hunter's Axe
+1 Carnivorous Cultivator // Enroot
+1 Hungering Puppetbeast
+1 Marwyn, the Preserver
