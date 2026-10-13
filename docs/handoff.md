@@ -29,22 +29,56 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: Reality Fracture uploads done for now (2026-10-13), audit next
+## START HERE: Reality Fracture cards in, swaps PROPOSED not applied (2026-10-13)
 
-The player photographed their Reality Fracture (FRA) cards in six uploads and called the
-sixth "the last one for now". Each upload was verified on deck-verify and written as its
-own dated batch in `owned_additions.txt` (uploads 1-6: 9 + 9 + 9 + 8 + 8 + 8 = **51 cards**).
-No deck was assessed while the uploads came in. **Next: one combined sleeper audit of the
-FRA cards against every deck** (`card-review-method.md`). Present the swap table first and
-apply nothing until the player agrees.
+The player photographed their Reality Fracture (FRA) cards in six uploads, which they
+called done "for now". Each upload is a dated batch in `owned_additions.txt`, verified on
+deck-verify: 51 cards, 47 distinct. The combined sleeper audit ran after the last upload.
+**Nothing below is applied. It waits on the player's yes.**
+
+Field % is ~0 for almost every FRA card. The set is too new for EDHREC, so that is a
+coverage gap, not a verdict. Every verdict comes from verified text read against the deck's
+engine, and every cut's text was verified too (deck-verify run 38447893724).
+
+| Deck | In | Out (field %) | Engine reason |
+|---|---|---|---|
+| Kami | Jace, Reality Sculptor | Kappa Cannoneer | An alternate win (see below) |
+| Kami | Theorist's Proxy | Mulldrifter | Flash; empower Jace 3; can make a spell uncounterable |
+| Kami | Geist of Saint Thalia | Padeem (player's call) | Noncreature spells cost 1 less in a ~60-noncreature deck |
+| Kami | Theorist's Sanctum | 1 Island | It IS an Island, so it still counts for Jace's +1; {2}{U},T empowers Jace 2 |
+| Y'shtola | Samut, Tyrant of Naktamun (9%) | Krile Baldesion (25%) | Split second on every instant and sorcery: Exsanguinate and Deluge can't be answered |
+| Captain America | Warrior's Blades | Visions of Beyond | ETB 3 damage + 3 life; equip drops {1} per +1/+1 counter, and Cap hands out counters |
+| Captain America | Solitary Cell (one of two) | Seal of Fire | Exiles any nonland permanent MV<=3 for 2 mana |
+| Dina | Vraska, the Cutting Glare | Shared Roots (6%) | A 4/4 deathtouch body; destroys a permanent at 6 lands; X=4 for Dina's ratchet |
+| Bartolomé | Lich's Relic (4%) | Bound in Gold (8%) | Kills a creature/PW per opponent, then is an artifact Bartolomé sacrifices |
+| Bartolomé | Vindictive Triumph | Intercessor's Arrest (8%) | Exile; MV<=3 comes back under our control, and Bartolomé sacrifices it before the end step |
+
+**The Kami find: Jace, Reality Sculptor (loyalty 5).** +1: empower Jace X = the Islands you
+control. The deck runs 25. 0 (with 25+ loyalty among Jaces): exile all but the bottom
+card of each opponent's library, and Kami makes each player draw a second card every draw
+step. With ~7-8 Islands it reaches 25 in two activations plus Proxy (+3) or Sanctum (+2).
+
+**Held, not judged:** Thorin and The Ur-Dragon wait on the player's real lists (task
+"Compare with the player's lists").
+- Thorin flags: Marwyn the Clearcutter (sac a Treasure: draw), the second Solitary Cell, and
+  Draconic Visitor. Check Draconic Visitor first: it turns EVERY artifact token into a 5/5
+  Dragon, so it eats a Treasure plan.
+- Ur-Dragon flags: Draconic Visitor (11%), Samut Hazoret's Champion (haste triggers Ur-Dragon
+  on the turn a dragon lands), and the three slow lands (Rockfall Vale, Overgrown Farmland,
+  Haunted Ridge).
+
+**Bench (playable, an incumbent is better):** Thalia the Survivor, Null Summoner, The
+Echoverse Fulcrum, Ajani Resolute (Y'shtola); Variable Chaser, Diviner of Victory (Kami);
+Puppet Crafting, Emrakul the Exigent Doom (Beorn); Curse-Marred Demon (a tutor; red decks
+are held); Vraska Soul of Stone (Cap).
+**Skip:** the rest. Off-identity for every live deck, draft-level, or engine-less:
+Entrust the Spark, Tam, Karn, Kwia, Return to the Light Realms (9 mana), Face Yourself,
+Stinging Vitriol, and the others.
 
 Waiting on the player's word (copies NOT added, each the same printing as an earlier upload):
-- Entrust the Spark (FRA 131), already in upload 2.
-- Solarium Sentry (FRA 148), already in upload 4.
-
-Different printings of the same card count as separate physical copies: Haunted Ridge,
-Null Summoner, Solitary Cell and Puppet Crafting each have two (upload 6's note lists the
-collector numbers).
+Entrust the Spark (FRA 131, upload 2) and Solarium Sentry (FRA 148, upload 4). Different
+printings count as separate copies: Haunted Ridge, Null Summoner, Solitary Cell and Puppet
+Crafting each have two.
 
 ## Backlog: target architecture (2026-10-13), the player will review
 
