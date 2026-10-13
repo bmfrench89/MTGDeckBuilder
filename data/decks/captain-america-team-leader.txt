@@ -36,7 +36,6 @@
 1 War Machine, Avenging Arsenal
 
 # --- Instants ---
-1 Visions of Beyond
 1 Abrade
 1 Dispatch
 1 Swords to Plowshares
@@ -55,6 +54,7 @@
 1 Austere Command
 
 # --- Artifacts ---
+1 Warrior's Blades
 1 Avengers Quinjet
 1 Arcane Signet
 1 Sol Ring
@@ -68,6 +68,7 @@
 1 Tome of Legends
 1 Door of Destinies
 1 Mjölnir, Hammer of Thor
+1 Solitary Cell
 
 # --- Enchantments ---
 1 Avengers Assemble!
@@ -76,7 +77,6 @@
 1 Kindred Discovery
 1 Reconnaissance Mission
 1 Seal of Cleansing
-1 Seal of Fire
 1 Folk Hero
 
 # --- Lands ---

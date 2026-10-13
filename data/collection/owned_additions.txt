@@ -682,3 +682,13 @@
 1 Null Summoner
 1 Solitary Cell
 1 Puppet Crafting
+
+# --- Batch 2026-10-13 · Second copies on the player's word · 3 cards (3 distinct) ---
+# The player confirmed (2026-10-13) that the two cards held back from the FRA uploads
+# are second copies, not re-shoots: Entrust the Spark and Solarium Sentry. They also
+# own more Geist of Saint Thalia than were scanned; ONE more is logged here, the
+# copies the decks now use (Kami + Y'shtola). Add the rest when they're scanned.
+# Text verified on deck-verify runs 38446934903 and 38447450079 / 38447413487.
+1 Entrust the Spark
+1 Solarium Sentry
+1 Geist of Saint Thalia

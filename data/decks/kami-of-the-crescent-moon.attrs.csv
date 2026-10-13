@@ -75,3 +75,7 @@ War Room,Land,0,,,,C,draw,,4
 Whir of Invention,Instant,3,U,{X}{U}{U}{U},,,,,4
 Windfall,Sorcery,3,U,{2}{U},,,,,4
 Worn Powerstone,Artifact,3,,{3},,C,mana2;ramp;rock,,4
+"Jace, Reality Sculptor",Planeswalker,5,U,{3}{U}{U},Jace,,,,4
+Theorist's Proxy,Creature,2,U,{1}{U},Illusion,,,0,4
+Geist of Saint Thalia,Creature,2,U,{1}{U},Spirit;Cleric,,discount:noncreature:1,1,4
+Theorist's Sanctum,Land,0,U,,Island,U,etb-tapped-cond,,4

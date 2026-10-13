@@ -74,3 +74,10 @@ shared-cards panel before sleeving.
 - Notes drift fixed: Quicksilver, Speedster and Masked Meower were named in the
   old plan but are not in the 99 (Meower cut for Mjölnir; Quicksilver is a
   47%-field bench candidate for a future audit).
+
+## 2026-10-13 Reality Fracture adds (manual — do not cut)
+- **Warrior's Blades**: on entry, 3 damage to any target and 3 life. Equip {3} costs {1} less
+  per +1/+1 counter on the target. Cap puts a counter on every Hero and on himself, so it
+  equips Cap for free after three Heroes. In over Visions of Beyond.
+- **Solitary Cell**: exiles a nonland permanent with mana value 3 or less until it leaves the
+  battlefield. {1}, T, discard a legendary card: draw. In over Seal of Fire.

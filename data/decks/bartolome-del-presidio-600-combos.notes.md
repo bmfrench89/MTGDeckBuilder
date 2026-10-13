@@ -121,3 +121,13 @@ The 600 figure itself is **not reproducible here** — Commander Spellbook's `fi
 endpoint is blocked in the sandbox, so `spellbook.py` cannot be run against this list. 264
 kill combos are counted by hand above and 45 rows are written into `combos.csv`; the rest
 of the gap to 600 is the second sacrifice outlet and Spellbook's finer-grained enumeration.
+
+## 2026-10-13 Reality Fracture adds (manual — do not cut)
+- **Lich's Relic**: {B}, then pay {2} on entry to destroy up to one creature or planeswalker
+  per opponent. After that it is an artifact for Bartolomé to sacrifice. In over Bound in Gold.
+- **Vindictive Triumph**: exile a creature or planeswalker. If its mana value was 3 or less,
+  it returns under your control until the end step, so Bartolomé sacrifices it first. In over
+  Intercessor's Arrest.
+
+Both cuts were removal-only Auras that the optimizer itself rated lowest (8% field), so the
+lattice is untouched.

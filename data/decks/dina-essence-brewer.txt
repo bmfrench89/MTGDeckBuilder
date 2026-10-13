@@ -46,6 +46,7 @@
 1 Sakura-Tribe Elder
 1 Beledros Witherbloom
 1 Blood Artist
+1 Vraska, the Cutting Glare
 
 # --- Instants ---
 1 Nameless Inversion
@@ -60,7 +61,6 @@
 # --- Sorceries ---
 1 Witherbloom Command
 1 Culling Ritual
-1 Shared Roots
 1 Feed the Swarm
 1 Final Act
 1 Toxic Deluge

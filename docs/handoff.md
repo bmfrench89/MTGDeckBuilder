@@ -29,12 +29,18 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: Reality Fracture cards in, swaps PROPOSED not applied (2026-10-13)
+## START HERE: Reality Fracture cards in, swaps APPLIED (2026-10-13)
 
 The player photographed their Reality Fracture (FRA) cards in six uploads, which they
 called done "for now". Each upload is a dated batch in `owned_additions.txt`, verified on
 deck-verify: 51 cards, 47 distinct. The combined sleeper audit ran after the last upload.
-**Nothing below is applied. It waits on the player's yes.**
+**All ten swaps below were applied on the player's word (2026-10-13)**, plus one more. The
+player owns several Geist of Saint Thalia, so Y'shtola also took one, in over Hermes,
+Overseer of Elpis (25%). Each swap is logged `manual-replace` in the deck's `.changes.csv`,
+has a row in its `.attrs.csv`, and has a WHY line in its `.notes.md`. Kami now HAS a
+notes.md: the Jace win line. The five removal adds are curated in `mtglib.REMOVAL`.
+Validated: 100 cards each, singleton clean, sections and clips checks clean, no new
+cross-deck conflicts, brackets unchanged, and the optimizer proposes no reverts.
 
 Field % is ~0 for almost every FRA card. The set is too new for EDHREC, so that is a
 coverage gap, not a verdict. Every verdict comes from verified text read against the deck's
@@ -75,8 +81,9 @@ are held); Vraska Soul of Stone (Cap).
 Entrust the Spark, Tam, Karn, Kwia, Return to the Light Realms (9 mana), Face Yourself,
 Stinging Vitriol, and the others.
 
-Waiting on the player's word (copies NOT added, each the same printing as an earlier upload):
-Entrust the Spark (FRA 131, upload 2) and Solarium Sentry (FRA 148, upload 4). Different
+Second copies: the player confirmed Entrust the Spark and Solarium Sentry are second copies.
+They also own more Geist of Saint Thalia than were scanned. One more of each is logged (batch
+"Second copies on the player's word"). Scan the remaining Geists when they turn up. Different
 printings count as separate copies: Haunted Ridge, Null Summoner, Solitary Cell and Puppet
 Crafting each have two.
 
