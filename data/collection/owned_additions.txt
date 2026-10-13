@@ -597,3 +597,17 @@
 1 Carnivorous Cultivator // Enroot
 1 Hungering Puppetbeast
 1 Marwyn, the Preserver
+
+# --- Batch 2026-10-13 · Reality Fracture cards photographed by the player (upload 1) · 9 cards (9 distinct) ---
+# Nine FRA mythics from one photographed page. Text verified on deck-verify run 38417831109.
+# None was already logged in the export or an earlier batch. More uploads are coming; no deck
+# assessment until the player says the uploads are finished.
+1 Emrakul, the Exigent Doom
+1 The Echoverse Fulcrum
+1 Kwia Vigorbloom
+1 Craterclaw Colossus
+1 Ajani Resolute
+1 Return to the Light Realms
+1 Enlightened Confidant
+1 Ajani Unrelenting
+1 Stingcaster Mage

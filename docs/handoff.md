@@ -29,15 +29,25 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: target architecture proposal (2026-10-13) — WAITING ON THE PLAYER
+## START HERE: Reality Fracture uploads in progress (2026-10-13), NO deck assessments
 
-The player wants no data in the repo, a non-GitHub way to reach Scryfall, and deck
-workflows that hang together. `docs/spec-target-architecture.md` proposes code in git,
-data in a SQLite DB on the app server, and the network at the server. Claude would reach
-it through a token API and CLI, and deck changes would arrive as proposals the player
-approves. Nothing is built. Decisions D1–D5 are in §10. Phase 0 (allowed domains in the
-Claude environment) is the player's and needs no code. Do not start Phase 1 until the
-player answers.
+The player is photographing their Reality Fracture (FRA) cards in several uploads.
+**Standing instruction: add each upload to the collection, and do not assess or swap any
+deck until the player says the uploads are finished.** Then run one combined sleeper audit.
+Each upload is verified on deck-verify and written as its own dated batch in
+`owned_additions.txt`.
+
+## Backlog: target architecture (2026-10-13), the player will review
+
+`docs/spec-target-architecture.md` (PROPOSED, revised after online research in §12):
+- Code in git, data in a SQLite DB on the app server, network at the server.
+- Claude reaches it through a token API and CLI.
+- Deck changes arrive as proposals the player approves.
+- PythonAnywhere Developer ($10/month) recommended over free.
+- No Play Store release yet.
+
+The player backlogged decisions D1–D6 to review later. Don't start Phase 1 until they
+answer. Phase 0 (allowed domains in the Claude environment) is still the player's own step.
 
 ## Binder batch + Beorn swaps (2026-10-13) — APPLIED
 
