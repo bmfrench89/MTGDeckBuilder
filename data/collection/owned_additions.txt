@@ -652,3 +652,18 @@
 1 Karn, Gilded Guardian
 1 Pompous Battlemage // Improvised Act
 1 Solarium Sentry
+
+# --- Batch 2026-10-13 · Reality Fracture cards photographed by the player (upload 5) · 8 cards (8 distinct) ---
+# One photographed FRA page. Text verified on deck-verify run 38446443438.
+# Vraska, the Cutting Glare and Vraska, Soul of Stone are the borderless printings
+# (FRA 319 / 318); Scryfall resolves the names to the same cards.
+# NOT added: Solarium Sentry (FRA 148), already in upload 4 in the same printing;
+# waiting on the player to confirm a second copy.
+1 Rockfall Vale
+1 Overgrown Farmland
+1 Proctor of Potential
+1 Tam, the Possibility
+1 Vraska, the Cutting Glare
+1 Vraska, Soul of Stone
+1 Haunted Ridge
+1 Theorist's Sanctum
