@@ -1176,6 +1176,16 @@ def export_wishlist():
     return text if raw else _txt(text, "manapool-wishlist.txt")
 
 
+@app.route("/export/additions.txt")
+def export_additions():
+    """Every card added by hand that the player's collection site doesn't have yet,
+    as `qty name` lines to import there (Archidekt, ManaPool). The next full export
+    then carries them, and the Upload's reconcile offer retires the rows."""
+    from datetime import date
+    text = ex.additions_text(ADDITIONS)
+    return _txt(text, f"added-cards-{date.today().isoformat()}.txt")
+
+
 @app.route("/export/deck/<stem>.txt")
 def export_deck(stem):
     m = deck_meta(stem)

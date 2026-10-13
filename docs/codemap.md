@@ -234,6 +234,8 @@ move) · `/deck/<stem>/bracket` (the player's bracket setting)
 
 **Named members (2026-10-12):** `users.py` is the member store (`data/private/users.json`, scrypt hashes, per-name lockout, `ver` for sign-out-everywhere); `app.py`'s `_session_valid` / `_me` / `_by` decide who is acting, `_note` queues a row that `_write_activity` appends to `data/activity.csv` after a successful response, and every `.changes.csv` write goes through `deckcore.append_changes` with `by=`. `sync_summary.py` turns the staged labels into the sync commit's "Changes by person" line.
 
+**The repo's copy of the collection (2026-10-13):** `sync_snapshot.py` is the one writer of the committed `collection_snapshot.txt`. `sync_server.sh` calls it before staging, and it projects the private `collection.csv` to names and quantities. It writes only when an anonymous `git ls-remote` of origin is refused (the repo is private), when the export doesn't look partial (`intake.upload_looks_partial`), and when the cards changed. The other direction is `/export/additions.txt` (`export_manapool.additions_text`): the live `owned_additions.txt` rows as an import list for the player's own collection site.
+
 **Background work — two modules, one pattern.** `sync.py` (daily git sync) and
 `enrich_bg.py` (collection enrichment after an upload) both use: a daemon thread, a
 JSON status file under `data/cache/`, an already-running guard, and a **stale-status

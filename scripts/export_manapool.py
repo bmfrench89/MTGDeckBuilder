@@ -56,11 +56,33 @@ def wishlist_text(collection_path, decks_dir, include=("shared", "unowned", "upg
     return _fmt(lines)
 
 
+def additions_text(additions_path):
+    """The cards added by hand (the app's batches, a session's batches) that the
+    player's own collection site doesn't know about yet: every live row of
+    `owned_additions.txt`, summed per card and sorted. Retired rows are comments and
+    never appear; basics never do either (they're never tracked).
+
+    The point is the round trip: import this into Archidekt or ManaPool, so the next
+    full export carries these cards, and the Upload's reconcile offer then retires
+    the rows. No card ends up counted twice."""
+    try:
+        with open(additions_path, encoding="utf-8") as f:
+            cards = mtglib.parse_additions(f.read())
+    except FileNotFoundError:
+        return ""
+    rows = [(c.quantity, c.name) for c in cards if not mtglib.is_basic(c.name)]
+    return _fmt(sorted(rows, key=lambda r: (r[1].lower(), r[1])))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Export a ManaPool-ready card list.")
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--deck", help="deck file -> full 100-card list")
     src.add_argument("--wishlist", action="store_true", help="cards you still need")
+    src.add_argument("--additions", nargs="?", metavar="PATH",
+                     const=os.path.join("data", "collection", "owned_additions.txt"),
+                     help="cards added by hand that your collection site doesn't have "
+                          "yet (default: data/collection/owned_additions.txt)")
     ap.add_argument("--collection", help="collection CSV (required with --wishlist)")
     ap.add_argument("--decks-dir", default="data/decks")
     ap.add_argument("--out", help="write to a file (default: print to stdout)")
@@ -69,6 +91,8 @@ def main():
     try:
         if args.deck:
             text = deck_text(args.deck)
+        elif args.additions:
+            text = additions_text(args.additions)
         else:
             if not args.collection:
                 ap.error("--wishlist needs --collection")

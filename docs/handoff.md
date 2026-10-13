@@ -91,8 +91,17 @@ Each has a notes.md with the reasoning and caveats.
    33 → 36 (three lands had been counted as spells).
    - **Still stale in the sandbox: ownership.** The name-only `collection_snapshot.txt` is
      from 2026-08-20 and lacks 51 of the deck's cards. An attrs file adds types, never
-     ownership. The server reads the full CSV and is unaffected; only a fresh export
-     refreshes the snapshot.
+     ownership. The server reads the full CSV and is unaffected.
+   - **Fixed in code (2026-10-13), waiting on the player.** The server sync now refreshes
+     the snapshot itself (`webapp/sync_snapshot.py`, names + quantities), but only once
+     the repo is private. On 2026-10-13 the repo was still **public**, and the player
+     said they would make it private. Until they do, the sync prints "the repo is
+     public" and writes nothing. After the switch, the second daily sync (the first one
+     pulls the new code) refreshes the list, and `attrs-snapshot.yml` types it.
+   - **The other direction:** Collection → Download added cards (`/export/additions.txt`)
+     hands the player the live `owned_additions.txt` rows to import into Archidekt or
+     ManaPool. The next full export then carries them, and the upload's reconcile
+     retires the rows.
 
 **Build-pool model (scratch, re-creatable):**
 - Y'shtola treated as a donor.

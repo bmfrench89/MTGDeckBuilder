@@ -172,11 +172,15 @@ is a physical task; *buying* them is not a thing — see the basics rule under D
 
 ### Privacy — the hard line
 `data/collection/collection.csv` and `collection_attrs.csv` are **gitignored and private**
-(a priced export of someone's real collection). Never commit them, never print their full
-contents into a PR body, and never write uploads to the tracked name-only snapshot —
-`/collection/upload` deliberately writes to the private CSV only (this closed a real leak).
-The committed `collection_snapshot.txt` is name + quantity only and is the ownership
-fallback for a fresh clone.
+(a priced export of someone's real collection). Never commit them, and never print their full
+contents into a PR body. An upload never writes the tracked snapshot:
+`/collection/upload` writes the private CSV only (this closed a real price leak).
+The committed `collection_snapshot.txt` is name + quantity only. It is the ownership
+fallback for a fresh clone and for every Action. Exactly one thing rewrites it: the server
+sync's `webapp/sync_snapshot.py`. It reads the private CSV, writes names and quantities only,
+never folds in `owned_additions.txt` (that would count added cards twice), and runs **only
+while an anonymous read of the repo is refused**. A public repo, or one whose privacy can't
+be proven, gets nothing.
 
 ### scripts/ is stdlib-only
 CI uninstalls Flask and imports every module in `scripts/` with no third-party packages
@@ -351,7 +355,9 @@ Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<st
 (coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` (+ `/add`,
 `/upload`) · `/wishlist` · `/shared` · `/api/card/<name>` · `/api/collection/search` ·
 `/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health` ·
-`/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) · `/collection/upload/decide`
+`/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) ·
+`/export/additions.txt` (the added cards as `qty name` lines to import into Archidekt/ManaPool,
+so the next export carries them and the upload's reconcile retires the rows) · `/collection/upload/decide`
 (the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
 `/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one) ·
 `/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes` ·

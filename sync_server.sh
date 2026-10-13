@@ -8,7 +8,9 @@
 # would land in conflict. Run this before pulling, or on whatever cadence suits you.
 #
 # Private data never moves: data/collection/collection.csv and collection_attrs.csv are
-# gitignored, so the explicit `git add` below cannot pick them up.
+# gitignored, so the explicit `git add` below cannot pick them up. What does move is a
+# projection of collection.csv: names and quantities only, into collection_snapshot.txt,
+# and only while the repo is private (webapp/sync_snapshot.py proves that first).
 #
 # One-time setup on the server (push needs credentials — a GitHub fine-grained PAT
 # with Contents: read/write on this repo):
@@ -41,14 +43,22 @@ fi
 # `git pull --rebase` fail, wedging the daily sync until a console cleanup.
 # data/activity.csv is the labelled log of deck-level actions (docs/spec-second-login.md);
 # data/private/ (member accounts) is deliberately NOT here and never may be.
+# collection_snapshot.txt is the names-and-quantities copy of the collection that
+# webapp/sync_snapshot.py rewrites just below, and ONLY while the repo is private.
 TRACKED_DATA=(
   data/decks
   data/collection/owned_additions.txt
   data/collection/pins.csv
+  data/collection/collection_snapshot.txt
   data/wishlist.md
   data/manapool-wishlist.txt
   data/activity.csv
 )
+
+# Bring the repo's copy of the collection up to date with the private export. It
+# checks for itself that the repo is private (an anonymous read must be refused),
+# writes names and quantities only, and never fails the sync.
+python3 webapp/sync_snapshot.py || true
 
 present=()
 for p in "${TRACKED_DATA[@]}"; do
@@ -65,6 +75,10 @@ else
   # Who changed what, per person, from the staged change logs ("Ben: 3 changes ·
   # Sam: 2"); empty when nothing is labelled, and a failure never blocks the commit.
   summary="$(python3 webapp/sync_summary.py 2>/dev/null || true)"
+  if ! git diff --cached --quiet -- data/collection/collection_snapshot.txt; then
+    summary="${summary:+$summary
+}Collection list refreshed from the private export (names and quantities only)."
+  fi
   git commit -m "Deck edits from the hosted app" -m "$summary"
   echo "sync: committed deck edits"
 fi
