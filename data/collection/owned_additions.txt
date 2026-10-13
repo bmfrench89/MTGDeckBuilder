@@ -637,3 +637,18 @@
 1 Draconic Visitor
 1 Repurposed Enforcer
 1 Guiding Hydra
+
+# --- Batch 2026-10-13 · Reality Fracture cards photographed by the player (upload 4) · 8 cards (7 distinct) ---
+# One photographed FRA page. Text verified on deck-verify run 38445455781.
+# Ajani's Anguish x2 = the regular and the borderless printing (two physical cards).
+# Germinate Recruits: the name was hidden by glare; Scryfall resolved it exactly and its
+# text and collector number (FRA 9) match the photo.
+# NOT added: Entrust the Spark (FRA 131), already in upload 2 in the same printing;
+# waiting on the player to confirm a second copy.
+2 Ajani's Anguish
+1 Germinate Recruits
+1 Face Yourself
+1 Frostbite Pyromental
+1 Karn, Gilded Guardian
+1 Pompous Battlemage // Improvised Act
+1 Solarium Sentry
