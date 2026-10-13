@@ -611,3 +611,16 @@
 1 Enlightened Confidant
 1 Ajani Unrelenting
 1 Stingcaster Mage
+
+# --- Batch 2026-10-13 · Reality Fracture cards photographed by the player (upload 2) · 9 cards (9 distinct) ---
+# Nine FRA rares from one photographed page. Text verified on deck-verify run 38429197335.
+# None was already logged. Three are prepare cards, stored under their full Scryfall names.
+1 Curse-Marred Demon
+1 Pyre Rhymer // Molten Tide
+1 Solitary Cell
+1 Stinging Vitriol
+1 Entrust the Spark
+1 Null Summoner
+1 Lich's Relic
+1 Diviner of Victory // Unwind History
+1 Variable Chaser // Arc of Fortune
