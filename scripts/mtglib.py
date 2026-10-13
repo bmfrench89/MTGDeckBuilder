@@ -886,6 +886,12 @@ REMOVAL = {
     # enrichment can't erase them.
     "ram through", "terrific team-up", "scrapshooter", "whiptongue hydra",
     "lizard, connors's curse", "kenrith's transformation",
+    # 2026-10-13 Reality Fracture sleeper-audit swaps — texts runner-verified
+    # (deck-verify 38446443438, 38446934903, 38447413487, 38447450079). Each one's
+    # removal clause sits behind an ETB, an equipment or a "return it under your
+    # control" rider that oracle_flags' sentence rules don't read as removal.
+    "lich's relic", "vindictive triumph", "solitary cell", "warrior's blades",
+    "vraska, the cutting glare",
 }
 WIPES = {
     "blasphemous act", "toxic deluge", "cleansing nova", "austere command",

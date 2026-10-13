@@ -124,3 +124,11 @@ records it, and the assess surfaces show it beside the detected estimate.
 Removal after the swaps: Swords, Infernal Grasp, Snuff Out, Void Rend, Dismember,
 Murderous Rider, Vindicate, plus Toxic Deluge. One wipe is deliberate — see
 Ghostly Prison above.
+
+## 2026-10-13 Reality Fracture adds (manual — do not cut)
+- **Samut, Tyrant of Naktamun**: *"Instant and sorcery spells you control have split second."*
+  Nobody can respond to Exsanguinate, Toxic Deluge or Dig Through Time once it's on the
+  stack. In over Krile Baldesion (25% field).
+- **Geist of Saint Thalia**: noncreature spells cost {1} less. Mana value is unchanged, so
+  Y'shtola's MV3+ trigger still fires on the discounted spell. In over Hermes, Overseer of
+  Elpis (25%).

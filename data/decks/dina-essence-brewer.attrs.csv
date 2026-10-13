@@ -87,3 +87,4 @@ Festering Thicket,Land,0,B G,B G,draw;etb-tapped,3,
 Path of Ancestry,Land,0,,W U B R G,etb-tapped,3,
 Forest,Land,0,G,G,,3,
 Swamp,Land,0,B,B,,3,
+"Vraska, the Cutting Glare",Creature,3,B G,,,4,4

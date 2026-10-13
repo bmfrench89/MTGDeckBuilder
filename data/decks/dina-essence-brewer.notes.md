@@ -119,3 +119,8 @@ deck's favor, and the text audit *upgraded* several cards the counters undervalu
 load-bearing in `yshtola-nights-blessed` (named in that deck's notes as its drain payoff).
 It is the one card here worth *buying* — it is the magnitude-aware lifegain payoff this deck
 otherwise lacks. Do not take it off the other deck without deciding which one sleeves it.
+
+## 2026-10-13 Reality Fracture add (manual — do not cut)
+- **Vraska, the Cutting Glare**: a 4/4 deathtouch for {B}{B}{G}. With six or more lands, its ETB
+  destroys a permanent an opponent controls (they get a Treasure). It is removal, then a
+  4-power body for Dina's ratchet (X=4). In over Shared Roots (6% field).

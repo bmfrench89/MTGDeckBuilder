@@ -52,6 +52,7 @@
 1 Generous Gift
 1 Unseal the Necropolis
 1 Wake the Dead
+1 Vindictive Triumph
 
 # --- Sorceries ---
 1 Demonic Bargain
@@ -76,16 +77,15 @@
 1 Talisman of Hierarchy
 1 Throne of the Grim Captain
 1 Wayfarer's Bauble
+1 Lich's Relic
 
 # --- Enchantments ---
 1 Agent of the Iron Throne
 1 Angelic Renewal
 1 Bastion of Remembrance
-1 Bound in Gold
 1 Changing Loyalty
 1 Fungal Fortitude
 1 Gift of Immortality
-1 Intercessor's Arrest
 1 Kaya's Ghostform
 1 Minion's Return
 1 Necrogen Communion
