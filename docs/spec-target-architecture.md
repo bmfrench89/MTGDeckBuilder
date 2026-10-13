@@ -1,6 +1,7 @@
 # Spec — Target architecture: code in git, data in a database, network at the server
 
-**Status: PROPOSED 2026-10-13. Nothing here is built.** Written because the player asked
+**Status: PROPOSED 2026-10-13, revised the same day after online research (§12).
+Nothing here is built.** Written because the player asked
 to revisit the whole app: *"I don't want my cards in the repo… No data should ever live in
 a repo. We also need a better way to check Scryfall other than GitHub… I also want to
 ensure our deck building workflows make sense."* The decisions for the player are in §10.
@@ -112,6 +113,16 @@ reference knowledge (see §4). No `data/` tree at all; `.gitignore` covers it.
   it can't reach a database on another host.
 - It would put a third party between the player and their data.
 
+**The SQLite caveat (research, §12):** PythonAnywhere's help pages say SQLite "runs a bit
+slower on the cloud" and they "don't recommend it as a production database", because the
+disk is a network filesystem with known problems when several processes write at once.
+For one household on one web worker, it holds up if `store.py`:
+- uses the default rollback journal (**not WAL**, which is unsafe on NFS);
+- sets a busy timeout;
+- funnels every write through one connection per process.
+
+The paid plan's MySQL is the upgrade path if the app ever serves the public.
+
 **Backups:**
 - Nightly `sqlite3 .backup` to a dated file on the server (protects against bugs).
 - A **Download backup** button (protects against losing the host). If unattended
@@ -134,13 +145,28 @@ reference knowledge (see §4). No `data/` tree at all; `.gitignore` covers it.
   *Allowed domains* (environment settings → Network access → Limited → Allowed domains).
   This is `spec-network-and-attrs.md` Phase 1, open since 2026-08-12. It takes minutes,
   needs no code, and ends the GitHub round trip **today**, before any of this is built.
-- **To verify:**
-  - [ ] Whether PythonAnywhere free's outbound allowlist includes `json.edhrec.com` and
-    `backend.commanderspellbook.com`. Scryfall is already used from the server. Check
-    from the server console during Phase 2. If either is blocked, the options are:
-    PythonAnywhere's paid tier (unrestricted outbound and scheduled tasks; check the
-    current price), a request to add the site to their allowlist, or moving the host
-    (D1).
+- **What the research found (§12):**
+  - **PythonAnywhere free:**
+    - Outbound traffic goes through an allowlist, and it only admits sites with "an
+      official, public, documented API". EDHREC has none, so `json.edhrec.com` is very
+      likely blocked.
+    - Free accounts created after 2026-01-15 have **no scheduled tasks**, and free web
+      apps now **expire after a month** unless renewed.
+    - The **Developer plan, $10/month** since January 2026, adds unrestricted internet,
+      scheduled tasks, 5 GB of disk and 5,000 CPU-seconds a day. That is what this design
+      needs (D1).
+  - **EDHREC's terms** grant personal, noncommercial use only, through an undocumented
+    feed. That's fine for one household, and a blocker for a public app (§12).
+  - **Scryfall:**
+    - `/cards/collection` is limited to 2 requests a second; a 429 locks you out for
+      30 seconds.
+    - Cache at least 24 hours. Prices go stale after 24 hours; oracle text can refresh
+      weekly.
+    - `carddb` already sends the required User-Agent and Accept headers.
+    - The bulk files (~139–420 MB) don't fit the free tier's 512 MB, so stay on the
+      API with the cache.
+  - **Commander Spellbook:** the read API is public, about 80 requests a minute, with a
+    User-Agent. Use its `variants.json.gz` for bulk.
 - **GitHub Actions keeps two jobs only:**
   1. CI (pytest).
   2. Narration synthesis. The Kokoro model needs more CPU than the free server allows,
@@ -273,9 +299,12 @@ the big one; Phases 2–4 are mostly deletion.
 
 ## 10. Decisions for the player
 
-- **D1: Host.** Stay on PythonAnywhere free (recommended) unless Phase 2 finds EDHREC or
-  Spellbook blocked. If so, move to their paid tier or another host with a persistent
-  disk.
+- **D1: Host.** **Upgrade to PythonAnywhere Developer ($10/month; recommended, revised
+  after research).** The free tier's allowlist almost certainly blocks EDHREC. New free
+  accounts have no scheduled tasks, so no nightly refresh or backup. Free web apps expire
+  monthly. And 512 MB of disk is tight. Staying free means EDHREC field data has to keep
+  coming from a GitHub runner, which would then upload it to the API instead of
+  committing it.
 - **D2: Git history.** Today's history holds every card list ever committed.
   1. Make the repo private and keep the history.
   2. Start a **fresh repo** from the cleaned tree (recommended). It loses the PR history
@@ -289,6 +318,8 @@ the big one; Phases 2–4 are mostly deletion.
   auto-applying (recommended).
 - **D5: Claude access.** Token API and CLI first, MCP connector later (recommended), or
   the connector first.
+- **D6: Public release.** Not now (recommended). Revisit as a free Play release (TWA)
+  after Phase 4, if wanted (§12).
 
 ## 11. Risks
 
@@ -304,3 +335,96 @@ the big one; Phases 2–4 are mostly deletion.
 - **Migration correctness:** the importer's dry run must reproduce today's numbers before
   the switch. Per-deck card counts, role counts, owned counts and the EDHREC overlap
   checks are the acceptance test.
+
+## 12. Research: platform rules, the Play Store, and the competition (2026-10-13)
+
+Three web research passes on 2026-10-13. Page access was limited from the sandbox, so
+most official pages were read through search-engine excerpts. Treat dates and prices as
+"checked 2026-10-13".
+
+**Platform and data-source rules:**
+- **PythonAnywhere:** see §5.
+  - help.pythonanywhere.com/pages/FreeAccountsFeatures
+  - blog.pythonanywhere.com/221 and /222 (pricing, January 2026)
+  - help.pythonanywhere.com/pages/KindsOfDatabases (SQLite)
+- **Scryfall:** no paywalling its data, add value rather than repackaging, no implied
+  endorsement, and never crop, blur or watermark images (the artist and copyright line
+  stay visible).
+  - scryfall.com/docs/api
+  - scryfall.com/docs/api/rate-limits
+  - scryfall.com/blog/two-new-ways-to-sync-scryfall-data-236 (2026-07-01, bulk now JSONL)
+- **Wizards Fan Content Policy:**
+  - It must be free to access: no payments, subscriptions or required email
+    registration. Ads, sponsorships and donations are OK if access isn't affected.
+  - No WotC logos.
+  - A mandatory disclaimer: "[Title] is unofficial Fan Content permitted under the Fan
+    Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are
+    property of Wizards of the Coast. ©Wizards of the Coast LLC."
+  - Source: company.wizards.com/en/legal/fancontentpolicy
+  - [ ] **The app shows no such disclaimer today.** Add it to the footer (cheap,
+    needed before any public use).
+- **EDHREC:** no official API; personal and noncommercial terms (edhrec.com/terms). On
+  2026-10-01 commander pages replaced "Synergy" with "Lift". Today's snapshots still
+  carry `synergy`, so `edhrec.py` still works. Watch it.
+- **Moxfield and Archidekt:** no official APIs, and their terms bar scraping or automated
+  queries. Imports stay as exported files or pasted text, which is how the app already
+  works.
+
+**Shipping on Google Play:**
+- **The wrapper is easy.** A Trusted Web Activity (Bubblewrap or PWABuilder) of the
+  existing HTTPS PWA is about 1–3 days, plus `/.well-known/assetlinks.json`.
+  - The service worker's offline page must return **200**; today it returns 503.
+  - Source: developer.android.com/…/trusted-web-activities, updated 2026-02-26.
+- **Store paperwork:**
+  - $25, one time.
+  - ID verification.
+  - Privacy policy, both in Play Console and in the app.
+  - Data safety form.
+  - In-app **and** web account deletion.
+  - Target API 36 from 2026-08-31, bumped yearly.
+  - **New personal accounts must run a closed test with 12 testers for 14 days in a
+    row before production.**
+- **The real work is multi-tenancy, not the store.** Every engine assumes one
+  collection. A public app needs real accounts (sign-up, reset, deletion), per-user
+  data isolation (this spec's DB with a `user_id` everywhere), abuse limits on the
+  upstream APIs (every user shares the server's one IP against Scryfall's 2-per-second
+  limit), and GDPR basics. That's 1–3 months part-time on top of this spec.
+- **Monetization is effectively blocked.** The Fan Content Policy and Scryfall forbid
+  paywalling. EDHREC's terms forbid commercial use of the data the swap engine leans on.
+  Claude-powered coaching would cost money per use. One way out: a public MCP connector,
+  so each user brings their own Claude subscription.
+- **iOS:** $99 a year, and Guideline 4.2 rejects repackaged websites, so iOS needs
+  Capacitor plus real native features. iOS PWAs install fine; since iOS 26, Home Screen
+  sites open as web apps by default.
+
+**The competition (update of research-competitive-landscape.md):**
+- **Mobile belongs to scanners and collection apps:**
+  - ManaBox: 1M+ installs, 4.3★, Pro $2.49/month.
+  - TCGplayer: 1M+.
+  - Dragon Shield: ~0.5–0.8M.
+  - TopDecked: 100K+, 4.7★. The closest rival: decks count as inventory, plus bracket
+    detection.
+  - Delver Lens: 100K+.
+  - None builds or tunes a Commander deck from your collection with stated reasoning.
+- **Moxfield and Archidekt still have no native app**; Archidekt says it has "no plans".
+- **About 15 AI "build from what I own" tools,** none with visible traction (ManaTap,
+  MTG Agents, GrimDeck, KrakenTheMeta, Farseek, Commander Bracket, Untap AI, ManaForge,
+  Decksmith…). ManaTap's Play listing shows 1K+ installs. Typical price is
+  $4–5/month.
+- **Commoditized:** owned-cards-only AI building, bracket estimates with evidence, mana
+  math, mulligan simulators, goldfish commander-turn estimates.
+- **Unique or near-unique here:**
+  - Pinning a physical copy to one deck and flagging copies claimed by two decks.
+  - Paired A/B goldfish replays.
+  - Swap gates on inclusion gain, with engine protection.
+  - Verified card text shown per card next to the reasoning.
+  - Narrated how-to clips.
+  - A household login sharing one collection.
+- **Official players:** Wizards ships no AI or collection tool, and Hasbro says players
+  "just don't want" AI in Magic products. EDHREC took its AI chat offline.
+
+**Verdict for the player (D6, new):** finish this spec for the household first. The
+DB and per-user data are prerequisites for any public release anyway. Keep the installed
+PWA, which already gives a home-screen icon and full-screen launch. Revisit Play only
+as a free hobby release, and only if the player wants other users and the support load
+that comes with them.
