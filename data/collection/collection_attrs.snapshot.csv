@@ -85,6 +85,7 @@ Angel of Finality,Creature,4,W,{3}{W},Angel,,,3,4
 Angel of Indemnity,Creature,6,W,{5}{W},Angel;Warrior,,,5,4
 Angel of Jubilation,Creature,4,W,{1}{W}{W}{W},Angel,,,3,4
 Angel of Vitality,Creature,3,W,{2}{W},Angel,,,2,4
+Angel of the Ruins,Creature,7,W,{5}{W}{W},Angel,,,5,4
 Angelic Accord,Enchantment,4,W,{3}{W},,,,,4
 Angelic Blessing,Sorcery,3,W,{2}{W},,,,,4
 Angelic Curator,Creature,2,W,{1}{W},Angel;Spirit,,,1,4
@@ -193,6 +194,7 @@ Avishkar Raceway,Land,0,,,,C,draw,,4
 Awakening Zone,Enchantment,3,G,{2}{G},,C,,,4
 Axgard Cavalry,Creature,2,R,{1}{R},Dwarf;Berserker,,,2,4
 "Ayara, First of Locthwain",Creature,3,B,{B}{B}{B},Elf;Noble,,draw,2,4
+"Ayula, Queen Among Bears",Creature,2,G,{1}{G},Bear,,,2,4
 Azimaet Drake,Creature,3,U,{2}{U},Drake,,,1,4
 "Azog, Moria's Ruin",Creature,3,B,{2}{B},Goblin;Soldier,,draw,1,4
 "Azor, the Lawbringer",Creature,6,U W,{2}{W}{W}{U}{U},Sphinx,,draw,6,4
@@ -404,6 +406,7 @@ Captain America's Shield,Artifact,2,,{2},Equipment,,,,4
 "Captain Marvel, Apex Avenger",Creature,7,R W,{5}{R}{W},Human;Kree;Hero,,,4,4
 Carnage Tyrant,Creature,6,G,{4}{G}{G},Dinosaur,,,7,4
 "Carnage, Crimson Chaos",Creature,4,B R,{2}{B}{R},Symbiote;Villain,,,4,4
+Carnivorous Cultivator // Enroot,Creature,2,G,{1}{G} // {G},Elf;Warlock,,fetch:land,2,4
 Carrion Feeder,Creature,1,B,{B},Zombie,,,1,4
 Carrion Wall,Creature,3,B,{1}{B}{B},Wall,,,3,4
 Cartographer's Hawk,Creature,2,W,{1}{W},Bird,,fetch:plains;ramp,2,4
@@ -1035,6 +1038,7 @@ Game Trail,Land,0,G R,,,R G,etb-tapped-cond,,4
 "Gandalf, Wandering Wizard",Creature,5,U,{4}{U},Avatar;Wizard,,draw,4,4
 Gangly Stompling,Creature,3,G R,{2}{R/G},Shapeshifter,,,4,4
 Gangrenous Zombies,Creature,3,B,{1}{B}{B},Zombie,,,2,4
+Gardenize,Enchantment,3,G,{1}{G}{G},,G,,,4
 "Garnet, Princess of Alexandria",Creature,2,G W,{G}{W},Human;Noble;Cleric,,,2,4
 Garruk's Packleader,Creature,5,G,{4}{G},Beast,,draw,4,4
 Garruk's Uprising,Enchantment,3,G,{2}{G},,,draw,,4
@@ -1254,6 +1258,7 @@ Heroic Intervention,Instant,2,G,{1}{G},,,,,4
 Heroic Return,Instant,6,W,{5}{W},,,,,4
 Heroic Sacrifice,Instant,2,W,{1}{W},,,draw,,4
 Heroic Teamwork,Instant,3,W,{2}{W},,,draw,,4
+Hexhaven Invigorator,Creature,4,G,{G}{G}{G}{G},Chimera;Horror,,fetch:land;ramp,6,4
 Hibernation Sliver,Creature,2,B U,{U}{B},Sliver,,,2,4
 Hickory Woodlot,Land,0,G,,,G,etb-tapped;mana2,,4
 Hidden Grotto,Land,0,,,,W U B R G C,,,4
@@ -1295,7 +1300,9 @@ Hulking Raptor,Creature,4,G,{2}{G}{G},Dinosaur,G,mana2,5,4
 Hulldrifter,Artifact,5,U,{3}{U}{U},Vehicle,,draw,3,4
 "Human Torch, Johnny Storm",Creature,3,R,{2}{R},Human;Hero,,draw,2,4
 Humble,Instant,2,W,{1}{W},,,,,4
+Hungering Puppetbeast,Creature,5,G,{3}{G}{G},Beast;Construct,R G,,5,4
 Hungry Graffalon,Creature,4,G,{3}{G},Giraffe,,,3,4
+Hunter's Axe,Artifact,1,G,{G},Equipment,,,,4
 Hydraulic Helper,Creature,2,U,{1}{U},Robot,U,dork;ramp;rock,2,4
 Hydro-Channeler,Creature,2,U,{1}{U},Merfolk;Wizard,W U B R G,dork;mana-restricted;ramp,1,4
 "Hydro-Man, Fluid Felon",Creature,2,U,{U}{U},Elemental;Villain,U,dork;ramp,2,4
@@ -1448,6 +1455,7 @@ Knight of Wundagore,Creature,2,G,{1}{G},Cat;Knight;Villain,,,2,4
 Knighthood,Enchantment,3,W,{2}{W},,,,,4
 Knockout Maneuver,Sorcery,3,G,{2}{G},,,,,4
 Knowledge Seeker,Creature,2,U,{1}{U},Fox;Spirit,,,2,4
+"Kogla, the Titan Ape",Creature,6,G,{3}{G}{G}{G},Ape,,,7,4
 "Kolaghan, the Storm's Fury",Creature,5,B R,{3}{B}{R},Dragon,,,4,4
 "Kolodin, Triumph Caster",Creature,2,R W,{R}{W},Human;Pilot,,,2,4
 Kor Spiritdancer,Creature,2,W,{1}{W},Kor;Wizard,,draw,0,4
@@ -1458,6 +1466,7 @@ Kree Commandos,Creature,3,W,{2}{W},Kree;Soldier;Villain,,,2,4
 Kree Sentinel,Creature,5,R,{4}{R},Kree;Robot;Villain,,,5,4
 Krile Baldesion,Creature,2,U W,{W}{U},Dwarf;Wizard,,,2,4
 Kris Mage,Creature,1,R,{R},Human;Spellshaper,,,1,4
+Krosan Grip,Instant,3,G,{2}{G},,,removal,,4
 Krovikan Sorcerer,Creature,3,U,{2}{U},Human;Wizard;Sorcerer,,draw,1,4
 Kulrath Mystic,Creature,3,U,{2}{U},Elemental;Wizard,,,2,4
 Kulrath Zealot,Creature,6,R,{5}{R},Elemental;Warrior,,,6,4
@@ -1626,6 +1635,7 @@ Martial Impetus,Enchantment,3,W,{2}{W},Aura,,,,4
 Martyr's Cause,Enchantment,3,W,{2}{W},,,,,4
 "Marvel Boy, Noh-Varr",Creature,2,R W,{1}{R/W},Kree;Soldier;Hero,,,1,4
 Marvelous Melee,Instant,5,R,{4}{R},,,,,4
+"Marwyn, the Preserver",Creature,2,G,{1}{G},Elf;Druid,,,3,4
 Mask of Law and Grace,Enchantment,1,W,{W},Aura,,,,4
 Mask of Memory,Artifact,2,,{2},Equipment,,draw,,4
 Masked Meower,Creature,1,R,{R},Spider;Cat;Hero,,draw,1,4
@@ -2002,6 +2012,7 @@ Pugnacious Hammerskull,Creature,3,G,{2}{G},Dinosaur,,,6,4
 Pull from the Grave,Sorcery,3,B,{2}{B},,,,,4
 Pumpkin Bombardment,Sorcery,1,B R,{B/R},,,,,4
 Punishing Punch,Instant,3,G,{2}{G},,,,,4
+Puppet Crafting,Enchantment,2,G,{1}{G},Aura,,,,4
 Puppet's Verdict,Instant,3,R,{1}{R}{R},,,wipe,,4
 Puresteel Paladin,Creature,2,W,{W}{W},Human;Knight,,draw,2,4
 Purple Dragon Punks,Creature,2,R,{1}{R},Human;Rogue,R,dork;mana-restricted;ramp,2,4
@@ -2056,6 +2067,7 @@ Ramosian Commander,Creature,4,W,{2}{W}{W},Human;Rebel,,,2,4
 Ramosian Rally,Instant,4,W,{3}{W},,,,,4
 Ramosian Sergeant,Creature,1,W,{W},Human;Rebel,,,1,4
 Ramosian Sky Marshal,Creature,5,W,{3}{W}{W},Human;Rebel,,,3,4
+Rampaging Yao Guai,Creature,3,G,{X}{G}{G}{G},Bear;Mutant,,,2,4
 Rampant Growth,Sorcery,2,G,{1}{G},,,fetch:basic;ramp,,4
 Rancor,Enchantment,1,G,{G},Aura,,,,4
 Rancorous Archaic,Creature,5,,{5},Avatar,,,2,4
@@ -2399,6 +2411,7 @@ Silvergill Peddler,Creature,3,U,{2}{U},Merfolk;Citizen,,draw,2,4
 Silverglade Pathfinder,Creature,2,G,{1}{G},Dryad;Spellshaper,,fetch:basic;ramp,1,4
 Silverquill Charm,Instant,2,B W,{W}{B},,,removal,,4
 Simian Grunts,Creature,3,G,{2}{G},Ape,,,3,4
+Simulacrum Shaper,Creature,3,G,{1}{G}{G},Elf;Druid,,draw;fetch:basic;ramp,2,4
 Simulacrum Synthesizer,Artifact,3,U,{2}{U},,,,,4
 Single Combat,Sorcery,5,W,{3}{W}{W},,,,,4
 Sizzling Changeling,Creature,3,R,{2}{R},Shapeshifter,,,3,4
@@ -2500,6 +2513,7 @@ Sphinx of the Final Word,Creature,7,U,{5}{U}{U},Sphinx,,,5,4
 Sphinx of the Second Sun,Creature,8,U,{6}{U}{U},Sphinx,,,6,4
 Sphinx of the Steel Wind,Creature,8,B U W,{5}{W}{U}{B},Sphinx,,,6,4
 Sphinx's Revelation,Instant,3,U W,{X}{W}{U}{U},,,draw,,4
+Sphinx's Tutelage,Enchantment,3,U,{2}{U},,,draw,,4
 Spider-Bot,Creature,2,,{2},Spider;Robot;Scout,,fetch:basic,2,4
 "Spider-Byte, Web Warden",Creature,3,U,{2}{U},Spider;Avatar;Hero,,,2,4
 "Spider-Girl, Legacy Hero",Creature,2,G W,{G}{W},Spider;Human;Hero,,,2,4
@@ -2681,6 +2695,7 @@ Sustenance,Enchantment,2,G,{1}{G},,,,,4
 Svyelunite Temple,Land,0,U,,,U,etb-tapped;mana2,,4
 Swallowed by Leviathan,Instant,3,U,{2}{U},,,,,4
 Swamp,Land,0,B,,Swamp,B,,,4
+Swan Song,Instant,1,U,{U},,,counter,,4
 "Swarm, Being of Bees",Creature,3,B,{2}{B},Insect;Villain,,,2,4
 Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
 Swiftwing Assailant,Creature,4,W,{3}{W},Bird;Warrior,,,3,4
@@ -2761,6 +2776,8 @@ The Coming of Galactus,Enchantment,5,B G,{2}{B}{B}{G},Saga,,removal,,4
 The Crystal's Chosen,Sorcery,7,W,{5}{W}{W},,,,,4
 The Death of Gwen Stacy,Enchantment,3,B,{2}{B},Saga,,removal,,4
 The Eagles Are Coming!,Instant,2,W,{1}{W},,,,,4
+The Earth Crystal,Artifact,4,G,{2}{G}{G},,,discount:green:1,,4
+The Earth King,Creature,4,G,{3}{G},Human;Noble;Ally,,fetch:basic;ramp,2,4
 The Emperor of Palamecia,Creature,2,R U,{U}{R},Human;Noble;Wizard,U R,dork;mana-restricted;ramp,2,4
 The Gold Saucer,Land,0,,,Town,C,draw,,4
 The Great Goblin,Creature,3,B R,{1}{B/R}{B/R},Goblin;Noble,,,3,4
