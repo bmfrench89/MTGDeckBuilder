@@ -692,3 +692,14 @@
 1 Entrust the Spark
 1 Solarium Sentry
 1 Geist of Saint Thalia
+
+# --- Batch 2026-10-13 · Owned cards the server's export is missing (player's word) · 4 cards (4 distinct) ---
+# The hosted Beorn page badged these BUY; the player owns them. All four were in the
+# 2026-08-20 export (collection_snapshot.txt), but the export the SERVER now holds
+# lacks them, so the app counted them unowned. Logged here so they count now. When a
+# fresh full export carries them, the upload's reconcile retires these rows.
+# Text verified on deck-verify run 38484168869.
+1 Tireless Tracker
+1 Ohran Frostfang
+1 Vaultborn Tyrant
+1 Gigantic Big Bear
