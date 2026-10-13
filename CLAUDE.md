@@ -84,6 +84,7 @@ per-module table — read it before any structural change.
   scene timing; the synthesis itself runs only on a runner — `narrate.yml`).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
+- **The collection database:** `store` (SQLite, stdlib) writes the player's collection on the server (`data/collection/collection.db`, gitignored); `mtglib.load_collection` reads it, so engines never know. Seeded once by the sync (`webapp/collection_db.py`), then it IS the collection — see Data formats.
 - **Network-touching, disk-cached, degrade gracefully:** `carddb` (Scryfall
   `/cards/collection`), `edhrec`, `spellbook`, `rules` (WotC's Comprehensive Rules txt —
   **zero repo imports**, a first for the ring: rule text has no card names in it),
@@ -294,6 +295,8 @@ of date. Every card a clip features is protected from the optimizer like a notes
 so automatic tuning never strands a scene. **When you change a deck that has clips, rewrite
 the stale scenes in the same change** — CI's `clips.py --all --check` fails until you do.
 Opponents' cards are `ph` placeholders, never named; nothing is rendered to a video file).
+
+**Collection database (server, 2026-10-13+)** — `data/collection/collection.db`, gitignored, never synced. The server sync seeds it ONCE as the union of every record (private export, the committed August list, every `owned_additions.txt` block, every sleeved deck: `store.seed`, report on the Collection page) and from then on it is the collection: app adds/edits go straight to it (every change in its `ledger`), an Upload only MERGES (never lowers a count), and batches a session commits to `owned_additions.txt` are ingested once each by the next sync. A `[floor]` line in a batch's comments means "own at least this many" (raise, don't add) in both the database and the file loader. Sessions still add cards exactly as before (`intake.py` → a dated batch); never write the database from a session, and never re-seed one.
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks

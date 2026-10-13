@@ -69,6 +69,9 @@ def _collection_path():
     env = os.environ.get("MTG_COLLECTION")
     if env:
         return env
+    db = os.path.join(ROOT, "data", "collection", "collection.db")
+    if os.path.exists(db):
+        return db
     csv_path = os.path.join(ROOT, "data", "collection", "collection.csv")
     if os.path.exists(csv_path):
         return csv_path

@@ -699,6 +699,8 @@
 # lacks them, so the app counted them unowned. Logged here so they count now. When a
 # fresh full export carries them, the upload's reconcile retires these rows.
 # Text verified on deck-verify run 38484168869.
+# [floor] These rows mean "own at least this many", not new copies: the cards were
+# already on the August list, so the loader and the database raise to the count.
 1 Tireless Tracker
 1 Ohran Frostfang
 1 Vaultborn Tyrant

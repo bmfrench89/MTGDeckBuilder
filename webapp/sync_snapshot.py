@@ -99,7 +99,9 @@ def _private_export():
     """The private export the app reads (same precedence as webapp/sync.py), or None
     when there isn't one. The committed list itself is never its own source."""
     env = os.environ.get("MTG_COLLECTION")
-    path = env or os.path.join(ROOT, "data", "collection", "collection.csv")
+    db = os.path.join(ROOT, "data", "collection", "collection.db")
+    path = env or (db if os.path.isfile(db) else
+                   os.path.join(ROOT, "data", "collection", "collection.csv"))
     if not os.path.isfile(path) or os.path.abspath(path) == os.path.abspath(SNAPSHOT):
         return None
     return path
@@ -131,8 +133,16 @@ def refresh(export_path, snapshot_path=SNAPSHOT, today=None):
     -> (changed?, message). The visibility gate is the caller's job (`main`)."""
     import intake
     import mtglib
-    with open(export_path, encoding="utf-8-sig") as f:
-        new_cards = mtglib.parse_collection(f.read())
+    if mtglib.is_collection_db(export_path):
+        # The database already holds every added card; the committed list must not,
+        # because a fresh clone merges owned_additions.txt on top of it again.
+        import store
+        adds = os.path.join(os.path.dirname(export_path), "owned_additions.txt")
+        new_cards = [mtglib.Card(name=n, quantity=q)
+                     for n, q in store.snapshot_counts(export_path, adds)]
+    else:
+        with open(export_path, encoding="utf-8-sig") as f:
+            new_cards = mtglib.parse_collection(f.read())
     old_cards = []
     if os.path.exists(snapshot_path):
         with open(snapshot_path, encoding="utf-8") as f:

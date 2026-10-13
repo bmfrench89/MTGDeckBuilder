@@ -29,6 +29,39 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
+## START HERE: the app now OWNS the collection (collection database, 2026-10-13)
+
+The player wants to stop using Archidekt/ManaPool: "I just need all cards accounted for
+and stored in this new db", on free hosting ("I'd rather not do paid"). Phase 1a of
+`docs/spec-target-architecture.md` shipped:
+- **`scripts/store.py`** — SQLite `data/collection/collection.db` (gitignored, server only):
+  holdings + a ledger of every change. `mtglib.load_collection(<.db>)` reads it.
+- **The first sync after this merges SEEDS it** (`webapp/collection_db.py`, run by
+  `sync_server.sh` after the pull):
+  - The union of every record: the server's private export, the committed August list,
+    every `owned_additions.txt` block and every sleeved deck.
+  - Dry run on the repo's data (no private export here): 3,294 cards / 4,608 copies,
+    including 47 Kami cards only a deck holds.
+  - 15 shared-card shortfalls are REPORTED, not invented: Blood Artist, Force of Will,
+    Toxic Deluge and others. They show on the Collection page under "What the start-up
+    found". The player should check them.
+- **The app:**
+  - Every add writes the DB.
+  - New **Change a card's count** (sold/traded/lost, logged) and **Download my whole
+    collection** (CSV).
+  - Upload is now a MERGE that never lowers a count. The Upload guard and reconcile only
+    apply in the old file mode.
+- **Sessions add cards as before** (`intake.py` → a dated batch in `owned_additions.txt`).
+  The next sync ingests each new block exactly once.
+- **`[floor]` batches:** the 2026-10-13 four-card Beorn fix is marked `[floor]` ("own at
+  least", not "one more"). Both loaders honour it, so those four never double-count.
+- **Hosting (D1): stay free for now.** Revisit before Phase 4 (data out of the repo).
+  Free alternatives are in the spec's D1.
+- **Still open:**
+  - Phase 1b (decks, pins, members and activity into the DB).
+  - Phase 2 (fetchers at the server).
+  - The repo is still public.
+
 ## START HERE: Reality Fracture cards in, swaps APPLIED (2026-10-13)
 
 The player photographed their Reality Fracture (FRA) cards in six uploads, which they

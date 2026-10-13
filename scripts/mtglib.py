@@ -563,7 +563,171 @@ def collection_inputs(path: str) -> list:
     not. Missing ones matter: they key as `(path, None)` so their later creation
     invalidates the cached load rather than being ignored until the next edit."""
     d = os.path.dirname(path) or "."
+    if is_collection_db(path):
+        # The database already holds every added card (ingested once, by batch), so
+        # owned_additions is NOT one of its inputs; only the attribute overlays are.
+        return [path] + [os.path.join(d, x) for x in ATTRS_OVERLAYS]
     return [path] + [os.path.join(d, x) for x in COLLECTION_INPUTS]
+
+
+# --------------------------------------------------------------------------- #
+# The collection database (docs/spec-target-architecture.md, Phase 1).
+# READING lives here, in the hub, so every engine keeps calling load_collection and
+# never learns where the cards came from. WRITING (seed, add, set, merge, ingest)
+# lives in store.py, which imports this module and never the reverse.
+# --------------------------------------------------------------------------- #
+def is_collection_db(path) -> bool:
+    return str(path or "").endswith(".db")
+
+
+def card_key(name: str) -> str:
+    """The ONE identity a physical card has in the database: the normalized front
+    face. 'Fire // Ice' and 'Fire' are the same card in every source (the deck
+    file, the export, a batch row), so they must be the same row."""
+    return _norm(front_face(name))
+
+
+_SET_FIELDS = ("colors", "identity", "flags")
+_LIST_FIELDS = ("types", "subtypes", "supertypes")
+_SCALAR_FIELDS = ("mana_value", "mana_cost", "rarity", "scryfall_id", "set_code",
+                  "collector_number", "price", "date_added", "flags_ver", "power")
+
+
+def card_to_dict(c) -> dict:
+    """The JSON a holding stores beside its count: everything a Card knows except
+    the name and quantity (those are columns). `produced` keeps None-vs-empty:
+    absent key = never enriched, [] = enriched and makes no mana."""
+    d = {f: getattr(c, f) for f in _SCALAR_FIELDS if getattr(c, f) not in (None, "")}
+    for f in _SET_FIELDS:
+        v = getattr(c, f)
+        if v:
+            d[f] = sorted(v)
+    for f in _LIST_FIELDS:
+        v = getattr(c, f)
+        if v:
+            d[f] = list(v)
+    if c.produced is not None:
+        d["produced"] = sorted(c.produced)
+    return d
+
+
+def card_from_dict(name: str, qty: int, d: dict) -> "Card":
+    c = Card(name=name, quantity=int(qty))
+    for f in _SCALAR_FIELDS:
+        if f in d:
+            setattr(c, f, d[f])
+    for f in _SET_FIELDS:
+        if f in d:
+            setattr(c, f, set(d[f]))
+    for f in _LIST_FIELDS:
+        if f in d:
+            setattr(c, f, list(d[f]))
+    if "produced" in d:
+        c.produced = set(d["produced"])
+    c.value = round(c.quantity * c.price, 2) if c.price else 0.0
+    return c
+
+
+def _load_db(path: str) -> list:
+    """Every holding with a positive count, as Cards. Read-only: a missing table
+    means a database that was never seeded, which reads as an empty collection."""
+    import json
+    import sqlite3
+    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        rows = con.execute(
+            "SELECT name, qty, card FROM holdings WHERE qty > 0 ORDER BY name").fetchall()
+    except sqlite3.OperationalError:
+        rows = []
+    finally:
+        con.close()
+    return [card_from_dict(n, q, json.loads(js or "{}")) for n, q, js in rows]
+
+
+FLOOR_MARK = "[floor]"
+
+
+def addition_blocks(text: str) -> list:
+    """`owned_additions.txt` -> its blocks, in file order, as dicts:
+    {id, header, date, label, floor, rows: [(qty, name)]}.
+
+    A block starts at any `# --- … ---` header (a dated Batch or an older section
+    header); rows before the first header form a preamble block. `id` is a hash of
+    the header and how many identical headers came before it, NOT of the rows, so
+    retiring a row (commenting it out) or fixing a typo in one keeps the id the
+    database already ingested; appending a new batch is a new id. A block whose
+    comment lines carry `[floor]` asserts "I own at least
+    this many" rather than "these are new copies": its rows raise a count to that
+    floor instead of adding to it (used when a card was already owned on an
+    earlier list that a later export lost)."""
+    import hashlib
+    blocks, cur = [], {"header": "", "note": [], "rows": []}
+    seen = {}
+
+    def close(b):
+        if b["header"] or b["rows"]:
+            n = seen.get(b["header"], 0)
+            seen[b["header"]] = n + 1
+            m = ADDITIONS_DATE_RE.match(b["header"]) if b["header"] else None
+            label = ""
+            if b["header"]:
+                parts = [p.strip() for p in b["header"].strip("# -").split("·")]
+                label = parts[1] if len(parts) > 1 else parts[0]
+            ident = f"{b['header'] or '(preamble)'}#{n}"
+            blocks.append({
+                "id": hashlib.sha1(ident.encode("utf-8")).hexdigest()[:16],
+                "header": b["header"], "date": m.group(1) if m else "",
+                "label": label, "rows": b["rows"],
+                "floor": any(FLOOR_MARK in ln for ln in b["note"]),
+            })
+
+    for raw in (text or "").splitlines():
+        s = raw.strip()
+        if not s:
+            continue
+        if re.match(r"^#\s*---", s):
+            close(cur)
+            cur = {"header": s, "note": [], "rows": []}
+            continue
+        if s.startswith("#"):
+            cur["note"].append(s)
+            continue
+        for c in _parse_namelist(s):
+            cur["rows"].append((c.quantity, c.name))
+    close(cur)
+    return blocks
+
+
+def _strip_floor_blocks(text: str) -> str:
+    """The additions text minus every `[floor]` block (those merge as floors)."""
+    out, skip = [], False
+    lines = (text or "").splitlines()
+    for i, raw in enumerate(lines):
+        s = raw.strip()
+        if re.match(r"^#\s*---", s):
+            j, note = i + 1, []
+            while j < len(lines) and lines[j].strip().startswith("#") \
+                    and not re.match(r"^#\s*---", lines[j].strip()):
+                note.append(lines[j]); j += 1
+            skip = any(FLOOR_MARK in n for n in note)
+        if not skip:
+            out.append(raw)
+    return "\n".join(out)
+
+
+def _merge_floor_blocks(cards: list, text: str) -> None:
+    """Raise each `[floor]` row's card to at least that count (never add)."""
+    idx = {_norm(c.name): c for c in cards}
+    for b in addition_blocks(text):
+        if not b["floor"]:
+            continue
+        for q, n in b["rows"]:
+            k = _norm(n)
+            if k in idx:
+                idx[k].quantity = max(idx[k].quantity, q)
+            else:
+                c = Card(name=n, quantity=q, date_added=b["date"])
+                cards.append(c); idx[k] = c
 
 
 def load_collection(path: str) -> list:
@@ -589,19 +753,25 @@ def load_collection(path: str) -> list:
 
 
 def _load_collection(path: str) -> list:
-    with open(path, encoding="utf-8") as f:
-        cards = parse_collection(f.read())
     d = os.path.dirname(path) or "."
-    for extra in ("owned_additions.txt", "owned_additions.csv"):
+    if is_collection_db(path):
+        cards = _load_db(path)
+    else:
+        with open(path, encoding="utf-8") as f:
+            cards = parse_collection(f.read())
+    for extra in (() if is_collection_db(path) else
+                  ("owned_additions.txt", "owned_additions.csv")):
         ep = os.path.join(d, extra)
         if os.path.exists(ep):
             with open(ep, encoding="utf-8") as f:
                 text = f.read()
             # The .txt is the dated-batch file; a .csv goes through the CSV reader
             # (which already reads a Date Bought column if it has one).
-            merge_collection(cards, parse_additions(text)
-                             if ep.endswith(".txt") and detect_format(text) != "csv"
-                             else parse_collection(text))
+            if ep.endswith(".txt") and detect_format(text) != "csv":
+                _merge_floor_blocks(cards, text)
+                merge_collection(cards, parse_additions(_strip_floor_blocks(text)))
+            else:
+                merge_collection(cards, parse_collection(text))
     for attrs in ATTRS_OVERLAYS:
         ap = os.path.join(d, attrs)
         if os.path.exists(ap):

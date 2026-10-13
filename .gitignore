@@ -14,6 +14,12 @@ dashboard.html
 # IS committed as a fallback. Uncomment the next line if you'd rather commit the CSV.
 data/collection/collection.csv
 data/collection/*.private.csv
+# The collection database (scripts/store.py): the player's whole collection, so
+# it never enters git. -journal/-wal are SQLite's own side files.
+data/collection/*.db
+data/collection/*.db-journal
+data/collection/*.db-wal
+data/collection/*.db-shm
 
 # Member accounts (password hashes) — server-only, never committed, never synced
 # (docs/spec-second-login.md). sync_server.sh names its paths explicitly too.
