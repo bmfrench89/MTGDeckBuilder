@@ -809,6 +809,13 @@ RAMP = {
     "talisman of unity",
     "charcoal diamond", "fire diamond", "marble diamond", "prismatic lens",
     "smothering tithe",
+    # 2026-10-13: Beorn's 2026-10-07 attrs file carried these roles as hand-written
+    # flags (texts verified on deck-verify run 37654666265). A runner re-enrichment
+    # replaces those with oracle_flags' derived set, which cannot see fights, cost
+    # reducers or "cast free" card advantage, so they are curated here, where an
+    # enrichment can't erase them.
+    "goreclaw, terror of qal sisma", "radagast of rhosgobel", "hulking raptor",
+    "loot, exuberant explorer", "verdant kraken",
 }
 DRAW = {
     "rhystic study", "mystic remora", "night's whisper", "sign in blood",
@@ -832,6 +839,13 @@ DRAW = {
     "skyscanner",
     "guardian project", "beast whisperer", "garruk's uprising", "elemental bond",
     "colossal majesty", "the great henge", "toski, bearer of secrets",
+    # 2026-10-13: Beorn's 2026-10-07 attrs file carried these roles as hand-written
+    # flags (texts verified on deck-verify run 37654666265). A runner re-enrichment
+    # replaces those with oracle_flags' derived set, which cannot see fights, cost
+    # reducers or "cast free" card advantage, so they are curated here, where an
+    # enrichment can't erase them.
+    "tireless tracker", "rishkar's expertise", "last march of the ents",
+    "cosmic cube",
 }
 REMOVAL = {
     # `dismember` is curated on purpose: oracle_flags' _REMOVAL_RE reads the
@@ -861,6 +875,17 @@ REMOVAL = {
     "vona's hunger", "tergrid's shadow",
     "fleshbag marauder", "plaguecrafter", "accursed marauder",
     "merciless executioner", "demon's disciple", "archon of cruelty",
+    # 2026-10-13 Beorn binder swaps — runner-verified (deck-verify 38334003819).
+    # Fight / ETB-destroy CREATURES: type-gated out of the derived layer like the
+    # edict creatures above, so they are curated or they never count.
+    "ayula, queen among bears", "kogla, the titan ape", "rampaging yao guai",
+    # 2026-10-13: Beorn's 2026-10-07 attrs file carried these roles as hand-written
+    # flags (texts verified on deck-verify run 37654666265). A runner re-enrichment
+    # replaces those with oracle_flags' derived set, which cannot see fights, cost
+    # reducers or "cast free" card advantage, so they are curated here, where an
+    # enrichment can't erase them.
+    "ram through", "terrific team-up", "scrapshooter", "whiptongue hydra",
+    "lizard, connors's curse", "kenrith's transformation",
 }
 WIPES = {
     "blasphemous act", "toxic deluge", "cleansing nova", "austere command",
@@ -874,6 +899,12 @@ WIPES = {
     # creature" — a one-sided sweeper in the deck it was printed for. The Dragon
     # ritual rider is a bonus classify() has no bucket for.
     "desolation of smaug",
+    # 2026-10-13: Beorn's 2026-10-07 attrs file carried these roles as hand-written
+    # flags (texts verified on deck-verify run 37654666265). A runner re-enrichment
+    # replaces those with oracle_flags' derived set, which cannot see fights, cost
+    # reducers or "cast free" card advantage, so they are curated here, where an
+    # enrichment can't erase them.
+    "ezuri's predation",
 }
 COUNTERS = {
     "counterspell", "force of will", "misdirection", "arcane denial", "negate",
