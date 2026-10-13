@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind Ur-Dragon + Giada study copies still waiting on the player's real lists)._
+_Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; collection-list refresh waits on the repo going private; blind Ur-Dragon + Giada study copies still waiting on the player's real lists)._
 
 ## New in the app (2026-10-12): card intake, deck import, Watch controls, a second login
 
@@ -29,37 +29,49 @@ _Last updated: 2026-10-12 (card intake + deck import shipped in the app; blind U
   People page; from then on every change says who made it (`By`, `data/activity.csv`).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## Binder batch + Beorn swap proposal (2026-10-13) — WAITING ON THE PLAYER
+## Binder batch + Beorn swaps (2026-10-13) — APPLIED
 
 The player photographed four binder pages, mostly cards for Beorn. All 24 names were
-verified on deck-verify run 38334003819. A 22-card batch is in `owned_additions.txt`. The
-batch note records the judgement calls:
+verified on deck-verify run 38334003819. A 22-card batch is in `owned_additions.txt` (#180).
+The batch note records the judgement calls:
 - Thraben Watcher, Dream Eater and Elspeth Resplendent were left out. Their printings match
   the 2026-10-12 orders, so they are those orders arriving.
-- Kept on the player's word, to confirm: Brainstorm, Sphinx of Enlightenment, Karmic Guide,
+- **Still to confirm with the player:** Brainstorm, Sphinx of Enlightenment, Karmic Guide,
   Emeria Angel and Swan Song. All five may be copies the export or the Kami deck already counts.
 
-**Proposed Beorn swaps, NOT applied.** The incumbents were verified on run 38334358379.
-The player is to OK them first (card-review-method step 7):
+**Beorn: six swaps, applied with the player's go-ahead.** Incumbents verified on run
+38334358379. Every swap is logged `manual-replace`, so the optimizer reads them as manual adds:
 
-| In (field %) | Out (field %) |
+| In (field %) | Out |
 |---|---|
-| Ayula, Queen Among Bears (86%) | Regal Imperiosaur (–, a Dinosaur lord) |
-| The Earth King (74%) | Ordinary Bear (49%, a vanilla 4-mana Bear) |
-| Rampaging Yao Guai (57%) | Carnage Tyrant (–) |
-| The Earth Crystal (25%) | Rhonas's Monument (31%) |
-| Hexhaven Invigorator (–) | Devil Dinosaur (–) |
-| Kogla, the Titan Ape (–; 46% under Goreclaw) | Terrian, World Tyrant (–, vanilla 9-power) |
+| Ayula, Queen Among Bears (86%) | Regal Imperiosaur (a Dinosaur lord) |
+| The Earth King (74%) | Ordinary Bear (a vanilla 4-mana Bear) |
+| Rampaging Yao Guai (57%) | Carnage Tyrant |
+| The Earth Crystal (25%) | Rhonas's Monument |
+| Hexhaven Invigorator (new set) | Devil Dinosaur |
+| Kogla, the Titan Ape (46% under Goreclaw) | Terrian, World Tyrant (vanilla) |
 
-- EDHREC top-25 overlap goes from 14/25 to 17/25.
-- Hulk stays. The buylist had it as Yao Guai's slot, but The Earth Crystal doubles Hulk's
-  per-attack counters.
-- Bench: Krosan Grip, Simulacrum Shaper, Hungering Puppetbeast. Skip: Gardenize (Dina at
-  15% is the better home), Puppet Crafting, Hunter's Axe, Carnivorous Cultivator, Marwyn.
-- **To apply:** write the six swaps; log them `Source=manual-replace`; update the
-  `.notes.md` natural-Bear list and engine lines; mark the four buylist rows bought. Then
-  dispatch deck-verify with `deck_attrs: beorn-the-fierce` (the new cards need types) and
-  validate (deck_stats, power --rank, optimizer preview must not revert).
+- **Overlap:** EDHREC top-25 went from 14/25 to 17/25.
+- **Roles:** ramp 16 → 18, removal 9 → 12, draw 13, wipe 1.
+- **Goldfish:** Beorn is cast on turn 5.56 instead of 5.75 (74% by turn 6, from 70%). The
+  combat clock went from median turn 8 to 9, because it counts printed power only. It can't
+  see the Earth King token, Ayula's counters, the Crystal's doubling or Yao Guai's X.
+- **Optimizer:** proposes no deck changes (the role bands freeze, by design).
+
+Other files changed:
+- `.notes.md` has the new engine sections.
+- The buylist dropped the three bought rows. Craterhoof now replaces Hulking Raptor, and
+  Emerald Medallion replaces Ilysian Caryatid (it stacks with the Crystal).
+- `beorn-the-fierce.attrs.csv` was re-enriched on run 38334845848.
+- **Watch for this:** that re-enrichment replaced 18 hand-written role flags from 2026-10-07
+  (Ram Through, Ezuri's Predation, Goreclaw...). They are now curated in `mtglib`'s
+  RAMP/DRAW/REMOVAL/WIPES lists, so an enrichment can't erase them again. Radagast's
+  curation lifts both Ur-Dragon lists' ramp 9 → 10. That is the only other deck that moved.
+
+Not for Beorn:
+- Gardenize goes to Dina (15%), still a proposal.
+- Sphinx's Tutelage goes to Kami (20%), still a proposal.
+- The angels go to Giada once the real list is imported.
 
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 

@@ -15,13 +15,38 @@ trample counter, and the type change has no duration, so it survives Beorn dying
 he draws two cards **every** combat. "Up to one" means you can pick no target and still get the
 draw. Beorn himself counts as a Bear, so two conversions are enough even with no natural Bears.
 
-**Natural Bears** speed this up: Goreclaw, Terror of Qal Sisma; Little Bear; Ordinary Bear;
-Beorn, Reluctant Host; Surrak and Goreclaw; Gigantic Big Bear; Studious First-Year. Dancing from
-Dark to Dawn makes a 2/2 Bear token on every land, which is a 4/4 next to Beorn.
+**Natural Bears** speed this up: Goreclaw, Terror of Qal Sisma; Little Bear; Ayula, Queen Among
+Bears; Rampaging Yao Guai; Beorn, Reluctant Host; Surrak and Goreclaw; Gigantic Big Bear;
+Studious First-Year. The Earth King brings a 4/4 Bear token, and Dancing from Dark to Dawn makes
+a 2/2 Bear token on every land. Next to Beorn those tokens are 6/6s and 4/4s.
+
+**Ayula is the second engine (2026-10-13).** Whenever ANOTHER Bear you control enters, choose:
+two +1/+1 counters on a Bear, or a Bear you control fights a creature you don't control. Every
+Dancing token, The Earth King's token and every natural Bear is a trigger, so a landfall turn
+is removal. Beorn's conversion makes a creature a Bear without it entering, so it does not
+trigger Ayula. A converted creature IS a Bear you control, though, so it can be the fighter.
+
+**The Earth Crystal doubles the counters.** Every +1/+1 counter placed on your creatures is
+doubled:
+- Ayula's two become four.
+- Hulk's attack gives everything else two.
+- Dancing's "X counters on cast" becomes 2X.
+- Beorn's Hospitality, Managorger Hydra and Yao Guai's X are doubled too.
+Beorn's trample counter is not a +1/+1 counter and is not doubled.
+
+**Ramp off the attack.** The Earth King fetches a basic land for each power-4+ creature that
+attacks, and next to Beorn every Bear is power 4+. Each land is a Dancing Bear and a Hospitality
+counter. Hexhaven Invigorator fetches a land for each point of damage it is dealt (a block, or a
+fight). Convert it with Beorn and let Ayula make it fight.
+
+**Kogla, the Titan Ape** fights when it enters and destroys an artifact or enchantment every
+attack. Its {1}{G} returns a Human you control to hand, and The Earth King is a Human, so
+replaying him makes another 4/4 Bear token (and Kogla is indestructible that turn).
 
 **Speed:** three cost reducers stack on generic mana. Goreclaw takes {2} off power-4+ creatures,
 Radagast of Rhosgobel takes {2} off the first creature each turn and gives it flash, and
-Rhonas's Monument takes {1} off green creatures. Beorn himself costs {1}{G}{G} with Goreclaw out.
+The Earth Crystal takes {1} off every green spell, not just creatures. Beorn himself costs
+{G}{G} with Goreclaw and the Crystal out.
 
 ## Piloting
 
