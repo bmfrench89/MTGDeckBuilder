@@ -2564,6 +2564,11 @@ def _collection_cards(coll, decks_dir):
     import glob
     decks_of = {}
     for p in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
+        # A study copy holds no physical cards (deck_conflicts.is_study_deck):
+        # counting it made "in a deck" flag 97 cards that sit only in study lists
+        # (collection audit 2026-10-14).
+        if deck_conflicts.is_study_deck(p):
+            continue
         try:
             txt = open(p, encoding="utf-8").read()
         except OSError:

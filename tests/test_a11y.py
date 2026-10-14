@@ -106,6 +106,15 @@ def test_card_names_are_keyboard_reachable_and_focus_comes_back():
         assert re.search(r"opener\.focus\(", src), "focus returns to the card that opened it"
 
 
+def test_the_card_name_observer_only_scans_what_was_added():
+    # Scanning the added node's PARENT re-scanned the whole grid for every tile a
+    # sort moved, and each Collection sort froze the page for 4-6 s (17-29 s on a
+    # slow phone). Linear is the contract; flows.js F13 times the real thing.
+    js = _read("webapp", "static", "cardpanel.js")
+    assert "parentNode" not in js[js.index("function focusable"):js.index("observe(document.body")]
+    assert re.search(r"if \(added\[b\]\.nodeType === 1\) focusable\(added\[b\]\)", js)
+
+
 def test_the_pins_table_stacks_on_a_phone():
     pins = _read("webapp", "templates", "pins.html")
     assert '<table class="data stackable">' in pins

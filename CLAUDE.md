@@ -256,8 +256,9 @@ then read the screenshots. Anything that touches an edit flow also runs
 `webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan, the table card,
 undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
 earlier version), the keyboard path (skip link, panel focus in and back) and the phone
-deck page (tabs on the first screen, the list by default, filter, panel, zoom), each read
-back from the deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
+deck page (tabs on the first screen, the list by default, filter, panel, zoom) and a timed
+Collection sort (F13: a quadratic observer once froze every sort for 4-6 s while every
+other flow passed), each read back from the deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
 without an accessible name. The sweep photographs pages; the
 2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
 has the commands.
