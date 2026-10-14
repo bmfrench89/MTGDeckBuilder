@@ -105,6 +105,17 @@ def _db_mode():
     """True once the app's own database is the collection (docs/spec-target-
     architecture.md Phase 1): every write goes there, nothing goes to files."""
     return mtglib.is_collection_db(COLLECTION)
+
+
+def _members_db():
+    """Members and the activity log follow the collection into the database
+    (Phase 1b): its path while the app runs on it, else None (users.json and
+    data/activity.csv, exactly as before)."""
+    return COLLECTION if _db_mode() and os.path.exists(COLLECTION) else None
+
+
+users.database = _members_db
+
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
@@ -320,8 +331,9 @@ def _me():
 
 def _by():
     """The `By` label for a change: the signed-in person's display name — but only
-    once named members exist (users.json). Single-password mode writes exactly what
-    it always wrote, which is the spec's back-compat promise."""
+    once named members exist (a member store, in users.json or the database).
+    Single-password mode writes exactly what it always wrote, which is the spec's
+    back-compat promise."""
     return _me()[1] if users.exists() else ""
 
 
@@ -349,25 +361,41 @@ def _activity_path():
 
 @app.after_request
 def _write_activity(resp):
-    """`data/activity.csv` (When,By,Action,Deck,Detail): deck-level actions, labelled.
-    Only with named members (users.json) — and sign-ins are never logged. The sync
-    commits it so a Claude session can read who changed what."""
+    """The labelled log of deck-level actions (When,By,Action,Deck,Detail). Only
+    with named members — and sign-ins are never logged. In database mode the rows
+    go to the database's `activity` table (Phase 1b); on files, to
+    `data/activity.csv`, which the sync commits. A logging problem never fails
+    the edit it describes."""
     rows = g.pop("activity", None)
-    if not rows or resp.status_code >= 400 or not users.exists():
+    if not rows or resp.status_code >= 400:
+        return resp
+    try:                          # the member store can be the database: guard its read
+        if not users.exists():
+            return resp
+        by = _by()
+    except Exception as e:                  # noqa: BLE001 — never fail the response
+        app.logger.warning("activity not logged: %s", e)
+        return resp
+    from datetime import datetime, timezone
+    when = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    rows = [(when, by, action, deck, re.sub(r"[\x00-\x1f\x7f]", " ", str(detail))[:200])
+            for action, deck, detail in rows]
+    db = _members_db()
+    if db:
+        try:
+            store.log_activity(db, rows)
+        except Exception as e:              # noqa: BLE001 — never fail the response
+            app.logger.warning("activity not logged: %s", e)
         return resp
     try:
         import csv as _csv
-        from datetime import datetime, timezone
         path = _activity_path()
         new = not os.path.exists(path)
-        when = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
         with open(path, "a", encoding="utf-8", newline="") as f:
             w = _csv.writer(f)
             if new:
-                w.writerow(["When", "By", "Action", "Deck", "Detail"])
-            for action, deck, detail in rows:
-                w.writerow([when, _by(), action, deck,
-                            re.sub(r"[\x00-\x1f\x7f]", " ", str(detail))[:200]])
+                w.writerow(list(store.ACTIVITY_FIELDS))
+            w.writerows(rows)
     except OSError:
         pass                      # a full disk must not fail the edit it describes
     return resp
@@ -2882,7 +2910,7 @@ def people():
     return render_template("people.html", members=users.members(data),
                            owner_display=users.owner_display(data),
                            can_upload=bool(data.get("members_can_upload")),
-                           gated=bool(PASSWORD), page="people")
+                           gated=bool(PASSWORD), db=bool(_members_db()), page="people")
 
 
 @app.route("/people", methods=["POST"])
@@ -2933,15 +2961,41 @@ def people_post():
 def activity():
     """The last 100 deck-level actions, newest first (owner only)."""
     _owner_only()
-    import csv as _csv
-    rows = []
-    try:
-        with open(_activity_path(), encoding="utf-8") as f:
-            rows = list(_csv.DictReader(f))
-    except OSError:
-        pass
-    return render_template("activity.html", rows=list(reversed(rows))[:100],
-                           page="people")
+    db = _members_db()
+    if db:
+        try:            # rows an app still on files appended (a deploy's last seconds)
+            store.import_activity(db, _activity_path())
+        except Exception as e:              # noqa: BLE001 — the page still shows the rest
+            app.logger.warning("activity import skipped: %s", e)
+        rows = store.activity_rows(db, limit=100)
+    else:
+        import csv as _csv
+        rows = []
+        try:
+            with open(_activity_path(), encoding="utf-8") as f:
+                rows = list(_csv.DictReader(f))
+        except OSError:
+            pass
+        rows = list(reversed(rows))[:100]
+    return render_template("activity.html", rows=rows, db=bool(db), page="people")
+
+
+@app.route("/export/activity.csv")
+def export_activity():
+    """The whole activity log as a CSV (owner only) — in database mode the page
+    shows the newest 100 and this is everything else."""
+    _owner_only()
+    db = _members_db()
+    if db:
+        text = store.activity_csv(db)
+    else:
+        try:
+            with open(_activity_path(), encoding="utf-8") as f:
+                text = f.read()
+        except OSError:
+            abort(404)
+    return Response(text, mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=activity.csv"})
 
 
 @app.route("/deck/<stem>/changes")

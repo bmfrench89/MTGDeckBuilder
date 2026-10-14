@@ -17,7 +17,8 @@ const UA_M = 'Mozilla/5.0 (Linux; Android 14; SM-F946U) AppleWebKit/537.36 (KHTM
 const exe = fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
 const PAGES = [['home', '/'], ['build', '/build-next'], ['collection', '/collection'],
                ['wishlist', '/wishlist'], ['shared', '/shared'], ['pins', '/pins'],
-               ['import', '/decks/import'], ['arrivals', '/collection/arrivals']];
+               ['import', '/decks/import'], ['arrivals', '/collection/arrivals'],
+               ['people', '/people'], ['activity', '/activity']];
 
 function audit() {          // runs in the page
   const vw = document.documentElement.clientWidth;

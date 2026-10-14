@@ -9,6 +9,11 @@ sign-out-everywhere via `ver`) · `webapp/app.py` (member sign-in, `_session_val
 `data/private/` gitignored and never in the path list) · tests `tests/test_members.py`.
 As built: `By` and the activity log are written only once `users.json` exists (the
 back-compat promise); editor saves are diffed into manual-add/-remove rows for everyone.
+**Moved 2026-10-14** (spec-target-architecture Phase 1b): once the app runs on its
+collection database, the member store and the activity log live there (`members`,
+`activity`); users.json is taken in once and renamed `users.json.moved-to-db`, and
+`data/activity.csv` stops growing, so the log is no longer committed. Everything below
+still describes the behaviour; only where it is stored changed.
 
 **Player ask (2026-10-12):** "I want to create a user login for my brother when he uses
 the site."

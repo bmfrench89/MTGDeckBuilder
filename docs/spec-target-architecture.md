@@ -265,7 +265,19 @@ Phase 4 deletes them.
     - [x] **Download all decks** (zip) on the Collection page.
     - The files stay the working copy the engines read until Phase 4 takes data out of
       the repo; then the database is the only copy and restore is how a host gets them.
-  - **Phase 1b, still open:** members and activity into the DB.
+  - **Phase 1b, MEMBERS and ACTIVITY shipped 2026-10-14** (the player: "move members
+    and activity into the db too").
+    - [x] `members` table + the owner's settings in `meta`: `users.py` keeps the same
+      dict there in database mode, so sign-in, revocation (`ver`), lockout and the
+      People page are unchanged. users.json is taken in once by the app's first read
+      (never by the sync, so the app still running during a deploy keeps its file)
+      and renamed `.moved-to-db`; the database turns 0600 before any hash lands.
+    - [x] `activity` table: the app logs there instead of `data/activity.csv`; rows an
+      app still on files appended are taken in once each (sync + Activity page).
+      **Download the whole log** on the Activity page. No download ever carries the
+      `members` table.
+    - The sync commit's "Changes by person" line now counts the decks' `.changes.csv`
+      rows only: activity is no longer in git, which is the point.
   - [ ] `scripts/store.py` (stdlib sqlite3): schema, migrations, typed accessors returning
     the existing `Card` / deck objects, so the engines barely change.
   - [ ] A one-time importer that reads today's files (`collection.csv`, owned_additions,

@@ -41,8 +41,10 @@ fi
 # wishlist.md / manapool-wishlist.txt ARE runtime-edited (the ↻ Rebuild button runs
 # refresh.py): leaving them unstaged dirtied the tree and made every subsequent
 # `git pull --rebase` fail, wedging the daily sync until a console cleanup.
-# data/activity.csv is the labelled log of deck-level actions (docs/spec-second-login.md);
-# data/private/ (member accounts) is deliberately NOT here and never may be.
+# data/activity.csv is the labelled log of deck-level actions (docs/spec-second-login.md)
+# while the app runs on files; once it runs on its collection database the log lives
+# there and this file stops changing. data/private/ (member accounts, before they moved
+# into the database) is deliberately NOT here and never may be.
 # collection_snapshot.txt is the names-and-quantities copy of the collection that
 # webapp/sync_snapshot.py rewrites just below, and ONLY while the repo is private.
 TRACKED_DATA=(

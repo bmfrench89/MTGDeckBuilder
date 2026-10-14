@@ -5,7 +5,10 @@ tmp decks and a tmp owned_additions.txt. What is pinned: once the database exist
 every write goes to it and none to owned_additions.txt; Upload merges and never
 lowers; a count can be edited (with permission) but never invented; the whole
 collection downloads; and the page tells the player where their cards live.
+Phase 1b adds: deck edits become revisions, and members and the activity log live
+in the database (users.json moves in once; no activity.csv is written).
 """
+import os
 import re
 
 import pytest
@@ -192,3 +195,110 @@ def test_the_decks_download_and_the_page_line(env):
     assert r.status_code == 200 and r.mimetype == "application/zip"
     html = env.client.get("/collection").get_data(as_text=True)
     assert "Download all decks" in html and "1 decks and your pins" in html
+
+
+# --------------------------------------------------------------------------- #
+# Members and the activity log live in the database too (Phase 1b, 2026-10-14)
+# --------------------------------------------------------------------------- #
+def _hash(pw):
+    from werkzeug.security import generate_password_hash
+    return generate_password_hash(pw)
+
+
+def _gate(env, monkeypatch):
+    monkeypatch.setattr(env.app, "PASSWORD", "owner-pass")
+    monkeypatch.setattr(env.app.time, "sleep", lambda s: None)
+    return env.app.app.test_client()
+
+
+def _sign_in(client, name, password):
+    return client.post("/login", data={"name": name, "password": password, "next": "/"})
+
+
+def test_members_added_on_the_people_page_live_in_the_database(env):
+    import users
+    r = env.client.post("/people", data={"action": "add", "name": "sam",
+                                         "password": "sam-password"})
+    assert r.status_code == 302
+    held = store.people_load(env.db)
+    assert set(held["members"]) == {"sam"}
+    assert "sam-password" not in held["members"]["sam"]["hash"], "a hash, never the password"
+    assert not os.path.exists(users.PATH), "no users.json is written in database mode"
+    html = env.client.get("/people").get_data(as_text=True)
+    assert "kept in the app's database on the server" in html
+
+
+def test_a_users_json_moves_in_on_first_read_and_its_members_still_sign_in(env, monkeypatch):
+    import json
+    import users
+    with open(users.PATH, "w", encoding="utf-8") as f:
+        json.dump({"owner": {"display": "Ben"}, "members_can_upload": False,
+                   "members": {"sam": {"name": "sam", "display": "Sam", "role": "member",
+                                       "hash": _hash("sam-password"), "ver": 1,
+                                       "disabled": False}}}, f)
+    c = _gate(env, monkeypatch)
+    r = _sign_in(c, "sam", "sam-password")
+    assert r.status_code == 302 and "/login" not in r.headers["Location"]
+    assert c.get("/collection").status_code == 200
+    assert not os.path.exists(users.PATH) and os.path.exists(users.PATH + ".moved-to-db")
+    assert store.people_load(env.db)["owner"] == {"display": "Ben"}
+
+
+def test_revocation_and_owner_only_pages_work_from_the_database(env, monkeypatch):
+    import users
+    c = _gate(env, monkeypatch)
+    assert users.add_member("sam", "sam-password") is None
+    _sign_in(c, "sam", "sam-password")
+    assert c.get("/collection").status_code == 200
+    assert c.get("/export/activity.csv").status_code == 403, "the log is the owner's"
+    users.sign_out_everywhere("sam")
+    r = c.get("/collection")
+    assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_activity_is_logged_in_the_database_and_never_in_a_file(env, tmp_path):
+    import users
+    users.set_owner_display("Ben")                       # a member store: named mode
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring", "action": "unpin"})
+    env.client.post("/deck/nope/pin", data={"name": "Sol Ring"})      # refused: no row
+    rows = store.activity_rows(env.db)
+    assert [(r["By"], r["Action"], r["Deck"]) for r in rows] == [
+        ("Ben", "unpin", "live"), ("Ben", "pin", "live")]
+    assert not (tmp_path / "activity.csv").exists()
+    html = env.client.get("/activity").get_data(as_text=True)
+    assert "unpin" in html and "Download the whole log" in html
+    r = env.client.get("/export/activity.csv")
+    assert r.status_code == 200 and "attachment" in r.headers["Content-Disposition"]
+    lines = r.get_data(as_text=True).splitlines()
+    assert lines[0] == "When,By,Action,Deck,Detail" and len(lines) == 3
+
+
+def test_without_members_nothing_is_logged_in_database_mode_either(env, tmp_path):
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    assert store.people_load(env.db) is None and store.activity_rows(env.db) == []
+    assert not (tmp_path / "activity.csv").exists()
+
+
+def test_rows_an_older_app_left_in_activity_csv_show_up_once(env, tmp_path):
+    import users
+    users.set_owner_display("Ben")
+    (tmp_path / "activity.csv").write_text(
+        "When,By,Action,Deck,Detail\n2026-10-13 23:59,Sam,pin,live,Sol Ring\n",
+        encoding="utf-8")
+    env.client.get("/activity")
+    html = env.client.get("/activity").get_data(as_text=True)
+    assert html.count("2026-10-13 23:59") == 1
+
+
+def test_a_member_store_that_cannot_be_read_never_fails_the_edit(env, monkeypatch):
+    import sqlite3
+    import users
+    users.set_owner_display("Ben")
+
+    def locked():
+        raise sqlite3.OperationalError("database is locked")
+    monkeypatch.setattr(users, "exists", locked)
+    r = env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    assert r.status_code == 302, "the pin is saved; only its log row is lost"
+    assert store.activity_rows(env.db) == []
