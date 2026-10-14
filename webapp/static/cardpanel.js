@@ -10,13 +10,45 @@
   function wrap(id, on) { var e = $(id); if (e) e.hidden = !on; }
   function esc(s) { var d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
 
+  // Focus moves into the panel when it opens and back to the card name that opened
+  // it when it closes: it is a modal dialog, and focus left on the page behind it,
+  // or dropped to <body> on Escape, strands a keyboard user (UX audit 2026-10-14).
+  var opener = null;
   function show() {
+    if (ov.hidden) opener = document.activeElement;
     ov.hidden = false; document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () { ov.classList.add('show'); });
+    requestAnimationFrame(function () {
+      ov.classList.add('show');
+      var x = ov.querySelector('.cp-close'); if (x) x.focus({ preventScroll: true });
+    });
   }
   function close() {
     ov.classList.remove('show'); document.body.style.overflow = '';
     setTimeout(function () { ov.hidden = true; }, 260);
+    if (opener && document.contains(opener) && opener.focus) opener.focus({ preventScroll: true });
+    opener = null;
+  }
+
+  // Card names are <span>s and <b>s on most pages. Give each a tab stop and a button
+  // role, so a keyboard can open the panel too (the keydown handler below already
+  // answers Enter and Space). Lists drawn later by script get the same treatment.
+  function focusable(root) {
+    if (!root || !root.querySelectorAll) return;
+    var els = root.querySelectorAll('[data-card]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.matches('a[href], button, input, select, textarea, [tabindex]')) continue;
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+    }
+  }
+  focusable(document);
+  if (window.MutationObserver) {
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        m.addedNodes.forEach(function (n) { if (n.nodeType === 1) focusable(n.parentNode || n); });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   // Grounded "how it works": role scaffold (server) + mechanic tags read off the oracle.

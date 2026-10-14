@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="{{ asset('app.css') }}">
 <link rel="stylesheet" href="{{ asset('cardpanel.css') }}">
 </head><body class="shell">
+<a class="skiplink" href="#main">Skip to content</a>
 {#- Icons are inline SVG paths so the shell needs no icon font or extra request. -#}
 {% set icons = {
   'home': '<rect x="4" y="3" width="13" height="17" rx="2"/><path d="M19 6v13a2 2 0 0 1-2 2H8"/>',
@@ -68,7 +69,7 @@
     {% endif %}
   </div>
 </nav>
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
 {% with msgs = get_flashed_messages(with_categories=true) %}
   {% set plain = msgs|rejectattr(0, 'equalto', 'undo')|list %}
   {% if plain %}<div class="flashes">

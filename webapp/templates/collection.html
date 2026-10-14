@@ -38,9 +38,9 @@
     through <a href="#batch">Add a batch</a>, which checks the name first.</p>
   <form method="post" action="{{ url_for('collection_set') }}">
     <div class="row">
-      <input type="text" name="name" placeholder="Card name" style="flex:1" required>
-      <input type="number" name="qty" value="1" min="0" max="999" style="width:70px" required>
-      <input type="text" name="reason" placeholder="Why (optional)" style="flex:1">
+      <input type="text" name="name" placeholder="Card name" aria-label="Card name" style="flex:1" required>
+      <input type="number" name="qty" value="1" min="0" max="999" aria-label="How many you own" style="width:70px" required>
+      <input type="text" name="reason" placeholder="Why (optional)" aria-label="Why (optional)" style="flex:1">
       <button class="btn" type="submit">Set count</button>
     </div>
   </form>
@@ -113,7 +113,7 @@
       or attach a CSV of just the new cards (ManaBox, Moxfield, TCGplayer…). You'll see a
       preview before anything is saved. Basic lands are skipped — they're always owned.</p>
     <form method="post" action="{{ url_for('collection_batch') }}" enctype="multipart/form-data">
-      <textarea name="text" class="pastebox" spellcheck="false"
+      <textarea name="text" class="pastebox" spellcheck="false" aria-label="Cards to add, one per line"
         placeholder="1 Sol Ring&#10;2x Arcane Signet&#10;Counterspell"></textarea>
       <div class="row filepick mt-3">
         <input type="file" name="file" id="batchfile" accept=".txt,.csv,text/plain,text/csv">
@@ -147,8 +147,8 @@
     <p class="muted">Add it here (your word beats the export).</p>
     {% endif %}
     <form method="post" action="{{ url_for('collection_add') }}">
-      <div class="row"><input type="number" name="qty" value="1" min="1" style="width:60px">
-        <input type="text" name="name" placeholder="Card name" style="flex:1" required>
+      <div class="row"><input type="number" name="qty" value="1" min="1" aria-label="How many" style="width:60px">
+        <input type="text" name="name" placeholder="Card name" aria-label="Card name" style="flex:1" required>
         <button class="btn" type="submit">Add</button></div>
     </form>
     {% if db %}
@@ -197,15 +197,15 @@
 
 <h2>Browse your collection</h2>
 <div class="card collctl mb-4">
-  <input type="text" id="collsearch" placeholder="Search by name…" autocomplete="off" class="mb-3" style="width:100%">
+  <input type="search" id="collsearch" placeholder="Search by name…" aria-label="Search your collection by name" autocomplete="off" class="mb-3" style="width:100%">
   <div class="row tight">
     <span class="muted fs-xs">Colors:</span>
     {% for col in ['W','U','B','R','G'] %}<button type="button" class="colorbtn" data-color="{{ col }}">{{ col }}</button>{% endfor %}
-    <select id="collType"><option value="">All types</option>{% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
-    <select id="collRole"><option value="">Any role</option><option value="ramp">Ramp</option><option value="draw">Draw</option><option value="removal">Removal</option><option value="wipe">Wipe</option><option value="counter">Counter</option></select>
+    <select id="collType" aria-label="Card type"><option value="">All types</option>{% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
+    <select id="collRole" aria-label="Role"><option value="">Any role</option><option value="ramp">Ramp</option><option value="draw">Draw</option><option value="removal">Removal</option><option value="wipe">Wipe</option><option value="counter">Counter</option></select>
     <label class="muted fs-xs"><input type="checkbox" id="collIndeck" class="chk"> in a deck</label>
     <label class="muted fs-xs"><input type="checkbox" id="collPriced" class="chk"> priced</label>
-    <select id="collSort" class="push"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
+    <select id="collSort" class="push" aria-label="Sort by"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
   </div>
   <div class="muted fs-xs mt-3"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
   {% if not carddb.on %}<div class="warn fs-xs mt-2">Name-only collection — the color / type / mana-value filters need card details, which are fetched after your next upload or batch.</div>{% endif %}

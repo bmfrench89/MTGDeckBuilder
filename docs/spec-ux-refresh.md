@@ -1,6 +1,6 @@
 # Spec — UX refresh: a phone edit loop the household can trust
 
-**Status: Wave 0 SHIPPED 2026-10-14; Wave 1.1 (undo) SHIPPED 2026-10-14; 1.2–1.5 next.** This file is the live tracker; tick its boxes.
+**Status: Wave 0, Wave 1.1 (undo) and Wave 1.5 (accessibility) SHIPPED 2026-10-14; 1.2–1.4 next.** This file is the live tracker; tick its boxes.
 **Player ask (2026-10-14):** "What about general app improvements or UI/UX updates. Perform
 deep research and spec out and implement what you think could be best for this site."
 **Evidence:** [`research-ux-2026-10.md`](research-ux-2026-10.md): five research passes (the
@@ -64,7 +64,7 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 | 1.2 | [ ] **Phone deck page.** Tab bar inside the first screen (a one-line summary that expands into the tiles); every tab visible (short labels or an edge fade); the Deck tab defaults to a text list (48–56 px rows with a small thumbnail, name, cost, ownership mark) under collapsible section headers with counts; an in-deck filter box; client-side group (section, role, mana value, colour) and sort; the chosen view remembered per device; the image grid one tap away; tap the panel image for a full-screen zoom; tap a curve bar to filter |
 | 1.3 | [ ] **Card panel on `<dialog>`:** name, ownership line and actions first, then text, then art; 44 px close; deck titles as links; a visible "Simulate first" button (no Shift-click); Back closes the sheet; focus moves in and returns |
 | 1.4 | [ ] **The dashboard inside the shell:** bottom bar and rail on deck pages, one "⋯" menu, titles and back links on deck sub-pages; Activity, Import, New arrivals in the More sheet; "Phone" setup out of it |
-| 1.5 | [ ] **Accessibility batch:** labels on every control, focusable card names, underlined links in text, `main` landmark and a skip link, `color-scheme: dark`, `scroll-padding` under sticky bars, a `--target` size token, the smallest type token raised to 12–13 px, inputs at 16 px |
+| 1.5 | [x] **Accessibility batch:** labels on every control, focusable card names, underlined links in text, `main` landmark and a skip link, `color-scheme: dark`, `scroll-padding` under sticky bars, a `--target` size token, the smallest type token raised to 12–13 px, inputs at 16 px |
 
 **Wave 1.1 as built:**
 - **What can be undone.** Each panel Remove or Replace, an Add (from the sheet itself), an
@@ -89,6 +89,24 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
   change log.
 - **UAT.** `flows.js` gained F7–F10: panel replace → toast → Undo, ⚡ → Undo all, Undo on
   the Changes page, and restore an earlier version. All 13 flows PASS.
+
+**Wave 1.5 as built:**
+- **Names and keyboard access.** Every form control has an accessible name, and
+  `test_a11y` fails on any that doesn't. Card names on app pages become tab stops with a
+  button role, including lists drawn later by script.
+- **Focus.** Both card panels take focus when they open and give it back to the card on
+  close. The full `<dialog>` with a focus trap is still 1.3.
+- **Landmarks.** A skip link leads to `<main id="main">`, and the dashboard's wrapper is
+  `role="main"`.
+- **Links and controls.** Links in running text are underlined. `color-scheme: dark`
+  applies on both surfaces, and `scroll-padding` keeps focused fields clear of the phone bar.
+- **Sizes.** `--target: 44px` drives chips, inputs, small buttons, the colour buttons, the
+  panel close button and the print button. `--fs-2xs` is 12 px (was 11.1 px). Fields
+  are 16 px on touch screens, so iOS never zooms.
+- **Pins on phones.** The table stacks one block per pin, so Move/Apply sit on screen.
+- **Results.** The sweep's earlier small-target and sideways-scroll warnings are gone,
+  except the home chip row, which stays one swipeable row by design. The new keyboard
+  flow F11 fails on main and passes here, and all 14 flows PASS.
 
 ## 5. Waves 2 and 3 — collection, speed, differentiators
 

@@ -18,7 +18,7 @@
     decks want the same physical copy.</p>
 {% else %}
 <div class="tablewrap">
-<table class="data">
+<table class="data stackable">
   <thead><tr><th>Card</th><th>Reserved for</th><th>Owned</th><th>Also in</th>
     <th>Move / release</th></tr></thead>
   <tbody>
@@ -29,10 +29,10 @@
           any more — the pin is holding a copy nothing is using">stale</span>{% endif %}
         {% if r.contested %}<span class="tag buy" title="More decks run this than you
           own copies of">contested</span>{% endif %}</td>
-      <td>{{ r.deck_title }}</td>
-      <td>{{ r.owned }}</td>
-      <td class="muted">{% for d in r.in_decks %}<a href="{{ url_for('deck', stem=d) }}">{{ d|deck_title }}</a>{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
-      <td>
+      <td data-label="Reserved for">{{ r.deck_title }}</td>
+      <td data-label="Owned">{{ r.owned }}</td>
+      <td class="muted" data-label="Also in">{% for d in r.in_decks %}<a href="{{ url_for('deck', stem=d) }}">{{ d|deck_title }}</a>{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
+      <td data-label="Move / release">
         <form method="post" action="{{ url_for('pins_move') }}" class="pinmove">
           <input type="hidden" name="card" value="{{ r.name }}">
           <select name="deck" aria-label="Move {{ r.name }} to">
@@ -54,8 +54,10 @@
 
 <style>
 .pinmove { display:flex; gap:var(--sp-2); align-items:center; }
+.pinmove select { flex:1 1 auto; min-width:0; }
 .pinmove select, .pinmove button { font:inherit; padding:var(--sp-1) var(--sp-2);
-  border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.18);
+  min-height:var(--target); border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.18);
   background:rgba(255,255,255,.06); color:inherit; }
+.pinmove button { flex:none; padding:0 var(--sp-4); }
 </style>
 {% endblock %}

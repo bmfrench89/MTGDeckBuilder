@@ -54,6 +54,8 @@ Then undo, through the screens a player taps (Wave 1.1):
 - F8: ⚡ then "Undo all".
 - F9: Undo on a Changes-page row, which then reads "Undone".
 - F10: Restore an earlier version (database mode; SKIP on files).
+- F11: Keyboard only: Tab reaches a visible skip link that moves focus to main; a card
+  name opens the panel with focus inside; Escape returns focus to the card (both panels).
 
 Each must give back the same list, compared section by section.
 
