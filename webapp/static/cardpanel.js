@@ -32,22 +32,29 @@
   // Card names are <span>s and <b>s on most pages. Give each a tab stop and a button
   // role, so a keyboard can open the panel too (the keydown handler below already
   // answers Enter and Space). Lists drawn later by script get the same treatment.
+  function prep(el) {
+    if (el.matches('a[href], button, input, select, textarea, [tabindex]')) return;
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+  }
+  // Only a node a mutation ADDED, and what is inside it. Scanning the added node's
+  // PARENT re-scanned the whole grid for every tile a sort moved: 3,294 tiles,
+  // ~10.8 million checks, a 4-6 s freeze per Collection sort (17-29 s on a slow
+  // phone) shipped with the accessibility batch and caught by the collection audit
+  // (2026-10-14).
   function focusable(root) {
     if (!root || !root.querySelectorAll) return;
+    if (root.matches && root.matches('[data-card]')) prep(root);
     var els = root.querySelectorAll('[data-card]');
-    for (var i = 0; i < els.length; i++) {
-      var el = els[i];
-      if (el.matches('a[href], button, input, select, textarea, [tabindex]')) continue;
-      el.setAttribute('tabindex', '0');
-      el.setAttribute('role', 'button');
-    }
+    for (var i = 0; i < els.length; i++) prep(els[i]);
   }
   focusable(document);
   if (window.MutationObserver) {
     new MutationObserver(function (ms) {
-      ms.forEach(function (m) {
-        m.addedNodes.forEach(function (n) { if (n.nodeType === 1) focusable(n.parentNode || n); });
-      });
+      for (var a = 0; a < ms.length; a++) {
+        var added = ms[a].addedNodes;
+        for (var b = 0; b < added.length; b++) if (added[b].nodeType === 1) focusable(added[b]);
+      }
     }).observe(document.body, { childList: true, subtree: true });
   }
 

@@ -56,6 +56,10 @@ Then undo, through the screens a player taps (Wave 1.1):
 - F10: Restore an earlier version (database mode; SKIP on files).
 - F11: Keyboard only: Tab reaches a visible skip link that moves focus to main; a card
   name opens the panel with focus inside; Escape returns focus to the card (both panels).
+- F12: The phone deck page: tabs on the first screen, the list by default, the filter, a
+  row opening the panel, zoom.
+- F13: Three Collection sorts, each timed to the next frame; FAIL over 2.5 s. The
+  accessibility batch's card-name observer once made every sort take 4-6 s.
 
 Each must give back the same list, compared section by section.
 

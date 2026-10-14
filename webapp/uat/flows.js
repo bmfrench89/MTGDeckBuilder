@@ -385,6 +385,29 @@ function restore(stem, files) {
     } catch (e) { fail('F12 phone deck page', String(e).slice(0, 140)); }
   }
 
+  // F13 · The Collection page sorts without freezing. The accessibility batch's
+  // card-name observer re-scanned the whole grid for every tile a sort moved, and
+  // every sort froze the page for 4-6 s (17-29 s on a slow phone) while all 14
+  // flows above passed, because none of them sorted 3,294 tiles and timed it.
+  {
+    try {
+      await p.goto(`${BASE}/collection`, { waitUntil: 'load', timeout: 300000 });
+      if (!(await p.$('#collSort'))) skip('F13 collection sort is quick', 'no sort control on this build');
+      else {
+        const times = [];
+        for (const v of ['mv', 'name', 'mv']) {
+          const t0 = Date.now();
+          await p.selectOption('#collSort', v);
+          await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+          times.push(Date.now() - t0);
+        }
+        const n = await p.evaluate(() => document.querySelectorAll('[data-card]').length);
+        if (Math.max(...times) > 2500) fail('F13 collection sort is quick', `${n} cards; sorts took ${times.join(' / ')} ms`);
+        else pass('F13 collection sort is quick', `${n} cards; sorts took ${times.join(' / ')} ms`);
+      }
+    } catch (e) { fail('F13 collection sort is quick', String(e).slice(0, 140)); }
+  }
+
   // F11 · Keyboard only (Wave 1.5): the skip link, then a card name opens the panel,
   // focus goes in, and Escape brings it back to the card, on both panels.
   {
