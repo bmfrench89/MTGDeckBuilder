@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Wishlist · MTG Deckbuilder{% endblock %}
 {% block content %}
+{% macro cost(total, unknown, n) -%}
+  {%- if n and unknown >= n %}<span class="muted fs-sm">prices unknown</span>
+  {%- elif n %}<span class="gold">~${{ '%.2f'|format(total) }}</span>{% if unknown %} <span class="muted fs-sm">+ {{ unknown }} unpriced</span>{% endif %}
+  {%- endif %}
+{%- endmacro %}
 <h1>Wishlist</h1>
 <div class="sub">Nothing here is required — it's what you'd buy to run every deck at once, or to upgrade.</div>
 
@@ -30,36 +35,51 @@ document.getElementById('mpcopy').addEventListener('click',function(){
 });
 </script>
 
-<h2>Copies to buy so decks coexist <span class="gold">~${{ '%.2f'|format(share_cost) }}</span></h2>
+<h2>Copies to buy so decks coexist {{ cost(share_cost, unpriced.share, shared|length) }}</h2>
 <div class="card tablewrap">
 <table><thead><tr><th></th><th>Qty</th><th>Card</th><th>~each</th><th>Shared with</th></tr></thead><tbody>
 {% for c in shared %}
-<tr><td><input class="chk" type="checkbox"></td><td>{{ c.short }}×</td>
+<tr><td><input class="chk got" type="checkbox" data-k="share:{{ c.card }}" aria-label="Got {{ c.card }}"></td><td>{{ c.short }}×</td>
   <td><b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td>
   <td class="good">{% if c.price %}${{ '%.2f'|format(c.price) }}{% else %}—{% endif %}</td>
-  <td class="muted">{{ c.decks|join(', ') }}</td></tr>
+  <td class="muted">{% for d in c.decks %}<a href="{{ url_for('deck', stem=d) }}">{{ d|deck_title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>
 {% else %}<tr><td colspan="5" class="muted">none</td></tr>{% endfor %}
 </tbody></table></div>
 
 {% if unowned %}
 <h2>Cards in a deck you don't own yet</h2>
 <div class="card tablewrap"><table><tbody>
-{% for c in unowned %}<tr><td><input class="chk" type="checkbox"></td>
-  <td>{{ c.short }}× <b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td><td class="muted">{{ c.decks|join(', ') }}</td></tr>{% endfor %}
+{% for c in unowned %}<tr><td><input class="chk got" type="checkbox" data-k="own:{{ c.card }}" aria-label="Got {{ c.card }}"></td>
+  <td>{{ c.short }}× <b class="cardlink" data-card="{{ c.card }}">{{ c.card }}</b></td><td class="muted">{% for d in c.decks %}<a href="{{ url_for('deck', stem=d) }}">{{ d|deck_title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
 
-<h2>Upgrades from deck buy-lists <span class="gold">~${{ '%.2f'|format(up_cost) }}</span></h2>
+<h2>Upgrades from deck buy-lists {{ cost(up_cost, unpriced.up, upgrades|length) }}</h2>
 <div class="card tablewrap">
 <table><thead><tr><th></th><th>Card</th><th>~$</th><th>Deck</th><th>Swap / why</th></tr></thead><tbody>
 {% for u in upgrades %}
-<tr><td><input class="chk" type="checkbox"></td><td><b class="cardlink" data-card="{{ u.card }}">{{ u.card }}</b></td>
+<tr><td><input class="chk got" type="checkbox" data-k="up:{{ u.deck }}:{{ u.card }}" aria-label="Got {{ u.card }}"></td><td><b class="cardlink" data-card="{{ u.card }}">{{ u.card }}</b></td>
   <td class="good">{% if u.price %}${{ '%.0f'|format(u.price) }}{% else %}—{% endif %}</td>
-  <td class="muted">{{ u.deck }}</td>
+  <td class="muted"><a href="{{ url_for('deck', stem=u.deck) }}">{{ u.deck|deck_title }}</a></td>
   <td class="muted">{% if u.replaces %}<span class="warn">→{{ u.replaces }}</span> · {% endif %}{{ u.reason }}</td></tr>
 {% else %}<tr><td colspan="5" class="muted">none</td></tr>{% endfor %}
 </tbody></table></div>
 
 <p class="muted mt-4">Prices are your export's MARKET / buy-list estimates.
-Checkboxes are for your own tracking (not saved).</p>
+Tick a card when you've got it — ticks are remembered on this device only.</p>
+<script>
+(function(){
+  // Shopping ticks, per device. Storage can be missing or blocked (private mode),
+  // so every read and write is guarded and the page works without it.
+  var KEY='mtg.wishlist.got', got={};
+  try { got=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; } catch(e){ got={}; }
+  document.querySelectorAll('input.got').forEach(function(b){
+    if(got[b.dataset.k]) b.checked=true;
+    b.addEventListener('change', function(){
+      if(b.checked) got[b.dataset.k]=1; else delete got[b.dataset.k];
+      try { localStorage.setItem(KEY, JSON.stringify(got)); } catch(e){}
+    });
+  });
+})();
+</script>
 {% endblock %}

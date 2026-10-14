@@ -1,0 +1,201 @@
+// UAT: the flows a player runs, end to end, read back from the deck FILES.
+//
+//   node webapp/uat/flows.js <base-url> <decks-dir>
+//
+// Run it against a SCRATCH copy of the decks (and collection): it edits decks, and
+// puts every file it touched back afterwards. Env: UAT_PASSWORD when the server runs
+// with MTG_PASSWORD. Prints PASS / FAIL / SKIP per flow; exit 1 on any FAIL.
+//
+// Why it exists: the 2026-10-14 UX audit found edit flows that silently damaged
+// decks — a one-tap Replace put a white card into mono-green Beorn, "+ Add card"
+// filed Cultivate under Commander, the ⚡ report vanished, the mulligan trainer
+// counted one hand three times — and every one passed sweep.js, which photographs
+// pages but never runs a flow. sweep.js checks how pages LOOK; this checks what
+// they DO.
+const { chromium } = require('playwright');
+const fs = require('fs'), path = require('path');
+const BASE = process.argv[2] || 'http://127.0.0.1:5000';
+const DECKS = process.argv[3];
+const PASS = process.env.UAT_PASSWORD || '';
+const exe = fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
+if (!DECKS || !fs.existsSync(DECKS)) { console.error('usage: flows.js <base-url> <decks-dir>'); process.exit(2); }
+
+const results = [];
+const pass = (f, why) => results.push(['PASS', f, why || '']);
+const fail = (f, why) => results.push(['FAIL', f, why || '']);
+const skip = (f, why) => results.push(['SKIP', f, why || '']);
+
+// --- the deck files, read the way the app writes them ----------------------------
+function parseDeck(text) {
+  const out = { colors: '', commander: [], cards: [], sections: {}, total: 0 };
+  let section = '';
+  for (const raw of text.split('\n')) {
+    const s = raw.trim();
+    const hdr = s.match(/^#\s*Colors:\s*(.*)$/i);
+    if (hdr) out.colors = (hdr[1].toUpperCase().match(/[WUBRG]/g) || []).join('');
+    const sec = s.match(/^#\s*---\s*(.+?)\s*---\s*$/);
+    if (sec) { section = sec[1]; continue; }
+    if (!s || s.startsWith('#')) continue;
+    const m = s.match(/^(\d+)x?\s+(.+)$/);
+    const name = m ? m[2] : s;
+    out.total += m ? Number(m[1]) : 1;
+    (out.sections[section] = out.sections[section] || []).push(name);
+    if (section.toLowerCase().startsWith('commander')) out.commander.push(name);
+    else out.cards.push(name);
+  }
+  return out;
+}
+const BASICS = /^(snow-covered )?(plains|island|swamp|mountain|forest|wastes)$/i;
+const read = (f) => fs.readFileSync(f, 'utf8');
+function snapshot(stem) {
+  const files = {};
+  for (const f of fs.readdirSync(DECKS)) if (f.startsWith(stem + '.')) files[f] = read(path.join(DECKS, f));
+  return files;
+}
+function restore(stem, files) {
+  for (const f of fs.readdirSync(DECKS)) {
+    if (!f.startsWith(stem + '.')) continue;
+    const p = path.join(DECKS, f);
+    if (f in files) fs.writeFileSync(p, files[f]); else fs.unlinkSync(p);
+  }
+}
+
+(async () => {
+  const b = await chromium.launch({ executablePath: exe });
+  const ctx = await b.newContext({ viewport: { width: 412, height: 915 }, isMobile: true,
+                                   hasTouch: true, serviceWorkers: 'block' });
+  const p = await ctx.newPage();
+  await p.goto(BASE + '/', { waitUntil: 'load', timeout: 300000 });
+  if (p.url().includes('/login')) {
+    await p.fill('input[name=password]', PASS);
+    await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), p.click('button[type=submit]')]);
+  }
+  const api = p.request;
+  const search = async (q, stem, strict) => {
+    const r = await api.get(`${BASE}/api/collection/search?q=${encodeURIComponent(q)}&deck=${encodeURIComponent(stem)}${strict ? '&strict=1' : ''}`);
+    return r.ok() ? r.json() : [];
+  };
+  const QUERIES = ['so', 'an', 'ar', 'dr', 'th', 'el', 'st', 're', 'li', 'ma', 'go', 'sh'];
+
+  // A deck with 1–4 colours, so off-colour cards exist, and a nonbasic card to act on.
+  const decks = fs.readdirSync(DECKS).filter((f) => f.endsWith('.txt')).sort();
+  let stem = null, deck = null;
+  for (const f of decks) {
+    const d = parseDeck(read(path.join(DECKS, f)));
+    if (d.colors && d.colors.length < 5 && d.commander.length && d.cards.some((n) => !BASICS.test(n))) {
+      stem = f.slice(0, -4); deck = d; break;
+    }
+  }
+  if (!stem) { console.log('No suitable deck (needs a # Colors: header with 1–4 colours).'); process.exit(2); }
+  const target = deck.cards.find((n) => !BASICS.test(n));
+  const deckFile = path.join(DECKS, stem + '.txt');
+  console.log(`deck: ${stem} [${deck.colors}] · acting on: ${target}`);
+
+  // F1 · Replace refuses an off-colour card, and the replace search never offers one.
+  {
+    let off = null;
+    for (const q of QUERIES) {
+      const list = await search(q, stem, false);
+      off = (list || []).find((it) => it.legal === false);
+      if (off) break;
+    }
+    if (!off) skip('F1 replace refuses off-colour', 'no colour data in this collection');
+    else {
+      const before = read(deckFile);
+      const r = await api.post(`${BASE}/deck/${stem}/card`, { form: { action: 'replace', name: target, replacement: off.name }, maxRedirects: 0 });
+      const after = read(deckFile);
+      if (r.status() === 409 && before === after) pass('F1 replace refuses off-colour', `${off.name} refused (409), file untouched`);
+      else fail('F1 replace refuses off-colour', `${off.name}: status ${r.status()}, file ${before === after ? 'untouched' : 'CHANGED'}`);
+      let leak = null;
+      for (const q of QUERIES.slice(0, 6)) {
+        leak = ((await search(q, stem, true)) || []).find((it) => it.legal === false);
+        if (leak) break;
+      }
+      if (leak) fail('F1b in-colour replace search', `strict search offered ${leak.name}`);
+      else pass('F1b in-colour replace search', 'strict search offered only in-colour cards');
+    }
+  }
+
+  // F2 · The commander can't be swapped from a one-tap sheet.
+  {
+    const before = read(deckFile);
+    const r = await api.post(`${BASE}/deck/${stem}/card`, { form: { action: 'remove', name: deck.commander[0] }, maxRedirects: 0 });
+    const after = read(deckFile);
+    if (r.status() === 409 && before === after) pass('F2 commander guarded', 'remove refused (409), file untouched');
+    else fail('F2 commander guarded', `status ${r.status()}, file ${before === after ? 'untouched' : 'CHANGED'}`);
+  }
+
+  // F3 · "+ Add card" with no section files the card by type, never under Commander,
+  // and says when the deck is no longer 100.
+  {
+    const files = snapshot(stem);
+    const have = new Set([...deck.cards, ...deck.commander].map((n) => n.toLowerCase()));
+    let pick = null;
+    for (const q of QUERIES) {
+      pick = ((await search(q, stem, true)) || []).find((it) => !have.has(it.name.toLowerCase()) && !BASICS.test(it.name));
+      if (pick) break;
+    }
+    if (!pick) skip('F3 add files by type', 'no in-colour owned card outside the deck');
+    else {
+      const r = await api.post(`${BASE}/deck/${stem}/add`, { form: { name: pick.name, section: '' } });
+      const j = r.ok() ? await r.json() : {};
+      const after = parseDeck(read(deckFile));
+      const where = Object.keys(after.sections).find((s) => (after.sections[s] || []).some((n) => n.toLowerCase() === pick.name.toLowerCase()));
+      const total = after.total;
+      if (!j.ok) fail('F3 add files by type', `add refused: ${j.error || r.status()}`);
+      else if (!where || where.toLowerCase().startsWith('commander')) fail('F3 add files by type', `${pick.name} landed under "${where}"`);
+      else if (where !== j.section) fail('F3 add files by type', `reply said "${j.section}", file has "${where}"`);
+      else pass('F3 add files by type', `${pick.name} → ${where}`);
+      const wasHundred = parseDeck(files[stem + '.txt']).total === 100;
+      if (wasHundred && !(j.size_note || '').includes('101')) fail('F3b size warning', `no warning at ${total} cards: ${j.size_note}`);
+      else if (wasHundred) pass('F3b size warning', j.size_note);
+      else skip('F3b size warning', `deck was ${parseDeck(files[stem + '.txt']).total} cards, not 100`);
+    }
+    restore(stem, files);
+  }
+
+  // F4 · The ⚡ report reaches the deck page.
+  {
+    const files = snapshot(stem);
+    const r = await api.post(`${BASE}/deck/${stem}/optimize`, { maxRedirects: 0 });
+    const loc = r.headers()['location'] || '';
+    await p.goto(new URL(loc || `/deck/${stem}`, BASE).toString(), { waitUntil: 'load', timeout: 300000 });
+    const msg = await p.evaluate(() => (document.querySelector('.appflashes') || {}).textContent || '');
+    if (/Optimiz/.test(msg)) pass('F4 optimize report shown', msg.trim().slice(0, 90));
+    else fail('F4 optimize report shown', `status ${r.status()}, no report on the deck page`);
+    restore(stem, files);
+  }
+
+  // F5 · The mulligan trainer counts one decision once.
+  {
+    await p.goto(`${BASE}/deck/${stem}/mulligan`, { waitUntil: 'load', timeout: 300000 });
+    const keep = p.locator('#keep');
+    try {
+      await keep.waitFor({ state: 'visible', timeout: 20000 });
+      await keep.click();
+      await p.locator('#reveal').waitFor({ state: 'visible', timeout: 20000 });
+      const askShown = await p.evaluate(() => getComputedStyle(document.getElementById('ask')).display !== 'none');
+      const stats = await p.textContent('#stats');
+      if (askShown) fail('F5 mulligan counts once', 'Keep/Mulligan still showing after the decision');
+      else if (!/^\s*1 hand/.test(stats || '')) fail('F5 mulligan counts once', `stats read "${(stats || '').trim()}"`);
+      else pass('F5 mulligan counts once', (stats || '').trim().slice(0, 60));
+    } catch (e) { fail('F5 mulligan counts once', String(e).slice(0, 120)); }
+  }
+
+  // F6 · No raw markdown on the screen opponents read, and pages arrive compressed.
+  {
+    const r = await api.get(`${BASE}/deck/${stem}/table-card`);
+    const html = await r.text();
+    const text = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, ' ');
+    if (/\*\*|(^|\s)\*\w/.test(text)) fail('F6 table card is clean', 'raw markdown asterisks in the visible text');
+    else pass('F6 table card is clean', 'no raw markdown');
+    const g = await api.get(`${BASE}/`, { headers: { 'Accept-Encoding': 'gzip' } });
+    const enc = (g.headers()['content-encoding'] || '');
+    if (enc.includes('gzip')) pass('F6b pages compressed', 'Content-Encoding: gzip');
+    else fail('F6b pages compressed', `Content-Encoding: "${enc}"`);
+  }
+
+  await b.close();
+  for (const [s, f, why] of results) console.log(`${s.padEnd(4)} ${f}${why ? ' — ' + why : ''}`);
+  process.exit(results.some((r) => r[0] === 'FAIL') ? 1 : 0);
+})().catch((e) => { console.error(e); process.exit(2); });

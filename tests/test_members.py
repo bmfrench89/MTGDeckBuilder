@@ -289,7 +289,7 @@ def test_deck_level_actions_write_one_labelled_row_each(env):
         ("sam", "set bracket", "td", "4"), ("sam", "pin", "td", "Sol Ring")]
     owner = env.new()
     _login(owner, "owner-pass")
-    assert "set bracket" in owner.get("/activity").get_data(as_text=True)
+    assert "set the bracket" in owner.get("/activity").get_data(as_text=True)
 
 
 def test_sign_ins_are_not_logged(env):

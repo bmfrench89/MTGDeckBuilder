@@ -41,6 +41,10 @@
         fetch(api('/sections')).then(function(r){return r.ok?r.json():[];})
           .then(function(list){
             sec.innerHTML='';
+            // Default: let the server file it by card type. Picking the first real
+            // section here once put Cultivate under Commander (UX audit).
+            var auto=document.createElement('option'); auto.value=''; auto.textContent='By card type';
+            sec.appendChild(auto);
             (list||[]).forEach(function(s){
               var o=document.createElement('option'); o.value=s; o.textContent=s; sec.appendChild(o);
             });
@@ -133,6 +137,8 @@
           return;
         }
         var notes=[];
+        if(x.j.section) notes.push('Added under '+x.j.section+'.');
+        if(x.j.size_note) notes.push(x.j.size_note);
         if(x.j.warning) notes.push(x.j.warning);
         if(x.j.illegal && x.j.illegal.length) notes.push('Singleton check flagged: '+
           x.j.illegal.map(function(p){return p[1];}).join(', '));

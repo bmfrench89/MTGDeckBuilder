@@ -328,7 +328,7 @@
       var q=si.value.trim(); clearTimeout(stimer);
       if(q.length<2){ sr.innerHTML=''; return; }
       stimer=setTimeout(function(){
-        fetch('/api/collection/search?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():[];})
+        fetch('/api/collection/search?q='+encodeURIComponent(q)+'&deck='+encodeURIComponent(STEM)+'&strict=1').then(function(r){return r.ok?r.json():[];})
           .then(function(list){
             sr.innerHTML='';
             (list||[]).forEach(function(it){
@@ -339,7 +339,7 @@
                 editCard('replace', nm); }); })(it.name);
               sr.appendChild(b);
             });
-            if(!list || !list.length) sr.innerHTML='<span class="cm-hint">No owned card matches.</span>';
+            if(!list || !list.length) sr.innerHTML='<span class="cm-hint">No owned card in this deck\'s colors matches.</span>';
           }).catch(function(){});
       }, 220);
     });

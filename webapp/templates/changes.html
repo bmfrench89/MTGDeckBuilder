@@ -4,8 +4,7 @@
 <nav class="crumbs mb-3"><a href="{{ url_for('deck', stem=meta.stem) }}">&larr; {{ meta.title }}</a></nav>
 <h1>Changes</h1>
 <div class="sub">Every card that came in or went out of this deck, newest first.
-  <b>manual-…</b> rows are someone's own choice (the optimizer never undoes them); other sources
-  are the optimizer's swaps.</div>
+  Changes made <b>by hand</b> are someone's own choice, and the optimizer never undoes them.</div>
 {% if not rows %}
 <div class="card mt-4 muted">No changes recorded yet.</div>
 {% else %}
@@ -14,7 +13,7 @@
   <div class="arrival fs-sm">
     {% if r.Card %}<span class="good">+</span> <span class="cardlink" data-card="{{ r.Card }}">{{ r.Card }}</span>{% endif %}
     {% if r.Replaced %}{% if r.Card %} <span class="muted">replacing</span> {% else %}<span class="warn">−</span> {% endif %}<span class="cardlink" data-card="{{ r.Replaced }}">{{ r.Replaced }}</span>{% endif %}
-    <div class="faint fs-xs">{{ r.Added }} · {{ r.Source or 'unknown source' }}{% if r.By %} · by {{ r.By }}{% endif %}</div>
+    <div class="faint fs-xs">{{ r.Added }} · {{ r.Source|change_source }}{% if r.By %} · by {{ r.By }}{% endif %}</div>
   </div>
   {% endfor %}
 </div>

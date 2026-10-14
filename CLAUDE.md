@@ -245,9 +245,14 @@ means something is wrong, so say so rather than shipping quietly.
 Unit tests and fresh-browser screenshots passed the Arcane Ledger redesign (2026-10-11),
 and the player's installed phone still rendered the new page with the **old** stylesheet.
 Before merging anything that touches templates, CSS, JS or the service worker, run
-`webapp/uat/upgrade.js` (an installed app receiving the deploy — must PASS) and
-`webapp/uat/sweep.js` (every main page at phone / Fold / tablet / desktop), then read the
-screenshots. `webapp/uat/README.md` has the two commands.
+`webapp/uat/upgrade.js` (an installed app receiving the deploy — must PASS),
+`webapp/uat/sweep.js` (every main page at phone / Fold / tablet / desktop, the open card
+panel included; exits 1 on page overflow or a tap target under 24 px, warns under 44 px),
+then read the screenshots. Anything that touches an edit flow also runs
+`webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan and the table
+card, each read back from the deck FILES (must PASS). The sweep photographs pages; the
+2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
+has the commands.
 
 ### Network access degrades, never crashes
 Scryfall / EDHREC / Commander Spellbook are reachable from the player's machine but may be

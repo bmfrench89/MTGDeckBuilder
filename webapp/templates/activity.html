@@ -16,7 +16,7 @@
 <div class="card mt-4">
   {% for r in rows %}
   <div class="arrival fs-sm">
-    <p><b>{{ r.By or '—' }}</b> {{ r.Action }}{% if r.Deck %} · <a href="{{ url_for('deck', stem=r.Deck) }}">{{ r.Deck }}</a>{% endif %}
+    <p><b>{{ r.By or '—' }}</b> {{ r.Action|activity_verb }}{% if r.Deck %} · <a href="{{ url_for('deck', stem=r.Deck) }}">{{ r.Deck|deck_title }}</a>{% endif %}
     {% if r.Detail %}<span class="muted">· {{ r.Detail }}</span>{% endif %}</p>
     <div class="faint fs-xs">{{ r.When }}</div>
   </div>

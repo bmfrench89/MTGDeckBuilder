@@ -48,6 +48,7 @@ import auto_build
 import manabase
 import combo_detector
 import deckcore
+import deck_sections
 import edhrec
 import spellbook
 import optimize
@@ -148,6 +149,41 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True          # no script access to the 
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"         # cross-site POSTs carry no session → CSRF brake
 app.config["SESSION_COOKIE_SECURE"] = _cookie_secure()
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024   # uploads are ~1–2 MB CSVs; cap the rest
+
+_GZIP_TYPES = ("application/json", "application/javascript", "application/xml",
+               "image/svg+xml", "application/manifest+json")
+
+
+@app.after_request
+def _gzip(resp):
+    """Compress text responses of 1 KB and up when the browser accepts gzip.
+
+    Nothing compressed anything: the Collection page went over the wire as 1.23 MB
+    of HTML that gzips to 117 KB, and a deck dashboard as ~300 KB that gzips to
+    ~60 KB (UX audit 2026-10-14). Registered FIRST so it runs LAST (Flask runs
+    after-request hooks in reverse), after every other hook has had the body.
+    Skips files sent from disk and streams (narration audio, downloads), ranges,
+    304s and anything already encoded; a front proxy that also compresses sees
+    Content-Encoding and leaves it alone. Never fails a response."""
+    try:
+        if (resp.direct_passthrough or resp.is_streamed or request.method == "HEAD"
+                or resp.status_code < 200 or resp.status_code in (204, 206, 304)
+                or "Content-Encoding" in resp.headers
+                or "gzip" not in request.headers.get("Accept-Encoding", "").lower()):
+            return resp
+        mt = resp.mimetype or ""
+        if not (mt.startswith("text/") or mt in _GZIP_TYPES):
+            return resp
+        data = resp.get_data()
+        if len(data) < 1024:
+            return resp
+        import gzip
+        resp.set_data(gzip.compress(data, compresslevel=6))
+        resp.headers["Content-Encoding"] = "gzip"
+        resp.vary.add("Accept-Encoding")
+    except Exception as e:                  # noqa: BLE001 — never fail the response
+        app.logger.warning("gzip skipped: %s", e)
+    return resp
 
 
 @app.after_request
@@ -756,6 +792,12 @@ def deck(stem):
                       editable=True, narration_url=url_for("narration_file", stem=stem,
                                                            name="x")[:-1])
     html = res["dashboard"]
+    # The dashboard is a generated document, not a base.html page, so it never drew
+    # flash messages: the ⚡ report and every edit warning vanished, resurfacing later
+    # as stale notes on the Decks page (UX audit 2026-10-14). Draw them here.
+    notes = _flash_banner()
+    if notes:
+        html = re.sub(r"(<body[^>]*>)", lambda mt: mt.group(1) + notes, html, count=1)
     # Surface the singleton guard on the primary surface. optimize() computes this
     # after every applying run, but the POST routes discard the report — so a
     # violation from ANY source was invisible in the app (CLAUDE.md: this class of
@@ -773,6 +815,22 @@ def deck(stem):
         html = re.sub(r"(<body[^>]*>)", r"\1" + banner.replace("\\", "\\\\"),
                       html, count=1)
     return html
+
+
+def _flash_banner():
+    """This request's flash messages as a small block for the generated dashboard."""
+    from flask import get_flashed_messages
+    from markupsafe import escape
+    msgs = get_flashed_messages(with_categories=True)
+    if not msgs:
+        return ""
+    edge = {"warn": "#f59e0b", "error": "#ef4444"}
+    rows = "".join(
+        f'<p style="margin:0;padding:10px 16px;border-left:4px solid '
+        f'{edge.get(cat, "#60a5fa")};background:#1b2230;color:#f3f4f6;'
+        f'font:500 15px/1.45 system-ui,sans-serif">{escape(m)}</p>'
+        for cat, m in msgs)
+    return f'<div class="appflashes" role="status" style="display:grid;gap:2px">{rows}</div>'
 
 
 @app.route("/deck/<stem>/visual")
@@ -839,7 +897,7 @@ def _log_editor_diff(deck_path, old_text, new_text):
 _section_label = deckcore.section_label
 
 
-def _insert_deck_card(path, lines, name, section=None):
+def _insert_deck_card(path, lines, name, section=None, create=False):
     """Insert `1 <name>` as the LAST card of `section`, leaving every other byte of the
     file untouched — same contract as remove/replace (quantities, comments, and section
     headers all survive). Falls back to after the final card line if the section isn't
@@ -868,6 +926,27 @@ def _insert_deck_card(path, lines, name, section=None):
             if label and label.lower() == want:
                 start = i
                 break
+    if start is None and create and section and not mtglib.is_basic(name):
+        # `create`: the caller computed the card's TYPE section and the deck has no
+        # such header yet. Open it where the convention puts it — before the first
+        # existing type section that comes later in the canonical order — so a new
+        # "Planeswalkers" never lands under Basics.
+        order = list(deckcore.TYPE_SECTION_ORDER)
+        rank = order.index(section) if section in order else len(order)
+        at = len(lines)
+        while at > 0 and not lines[at - 1].strip():
+            at -= 1
+        for i, ln in enumerate(lines):
+            label = _section_label(ln)
+            if label in order and order.index(label) > rank:
+                at = i
+                while at > 0 and not lines[at - 1].strip():
+                    at -= 1
+                break
+        new = lines[:at] + ["", f"# --- {section} ---", f"1 {name}"] + lines[at:]
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(new))
+        return True
     if start is None:
         last = [i for i, l in enumerate(lines) if l.strip() and not l.strip().startswith("#")]
         at = (last[-1] + 1) if last else len(lines)
@@ -1028,6 +1107,41 @@ def _deck_identity(text):
     return set(re.findall(r"[WUBRG]", (_hdr(text, "Colors") or "").upper()))
 
 
+def _auto_section(card):
+    """Where an added card goes when the player didn't pick a section: its TYPE
+    section (the deck-file convention), or the explicit Unsorted section when its
+    type is unknown — never the picker's first option, which put Cultivate under
+    Commander (UX audit 2026-10-14)."""
+    return deckcore.type_bucket(card.name, card.types) or deck_sections.UNSORTED
+
+
+def _deck_size_note(path):
+    """A plain warning when an edit leaves a deck at other than 100 cards."""
+    try:
+        total = sum(c.quantity for c in mtglib.parse_deck(open(path, encoding="utf-8").read()))
+    except OSError:
+        return None
+    if total == 100:
+        return None
+    return (f"This deck now has {total} cards. A Commander deck is exactly 100, "
+            "commander included.")
+
+
+def _commander_keys(text):
+    """Name keys of the deck's commander(s): every card in its Commander section.
+    The section, not the `# Commander:` header, so partners are both covered."""
+    keys, in_cmd = set(), False
+    for raw in text.splitlines():
+        s = raw.strip()
+        sec = re.match(r"^#\s*---\s*(.+?)\s*---\s*$", s)
+        if sec:
+            in_cmd = sec.group(1).strip().lower().startswith("commander")
+        elif in_cmd and s and not s.startswith("#"):
+            for c in mtglib.parse_deck(s):
+                keys |= mtglib.name_keys(c.name)
+    return keys
+
+
 def _validate_add(meta, stem, name, idx=None):
     """Ordered checks for adding a card. Returns (card, error, warning).
 
@@ -1092,11 +1206,17 @@ def deck_card(stem):
     replacement = request.form.get("replacement", "").strip() or None
     if _unsafe_line_value(name, replacement):
         return _LINE_VALUE_ERROR, 400
+    text = open(m["path"], encoding="utf-8").read()
+    if action in ("remove", "replace") and name and \
+            mtglib.name_keys(name) & _commander_keys(text):
+        # The commander defines the deck's colours; one tap in a sheet is the wrong
+        # place to change it (the audit's one-tap swaps, 2026-10-14).
+        return ("That's this deck's commander. Change the commander in the deck "
+                "editor, where the whole list is in front of you.", 409)
     if action == "replace" and replacement:
         # The same front-face-aware singleton guard the Add path enforces — minus the
         # card being replaced (swapping A for A's other face is still one copy), and
         # minus an ownership block: deck files legitimately hold unowned BUY cards.
-        text = open(m["path"], encoding="utf-8").read()
         others = set()
         for c in mtglib.parse_deck(text):
             if not (mtglib.name_keys(c.name) & mtglib.name_keys(name)):
@@ -1107,6 +1227,16 @@ def deck_card(stem):
             # nothing — the "replace did not work" bug report, twice over.
             return (f"{replacement} is already in this deck — that swap would "
                     "break the singleton rule.", 409)
+        # Colour identity, exactly as Add enforces it: one tap once put a white
+        # enchantment into mono-green Beorn (UX audit 2026-10-14). Only when both
+        # identities are known; a name-only collection must not refuse falsely.
+        _coll, idx = collection_index()
+        ref = mtglib.lookup(idx, replacement)
+        ident = _deck_identity(text)
+        if ref is not None and ref.identity and ident and not ref.identity <= ident:
+            bad = "".join(sorted(ref.identity - ident))
+            return (f"{ref.name} is outside this deck's color identity (needs {bad}). "
+                    "That swap would make the deck illegal.", 409)
     if action in ("remove", "replace") and name:
         # The incoming card's types, when the collection knows them, let the editor
         # re-file instead of inheriting the outgoing card's section (see
@@ -1137,6 +1267,9 @@ def deck_card(stem):
                                    source="manual-remove")
                 _note("remove card", stem, name)
             _invalidate(stem)
+            note = _deck_size_note(m["path"])
+            if note:
+                flash(note, "warn")
     return redirect(url_for("deck", stem=stem))
 
 
@@ -1157,7 +1290,12 @@ def deck_add(stem):
     card, err, warn = _validate_add(m, stem, name, idx=idx)
     if err:
         return jsonify({"ok": False, "error": err}), 400
-    _edit_deck_card(m["path"], "add", card.name, section=section)
+    if section:
+        _edit_deck_card(m["path"], "add", card.name, section=section)
+    else:
+        section = _auto_section(card)
+        lines = open(m["path"], encoding="utf-8").read().split("\n")
+        _insert_deck_card(m["path"], lines, card.name, section=section, create=True)
     _log_manual_change(m["path"], card.name, source="manual-add")
     _note("add card", stem, card.name)
     _invalidate(stem)                   # the deck changed — drop it before the
@@ -1174,7 +1312,8 @@ def deck_add(stem):
     except Exception:
         verdict = None
     return jsonify({"ok": True, "card": card.name, "section": section,
-                    "warning": warn, "illegal": illegal, "verdict": verdict})
+                    "warning": warn, "illegal": illegal, "verdict": verdict,
+                    "size_note": _deck_size_note(m["path"])})
 
 
 @app.route("/api/deck/<stem>/advise")
@@ -1216,6 +1355,14 @@ def api_collection_search():
     (e.g. WUR) sorts in-color-legal cards first (but still returns off-color ones)."""
     q = request.args.get("q", "").strip().lower()
     ci = set(request.args.get("ci", "") or "")
+    # `deck=<stem>` reads the identity from that deck's header; `strict=1` then drops
+    # off-colour cards instead of sorting them last (the panel's Replace search).
+    stem = request.args.get("deck", "")
+    if stem and not ci:
+        dm = deck_meta(stem) if _STEM_RE.match(stem) else None
+        if dm:
+            ci = _deck_identity(open(dm["path"], encoding="utf-8").read())
+    strict = request.args.get("strict") == "1"
     if len(q) < 2:
         return jsonify([])
     coll, _ = collection_index()
@@ -1224,6 +1371,8 @@ def api_collection_search():
         nl = c.name.lower()
         if q in nl:
             legal = ((not c.identity) or c.identity <= ci) if ci else True
+            if strict and not legal:
+                continue
             out.append((0 if nl.startswith(q) else 1, not legal, c.name, c.quantity, legal))
     out.sort()
     return jsonify([{"name": n, "qty": qn, "legal": lg} for _p, _l, n, qn, lg in out[:20]])
@@ -1236,9 +1385,13 @@ def wishlist_view():
     upgrades.sort(key=lambda u: (u["deck"], -(u["price"] or 0)))
     share_cost = round(sum((c["price"] or 0) * c["short"] for c in shared), 2)
     up_cost = round(sum((u["price"] or 0) for u in upgrades), 2)
+    # An unpriced row is UNKNOWN, not free: a total built only from unknowns read
+    # "~$0.00" (UX audit 2026-10-14). The template says what the sum leaves out.
+    unpriced = {"share": sum(1 for c in shared if not c["price"]),
+                "up": sum(1 for u in upgrades if not u["price"])}
     return render_template("wishlist.html", shared=shared, unowned=unowned,
                            upgrades=upgrades, share_cost=share_cost, up_cost=up_cost,
-                           page="wishlist")
+                           unpriced=unpriced, page="wishlist")
 
 
 @app.route("/export/wishlist.txt")
@@ -1713,7 +1866,10 @@ def deck_assess_page(stem):
     around because pasting a plain block into a coaching session is a different job."""
     m = _analysable_deck(stem)
     coll, idx = collection_index()
-    a = deckcore.analyze_deck(m["path"], coll)
+    # The PATH, not the loaded list: only a path gives the assessment its goldfish
+    # clock (deckcore: clock_for_deck needs one). The list read "Speed unmeasured"
+    # here while every other surface said "combat T9" (UX audit 2026-10-14).
+    a = deckcore.analyze_deck(m["path"], COLLECTION)
     try:
         pool = optimize.pool_report(m["path"], coll, idx, DECKS_DIR)
     except Exception:
@@ -1740,6 +1896,27 @@ def deck_assess_page(stem):
                            field_decks=field_decks, sim=sim, page="decks")
 
 
+def _brief(text, limit=240):
+    """One table-card point: whole sentences up to `limit` characters, else cut at
+    a word with an ellipsis. Opponents read this across a table."""
+    if len(text) <= limit:
+        return text
+    cut = max(text.rfind(". ", 0, limit), text.rfind("! ", 0, limit),
+              text.rfind("? ", 0, limit))
+    out = text[:cut + 1] if cut >= limit // 3 else \
+        text[:limit].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    # A cut can land inside **bold** or `code`: drop the marker left unclosed, or
+    # the opponent reads raw asterisks (seen on Bartolomé's card, 2026-10-14).
+    for mark in ("**", "`", "~~"):
+        if out.count(mark) % 2:
+            i = out.rfind(mark)
+            out = out[:i] + out[i + len(mark):]
+    singles = [m.start() for m in re.finditer(r"(?<!\*)\*(?!\*)", out)]
+    if len(singles) % 2:
+        out = out[:singles[-1]] + out[singles[-1] + 1:]
+    return out
+
+
 def _plan_lines(m, a):
     """The deck's game plan, and an honest label for where it came from.
 
@@ -1749,12 +1926,12 @@ def _plan_lines(m, a):
     stem = m["path"][:-4] if m["path"].endswith(".txt") else m["path"]
     notes = deckcore.load_notes(f"{stem}.notes.md")
     if notes:
+        from markupsafe import Markup
         out = []
-        for raw in notes.splitlines():
-            s = raw.strip().lstrip("#").strip()
-            if not s or s.startswith("<!--"):
-                continue
-            out.append(s.lstrip("-* ").strip())
+        for kind, text in deckcore.notes_blocks(notes):
+            if kind not in ("p", "li"):   # titles, tables and quoted card text aren't
+                continue                  # points to make across a table
+            out.append(Markup(deckcore.notes_inline_html(_brief(text))))
             if len(out) >= 6:
                 break
         if out:
@@ -1780,7 +1957,10 @@ def deck_table_card(stem):
     as unavailable rather than silently omitted."""
     m = _analysable_deck(stem)
     coll, idx = collection_index()
-    a = deckcore.analyze_deck(m["path"], coll)
+    # The PATH, not the loaded list: only a path gives the assessment its goldfish
+    # clock (deckcore: clock_for_deck needs one). The list read "Speed unmeasured"
+    # here while every other surface said "combat T9" (UX audit 2026-10-14).
+    a = deckcore.analyze_deck(m["path"], COLLECTION)
     assessment = a.get("assessment")
     sig = (assessment or {}).get("signals", {})
 
@@ -1921,7 +2101,9 @@ def shared_view():
     usage = deck_conflicts.scan(DECKS_DIR, idx)
     conf = deck_conflicts.conflicts(usage)
     total = round(sum(c["buy_cost"] or 0 for c in conf), 2)
-    return render_template("shared.html", conf=conf, total=total, page="shared")
+    unpriced = sum(1 for c in conf if not c["buy_cost"])   # unknown, never $0
+    return render_template("shared.html", conf=conf, total=total, unpriced=unpriced,
+                           page="shared")
 
 
 @app.route("/build-next")
@@ -2027,7 +2209,16 @@ def _flash_optimize(r):
     # is where the player's finger actually is.
     blocked = (r.get("role_deadlock") or {}).get("blocked") or []
     if n:
-        flash(f"Optimizer: {n} change(s) applied.", "info")
+        # Name the swaps: the run is only trustworthy if the player can SEE it
+        # (UX research 2026-10-14: players want proposals they can follow).
+        pairs = [f"{s[0]} → {s[2]}" for s in (r.get("swaps") or [])
+                 if isinstance(s, (list, tuple)) and len(s) > 2]
+        pairs += [f"{s[0]} → {s[1]}" for s in (r.get("land_swaps") or [])
+                  if isinstance(s, (list, tuple)) and len(s) > 1]
+        more = f" and {len(pairs) - 5} more" if len(pairs) > 5 else ""
+        named = (" — " + "; ".join(pairs[:5]) + more) if pairs else ""
+        flash(f"Optimizer: {n} change(s) applied{named}. The deck's Changes page lists "
+              "them all.", "info")
     elif blocked:
         parts = ", ".join(f"{len(b['adds'])} by the {b['role']} band" for b in blocked)
         flash(f"Optimizer: no changes — candidates blocked: {parts}. That role's count "
@@ -2074,8 +2265,10 @@ def deck_optimize(stem):
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
         _flash_optimize(r)
-    except Exception:
-        pass
+    except Exception as e:              # never silent: the report IS the feature
+        app.logger.exception("optimize failed for %s", stem)
+        flash(f"Optimize stopped with an error ({type(e).__name__}). Check this deck's "
+              "Changes page to see whether anything was written.", "warn")
     _invalidate(stem)                   # an applying run rewrote the 99
     return redirect(url_for("deck", stem=stem))
 
@@ -3055,7 +3248,12 @@ def api_card(name):
     """Grounded, deck-agnostic payload for the site-wide card panel (Phase 0).
     Local data only; the panel fetches image/oracle/rulings live from Scryfall."""
     _, idx = collection_index()
-    return jsonify(card_api.card_payload(name, idx, DECKS_DIR))
+    payload = card_api.card_payload(name, idx, DECKS_DIR)
+    # Titles for the deck stems the panel shows (UX audit: slugs, not names).
+    titles = _deck_titles()
+    stems = list(payload.get("decks") or []) + [payload.get("pinned") or ""]
+    payload["deck_titles"] = {s: titles.get(s, s) for s in stems if s}
+    return jsonify(payload)
 
 
 @app.route("/api/edhrec/<path:commander>")
@@ -3159,6 +3357,61 @@ def asset_url(name):
 
 
 app.jinja_env.globals["asset"] = asset_url
+
+
+# ---- words for people (UX audit 2026-10-14) --------------------------------------
+# Screens written for the CLI showed deck FILE names ("captain-america-team-leader"),
+# change-log codes ("manual-replace") and imperative log verbs ("Sam replace card").
+# One display layer turns each into what a player would say.
+def _deck_titles():
+    """{deck file stem: deck title}, built once per request."""
+    t = getattr(g, "_deck_titles", None)
+    if t is None:
+        t = {m["stem"]: m["title"] for m in list_decks()}
+        g._deck_titles = t
+    return t
+
+
+@app.template_filter("deck_title")
+def _deck_title_filter(stem):
+    return _deck_titles().get(stem, stem)
+
+
+_CHANGE_SOURCES = {"manual-add": "added by hand", "manual-replace": "swapped in by hand",
+                   "manual-remove": "removed by hand"}
+
+
+@app.template_filter("change_source")
+def _change_source_filter(src):
+    s = (src or "").strip()
+    if not s:
+        return "source not recorded"
+    if s in _CHANGE_SOURCES:
+        return _CHANGE_SOURCES[s]
+    if s.startswith("imported"):
+        return s
+    return "optimizer swap"
+
+
+_ACTIVITY_VERBS = {
+    "edit list": "edited the list", "replace card": "swapped a card",
+    "remove card": "removed a card", "add card": "added a card", "pin": "pinned",
+    "unpin": "unpinned", "set bracket": "set the bracket", "release pin": "released a pin",
+    "move pin": "moved a pin", "delete deck": "deleted a deck",
+    "new deck (Build Next)": "saved a new deck from Build Next",
+    "optimize": "ran the optimizer", "add to collection": "added to the collection",
+    "merge an export": "merged an export", "replace collection": "replaced the collection",
+    "set a card's count": "changed a card's count", "retire batch rows": "retired batch rows",
+    "add a batch": "added a batch", "replace list (import)": "replaced a deck's list",
+    "new deck (import)": "imported a new deck", "sync": "synced",
+    "add member": "added a member", "reset member password": "reset a member's password",
+    "sign member out": "signed a member out", "enable member": "enabled a member",
+    "disable member": "disabled a member", "remove member": "removed a member"}
+
+
+@app.template_filter("activity_verb")
+def _activity_verb_filter(action):
+    return _ACTIVITY_VERBS.get(action or "", action or "")
 
 
 @app.route("/static/manifest.webmanifest")
