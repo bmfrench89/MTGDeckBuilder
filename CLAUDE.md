@@ -131,11 +131,13 @@ python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL \
 
 # Build / tune / render
 python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL          # preview
-python3 scripts/optimize.py --all --collection $COLL --apply                        # write
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL          # proposals
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL --apply  # write — only
+                                       # after a session has read the proposals and the player agreed
 python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $COLL \
     --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
+                                                             # (--optimize prints proposals only)
 python3 scripts/deck_sections.py --all --collection $COLL --apply   # regroup decks into type sections
 python3 scripts/deck_sections.py --all --collection $COLL --check   # exit 3 on misfiled cards (CI runs this)
 python3 scripts/clips.py --deck data/decks/<stem>.txt               # a deck's Watch-tab clips: outline + warnings
@@ -228,22 +230,42 @@ generated dashboards **inline** it so the file stays self-contained/offline.
 starts hardcoding a colour, or if the two surfaces resolve a token differently. Don't add
 ad-hoc font sizes or spacing values — use a token.
 
-### Optimization is automatic in four places, and deliberately NOT in a fifth
-It runs when a deck is saved from Build Next, via the ⚡ button (`POST /deck/<stem>/optimize`),
-via `refresh.py --optimize`, and as step 5 of the skill's build workflow. It does **not**
-run after a manual edit — the card panel's Remove/Replace and the deck editor save the
-player's choice as-is. Never second-guess a deliberate swap. The optimizer is idempotent:
-a second run on a tuned deck changes nothing, and that property is worth preserving.
+### The optimizer PROPOSES; the player (or a Claude session's read) decides
+**Player decision 2026-10-14** (`docs/spec-optimizer-judgment.md`): "I want more AI
+intelligent decisions … EDHREC … should not be the golden choice." So field % is
+evidence, never the verdict, and nothing in the app applies swaps on its own:
+- **⚡** (`GET /deck/<stem>/optimize`) shows the suggested swaps with their evidence; the
+  player ticks the ones they want and `POST` applies only those (`optimize.apply_chosen`
+  recomputes the proposals server-side, so a stale form can't write anything else).
+- **Build Next** saves the draft as built and opens that same review.
+- **`refresh.py --optimize`** prints every deck's proposals and writes nothing.
+- **A Claude session** is the judgment layer: it reads each proposal's verified text
+  against the deck's engine (the sleeper audit, `card-review-method.md`), presents the
+  table, and applies with `optimize.py --deck … --apply` once the player says go. The AI
+  read runs in sessions only — no API calls from the app (player decision, same day).
+It never runs after a manual edit — the card panel's Remove/Replace and the deck editor
+save the player's choice as-is. Never second-guess a deliberate swap. The optimizer is
+idempotent: a second run on a tuned deck changes nothing, and that property is worth
+preserving.
 **Every edit is undoable** (2026-10-14, `docs/spec-ux-refresh.md` Wave 1.1): a toast after
-each edit, an Undo on each row of the deck's Changes page, and a whole ⚡ run in one tap.
-An undo is a NEW inverse change logged `Source=manual-undo:<row>` — manual, so the optimizer
-treats the result as the player's choice and never swaps it back.
+each edit, an Undo on each row of the deck's Changes page, and a whole approved ⚡ run in
+one tap. An undo is a NEW inverse change logged `Source=manual-undo:<row>` — manual, so the
+optimizer treats the result as the player's choice and never swaps it back.
 
-Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥25-point
+Its guardrails each exist because a naive pass got it wrong: a spell swap needs a ≥25-point
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
 basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` or featured in
 its `.clips.json` are never cut; role counts must stay in template range; lands only swap for lands; with no field data
-the manabase is left alone. **Buy candidates never enter the 99** (2026-08-11, player
+the deck is left alone. **Lands are valued by mana function, not field %** (Phase A,
+2026-10-14): `manabase.land_mana_score` credits the deck's colours a land makes (weighted
+by the spells' pip demand, two colours at most), subtracts for entering tapped, and adds
+for land types the deck's fetchers want; a swap needs +0.6. There is **no basics quota** —
+basics' 98-99% inclusion means nearly every deck runs some, never how many, and the old
+quota traded untapped duals for basics in five-colour decks. A land with no produced data,
+or making none of the deck's colours (utility lands), is never judged; a land the field
+runs in ≥25% of decks is kept (an ability the score can't see); only free lands listing
+≤2 colours are brought in (Rhystic Cave, Crossroads Village and filter lands list every
+colour). Notes protection matches FOLDED text, so a name wrapped across lines counts. **Buy candidates never enter the 99** (2026-08-11, player
 request): decks are built from owned cards only, and each buy is instead appended to the
 deck's `.buylist.csv` with `Replaces` = the in-deck card to pull when it arrives —
 existing buylist rows are never removed, only their `Replaces` refreshed. Which pass *owns* a card (land vs spell) is layered like

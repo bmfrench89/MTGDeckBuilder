@@ -155,7 +155,9 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 
 ## 7. Decisions for the player
 
-- **D1. Optimizer preview sheet.** Today ⚡ applies its swaps (a deliberate, documented
+- **D1. Optimizer preview sheet. — DECIDED 2026-10-14: propose, the player approves.**
+  Shipped in `docs/spec-optimizer-judgment.md` Phase B (⚡ opens a review of ticked swaps).
+  Original note: today ⚡ applies its swaps (a deliberate, documented
   design). Players asked Moxfield for "propose, then approve". Wave 0/1 make a run visible
   and undoable; a preview sheet (each swap with its reason, field % and fit, approved or
   skipped) is the next step if the player wants it. Same question as the target

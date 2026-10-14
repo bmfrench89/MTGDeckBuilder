@@ -60,6 +60,13 @@ BASICS = {"plains", "island", "swamp", "mountain", "forest", "wastes"}
 # has no row for. See the no-field-row guard in optimize().
 STRONG_CONSENSUS = 50
 
+# The manabase pass (spec-optimizer-judgment Phase A): a land swap needs the incoming
+# land to beat the outgoing one by 0.6 colour-equivalents of `manabase.land_mana_score`
+# — e.g. a tapped dual to an untapped one (+0.75), a tapped mono land to a basic of a
+# main colour. A land the field runs this often is kept: the score can't see abilities.
+LAND_SCORE_MARGIN = 0.6
+LAND_FIELD_KEEP = 25
+
 
 def card_value(name, ref, rep, ctx, refs, field):
     """Deprecated shim — the scorer lives in `deck_fit.card_value` now.
@@ -722,7 +729,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 
     # ---- manabase passes. Both need field data: without it every land scores 0 and we
     # can't tell Command Tower from a bad tapland, so we leave the manabase alone. -------
-    land_swaps = []
+    land_swaps, land_detail = [], []
     lands = [c for c in deck if mtglib.lookup(idx, c.name) and is_land_in_deck(c.name)]
     if not field:
         return {"stem": stem, "commander": commander, "swaps": swaps,
@@ -805,95 +812,114 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             for ty in _mb._land_types(ref):
                 type_counts[ty] = type_counts.get(ty, 0) + 1
 
-    # pass 1: upgrade weak nonbasic lands to ones the field actually plays
-    weak_lands = sorted((inc_of(c.name), c.name) for c in lands
-                        if not mtglib.is_basic(c.name)
-                        and not (mtglib.name_keys(c.name) & keep)   # canonical pins too
-                        and c.name.lower() not in notes)
-    used_land, used_land_add = set(), set()
-    for _val, _rank, add_name, avail, inc_add in land_adds:
-        # One field card can arrive under two keys (full name + DFC front face);
-        # without this guard the same land was swapped in for two different cuts
-        # and _tidy merged the pair into an illegal `2 <land>`.
-        akeys = mtglib.name_keys(add_name)
-        if akeys & used_land_add:
+    # ---- the manabase pass: lands are valued by what they DO for this deck -----------
+    # (docs/spec-optimizer-judgment.md, Phase A, 2026-10-14). This replaces two passes:
+    # "upgrade a weak land to one the field plays (>= 25 inclusion points)" and "run
+    # basics" — a quota of round(lands x (0.42 - 0.04 x (colours-1))) basics justified
+    # by basics' 98-99% inclusion. That inclusion only says nearly every deck runs SOME
+    # basics, never how many, and the quota traded untapped duals for basics in
+    # five-colour decks (nine proposed on the 2026-10-14 Ur-Dragon rebuild, 8+ on
+    # Y'shtola). Now each land gets `manabase.land_mana_score` — the deck's colours it
+    # makes, weighted by the deck's own pip demand, minus a tapped penalty, plus a bonus
+    # for land types the deck's fetchers ask for — and a swap needs the incoming land to
+    # be better by LAND_SCORE_MARGIN colour-equivalents. EDHREC inclusion is consulted
+    # twice and decides nothing: it breaks ties, and a land the field runs in
+    # >= LAND_FIELD_KEEP % of decks is kept, because that usually means an ability the
+    # mana score can't see (Bojuka Bog's exile, a creature land).
+    import manabase as _mb2
+    weights = _mb2.color_weights((a.get("mana") or {}).get("colors"), identity)
+    want_types = {t for t, n in demanded.items() if n > 0}
+
+    def _land_ref(name):
+        e = enriched_by_key.get(mtglib._norm(name))
+        if e is not None and e.has_type_data:
+            return e
+        return mtglib.lookup(idx, name)
+
+    def _score(name, ref=None):
+        ref = ref if ref is not None else _land_ref(name)
+        if ref is None:
+            if mtglib.is_basic(name):          # basics are unlimited and may be untracked
+                ref = mtglib.Card(name=name, quantity=1)
+            else:
+                return None
+        return _mb2.land_mana_score(ref, weights, want_types)
+
+    # Cut candidates: nonbasic, unprotected (commander/pins/manual adds, curated notes,
+    # the deck's own .notes.md — matched on FOLDED text, so a name wrapped across two
+    # lines still counts; a raw substring test let "Canopy\nVista" through), scorable,
+    # and not a land the field leans on. `weak_lands` keeps its (inclusion, name) shape
+    # for the buy pairing below but is ordered worst-for-the-deck first.
+    scored_cuts = []
+    for c in lands:
+        if (mtglib.is_basic(c.name) or (mtglib.name_keys(c.name) & keep)
+                or deck_fit.named_in_notes(c.name, notes)):
             continue
-        for inc_cut, cut_name in weak_lands:
-            ck = mtglib._norm(cut_name)
-            if ck in used_land or inc_add - inc_cut < margin:
+        s = _score(c.name)
+        if s is None or inc_of(c.name) >= LAND_FIELD_KEEP:
+            continue
+        scored_cuts.append((s, inc_of(c.name), c.name))
+    scored_cuts.sort()
+    weak_lands = [(inc, name) for _s, inc, name in scored_cuts]
+
+    # Add candidates: owned lands with a FREE copy, inside the identity, not reserved,
+    # not held by a manual removal, scorable — whether or not EDHREC lists them (the
+    # field no longer gates which lands are considered). Sharing a land with another
+    # deck is never proposed: the free pool almost always has an equal land, and a
+    # shared copy turns a mana upgrade into a sleeving conflict (the Ur-Dragon rebuild
+    # took Captain America's only Unclaimed Territory this way). Basics of each colour
+    # are unlimited candidates, so a tapped off-colour land can always become a basic.
+    land_cands = []
+    for ref in coll:
+        k = mtglib._norm(ref.name)
+        if (not ref.is_land or not ref.has_type_data or mtglib.is_basic(ref.name)
+                or mtglib.name_keys(ref.name) & in_deck or k in reserved
+                or k in removed_by_hand or deck_fit.is_banned(k)):
+            continue
+        if ref.identity and not (ref.identity <= identity):
+            continue
+        if ref.quantity - committed.get(k, 0) < 1 or not _mb2.land_is_reliable_add(ref):
+            continue
+        s = _score(ref.name, ref)
+        if s is not None:
+            land_cands.append([s, inc_of(ref.name), ref.name, False])
+    for col in sorted(weights):
+        b = deckcore.BASIC_OF_COLOR[col]
+        s = _score(b)
+        if s is not None:
+            land_cands.append([s, inc_of(b), b, True])
+    land_cands.sort(key=lambda t: (-t[0], -t[1], t[2]))
+
+    used_land, used_land_add = set(), set()
+    for s_cut, _inc_cut, cut_name in scored_cuts:
+        ck = mtglib._norm(cut_name)
+        if ck in used_land:
+            continue
+        for cand in land_cands:
+            s_add, _inc_add, add_name, unlimited = cand
+            if s_add - s_cut < LAND_SCORE_MARGIN:
+                break                     # sorted best-first: nothing later clears it
+            akeys = mtglib.name_keys(add_name)
+            if not unlimited and akeys & used_land_add:
                 continue
             blocked = _guard_blocks(cut_name)
             if blocked:
                 for ty, who in blocked:
                     land_guard.append({"kept": cut_name, "type": ty, "for": who})
-                used_land.add(ck)         # held for its type — not offered to pass 2
-                continue                  # try the next weak land for this add
-            land_swaps.append((cut_name, add_name, avail))
+                used_land.add(ck)         # held for its type
+                break
+            land_swaps.append((cut_name, add_name, "free"))
+            land_detail.append({"cut": cut_name, "cut_score": s_cut, "add": add_name,
+                                "add_score": s_add})
             used_land.add(ck)
-            used_land_add |= akeys
+            if not unlimited:
+                used_land_add |= akeys
             _ledger_cut(cut_name)
             _ledger_add(add_name)
-            break
-
-    # ---- manabase pass 2: run basics (98-99% inclusion in every archetype) --------------
-    n_lands = sum(c.quantity for c in lands)
-    n_basic = sum(c.quantity for c in lands if mtglib.is_basic(c.name))
-    want_basic = _basics_needed(identity, n_lands)
-    if n_basic < want_basic:
-        worst = [(i, n) for i, n in weak_lands if mtglib._norm(n) not in used_land]
-        need = want_basic - n_basic
-        # Which basic types does the deck actually WANT? Pip-proportional via THE
-        # shared split (deckcore.basics_by_demand) over the deck's nonland cards —
-        # the alphabetical round-robin this replaces gave B the first repaired
-        # basic in every B deck regardless of pips. Deficit = desired minus what
-        # is already sleeved; ties break toward fetch-demanded types, then name,
-        # so the choice is deterministic and a second run still no-ops.
-        nonland_refs = [mtglib.lookup(idx, c.name) for c in deck
-                        if not is_land_in_deck(c.name)]
-        desired = deckcore.basics_by_demand(want_basic, identity,
-                                            [r for r in nonland_refs if r])
-        have_basics = {}
-        for c in lands:
-            if mtglib.is_basic(c.name):
-                base = c.name.replace("Snow-Covered ", "")
-                have_basics[base] = have_basics.get(base, 0) + c.quantity
-        deficit = {b: desired.get(b, 0) - have_basics.get(b, 0)
-                   for b in set(desired) | set(have_basics)}
-        _type_of_basic = {v: k for k, v in deckcore.BASIC_OF_COLOR.items()}
-
-        def _next_basic():
-            pool = sorted(deficit.items(),
-                          key=lambda kv: (-kv[1],
-                                          0 if kv[0].lower() in demanded else 1,
-                                          kv[0]))
-            for name, d in pool:
-                if d > 0:
-                    return name
-            return deckcore.BASIC_OF_COLOR.get((sorted(identity) or ["C"])[0], "Wastes")
-
-        for inc_l, land in worst:
-            if need <= 0:
-                break
-            if inc_l >= 40:               # a genuinely-played fixing land: keep it
-                continue
-            blocked = _guard_blocks(land)
-            if blocked:
-                for ty, who in blocked:
-                    land_guard.append({"kept": land, "type": ty, "for": who})
-                used_land.add(mtglib._norm(land))
-                continue
-            incoming = _next_basic()
-            # 3-tuple like every other land swap: consumers (record_changes, the
-            # CLI printer) unpack (old, new, avail); the 2-tuple crashed them AFTER
-            # _write had already rewritten the deck. Basics are always "free".
-            land_swaps.append((land, incoming, "free"))
-            used_land.add(mtglib._norm(land))   # else the buy-land pairing can set a
-            need -= 1                           # Replaces target this run just removed
-            deficit[incoming] = deficit.get(incoming, 0) - 1
-            _ledger_cut(land)
-            ity = incoming.lower()
-            if ity in ("plains", "island", "swamp", "mountain", "forest"):
+            if unlimited:
+                ity = add_name.lower()
                 type_counts[ity] = type_counts.get(ity, 0) + 1
+            break
 
     # ---- buys: recommended, never written into the 99 -----------------------------------
     # Each buy pairs one-to-one with a card that STAYS in the deck (a cut the owned
@@ -939,7 +965,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             break
 
     result = {"stem": stem, "commander": commander, "swaps": swaps,
-              "land_swaps": land_swaps, "buy_swaps": buy_swaps, "land_guard": land_guard,
+              "land_swaps": land_swaps, "land_detail": land_detail,
+              "buy_swaps": buy_swaps, "land_guard": land_guard,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
               "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
@@ -960,6 +987,101 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     if apply and buy_swaps:
         result["buylist_appended"] = append_buylist(deck_path, buy_swaps, commander)
     return result
+
+
+def proposal_key(kind, cut, add):
+    """The stable id of one proposed swap, as the ⚡ review form submits it."""
+    return f"{kind}|{cut}|{add}"
+
+
+def proposals(r):
+    """The swaps a preview report proposes, flattened for a review surface: one dict
+    per swap with its evidence (spec-optimizer-judgment Phase B). Nothing here decides;
+    the player ticks, `apply_chosen` writes."""
+    out = []
+    detail = {(d["cut"], d["add"]): d for d in (r.get("swaps_detail") or [])}
+    for s in r.get("swaps") or []:
+        cut, _vc, add, inc_add, avail = s
+        d = detail.get((cut, add), {})
+        out.append({"key": proposal_key("spell", cut, add), "kind": "spell",
+                    "cut": cut, "add": add, "avail": avail,
+                    "cut_inc": d.get("cut_inc"), "add_inc": inc_add,
+                    "cut_field_known": d.get("cut_field_known", True),
+                    "add_field_known": d.get("add_field_known", True),
+                    "cut_value": d.get("cut_value"), "add_value": d.get("add_value")})
+    ldet = {(d["cut"], d["add"]): d for d in (r.get("land_detail") or [])}
+    for cut, add, avail in r.get("land_swaps") or []:
+        d = ldet.get((cut, add), {})
+        out.append({"key": proposal_key("land", cut, add), "kind": "land",
+                    "cut": cut, "add": add, "avail": avail,
+                    "cut_score": d.get("cut_score"), "add_score": d.get("add_score")})
+    return out
+
+
+def apply_chosen(deck_path, coll, idx, decks_dir, chosen, refs=None, by=""):
+    """Write ONLY the swaps the player approved (the ⚡ review, Phase B).
+
+    The proposal set is recomputed here, never trusted from the form: a key that no
+    longer matches a current proposal (the deck changed since the page was drawn, or
+    the form was tampered with) is reported as `stale` and skipped. A subset can also
+    break a role band the full run kept — the run validates each swap against the
+    counts AFTER the swaps before it — so the chosen swaps are re-checked in order and
+    a failing one is reported as `held`, not written. Then the same writer, change log
+    (`Source` free/share, so Undo / Undo all work unchanged), `_tidy`, singleton check
+    and buylist append an applying run always used."""
+    refs = refs or power.load_refs()
+    r = optimize(deck_path, coll, idx, decks_dir, refs=refs, apply=False)
+    chosen = set(chosen or ())
+    swaps = [s for s in r.get("swaps") or []
+             if proposal_key("spell", s[0], s[2]) in chosen]
+    land_swaps = [s for s in r.get("land_swaps") or []
+                  if proposal_key("land", s[0], s[1]) in chosen]
+    known = {p["key"] for p in proposals(r)}
+    stale = sorted(chosen - known)
+
+    a = deckcore.analyze_deck(deck_path, coll)
+    by_key = {}
+    for c in a["enriched"]:
+        for k in mtglib.name_keys(c.name):
+            by_key.setdefault(k, c)
+
+    def _role(name):
+        e = by_key.get(mtglib._norm(name))
+        ref = e if (e is not None and e.has_type_data) else mtglib.lookup(idx, name)
+        return deck_fit.primary_role(ref) if ref else None
+
+    ranges = r.get("role_ranges") or {}
+    cats = dict(a["report"].get("categories", {}))
+    kept, held = [], []
+    for s in swaps:
+        cr, ar = _role(s[0]), _role(s[2])
+        trial = dict(cats)
+        if cr:
+            trial[cr] = trial.get(cr, 0) - 1
+        if ar:
+            trial[ar] = trial.get(ar, 0) + 1
+        bad = [ro for ro in (cr, ar) if ro in ranges
+               and not (ranges[ro][0] <= trial.get(ro, 0) <= ranges[ro][1])
+               and (ranges[ro][0] <= cats.get(ro, 0) <= ranges[ro][1])]
+        if bad:
+            held.append({"cut": s[0], "add": s[2], "role": bad[0]})
+            continue
+        cats = trial
+        kept.append(s)
+
+    out = dict(r)
+    out.update({"swaps": kept, "land_swaps": land_swaps, "stale": stale, "held": held,
+                "swaps_detail": [d for d in r.get("swaps_detail") or []
+                                 if (d["cut"], d["add"]) in {(s[0], s[2]) for s in kept}]})
+    if kept or land_swaps:
+        _write(deck_path, kept, land_swaps)
+        record_changes(deck_path, kept, land_swaps, by=by)
+        _tidy(deck_path, idx)
+        out["illegal"] = singleton_violations(deck_path)
+        if r.get("buy_swaps"):
+            out["buylist_appended"] = append_buylist(deck_path, r["buy_swaps"],
+                                                     r.get("commander", ""))
+    return out
 
 
 def singleton_violations(deck_path):

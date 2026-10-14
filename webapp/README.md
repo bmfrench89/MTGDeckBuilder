@@ -31,7 +31,7 @@ Config via env vars:
 
 - **Decks** — power leaderboard (bracket + score) with filters; each deck opens a live
   dashboard with six tabs (Deck / Mana / Power / Buy / Plan / More), in-place card
-  Remove/Replace/Add via the card panel, an add-card advisor, and one-click optimize.
+  Remove/Replace/Add via the card panel, an add-card advisor, and ⚡ optimize (suggested swaps you tick and approve).
 - **Build Next** — commanders ranked by owned support; auto-builds a full 100 for any
   of them, ready to tweak and save.
 - **Wishlist** — copies-to-buy + not-owned + per-deck upgrades, with ManaPool-format

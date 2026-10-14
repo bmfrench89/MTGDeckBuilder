@@ -397,8 +397,8 @@ Quantity,Name,Identities,Types,Sub-types
 GUARD_ATTRS = """\
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
 Farseek Analog,Sorcery,2,B,{1}{B},,,fetch:swamp;ramp,,2
-Weak Swamp Dual A,Land,0,,,Swamp,W B,,,2
-Weak Swamp Dual B,Land,0,,,Swamp,W B,,,2
+Weak Swamp Dual A,Land,0,,,Swamp,B,etb-tapped,,2
+Weak Swamp Dual B,Land,0,,,Swamp,B,etb-tapped,,2
 Hot Land One,Land,0,,,,W B,,,2
 Hot Land Two,Land,0,,,,W B,,,2
 """
@@ -431,9 +431,11 @@ def _guard_run(tmp_path, monkeypatch, deck_text=GUARD_DECK, margin=25):
     deck.write_text(deck_text, encoding="utf-8")
     coll = mtglib.load_collection(str(d / "collection.csv"))
     idx = mtglib.index_by_name(coll)
-    # Both Swamp duals are field-zeros; both Hot Lands clear the margin over
-    # them. Without the ledger, pass 1 takes dual A and pass 2 (or a second
-    # pass-1 add) takes dual B — each individually "leaving one".
+    # Both Swamp-typed lands are tapped mono-B; both Hot Lands are untapped W/B and
+    # clear the mana-score margin over them (spec-optimizer-judgment Phase A — the
+    # lands were W/B untapped duals while lands were valued by field %; under the
+    # mana score they would tie the Hot Lands and nothing would move). Without the
+    # ledger the pass takes dual A and then dual B — each individually "leaving one".
     field = {"weak swamp dual a": 0, "weak swamp dual b": 0,
              "hot land one": 60, "hot land two": 60, "farseek analog": 50,
              "filler": 10}
@@ -479,9 +481,9 @@ def test_buy_pairing_obeys_the_same_guard(tmp_path, monkeypatch):
 
     Built so ONLY the buy-pairing's own guard stands in the way (a first draft
     passed with the guard deleted, because pass 1's refusal had already parked
-    the land in used_land): no owned land upgrades exist, and enough off-type
-    basics that basics repair never runs — the buy pairing is the first and
-    only pass to reach the deck's lone Swamp-typed land."""
+    the land in used_land): no owned land upgrades exist (and, since Phase A, no
+    basics quota) — the buy pairing is the first and only pass to reach the
+    deck's lone Swamp-typed land."""
     import optimize
     d = tmp_path / "bg"
     d.mkdir(exist_ok=True)
@@ -520,8 +522,9 @@ def test_buy_pairing_obeys_the_same_guard(tmp_path, monkeypatch):
 
 def test_the_repair_is_idempotent_with_the_guard(tmp_path, monkeypatch):
     """Apply once, run again: the second run proposes nothing. The stated
-    optimizer invariant, preserved through the ledger and the pip-proportional
-    chooser (both deterministic)."""
+    optimizer invariant, preserved through the ledger and the mana score (both
+    deterministic; the score's colour weights come from the SPELLS, so swapping
+    lands never moves them)."""
     import optimize, deck_fit
     d = tmp_path / "g"
     d.mkdir(exist_ok=True)

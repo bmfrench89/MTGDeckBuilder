@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Optimize · {{ meta.title }} · MTG Deckbuilder{% endblock %}
+{% block content %}
+<nav aria-label="Breadcrumb" class="crumbs"><a href="{{ url_for('deck', stem=stem) }}"><span aria-hidden="true">&larr;&nbsp;</span>{{ meta.title }}</a></nav>
+<h1>⚡ Suggested swaps</h1>
+<div class="sub">Nothing changes until you tick a swap and apply it. Each one shows its
+  evidence: how often the field plays each card, and for lands what each one does for
+  this deck's mana. Field % is one signal, not the decision — for a real read of what a
+  card does in this deck, take the <a href="{{ url_for('deck_assess', stem=stem) }}">review
+  packet</a> to a Claude session.</div>
+
+{% if error %}
+<div class="card mt-4 warn">The optimizer stopped with an error ({{ error }}). Nothing was changed.</div>
+{% elif not props %}
+<div class="card mt-4">
+  {% set blocked = (r.role_deadlock or {}).blocked or [] %}
+  {% if blocked %}
+  <b>No swaps to suggest</b> — candidates are blocked:
+  {% for b in blocked %}{{ b.adds|length }} by the {{ b.role }} band{% if not loop.last %}, {% endif %}{% endfor %}.
+  That role's count sits outside the deck's template, which freezes swaps touching it.
+  {% elif not r.field_size %}
+  <b>No field data for this commander</b>, so the optimizer has nothing to compare against.
+  {% else %}
+  <b>No swaps to suggest.</b> Every card already holds its slot by the optimizer's measures.
+  {% endif %}
+</div>
+{% else %}
+<form method="post" action="{{ url_for('deck_optimize', stem=stem) }}">
+  {% set spells = props|selectattr('kind', 'equalto', 'spell')|list %}
+  {% set lands = props|selectattr('kind', 'equalto', 'land')|list %}
+  {% if spells %}
+  <h2 class="mt-4">Spells</h2>
+  <div class="card tablewrap mb-4">
+  <table>
+    <thead><tr><th scope="col"><span class="sr-only">Apply</span></th><th scope="col">Out</th><th scope="col">In</th></tr></thead>
+    <tbody>
+    {% for p in spells %}
+    <tr>
+      <td><input type="checkbox" class="chk" name="pick" value="{{ p.key }}" id="pick-{{ loop.index }}"
+           aria-label="Swap {{ p.cut }} for {{ p.add }}"></td>
+      <td><span class="cardlink" data-card="{{ p.cut }}">{{ p.cut }}</span>
+        <div class="muted fs-xs">{% if p.cut_field_known %}{{ p.cut_inc }}% of the field{% else %}no field data{% endif %}</div></td>
+      <td><label for="pick-{{ loop.index }}"><span class="cardlink" data-card="{{ p.add }}">{{ p.add }}</span></label>
+        <div class="muted fs-xs">{% if p.add_field_known %}{{ p.add_inc }}% of the field{% else %}no field data{% endif %}
+          · {% if p.avail == 'free' %}a free copy{% else %}<span class="warn">shared with another deck</span>{% endif %}</div>
+        <div class="fs-xs">{% if not p.cut_field_known %}Fit-driven: the field has no opinion on the card going out.
+          {% else %}Played by {{ p.add_inc - p.cut_inc }} more points of the field.{% endif %}</div></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+
+  {% if lands %}
+  <h2 class="mt-4">Lands</h2>
+  <div class="sub">Lands are judged by what they do for this deck's mana: the colours it
+    needs (weighted by its spells' pips), entering untapped, and land types its fetch
+    effects can find. A score can't see a land's other abilities — skip any you keep on purpose.</div>
+  <div class="card tablewrap mb-4">
+  <table>
+    <thead><tr><th scope="col"><span class="sr-only">Apply</span></th><th scope="col">Out</th><th scope="col">In</th><th scope="col">Mana value</th></tr></thead>
+    <tbody>
+    {% for p in lands %}
+    <tr>
+      <td><input type="checkbox" class="chk" name="pick" value="{{ p.key }}" id="lpick-{{ loop.index }}"
+           aria-label="Swap {{ p.cut }} for {{ p.add }}"></td>
+      <td><span class="cardlink" data-card="{{ p.cut }}">{{ p.cut }}</span></td>
+      <td><label for="lpick-{{ loop.index }}"><span class="cardlink" data-card="{{ p.add }}">{{ p.add }}</span></label></td>
+      <td class="fs-sm">{% if p.cut_score is not none %}{{ '%.2f'|format(p.cut_score) }} → {{ '%.2f'|format(p.add_score) }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+
+  <div class="row mb-4">
+    <button class="btn" type="submit">Apply the ticked swaps</button>
+    <a class="btn ghost" href="{{ url_for('deck', stem=stem) }}">Back to the deck</a>
+  </div>
+  <div class="muted fs-xs mb-4">Applied swaps are logged on the deck's Changes page and can be
+    undone one at a time or all together.</div>
+</form>
+{% endif %}
+
+{% set notes = [] %}
+{% if r.buy_swaps %}
+<h2 class="mt-4">Worth buying</h2>
+<div class="card mb-4 fs-sm">
+  {% for b in r.buy_swaps[:8] %}
+  <div><span class="cardlink" data-card="{{ b[2] }}">{{ b[2] }}</span> ({{ b[3] }}% of the field)
+    <span class="muted">— would replace</span> <span class="cardlink" data-card="{{ b[0] }}">{{ b[0] }}</span></div>
+  {% endfor %}
+  <div class="muted fs-xs mt-2">Never added to the deck: these go to the buy list when you apply swaps.</div>
+</div>
+{% endif %}
+
+{% if r.risers or r.manual_holds or r.land_guard or r.archetype_unknown %}
+<h2 class="mt-4">Also worth knowing</h2>
+<div class="card mb-4 fs-sm">
+  {% for x in r.risers or [] %}
+  <div>You own <span class="cardlink" data-card="{{ x.add }}">{{ x.add }}</span> ({{ x.add_inc }}%) —
+    it beats {{ x.over }} ({{ x.over_inc }}%) but not by enough to suggest on field % alone.
+    Worth a read.</div>
+  {% endfor %}
+  {% for h in r.manual_holds or [] %}
+  <div>Held: {{ h.name }} ({{ h.inc }}% field) — you removed it by hand on {{ h.removed }}.</div>
+  {% endfor %}
+  {% for g in r.land_guard or [] %}
+  <div>Kept {{ g.kept }}: the last {{ g.type|capitalize }}-typed land{% if g['for'] %} — {{ g['for'][:2]|join(', ') }} would have nothing to fetch{% endif %}.</div>
+  {% endfor %}
+  {% if r.archetype_unknown %}<div class="warn">Archetype word(s) not recognised: {{ r.archetype_unknown|join(', ') }}.</div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

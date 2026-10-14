@@ -270,15 +270,19 @@ def test_an_unowned_field_land_is_never_added_by_the_spell_pass(tmp_path, monkey
     r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
     assert all("Hallowed Fountain" not in add for _cut, _vc, add, *_ in r["swaps"])
     assert all("Hallowed Fountain" not in new for _old, new, _avail in r["land_swaps"])
-    # it arrives as a LAND buy recommendation, paired against a weak in-deck land
-    land_buys = [b for b in r["buy_swaps"] if b[4] == "land"]
-    assert land_buys and land_buys[0][2] == "Hallowed Fountain"
-    assert mtglib._norm(land_buys[0][0]) == mtglib._norm("Hidden Lair")
+    # Never offered as a SPELL buy either. (It used to be paired as a LAND buy against
+    # Hidden Lair; since lands are valued by mana function, a land with no produced
+    # data — this whole collection is name-only — is not judged weak, so it is never
+    # named as a Replaces target. Never guess: the Hidden Lair rule.)
+    assert not any(b[2] == "Hallowed Fountain" and b[4] == "spell" for b in r["buy_swaps"])
+    assert not any(mtglib._norm(b[0]) == mtglib._norm("Hidden Lair") for b in r["buy_swaps"])
 
 
 def test_manabase_pass_owns_a_section_signalled_land(tmp_path, monkeypatch):
-    """Hidden Lair may still be upgraded — by the LAND pass, for a land the field
-    plays, preserving the deck's land count."""
+    """Hidden Lair belongs to the LAND pass, never the spell pass. On a name-only
+    collection the land pass has no produced-mana data to value it by (Phase A), so it
+    leaves it alone rather than guess — what must hold is that the SPELL pass never
+    cuts it (the 2026-08-09 bug) and the deck keeps its land count."""
     coll, idx, p = _name_only_setup(
         # "...Tower" trips the name heuristic, so the incoming card lands in land_adds
         tmp_path, monkeypatch, {mtglib._norm("Great Field Tower"): 99})
@@ -287,8 +291,8 @@ def test_manabase_pass_owns_a_section_signalled_land(tmp_path, monkeypatch):
     coll = mtglib.load_collection(str(tmp_path / "snapshot.txt"))
     idx = mtglib.index_by_name(coll)
     r = optimize.optimize(p, coll, idx, str(tmp_path), apply=False)
-    assert any(mtglib._norm(old) == mtglib._norm("Hidden Lair")
-               for old, _new, _avail in r["land_swaps"])
+    assert all(mtglib._norm(old) != mtglib._norm("Hidden Lair")
+               for old, _new, _avail in r["land_swaps"]), "no data: not judged"
     assert all(mtglib._norm(cut) != mtglib._norm("Hidden Lair")
                for cut, *_ in r["swaps"])
 
@@ -1324,7 +1328,10 @@ def test_the_name_heuristic_still_decides_when_the_field_is_silent(tmp_path,
     r = optimize.optimize(p, coll, idx, str(tmp_path), include_buys=True, apply=False)
     buys = [b for b in r["buy_swaps"]
             if mtglib._norm(b[2]) == mtglib._norm("Unknown Sunlit Tower")]
-    assert buys and buys[0][4] == "land", "no lands key to consult -> trust the name"
+    # "no lands key to consult -> trust the name": it is typed a LAND, so it may never
+    # be paired against a spell. (Whether it is paired against a land at all needs mana
+    # data on the deck's lands, which a name-only collection doesn't have — Phase A.)
+    assert all(b[4] == "land" for b in buys), "no lands key to consult -> trust the name"
 
 
 def test_tidy_runs_even_when_the_pass_proposes_no_swaps(tmp_path, monkeypatch):

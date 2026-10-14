@@ -449,6 +449,10 @@ changed); `mana_note` in the add-route JSON for a thin fetcher.
 
 ## Phase E ☑ SHIPPED — Optimizer guards: the land passes may not strand a fetcher
 
+> **Superseded 2026-10-14** (`docs/spec-optimizer-judgment.md` Phase A): passes 1 and 2
+> are one mana-function land pass with no basics quota. The fetch-type ledger described
+> here survives unchanged and guards the new pass.
+
 Scope: `optimize.py` pass 1 (weak-nonbasic upgrades, :568-588), pass 2 (basics
 repair, :590-611), and the buy-land pairing (:633-644). All three consume the
 same `weak_lands` list and share state only through `used_land` — so the guard

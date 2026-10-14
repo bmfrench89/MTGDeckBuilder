@@ -163,18 +163,24 @@ def test_build_next_save_picks_a_free_stem(env, monkeypatch):
     monkeypatch.setattr(auto_build, "deck_text",
                         lambda d: "# Title: Draft\n# Commander: Test Commander\n"
                                   "# --- Commander ---\n1 Test Commander\n")
-    monkeypatch.setattr(optimize, "optimize", lambda *a, **k: {})
+    applied = []
+    monkeypatch.setattr(optimize, "optimize",
+                        lambda *a, **k: applied.append(k.get("apply")) or {})
     tuned = "# Title: My hand-tuned list\n# Commander: Test Commander\n1 Test Commander\n"
     (env.decks / "test-commander.txt").write_text(tuned, encoding="utf-8")
     (env.decks / "test-commander.notes.md").write_text("plan", encoding="utf-8")
 
     r = env.client.post("/build-next/Test Commander/save")
-    assert r.status_code == 302 and r.headers["Location"].endswith("/deck/test-commander-2")
+    # Saved as built, then the ⚡ REVIEW — tuning is proposed, never auto-applied
+    # (spec-optimizer-judgment Phase B, player decision 2026-10-14).
+    assert r.status_code == 302 and r.headers["Location"].endswith(
+        "/deck/test-commander-2/optimize")
+    assert True not in applied, "Build Next must not auto-apply the optimizer"
     assert _text(env, "test-commander") == tuned, "the tuned deck was overwritten"
     assert "Draft" in _text(env, "test-commander-2")
 
     r = env.client.post("/build-next/Test Commander/save")
-    assert r.headers["Location"].endswith("/deck/test-commander-3")
+    assert r.headers["Location"].endswith("/deck/test-commander-3/optimize")
     assert _text(env, "test-commander") == tuned
 
 

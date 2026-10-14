@@ -233,7 +233,8 @@ The paid plan's MySQL is the upgrade path if the app ever serves the public.
 - Claude never edits a deck file or opens a PR for deck data again.
 - "Present swaps before applying" becomes an object in the app, not just chat text. The
   player can approve it on the phone with no session open.
-- **(D4)** The optimizer becomes a proposal source like Claude. ⚡ and `refresh --optimize`
+- **(D4) — DECIDED 2026-10-14, and wider than proposed:** Build Next proposes too
+  (`docs/spec-optimizer-judgment.md` Phase B). The original text: the optimizer becomes a proposal source like Claude. ⚡ and `refresh --optimize`
   show proposals instead of applying them. Build Next keeps auto-applying, because its
   output is already a fresh draft. This changes CLAUDE.md's "automatic in four places"
   rule, so it's the player's call.
@@ -355,8 +356,8 @@ the big one; Phases 2–4 are mostly deletion.
 - **D3: Generic knowledge.** Keep the Game Changers list, combos, card notes and curated
   role lists in the repo as code (recommended). Or put them in the DB too, if "no data"
   is absolute.
-- **D4: Proposals gate.** Optimizer runs outside Build Next produce proposals instead of
-  auto-applying (recommended).
+- **D4: Proposals gate. — DECIDED 2026-10-14:** every optimizer run in the app proposes,
+  Build Next included (`docs/spec-optimizer-judgment.md`).
 - **D5: Claude access.** Token API and CLI first, MCP connector later (recommended), or
   the connector first.
 - **D6: Public release.** Not now (recommended). Revisit as a free Play release (TWA)

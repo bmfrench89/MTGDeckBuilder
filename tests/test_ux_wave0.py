@@ -161,7 +161,13 @@ def test_a_failing_optimize_is_reported_not_swallowed(env, monkeypatch):
     def boom(*a, **k):
         raise RuntimeError("boom")
     monkeypatch.setattr(optimize, "optimize", boom)
-    html = env.client.post("/deck/td/optimize", follow_redirects=True).get_data(as_text=True)
+    # the ⚡ review page (Phase B: opening ⚡ only previews) says so…
+    html = env.client.get("/deck/td/optimize").get_data(as_text=True)
+    assert "The optimizer stopped with an error (RuntimeError)" in html
+    # …and so does the apply step
+    monkeypatch.setattr(optimize, "apply_chosen", boom)
+    html = env.client.post("/deck/td/optimize", data={"pick": "spell|A|B"},
+                           follow_redirects=True).get_data(as_text=True)
     assert "Optimize stopped with an error (RuntimeError)" in html
 
 

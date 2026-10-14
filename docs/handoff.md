@@ -8,7 +8,29 @@ Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 
 _Last updated: 2026-10-14 (The Ur-Dragon rebuilt from the full collection database; the repo is moving to the private `bmfrench89/OnTheStAIck`)._
 
-## START HERE: The Ur-Dragon rebuilt from the full collection database (2026-10-14)
+## START HERE: the optimizer proposes, judgment decides (2026-10-14)
+
+The player: "I want more AI intelligent decisions … EDHREC … should not be the golden
+choice." Decided the same day: **the AI read happens in Claude sessions only** (no API calls
+from the app), and **⚡ proposes while the player approves**. Spec and tracker:
+`docs/spec-optimizer-judgment.md`.
+- **Phase A, shipped: lands by mana function.** `manabase.land_mana_score` replaces the
+  inclusion-margin land pass AND the basics quota that traded duals for basics. Live result:
+  Ur-Dragon, Captain America and Dina get no land proposals. **Bartolomé is proposed Dakmor
+  Salvage → Caves of Koilos**, which is wrong (a graveyard piece the score can't see) and is
+  why A only ships with B.
+- **Phase B, shipped: ⚡ is a review.** `GET /deck/<stem>/optimize` lists proposals with
+  evidence and checkboxes; `POST` applies only the ticked ones (`optimize.apply_chosen`,
+  recomputed server-side). Build Next opens the review instead of auto-applying.
+  `refresh.py --optimize` prints proposals only. UAT on the PC: all 17 flows pass (F4/F8
+  rewritten for the review), and the sweep is clean with the review page added.
+- **Phase C, not started:** the session-review path. Owned cards EDHREC doesn't list as
+  "worth a read", proposals in the assess packet, `optimize.py --json`, and revisiting the
+  25-point spell margin.
+- **Sessions:** step 5 of SKILL.md now reads every proposal against the engine before
+  `--apply`. Field % is a prior to cite, never the reason.
+
+## The Ur-Dragon rebuilt from the full collection database (2026-10-14)
 
 The player asked for "the best built Ur-Dragon deck" and said nothing from the old lists,
 built on an incomplete collection, needed keeping. `the-ur-dragon` and the study copy

@@ -154,15 +154,15 @@ function restore(stem, files) {
     restore(stem, files);
   }
 
-  // F4 · The ⚡ report reaches the deck page.
+  // F4 · ⚡ opens a REVIEW and writes nothing (spec-optimizer-judgment Phase B).
   {
     const files = snapshot(stem);
-    const r = await api.post(`${BASE}/deck/${stem}/optimize`, { maxRedirects: 0 });
-    const loc = r.headers()['location'] || '';
-    await p.goto(new URL(loc || `/deck/${stem}`, BASE).toString(), { waitUntil: 'load', timeout: 300000 });
-    const msg = await p.evaluate(() => (document.querySelector('.appflashes') || {}).textContent || '');
-    if (/Optimiz/.test(msg)) pass('F4 optimize report shown', msg.trim().slice(0, 90));
-    else fail('F4 optimize report shown', `status ${r.status()}, no report on the deck page`);
+    const before = read(deckFile);
+    await p.goto(`${BASE}/deck/${stem}/optimize`, { waitUntil: 'load', timeout: 300000 });
+    const h = await p.evaluate(() => (document.querySelector('h1') || {}).textContent || '');
+    if (!/Suggested swaps/.test(h)) fail('F4 optimize review shown', `heading was "${h.trim().slice(0, 60)}"`);
+    else if (read(deckFile) !== before) fail('F4 optimize review shown', 'opening the review wrote the deck');
+    else pass('F4 optimize review shown', 'review page, deck untouched');
     restore(stem, files);
   }
 
@@ -261,17 +261,19 @@ function restore(stem, files) {
     restore(stem, files);
   }
 
-  // F8 · ⚡ Optimize, then undo the whole run in one tap.
+  // F8 · ⚡ review → tick every proposal → apply, then undo the whole run in one tap.
   {
     const files = snapshot(stem);
     const before = read(deckFile);
     try {
-      await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
-      p.once('dialog', (d) => d.accept());
-      await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
-        p.click(`form[action$="/optimize"] button`)]);
-      const t = await toast();
-      if (read(deckFile) === before) skip('F8 ⚡ run → Undo all', 'the optimizer made no swaps on this deck');
+      await p.goto(`${BASE}/deck/${stem}/optimize`, { waitUntil: 'load', timeout: 300000 });
+      const n = await p.$$eval('input[name="pick"]', (els) => { els.forEach((e) => { e.checked = true; }); return els.length; });
+      if (!n) { skip('F8 ⚡ run → Undo all', 'the optimizer proposed no swaps on this deck'); restore(stem, files); }
+      else await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+        p.click('form[action$="/optimize"] button[type="submit"]')]);
+      const t = n ? await toast() : null;
+      if (!n) { /* skipped above */ }
+      else if (read(deckFile) === before) skip('F8 ⚡ run → Undo all', 'the ticked swaps were no longer proposed');
       else if (!t) fail('F8 ⚡ run → Undo all', 'swaps were written but no Undo toast');
       else {
         await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), p.click('.utoast .ut-btn')]);

@@ -264,12 +264,11 @@ def app_bar(stem, editable):
         "<a href='/'><span aria-hidden='true'>&larr;&nbsp;</span>All decks</a></nav>"
         "<div class='appacts'>"
         f"<a class='abtn primary' href='/deck/{s}/edit'>Edit list</a>"
-        f"<form method='post' action='/deck/{s}/optimize' onsubmit=\"return confirm("
-        "'Tune this deck toward what the field plays? Your commander, basics and "
-        "game-plan cards are protected, and every swap can be undone from the "
-        "deck\\'s Changes page.');\">"
-        "<button class='abtn' type='submit' title='Optimize against EDHREC'>"
-        "&#9889; Optimize</button></form>"
+        # ⚡ opens a review of SUGGESTED swaps; nothing is written until the player
+        # ticks and applies (spec-optimizer-judgment Phase B, 2026-10-14).
+        f"<a class='abtn' href='/deck/{s}/optimize' "
+        "title='See suggested swaps; nothing changes until you approve'>"
+        "&#9889; Optimize</a>"
         f"<a class='abtn wide-only' href='/deck/{s}/table-card'>Table card</a>"
         "<details class='amenu'><summary class='abtn' aria-label='More deck actions'>"
         "&#8943;</summary><div class='amenu-items'>"

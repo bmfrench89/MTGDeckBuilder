@@ -110,10 +110,8 @@
         <a href="{{ url_for('deck_proxies', stem=d.stem, buylist=1) }}"
            title="Print-exact 63×88mm playtest proxies of this deck's buylist — sleeve them over the cards they'd replace and play before you buy. Print at 100% scale.">Proxies</a>
         <hr>
-        <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}"
-          onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every swap can be undone, one at a time or all together, from the deck\'s Changes page.');">
-          <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
-        </form>
+        <a href="{{ url_for('deck_optimize_review', stem=d.stem) }}"
+           title="See suggested swaps — nothing changes until you approve">⚡ Optimize</a>
         <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
           onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; with its notes, buy list and change log? Its saved versions are kept, so it can be brought back — but it leaves your decks now.');">
           <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>

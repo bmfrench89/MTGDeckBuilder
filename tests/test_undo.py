@@ -134,9 +134,13 @@ def test_an_editor_save_is_undone(env):
 
 
 def test_a_whole_optimizer_run_is_one_undo(env, monkeypatch):
+    """The ⚡ approval (spec-optimizer-judgment Phase B): the ticked swaps are applied
+    as one run, and that run is ONE undo."""
     import optimize
 
-    def run(path, coll, idx, decks_dir, apply=True, by=""):
+    def run(path, coll, idx, decks_dir, chosen, by=""):
+        assert sorted(chosen) == ["spell|Arcane Signet|Swords to Plowshares",
+                                  "spell|Sol Ring|Counterspell"]
         text = open(path, encoding="utf-8").read()
         text = text.replace("1 Sol Ring", "1 Counterspell") \
                    .replace("1 Arcane Signet", "1 Swords to Plowshares")
@@ -146,14 +150,46 @@ def test_a_whole_optimizer_run_is_one_undo(env, monkeypatch):
                  ("Arcane Signet", 1, "Swords to Plowshares", 40, "share")]
         optimize.record_changes(path, swaps, [], by=by)
         return {"swaps": swaps, "land_swaps": []}
-    monkeypatch.setattr(env.app.optimize, "optimize", run)
-    env.client.post("/deck/td/optimize")
+    monkeypatch.setattr(env.app.optimize, "apply_chosen", run)
+    env.client.post("/deck/td/optimize",
+                    data={"pick": ["spell|Sol Ring|Counterspell",
+                                   "spell|Arcane Signet|Swords to Plowshares"]})
     offer = _offer(env)
     assert offer["label"] == "Undo all" and offer["rows"] == "0,1"
     _undo(env, offer)
     assert env.text() == DECK
     held = deckcore.manual_removals(env.log)
     assert {"counterspell", "swords to plowshares"} <= set(held)
+
+
+def test_opening_optimize_proposes_and_writes_nothing(env, monkeypatch):
+    """⚡ is a REVIEW: the page lists proposals with checkboxes and the deck file and
+    its change log are untouched (player decision 2026-10-14, "propose, I approve")."""
+    import optimize
+    report = {"swaps": [("Sol Ring", 1, "Counterspell", 50, "free")],
+              "swaps_detail": [{"cut": "Sol Ring", "add": "Counterspell", "cut_inc": 10,
+                                "add_inc": 50, "cut_field_known": True,
+                                "add_field_known": True}],
+              "land_swaps": [], "field_size": 9}
+    monkeypatch.setattr(env.app.optimize, "optimize", lambda *a, **k: report)
+    before = env.text()
+    page = env.client.get("/deck/td/optimize").get_data(as_text=True)
+    assert 'name="pick" value="spell|Sol Ring|Counterspell"' in page
+    assert "Nothing changes until you tick" in page
+    assert env.text() == before
+    import os
+    assert not os.path.exists(env.log)
+
+
+def test_applying_with_nothing_ticked_changes_nothing(env, monkeypatch):
+    import optimize
+    called = []
+    monkeypatch.setattr(env.app.optimize, "apply_chosen",
+                        lambda *a, **k: called.append(1) or {})
+    before = env.text()
+    r = env.client.post("/deck/td/optimize", data={})
+    assert r.status_code == 302 and r.headers["Location"].endswith("/deck/td/optimize")
+    assert not called and env.text() == before
 
 
 def test_the_changes_page_offers_undo_per_row_and_per_run(env, monkeypatch):

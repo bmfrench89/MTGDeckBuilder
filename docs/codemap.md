@@ -207,7 +207,7 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | carddb | **Two modes.** *Enrich* the collection (colors/types/MV/**subtypes**/**produced mana + oracle flags**/exact-printing id) → `collection_attrs.csv`; **default: Scryfall `/cards/collection` API** (no download), `--bulk`/`--download-bulk` for offline. Subtypes power tribal detection (deck_fit / auto_build); `Produced`/`Flags` (via `oracle_flags`) power actual-production source counts. *Verify* named cards — **`--verify "<name>"`** (repeatable, `--json`) batches names through the same endpoint, reconciles **positionally** (a back-face request returns a card named `Front // Back`, so name-keyed matching misfiles it), retries each miss once via `/cards/named?fuzzy=`, and returns verbatim oracle text + commander legality or an honest `UNVERIFIED`. 30-day cache in `data/cache/scryfall/`; a hallucinated card name dies here. The two modes are exclusive (enrichment still requires `--collection`). | mtglib, oracle_flags |
 | edhrec | EDHREC community staples for a commander vs your collection (inclusion% → own=add / missing=buy) + `inclusion_map()`/`synergy_map()`, the **field signal** behind `deck_fit`. Three-tier sourcing: live fetch → disk cache → **committed snapshot** (`data/reference/field/`, written by `--snapshot-all` on a machine that can reach EDHREC); degrades gracefully | mtglib |
 | gen_card_notes | Draft grounded card notes from oracle + role + EDHREC into `card_notes.generated.csv` (curated `card_notes.csv` always wins) | mtglib, deckcore, deck_fit |
-| **optimize** | Tune an EXISTING deck toward what the field plays: swaps low-value cards for owned+free high-inclusion ones, upgrades weak lands, repairs basics, keeps 100 cards + role balance. `--all --apply`. The role template is **archetype-aware** (`role_ranges` reads the deck's `# Archetype:` header — a control deck's 15 counterspells are correct, not nine over budget; unmatched words are reported, never silently ignored) and the **field has a veto over role repair**: a swap may never cut a card the field plays MORE than the incoming one, because template pressure arrives through `value_of`'s fit blend and can manufacture the 25-point margin on its own | mtglib, deckcore, deck_fit, deck_conflicts, power |
+| **optimize** | PROPOSE tuning for an EXISTING deck (spec-optimizer-judgment, 2026-10-14): swaps low-value cards for owned+free high-inclusion ones, and lands by **mana function** (`manabase.land_mana_score`, no basics quota), keeps 100 cards + role balance. `proposals()` flattens a report for a review surface and `apply_chosen()` writes only the player-approved subset (recomputed server-side). The deciding read of each proposal is a Claude session's (no API from the app). `--all --apply`. The role template is **archetype-aware** (`role_ranges` reads the deck's `# Archetype:` header — a control deck's 15 counterspells are correct, not nine over budget; unmatched words are reported, never silently ignored) and the **field has a veto over role repair**: a swap may never cut a card the field plays MORE than the incoming one, because template pressure arrives through `value_of`'s fit blend and can manufacture the 25-point margin on its own | mtglib, deckcore, deck_fit, deck_conflicts, power |
 | spellbook | Commander Spellbook combos present / one-away in a deck (full CSB DB, beyond `combos.csv`); disk-cached, degrades gracefully — and **degrades cheaply**: a failure is remembered for `FAIL_TTL` (5 min) so an unreachable CSB costs one attempt per cooldown instead of one per deck-page view (it was 315 ms of every warm render, ceiling 25 s when a connection hangs). The remembered failure is never served AS data — callers still get the empty error payload they already label | mtglib |
 | wishlist / staples_crossref / export_manapool / refresh | buy list / staple diff / exports / regenerate-all | mtglib (+ deck_conflicts / wishlist) |
 | proxy_sheet | Print-exact proxy sheets (63×88 mm, nine a page) for a deck — browser is the renderer (imported by `webapp/app.py`) | card_image, mtglib |
@@ -298,23 +298,26 @@ derived `collection_attrs.csv` gitignored) · `decks/*.txt` (+ optional
 combos, card_notes, role_staples, commanders, archetype_support, **field/** — committed
 EDHREC snapshots, one per commander).
 
-## Keeping decks optimized (automated at four points)
+## Keeping decks optimized — proposals, then a decision (2026-10-14)
+
+The player's call: EDHREC is evidence, not the golden choice, and nothing is applied
+without approval (`docs/spec-optimizer-judgment.md`).
 
 | When | What runs | Where |
 |---|---|---|
-| **A new deck is saved** ("Save to my decks") | optimize runs automatically | `webapp` `build_deck_save` |
-| **On demand** | ⚡ Optimize button per deck | `POST /deck/<stem>/optimize` |
-| **After buying cards** | `refresh.py --optimize` (then rebuilds dashboards) | CLI |
-| **Any Claude-driven build** | workflow step 5 in `SKILL.md` | the skill |
+| **A new deck is saved** ("Save to my decks") | saved as built, then the ⚡ review opens | `webapp` `build_deck_save` |
+| **On demand** | ⚡ review: tick swaps, apply only those | `GET` / `POST /deck/<stem>/optimize` |
+| **After buying cards** | `refresh.py --optimize` prints every deck's proposals | CLI |
+| **Any Claude-driven build or review** | the session reads each proposal's verified text against the engine, presents the table, applies on the player's go | the skill (step 5) |
 
-**Deliberately NOT automatic: manual edits.** The card panel's Remove/Replace and the deck
-editor save your choice as-is — the optimizer never second-guesses a deliberate swap. Use
-the ⚡ button when you *want* a tune-up. It's idempotent: an already-tuned deck is untouched.
+**Never automatic: manual edits.** The card panel's Remove/Replace and the deck editor save
+your choice as-is — the optimizer never second-guesses a deliberate swap. It's idempotent:
+an already-tuned deck gets no proposals.
 
 ```bash
-python3 scripts/optimize.py --all --collection data/collection/collection.csv          # dry run
-python3 scripts/optimize.py --all --collection data/collection/collection.csv --apply  # write
-python3 scripts/refresh.py  --optimize --collection data/collection/collection.csv     # tune + rebuild
+python3 scripts/optimize.py --all --collection data/collection/collection.csv          # proposals
+python3 scripts/optimize.py --deck <deck> --collection <coll> --apply                   # after a read
+python3 scripts/refresh.py  --optimize --collection data/collection/collection.csv     # proposals + rebuild
 ```
 
 **The signal:** `deck_fit` scores cards by **EDHREC inclusion % AND synergy for that
@@ -352,8 +355,10 @@ beat a high-synergy archetype payoff twice); the commander, basics, `card_notes.
 entries, anything named in the deck's `.notes.md`, and every `Source=manual-*` card are
 never cut; role counts must stay in template range; lands only swap for lands; every
 membership test goes through `mtglib.name_keys()` (front-face aware) and
-`singleton_violations` aggregates by front-face key; and with no field data the manabase
-is left alone entirely. Validate with EDHREC top-25 overlap before/after — see
+`singleton_violations` aggregates by front-face key; with no field data the deck is left
+alone entirely; and lands are valued by `manabase.land_mana_score` (colours made weighted by
+pip demand, tapped penalty, fetchable-type bonus; +0.6 to swap; utility lands and unenriched
+lands never judged; a ≥25%-field land kept), never by inclusion — no basics quota. Validate with EDHREC top-25 overlap before/after — see
 `docs/handoff.md`.
 
 ## Design system (one visual language, two surfaces)

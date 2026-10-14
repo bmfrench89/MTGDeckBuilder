@@ -76,26 +76,38 @@ Assemble the 99 (+ commander) from owned cards. As you go:
 - Watch for the rules traps in `references/rules-reference.md` (X-spell MV, cast triggers,
   exile-vs-destroy wraths with graveyard synergy, MDFC/flashback mana value).
 
-### 5. Optimize against the field — ALWAYS, after any build or rebuild
-**Whenever you create or materially change a deck file, run the optimizer and report the
-before/after.** This is not optional polish; it is the step that separates a deck the field
-would recognise from a pile of on-curve filler.
+### 5. Optimize — the optimizer proposes, YOU read, the player decides
+**Whenever you create or materially change a deck file, run the optimizer and judge its
+proposals.** Player decision 2026-10-14 (`docs/spec-optimizer-judgment.md`): field % is
+evidence, never the verdict — "EDHREC and AI decisions can overlap … but should not be the
+golden choice." The read happens here, in the session; the app makes no AI calls.
 
 ```bash
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>            # preview
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll> --apply    # write
-python3 scripts/optimize.py --all --collection <coll> --apply                           # every deck
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>            # proposals
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll> --apply    # after your read + the player's go
 ```
 
-It swaps low-value cards for owned, **free**, high-inclusion ones, upgrades weak lands and
-repairs basics, while protecting the commander, basics, curated notes and anything named in
-the deck's `.notes.md`. **Validate with EDHREC top-25 overlap** (`edhrec.inclusion_map`):
-below ~50% means something is wrong — say so rather than shipping it quietly.
+1. **Read every proposal against the deck's engine** (the sleeper audit,
+   `references/card-review-method.md`): verified text in, verified text out, what each
+   does for THIS commander. Field % is a prior to cite; a 0%-field card can be the best
+   add (Samut, Hazoret's Champion in the Ur-Dragon) and a 60% card can be wrong here.
+2. **Look past the proposals too.** The optimizer only proposes cards EDHREC lists; sweep
+   the free pool (`analyze_collection.py --query`) for engine fits it cannot see.
+3. **Present the swap table**, then apply what the player approves — either here
+   (`--apply`, then undo by hand what they reject, logged `Source=manual-replace`) or by
+   pointing them at the deck's ⚡ page, which applies only the ticked swaps.
+4. **Lands are scored by mana function** (`manabase.land_mana_score`), not field %; a
+   utility land (no deck colours) or one with no enrichment is never judged — read those.
 
-*Why this exists:* the auto-builder once scored **24%** against the field on Captain America
-while the player's hand-built decks scored 56–80%, because the fit engine rewarded low mana
-cost and had no idea Director Nick Fury is in 95% of that commander's decks. The scorer is
-fixed, but always verify — a shallow collection or a missing EDHREC page still shows up here.
+It never cuts the commander, basics, curated notes, `.notes.md`-named cards (folded match,
+so a wrapped name still counts) or manual adds. **Validate with EDHREC top-25 overlap**
+(`edhrec.inclusion_map`) as a sanity check — far below ~50% deserves an explanation, but
+overlap is not the goal.
+
+*Why the read is the decision:* the field gate traded untapped duals for basics in a
+five-colour deck, would have missed Samut (new set, ~0% field) and ranked Misdirection
+(redirects) over Absorb (counters + drains with Vito) for Y'shtola — all caught by reading
+the card against the engine on 2026-10-14.
 
 ### 6. Verify the questionable cards
 For any card whose text you're not certain of, get the real oracle text before you build
@@ -254,9 +266,10 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
   away**, and combos the whole collection can assemble (`data/reference/combos.csv`).
 - `spellbook.py` — Commander Spellbook's FULL combo DB via find-my-combos: every combo **present** or
   **one card away** in a deck, far beyond the curated `combos.csv`. Feeds the web assess packet.
-- `optimize.py` — **run after every build/rebuild** (workflow step 5). Tunes an existing deck toward
-  what the field actually plays: swaps low-value cards for owned+free high-inclusion ones, upgrades
-  weak lands, repairs basics. `--all --apply` does every deck; protects engine pieces and roles.
+- `optimize.py` — **run after every build/rebuild** (workflow step 5). PROPOSES tuning: swaps
+  low-value cards for owned+free high-inclusion ones and lands by mana function (no basics quota);
+  you read the proposals against the engine and apply on the player's go (`--apply`). Protects
+  engine pieces and roles.
 - `auto_build.py` — auto-assembles a full 99 for a commander from the owned, in-color, uncommitted
   pool (deck_fit scoring + role template). Its ranked pool is the **candidate source for adds**; also
   takes `identity=` (WUBRG) for any commander not in `commanders.csv`.

@@ -279,6 +279,98 @@ def _land_colors(card):
     return set(card.colors or card.identity or ())
 
 
+# ---- a land's value to THIS deck, in colour-equivalents (spec-optimizer-judgment A) ----
+# What a land does for a manabase is countable from enriched data: which of the deck's
+# colours it makes, weighted by how hard the deck's spells lean on each; whether it
+# enters tapped; and whether the deck's own fetch effects can find it. The optimizer
+# used to value lands by EDHREC inclusion instead, and because basics sit at 76-99%
+# inclusion (nearly every deck runs SOME), it traded untapped duals for basics in
+# five-colour decks. Field % is not an input here — the optimizer may use it to break
+# a tie, never to decide.
+LAND_TAPPED_PENALTY = 0.75   # enters tapped, always
+LAND_COND_PENALTY = 0.25     # enters tapped unless (shocks, checks, battle lands, ...)
+LAND_TYPE_BONUS = 0.25       # per basic land type the deck's fetchers ask for
+LAND_FILTER_CREDIT = 0.75    # {C} natively, colours only through a paid ability
+LAND_MAX_COLORS = 2          # credit at most two colours per land (see below)
+_WEIGHT_FLOOR, _WEIGHT_CEIL = 0.5, 1.5
+
+
+def color_weights(colors_rows, identity):
+    """{colour: weight} over the deck's identity, from `analyze()["colors"]`'s pip
+    demand: each colour's demand over the mean demand, clamped to [0.5, 1.5] so a
+    splash colour still counts and the main colour cannot drown the rest. Static per
+    decklist's SPELLS, so swapping lands never moves the weights — that is what
+    keeps a second optimizer run a no-op. No demand data at all -> every colour 1.0."""
+    ident = [c for c in "WUBRG" if c in (identity or ())]
+    dem = {r["color"]: float(r.get("demand") or 0) for r in colors_rows or []
+           if r.get("color") in ident}
+    mean = (sum(dem.values()) / len(ident)) if ident and dem else 0
+    if mean <= 0:
+        return {c: 1.0 for c in ident}
+    return {c: min(_WEIGHT_CEIL, max(_WEIGHT_FLOOR, dem.get(c, 0) / mean)) for c in ident}
+
+
+def is_filter_land(card):
+    """{C} natively and three-plus colours listed: the colours cost an activation
+    (Study Hall, Rumble Arena, Henge of Ramos, Baxter Building)."""
+    p = card.produced
+    return p is not None and "C" in p and len({c for c in p if c in "WUBRG"}) >= 3
+
+
+def land_is_reliable_add(card):
+    """Lands the mana pass may BRING IN on its own: at most two colours listed. A land
+    listing three-plus colours is a Command Tower, a Triome — or a land whose colours
+    hang on a condition the produced_mana row can't express (Rhystic Cave's tax,
+    Crossroads Village's one chosen colour, a filter land's activation). Those are
+    still scored when judging CUTS; adding one is a call for a session's read."""
+    p = card.produced
+    return p is not None and len({c for c in p if c in "WUBRG"}) <= 2
+
+
+def land_mana_score(card, weights, demanded_types=()):
+    """A land's mana value to a deck, or None when the mana pass must not judge it.
+
+    None means one of two honest things: the land was never enriched (`produced is
+    None` on a nonbasic — never guess, the Hidden Lair rule), or it makes NONE of the
+    deck's colours (Reliquary Tower, Ancient Tomb, a spend-restricted Haven of the
+    Spirit Dragon). Those are in the deck for an ability this score cannot see, so
+    the optimizer neither cuts nor adds them by mana.
+
+    Two data traps are handled, both read off the enriched rows:
+      * "choose a colour as it enters" lands (Thriving Bluff, Crossroads Village)
+        list every colour in Scryfall's produced_mana, so credit is capped at the two
+        best colours — exact for a Thriving land, generous for a Crossroads.
+      * pay-to-filter lands (Study Hall, Rumble Arena, Henge of Ramos) list {C} AND
+        three-plus colours; their colours cost an activation, so they earn a single
+        discounted colour."""
+    weights = weights or {}
+    if mtglib.is_basic(card.name) and card.produced is None:
+        low = card.name.lower().replace("snow-covered ", "")
+        cols = {c for c, b in (("W", "plains"), ("U", "island"), ("B", "swamp"),
+                               ("R", "mountain"), ("G", "forest")) if b == low}
+    elif card.produced is None:
+        return None
+    else:
+        cols = _land_colors(card)
+    cols = {c for c in cols if c in weights}
+    if not cols:
+        return None
+    ws = sorted((weights[c] for c in cols), reverse=True)
+    # The filter test reads EVERYTHING the land lists, not just the deck's colours: in a
+    # two-colour deck Henge of Ramos narrows to two colours and passed for an untapped dual.
+    if is_filter_land(card):
+        credit = ws[0] * LAND_FILTER_CREDIT
+    else:
+        credit = sum(ws[:LAND_MAX_COLORS])
+    flags = card.flags or set()
+    if "etb-tapped" in flags:
+        credit -= LAND_TAPPED_PENALTY
+    elif "etb-tapped-cond" in flags:
+        credit -= LAND_COND_PENALTY
+    credit += LAND_TYPE_BONUS * len(_land_types(card) & set(demanded_types or ()))
+    return round(credit, 3)
+
+
 def _union_sources(enriched, colors, sources):
     """Lands that tap for at least one of `colors`. A single color reads the
     report's own count, so a mono-color requirement is checked exactly as before."""

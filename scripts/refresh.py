@@ -36,8 +36,9 @@ def main():
     ap.add_argument("--no-visual", action="store_true", help="skip card-image galleries")
     ap.add_argument("--size", default="small")
     ap.add_argument("--optimize", action="store_true",
-                    help="tune every deck toward what the field plays before rebuilding "
-                         "(run this after adding cards — new pickups unlock new options)")
+                    help="print every deck's SUGGESTED swaps before rebuilding — nothing "
+                         "is written; approve them on each deck's ⚡ page (run this after "
+                         "adding cards — new pickups unlock new options)")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -47,10 +48,13 @@ def main():
         return 2
 
     if args.optimize:
-        print("== optimizing decks against the field (EDHREC) ==")
+        # PROPOSALS only (spec-optimizer-judgment Phase B, player decision 2026-10-14):
+        # the player approves swaps on the ⚡ page, or a Claude session reads them and
+        # applies one deck at a time with `optimize.py --deck … --apply`.
+        print("== suggested swaps (nothing is written; apply from the ⚡ page) ==")
         r = subprocess.run([sys.executable, os.path.join(HERE, "optimize.py"),
                             "--all", "--collection", args.collection,
-                            "--decks-dir", args.decks_dir, "--apply"],
+                            "--decks-dir", args.decks_dir],
                            capture_output=True, text=True)
         print(r.stdout.strip() or r.stderr.strip()[:400])
 

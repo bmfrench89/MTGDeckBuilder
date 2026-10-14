@@ -2444,9 +2444,8 @@ def build_deck_export(commander):
 def build_deck_save(commander):
     """Write the auto-built draft to data/decks/ as a NEW deck (`<slug>`, or
     `<slug>-2`, `-3`, … when that name is taken — an existing deck is never
-    overwritten), then tune it against what the field actually plays so it lands
-    optimized. (Manual edits are deliberately left alone — see
-    /deck/<stem>/optimize.)"""
+    overwritten), then open the ⚡ review so the player approves any tuning.
+    (Manual edits are deliberately left alone — see /deck/<stem>/optimize.)"""
     coll, idx = collection_index()
     d = auto_build.build(commander, coll, idx, DECKS_DIR, identity=(request.form.get("ci") or None),
                          skip_deck=_deck_slug(commander))
@@ -2459,15 +2458,12 @@ def build_deck_save(commander):
     if stem != _deck_slug(commander):
         flash(f"You already have a “{_deck_slug(commander)}” deck, so this draft was "
               f"saved alongside it as “{stem}” — nothing was overwritten.", "info")
-    try:
-        r = optimize.optimize(path, coll, idx, DECKS_DIR, apply=True, by=_by())
-        if r.get("illegal"):
-            app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
-        _flash_optimize(r)
-    except Exception:
-        pass                      # offline / EDHREC down: keep the un-tuned draft
-    _invalidate(stem)             # a brand-new deck, and an optimizer pass over it
-    return redirect(url_for("deck", stem=stem))
+    # The draft is saved as built; tuning is PROPOSED, not applied (Phase B, player
+    # decision 2026-10-14). The review page shows what the optimizer would change.
+    flash("Saved. Below is what the optimizer suggests — nothing changes until you "
+          "tick the swaps you want.", "info")
+    _invalidate(stem)
+    return redirect(url_for("deck_optimize_review", stem=stem))
 
 
 def _flash_optimize(r):
@@ -2531,29 +2527,59 @@ def _flash_optimize(r):
               + " — Commander allows one copy.", "warn")
 
 
-@app.route("/deck/<stem>/optimize", methods=["POST"])
-def deck_optimize(stem):
-    """Tune an existing deck toward the field on demand (the ⚡ Optimize button)."""
+@app.route("/deck/<stem>/optimize", methods=["GET"])
+def deck_optimize_review(stem):
+    """The ⚡ button: what the optimizer PROPOSES, with its evidence — nothing is
+    written (spec-optimizer-judgment Phase B, player decision 2026-10-14: "propose,
+    I approve"). Each swap gets a checkbox; POST applies the ticked ones."""
     m = _analysable_deck(stem)
     coll, idx = collection_index()
     try:
+        r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=False)
+        error = None
+    except Exception as e:              # never silent: the report IS the feature
+        app.logger.exception("optimize preview failed for %s", stem)
+        r, error = {}, type(e).__name__
+    return render_template("optimize_review.html", meta=m, stem=stem, r=r,
+                           props=optimize.proposals(r) if r else [], error=error,
+                           base_range=optimize.ROLE_RANGE)
+
+
+@app.route("/deck/<stem>/optimize", methods=["POST"])
+def deck_optimize(stem):
+    """Apply ONLY the swaps the player ticked on the review page. The proposal set is
+    recomputed server-side (`optimize.apply_chosen`), so a stale or edited form can
+    never write a swap the optimizer is not proposing right now."""
+    m = _analysable_deck(stem)
+    coll, idx = collection_index()
+    chosen = request.form.getlist("pick")
+    if not chosen:
+        flash("Nothing was ticked, so nothing changed.", "info")
+        return redirect(url_for("deck_optimize_review", stem=stem))
+    try:
         start = _change_count(m["path"])
-        r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True, by=_by())
-        _note("optimize", stem, f"{len(r.get('swaps') or []) + len(r.get('land_swaps') or [])} change(s)")
+        r = optimize.apply_chosen(m["path"], coll, idx, DECKS_DIR, chosen, by=_by())
+        _note("optimize", stem, f"{len(r.get('swaps') or []) + len(r.get('land_swaps') or [])} change(s) approved")
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
         _flash_optimize(r)
+        if r.get("stale"):
+            flash(f"{len(r['stale'])} ticked swap(s) were no longer proposed (the deck "
+                  "changed since the page loaded), so they were skipped.", "warn")
+        for h in (r.get("held") or [])[:3]:
+            flash(f"Held: {h['cut']} → {h['add']} — without the swaps you left "
+                  f"unticked, it would push {h['role']} out of the deck's range.", "info")
         n = _change_count(m["path"]) - start
         if n > 0:
-            # The whole run as ONE undo: the rows it appended are contiguous.
+            # The whole approval as ONE undo: the rows it appended are contiguous.
             _flash_undo(stem, m["path"], start,
-                        f"The optimizer made {n} swap{'s' if n != 1 else ''}.",
+                        f"Applied {n} swap{'s' if n != 1 else ''} you approved.",
                         label="Undo all" if n > 1 else "Undo")
     except Exception as e:              # never silent: the report IS the feature
         app.logger.exception("optimize failed for %s", stem)
         flash(f"Optimize stopped with an error ({type(e).__name__}). Check this deck's "
               "Changes page to see whether anything was written.", "warn")
-    _invalidate(stem)                   # an applying run rewrote the 99
+    _invalidate(stem)
     return redirect(url_for("deck", stem=stem))
 
 
