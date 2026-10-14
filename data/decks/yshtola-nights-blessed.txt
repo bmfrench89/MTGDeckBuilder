@@ -51,12 +51,12 @@
 1 Dark Ritual
 1 Frantic Search
 1 Transpose
-1 Mana Drain
+1 Absorb
 
 # --- Sorceries ---
 1 Circle of Power
 1 Exsanguinate
-1 Grim Tutor
+1 Diabolic Tutor
 1 Toxic Deluge
 1 Vindicate
 1 Night's Whisper

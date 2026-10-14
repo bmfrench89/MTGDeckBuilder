@@ -4,7 +4,7 @@
 Esper drain-control behind a pillowfort. Y'shtola turns the deck's constant small
 life-loss triggers into cards, Vito and Blood Artist turn drains into damage, and
 two lines close: the Viscera Seer + Sun Titan + Angelic Renewal zero-mana loop, or
-Exsanguinate off Dark Ritual and Mana Drain mana. Ghostly Prison and Norn's Annex
+Exsanguinate off Dark Ritual and Lotho's Treasures. Ghostly Prison and Norn's Annex
 tax anyone who comes at us while the engine assembles; Teferi keeps our sorcery-
 speed pieces uncounterable; Bloodchief Ascension turns the drains the deck already
 makes into a second, compounding engine. Counter what matters, tax the rest, and
@@ -106,13 +106,10 @@ records it, and the assess surfaces show it beside the detected estimate.
   sorcery speed: the loop cannot be interrupted by an instant-speed kill spell on
   the Seer, and our own wipes and tutors resolve clean. His -3 bounces a problem
   permanent and draws. MV 3, so casting him drains the table.
-- **Grim Tutor** (in over Syphon Mind) — any card to hand for 3 life, and at MV 3
-  it triggers Y'shtola on the way. Finds the missing loop piece; second
-  unconditional tutor alongside Mystical Tutor.
-- **Mana Drain** (in over Cleansing Nova) — Counterspell that banks the countered
-  spell's mana for our next main phase: a countered 5-drop pays for Exsanguinate
-  or double-spell turns. The counter core is now FoW / Counterspell / Mana Drain /
-  Sublime Epiphany.
+- ~~Grim Tutor~~ (in over Syphon Mind) — moved to The Ur-Dragon by the player;
+  replaced 2026-10-14 by Diabolic Tutor (see below).
+- ~~Mana Drain~~ (in over Cleansing Nova) — moved to The Ur-Dragon by the player;
+  replaced 2026-10-14 by Absorb (see below).
 - **Talion, the Kindly Lord** (in over Dancer's Chakrams) — name a number (3 is
   usually right here); every opponent spell with that MV/power/toughness costs
   them 2 life and draws us a card. Table-wide tax that feeds the end-step draw
@@ -132,3 +129,20 @@ Ghostly Prison above.
 - **Geist of Saint Thalia**: noncreature spells cost {1} less. Mana value is unchanged, so
   Y'shtola's MV3+ trigger still fires on the discounted spell. In over Hermes, Overseer of
   Elpis (25%).
+
+## 2026-10-14 — Mana Drain and Grim Tutor replaced (manual — do not cut)
+The player physically moved Mana Drain and Grim Tutor into The Ur-Dragon's box; the
+rebuilt Ur-Dragon runs them, so this list gives them up. Like-for-like replacements from
+the free pool, read against Y'shtola's verified text ("Whenever you cast a noncreature
+spell with mana value 3 or greater, Y'shtola deals 2 damage to each opponent and you gain
+2 life"):
+- **Absorb** {W}{U}{U} (over Mana Drain) — "Counter target spell. You gain 3 life." MV 3,
+  so it triggers Y'shtola, and its 3 life is a Vito drain and Bloodchief progress: a
+  counterspell that drains. The counter core is now FoW / Counterspell / Absorb /
+  Sublime Epiphany.
+- **Diabolic Tutor** {2}{B}{B} (over Grim Tutor) — any card to hand, so it still finds
+  the missing loop piece (Viscera Seer, Sun Titan, Angelic Renewal). MV 4, still a
+  Y'shtola trigger; one mana more than Grim, no life paid.
+Considered and passed: Misdirection (12% field, but it redirects a spell rather than
+countering it), Idyllic Tutor (enchantments only), and the higher-field cards earlier
+player-ratified passes cut on purpose (Syphon Mind, Observed Stasis, Cleansing Nova).
