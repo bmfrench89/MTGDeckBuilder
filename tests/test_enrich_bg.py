@@ -224,6 +224,6 @@ def test_upload_never_writes_the_tracked_snapshot(client, tmp_path, monkeypatch)
 def test_the_collection_page_renders_the_enrichment_status(client, tmp_path):
     enrich_bg._write_status({"when": time.time(), "state": "done", "matched": 7,
                              "total": 9, "detail": ""})
-    body = client.get("/collection").get_data(as_text=True)
+    body = client.get("/collection/manage").get_data(as_text=True)   # Manage tab
     assert "7/9 cards matched" in body
     assert json.loads(open(enrich_bg.STATUS, encoding="utf-8").read())["state"] == "done"

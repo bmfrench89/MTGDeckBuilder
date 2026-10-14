@@ -266,9 +266,12 @@ then read the screenshots. Anything that touches an edit flow also runs
 `webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan, the table card,
 undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
 earlier version), the keyboard path (skip link, panel focus in and back) and the phone
-deck page (tabs on the first screen, the list by default, filter, panel, zoom) and a timed
+deck page (tabs on the first screen, the list by default, filter, panel, zoom), a timed
 Collection sort (F13: a quadratic observer once froze every sort for 4-6 s while every
-other flow passed), each read back from the deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
+other flow passed) and the Collection's search (F14: first card on the first screen, live
+search, a scope chip, a chip removing itself, the Filters sheet's count matching the page,
+Load more kept through Back, the sub-tabs, help giving focus back), each read back from the
+deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
 without an accessible name. The sweep photographs pages; the
 2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
 has the commands.
@@ -381,8 +384,12 @@ templates. Config via env: `MTG_COLLECTION`, `MTG_DECKS_DIR`, `MTG_PORT`, `MTG_H
 
 Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<stem>/card`
 (remove/replace) · `/deck/<stem>/optimize` · `/deck/<stem>/pin` · `/deck/<stem>/assess[.txt]`
-(coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` (+ `/add`,
-`/upload`) · `/wishlist` · `/shared` · `/api/card/<name>` · `/api/collection/search` ·
+(coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` — three sub-tabs
+(docs/spec-collection-rebuild.md): **Cards** (`?q=` the one query language + `scope`, `order`,
+`dir`, `group`, `view`, `n`; `/collection/results` live search, `/collection/rows` Load more,
+`/api/collection/count` the Filters sheet's live count), **Add** (`GET /collection/add`; the
+POST of the same path adds one card; `/upload`) and **Manage** (`/collection/manage`:
+downloads, backups, set a count, history, card data, the reconcile offer) · `/wishlist` · `/shared` · `/api/card/<name>` · `/api/collection/search` ·
 `/api/edhrec/<commander>` · `/api/combos/build/<commander>` · `/mobile` · `/sw.js` · `/health` ·
 `/collection/batch` (+ `/confirm`: paste → preview → write a dated batch) ·
 `/export/additions.txt` (the added cards as `qty name` lines to import into Archidekt/ManaPool,

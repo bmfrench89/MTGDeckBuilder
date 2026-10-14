@@ -26,7 +26,7 @@ from urllib.parse import quote, unquote, urlsplit
 
 from flask import (Flask, Response, abort, flash, g, jsonify, redirect,
                    render_template, request, send_from_directory, session, url_for)
-from markupsafe import escape
+from markupsafe import Markup, escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -54,6 +54,8 @@ import spellbook
 import optimize
 import goldfish
 import intake
+import collection_query as cq
+import card_image
 import proxy_sheet as px
 
 import sync
@@ -2555,53 +2557,363 @@ def deck_optimize(stem):
     return redirect(url_for("deck", stem=stem))
 
 
-_FILTER_ROLES = {"ramp", "draw", "removal", "wipe", "counter"}
+# --------------------------------------------------------------------------- #
+# Collection: three sub-tabs (docs/spec-collection-rebuild.md §4)
+#   Cards  /collection          the cards, searched with collection_query
+#   Add    /collection/add      every way cards come in
+#   Manage /collection/manage   downloads, counts, history, card data, reconcile
+# The page used to stack all of it, and a phone met the first card 3.9 screens down.
+# --------------------------------------------------------------------------- #
+_COLL_SCOPES = (("all", "All", ""), ("free", "Free", "free>0"),
+                ("indeck", "In decks", "decks>0"), ("nodeck", "In no deck", "decks=0"),
+                ("pinned", "Pinned", "is:pinned"), ("shared", "Shared", "is:shared"))
+_COLL_SCOPE_TERM = {k: t for k, _l, t in _COLL_SCOPES}
+_COLL_PAGE = 100            # rows per page and per "Load more"
+_COLL_MAX = 5000            # the most rows one page will render
+# Curated lists the records read, so editing one rebuilds them.
+_COLL_REFS = ("game_changers.txt", "fast_mana.txt", "tutors.txt", "extra_turns.txt",
+              "mass_land_denial.txt", "banned.txt", "commanders.csv")
+_COLL_ORDERS = (("", None), ("name", "Name"), ("mv", "Mana value"), ("color", "Colour"),
+                ("type", "Type"), ("usd", "Est. price"), ("value", "Est. value"),
+                ("qty", "Copies owned"), ("free", "Free copies"), ("decks", "Decks using it"),
+                ("added", "Date added"), ("power", "Power"), ("rarity", "Rarity"),
+                ("set", "Set"))
+_COLL_GROUPS = (("", "No grouping"),) + tuple((k, v[0]) for k, v in cq.GROUPS.items())
+_FORM_TYPES = ("creature", "instant", "sorcery", "artifact", "enchantment",
+               "planeswalker", "land", "battle")
+_FORM_TAGS = (("commander", "Can be a commander"), ("gamechanger", "Game Changer"),
+              ("tutor", "Tutor"), ("fastmana", "Fast mana"),
+              ("new", f"Added in the last {cq.NEW_DAYS} days"))
+_FORM_ADDED = ((7, "Last 7 days"), (30, "Last 30 days"), (90, "Last 90 days"),
+               (365, "Last year"))
 
 
-def _collection_cards(coll, decks_dir):
-    """Every owned card + the metadata the browse grid filters on (name, qty,
-    price, type, MV, color identity, roles, which decks use it)."""
+def _coll_records():
+    """The search engine's records and context, memoised on every file they read
+    (the collection's inputs, each deck, the pins, the curated lists) and on the
+    date, because `is:new` counts back from today."""
     import glob
-    decks_of = {}
-    for p in sorted(glob.glob(os.path.join(decks_dir, "*.txt"))):
-        # A study copy holds no physical cards (deck_conflicts.is_study_deck):
-        # counting it made "in a deck" flag 97 cards that sit only in study lists
-        # (collection audit 2026-10-14).
-        if deck_conflicts.is_study_deck(p):
-            continue
+    from datetime import date
+    decks = sorted(glob.glob(os.path.join(DECKS_DIR, "*.txt")))
+    refs = [os.path.join(deckcore.REF_DIR, f) for f in _COLL_REFS]
+    key = ("collection_query.records", COLLECTION, DECKS_DIR,
+           memo.stat_key(*mtglib.collection_inputs(COLLECTION), *decks, deckcore.PINS, *refs),
+           date.today().isoformat())
+    return memo.get(key, lambda: cq.records(collection_index()[0], DECKS_DIR,
+                                            pins=deckcore.load_pins()))
+
+
+def _coll_state(src):
+    """The Cards tab's state from a request's args: the query text plus the controls
+    around it. Anything unrecognised falls back to its default."""
+    def pick(name, allowed):
+        v = (src.get(name) or "").strip()
+        return v if v in allowed else ""
+    try:
+        n = int(src.get("n") or _COLL_PAGE)
+    except ValueError:
+        n = _COLL_PAGE
+    return {"q": re.sub(r"\s+", " ", src.get("q") or "").strip()[:400],
+            "scope": pick("scope", _COLL_SCOPE_TERM) or "all",
+            "order": pick("order", set(cq.ORDERS) | {"relevance"}),
+            "dir": pick("dir", ("asc", "desc")),
+            "group": pick("group", cq.GROUPS),
+            "view": pick("view", ("list", "grid")),
+            "n": max(_COLL_PAGE, min(_COLL_MAX, n))}
+
+
+def _coll_url(state, endpoint="collection_view", **over):
+    """A URL for the state with `over` applied. Defaults are left out, so a link
+    reads like what it does."""
+    s = dict(state, **over)
+    args = {k: v for k, v in s.items()
+            if v and not (k == "scope" and v == "all") and not (k == "n" and v == _COLL_PAGE)}
+    return url_for(endpoint, **args)
+
+
+def _coll_text(state):
+    """The query the page runs: the typed text AND the scope chip. The text is
+    wrapped in parentheses first, so "a or b" under Free means (a or b) free>0;
+    Archidekt's smart filters dropped half an OR query for want of exactly this."""
+    q, term = state["q"], _COLL_SCOPE_TERM[state["scope"]]
+    if not term:
+        return q
+    return f"({q}) {term}" if q else term
+
+
+def _or_terms(terms):
+    terms = list(terms)
+    return terms[0] if len(terms) == 1 else "(" + " or ".join(terms) + ")"
+
+
+def _coll_compose(src, ctx):
+    """The filter dialog's fields as query terms, appended to the part of the query
+    the dialog couldn't show (`q_rest`). The dialog is the front door; the query
+    string is what the URL, the chips and the command line share."""
+    from datetime import date
+    terms = []
+    picked = src.getlist("fi_c")
+    letters = "".join(c for c in "WUBRG" if c in picked).lower()
+    if letters:
+        terms.append("id" + {"has": ">=", "exact": "="}.get(src.get("fi_cm"), "<=") + letters)
+    elif "C" in picked:
+        terms.append("id:c")
+    t = (src.get("fi_t") or "").strip().lower()
+    if t in _FORM_TYPES:
+        terms.append(f"t:{t}")
+    sub = re.sub(r"[^a-z' -]", "", (src.get("fi_sub") or "").strip().lower())[:40].strip()
+    if sub:
+        terms.append(f't:"{sub}"' if " " in sub else f"t:{sub}")
+    roles = [r for r in cq.ROLES if r in src.getlist("fi_role")]
+    if roles:
+        terms.append(_or_terms(f"role:{r}" for r in roles))
+    for key, op in (("fi_mv_lo", ">="), ("fi_mv_hi", "<=")):
+        v = (src.get(key) or "").strip()
+        if re.fullmatch(r"\d{1,2}", v):
+            terms.append(f"mv{op}{int(v)}")
+    tags = [k for k, _l in _FORM_TAGS if k in src.getlist("fi_tag")]
+    if tags:
+        terms.append(_or_terms(f"is:{k}" for k in tags))
+    stems = {d.stem for d in ctx.decks}
+    for key, word in (("fi_deck", "deck"), ("fi_for", "for")):
+        v = src.get(key) or ""
+        if v in stems:
+            terms.append(f"{word}:{v}")
+    days = src.get("fi_added") or ""
+    if days.isdigit() and int(days) in dict(_FORM_ADDED):
+        since = date.fromisoformat(ctx.today) - timedelta(days=int(days))
+        terms.append(f"added>={since.isoformat()}")
+    usd = (src.get("fi_usd_hi") or "").strip()
+    if re.fullmatch(r"\d{1,5}(\.\d{1,2})?", usd):
+        terms.append(f"usd<={usd}")
+    rest = re.sub(r"\s+", " ", src.get("q_rest") or "").strip()[:400]
+    if rest and terms:
+        tree = cq.parse(rest, ctx).tree
+        if tree is not None and tree.kind == "or":
+            rest = f"({rest})"          # the dialog's terms must AND the whole rest
+    return " ".join([rest] + terms).strip()
+
+
+def _coll_form_take(node, form, ctx):
+    """Move one top-level part of the query into the dialog's fields, if a field can
+    show it exactly. Returns whether it did."""
+    from datetime import date
+    if node.kind == "or" and all(k.kind == "term" for k in node.kids):
+        terms = [k.term for k in node.kids]
+        keys = {t.key for t in terms}
+        vals = [t.value.strip().lower() for t in terms]
+        if keys == {"role"} and all(t.op == ":" for t in terms) and \
+                all(v in cq.ROLES for v in vals) and not form["role"]:
+            form["role"] = vals
+            return True
+        if keys == {"is"} and all(v in dict(_FORM_TAGS) for v in vals) and not form["tag"]:
+            form["tag"] = vals
+            return True
+        return False
+    if node.kind != "term":
+        return False
+    t = node.term
+    k, op, v = t.key, t.op, t.value.strip().lower()
+    if k in ("id", "identity", "ci") and not form["c"]:
+        if v == "c" and op in (":", "="):
+            form["c"] = ["C"]
+            return True
+        if v and set(v) <= set("wubrg") and op in (":", "<=", ">=", "="):
+            form["c"] = [c for c in "WUBRG" if c.lower() in v]
+            form["cm"] = {">=": "has", "=": "exact"}.get(op, "fits")
+            return True
+    if k in ("t", "type") and op == ":":
+        if v in _FORM_TYPES and not form["t"]:
+            form["t"] = v
+            return True
+        if v not in _FORM_TYPES and re.fullmatch(r"[a-z' -]{1,40}", v) and not form["sub"]:
+            form["sub"] = v
+            return True
+    if k == "role" and op == ":" and v in cq.ROLES and not form["role"]:
+        form["role"] = [v]
+        return True
+    if k in ("mv", "cmc") and re.fullmatch(r"\d{1,2}", v):
+        slot = {">=": "mv_lo", "<=": "mv_hi"}.get(op)
+        if slot and not form[slot]:
+            form[slot] = v
+            return True
+    if k == "is" and op == ":" and v in dict(_FORM_TAGS) and not form["tag"]:
+        form["tag"] = [v]
+        return True
+    stems = {d.stem for d in ctx.decks}
+    if k in ("deck", "for") and op == ":" and t.value in stems and not form[k]:
+        form[k] = t.value
+        return True
+    if k == "added" and op == ">=" and re.fullmatch(r"\d{4}-\d{2}-\d{2}", v) and not form["added"]:
+        days = (date.fromisoformat(ctx.today) - date.fromisoformat(v)).days
+        if days in dict(_FORM_ADDED):
+            form["added"] = str(days)
+            return True
+    if k in ("usd", "price") and op == "<=" and re.fullmatch(r"\d{1,5}(\.\d{1,2})?", v) \
+            and not form["usd_hi"]:
+        form["usd_hi"] = v
+        return True
+    return False
+
+
+def _coll_form_state(q, ctx):
+    """The dialog's fields, read back out of the query, and the rest of the query
+    verbatim: the dialog edits the filters it can show and carries every other term
+    through untouched, so opening it and pressing Show never loses a filter."""
+    form = {"c": [], "cm": "fits", "t": "", "sub": "", "role": [], "mv_lo": "",
+            "mv_hi": "", "tag": [], "deck": "", "for": "", "added": "", "usd_hi": ""}
+    query = cq.parse(q, ctx)
+    tree = query.tree
+    parts = tree.kids if tree is not None and tree.kind == "and" else ([tree] if tree else [])
+    cuts = [(n.start, n.end) for n in parts if _coll_form_take(n, form, ctx)]
+    rest = query.source
+    for s, e in sorted(cuts, reverse=True):
+        rest = rest[:s] + " " + rest[e:]
+    return form, re.sub(r"\s+", " ", rest).strip()
+
+
+def _coll_row(r, ctx):
+    c = r.card
+    mv = r.mv
+    if mv is not None and mv == int(mv):
+        mv = int(mv)
+    small = normal = ""
+    sid = (c.scryfall_id or "").strip()
+    if sid:
         try:
-            txt = open(p, encoding="utf-8").read()
-        except OSError:
-            continue
-        label = os.path.splitext(os.path.basename(p))[0]
-        for card in mtglib.parse_deck(txt):
-            decks_of.setdefault(mtglib._norm(card.name), set()).add(label)
-    rows = []
-    for c in coll:
-        mv = c.mana_value
-        if mv is not None and mv == int(mv):
-            mv = int(mv)
-        rows.append({
-            "name": c.name, "qty": c.quantity,
-            "price": round(c.price, 2) if c.price else None,
-            "type": c.primary_type if c.types else "",
-            "mv": mv,
-            "colors": ("".join(sorted(c.identity)) if c.identity else ("C" if c.types else "")),
-            "roles": sorted(_FILTER_ROLES & mtglib.classify(c)),
-            "decks": sorted(decks_of.get(mtglib._norm(c.name), [])),
-        })
-    rows.sort(key=lambda r: r["name"].lower())
-    return rows
+            small, normal = card_image.image_url(sid, "small"), card_image.image_url(sid, "normal")
+        except ValueError:
+            pass
+    return {"name": r.name, "qty": r.qty, "basic": r.basic,
+            "free": None if r.basic else r.free, "short": r.short,
+            "short_by": r.committed - r.qty if r.short else 0,
+            "type": r.primary.title() if r.primary else "", "mv": mv,
+            "decks": [ctx.titles.get(s, s) for s in sorted(r.decks)],
+            "pinned": ctx.titles.get(r.pinned, r.pinned) if r.pinned else "",
+            "pips": Markup(bd.cost_pips(c.mana_cost)), "price": r.price,
+            "small": small, "normal": normal}
+
+
+def _coll_items(res, ctx, start, stop):
+    """Rows [start, stop) of a result, with a group header wherever the group
+    changes, judged against the row before, so a "Load more" page never repeats
+    the header it continues under."""
+    stats = {g["label"]: g for g in res.groups}
+    items = []
+    for i in range(start, min(stop, len(res.rows))):
+        if res.row_groups and (i == 0 or res.row_groups[i] != res.row_groups[i - 1]):
+            items.append({"group": stats[res.row_groups[i]]})
+        items.append({"row": _coll_row(res.rows[i], ctx)})
+    return items
+
+
+def _coll_page(state):
+    """Everything the Cards tab and its live-results fragment render from."""
+    import difflib
+    recs, ctx = _coll_records()
+    res = cq.run(_coll_text(state), recs, ctx, order=state["order"] or None,
+                 direction=state["dir"] or None, group=state["group"] or None)
+    typed = cq.parse(state["q"], ctx)
+    res.chips = cq.chips(typed)              # chips for what was TYPED; scope is a row
+    shown = min(state["n"], res.matched)
+    suggest = []
+    if not res.matched and typed.name_words:
+        by_norm = {r.norm: r.name for r in recs}
+        suggest = [by_norm[n] for n in difflib.get_close_matches(
+            " ".join(typed.name_words), list(by_norm), n=3, cutoff=0.6)]
+    form, rest = _coll_form_state(state["q"], ctx)
+    orders = [(k, label or ("Best match" if typed.name_words else "Name"))
+              for k, label in _COLL_ORDERS if not (k == "name" and not typed.name_words)]
+    return {"st": state, "res": res, "items": _coll_items(res, ctx, 0, shown),
+            "shown": shown, "scopes": _COLL_SCOPES, "orders": orders,
+            # An `order:` typed into the query wins over the control, so the control
+            # shows it rather than a sort that isn't the one applied.
+            "sel_order": typed.order if typed.order in dict(_COLL_ORDERS) else state["order"],
+            "groups": _COLL_GROUPS, "suggest": suggest, "name_words": typed.name_words,
+            "form": form, "q_rest": rest, "decks": ctx.decks,
+            "vocab": sorted(w for w in ctx.type_vocab if w not in _FORM_TYPES),
+            "curl": lambda **o: _coll_url(state, **o),
+            "more_url": _coll_url(state, n=min(shown + _COLL_PAGE, _COLL_MAX)),
+            "rows_url": _coll_url(state, "collection_rows", offset=shown, n=None)}
+
+
+def _coll_head(tab):
+    """The header every Collection tab shares: the totals and the sub-tab bar, with
+    a badge on Manage while an upload's reconcile offer waits there."""
+    coll, _ = collection_index()
+    plan = (_read_json(_reconcile_path()) or {}).get("plan") or []
+    return {"ctab": tab, "unique": len(coll), "copies": sum(c.quantity for c in coll),
+            "total": round(sum(c.value for c in coll), 2),
+            "has_price": any(c.price for c in coll),
+            "manage_badge": 1 if plan else 0, "page": "collection"}
 
 
 @app.route("/collection", methods=["GET"])
 def collection_view():
-    coll, idx = collection_index()
-    priced = [c for c in coll if c.price]
-    total = round(sum(c.value for c in coll), 2)
-    top = sorted(priced, key=lambda c: -c.price)[:20]
-    cards = _collection_cards(coll, DECKS_DIR)
-    types = sorted({r["type"] for r in cards if r["type"]})
+    """Cards: the collection itself, searched with the one query language."""
+    state = _coll_state(request.args)
+    if request.args.get("apply"):
+        _recs, ctx = _coll_records()
+        state.update(q=_coll_compose(request.args, ctx), n=_COLL_PAGE)
+        return redirect(_coll_url(state))
+    page = _coll_page(state)
+    backup = ""
+    if _db_mode():
+        b = store.list_backups(_backups_dir())
+        backup = b[0]["date"] if b else ""
+    return render_template("collection.html", **_coll_head("cards"), **page,
+                           help_rows=cq.help_rows(), form_types=_FORM_TYPES, form_tags=_FORM_TAGS,
+                           form_added=_FORM_ADDED, roles=cq.ROLES,
+                           open_filters=request.args.get("filters") == "1",
+                           open_help=request.args.get("help") == "1",
+                           db_mode=_db_mode(), backup=backup)
+
+
+@app.route("/collection/results")
+def collection_results():
+    """The results region for live search: the same partial the page renders, so
+    typing never shows anything a reload wouldn't."""
+    state = _coll_state(request.args)
+    page = _coll_page(state)
+    return jsonify({"html": render_template("_collection_results.html", **page),
+                    "status": page["res"].summary, "url": _coll_url(state)})
+
+
+@app.route("/collection/rows")
+def collection_rows():
+    """The next page of rows for "Load more"."""
+    state = _coll_state(request.args)
+    try:
+        offset = max(0, int(request.args.get("offset") or 0))
+    except ValueError:
+        offset = 0
+    recs, ctx = _coll_records()
+    res = cq.run(_coll_text(state), recs, ctx, order=state["order"] or None,
+                 direction=state["dir"] or None, group=state["group"] or None)
+    stop = min(offset + _COLL_PAGE, res.matched, _COLL_MAX)
+    html = render_template("_collection_rows.html", items=_coll_items(res, ctx, offset, stop))
+    return jsonify({"html": html, "shown": stop, "matched": res.matched,
+                    "more": stop < min(res.matched, _COLL_MAX),
+                    "url": _coll_url(state, n=stop),
+                    "rows_url": _coll_url(state, "collection_rows", offset=stop, n=None)})
+
+
+@app.route("/api/collection/count")
+def api_collection_count():
+    """The filter dialog's live "Show N cards": the fields composed exactly as
+    pressing Show would compose them."""
+    state = _coll_state(request.args)
+    recs, ctx = _coll_records()
+    q = _coll_compose(request.args, ctx)
+    res = cq.run(_coll_text(dict(state, q=q)), recs, ctx)
+    return jsonify({"n": res.matched, "skipped": res.skipped, "q": q})
+
+
+@app.route("/collection/add", methods=["GET"])
+def collection_add_tab():
+    """Add: every way cards come in — a pasted batch, one card, an export — and the
+    review of what arrived lately."""
+    coll, _idx = collection_index()
     # owned_additions.txt holds hundreds of rows after a big pickup: summarise it
     # (row count + the latest dated batch) instead of printing every line.
     additions = {"rows": 0, "copies": 0, "latest": ""}
@@ -2613,11 +2925,20 @@ def collection_view():
         heads = [ln.strip()[1:].strip(" -") for ln in adds_text.splitlines()
                  if intake.BATCH_RE.match(ln.strip())]
         additions["latest"] = heads[-1] if heads else ""
-    reconcile = (_read_json(_reconcile_path()) or {}).get("plan") or []
     try:
         arrivals = deckcore.new_arrivals(coll, DECKS_DIR, limit=10_000)
     except Exception:
         arrivals = []
+    return render_template("collection_add.html", **_coll_head("add"),
+                           additions=additions, arrivals=arrivals, db=_db_mode())
+
+
+@app.route("/collection/manage")
+def collection_manage():
+    """Manage: everything that keeps the record honest — downloads and backups, a
+    count fix, the history, card data coverage, and an upload's reconcile offer."""
+    coll, _idx = collection_index()
+    reconcile = (_read_json(_reconcile_path()) or {}).get("plan") or []
     attrs_path = os.path.join(ROOT, "data/collection/collection_attrs.csv")
     enriched_n = sum(1 for c in coll if c.types)
     # Production coverage is a SEPARATE number from type coverage: an attrs file
@@ -2649,12 +2970,9 @@ def collection_view():
               "decks": store.decks_summary(COLLECTION),
               "backups": store.list_backups(_backups_dir()),
               "report_head": report.splitlines()[2] if len(report.splitlines()) > 2 else ""}
-    return render_template("collection.html", unique=len(coll), db=db,
-                           copies=sum(c.quantity for c in coll), total=total,
-                           top=top, has_price=bool(priced), additions=additions,
-                           reconcile=reconcile, arrivals=arrivals,
-                           carddb=carddb, cards=cards, types=types,
-                           enrich_status=enrich_bg.status_view(), page="collection")
+    return render_template("collection_manage.html", **_coll_head("manage"), db=db,
+                           reconcile=reconcile, carddb=carddb,
+                           enrich_status=enrich_bg.status_view())
 
 
 @app.route("/collection/add", methods=["POST"])
@@ -2663,20 +2981,20 @@ def collection_add():
     qty = request.form.get("qty", "1").strip() or "1"
     if _unsafe_line_value(name):
         flash(_LINE_VALUE_ERROR, "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     # Digits only, 1..99 (W9): `-5` and `lots` were written verbatim, and the
     # parser read `lots Arcane Signet` as a phantom card named exactly that.
     if not (qty.isascii() and qty.isdigit() and 1 <= int(qty) <= 99):
         flash(f"Quantity must be a whole number from 1 to 99 (got “{qty[:20]}”) — "
               "nothing was added.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     qty = str(int(qty))
     if name and _db_mode():
         store.add_rows(COLLECTION, [(int(qty), name)], action="add",
                        detail="added in the app", by=_by() or _me()[1])
         _note("add to collection", "", f"{qty} {name}")
         _invalidate()
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     if name:
         header_needed = not os.path.exists(ADDITIONS)
         with open(ADDITIONS, "a", encoding="utf-8") as f:
@@ -2685,7 +3003,7 @@ def collection_add():
             f.write(f"{qty} {name}\n")
         _note("add to collection", "", f"{qty} {name}")
         _invalidate()             # owned_additions feeds EVERY deck's analysis
-    return redirect(url_for("collection_view"))
+    return redirect(url_for("collection_add_tab"))
 
 
 @app.route("/collection/upload", methods=["POST"])
@@ -2706,14 +3024,14 @@ def collection_upload():
         abort(403)
     f = request.files.get("csv")
     if not (f and f.filename):
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     pending = _pending_upload_path()
     err = _install_upload(f, pending)
     _drop(_upload_backup_path(pending))   # a backup of a pending file is noise
     if err:
         _drop(pending)
         flash(f"Upload refused — {err} Your previous collection is unchanged.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     with open(pending, encoding="utf-8") as fh:
         new_cards = mtglib.parse_collection(fh.read())
     if _db_mode():
@@ -2727,7 +3045,7 @@ def collection_upload():
               f"{res['refreshed']} already matched or were higher and kept their count. "
               "An export never lowers a count. " + enrich_bg.start(COLLECTION, COLLECTION_ATTRS),
               "info")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     current = _raw_collection_cards()
     # Judged against the collection the player SEES (export + added batches), so the
     # question quotes the same card count as the Collection page.
@@ -2746,7 +3064,7 @@ def collection_upload_decide():
     pending = _pending_upload_path()
     if not os.path.exists(pending):
         flash("That upload has expired — choose the file again.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     if request.form.get("choice") == "replace":
         return _replace_collection_from(pending, _raw_collection_cards())
     with open(pending, encoding="utf-8") as fh:
@@ -2779,7 +3097,9 @@ def _replace_collection_from(pending, previous_cards):
     else:
         _drop(_reconcile_path())
     flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
-    return redirect(url_for("collection_view"))
+    # The reconcile offer lives on Manage; with nothing to offer, back to Add.
+    return redirect(url_for("collection_manage") + "#reconcile" if plan
+                    else url_for("collection_add_tab"))
 
 
 @app.route("/collection/set", methods=["POST"])
@@ -2791,7 +3111,7 @@ def collection_set():
     if not _db_mode():
         flash("Editing counts needs the collection database (it is created on the "
               "next sync).", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_manage"))
     if not _may_replace_collection():
         abort(403)
     name = request.form.get("name", "").strip()
@@ -2800,19 +3120,19 @@ def collection_set():
     if not (qty.isascii() and qty.isdigit() and 0 <= int(qty) <= 999):
         flash(f"Count must be a whole number from 0 to 999 (got “{qty[:20]}”) — "
               "nothing changed.", "warn")
-        return redirect(url_for("collection_view") + "#edit")
+        return redirect(url_for("collection_manage") + "#edit")
     res = store.set_qty(COLLECTION, name, int(qty), reason=reason or "edited in the app",
                         by=_by() or _me()[1])
     if res is None:
         flash(f"“{name[:60]}” isn't in your collection yet. Add it with Add a batch, "
               "which checks the name first.", "warn")
-        return redirect(url_for("collection_view") + "#edit")
+        return redirect(url_for("collection_manage") + "#edit")
     old, new = res
     _note("set a card's count", "", f"{name}: {old} → {new}")
     _invalidate()
     flash(f"{name}: {old} → {new}." + ("" if new else " It no longer counts as owned."),
           "info")
-    return redirect(url_for("collection_view") + "#edit")
+    return redirect(url_for("collection_manage") + "#edit")
 
 
 @app.route("/export/collection.csv")
@@ -2891,9 +3211,9 @@ def collection_reconcile():
     _drop(_reconcile_path())
     if request.form.get("action") != "retire" or not plan:
         flash("Kept every added card as it was.", "info")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_manage"))
     if not os.path.exists(ADDITIONS):
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_manage"))
     retired, skipped = intake.apply_retire(ADDITIONS, plan)
     _note("retire batch rows", "", f"{retired} cop(ies) now in the export")
     _invalidate()
@@ -2902,7 +3222,7 @@ def collection_reconcile():
         msg += (f" {skipped} row(s) were left alone because the file changed since "
                 "the upload.")
     flash(msg, "info")
-    return redirect(url_for("collection_view"))
+    return redirect(url_for("collection_manage"))
 
 
 # ---- batch entry (paste → preview → confirm → write) -------------------------
@@ -3029,7 +3349,7 @@ def _batch_preview(text, source="pasted list"):
     rows = intake.parse_text(text)
     if not rows:
         flash("No card lines found — paste one card per line, like “1 Sol Ring”.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     coll, _idx = collection_index()
     entries = intake.resolve(rows, verify=_verify_names, known=_known_names(coll))
     token = _save_preview("batch", {"entries": entries, "source": source})
@@ -3044,7 +3364,7 @@ def collection_batch():
     text, err = _read_paste()
     if err:
         flash(f"Nothing added — {err}", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     return _batch_preview(text, source="uploaded file" if request.files.get("file")
                           and request.files["file"].filename else "pasted list")
 
@@ -3056,12 +3376,12 @@ def collection_batch_confirm():
     data, path = _load_preview("batch", request.form.get("token"))
     if not data:
         flash("That preview has expired — paste the list again.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     rows = intake.accepted(data["entries"], request.form.getlist("take"))
     _drop(path)
     if not rows:
         flash("Nothing to add — no line resolved to a card.", "warn")
-        return redirect(url_for("collection_view"))
+        return redirect(url_for("collection_add_tab"))
     label = "pasted list" if data.get("source") == "pasted list" else "uploaded file"
     if _db_mode():
         copies, distinct = store.add_rows(COLLECTION, rows, action="add-batch",
@@ -3072,7 +3392,7 @@ def collection_batch_confirm():
     _invalidate()             # owned_additions feeds EVERY deck's analysis
     flash(f"Added {copies} card(s) ({distinct} distinct) as a dated batch. "
           + enrich_bg.start(COLLECTION, COLLECTION_ATTRS), "info")
-    return redirect(url_for("collection_view") + "#arrivals")
+    return redirect(url_for("collection_add_tab") + "#arrivals")
 
 
 @app.route("/collection/arrivals")

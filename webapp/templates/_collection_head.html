@@ -1,0 +1,13 @@
+{#- The header every Collection tab shares: totals, then the sub-tab bar. The tabs are
+    plain links with their own URLs, so Back, reload and bookmarks land where you were
+    (docs/spec-collection-rebuild.md §2). The current tab is marked by an underline AND
+    weight, never colour alone. -#}
+<h1>Collection</h1>
+<div class="sub">{{ '{:,}'.format(unique) }} unique cards · {{ '{:,}'.format(copies) }} copies
+{%- if has_price %} · <span class="gold">~${{ '{:,.2f}'.format(total) }}</span> est. value{% endif %}</div>
+<nav class="subtabs" aria-label="Collection">
+  <a href="{{ url_for('collection_view') }}"{% if ctab == 'cards' %} aria-current="page"{% endif %}>Cards</a>
+  <a href="{{ url_for('collection_add_tab') }}"{% if ctab == 'add' %} aria-current="page"{% endif %}>Add</a>
+  <a href="{{ url_for('collection_manage') }}"{% if ctab == 'manage' %} aria-current="page"{% endif %}>Manage
+    {%- if manage_badge %}<span class="badge" aria-hidden="true">{{ manage_badge }}</span><span class="sr-only"> (an upload is waiting for you here)</span>{% endif %}</a>
+</nav>

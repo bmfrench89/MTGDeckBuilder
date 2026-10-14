@@ -1,239 +1,139 @@
 {% extends "base.html" %}
 {% block title %}Collection · MTG Deckbuilder{% endblock %}
 {% block content %}
-<h1>Collection</h1>
-<div class="sub">{{ unique }} unique cards · {{ copies }} copies
-{% if has_price %}· <span class="gold">~${{ '%.2f'|format(total) }}</span> MARKET value{% endif %}</div>
+{% include "_collection_head.html" %}
 
-{% if db %}
-<div class="card mt-4" id="db" style="border-left:3px solid var(--in)">
-  <h2 class="mt-0">Your collection lives here</h2>
-  <p>This app is the record of every card you own{% if db.seeded_at %} — started
-    {{ db.seeded_at }} from every list you had (your export, the August list, every card
-    added here, and every sleeved deck){% endif %}. Adding, editing and uploads all change
-    this one record, and each change is logged.</p>
-  <div class="row mt-3">
-    <a class="btn" href="{{ url_for('export_collection_csv') }}" download>Download my whole collection</a>
-    {% if db.has_report %}<a class="btn ghost" href="{{ url_for('collection_seed_report') }}">What the start-up found</a>{% endif %}
-    {% if db.report_head %}<span class="muted fs-xs">{{ db.report_head }}</span>{% endif %}
-  </div>
-  {% if db.decks and db.decks.decks %}
-  <div class="row mt-3">
-    <a class="btn ghost" href="{{ url_for('export_decks_zip') }}" download>Download all decks</a>
-    <span class="muted fs-xs">{{ db.decks.decks }} decks{% if db.decks.pins %} and your pins{% endif %}
-      are saved here too, with every version ({{ db.decks.revisions }} so far).</span>
-  </div>
-  {% endif %}
-  {% if me_role == 'owner' %}
-  <div class="row mt-3">
-    <a class="btn ghost" href="{{ url_for('export_backup') }}" download>Download a backup</a>
-    <span class="muted fs-xs">All of it in one file: cards, every deck version, pins and the
-      activity log, without anyone's password.{% if db.backups %} The server also keeps a
-      copy from each of the last {{ db.backups|length }} day{{ 's' if db.backups|length != 1 }}
-      (newest {{ db.backups[0].date }}).{% endif %}</span>
-  </div>
-  {% endif %}
-  <h2 id="edit">Change a card's count</h2>
-  <p class="muted">Sold, traded, lost or miscounted. Set 0 to stop counting it. New cards go
-    through <a href="#batch">Add a batch</a>, which checks the name first.</p>
-  <form method="post" action="{{ url_for('collection_set') }}">
-    <div class="row">
-      <input type="text" name="name" placeholder="Card name" aria-label="Card name" style="flex:1" required>
-      <input type="number" name="qty" value="1" min="0" max="999" aria-label="How many you own" style="width:70px" required>
-      <input type="text" name="reason" placeholder="Why (optional)" aria-label="Why (optional)" style="flex:1">
-      <button class="btn" type="submit">Set count</button>
-    </div>
-  </form>
-  {% if db.recent %}
-  <h2>Recent changes</h2>
-  <div class="fs-xs">{% for r in db.recent %}
-    <div>{{ r.at[:10] }} · <b>{{ r.name }}</b> {{ '+' if r.delta > 0 }}{{ r.delta }} → {{ r.qty_after }}
-      <span class="muted">· {{ r.action }}{% if r.detail %} · {{ r.detail[:60] }}{% endif %}{% if r.by %} · {{ r.by }}{% endif %}</span></div>
-  {% endfor %}</div>
-  {% endif %}
+{#- One query string carries every filter (docs/spec-collection-rebuild.md §2): typed
+    terms, the scope row, the chips and the Filters sheet all read and write it, and
+    the URL holds it. The search runs on the server (scripts/collection_query.py), the
+    same parser `analyze_collection.py --query` and the skill use. -#}
+<form class="collbar" role="search" method="get" action="{{ url_for('collection_view') }}" id="collForm">
+  <label class="sr-only" for="collQ">Search your collection</label>
+  <input type="search" id="collQ" name="q" value="{{ st.q }}" placeholder="Name, or t:dragon free>0"
+         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+  {%- for k in ('scope', 'order', 'dir', 'group', 'view') %}{% if st[k] and not (k == 'scope' and st[k] == 'all') %}
+  <input type="hidden" name="{{ k }}" value="{{ st[k] }}">{% endif %}{% endfor %}
+  <a class="btn ghost" id="collFiltersBtn" href="{{ curl(filters='1') }}" aria-haspopup="dialog">Filters{% if res.chips %} <span class="cnt">{{ res.chips|length }}</span>{% endif %}</a>
+  <a class="btn ghost coll-helpbtn" id="collHelpBtn" href="{{ curl(help='1') }}" aria-haspopup="dialog" aria-label="How to search">?</a>
+</form>
+<p class="sr-only" id="collLive" role="status" aria-live="polite"></p>
+{#- The device's List/Grid choice, applied before the rows paint (no list-then-grid flash). -#}
+<script>try{if(localStorage.getItem('mtg.collview')==='grid')document.documentElement.setAttribute('data-collview','grid')}catch(e){}</script>
+<div id="collResults">
+{% include "_collection_results.html" %}
 </div>
+{% if db_mode %}
+<p class="coll-foot muted fs-xs">Every change is logged{% if backup %} · last backup {{ backup }}{% endif %} ·
+  <a href="{{ url_for('collection_manage') }}#history">History</a></p>
 {% endif %}
 
-<div class="card mt-4" style="border-left:3px solid {{ 'var(--in)' if carddb.on and carddb.pct >= 60 else 'var(--short)' }}">
-  {% if carddb.on %}
-    <b class="good">Card DB: enriched{% if carddb.source == 'snapshot' %}
-    (committed snapshot — name-resolved, no printing ids){% else %}
-    (your own export — exact printings){% endif %}</b> —
-    {{ carddb.covered }}/{{ carddb.total }}
-    cards ({{ carddb.pct }}%) have real colors / types / mana value{% if carddb.source != 'snapshot' %} / image ids{% endif %}.
-    Curves, color scores, and card-fit scores use them across every deck.
-    {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
-    new cards; details are fetched again after your next upload or batch.</span>{% endif %}
-    <div class="fs-xs mt-2">
-      {% if carddb.produced_covered %}
-        <b class="good">Mana production: known</b> for {{ carddb.produced_covered }}/{{ carddb.total }}
-        cards ({{ carddb.produced_pct }}%) — manabase source counts use what those lands
-        actually tap for instead of their color identity.
-      {% else %}
-        <b class="warn">Mana production: unknown</b> — this attrs file predates production
-        enrichment, so colored-source counts fall back to color <i>identity</i> (and say so).
-        It fills in the next time card details are fetched (after an upload or a batch).
-      {% endif %}
+<dialog id="collFilters" class="sheet" aria-labelledby="collFiltersTitle"{% if open_filters %} open{% endif %}>
+  <form method="get" action="{{ url_for('collection_view') }}" id="collFilterForm">
+    <div class="sheet-head">
+      <h2 id="collFiltersTitle" tabindex="-1">Filters</h2>
+      <a class="btn ghost sm sheet-x" href="{{ curl() }}" data-close aria-label="Close filters">✕</a>
     </div>
-  {% else %}
-    <b class="warn">Card DB: not enriched</b> — tools are running on the name-only list, so
-    curves and fit scores are limited. Real colors, types and mana values are fetched from
-    Scryfall after your next upload or batch add.
-  {% endif %}
-  {% if enrich_status %}
-    {# Background enrichment (webapp/enrich_bg.py). "interrupted" is a real state,
-       not an error: PythonAnywhere kills daemon threads on app reload, and saying
-       "running" forever would be a lie with a spinner on it. #}
-    <div class="fs-xs mt-2"><span class="{{ enrich_status.cls }}">{{ enrich_status.text }}</span></div>
-  {% endif %}
-</div>
-
-{% if reconcile %}
-<div class="card mb-4" id="reconcile" style="border-left:3px solid var(--short)">
-  {% set rc = reconcile|sum(attribute='covered') %}
-  <h2 class="mt-0">Already in your new export?</h2>
-  <p>{{ reconcile|length }} card row(s) you added by hand ({{ rc }} cop{{ 'y' if rc == 1 else 'ies' }})
-    are now carried by the export you just uploaded. Retire them so they aren't counted twice?
-    Each row is commented out with today's date, never deleted.</p>
-  <details class="mb-3"><summary class="muted fs-xs">Show the rows</summary>
-    <div class="muted fs-xs mt-2">{% for r in reconcile %}{{ r.covered }}{% if r.covered < r.qty %} of {{ r.qty }}{% endif %} {{ r.name }}{{ ' · ' if not loop.last }}{% endfor %}</div>
-  </details>
-  <form method="post" action="{{ url_for('collection_reconcile') }}" class="row">
-    <button class="btn" type="submit" name="action" value="retire">Retire them</button>
-    <button class="btn ghost" type="submit" name="action" value="keep">Keep them</button>
+    <div class="sheet-body">
+      <input type="hidden" name="apply" value="1">
+      <input type="hidden" name="q_rest" value="{{ q_rest }}">
+      {%- for k in ('scope', 'order', 'dir', 'group', 'view') %}{% if st[k] and not (k == 'scope' and st[k] == 'all') %}
+      <input type="hidden" name="{{ k }}" value="{{ st[k] }}">{% endif %}{% endfor %}
+      {% if q_rest %}<p class="muted fs-xs">Kept from your search: <code>{{ q_rest }}</code></p>{% endif %}
+      <fieldset>
+        <legend>Colour identity</legend>
+        <div class="row tight">
+          {%- for c, cname in (('W', 'White'), ('U', 'Blue'), ('B', 'Black'), ('R', 'Red'), ('G', 'Green'), ('C', 'Colourless')) %}
+          <label class="cpick"><input type="checkbox" class="chk" name="fi_c" value="{{ c }}"{{ ' checked' if c in form.c }}><span class="pipc {{ c }}" aria-hidden="true">{{ c }}</span>{{ cname }}</label>
+          {%- endfor %}
+        </div>
+        <div class="row tight mt-2">
+          {%- for v, label in (('fits', 'Fits a deck of these colours'), ('has', 'Includes these colours'), ('exact', 'Exactly these colours')) %}
+          <label><input type="radio" class="chk" name="fi_cm" value="{{ v }}"{{ ' checked' if form.cm == v }}>{{ label }}</label>
+          {%- endfor %}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Type</legend>
+        <div class="row tight">
+          <label class="field grow-sm">Card type
+            <select name="fi_t"><option value="">Any</option>
+              {%- for t in form_types %}<option value="{{ t }}"{{ ' selected' if form.t == t }}>{{ t|title }}</option>{% endfor %}
+            </select></label>
+          <label class="field grow">Subtype or other type word
+            <input type="text" name="fi_sub" value="{{ form.sub }}" list="collVocab" autocomplete="off" autocapitalize="off" placeholder="Dragon, Equipment, legendary…"></label>
+          <datalist id="collVocab">{% for w in vocab %}<option value="{{ w }}">{% endfor %}</datalist>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Role <span class="faint fs-xs">(any of these)</span></legend>
+        <div class="row tight">
+          {%- for r in roles %}<label><input type="checkbox" class="chk" name="fi_role" value="{{ r }}"{{ ' checked' if r in form.role }}>{{ r|title }}</label>{% endfor %}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Mana value</legend>
+        <div class="row tight">
+          <label class="field grow-sm">From<input type="number" name="fi_mv_lo" value="{{ form.mv_lo }}" min="0" max="20" inputmode="numeric"></label>
+          <label class="field grow-sm">To<input type="number" name="fi_mv_hi" value="{{ form.mv_hi }}" min="0" max="20" inputmode="numeric"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Card <span class="faint fs-xs">(any of these)</span></legend>
+        <div class="row tight">
+          {%- for k, label in form_tags %}<label><input type="checkbox" class="chk" name="fi_tag" value="{{ k }}"{{ ' checked' if k in form.tag }}>{{ label }}</label>{% endfor %}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Decks</legend>
+        <div class="row tight">
+          <label class="field grow">In this deck's list
+            <select name="fi_deck"><option value="">Any</option>
+              {%- for d in decks %}<option value="{{ d.stem }}"{{ ' selected' if form.deck == d.stem }}>{{ d.title }}{{ ' (study)' if d.study }}</option>{% endfor %}
+            </select></label>
+          <label class="field grow">Fits this deck's colours
+            <select name="fi_for"><option value="">Any</option>
+              {%- for d in decks %}{% if d.colors %}<option value="{{ d.stem }}"{{ ' selected' if form['for'] == d.stem }}>{{ d.title }}</option>{% endif %}{% endfor %}
+            </select></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Added and price</legend>
+        <div class="row tight">
+          <label class="field grow-sm">Added
+            <select name="fi_added"><option value="">Any time</option>
+              {%- for days, label in form_added %}<option value="{{ days }}"{{ ' selected' if form.added == days|string }}>{{ label }}</option>{% endfor %}
+            </select></label>
+          <label class="field grow-sm">Est. price at most $
+            <input type="text" name="fi_usd_hi" value="{{ form.usd_hi }}" inputmode="decimal" autocomplete="off"></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="sheet-foot">
+      <a class="btn ghost" href="{{ curl(q=(q_rest or None), n=None, filters='1') }}" id="collFiltersReset">Reset</a>
+      <button class="btn" type="submit" id="collFiltersShow">Show cards</button>
+    </div>
   </form>
-</div>
-{% endif %}
+</dialog>
 
-<div class="grid mb-4">
-  <div class="card" id="batch">
-    <h2 class="mt-0">Add a batch of new cards</h2>
-    <p class="muted">Paste a list, one card per line (<code>1 Sol Ring</code>,
-      <code>2x Arcane Signet</code>, Moxfield/Arena lines like <code>1 Sol Ring (C21) 263 *F*</code>),
-      or attach a CSV of just the new cards (ManaBox, Moxfield, TCGplayer…). You'll see a
-      preview before anything is saved. Basic lands are skipped — they're always owned.</p>
-    <form method="post" action="{{ url_for('collection_batch') }}" enctype="multipart/form-data">
-      <textarea name="text" class="pastebox" spellcheck="false" aria-label="Cards to add, one per line"
-        placeholder="1 Sol Ring&#10;2x Arcane Signet&#10;Counterspell"></textarea>
-      <div class="row filepick mt-3">
-        <input type="file" name="file" id="batchfile" accept=".txt,.csv,text/plain,text/csv">
-        <label for="batchfile" class="btn ghost">Or attach a file…</label>
-        <span id="batchname" class="muted fs-xs">No file chosen</span>
-        <button class="btn" type="submit">Preview</button>
-      </div>
-    </form>
-    {% if db %}
-    <div class="muted mt-3 fs-xs">Saved straight to your collection, dated, and counted everywhere.</div>
-    {% else %}
-    <div class="muted mt-3 fs-xs">Added by hand so far: {{ additions.rows }} rows ·
-      {{ additions.copies }} copies{% if additions.latest %} · latest batch: {{ additions.latest }}{% endif %}.
-      Saved to your collection and counted everywhere.</div>
-    {% endif %}
-    {% if additions.copies and not db %}
-    <div class="row mt-3">
-      <a class="btn ghost" href="{{ url_for('export_additions') }}" download>Download added cards</a>
-      <span class="muted fs-xs">One <code>1 Sol Ring</code> line per card, to import into
-        Archidekt or ManaPool. Your next full export then carries them, and the upload offers
-        to retire these rows so nothing counts twice.</span>
-    </div>
-    {% endif %}
+<dialog id="collHelp" class="sheet" aria-labelledby="collHelpTitle"{% if open_help %} open{% endif %}>
+  <div class="sheet-head">
+    <h2 id="collHelpTitle" tabindex="-1">How to search</h2>
+    <a class="btn ghost sm sheet-x" href="{{ curl() }}" data-close aria-label="Close help">✕</a>
   </div>
-  <div class="card">
-    {% if db %}
-    <h2 class="mt-0">Add one card</h2>
-    <p class="muted">One more copy of a card, straight into your collection.</p>
-    {% else %}
-    <h2 class="mt-0">Own one card the export missed?</h2>
-    <p class="muted">Add it here (your word beats the export).</p>
-    {% endif %}
-    <form method="post" action="{{ url_for('collection_add') }}">
-      <div class="row"><input type="number" name="qty" value="1" min="1" aria-label="How many" style="width:60px">
-        <input type="text" name="name" placeholder="Card name" aria-label="Card name" style="flex:1" required>
-        <button class="btn" type="submit">Add</button></div>
-    </form>
-    {% if db %}
-    <h2>Merge an export</h2>
-    <p class="muted">Have a list from Archidekt, ManaBox or a store? Merging adds cards you
-      don't have yet and raises counts that are higher in the file. It never lowers a count,
-      so a partial file can't lose anything.</p>
-    {% else %}
-    <h2>Replace my whole collection</h2>
-    <p class="muted">For a <b>full</b> export only (Archidekt, ManaBox, Sorted…) — it replaces
-      <code>collection.csv</code>. A file that looks like a few new cards stops and asks first.
-      Stays on this machine.</p>
-    {% endif %}
-    <form method="post" action="{{ url_for('collection_upload') }}" enctype="multipart/form-data">
-      <div class="row filepick" >
-        <input type="file" name="csv" id="csvfile" accept=".csv" required>
-        <label for="csvfile" class="btn ghost">Choose file…</label>
-        <span id="csvname" class="muted fs-xs">No file chosen</span>
-        <button class="btn ghost" type="submit">{{ 'Merge this export' if db else 'Replace my whole collection' }}</button>
-      </div>
-    </form>
-    <script>
-      (function(){[['csvfile','csvname'],['batchfile','batchname']].forEach(function(p){
-        var f=document.getElementById(p[0]),n=document.getElementById(p[1]);
-        if(f)f.addEventListener('change',function(){
-          n.textContent=(f.files&&f.files[0])?f.files[0].name:'No file chosen';});});})();
-    </script>
+  <div class="sheet-body">
+    <p>Type part of a card's name, or combine terms. Every term must match. <code>or</code>
+      takes either, a leading <code>-</code> leaves a term out, and <code>( )</code> groups.
+      Tap an example to run it.</p>
+    <dl class="qhelp">
+    {%- for h in help_rows %}
+      <dt>{% for n in h.names %}<code>{{ 'words' if n == 'name' else n ~ ':' }}</code>{{ ' ' if not loop.last }}{% endfor %}</dt>
+      <dd>{{ h.means }}{% if h.example %} <a class="qex" href="{{ url_for('collection_view', q=h.example) }}"><code>{{ h.example }}</code></a>{% endif %}
+        <span class="faint fs-xs">({{ h.support }})</span></dd>
+    {%- endfor %}
+    </dl>
+    <p class="muted fs-xs">A card whose data is missing is left out and counted (“3 skipped: no
+      type data yet”), never treated as a no. Prices are estimates from your export.</p>
   </div>
-</div>
-
-<div class="card mb-4" id="arrivals">
-  <h2 class="mt-0">🆕 New arrivals</h2>
-  {% if arrivals %}
-  <p>{{ arrivals|length }} card(s) from the last 30 days aren't in any deck yet.
-    The review lists the decks each one is legal in, with the field % and fit score — a
-    starting point, not a verdict.</p>
-  <div class="row">
-    <a class="btn" href="{{ url_for('collection_arrivals') }}">Review new arrivals</a>
-    <a class="btn ghost" href="{{ url_for('collection_arrivals_txt') }}">Copy review packet (text)</a>
-  </div>
-  {% else %}
-  <p class="muted">Nothing new in the last 30 days that isn't already in a deck. Cards you add
-    as a batch, or an export with purchase dates, show up here.</p>
-  {% endif %}
-</div>
-
-<h2>Browse your collection</h2>
-<div class="card collctl mb-4">
-  <input type="search" id="collsearch" placeholder="Search by name…" aria-label="Search your collection by name" autocomplete="off" class="mb-3" style="width:100%">
-  <div class="row tight">
-    <span class="muted fs-xs">Colors:</span>
-    {% for col in ['W','U','B','R','G'] %}<button type="button" class="colorbtn" data-color="{{ col }}">{{ col }}</button>{% endfor %}
-    <select id="collType" aria-label="Card type"><option value="">All types</option>{% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
-    <select id="collRole" aria-label="Role"><option value="">Any role</option><option value="ramp">Ramp</option><option value="draw">Draw</option><option value="removal">Removal</option><option value="wipe">Wipe</option><option value="counter">Counter</option></select>
-    <label class="muted fs-xs"><input type="checkbox" id="collIndeck" class="chk"> in a deck</label>
-    <label class="muted fs-xs"><input type="checkbox" id="collPriced" class="chk"> priced</label>
-    <select id="collSort" class="push" aria-label="Sort by"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
-  </div>
-  <div class="muted fs-xs mt-3"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
-  {% if not carddb.on %}<div class="warn fs-xs mt-2">Name-only collection — the color / type / mana-value filters need card details, which are fetched after your next upload or batch.</div>{% endif %}
-</div>
-<div id="collgrid" class="cardgrid">
-  {% for c in cards %}
-  <figure class="mc" data-card="{{ c.name }}" data-name="{{ c.name|lower }}" data-type="{{ c.type }}"
-    data-mv="{{ c.mv if c.mv is not none else '' }}" data-colors="{{ c.colors }}"
-    data-roles="{{ c.roles|join(',') }}" data-decks="{{ c.decks|join(',') }}"
-    data-price="{{ c.price if c.price else '' }}" tabindex="0" role="button" title="{{ c.name }}">
-    <img loading="lazy" alt="{{ c.name }}">
-    {% if c.qty > 1 %}<span class="qty">{{ c.qty }}×</span>{% endif %}
-    <figcaption>{{ c.name }}</figcaption>
-  </figure>
-  {% endfor %}
-</div>
+</dialog>
 <script src="{{ asset('collection.js') }}" defer></script>
-
-{% if top %}
-<h2>Most valuable cards</h2>
-<div class="card tablewrap">
-<table><thead><tr><th>~$</th><th>Qty</th><th>Card</th><th>Set</th></tr></thead><tbody>
-{% for c in top %}<tr><td class="good">${{ '%.2f'|format(c.price) }}</td>
-  <td>{{ c.quantity }}×</td><td><span class="cardlink" data-card="{{ c.name }}">{{ c.name }}</span></td>
-  <td class="muted">{{ c.set_code }}</td></tr>{% endfor %}
-</tbody></table></div>
-<p class="muted mt-3">Some obscure rows are mispriced in the export — treat as rough.</p>
-{% else %}
-<div class="card muted">No price data in this collection format — load a pricing export to see value.</div>
-{% endif %}
 {% endblock %}

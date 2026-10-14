@@ -80,11 +80,14 @@ def _counts(env):
 
 
 def test_the_page_says_where_the_cards_live(env):
-    html = env.client.get("/collection").get_data(as_text=True)
+    # Since the Collection rebuild: the record and its tools on Manage, intake on Add.
+    html = env.client.get("/collection/manage").get_data(as_text=True)
     assert "Your collection lives here" in html
     assert "Download my whole collection" in html and "Set count" in html
-    assert "Merge this export" in html and "Replace my whole collection" not in html
-    assert "owned_additions.txt" not in html
+    add = env.client.get("/collection/add").get_data(as_text=True)
+    assert "Merge this export" in add and "Replace my whole collection" not in add
+    assert "owned_additions.txt" not in html + add
+    assert "Every change is logged" in env.client.get("/collection").get_data(as_text=True)
 
 
 def test_adding_one_card_writes_the_database_not_the_file(env):
@@ -109,7 +112,8 @@ def test_a_count_can_be_set_and_is_logged(env):
     assert _counts(env)["Sol Ring"] == 1
     last = store.history(env.db, "Sol Ring")[-1]
     assert (last["action"], last["delta"], last["detail"]) == ("set", -1, "traded")
-    html = env.client.get("/collection").get_data(as_text=True)
+    assert r.headers["Location"].endswith("/collection/manage#edit")
+    html = env.client.get("/collection/manage").get_data(as_text=True)
     assert "Recent changes" in html and "traded" in html
 
 
@@ -155,8 +159,9 @@ def test_the_seed_report_is_readable(env):
 def test_file_mode_keeps_working_and_set_explains_itself(env, monkeypatch, tmp_path):
     csv_path = tmp_path / "coll" / "collection.csv"
     monkeypatch.setattr(env.app, "COLLECTION", str(csv_path))
-    html = env.client.get("/collection").get_data(as_text=True)
-    assert "Your collection lives here" not in html and "Replace my whole collection" in html
+    html = env.client.get("/collection/manage").get_data(as_text=True)
+    assert "Your collection lives here" not in html
+    assert "Replace my whole collection" in env.client.get("/collection/add").get_data(as_text=True)
     r = env.client.post("/collection/set", data={"name": "Sol Ring", "qty": "0"},
                         follow_redirects=True)
     assert "needs the collection database" in r.get_data(as_text=True)
@@ -193,7 +198,7 @@ def test_the_decks_download_and_the_page_line(env):
     env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
     r = env.client.get("/export/decks.zip")
     assert r.status_code == 200 and r.mimetype == "application/zip"
-    html = env.client.get("/collection").get_data(as_text=True)
+    html = env.client.get("/collection/manage").get_data(as_text=True)
     assert "Download all decks" in html and "1 decks and your pins" in html
 
 
@@ -338,7 +343,7 @@ def test_only_the_owner_gets_a_backup_and_only_in_database_mode(env, monkeypatch
     assert users.add_member("sam", "sam-password") is None
     _sign_in(c, "sam", "sam-password")
     assert c.get("/export/backup.db").status_code == 403
-    assert "Download a backup" not in c.get("/collection").get_data(as_text=True)
+    assert "Download a backup" not in c.get("/collection/manage").get_data(as_text=True)
     monkeypatch.setattr(env.app, "PASSWORD", None)
     monkeypatch.setattr(env.app, "COLLECTION", str(tmp_path / "coll" / "collection.csv"))
     assert env.client.get("/export/backup.db").status_code == 404
@@ -347,6 +352,8 @@ def test_only_the_owner_gets_a_backup_and_only_in_database_mode(env, monkeypatch
 def test_the_page_offers_a_backup_and_counts_the_daily_copies(env):
     for day in ("2026-10-13", "2026-10-14"):
         store.daily_backup(env.db, env.app._backups_dir(), today=day)
-    html = env.client.get("/collection").get_data(as_text=True)
+    html = env.client.get("/collection/manage").get_data(as_text=True)
     assert "Download a backup" in html
     assert "last 2 days" in html and "newest 2026-10-14" in html
+    cards = env.client.get("/collection").get_data(as_text=True)
+    assert "last backup 2026-10-14" in cards, "the Cards tab's one quiet line"

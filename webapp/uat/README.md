@@ -16,7 +16,8 @@ PASS means the very first open after the deploy applied the server's current
 stylesheets, rule for rule. FAIL names the stale sheet.
 
 **2. The device sweep** — every main page at phone, Fold, tablet and desktop widths,
-plus the deck-card menu, phone More sheet and card panel:
+plus the deck-card menu, phone More sheet and card panel, and the Collection's three
+tabs with its grid, Filters sheet and help sheet open:
 
 ```bash
 MTG_PORT=5000 MTG_PASSWORD=uat-pass python3 webapp/app.py &
@@ -58,8 +59,14 @@ Then undo, through the screens a player taps (Wave 1.1):
   name opens the panel with focus inside; Escape returns focus to the card (both panels).
 - F12: The phone deck page: tabs on the first screen, the list by default, the filter, a
   row opening the panel, zoom.
-- F13: Three Collection sorts, each timed to the next frame; FAIL over 2.5 s. The
-  accessibility batch's card-name observer once made every sort take 4-6 s.
+- F13: Three Collection sorts, each timed to the new page's first frame (a sort is a
+  server round trip since the rebuild); FAIL over 2.5 s or when the URL loses the order.
+  The accessibility batch's card-name observer once made every sort take 4-6 s.
+- F14: The Collection rebuild on a phone (docs/spec-collection-rebuild.md §4): the first
+  card on the first screen, live search rewriting the URL, the Free scope chip, a chip
+  removing only its own term, the Filters sheet's "Show N cards" equal to the page it
+  opens, Load more kept through a visit to Add and Back, Manage marked current, and the
+  help sheet handing focus back on Escape.
 
 Each must give back the same list, compared section by section.
 

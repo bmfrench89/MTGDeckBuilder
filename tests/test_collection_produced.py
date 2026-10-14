@@ -135,10 +135,10 @@ def test_upload_never_writes_any_tracked_collection_path(tmp_path, monkeypatch, 
         assert not os.path.exists(os.path.join(d, tracked)), tracked
 
 
-# ── /collection coverage tile ────────────────────────────────────────────────
+# ── the coverage tile (Collection → Manage since the rebuild) ────────────────────────────────────────────────
 def test_collection_tile_reports_production_coverage(tmp_path, monkeypatch):
     _app_mod, client = _app(tmp_path, monkeypatch, ATTRS_ENRICHED)
-    html = client.get("/collection").get_data(as_text=True)
+    html = client.get("/collection/manage").get_data(as_text=True)
     assert "Mana production: known" in html
     assert "2/2" in html
 
@@ -147,7 +147,7 @@ def test_collection_tile_is_honest_when_production_is_unknown(tmp_path, monkeypa
     """A pre-A attrs file has full types and zero production — the tile must not let
     that read as 'enriched, all good'."""
     _app_mod, client = _app(tmp_path, monkeypatch, ATTRS_LEGACY)
-    html = client.get("/collection").get_data(as_text=True)
+    html = client.get("/collection/manage").get_data(as_text=True)
     assert "Mana production: unknown" in html
     assert "identity" in html
 
@@ -213,7 +213,7 @@ def test_tile_names_the_snapshot_source_when_only_it_exists(tmp_path, monkeypatc
     with open(os.path.join(d, "collection_attrs.snapshot.csv"), "w",
               encoding="utf-8") as f:
         f.write("Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags\n")
-    html = client.get("/collection").data.decode()
+    html = client.get("/collection/manage").data.decode()
     assert "committed snapshot" in html
     assert "image ids" not in html, "no printing ids exist on the snapshot path"
 
@@ -224,5 +224,5 @@ def test_tile_names_the_private_source_when_present(tmp_path, monkeypatch,
     d = os.path.join(tmp_path, "data", "collection")
     with open(os.path.join(d, "collection_attrs.csv"), "w", encoding="utf-8") as f:
         f.write("Name,Type\n")
-    html = client.get("/collection").data.decode()
+    html = client.get("/collection/manage").data.decode()
     assert "your own export" in html and "image ids" in html
