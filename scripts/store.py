@@ -25,11 +25,19 @@ were at the time. So a card's starting count is
 with every source recorded on the card's seed row. Shared-card shortfalls across
 decks are REPORTED, never invented into extra copies.
 
+Phase 1b keeps the rest of the player's data here too: every deck file and pins.csv
+with each revision (`files`, `file_revisions`), the named members (`members`, plus the
+owner's settings in `meta`) and the labelled activity log (`activity`). Password
+hashes arrive and leave as opaque strings: hashing stays in webapp/users.py, so this
+module stays stdlib-only, and no export ever includes the `members` table.
+
 CLI:
     python3 scripts/store.py seed   --db D [--export CSV] [--august TXT]
                                     [--additions TXT] [--decks-dir DIR] [--write]
     python3 scripts/store.py ingest --db D --additions TXT
     python3 scripts/store.py stats  --db D
+    python3 scripts/store.py capture|restore|history …     (deck files, see below)
+    python3 scripts/store.py activity --db D [--limit N]
 """
 from __future__ import annotations
 
@@ -64,6 +72,13 @@ CREATE TABLE IF NOT EXISTS file_revisions (
     id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL, sha TEXT NOT NULL,
     text TEXT, at TEXT NOT NULL, action TEXT NOT NULL, by TEXT NOT NULL DEFAULT '');
 CREATE INDEX IF NOT EXISTS file_revisions_path ON file_revisions(path);
+CREATE TABLE IF NOT EXISTS members (
+    key TEXT PRIMARY KEY, display TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'member',
+    hash TEXT NOT NULL DEFAULT '', ver INTEGER NOT NULL DEFAULT 1,
+    disabled INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, by TEXT NOT NULL DEFAULT '',
+    action TEXT NOT NULL, deck TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '');
 """
 
 DEFAULT_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
@@ -672,6 +687,208 @@ def decks_summary(path):
             "pins": "pins.csv" in files}
 
 
+# --------------------------------------------------------------------------- #
+# Members and the activity log (Phase 1b, 2026-10-14).
+#
+# MEMBERS: the store webapp/users.py used to keep in data/private/users.json, as
+# the same dict ({"owner", "members", "members_can_upload"}), so users.py swaps
+# its file for these two calls and nothing above it changes. The first read on a
+# database with no member store imports users.json ONCE and renames it
+# `users.json.moved-to-db`: nothing can then read a stale copy (a member removed
+# here can never sign in through an old file), and the renamed file stays as the
+# backup. A database that has never had a member store reads as None, which is
+# single-password mode, exactly as a missing users.json always was.
+#
+# ACTIVITY: the deck-level log the app wrote to data/activity.csv. Rows an app
+# still running on files appended there (the seconds between a deploy's pull and
+# its reload) are taken in by `import_activity` with a cursor, so each is taken
+# exactly once and the file itself is never rewritten.
+# --------------------------------------------------------------------------- #
+ACTIVITY_FIELDS = ("When", "By", "Action", "Deck", "Detail")
+MOVED_SUFFIX = ".moved-to-db"
+
+
+def _meta_get(con, key):
+    r = con.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
+    return r[0] if r else None
+
+
+def _meta_set(con, key, value):
+    con.execute("INSERT OR REPLACE INTO meta(key, value) VALUES(?, ?)", (key, value))
+
+
+def _private(path):
+    """Owner read/write only: password hashes live in this file now, and
+    users.json was 0600 for the same reason. SQLite gives its journal the mode of
+    the database, so doing this BEFORE a write covers both."""
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+
+
+def _people_write(con, data):
+    con.execute("DELETE FROM members")
+    for k, m in sorted((data.get("members") or {}).items()):
+        con.execute("INSERT INTO members(key, display, role, hash, ver, disabled) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (k, m.get("display") or k, m.get("role") or "member",
+                     m.get("hash") or "", int(m.get("ver", 1)),
+                     1 if m.get("disabled") else 0))
+    _meta_set(con, "people", json.dumps(
+        {"owner": data.get("owner") or {},
+         "members_can_upload": bool(data.get("members_can_upload"))}, sort_keys=True))
+
+
+def _people_import(con, path, src):
+    """Take users.json in, once. -> True when THIS call imported it."""
+    try:
+        with open(src, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return False                 # unreadable: left where it is, nothing guessed
+    if not isinstance(data, dict):
+        return False
+    _private(path)                   # before any hash is written, journal included
+    con.execute("BEGIN IMMEDIATE")
+    try:
+        mine = _meta_get(con, "people") is None   # another worker may have won the race
+        if mine:
+            _people_write(con, data)
+            _meta_set(con, "people_imported", json.dumps(
+                {"from": os.path.basename(src), "at": _now(),
+                 "members": len(data.get("members") or {})}, sort_keys=True))
+        con.commit()
+    except BaseException:
+        con.rollback()
+        raise
+    if mine:
+        try:
+            os.replace(src, src + MOVED_SUFFIX)
+        except OSError:
+            pass                     # the database wins either way: it has a store now
+    return mine
+
+
+def people_load(path, import_from=None):
+    """The member store, or None when there is none (single-password mode).
+    `import_from` is users.json: taken in once, the first time the database has no
+    store of its own. Database errors propagate on purpose: a sign-in check must
+    fail closed, never read a broken database as "no members"."""
+    if not (path and os.path.exists(path)):
+        return None
+    con = connect(path)
+    try:
+        raw = _meta_get(con, "people")
+        if raw is None and import_from and os.path.exists(import_from):
+            _people_import(con, path, import_from)
+            raw = _meta_get(con, "people")
+        if raw is None:
+            return None
+        people = json.loads(raw)
+        members = {k: {"name": k, "display": d, "role": r, "hash": h, "ver": int(v),
+                       "disabled": bool(x)}
+                   for k, d, r, h, v, x in con.execute(
+                       "SELECT key, display, role, hash, ver, disabled FROM members")}
+    finally:
+        con.close()
+    return {"owner": people.get("owner") or {}, "members": members,
+            "members_can_upload": bool(people.get("members_can_upload"))}
+
+
+def people_save(path, data):
+    """Replace the member store with `data` (users.py's dict), in one transaction."""
+    _private(path)                   # before any hash is written, journal included
+    con = connect(path)
+    try:
+        with con:
+            _people_write(con, data)
+    finally:
+        con.close()
+
+
+def log_activity(path, rows):
+    """Append deck-level actions: rows = [(when, by, action, deck, detail)]."""
+    rows = [tuple("" if v is None else str(v) for v in r) for r in rows]
+    con = connect(path)
+    try:
+        with con:
+            con.executemany("INSERT INTO activity(at, by, action, deck, detail) "
+                            "VALUES(?,?,?,?,?)", rows)
+    finally:
+        con.close()
+    return len(rows)
+
+
+def activity_rows(path, limit=100):
+    """The newest actions first, keyed like the old CSV (When, By, Action, Deck,
+    Detail) so the page reads them unchanged."""
+    if not os.path.exists(path):
+        return []
+    con = connect(path)
+    try:
+        rows = con.execute("SELECT at, by, action, deck, detail FROM activity "
+                           "ORDER BY at DESC, id DESC LIMIT ?", (int(limit),)).fetchall()
+    finally:
+        con.close()
+    return [dict(zip(ACTIVITY_FIELDS, r)) for r in rows]
+
+
+def activity_csv(path) -> str:
+    """The whole log, oldest first, in the old file's columns."""
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(ACTIVITY_FIELDS)
+    if os.path.exists(path):
+        con = connect(path)
+        try:
+            w.writerows(con.execute("SELECT at, by, action, deck, detail FROM activity "
+                                    "ORDER BY at, id"))
+        finally:
+            con.close()
+    return buf.getvalue()
+
+
+def import_activity(path, csv_path):
+    """Take in the rows of data/activity.csv the database hasn't seen. A cursor in
+    meta counts the file's rows already taken, so a re-run takes nothing twice; a
+    file that shrank (rewritten by hand) moves the cursor without guessing which
+    rows are new. -> rows imported."""
+    if not (csv_path and os.path.exists(csv_path)):
+        return 0
+    with open(csv_path, encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    con = connect(path)
+    try:
+        con.execute("BEGIN IMMEDIATE")
+        try:
+            done = int(_meta_get(con, "activity_csv_rows") or 0)
+            new = rows[done:] if len(rows) >= done else []
+            con.executemany("INSERT INTO activity(at, by, action, deck, detail) "
+                            "VALUES(?,?,?,?,?)",
+                            [tuple((r.get(k) or "") for k in ACTIVITY_FIELDS) for r in new])
+            _meta_set(con, "activity_csv_rows", str(len(rows)))
+            con.commit()
+        except BaseException:
+            con.rollback()
+            raise
+    finally:
+        con.close()
+    return len(new)
+
+
+def people_summary(path):
+    """Counts only — never a name's hash: {members, activity}."""
+    if not os.path.exists(path):
+        return {"members": 0, "activity": 0}
+    con = connect(path)
+    try:
+        return {"members": con.execute("SELECT COUNT(*) FROM members").fetchone()[0],
+                "activity": con.execute("SELECT COUNT(*) FROM activity").fetchone()[0]}
+    finally:
+        con.close()
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -700,6 +917,9 @@ def main(argv=None):
     h = sub.add_parser("history", help="revisions of one deck file")
     h.add_argument("--db", default=DEFAULT_DB)
     h.add_argument("file")
+    v = sub.add_parser("activity", help="the newest deck-level actions, newest first")
+    v.add_argument("--db", default=DEFAULT_DB)
+    v.add_argument("--limit", type=int, default=20)
     a = ap.parse_args(argv)
     if a.cmd == "seed":
         print(seed(a.db, a.export, a.august, a.additions, a.decks_dir, write=a.write))
@@ -714,10 +934,16 @@ def main(argv=None):
         for r in file_history(a.db, a.file):
             print(f"{r['id']:>5}  {r['at']}  {r['action']}{'  (removed)' if r['removed'] else ''}"
                   f"{'  · ' + r['by'] if r['by'] else ''}")
+    elif a.cmd == "activity":
+        for r in activity_rows(a.db, limit=a.limit):
+            print(f"{r['When']}  {r['By'] or '-'}  {r['Action']}"
+                  f"{'  · ' + r['Deck'] if r['Deck'] else ''}"
+                  f"{'  · ' + r['Detail'] if r['Detail'] else ''}")
     else:
         cards = mtglib._load_db(a.db) if os.path.exists(a.db) else []
         print(f"{len(cards)} cards, {sum(c.quantity for c in cards)} copies")
         print(decks_summary(a.db))
+        print(people_summary(a.db))
     return 0
 
 

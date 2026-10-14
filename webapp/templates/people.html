@@ -6,7 +6,8 @@
     <h1>People</h1>
     <div class="sub">Who can sign in besides you. A member can do everything you can except
       this page{% if not can_upload %} and replacing your whole collection{% endif %} — and
-      every change they make is labelled with their name.</div>
+      every change they make is labelled with their name.{% if db %} Accounts and the
+      activity log are kept in the app's database on the server, never in the repo.{% endif %}</div>
   </div>
   <div class="acts"><a class="btn ghost" href="{{ url_for('activity') }}">Activity</a></div>
 </header>

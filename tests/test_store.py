@@ -12,7 +12,11 @@ had cards at the time. I just need all cards accounted for." What is pinned here
     never seeded twice;
   * batches a session commits are ingested exactly once, even after a row in them
     is retired;
-  * every engine reads it through `mtglib.load_collection`, unchanged.
+  * every engine reads it through `mtglib.load_collection`, unchanged;
+  * decks and pins are kept with every revision, and restored only where missing;
+  * members move in from users.json exactly once (the file is retired so a stale
+    copy can never be read), the database turns owner-only, and no download ever
+    carries a password hash; activity.csv rows are taken in exactly once.
 """
 import json
 import os
@@ -274,7 +278,8 @@ def test_the_sync_seeds_once_then_ingests(world, monkeypatch):
     import collection_db
     monkeypatch.delenv("MTG_COLLECTION", raising=False)
     kw = dict(db=world.db, export=world.export, august=world.august,
-              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"))
+              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"),
+              activity=str(world.dir / "activity.csv"))
     first = collection_db.run(**kw)
     assert first.startswith("collection db: SEEDED") and "decks: saved 3 new" in first
     assert collection_db.run(**kw) == "collection db: up to date · decks: up to date"
@@ -419,8 +424,153 @@ def test_the_sync_rebuilds_a_missing_deck_folder(world, monkeypatch, tmp_path):
     monkeypatch.delenv("MTG_COLLECTION", raising=False)
     pins = str(world.dir / "pins.csv")
     kw = dict(db=world.db, export=world.export, august=world.august,
-              additions=world.adds, decks=world.decks_dir, pins=pins)
+              additions=world.adds, decks=world.decks_dir, pins=pins,
+              activity=str(world.dir / "activity.csv"))
     collection_db.run(**kw)
     shutil.rmtree(world.decks_dir)
     assert "decks: RESTORED 3 file(s)" in collection_db.run(**kw)
     assert open(f"{world.decks_dir}/live.txt", encoding="utf-8").read() == LIVE
+
+
+# --------------------------------------------------------------------------- #
+# Members and the activity log (Phase 1b, 2026-10-14: "move members and activity
+# into the db too"). The store keeps users.py's dict as-is; hashes are opaque here.
+# --------------------------------------------------------------------------- #
+PEOPLE = {"owner": {"display": "Ben"}, "members_can_upload": True,
+          "members": {"sam": {"name": "sam", "display": "Sam", "role": "member",
+                              "hash": "scrypt:NOT-A-REAL-HASH", "ver": 3,
+                              "disabled": False}}}
+
+
+def _users_json(world, data=PEOPLE):
+    p = world.dir / "users.json"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    return str(p)
+
+
+def test_a_database_without_a_member_store_is_single_password_mode(world):
+    _seed(world)
+    assert store.people_load(world.db) is None
+    assert store.people_load(world.db, import_from=str(world.dir / "absent.json")) is None
+    missing = str(world.dir / "never.db")
+    assert store.people_load(missing) is None and not os.path.exists(missing), \
+        "reading never creates a database"
+
+
+def test_users_json_moves_in_once_and_the_file_is_retired(world):
+    _seed(world)
+    src = _users_json(world)
+    got = store.people_load(world.db, import_from=src)
+    assert got == PEOPLE
+    assert not os.path.exists(src) and os.path.exists(src + ".moved-to-db"), \
+        "a stale copy can never be read again; the renamed file is the backup"
+    assert store.people_load(world.db, import_from=src) == PEOPLE
+    note = json.loads(store.meta(world.db, "people_imported"))
+    assert note["from"] == "users.json" and note["members"] == 1
+
+
+def test_the_import_never_overwrites_a_store_the_database_has(world):
+    _seed(world)
+    store.people_save(world.db, PEOPLE)
+    other = dict(PEOPLE, owner={"display": "Someone else"}, members={})
+    src = _users_json(world, other)
+    assert store.people_load(world.db, import_from=src) == PEOPLE
+    assert os.path.exists(src), "a file the database did not take is not renamed"
+
+
+def test_an_unreadable_users_json_is_left_alone(world):
+    _seed(world)
+    p = world.dir / "users.json"
+    p.write_text("{not json", encoding="utf-8")
+    assert store.people_load(world.db, import_from=str(p)) is None
+    assert p.exists()
+
+
+def test_the_member_store_round_trips_and_the_database_turns_private(world):
+    import stat
+    _seed(world)
+    os.chmod(world.db, 0o644)
+    data = json.loads(json.dumps(PEOPLE))
+    data["members"]["sam"].update(ver=4, disabled=True)
+    data["members"]["kit"] = {"name": "kit", "display": "Kit", "role": "member",
+                              "hash": "scrypt:ALSO-NOT-REAL", "ver": 1, "disabled": False}
+    store.people_save(world.db, data)
+    assert store.people_load(world.db) == data
+    assert stat.S_IMODE(os.stat(world.db).st_mode) & 0o077 == 0, "hashes: owner only"
+    del data["members"]["kit"]
+    store.people_save(world.db, data)
+    assert set(store.people_load(world.db)["members"]) == {"sam"}, "a removal sticks"
+
+
+def test_no_download_ever_carries_a_password_hash(world, capsys):
+    _seed(world)
+    store.people_save(world.db, PEOPLE)
+    store.log_activity(world.db, [("2026-10-14 10:00", "Sam", "pin", "live", "Sol Ring")])
+    store.capture(world.db, world.decks_dir)
+    exports = (store.export_csv(world.db) + store.activity_csv(world.db) +
+               store.decks_zip(world.db).decode("latin-1"))
+    store.main(["stats", "--db", world.db])
+    store.main(["activity", "--db", world.db])
+    assert "NOT-A-REAL-HASH" not in exports + capsys.readouterr().out
+
+
+def test_the_activity_log_reads_newest_first_and_downloads_whole(world):
+    _seed(world)
+    store.log_activity(world.db, [("2026-10-14 10:00", "Ben", "pin", "live", "Sol Ring"),
+                                  ("2026-10-14 10:00", "Sam", "set bracket", "live", "4")])
+    store.log_activity(world.db, [("2026-10-14 11:30", "Sam", "optimize", "live", None)])
+    rows = store.activity_rows(world.db)
+    assert [(r["By"], r["Action"]) for r in rows] == [
+        ("Sam", "optimize"), ("Sam", "set bracket"), ("Ben", "pin")]
+    assert rows[0] == {"When": "2026-10-14 11:30", "By": "Sam", "Action": "optimize",
+                       "Deck": "live", "Detail": ""}
+    assert len(store.activity_rows(world.db, limit=1)) == 1
+    assert store.activity_csv(world.db).splitlines() == [
+        "When,By,Action,Deck,Detail", "2026-10-14 10:00,Ben,pin,live,Sol Ring",
+        "2026-10-14 10:00,Sam,set bracket,live,4", "2026-10-14 11:30,Sam,optimize,live,"]
+
+
+def test_activity_csv_rows_are_taken_in_exactly_once(world):
+    _seed(world)
+    p = world.dir / "activity.csv"
+    p.write_text("When,By,Action,Deck,Detail\n2026-10-12 09:00,Sam,pin,live,Sol Ring\n"
+                 "2026-10-12 09:05,Ben,delete deck,old,Old\n", encoding="utf-8")
+    assert store.import_activity(world.db, str(p)) == 2
+    assert store.import_activity(world.db, str(p)) == 0, "re-runs take nothing twice"
+    with open(p, "a", encoding="utf-8") as f:
+        f.write("2026-10-12 09:10,Sam,optimize,live,2\n")
+    assert store.import_activity(world.db, str(p)) == 1, "only the straggler"
+    assert [r["Action"] for r in store.activity_rows(world.db)] == \
+        ["optimize", "delete deck", "pin"]
+    p.write_text("When,By,Action,Deck,Detail\n", encoding="utf-8")
+    assert store.import_activity(world.db, str(p)) == 0, "a rewritten file guesses nothing"
+    with open(p, "a", encoding="utf-8") as f:
+        f.write("2026-10-13 08:00,Ben,pin,live,Opt\n")
+    assert store.import_activity(world.db, str(p)) == 1
+    assert store.import_activity(world.db, str(world.dir / "absent.csv")) == 0
+
+
+def test_the_sync_moves_the_activity_file_in_once(world, monkeypatch):
+    import collection_db
+    monkeypatch.delenv("MTG_COLLECTION", raising=False)
+    act = world.dir / "activity.csv"
+    act.write_text("When,By,Action,Deck,Detail\n2026-10-12 09:00,Sam,pin,live,Sol Ring\n",
+                   encoding="utf-8")
+    kw = dict(db=world.db, export=world.export, august=world.august,
+              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"),
+              activity=str(act))
+    assert "activity: took in 1 row(s)" in collection_db.run(**kw)
+    assert "activity" not in collection_db.run(**kw)
+    assert act.exists(), "the file is never rewritten or deleted by the move"
+
+
+def test_a_bad_activity_file_costs_only_its_own_phrase(world, monkeypatch, tmp_path):
+    import collection_db
+    monkeypatch.delenv("MTG_COLLECTION", raising=False)
+    bad = tmp_path / "not-a-file.csv"
+    bad.mkdir()
+    line = collection_db.run(db=world.db, export=world.export, august=world.august,
+                             additions=world.adds, decks=world.decks_dir,
+                             pins=str(world.dir / "pins.csv"), activity=str(bad))
+    assert line.startswith("collection db: SEEDED") and "decks: saved 3 new" in line
+    assert "activity: skipped" in line

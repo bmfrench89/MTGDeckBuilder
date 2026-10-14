@@ -296,7 +296,7 @@ so automatic tuning never strands a scene. **When you change a deck that has cli
 the stale scenes in the same change** — CI's `clips.py --all --check` fails until you do.
 Opponents' cards are `ph` placeholders, never named; nothing is rendered to a video file).
 
-**Collection database (server, 2026-10-13+)** — `data/collection/collection.db`, gitignored, never synced. The server sync seeds it ONCE as the union of every record (private export, the committed August list, every `owned_additions.txt` block, every sleeved deck: `store.seed`, report on the Collection page) and from then on it is the collection: app adds/edits go straight to it (every change in its `ledger`), an Upload only MERGES (never lowers a count), and batches a session commits to `owned_additions.txt` are ingested once each by the next sync. A `[floor]` line in a batch's comments means "own at least this many" (raise, don't add) in both the database and the file loader. Sessions still add cards exactly as before (`intake.py` → a dated batch); never write the database from a session, and never re-seed one. **Decks and pins live there too (Phase 1b, 2026-10-14):** the database keeps every deck file (`<stem>.txt` and its companions) and `pins.csv` with every revision (`files` + `file_revisions`). The deck folder stays the working copy every engine reads; `store.capture` records it after every successful app write and every sync (so a session's committed deck edit becomes a revision with the next pull), and `store.restore` rebuilds the folder only when it is missing (a new host) or one file on request. Edit decks exactly as before.
+**Collection database (server, 2026-10-13+)** — `data/collection/collection.db`, gitignored, never synced. The server sync seeds it ONCE as the union of every record (private export, the committed August list, every `owned_additions.txt` block, every sleeved deck: `store.seed`, report on the Collection page) and from then on it is the collection: app adds/edits go straight to it (every change in its `ledger`), an Upload only MERGES (never lowers a count), and batches a session commits to `owned_additions.txt` are ingested once each by the next sync. A `[floor]` line in a batch's comments means "own at least this many" (raise, don't add) in both the database and the file loader. Sessions still add cards exactly as before (`intake.py` → a dated batch); never write the database from a session, and never re-seed one. **Decks and pins live there too (Phase 1b, 2026-10-14):** the database keeps every deck file (`<stem>.txt` and its companions) and `pins.csv` with every revision (`files` + `file_revisions`). The deck folder stays the working copy every engine reads; `store.capture` records it after every successful app write and every sync (so a session's committed deck edit becomes a revision with the next pull), and `store.restore` rebuilds the folder only when it is missing (a new host) or one file on request. Edit decks exactly as before. **So do members and the activity log (Phase 1b, 2026-10-14):** in database mode `users.py` keeps the member store in the database (`members` + the owner's settings in `meta`; it takes `data/private/users.json` in on its first read and renames it `users.json.moved-to-db`, and the database is chmod 0600 because it now holds the hashes), and deck-level actions go to its `activity` table instead of `data/activity.csv` (the sync and the Activity page take in any rows still in that file, each once). No download ever includes the `members` table.
 
 **Collection** — rich Archidekt/ManaPool CSV (`Quantity, Name, Mana Value, Colors,
 Identities, Mana cost, Types, Sub-types, Super-types, Rarity, Scryfall ID`) unlocks
@@ -368,13 +368,15 @@ so the next export carries them and the upload's reconcile retires the rows) · 
 immutable caching; the service worker never touches it).
 
 **Named members** (docs/spec-second-login.md): `webapp/users.py` keeps member accounts in
+the collection database once the app runs on one (see Data formats), else in
 `data/private/users.json` — gitignored, mode 0600, never synced. The owner still signs in
 with `MTG_PASSWORD`; a member signs in with a name and their own password and can do
-everything except the People page and (unless allowed) replacing the collection. Once that
-file exists, every change the app writes carries `By` (`.changes.csv`'s optional fifth
-column, written through `deckcore.append_changes`) and deck-level actions go to
-`data/activity.csv`, which the sync commits. With no file, none of that happens — the app is
-the single-password app it always was.
+everything except the People page and (unless allowed) replacing the collection. Once a
+member store exists, every change the app writes carries `By` (`.changes.csv`'s optional
+fifth column, written through `deckcore.append_changes`) and deck-level actions go to the
+activity log: the database's `activity` table, or `data/activity.csv` (which the sync
+commits) on files. With no store, none of that happens — the app is the single-password app
+it always was.
 
 The saved-deck dashboard is editable (`build_dashboard.generate(..., editable=True)`);
 CLI-rendered dashboards keep `editable=False`. Both surfaces share `generate()`, so a change

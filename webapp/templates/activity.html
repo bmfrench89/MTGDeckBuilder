@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Activity · MTG Deckbuilder{% endblock %}
 {% block content %}
-<h1>Activity</h1>
-<div class="sub">The last 100 deck-level actions, newest first (times in UTC). Card-by-card
-  changes are on each deck's own Changes page.</div>
+<header class="pagehead">
+  <div>
+    <h1>Activity</h1>
+    <div class="sub">The last 100 deck-level actions, newest first (times in UTC). Card-by-card
+      changes are on each deck's own Changes page.{% if db %} The whole log is kept in the
+      app's database.{% endif %}</div>
+  </div>
+  {% if rows %}<div class="acts"><a class="btn ghost" href="{{ url_for('export_activity') }}" download>Download the whole log</a></div>{% endif %}
+</header>
 {% if not rows %}
 <div class="card mt-4 muted">Nothing yet. Actions are recorded once at least one member exists.</div>
 {% else %}
 <div class="card mt-4">
   {% for r in rows %}
   <div class="arrival fs-sm">
-    <b>{{ r.By or '—' }}</b> {{ r.Action }}{% if r.Deck %} · <a href="{{ url_for('deck', stem=r.Deck) }}">{{ r.Deck }}</a>{% endif %}
-    {% if r.Detail %}<span class="muted">· {{ r.Detail }}</span>{% endif %}
+    <p><b>{{ r.By or '—' }}</b> {{ r.Action }}{% if r.Deck %} · <a href="{{ url_for('deck', stem=r.Deck) }}">{{ r.Deck }}</a>{% endif %}
+    {% if r.Detail %}<span class="muted">· {{ r.Detail }}</span>{% endif %}</p>
     <div class="faint fs-xs">{{ r.When }}</div>
   </div>
   {% endfor %}

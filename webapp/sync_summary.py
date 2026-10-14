@@ -6,6 +6,9 @@ Reads the STAGED diff (`git diff --cached`) of the files the app labels — ever
 — and prints e.g. `Ben: 3 changes · Sam: 2 changes`. Prints nothing when no added row
 carries a name (single-password mode, or only CLI/session rows). Never raises into
 sync_server.sh: the commit must happen whether or not a summary can be made.
+
+Once the app runs on its collection database (Phase 1b, 2026-10-14) the activity log
+lives there, not in git, so the line counts the decks' `.changes.csv` rows only.
 """
 import csv
 import subprocess

@@ -16,6 +16,12 @@ app already has Werkzeug through Flask, so scripts/ stays stdlib-only.
 
 With no file, the app is exactly the single-password app it was: no names, no `By`
 labels, no activity log. That back-compat is a spec requirement, not an accident.
+
+**Once the app runs on its collection database** (docs/spec-target-architecture.md
+Phase 1b, 2026-10-14) the same store lives there instead: `store.people_load` /
+`people_save` hold the very dict below, and the first read takes users.json in once
+and renames it `users.json.moved-to-db`. The app says where through `database`;
+everything else in this module is the same code on either side.
 """
 import json
 import os
@@ -28,6 +34,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH = os.path.join(ROOT, "data", "private", "users.json")
+
+# The app sets this to a function returning its collection database's path while it
+# runs on one, else None. Asked on every call, so it follows the app's own switch.
+database = None
 
 LOCK_FAILS = 10                  # failures per name …
 LOCK_WINDOW = 15 * 60            # … within this many seconds locks that name out
@@ -48,12 +58,22 @@ def valid_name(name):
     return bool(_NAME_RE.match(k)) and k != OWNER_KEY
 
 
+def _db():
+    return database() if database else None
+
+
 def exists():
+    if _db():
+        return load() is not None
     return os.path.exists(PATH)
 
 
 def load():
     """The store, or None when there is none (single-password mode)."""
+    db = _db()
+    if db:
+        import store                       # scripts/ is on the path wherever the app runs
+        return store.people_load(db, import_from=PATH)
     try:
         with open(PATH, encoding="utf-8") as f:
             data = json.load(f)
@@ -68,7 +88,13 @@ def load():
 
 
 def save(data):
-    """Atomic, owner-only (0600) write; creates data/private/ on first use."""
+    """Atomic, owner-only (0600) write; creates data/private/ on first use. In
+    database mode: one transaction in the database, which is kept 0600 too."""
+    db = _db()
+    if db:
+        import store
+        store.people_save(db, data)
+        return
     d = os.path.dirname(PATH)
     os.makedirs(d, exist_ok=True)
     try:

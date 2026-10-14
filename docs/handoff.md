@@ -26,7 +26,8 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   text has no take and commits `data/narration/` — a caption edit re-records only that
   scene.
 - **A second login** (`docs/spec-second-login.md`): the owner adds the brother on the
-  People page; from then on every change says who made it (`By`, `data/activity.csv`).
+  People page; from then on every change says who made it (`By`, and the activity log,
+  which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
 ## START HERE: the app now OWNS the collection (collection database, 2026-10-13)
@@ -60,10 +61,17 @@ and stored in this new db", on free hosting ("I'd rather not do paid"). Phase 1a
   edit, the sync after each pull. The deck folder is still the working copy; if it is ever
   missing, the sync rebuilds it from the DB. **Download all decks** (zip) is on the
   Collection page. Sessions edit deck files exactly as before.
+- **Members and the activity log are in the DB too (Phase 1b done, 2026-10-14):**
+  - The member accounts (the People page) live in the DB's `members` table. If the
+    server has a `data/private/users.json`, the app's first read after the deploy takes
+    it in and renames it `users.json.moved-to-db` (keep it as a backup or delete it).
+  - Deck-level actions log to the DB's `activity` table; `data/activity.csv` is no
+    longer written or committed. **Download the whole log** is on the Activity page.
+  - The DB file is made owner-only (0600) because it now holds password hashes, and no
+    download ever includes them.
 - **Hosting (D1): stay free for now.** Revisit before Phase 4 (data out of the repo).
   Free alternatives are in the spec's D1.
 - **Still open:**
-  - Phase 1b's remainder (members and activity into the DB).
   - Phase 2 (fetchers at the server).
   - The repo is still public.
 

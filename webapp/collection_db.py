@@ -16,6 +16,12 @@ otherwise every deck file and pins.csv that changed (a session's committed edit,
 arriving with the pull) is recorded as a revision. App edits are captured as they
 happen, by the app itself.
 
+And **the activity log**: rows an app still running on files appended to
+data/activity.csv (the seconds between a deploy's pull and its reload) move into the
+database's `activity` table, each exactly once. MEMBERS are deliberately not touched
+here: the app takes users.json in on its own first read after the reload, so the
+app that is still running during this sync never finds its member file gone.
+
 `MTG_COLLECTION` set to anything but the database means the operator chose another
 source on purpose: this step then does nothing.
 """
@@ -32,6 +38,8 @@ AUGUST = os.path.join(COLL_DIR, "collection_snapshot.txt")
 ADDITIONS = os.path.join(COLL_DIR, "owned_additions.txt")
 DECKS = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data", "decks"))
 PINS = os.path.join(COLL_DIR, "pins.csv")
+# Beside the deck folder, exactly where the app writes it (app._activity_path).
+ACTIVITY = os.path.join(os.path.dirname(os.path.abspath(DECKS)), "activity.csv")
 
 
 def decks_step(db, decks=DECKS, pins=PINS):
@@ -47,12 +55,25 @@ def decks_step(db, decks=DECKS, pins=PINS):
     return "decks: up to date"
 
 
-def run(db=DB, export=EXPORT, august=AUGUST, additions=ADDITIONS, decks=DECKS, pins=PINS):
+def activity_step(db, activity=ACTIVITY):
+    """Take in activity.csv rows the database hasn't seen. -> a phrase, or "".
+    A bad file costs this phrase, never the rest of the sync's line."""
+    import store
+    try:
+        n = store.import_activity(db, activity)
+    except Exception as e:                       # noqa: BLE001
+        return f"activity: skipped ({type(e).__name__}: {e})"
+    return f"activity: took in {n} row(s) from activity.csv" if n else ""
+
+
+def run(db=DB, export=EXPORT, august=AUGUST, additions=ADDITIONS, decks=DECKS, pins=PINS,
+        activity=ACTIVITY):
     """-> one line for the sync log."""
     line = _collection_step(db, export, august, additions, decks)
     if line.startswith("collection db: skipped"):
         return line
-    return line + " · " + decks_step(db, decks, pins)
+    parts = [line, decks_step(db, decks, pins), activity_step(db, activity)]
+    return " · ".join(p for p in parts if p)
 
 
 def _collection_step(db, export, august, additions, decks):

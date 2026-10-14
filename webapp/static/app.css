@@ -272,6 +272,9 @@ label.field > input, label.field > select, label.field > textarea { width: 100%;
    squeezed the deck names into a one-word column on a phone). */
 .arrival { padding: var(--sp-3) 0; border-bottom: 1px solid var(--edge); }
 .arrival:last-child { border-bottom: 0; }
+/* A row that is one sentence (the Activity log): a paragraph, so its inline deck link
+   is a prose link — WCAG 2.5.8's inline exception — not a stray small button. */
+.arrival > p { margin: 0; }
 .arrival .homes { list-style: none; margin: var(--sp-1) 0 0; padding: 0; }
 .arrival .homes li { padding: var(--sp-1) 0; }
 .chk { accent-color: var(--accent); width: 20px; height: 20px; min-height: 0; }

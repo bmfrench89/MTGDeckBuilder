@@ -324,3 +324,13 @@ def test_users_json_is_private(env):
     assert mode & 0o077 == 0, "owner read/write only"
     data = open(users.PATH, encoding="utf-8").read()
     assert "sam-password" not in data, "hashes only"
+
+
+def test_the_whole_log_downloads_on_files_too(env):
+    _members("sam")
+    owner = env.new()
+    _login(owner, "owner-pass")
+    assert owner.get("/export/activity.csv").status_code == 404, "nothing logged yet"
+    owner.post("/deck/td/bracket", data={"bracket": "4"})
+    r = owner.get("/export/activity.csv")
+    assert r.status_code == 200 and "Ben,set bracket,td,4" in r.get_data(as_text=True)
