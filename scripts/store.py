@@ -612,6 +612,23 @@ def file_history(path, key):
     return [dict(zip(("id", "at", "action", "by", "removed"), r)) for r in rows]
 
 
+def file_revisions(path, key, limit=30):
+    """The newest `limit` revisions of one file WITH their text, newest first:
+    [{id, at, action, by, sha, text}]. `text` is None for a revision that records
+    the file's removal. Feeds the Changes page's "Restore this version"."""
+    try:
+        con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            rows = con.execute("SELECT id, at, action, by, sha, text FROM file_revisions "
+                               "WHERE path=? ORDER BY id DESC LIMIT ?",
+                               (key, int(limit))).fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return []
+    return [dict(zip(("id", "at", "action", "by", "sha", "text"), r)) for r in rows]
+
+
 def deck_working_copy_missing(decks_dir):
     """No deck list on disk at all: a new host, or a clone without data."""
     return not (os.path.isdir(decks_dir) and

@@ -224,6 +224,10 @@ via `refresh.py --optimize`, and as step 5 of the skill's build workflow. It doe
 run after a manual edit — the card panel's Remove/Replace and the deck editor save the
 player's choice as-is. Never second-guess a deliberate swap. The optimizer is idempotent:
 a second run on a tuned deck changes nothing, and that property is worth preserving.
+**Every edit is undoable** (2026-10-14, `docs/spec-ux-refresh.md` Wave 1.1): a toast after
+each edit, an Undo on each row of the deck's Changes page, and a whole ⚡ run in one tap.
+An undo is a NEW inverse change logged `Source=manual-undo:<row>` — manual, so the optimizer
+treats the result as the player's choice and never swaps it back.
 
 Its guardrails each exist because a naive pass got it wrong: a swap needs a ≥25-point
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
@@ -249,8 +253,9 @@ Before merging anything that touches templates, CSS, JS or the service worker, r
 `webapp/uat/sweep.js` (every main page at phone / Fold / tablet / desktop, the open card
 panel included; exits 1 on page overflow or a tap target under 24 px, warns under 44 px),
 then read the screenshots. Anything that touches an edit flow also runs
-`webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan and the table
-card, each read back from the deck FILES (must PASS). The sweep photographs pages; the
+`webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan, the table card,
+and undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
+earlier version), each read back from the deck FILES (must PASS). The sweep photographs pages; the
 2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
 has the commands.
 
@@ -291,7 +296,9 @@ columns are the same contract as the collection file, carried by
 lets the goldfish sim run its enriched mana model on a fresh clone), `.changes.csv` (`Card,Added,Replaced,Source[,By]` — appended by
 each applying optimizer run and every app edit, editor saves included, always through
 `deckcore.append_changes`; `By` appears once named members exist; the dashboard badges
-anything from the last 14 days as `NEW`),
+anything from the last 14 days as `NEW`. A row's POSITION is its identity — undo names rows
+by position, so the file is append-only: never reorder or delete a row, and never hand-write
+one (an unquoted comma in a card name breaks the columns; CI's change-log check fails on it)),
 `.clips.json` (the **Watch tab**: 30-60s animated how-to-play clips, scenes of the deck's own
 cards in zones with captions — validated by `clips.py` against the CURRENT list on every
 render. Captions name cards as `[[Card Name]]` (or `[[Card Name|shown text]]`), and a scene
@@ -368,7 +375,8 @@ Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<st
 so the next export carries them and the upload's reconcile retires the rows) · `/collection/upload/decide`
 (the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
 `/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one) ·
-`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes` ·
+`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes` (+ `/undo`:
+reverse logged rows; `/restore`: an earlier stored version, database mode) ·
 `/narration/<stem>/<file>` (a deck's recorded narration — manifest-listed takes only,
 immutable caching; the service worker never touches it).
 

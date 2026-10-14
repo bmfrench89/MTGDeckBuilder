@@ -195,6 +195,152 @@ function restore(stem, files) {
     else fail('F6b pages compressed', `Content-Encoding: "${enc}"`);
   }
 
+  // --- Wave 1.1: every edit can be undone, through the screens a player taps ----
+  // Compared as {section: sorted cards}: an undo may put a card back at the end of
+  // its section rather than on its old line, which reads the same to a player.
+  const shape = (text) => {
+    const d = parseDeck(text), out = {};
+    for (const [s, names] of Object.entries(d.sections)) out[s] = [...names].map((n) => n.toLowerCase()).sort();
+    return JSON.stringify(out);
+  };
+  const toast = async () => p.evaluate(() => {
+    const t = document.querySelector('[data-utoast]');
+    return t && !t.hidden ? { msg: t.querySelector('.ut-msg').textContent, label: t.querySelector('.ut-btn').textContent } : null;
+  });
+
+  // F7 · Replace from the card panel, then Undo from the toast it leaves.
+  {
+    const files = snapshot(stem);
+    const before = read(deckFile);
+    try {
+      await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
+      const opened = await p.evaluate((t) => {
+        const f = [...document.querySelectorAll('figure.mc[data-key]')]
+          .find((x) => x.getAttribute('data-key').toLowerCase() === t.toLowerCase());
+        if (!f) return false;
+        f.scrollIntoView(); f.click(); return true;
+      }, target);
+      if (!opened) throw new Error(`no card tile for ${target}`);
+      await p.locator('#cm-replace').waitFor({ state: 'visible', timeout: 30000 });
+      await p.click('#cm-replace');
+      const have = new Set([...deck.cards, ...deck.commander].map((n) => n.toLowerCase()));
+      let picked = null;
+      for (const q of QUERIES) {
+        await p.fill('#cm-search', q);
+        await p.waitForTimeout(700);
+        picked = await p.evaluate((haveList) => {
+          const have = new Set(haveList);
+          const b = [...document.querySelectorAll('#cm-searchres .cm-searchitem')]
+            .find((x) => !have.has(x.textContent.replace(/ ×\d+$/, '').toLowerCase()) &&
+                         !/^(snow-covered )?(plains|island|swamp|mountain|forest|wastes)\b/i.test(x.textContent));
+          if (!b) return null;
+          return b.textContent.replace(/ ×\d+$/, '');
+        }, [...have]);
+        if (picked) break;
+      }
+      if (!picked) { skip('F7 panel replace → toast → Undo', 'no in-colour owned card to swap in'); }
+      else {
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+          p.evaluate((nm) => [...document.querySelectorAll('#cm-searchres .cm-searchitem')]
+            .find((x) => x.textContent.replace(/ ×\d+$/, '') === nm).click(), picked)]);
+        const t = await toast();
+        const swapped = read(deckFile).toLowerCase().includes(picked.toLowerCase());
+        if (!swapped) fail('F7 panel replace → toast → Undo', `the replace didn't land (${picked})`);
+        else if (!t || !/Replaced/.test(t.msg)) fail('F7 panel replace → toast → Undo', 'no Undo toast after the panel reload');
+        else {
+          await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), p.click('.utoast .ut-btn')]);
+          const back = read(deckFile);
+          const redo = await toast();
+          if (shape(back) !== shape(before)) fail('F7 panel replace → toast → Undo', 'the list did not come back');
+          else pass('F7 panel replace → toast → Undo',
+            `${target} ⇄ ${picked}; ${back === before ? 'byte-identical' : 'same sections'}; then "${redo ? redo.label : 'no'}" offered`);
+        }
+      }
+    } catch (e) { fail('F7 panel replace → toast → Undo', String(e).slice(0, 140)); }
+    restore(stem, files);
+  }
+
+  // F8 · ⚡ Optimize, then undo the whole run in one tap.
+  {
+    const files = snapshot(stem);
+    const before = read(deckFile);
+    try {
+      await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
+      p.once('dialog', (d) => d.accept());
+      await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+        p.click(`form[action$="/optimize"] button`)]);
+      const t = await toast();
+      if (read(deckFile) === before) skip('F8 ⚡ run → Undo all', 'the optimizer made no swaps on this deck');
+      else if (!t) fail('F8 ⚡ run → Undo all', 'swaps were written but no Undo toast');
+      else {
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), p.click('.utoast .ut-btn')]);
+        if (shape(read(deckFile)) === shape(before)) pass('F8 ⚡ run → Undo all', `"${t.msg.trim()}" → ${t.label} → list restored`);
+        else fail('F8 ⚡ run → Undo all', 'the list did not come back');
+      }
+    } catch (e) { fail('F8 ⚡ run → Undo all', String(e).slice(0, 140)); }
+    restore(stem, files);
+  }
+
+  // F9 · The Changes page: Undo on a row, and the row then reads "Undone".
+  {
+    const files = snapshot(stem);
+    const before = read(deckFile);
+    try {
+      let pick = null;
+      const have = new Set([...deck.cards, ...deck.commander].map((n) => n.toLowerCase()));
+      for (const q of QUERIES) {
+        pick = ((await search(q, stem, true)) || []).find((it) => !have.has(it.name.toLowerCase()) && !BASICS.test(it.name));
+        if (pick) break;
+      }
+      if (!pick) skip('F9 Changes page Undo', 'no in-colour owned card to swap in');
+      else {
+        await api.post(`${BASE}/deck/${stem}/card`, { form: { action: 'replace', name: target, replacement: pick.name }, maxRedirects: 0 });
+        await p.goto(`${BASE}/deck/${stem}/changes`, { waitUntil: 'load', timeout: 300000 });
+        const label = `Undo: ${pick.name} replacing ${target}`;
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+          p.click(`button[aria-label="${label.replace(/"/g, '\\"')}"]`)]);
+        const undoneShown = await p.evaluate(() => [...document.querySelectorAll('.chg-act')].some((x) => x.textContent.trim() === 'Undone'));
+        if (shape(read(deckFile)) !== shape(before)) fail('F9 Changes page Undo', 'the list did not come back');
+        else if (!undoneShown) fail('F9 Changes page Undo', 'the row does not read "Undone"');
+        else pass('F9 Changes page Undo', `${pick.name} → Undo → "Undone"`);
+      }
+    } catch (e) { fail('F9 Changes page Undo', String(e).slice(0, 140)); }
+    restore(stem, files);
+  }
+
+  // F10 · Database mode: put back an earlier version from the Changes page.
+  {
+    const files = snapshot(stem);
+    const before = read(deckFile);
+    try {
+      let pick = null;
+      const have = new Set([...deck.cards, ...deck.commander].map((n) => n.toLowerCase()));
+      for (const q of QUERIES) {
+        pick = ((await search(q, stem, true)) || []).find((it) => !have.has(it.name.toLowerCase()) && !BASICS.test(it.name));
+        if (pick) break;
+      }
+      if (!pick) skip('F10 restore an earlier version', 'no in-colour owned card to swap in');
+      else {
+        await api.post(`${BASE}/deck/${stem}/card`, { form: { action: 'replace', name: target, replacement: pick.name }, maxRedirects: 0 });
+        await p.goto(`${BASE}/deck/${stem}/changes`, { waitUntil: 'load', timeout: 300000 });
+        if (!(await p.locator('#versions').count())) skip('F10 restore an earlier version', 'files backend: versions are kept in database mode only');
+        else {
+          const btn = p.locator('form[action$="/restore"] button').first();
+          if (!(await btn.count())) fail('F10 restore an earlier version', 'no earlier version offered');
+          else {
+            p.once('dialog', (d) => d.accept());
+            await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), btn.click()]);
+            const t = await toast();
+            if (shape(read(deckFile)) !== shape(before)) fail('F10 restore an earlier version', 'the list did not come back');
+            else if (!t) fail('F10 restore an earlier version', 'no Undo toast after the restore');
+            else pass('F10 restore an earlier version', t.msg.trim());
+          }
+        }
+      }
+    } catch (e) { fail('F10 restore an earlier version', String(e).slice(0, 140)); }
+    restore(stem, files);
+  }
+
   await b.close();
   for (const [s, f, why] of results) console.log(`${s.padEnd(4)} ${f}${why ? ' — ' + why : ''}`);
   process.exit(results.some((r) => r[0] === 'FAIL') ? 1 : 0);

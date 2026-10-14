@@ -41,6 +41,7 @@
   --line-strong: rgba(255,255,255,.14);
 
   --measure: 68ch;          /* readable prose line length */
+  --target: 44px;           /* the smallest comfortable touch target */
 }
 
 * { box-sizing: border-box; }

@@ -169,14 +169,7 @@ def regroup(path, collection_path):
         if commander and mtglib._norm(name) == mtglib._norm(commander):
             commander_line = (qty, name)
             continue
-        types = None
-        a = attrs.get(mtglib._norm(name)) if attrs else None
-        if a and a.get("type"):
-            types = [a["type"]]
-        else:
-            card = mtglib.lookup(idx, name)
-            if card is not None and card.types:
-                types = card.types
+        types = deckcore.deck_card_types(name, idx, attrs)
         section = deckcore.type_bucket(name, types)
         if section is None:
             section = _hint(old_label)
@@ -241,14 +234,7 @@ def check(path, collection_path):
             continue
         if commander and mtglib._norm(name) == mtglib._norm(commander):
             continue
-        types = None
-        a = attrs.get(mtglib._norm(name)) if attrs else None
-        if a and a.get("type"):
-            types = [a["type"]]
-        else:
-            card = mtglib.lookup(idx, name)
-            if card is not None and card.types:
-                types = card.types
+        types = deckcore.deck_card_types(name, idx, attrs)
         bucket = deckcore.type_bucket(name, types)
         if bucket is None:
             untyped.append((label, name))

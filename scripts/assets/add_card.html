@@ -147,6 +147,20 @@
         done.type='button'; done.className='ac-go'; done.textContent='Reload deck';
         done.addEventListener('click', function(){ location.reload(); });
         out.appendChild(done);
+        if(x.j.undo){
+          // Undo straight from the sheet: the same route the toast and the Changes
+          // page use, so the add is reversed AND logged as the player's choice.
+          var un=document.createElement('button');
+          un.type='button'; un.className='ac-go ac-undo'; un.textContent='Undo';
+          un.addEventListener('click', function(){
+            un.disabled=true;
+            var g=new FormData(); g.append('rows', x.j.undo.rows); g.append('sig', x.j.undo.sig);
+            fetch('/deck/'+encodeURIComponent(STEM)+'/undo',{method:'POST',body:g,redirect:'manual'})
+              .then(function(){ location.reload(); })
+              .catch(function(){ un.disabled=false; });
+          });
+          out.appendChild(un);
+        }
       })
       .catch(function(){
         go.textContent='Add to deck'; go.disabled=false;

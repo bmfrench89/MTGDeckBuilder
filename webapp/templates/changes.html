@@ -1,21 +1,90 @@
 {% extends "base.html" %}
 {% block title %}Changes · {{ meta.title }} · MTG Deckbuilder{% endblock %}
+{% macro undo_form(rows, sig, label, aria) -%}
+<form class="chg-form" method="post" action="{{ url_for('deck_undo', stem=meta.stem) }}">
+  <input type="hidden" name="rows" value="{{ rows }}">
+  <input type="hidden" name="sig" value="{{ sig }}">
+  <input type="hidden" name="next" value="changes">
+  <button type="submit" class="btn ghost chg-btn" aria-label="{{ aria }}">{{ label }}</button>
+</form>
+{%- endmacro %}
+{% macro change_row(r) -%}
+<div class="arrival chg fs-sm">
+  <div class="chg-main">
+    {% if r.card %}<span class="good" aria-hidden="true">+</span> <span class="cardlink" data-card="{{ r.card }}">{{ r.card }}</span>{% endif %}
+    {% if r.replaced %}{% if r.card %} <span class="muted">replacing</span> {% else %}<span class="warn" aria-hidden="true">−</span> {% endif %}<span class="cardlink" data-card="{{ r.replaced }}">{{ r.replaced }}</span>{% endif %}
+    {% if not r.card and not r.replaced %}<span class="muted">(no card recorded)</span>{% endif %}
+    <div class="faint fs-xs">{{ r.added }} · {{ r.source|change_source }}{% if r.by %} · by {{ r.by }}{% endif %}</div>
+  </div>
+  <div class="chg-act">
+    {% if r.undone %}<span class="muted fs-xs">Undone</span>
+    {% elif r.blocker is none %}{{ undo_form(r.i, r.sig, 'Redo' if r.undoes is not none else 'Undo',
+         ('Redo: ' if r.undoes is not none else 'Undo: ') ~ r.words) }}
+    {% endif %}
+  </div>
+</div>
+{%- endmacro %}
 {% block content %}
 <nav class="crumbs mb-3"><a href="{{ url_for('deck', stem=meta.stem) }}">&larr; {{ meta.title }}</a></nav>
 <h1>Changes</h1>
-<div class="sub">Every card that came in or went out of this deck, newest first.
-  Changes made <b>by hand</b> are someone's own choice, and the optimizer never undoes them.</div>
-{% if not rows %}
+<div class="sub">Every card that came in or went out of this deck, newest first. Any change
+  can be undone here while the deck still matches it; an undo is saved as your own choice,
+  so the optimizer never puts it back.</div>
+{% if not groups %}
 <div class="card mt-4 muted">No changes recorded yet.</div>
 {% else %}
 <div class="card mt-4">
-  {% for r in rows %}
-  <div class="arrival fs-sm">
-    {% if r.Card %}<span class="good">+</span> <span class="cardlink" data-card="{{ r.Card }}">{{ r.Card }}</span>{% endif %}
-    {% if r.Replaced %}{% if r.Card %} <span class="muted">replacing</span> {% else %}<span class="warn">−</span> {% endif %}<span class="cardlink" data-card="{{ r.Replaced }}">{{ r.Replaced }}</span>{% endif %}
-    <div class="faint fs-xs">{{ r.Added }} · {{ r.Source|change_source }}{% if r.By %} · by {{ r.By }}{% endif %}</div>
+  {% for g in groups %}
+  {% if g.optimizer and g.rows|length > 1 %}
+  <section class="chg-group" aria-label="Optimizer swaps on {{ g.added }}">
+    <div class="chg-head">
+      <span class="fs-sm"><b>Optimizer</b> · {{ g.added }}{% if g.by %} · by {{ g.by }}{% endif %} · {{ g.rows|length }} swaps</span>
+      {% if g.undo_n > 1 %}{{ undo_form(g.undo_rows, g.undo_sig, 'Undo all ' ~ g.undo_n, 'Undo all ' ~ g.undo_n ~ ' optimizer swaps from ' ~ g.added) }}{% endif %}
+    </div>
+    {% for r in g.rows %}{{ change_row(r) }}{% endfor %}
+  </section>
+  {% else %}
+  {% for r in g.rows %}{{ change_row(r) }}{% endfor %}
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if db %}
+<h2 class="mt-6" id="versions">Earlier versions</h2>
+<div class="sub">Every saved version of this list. Restoring one keeps the list as it is now
+  as a version too, so you can always come back.</div>
+{% if versions %}
+<div class="card mt-3">
+  {% for v in versions %}
+  <div class="arrival chg fs-sm">
+    <div class="chg-main">
+      <time datetime="{{ v.at|replace(' ', 'T') }}Z" data-local>{{ v.at }} UTC</time> · {{ v.what }}{% if v.by %} · by {{ v.by }}{% endif %}
+      <div class="faint fs-xs">{% if v.removed %}the deck was removed{% elif v.n_in is none %}the earliest version kept{% elif v.n_in or v.n_out %}{{ v.n_in }} in, {{ v.n_out }} out{% else %}same cards, layout changed{% endif %}</div>
+    </div>
+    <div class="chg-act">
+      {% if v.current %}<span class="muted fs-xs">The list now</span>
+      {% elif not v.removed %}
+      <form class="chg-form" method="post" action="{{ url_for('deck_restore', stem=meta.stem) }}"
+            onsubmit="return confirm('Restore the list as it was then? The list as it is now is kept as a version, so you can come back to it.');">
+        <input type="hidden" name="rev" value="{{ v.id }}">
+        <button type="submit" class="btn ghost chg-btn" aria-label="Restore the version from {{ v.at }} UTC">Restore</button>
+      </form>
+      {% endif %}
+    </div>
   </div>
   {% endfor %}
 </div>
+{% else %}
+<div class="card mt-3 muted">No saved versions yet.</div>
+{% endif %}
+<script>
+  // Saved times are UTC on the server; show them in this device's own time.
+  document.querySelectorAll('time[data-local]').forEach(function (t) {
+    var d = new Date(t.getAttribute('datetime'));
+    if (!isNaN(d)) t.textContent = d.toLocaleString(undefined,
+      { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  });
+</script>
 {% endif %}
 {% endblock %}

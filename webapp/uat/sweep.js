@@ -87,7 +87,7 @@ function audit() {          // runs in the page
       await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), p.click('button[type=submit]')]);
     }
     const deckHref = await p.evaluate(() => (document.querySelector('.deckcard .name a') || {}).getAttribute?.('href'));
-    const pages = deckHref ? [...PAGES, ['deck', deckHref]] : PAGES;
+    const pages = deckHref ? [...PAGES, ['deck', deckHref], ['changes', deckHref + '/changes']] : PAGES;
     for (const [name, url] of pages) {
       await p.goto(BASE + url, { waitUntil: 'load', timeout: 300000 });
       await p.waitForTimeout(300);

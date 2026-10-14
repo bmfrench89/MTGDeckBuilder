@@ -829,8 +829,13 @@ def _flash_banner():
         f'<p style="margin:0;padding:10px 16px;border-left:4px solid '
         f'{edge.get(cat, "#60a5fa")};background:#1b2230;color:#f3f4f6;'
         f'font:500 15px/1.45 system-ui,sans-serif">{escape(m)}</p>'
-        for cat, m in msgs)
-    return f'<div class="appflashes" role="status" style="display:grid;gap:2px">{rows}</div>'
+        for cat, m in msgs if cat != "undo")
+    out = (f'<div class="appflashes" role="status" style="display:grid;gap:2px">{rows}</div>'
+           if rows else "")
+    toasts = [m for cat, m in msgs if cat == "undo" and isinstance(m, dict)]
+    if toasts:                          # one at a time: the newest offer
+        out += render_template("_undo_toast.html", t=toasts[-1])
+    return out
 
 
 @app.route("/deck/<stem>/visual")
@@ -859,10 +864,17 @@ def deck_edit(stem):
         old_text = open(m["path"], encoding="utf-8").read()
         with open(m["path"], "w", encoding="utf-8", newline="\n") as f:
             f.write(text.replace("\r\n", "\n"))
+        start = _change_count(m["path"])
         n_in, n_out = _log_editor_diff(m["path"], old_text, text)
         if n_in or n_out:
             _note("edit list", stem, f"{n_in} in, {n_out} out")
+            _flash_undo(stem, m["path"], start,
+                        f"List saved: {n_in} card{'s' if n_in != 1 else ''} in, "
+                        f"{n_out} out.")
         _invalidate(stem)
+        note = _deck_size_note(m["path"])
+        if note:
+            flash(note, "warn")
         return redirect(url_for("deck", stem=stem))
     content = open(m["path"], encoding="utf-8").read()
     return render_template("edit.html", meta=m, content=content, page="decks")
@@ -944,7 +956,7 @@ def _insert_deck_card(path, lines, name, section=None, create=False):
                     at -= 1
                 break
         new = lines[:at] + ["", f"# --- {section} ---", f"1 {name}"] + lines[at:]
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write("\n".join(new))
         return True
     if start is None:
@@ -1107,12 +1119,15 @@ def _deck_identity(text):
     return set(re.findall(r"[WUBRG]", (_hdr(text, "Colors") or "").upper()))
 
 
-def _auto_section(card):
+def _auto_section(card, deck_path=None, idx=None):
     """Where an added card goes when the player didn't pick a section: its TYPE
     section (the deck-file convention), or the explicit Unsorted section when its
     type is unknown — never the picker's first option, which put Cultivate under
-    Commander (UX audit 2026-10-14)."""
-    return deckcore.type_bucket(card.name, card.types) or deck_sections.UNSORTED
+    Commander (UX audit 2026-10-14). Types resolve as deck_sections resolves them:
+    the deck's own attrs first, then the collection."""
+    types = (deckcore.deck_card_types(card.name, idx, deckcore.deck_attrs(deck_path))
+             if deck_path else None) or card.types
+    return deckcore.type_bucket(card.name, types) or deck_sections.UNSORTED
 
 
 def _deck_size_note(path):
@@ -1127,19 +1142,34 @@ def _deck_size_note(path):
             "commander included.")
 
 
-def _commander_keys(text):
-    """Name keys of the deck's commander(s): every card in its Commander section.
-    The section, not the `# Commander:` header, so partners are both covered."""
-    keys, in_cmd = set(), False
-    for raw in text.splitlines():
-        s = raw.strip()
-        sec = re.match(r"^#\s*---\s*(.+?)\s*---\s*$", s)
-        if sec:
-            in_cmd = sec.group(1).strip().lower().startswith("commander")
-        elif in_cmd and s and not s.startswith("#"):
-            for c in mtglib.parse_deck(s):
-                keys |= mtglib.name_keys(c.name)
-    return keys
+_commander_keys = deckcore.commander_keys   # one parser: the undo guard uses it too
+
+
+def _changes_path(deck_path):
+    return os.path.splitext(deck_path)[0] + ".changes.csv"
+
+
+def _change_count(deck_path):
+    return len(deckcore.change_rows(_changes_path(deck_path)))
+
+
+def _undo_offer(stem, deck_path, start, text, label="Undo"):
+    """What an Undo button posts back for the rows this request appended to the
+    change log (positions `start` and up), or None when nothing was logged. The
+    signature lets the undo route refuse if those rows have changed since."""
+    rows = deckcore.change_rows(_changes_path(deck_path))[start:]
+    if not rows:
+        return None
+    return {"text": text, "stem": stem, "label": label,
+            "rows": ",".join(str(r["i"]) for r in rows),
+            "sig": deckcore.change_sig(rows)}
+
+
+def _flash_undo(stem, deck_path, start, text, label="Undo"):
+    """Offer an undo toast on the next page for what this request just logged."""
+    offer = _undo_offer(stem, deck_path, start, text, label)
+    if offer:
+        flash(offer, "undo")
 
 
 def _validate_add(meta, stem, name, idx=None):
@@ -1244,18 +1274,21 @@ def deck_card(stem):
         rtypes = None
         if action == "replace" and replacement:
             _coll, idx = collection_index()
-            ref = mtglib.lookup(idx, replacement)
-            rtypes = ref.types if (ref and ref.types) else None
+            rtypes = deckcore.deck_card_types(replacement, idx,
+                                              deckcore.deck_attrs(m["path"]))
         changed = _edit_deck_card(m["path"], action, name, replacement, types=rtypes)
         if not changed:
             return (f"Couldn't find “{name}” in the deck file — nothing was "
                     "changed. (If this card is a buy-list or field suggestion, "
                     "it isn't in the 99 to begin with.)", 404)
         if changed:
+            start = _change_count(m["path"])
             if action == "replace" and replacement:
                 _log_manual_change(m["path"], replacement, replaced=name,
                                    source="manual-replace")
                 _note("replace card", stem, f"{name} -> {replacement}")
+                _flash_undo(stem, m["path"], start,
+                            f"Replaced {name} with {replacement}.")
             elif action == "remove":
                 # A bare Remove is as much a player decision as a Replace, and the
                 # never-re-add rule reads the LOG — unlogged, the optimizer could
@@ -1266,6 +1299,7 @@ def deck_card(stem):
                 _log_manual_change(m["path"], "", replaced=name,
                                    source="manual-remove")
                 _note("remove card", stem, name)
+                _flash_undo(stem, m["path"], start, f"Removed {name}.")
             _invalidate(stem)
             note = _deck_size_note(m["path"])
             if note:
@@ -1293,10 +1327,12 @@ def deck_add(stem):
     if section:
         _edit_deck_card(m["path"], "add", card.name, section=section)
     else:
-        section = _auto_section(card)
+        section = _auto_section(card, m["path"], idx)
         lines = open(m["path"], encoding="utf-8").read().split("\n")
         _insert_deck_card(m["path"], lines, card.name, section=section, create=True)
+    start = _change_count(m["path"])
     _log_manual_change(m["path"], card.name, source="manual-add")
+    undo = _undo_offer(stem, m["path"], start, f"Added {card.name}.")
     _note("add card", stem, card.name)
     _invalidate(stem)                   # the deck changed — drop it before the
                                         # singleton check and the advise below
@@ -1313,7 +1349,246 @@ def deck_add(stem):
         verdict = None
     return jsonify({"ok": True, "card": card.name, "section": section,
                     "warning": warn, "illegal": illegal, "verdict": verdict,
-                    "size_note": _deck_size_note(m["path"])})
+                    "size_note": _deck_size_note(m["path"]), "undo": undo})
+
+
+def _undo_apply(path, take_out, put_back, idx):
+    """Write one reversal into the deck file. A swap goes back in place, re-filed by
+    type when the returning card's type is known (the deck's attrs, then the
+    collection, as deck_sections files); a returning card files under its type
+    section, or Unsorted when its type is unknown."""
+    types = (deckcore.deck_card_types(put_back, idx, deckcore.deck_attrs(path))
+             if put_back else None)
+    if take_out and put_back:
+        return _edit_deck_card(path, "replace", take_out, put_back, types=types)
+    if take_out:
+        return _edit_deck_card(path, "remove", take_out)
+    section = deckcore.type_bucket(put_back, types) or deck_sections.UNSORTED
+    lines = open(path, encoding="utf-8").read().split("\n")
+    return _insert_deck_card(path, lines, put_back, section=section, create=True)
+
+
+def _type_section_counts(text):
+    """{label: number of card lines} for the canonical type sections in a deck text."""
+    counts, cur = {}, None
+    for ln in text.split("\n"):
+        label = _section_label(ln)
+        if label is not None:
+            cur = label
+            counts.setdefault(cur, 0)
+            continue
+        s = ln.strip()
+        if cur is not None and s and not s.startswith("#"):
+            counts[cur] += 1
+    return {k: v for k, v in counts.items() if k in deckcore.TYPE_SECTION_ORDER}
+
+
+def _drop_emptied_sections(path, before_text):
+    """Drop a type section this undo emptied: it had cards before and has none now
+    (the Creatures header an Add opened, once that Add is undone). With its blank
+    line, so the file reads exactly as it did. Custom sections ("Combo Pieces") and
+    sections that were already empty are left alone."""
+    before = _type_section_counts(before_text)
+    text = open(path, encoding="utf-8").read()
+    gone = {k for k, v in _type_section_counts(text).items()
+            if v == 0 and before.get(k, 0) > 0}
+    if not gone:
+        return
+    lines, out = text.split("\n"), []
+    for j, ln in enumerate(lines):
+        if _section_label(ln) in gone:
+            nxt = lines[j + 1] if j + 1 < len(lines) else ""
+            if out and not out[-1].strip() and not nxt.strip():
+                out.pop()
+            continue
+        out.append(ln)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(out))
+
+
+def _undo_words(take_out, put_back):
+    if take_out and put_back:
+        return f"put {put_back} back in place of {take_out}"
+    if take_out:
+        return f"took {take_out} back out"
+    return f"put {put_back} back in"
+
+
+@app.route("/deck/<stem>/undo", methods=["POST"])
+def deck_undo(stem):
+    """Undo logged changes: one row (a toast, a Changes-page row) or several (a ⚡
+    run, an editor save). Rows go newest first. Each reversal is checked against
+    the deck as it is now, written as an ordinary edit, and logged as a new
+    `manual-undo:<row>` change. So an undo is itself undoable (Redo), and the
+    optimizer treats what it restored as the player's own choice."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    back = (url_for("deck_changes", stem=stem) if request.form.get("next") == "changes"
+            else url_for("deck", stem=stem))
+    log = _changes_path(m["path"])
+    rows = deckcore.change_rows(log)
+    try:
+        want = sorted({int(x) for x in (request.form.get("rows") or "").split(",")
+                       if x.strip()}, reverse=True)
+    except ValueError:
+        want = []
+    picked = [rows[i] for i in want if 0 <= i < len(rows)]
+    if (not want or len(picked) != len(want)
+            or deckcore.change_sig(picked) != (request.form.get("sig") or "")):
+        flash("This deck's change list has moved on since that page was opened, so "
+              "nothing was undone. Here is the list as it is now.", "warn")
+        return redirect(url_for("deck_changes", stem=stem), 303)
+    undone = deckcore.undone_rows(rows)
+    _coll, idx = collection_index()
+    from datetime import date
+    today = date.today().isoformat()
+    before_text = open(m["path"], encoding="utf-8").read()
+    done, skipped, inverse = [], [], []
+    for r in picked:
+        text = open(m["path"], encoding="utf-8").read()
+        why = deckcore.undo_blocker(r, text, undone)
+        take_out, put_back = deckcore.undo_step(r)
+        if why is None and put_back:
+            # Colour identity, as Add and Replace enforce it: the commander may
+            # have changed since. Only when both identities are known.
+            ref = mtglib.lookup(idx, put_back)
+            ident = _deck_identity(text)
+            if ref is not None and ref.identity and ident and not ref.identity <= ident:
+                why = f"{put_back} is outside this deck's colours now"
+        if why is None and not _undo_apply(m["path"], take_out, put_back, idx):
+            why = "the deck file didn't have the line to change"
+        if why:
+            skipped.append(f"{_undo_words(take_out, put_back)} ({why})")
+            continue
+        inverse.append((put_back or "", today, take_out or "",
+                        f"{deckcore.UNDO_SOURCE}:{r['i']}"))
+        done.append(_undo_words(take_out, put_back))
+    if inverse:
+        _drop_emptied_sections(m["path"], before_text)
+        start = len(rows)
+        deckcore.append_changes(log, inverse, by=_by())
+        _note("undo", stem, "; ".join(done)[:240])
+        _invalidate(stem)
+        head = done[0][0].upper() + done[0][1:]
+        if len(done) == 1:
+            msg = f"Undone: {head}."
+        else:
+            msg = (f"Undid {len(done)} changes: {head}"
+                   + "".join(f"; {d}" for d in done[1:3])
+                   + (f"; and {len(done) - 3} more" if len(done) > 3 else "") + ".")
+        _flash_undo(stem, m["path"], start, msg, label="Redo")
+    if skipped:
+        flash(("Not undone: " if inverse else "Nothing was undone: ")
+              + "; ".join(skipped[:4]) + ("; and more" if len(skipped) > 4 else "")
+              + ".", "warn")
+    note = _deck_size_note(m["path"]) if inverse else None
+    if note:
+        flash(note, "warn")
+    return redirect(back, 303)
+
+
+def _revision_words(action):
+    """A stored revision's action ("app /deck/x/card", "sync", "restore rev 3") in
+    words for people."""
+    a = (action or "").strip()
+    path = a[4:] if a.startswith("app ") else ""
+    for tail, words in (("/card", "a card swapped or removed"), ("/add", "a card added"),
+                        ("/optimize", "the optimizer"), ("/edit", "the list edited"),
+                        ("/undo", "an undo"), ("/restore", "an earlier version restored"),
+                        ("/pin", "a pin"), ("/bracket", "the bracket set"),
+                        ("/confirm", "an import"), ("/save", "a new deck saved")):
+        if path.endswith(tail):
+            return words
+    if a.startswith("restore"):
+        return "an earlier version restored"
+    if a == "before restore":
+        return "kept before a restore"
+    if a.startswith("sync") or a == "capture":
+        return "synced"
+    if a.startswith("seed"):
+        return "first saved"
+    return "saved"
+
+
+def _deck_versions(stem, deck_path, limit=30):
+    """The stored versions of this deck's list, newest first, each with what changed
+    since the version before it. [] on the files backend: versions are kept only
+    once the app runs on its database."""
+    if not _db_mode():
+        return []
+    key = f"decks/{os.path.basename(deck_path)}"
+    revs = store.file_revisions(COLLECTION, key, limit=limit + 1)
+    try:
+        current = open(deck_path, encoding="utf-8").read()
+    except OSError:
+        current = None
+
+    def cards(text):
+        out = {}
+        for c in mtglib.parse_deck(text or ""):
+            if not mtglib.is_basic(c.name):
+                out.setdefault(mtglib._norm(mtglib.front_face(c.name)), c.name)
+        return out
+    out, seen_current = [], False
+    for n, rv in enumerate(revs[:limit]):
+        older = revs[n + 1] if n + 1 < len(revs) else None
+        now_c = cards(rv["text"])
+        was_c = cards(older["text"]) if older else None
+        is_current = (not seen_current and rv["text"] is not None
+                      and rv["text"] == current)
+        seen_current = seen_current or is_current
+        out.append({"id": rv["id"], "at": rv["at"].replace("T", " ").rstrip("Z"),
+                    "what": _revision_words(rv["action"]),
+                    # Names only once named members exist, as change rows do: a
+                    # single-password app would say "by owner" on every line.
+                    "by": (rv["by"] or "") if users.exists() else "",
+                    "removed": rv["text"] is None, "current": is_current,
+                    "n_in": len([k for k in now_c if k not in was_c]) if was_c is not None else None,
+                    "n_out": len([k for k in was_c if k not in now_c]) if was_c is not None else None})
+    return out
+
+
+@app.route("/deck/<stem>/restore", methods=["POST"])
+def deck_restore(stem):
+    """Put back an earlier stored version of this deck's list (database mode). The
+    list as it is now is saved as a version first, so a restore can always be
+    reversed, and the cards that moved are logged like an editor save: they get
+    the player's protection and an Undo."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    back = url_for("deck_changes", stem=stem)
+    if not _db_mode():
+        flash("Earlier versions are kept once the app runs on its database.", "warn")
+        return redirect(back, 303)
+    key = f"decks/{os.path.basename(m['path'])}"
+    rev = request.form.get("rev", type=int)
+    hist = {h["id"]: h for h in store.file_history(COLLECTION, key)}
+    if not rev or rev not in hist or hist[rev]["removed"]:
+        flash("That version isn't in this deck's history.", "warn")
+        return redirect(back, 303)
+    who = _by() or _me()[1]
+    store.capture(COLLECTION, DECKS_DIR, deckcore.PINS, action="before restore", by=who)
+    old_text = open(m["path"], encoding="utf-8").read()
+    if not store.restore(COLLECTION, DECKS_DIR, deckcore.PINS, key=key, rev=rev, by=who):
+        flash("That version couldn't be restored.", "warn")
+        return redirect(back, 303)
+    new_text = open(m["path"], encoding="utf-8").read()
+    start = _change_count(m["path"])
+    n_in, n_out = _log_editor_diff(m["path"], old_text, new_text)
+    _note("restore version", stem, f"{hist[rev]['at']}: {n_in} in, {n_out} out")
+    _invalidate(stem)
+    when = hist[rev]["at"].replace("T", " ").rstrip("Z")
+    msg = f"Restored the list from {when} UTC: {n_in} in, {n_out} out."
+    if n_in or n_out:
+        _flash_undo(stem, m["path"], start, msg)
+    else:
+        flash(msg + " (The cards were the same; only the layout changed.)", "info")
+    note = _deck_size_note(m["path"])
+    if note:
+        flash(note, "warn")
+    return redirect(url_for("deck", stem=stem), 303)
 
 
 @app.route("/api/deck/<stem>/advise")
@@ -2260,11 +2535,18 @@ def deck_optimize(stem):
     m = _analysable_deck(stem)
     coll, idx = collection_index()
     try:
+        start = _change_count(m["path"])
         r = optimize.optimize(m["path"], coll, idx, DECKS_DIR, apply=True, by=_by())
         _note("optimize", stem, f"{len(r.get('swaps') or []) + len(r.get('land_swaps') or [])} change(s)")
         if r.get("illegal"):
             app.logger.error("post-optimize ILLEGAL in %s: %s", stem, r["illegal"])
         _flash_optimize(r)
+        n = _change_count(m["path"]) - start
+        if n > 0:
+            # The whole run as ONE undo: the rows it appended are contiguous.
+            _flash_undo(stem, m["path"], start,
+                        f"The optimizer made {n} swap{'s' if n != 1 else ''}.",
+                        label="Undo all" if n > 1 else "Undo")
     except Exception as e:              # never silent: the report IS the feature
         app.logger.exception("optimize failed for %s", stem)
         flash(f"Optimize stopped with an error ({type(e).__name__}). Check this deck's "
@@ -3232,15 +3514,47 @@ def deck_changes(stem):
     m = deck_meta(stem)
     if not m:
         abort(404)
-    import csv as _csv
-    rows = []
+    rows = deckcore.change_rows(_changes_path(m["path"]))
     try:
-        with open(os.path.splitext(m["path"])[0] + ".changes.csv", encoding="utf-8") as f:
-            rows = list(_csv.DictReader(f))
+        text = open(m["path"], encoding="utf-8").read()
     except OSError:
-        pass
-    return render_template("changes.html", meta=m, rows=list(reversed(rows))[:200],
-                           page="home")
+        text = ""
+    undone = deckcore.undone_rows(rows)
+    for r in rows:
+        r["undone"] = r["i"] in undone
+        r["blocker"] = deckcore.undo_blocker(r, text, undone)
+        r["sig"] = deckcore.change_sig([r])
+        r["words"] = _change_words(r)
+    groups = []
+    for r in list(reversed(rows))[:200]:
+        # One ⚡ run appends its swaps together, so consecutive optimizer rows with
+        # the same date and person read as one group, with one "Undo all".
+        opt = bool(r["source"]) and not r["source"].startswith(("manual", "imported"))
+        g = groups[-1] if groups else None
+        if (opt and g and g["optimizer"] and g["added"] == r["added"]
+                and g["by"] == r["by"]):
+            g["rows"].append(r)
+        else:
+            groups.append({"optimizer": opt, "added": r["added"], "by": r["by"],
+                           "rows": [r]})
+    for g in groups:
+        ok = [r for r in g["rows"] if r["blocker"] is None]
+        g["undo_rows"] = ",".join(str(r["i"]) for r in ok)
+        g["undo_sig"] = deckcore.change_sig(ok) if ok else ""
+        g["undo_n"] = len(ok)
+    return render_template("changes.html", meta=m, groups=groups, db=_db_mode(),
+                           versions=_deck_versions(stem, m["path"]), page="home")
+
+
+def _change_words(r):
+    """One change row as a short phrase for a button's accessible name."""
+    if r["card"] and r["replaced"]:
+        return f"{r['card']} replacing {r['replaced']}"
+    if r["card"]:
+        return f"added {r['card']}"
+    if r["replaced"]:
+        return f"removed {r['replaced']}"
+    return "this change"
 
 
 @app.route("/api/card/<path:name>")
@@ -3388,6 +3702,10 @@ def _change_source_filter(src):
         return "source not recorded"
     if s in _CHANGE_SOURCES:
         return _CHANGE_SOURCES[s]
+    if s.startswith(deckcore.UNDO_SOURCE):
+        return "an undo"
+    if s.startswith("manual"):           # legacy `manual` rows: still the player's
+        return "changed by hand"
     if s.startswith("imported"):
         return s
     return "optimizer swap"
@@ -3399,7 +3717,8 @@ _ACTIVITY_VERBS = {
     "unpin": "unpinned", "set bracket": "set the bracket", "release pin": "released a pin",
     "move pin": "moved a pin", "delete deck": "deleted a deck",
     "new deck (Build Next)": "saved a new deck from Build Next",
-    "optimize": "ran the optimizer", "add to collection": "added to the collection",
+    "optimize": "ran the optimizer", "undo": "undid a change",
+    "restore version": "restored an earlier version", "add to collection": "added to the collection",
     "merge an export": "merged an export", "replace collection": "replaced the collection",
     "set a card's count": "changed a card's count", "retire batch rows": "retired batch rows",
     "add a batch": "added a batch", "replace list (import)": "replaced a deck's list",

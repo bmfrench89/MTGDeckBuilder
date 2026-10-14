@@ -1,0 +1,57 @@
+{#- The undo toast (docs/spec-ux-refresh.md, Wave 1.1). One partial for both
+    surfaces: app pages include it from base.html, and the deck dashboard gets it
+    through _flash_banner(). The dashboard loads neither app.css nor the app's
+    scripts, so the toast carries its own small style and script.
+    `t` = {text, stem, rows, sig, label} from app._undo_offer. -#}
+<div class="utoast" role="status" aria-live="polite" data-utoast>
+  <p class="ut-msg">{{ t.text }}</p>
+  <form class="ut-form" method="post" action="{{ url_for('deck_undo', stem=t.stem) }}">
+    <input type="hidden" name="rows" value="{{ t.rows }}">
+    <input type="hidden" name="sig" value="{{ t.sig }}">
+    <button type="submit" class="ut-btn">{{ t.label or 'Undo' }}</button>
+  </form>
+  <a class="ut-link" href="{{ url_for('deck_changes', stem=t.stem) }}">Changes</a>
+  <button type="button" class="ut-x" aria-label="Dismiss">&times;</button>
+</div>
+<style>
+.utoast{position:fixed;left:50%;transform:translateX(-50%);z-index:9000;
+  bottom:calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;
+  width:max-content;max-width:min(560px,calc(100vw - 24px));padding:4px 4px 4px 16px;
+  background:#1b2230;color:#f3f4f6;border:1px solid #3b4558;border-radius:12px;
+  box-shadow:0 12px 32px rgba(0,0,0,.45);font:500 15px/1.4 system-ui,-apple-system,sans-serif}
+.utoast .ut-msg{margin:0;flex:1 1 auto;padding:8px 4px 8px 0}
+.utoast .ut-form{margin:0;flex:none}
+.utoast .ut-btn{min-height:44px;min-width:64px;padding:0 16px;border:0;border-radius:8px;
+  background:#93c5fd;color:#0b1220;font:700 15px system-ui,-apple-system,sans-serif;cursor:pointer}
+.utoast .ut-link{flex:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;
+  color:#bfdbfe;text-decoration:underline}
+.utoast .ut-x{flex:none;min-height:44px;min-width:44px;border:0;border-radius:8px;
+  background:transparent;color:#cbd5e1;font-size:24px;line-height:1;cursor:pointer}
+.utoast .ut-btn:focus-visible,.utoast .ut-x:focus-visible,.utoast .ut-link:focus-visible{
+  outline:2px solid #fde68a;outline-offset:2px}
+@media (max-width:480px){.utoast{flex-wrap:wrap}.utoast .ut-msg{flex-basis:100%}}
+</style>
+<script>
+(function(){
+  // At least 12 s on screen; the clock stops while a finger, pointer or keyboard is
+  // on the toast. Undo also stays on the deck's Changes page, so a missed toast
+  // costs nothing.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-utoast]:not([data-wired])'), function(t){
+    t.setAttribute('data-wired', '1');
+    var left = 12000, started = 0, timer = null, hov = false, foc = false;
+    function hide(){ clearTimeout(timer); t.hidden = true; }
+    function run(){ clearTimeout(timer); started = Date.now(); timer = setTimeout(hide, left); }
+    function sync(){
+      if (hov || foc) { if (timer) { clearTimeout(timer); timer = null; left = Math.max(4000, left - (Date.now() - started)); } }
+      else if (!timer && !t.hidden) { run(); }
+    }
+    t.addEventListener('pointerenter', function(){ hov = true; sync(); });
+    t.addEventListener('pointerleave', function(){ hov = false; sync(); });
+    t.addEventListener('focusin', function(){ foc = true; sync(); });
+    t.addEventListener('focusout', function(e){ if (!t.contains(e.relatedTarget)) { foc = false; sync(); } });
+    t.addEventListener('keydown', function(e){ if (e.key === 'Escape') hide(); });
+    t.querySelector('.ut-x').addEventListener('click', hide);
+    run();
+  });
+})();
+</script>

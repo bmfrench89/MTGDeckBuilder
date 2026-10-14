@@ -111,7 +111,7 @@
            title="Print-exact 63×88mm playtest proxies of this deck's buylist — sleeve them over the cards they'd replace and play before you buy. Print at 100% scale.">Proxies</a>
         <hr>
         <form method="post" action="{{ url_for('deck_optimize', stem=d.stem) }}"
-          onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every swap is listed on the deck\'s Changes page.');">
+          onsubmit="return confirm('Tune this deck toward what the field plays? Swaps low-value cards for high-inclusion ones you already own and aren\'t using elsewhere. Your commander, basics and game-plan cards are protected, and every swap can be undone, one at a time or all together, from the deck\'s Changes page.');">
           <button class="linkbtn" type="submit" title="Optimize against EDHREC">⚡ Optimize</button>
         </form>
         <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"

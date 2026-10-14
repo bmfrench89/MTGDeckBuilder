@@ -1,6 +1,6 @@
 # Spec — UX refresh: a phone edit loop the household can trust
 
-**Status: Wave 0 SHIPPED 2026-10-14; Wave 1 next.** This file is the live tracker; tick its boxes.
+**Status: Wave 0 SHIPPED 2026-10-14; Wave 1.1 (undo) SHIPPED 2026-10-14; 1.2–1.5 next.** This file is the live tracker; tick its boxes.
 **Player ask (2026-10-14):** "What about general app improvements or UI/UX updates. Perform
 deep research and spec out and implement what you think could be best for this site."
 **Evidence:** [`research-ux-2026-10.md`](research-ux-2026-10.md): five research passes (the
@@ -60,11 +60,35 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 
 | # | Change |
 |---|---|
-| 1.1 | [ ] **Undo.** A toast after each panel edit ("Replaced Hulking Raptor with Cultivate · Undo", ≥10 s, paused on focus, `role=status`); a permanent Undo on each row of the deck's Changes page; "Restore this version" over stored revisions; a ⚡ run undone as one batch. Each undo is a new inverse edit through `deckcore.append_changes` with a manual source, so the optimizer never churns it. The Optimize confirm stops promising what doesn't exist until then |
+| 1.1 | [x] **Undo.** A toast after each panel edit ("Replaced Hulking Raptor with Cultivate · Undo", ≥10 s, paused on focus, `role=status`); a permanent Undo on each row of the deck's Changes page; "Restore this version" over stored revisions; a ⚡ run undone as one batch. Each undo is a new inverse edit through `deckcore.append_changes` with a manual source, so the optimizer never churns it. The Optimize confirm stops promising what doesn't exist until then |
 | 1.2 | [ ] **Phone deck page.** Tab bar inside the first screen (a one-line summary that expands into the tiles); every tab visible (short labels or an edge fade); the Deck tab defaults to a text list (48–56 px rows with a small thumbnail, name, cost, ownership mark) under collapsible section headers with counts; an in-deck filter box; client-side group (section, role, mana value, colour) and sort; the chosen view remembered per device; the image grid one tap away; tap the panel image for a full-screen zoom; tap a curve bar to filter |
 | 1.3 | [ ] **Card panel on `<dialog>`:** name, ownership line and actions first, then text, then art; 44 px close; deck titles as links; a visible "Simulate first" button (no Shift-click); Back closes the sheet; focus moves in and returns |
 | 1.4 | [ ] **The dashboard inside the shell:** bottom bar and rail on deck pages, one "⋯" menu, titles and back links on deck sub-pages; Activity, Import, New arrivals in the More sheet; "Phone" setup out of it |
 | 1.5 | [ ] **Accessibility batch:** labels on every control, focusable card names, underlined links in text, `main` landmark and a skip link, `color-scheme: dark`, `scroll-padding` under sticky bars, a `--target` size token, the smallest type token raised to 12–13 px, inputs at 16 px |
+
+**Wave 1.1 as built:**
+- **What can be undone.** Each panel Remove or Replace, an Add (from the sheet itself), an
+  editor save and a whole ⚡ run ("Undo all") each leave a toast. It stays at least 12 s,
+  the clock stops while it is touched or focused, and it survives the panel's reload
+  (the panel now fetches with `redirect: 'manual'`).
+- **The Changes page.** Every row has Undo or reads "Undone". An undo row offers Redo.
+  Consecutive optimizer rows form one group with "Undo all N".
+- **Earlier versions (database mode).** The Changes page lists the stored versions of the
+  list, and "Restore" first saves the list as it is now. A restore logs its card changes
+  and can itself be undone.
+- **How it is stored.** An undo is a new row, `Source=manual-undo:<row>`. A row's position
+  in the log is its identity, and a signature refuses a stale page.
+- **The deck, not only the log, decides.** A card that has since left, one already back,
+  the commander, or an off-colour return is refused with the reason.
+- **Where cards land.** A returning card files where `deck_sections` would put it, with the
+  deck's own attrs first via the new `deckcore.deck_card_types`, now shared by Add, Replace
+  and the section check. A type section the undo empties is dropped, so an Add then Undo
+  leaves the file byte-identical.
+- **Broken log rows.** Three hand-written rows had unquoted commas, which hid three of the
+  player's swaps from the optimizer. They are repaired, and CI now checks every committed
+  change log.
+- **UAT.** `flows.js` gained F7–F10: panel replace → toast → Undo, ⚡ → Undo all, Undo on
+  the Changes page, and restore an earlier version. All 13 flows PASS.
 
 ## 5. Waves 2 and 3 — collection, speed, differentiators
 
@@ -86,7 +110,7 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 | Core flow | Today | Target after Waves 0–1 |
 |---|---|---|
 | Open a deck and read one card | 2 taps + 1.7–11.9 screens of scrolling; text needs a live Scryfall call | 2 taps + a few letters in the deck filter |
-| Swap one card | 4 taps; instant, off-colour allowed, no undo | 4 taps; colour-checked; Undo toast |
+| Swap one card | 4 taps; instant, off-colour allowed, no undo | 4 taps; colour-checked; Undo toast (**done**) |
 | Find which deck holds a card | 2 taps, 3.3 screens to the search box, ~1.2 screens in the sheet; answer as slugs | search icon, a few letters, read the row |
 | Paste three cards into the collection | 4 taps after 1.36 screens of scrolling | 4 taps, no scrolling |
 | Check the wishlist | 1 tap, then 19.7 screens of tables | 1 tap; grouped by deck and collapsed |
