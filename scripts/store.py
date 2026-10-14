@@ -57,6 +57,13 @@ CREATE TABLE IF NOT EXISTS ledger (
 CREATE INDEX IF NOT EXISTS ledger_key ON ledger(key);
 CREATE TABLE IF NOT EXISTS ingested (
     block TEXT PRIMARY KEY, header TEXT, at TEXT, copies INTEGER);
+CREATE TABLE IF NOT EXISTS files (
+    path TEXT PRIMARY KEY, text TEXT NOT NULL, sha TEXT NOT NULL,
+    live INTEGER NOT NULL DEFAULT 1, updated TEXT);
+CREATE TABLE IF NOT EXISTS file_revisions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL, sha TEXT NOT NULL,
+    text TEXT, at TEXT NOT NULL, action TEXT NOT NULL, by TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS file_revisions_path ON file_revisions(path);
 """
 
 DEFAULT_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
@@ -483,6 +490,188 @@ def snapshot_counts(path, additions_path=None):
     return sorted((n, q) for n, q in counts.items() if q > 0)
 
 
+# --------------------------------------------------------------------------- #
+# Decks and pins (Phase 1b, 2026-10-14). The database keeps every deck file and
+# pins.csv with EVERY revision; the deck folder is the working copy the engines
+# read (they all take a deck path), rebuilt from the database whenever it is gone.
+#   capture: disk -> database. After every app write and every sync, so an app
+#            edit and a session's committed edit both become a revision.
+#   restore: database -> disk. Only where the working copy is missing (a new host,
+#            or once the repo stops carrying data), or one file on request.
+# Keys are "decks/<file>" and "pins.csv", relative, so tmp dirs work the same.
+# --------------------------------------------------------------------------- #
+DECK_SUFFIXES = (".txt", ".notes.md", ".attrs.csv", ".buylist.csv", ".changes.csv",
+                 ".clips.json")
+
+
+def _sha(text):
+    import hashlib
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()
+
+
+def _disk_files(decks_dir, pins_path):
+    """{key: absolute path} for every file the database keeps. Flat deck folder
+    only; anything that isn't a deck file or a companion is not data we own."""
+    out = {}
+    if decks_dir and os.path.isdir(decks_dir):
+        for f in sorted(os.listdir(decks_dir)):
+            p = os.path.join(decks_dir, f)
+            if os.path.isfile(p) and f.endswith(DECK_SUFFIXES) and not f.startswith("."):
+                out[f"decks/{f}"] = p
+    if pins_path and os.path.isfile(pins_path):
+        out["pins.csv"] = pins_path
+    return out
+
+
+def _abs(key, decks_dir, pins_path):
+    if key == "pins.csv":
+        return pins_path
+    return os.path.join(decks_dir, key.split("/", 1)[1])
+
+
+def capture(path, decks_dir, pins_path=None, *, action="capture", by=""):
+    """Record every deck file (and pins.csv) whose content differs from the
+    database as a new revision; a file that vanished is marked removed (its history
+    stays, and `restore` can bring it back). -> {added, changed, removed}."""
+    disk = _disk_files(decks_dir, pins_path)
+    out = {"added": 0, "changed": 0, "removed": 0}
+    at = _now()
+    con = connect(path)
+    try:
+        with con:
+            known = {r[0]: (r[1], r[2]) for r in
+                     con.execute("SELECT path, sha, live FROM files")}
+            for key, p in disk.items():
+                try:
+                    with open(p, encoding="utf-8") as f:
+                        text = f.read()
+                except (OSError, UnicodeDecodeError):
+                    continue
+                sha = _sha(text)
+                old = known.get(key)
+                if old and old[0] == sha and old[1]:
+                    continue
+                con.execute("INSERT OR REPLACE INTO files(path, text, sha, live, updated) "
+                            "VALUES(?,?,?,1,?)", (key, text, sha, at))
+                con.execute("INSERT INTO file_revisions(path, sha, text, at, action, by) "
+                            "VALUES(?,?,?,?,?,?)", (key, sha, text, at, action, by))
+                out["changed" if old and old[1] else "added"] += 1
+            for key, (sha, live) in known.items():
+                if live and key not in disk and (
+                        key == "pins.csv" and pins_path or key.startswith("decks/") and decks_dir):
+                    con.execute("UPDATE files SET live=0, updated=? WHERE path=?", (at, key))
+                    con.execute("INSERT INTO file_revisions(path, sha, text, at, action, by) "
+                                "VALUES(?,?,NULL,?,?,?)", (key, "", at, f"{action}: removed", by))
+                    out["removed"] += 1
+    finally:
+        con.close()
+    return out
+
+
+def stored_files(path, live_only=True):
+    """{key: text} of what the database holds."""
+    if not os.path.exists(path):
+        return {}
+    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        q = "SELECT path, text FROM files" + (" WHERE live=1" if live_only else "")
+        return dict(con.execute(q).fetchall())
+    except sqlite3.Error:
+        return {}
+    finally:
+        con.close()
+
+
+def file_history(path, key):
+    """Every revision of one file, oldest first: [{id, at, action, by, removed}]."""
+    try:
+        con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            rows = con.execute("SELECT id, at, action, by, text IS NULL FROM file_revisions "
+                               "WHERE path=? ORDER BY id", (key,)).fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return []
+    return [dict(zip(("id", "at", "action", "by", "removed"), r)) for r in rows]
+
+
+def deck_working_copy_missing(decks_dir):
+    """No deck list on disk at all: a new host, or a clone without data."""
+    return not (os.path.isdir(decks_dir) and
+                any(f.endswith(".txt") for f in os.listdir(decks_dir)))
+
+
+def restore(path, decks_dir, pins_path=None, *, key=None, rev=None, by="restore"):
+    """Write files back from the database. With no `key`: every LIVE file that is
+    missing on disk (never overwrites one that exists). With `key` (and optionally
+    `rev`, a revision id): that one file, overwriting, and the write is recorded as
+    a new revision so the history shows the restore. -> [keys written]."""
+    con = connect(path)
+    written = []
+    try:
+        with con:
+            if key:
+                if rev:
+                    row = con.execute("SELECT text FROM file_revisions WHERE path=? AND id=?",
+                                      (key, int(rev))).fetchone()
+                else:
+                    row = con.execute("SELECT text FROM files WHERE path=?", (key,)).fetchone()
+                if not row or row[0] is None:
+                    return []
+                rows = [(key, row[0])]
+            else:
+                rows = con.execute("SELECT path, text FROM files WHERE live=1").fetchall()
+            for k, text in rows:
+                if k == "pins.csv" and not pins_path or k.startswith("decks/") and not decks_dir:
+                    continue
+                dest = _abs(k, decks_dir, pins_path)
+                if not key and os.path.exists(dest):
+                    continue
+                os.makedirs(os.path.dirname(os.path.abspath(dest)), exist_ok=True)
+                tmp = dest + ".restore.tmp"
+                with open(tmp, "w", encoding="utf-8", newline="") as f:
+                    f.write(text)
+                os.replace(tmp, dest)
+                written.append(k)
+                if key:
+                    sha = _sha(text)
+                    con.execute("INSERT OR REPLACE INTO files(path, text, sha, live, updated) "
+                                "VALUES(?,?,?,1,?)", (k, text, sha, _now()))
+                    con.execute("INSERT INTO file_revisions(path, sha, text, at, action, by) "
+                                "VALUES(?,?,?,?,?,?)",
+                                (k, sha, text, _now(), f"restore{f' rev {rev}' if rev else ''}", by))
+    finally:
+        con.close()
+    return written
+
+
+def decks_zip(path) -> bytes:
+    """Every live deck file and pins.csv from the database, as one zip: the deck
+    backup beside the collection CSV."""
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for k, text in sorted(stored_files(path).items()):
+            z.writestr(k, text)
+    return buf.getvalue()
+
+
+def decks_summary(path):
+    files = stored_files(path)
+    decks = sum(1 for k in files if k.startswith("decks/") and k.endswith(".txt"))
+    try:
+        con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            revs = con.execute("SELECT COUNT(*) FROM file_revisions").fetchone()[0]
+        finally:
+            con.close()
+    except sqlite3.Error:
+        revs = 0
+    return {"decks": decks, "files": len(files), "revisions": revs,
+            "pins": "pins.csv" in files}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -498,15 +687,37 @@ def main(argv=None):
     i.add_argument("--additions", required=True)
     t = sub.add_parser("stats", help="cards and copies in the database")
     t.add_argument("--db", default=DEFAULT_DB)
+    c = sub.add_parser("capture", help="record deck files and pins.csv as revisions")
+    c.add_argument("--db", default=DEFAULT_DB)
+    c.add_argument("--decks-dir", required=True)
+    c.add_argument("--pins")
+    r = sub.add_parser("restore", help="write deck files back from the database")
+    r.add_argument("--db", default=DEFAULT_DB)
+    r.add_argument("--decks-dir", required=True)
+    r.add_argument("--pins")
+    r.add_argument("--file", help="one file, e.g. decks/beorn-the-fierce.txt or pins.csv")
+    r.add_argument("--rev", type=int, help="a revision id from `history`")
+    h = sub.add_parser("history", help="revisions of one deck file")
+    h.add_argument("--db", default=DEFAULT_DB)
+    h.add_argument("file")
     a = ap.parse_args(argv)
     if a.cmd == "seed":
         print(seed(a.db, a.export, a.august, a.additions, a.decks_dir, write=a.write))
     elif a.cmd == "ingest":
         nb, nc = ingest(a.db, a.additions)
         print(f"ingested {nb} new block(s), {nc} cop(ies)")
+    elif a.cmd == "capture":
+        print(capture(a.db, a.decks_dir, a.pins, action="cli", by="cli"))
+    elif a.cmd == "restore":
+        print(restore(a.db, a.decks_dir, a.pins, key=a.file, rev=a.rev, by="cli"))
+    elif a.cmd == "history":
+        for r in file_history(a.db, a.file):
+            print(f"{r['id']:>5}  {r['at']}  {r['action']}{'  (removed)' if r['removed'] else ''}"
+                  f"{'  · ' + r['by'] if r['by'] else ''}")
     else:
         cards = mtglib._load_db(a.db) if os.path.exists(a.db) else []
         print(f"{len(cards)} cards, {sum(c.quantity for c in cards)} copies")
+        print(decks_summary(a.db))
     return 0
 
 

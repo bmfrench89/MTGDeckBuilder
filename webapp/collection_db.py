@@ -10,6 +10,12 @@ Run by sync_server.sh after every pull. Two jobs, and it never fails the sync:
   * **Every later run: ingest.** Batches a Claude session committed to
     owned_additions.txt arrive with the pull; each new block is applied once.
 
+Then, every run, **decks and pins** (Phase 1b): if the deck folder is gone (a new
+host, or a repo that no longer carries data) it is rebuilt from the database;
+otherwise every deck file and pins.csv that changed (a session's committed edit,
+arriving with the pull) is recorded as a revision. App edits are captured as they
+happen, by the app itself.
+
 `MTG_COLLECTION` set to anything but the database means the operator chose another
 source on purpose: this step then does nothing.
 """
@@ -25,10 +31,31 @@ EXPORT = os.path.join(COLL_DIR, "collection.csv")
 AUGUST = os.path.join(COLL_DIR, "collection_snapshot.txt")
 ADDITIONS = os.path.join(COLL_DIR, "owned_additions.txt")
 DECKS = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data", "decks"))
+PINS = os.path.join(COLL_DIR, "pins.csv")
 
 
-def run(db=DB, export=EXPORT, august=AUGUST, additions=ADDITIONS, decks=DECKS):
+def decks_step(db, decks=DECKS, pins=PINS):
+    """Rebuild a missing working copy, else capture what changed. -> a phrase."""
+    import store
+    if store.deck_working_copy_missing(decks) and store.stored_files(db):
+        written = store.restore(db, decks, pins, by="sync")
+        return f"decks: RESTORED {len(written)} file(s) from the database"
+    r = store.capture(db, decks, pins, action="sync", by="sync")
+    if r["added"] or r["changed"] or r["removed"]:
+        return (f"decks: saved {r['added']} new, {r['changed']} changed, "
+                f"{r['removed']} removed file(s)")
+    return "decks: up to date"
+
+
+def run(db=DB, export=EXPORT, august=AUGUST, additions=ADDITIONS, decks=DECKS, pins=PINS):
     """-> one line for the sync log."""
+    line = _collection_step(db, export, august, additions, decks)
+    if line.startswith("collection db: skipped"):
+        return line
+    return line + " · " + decks_step(db, decks, pins)
+
+
+def _collection_step(db, export, august, additions, decks):
     import store
     env = os.environ.get("MTG_COLLECTION")
     if env and os.path.abspath(env) != os.path.abspath(db):

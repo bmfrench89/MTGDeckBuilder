@@ -575,6 +575,23 @@ def _pick_up_collection_db():
         memo.invalidate()
 
 
+@app.after_request
+def _capture_decks(resp):
+    """Database mode: every successful write request ends by recording each deck
+    file and pins.csv that changed as a revision in the database (Phase 1b). The
+    routes keep writing files exactly as before (the engines read files), so no
+    route had to change, and a route added later is covered without remembering
+    to. Never costs the response: a capture problem is logged and swallowed."""
+    try:
+        if (request.method in ("POST", "PUT", "PATCH", "DELETE")
+                and resp.status_code < 400 and _db_mode()):
+            store.capture(COLLECTION, DECKS_DIR, deckcore.PINS,
+                          action=f"app {request.path}"[:120], by=_by() or _me()[1])
+    except Exception as e:                  # noqa: BLE001 — never fail the response
+        app.logger.warning("deck capture skipped: %s", e)
+    return resp
+
+
 def _invalidate(stem=None):
     """Drop memoized analysis after a write. `stem` narrows it to one deck's
     entries; no argument drops everything (a collection-level change).
@@ -2121,6 +2138,7 @@ def collection_view():
         db = {"seeded_at": (store.meta(COLLECTION, "seeded_at") or "")[:10],
               "recent": store.recent_changes(COLLECTION, 12),
               "has_report": bool(report),
+              "decks": store.decks_summary(COLLECTION),
               "report_head": report.splitlines()[2] if len(report.splitlines()) > 2 else ""}
     return render_template("collection.html", unique=len(coll), db=db,
                            copies=sum(c.quantity for c in coll), total=total,
@@ -2298,6 +2316,17 @@ def export_collection_csv():
     return Response(store.export_csv(COLLECTION), mimetype="text/csv; charset=utf-8",
                     headers={"Content-Disposition": "attachment; filename="
                              f"my-collection-{date.today().isoformat()}.csv"})
+
+
+@app.route("/export/decks.zip")
+def export_decks_zip():
+    """Every deck file and pins.csv as the database holds them: the deck backup."""
+    if not _db_mode():
+        abort(404)
+    from datetime import date
+    return Response(store.decks_zip(COLLECTION), mimetype="application/zip",
+                    headers={"Content-Disposition": "attachment; filename="
+                             f"my-decks-{date.today().isoformat()}.zip"})
 
 
 @app.route("/collection/seed-report.txt")

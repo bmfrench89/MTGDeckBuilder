@@ -17,6 +17,13 @@
     {% if db.has_report %}<a class="btn ghost" href="{{ url_for('collection_seed_report') }}">What the start-up found</a>{% endif %}
     {% if db.report_head %}<span class="muted fs-xs">{{ db.report_head }}</span>{% endif %}
   </div>
+  {% if db.decks and db.decks.decks %}
+  <div class="row mt-3">
+    <a class="btn ghost" href="{{ url_for('export_decks_zip') }}" download>Download all decks</a>
+    <span class="muted fs-xs">{{ db.decks.decks }} decks{% if db.decks.pins %} and your pins{% endif %}
+      are saved here too, with every version ({{ db.decks.revisions }} so far).</span>
+  </div>
+  {% endif %}
   <h2 id="edit">Change a card's count</h2>
   <p class="muted">Sold, traded, lost or miscounted. Set 0 to stop counting it. New cards go
     through <a href="#batch">Add a batch</a>, which checks the name first.</p>
