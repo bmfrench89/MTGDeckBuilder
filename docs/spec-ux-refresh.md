@@ -132,7 +132,7 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 
 | # | Change |
 |---|---|
-| 2.1 | [ ] **Collection rebuild:** search first; server-side filtering with a real "Load more" link; `content-visibility: auto`; location chips (free / in a deck / pinned / claimed twice); filters in the URL; downloads, uploads and status behind "Manage"; "Every change is logged · last backup <time>" |
+| 2.1 | [ ] → **now `docs/spec-collection-rebuild.md`** (sub-tabs + one search language; B1 engine shipped 2026-10-14). Original row: **Collection rebuild:** search first; server-side filtering with a real "Load more" link; `content-visibility: auto`; location chips (free / in a deck / pinned / claimed twice); filters in the URL; downloads, uploads and status behind "Manage"; "Every change is logged · last backup <time>" |
 | 2.2 | [ ] **Ownership everywhere:** ✓ free / ◐ claimed by another deck / ✗ not owned on every deck row; "97/100 owned · 3 shared" in the deck header; "add all missing to the wishlist" |
 | 2.3 | [ ] **Global search** sheet from the header, with the ownership line and deck links on each result |
 | 2.4 | [ ] **Batch preview:** "already own 2 · in Ur-Dragon" per row, merged duplicates, a quantity stepper, fix a ✗ row in place, drafts kept on the device |

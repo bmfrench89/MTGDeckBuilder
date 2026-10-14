@@ -43,6 +43,7 @@ thirty searches, and it is the only channel that produces *verbatim* text.
 | Question | Tool | NEVER |
 |---|---|---|
 | "what can I build?" / "how many X do I own?" | `analyze_collection.py`, or the **`collection-auditor`** agent | eyeball the snapshot |
+| Any filtered count of the pool — "free green ramp", "Dragons in no deck", "what's in that list I own", "cards added this month" | **`analyze_collection.py --query "…"`**: the Collection page's own search language (**`collection_query.py`**: `t:` `id<=` `role:` `free>0` `decks=0` `deck:` `for:` `added>=` …; `--query-help` lists every keyword). Quote its summary line, skipped count included: a skipped row is missing data, not a "no" | write a scratch filter over `load_collection`, or report a count without its skipped rows. The page, the CLI and the skill must give the player ONE number |
 | "is archetype X supported?" | `analyze_collection.py` **+ `commanders.csv` + `data/reference/field/*.json`** | measure against a staples list. This produced a wrong "treasures unsupported" verdict while the player owned **Smaug, Wicked Worm ×2** |
 | "what infinite can I assemble today?" | `combo_detector.py --collection-combos` | reason about combos from memory |
 | "which decks share cards?" / what is free | `deck_conflicts.py [--available]` | assume a card is uncommitted |

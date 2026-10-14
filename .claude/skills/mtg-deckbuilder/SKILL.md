@@ -227,6 +227,9 @@ All are stdlib-only Python 3. Run `python3 scripts/<name>.py --help` for options
 
 - `analyze_collection.py` — pool statistics: counts by color identity, type, subtype (tribal),
   mana value; tribe/type/subtype queries. Answers "what can I build?" and "how many X do I own?"
+  **`--query "…"`** runs the Collection page's own search (`collection_query.py`): `t:dragon
+  free>0`, `id<=g role:ramp`, `deck:"Iron Fortress" decks=0`, `added>=2026-10-01` — the count
+  you quote is the count the player sees. Quote the skipped rows too (missing data, not "no").
 - `deck_stats.py` — given a decklist + collection, computes curve, colored-pip demand, double-pip
   count, land/ramp/removal/draw counts, ownership check (flags cards you don't own), and validates
   against target ratios.
