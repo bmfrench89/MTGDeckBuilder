@@ -243,6 +243,18 @@ Phase 4 deletes them.
     through GitHub.
   - [ ] Decide D1–D5 (§10).
 - **Phase 1: the store**
+  - **Phase 1a, the COLLECTION, shipped 2026-10-13** (the player: "I just need all cards
+    accounted for and stored in this new db"; "I want to stop using other apps").
+    - [x] `scripts/store.py`: `collection.db` with holdings + a ledger of every change;
+      `mtglib.load_collection(<path>.db)` reads it, so no engine changed.
+    - [x] The one-time union seed (export + August list + every added batch + every
+      sleeved deck; shared-card shortfalls reported, not invented), run by the server
+      sync (`webapp/collection_db.py`), report on the Collection page.
+    - [x] The app writes the database: Add a batch, add one card, deck-import adds,
+      **Change a card's count** (sold/traded/lost), **Download my whole collection**,
+      and Upload becomes a merge that never lowers a count.
+    - [x] Session batches still go to `owned_additions.txt`; the sync ingests each once.
+  - **Phase 1b, still open:** decks, companions, pins, members and activity into the DB.
   - [ ] `scripts/store.py` (stdlib sqlite3): schema, migrations, typed accessors returning
     the existing `Card` / deck objects, so the engines barely change.
   - [ ] A one-time importer that reads today's files (`collection.csv`, owned_additions,
@@ -299,7 +311,8 @@ the big one; Phases 2–4 are mostly deletion.
 
 ## 10. Decisions for the player
 
-- **D1: Host.** **Upgrade to PythonAnywhere Developer ($10/month; recommended, revised
+- **D1: Host. DECIDED 2026-10-13: stay on free PythonAnywhere for now** (the player: "I'd rather not do paid"). Phases 1–3 run there: the DB is one small file, the daily refresh rides the first-request trigger, EDHREC stays on the GitHub runner. Making the repo private does NOT need a paid plan (the server pulls with a token). Revisit before Phase 4: the $10 Developer plan, or a free alternative checked 2026-10-13 — Oracle Cloud Always Free (full network + cron, but idle VMs can be reclaimed and the ARM allowance was halved in 2026), Google Cloud e2-micro (card required, 1 GB egress), or a home machine behind Cloudflare Tunnel. Render/Fly/Koyeb free tiers can't keep SQLite. Moving hosts later = copying one .db file. The original recommendation follows.
+- **D1 (original text):** **Upgrade to PythonAnywhere Developer ($10/month; recommended, revised
   after research).** The free tier's allowlist almost certainly blocks EDHREC. New free
   accounts have no scheduled tasks, so no nightly refresh or backup. Free web apps expire
   monthly. And 512 MB of disk is tight. Staying free means EDHREC field data has to keep

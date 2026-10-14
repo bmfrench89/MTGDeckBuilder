@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 import memo
 import mtglib
+import store
 import deck_stats
 import power
 import deck_conflicts
@@ -75,15 +76,21 @@ def _html_download(html, filename):
                     headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 def _default_collection():
-    """Prefer the player's private CSV; fall back to the committed name-only
-    snapshot so a fresh clone (which has no collection.csv — it's gitignored)
-    still works out of the box."""
+    """env → the collection DATABASE (once seeded, it IS the collection) → the
+    private CSV → the committed name-only snapshot, so a fresh clone (no database,
+    no collection.csv — both gitignored) still works out of the box."""
     csv_path = os.path.join(ROOT, "data/collection/collection.csv")
     snap = os.path.join(ROOT, "data/collection/collection_snapshot.txt")
     env = os.environ.get("MTG_COLLECTION")
     if env:
         return env
+    if store.exists(_db_path()):
+        return _db_path()
     return csv_path if os.path.exists(csv_path) else snap
+
+
+def _db_path():
+    return os.path.join(ROOT, "data/collection/collection.db")
 
 
 COLLECTION = _default_collection()
@@ -91,6 +98,13 @@ COLLECTION = _default_collection()
 # name-only snapshot, so a priced export can't leak into a public repo.
 COLLECTION_CSV = os.path.join(ROOT, "data/collection/collection.csv")
 COLLECTION_ATTRS = os.path.join(ROOT, "data/collection/collection_attrs.csv")
+COLLECTION_DB = _db_path()
+
+
+def _db_mode():
+    """True once the app's own database is the collection (docs/spec-target-
+    architecture.md Phase 1): every write goes there, nothing goes to files."""
+    return mtglib.is_collection_db(COLLECTION)
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
 
@@ -544,6 +558,21 @@ def collection_index():
     shared dict is one more object callers could mutate."""
     coll = mtglib.load_collection(COLLECTION)
     return coll, mtglib.index_by_name(coll)
+
+
+@app.before_request
+def _pick_up_collection_db():
+    """The sync seeds the database while the app is up; switch to it on the next
+    request instead of waiting for a reload. Only ever moves TO the database."""
+    global COLLECTION
+    defaults = {os.path.join(ROOT, "data/collection/collection.csv"),
+                os.path.join(ROOT, "data/collection/collection_snapshot.txt")}
+    # Only from a DEFAULT source: a collection someone pointed the app at on purpose
+    # (a test's tmp file, MTG_COLLECTION) is never swapped out from under them.
+    if (not os.environ.get("MTG_COLLECTION") and COLLECTION in defaults
+            and os.path.exists(COLLECTION_DB) and store.exists(COLLECTION_DB)):
+        COLLECTION = COLLECTION_DB
+        memo.invalidate()
 
 
 def _invalidate(stem=None):
@@ -2086,7 +2115,14 @@ def collection_view():
         "produced_covered": produced_n,
         "produced_pct": round(100 * produced_n / len(coll)) if coll else 0,
     }
-    return render_template("collection.html", unique=len(coll),
+    db = None
+    if _db_mode():
+        report = store.meta(COLLECTION, "seed_report") or ""
+        db = {"seeded_at": (store.meta(COLLECTION, "seeded_at") or "")[:10],
+              "recent": store.recent_changes(COLLECTION, 12),
+              "has_report": bool(report),
+              "report_head": report.splitlines()[2] if len(report.splitlines()) > 2 else ""}
+    return render_template("collection.html", unique=len(coll), db=db,
                            copies=sum(c.quantity for c in coll), total=total,
                            top=top, has_price=bool(priced), additions=additions,
                            reconcile=reconcile, arrivals=arrivals,
@@ -2108,6 +2144,12 @@ def collection_add():
               "nothing was added.", "warn")
         return redirect(url_for("collection_view"))
     qty = str(int(qty))
+    if name and _db_mode():
+        store.add_rows(COLLECTION, [(int(qty), name)], action="add",
+                       detail="added in the app", by=_by() or _me()[1])
+        _note("add to collection", "", f"{qty} {name}")
+        _invalidate()
+        return redirect(url_for("collection_view"))
     if name:
         header_needed = not os.path.exists(ADDITIONS)
         with open(ADDITIONS, "a", encoding="utf-8") as f:
@@ -2147,6 +2189,18 @@ def collection_upload():
         return redirect(url_for("collection_view"))
     with open(pending, encoding="utf-8") as fh:
         new_cards = mtglib.parse_collection(fh.read())
+    if _db_mode():
+        res = store.merge_export(COLLECTION, new_cards, by=_by() or _me()[1],
+                                 label=f"uploaded export ({len(new_cards)} cards)")
+        _drop(pending)
+        _note("merge an export", "", f"+{res['added_copies']} copies")
+        _invalidate()
+        flash(f"Merged your export: {res['raised']} card(s) went up "
+              f"(+{res['added_copies']} copies, {res['new_cards']} new to the app); "
+              f"{res['refreshed']} already matched or were higher and kept their count. "
+              "An export never lowers a count. " + enrich_bg.start(COLLECTION, COLLECTION_ATTRS),
+              "info")
+        return redirect(url_for("collection_view"))
     current = _raw_collection_cards()
     # Judged against the collection the player SEES (export + added batches), so the
     # question quotes the same card count as the Collection page.
@@ -2199,6 +2253,61 @@ def _replace_collection_from(pending, previous_cards):
         _drop(_reconcile_path())
     flash(enrich_bg.start(COLLECTION_CSV, COLLECTION_ATTRS), "info")
     return redirect(url_for("collection_view"))
+
+
+@app.route("/collection/set", methods=["POST"])
+def collection_set():
+    """Change one card's count in the database: sold, traded, lost, or miscounted.
+    Lowering a count is destructive, so it rides the same permission as replacing
+    the collection. A card the database doesn't hold goes through Add a batch,
+    which verifies the name; this form never invents a card."""
+    if not _db_mode():
+        flash("Editing counts needs the collection database (it is created on the "
+              "next sync).", "warn")
+        return redirect(url_for("collection_view"))
+    if not _may_replace_collection():
+        abort(403)
+    name = request.form.get("name", "").strip()
+    qty = request.form.get("qty", "").strip()
+    reason = re.sub(r"[\x00-\x1f\x7f]", " ", request.form.get("reason", "")).strip()[:120]
+    if not (qty.isascii() and qty.isdigit() and 0 <= int(qty) <= 999):
+        flash(f"Count must be a whole number from 0 to 999 (got “{qty[:20]}”) — "
+              "nothing changed.", "warn")
+        return redirect(url_for("collection_view") + "#edit")
+    res = store.set_qty(COLLECTION, name, int(qty), reason=reason or "edited in the app",
+                        by=_by() or _me()[1])
+    if res is None:
+        flash(f"“{name[:60]}” isn't in your collection yet. Add it with Add a batch, "
+              "which checks the name first.", "warn")
+        return redirect(url_for("collection_view") + "#edit")
+    old, new = res
+    _note("set a card's count", "", f"{name}: {old} → {new}")
+    _invalidate()
+    flash(f"{name}: {old} → {new}." + ("" if new else " It no longer counts as owned."),
+          "info")
+    return redirect(url_for("collection_view") + "#edit")
+
+
+@app.route("/export/collection.csv")
+def export_collection_csv():
+    """The whole collection as one CSV, the backup and the file any other app
+    imports. Prices are in it, so it is served only to a signed-in user."""
+    if not _db_mode():
+        abort(404)
+    from datetime import date
+    return Response(store.export_csv(COLLECTION), mimetype="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": "attachment; filename="
+                             f"my-collection-{date.today().isoformat()}.csv"})
+
+
+@app.route("/collection/seed-report.txt")
+def collection_seed_report():
+    """What the one-time union found: cards kept from the August list or from a
+    sleeved deck, and shared-card shortfalls that were NOT invented."""
+    report = store.meta(COLLECTION, "seed_report") if _db_mode() else None
+    if not report:
+        abort(404)
+    return Response(report, mimetype="text/plain; charset=utf-8")
 
 
 @app.route("/collection/reconcile", methods=["POST"])
@@ -2296,6 +2405,8 @@ def _load_preview(kind, token):
 def _raw_collection_cards():
     """The base collection file as parsed, WITHOUT owned_additions — the
     "previous export" the reconcile compares a new one against."""
+    if _db_mode():
+        return []
     try:
         with open(COLLECTION, encoding="utf-8") as fh:
             return mtglib.parse_collection(fh.read())
@@ -2382,7 +2493,11 @@ def collection_batch_confirm():
         flash("Nothing to add — no line resolved to a card.", "warn")
         return redirect(url_for("collection_view"))
     label = "pasted list" if data.get("source") == "pasted list" else "uploaded file"
-    copies, distinct = intake.append_batch(ADDITIONS, rows, label)
+    if _db_mode():
+        copies, distinct = store.add_rows(COLLECTION, rows, action="add-batch",
+                                          detail=label, by=_by() or _me()[1])
+    else:
+        copies, distinct = intake.append_batch(ADDITIONS, rows, label)
     _note("add a batch", "", f"{copies} cards ({distinct} distinct)")
     _invalidate()             # owned_additions feeds EVERY deck's analysis
     flash(f"Added {copies} card(s) ({distinct} distinct) as a dated batch. "
@@ -2602,7 +2717,14 @@ def deck_import_confirm():
             need = q - (ref.quantity if ref is not None else 0)
             if need > 0:
                 short.append((need, n))
-        if short:
+        if short and _db_mode():
+            copies, distinct = store.add_rows(
+                COLLECTION, short, action="add-batch",
+                detail=f"cards for the imported {data.get('title') or commander} deck",
+                by=_by() or _me()[1])
+            flash(f"Added {copies} card(s) you own to your collection. "
+                  + enrich_bg.start(COLLECTION, COLLECTION_ATTRS), "info")
+        elif short:
             copies, distinct = intake.append_batch(
                 ADDITIONS, short, f"cards for the imported {data.get('title') or commander} deck",
                 note=("Player-confirmed at deck import (\"I own these\"): the copies the",

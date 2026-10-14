@@ -160,6 +160,12 @@ if ! git pull --rebase; then
   fi
 fi
 
+# The collection database (webapp/collection_db.py): seeded once from every record
+# of the player's cards, then fed any batches a session committed, which arrived
+# with the pull above. It lives in data/collection/collection.db: gitignored, never
+# staged, never pushed. It must never fail a sync.
+python3 webapp/collection_db.py || true
+
 # Push with a bounded rebase-and-retry: three bots can push to main (this sync,
 # field-snapshots, attrs-snapshot), and a lost race used to cost a full day —
 # the push failed, the script exited 1, webapp/sync.py's TTL then refused to
