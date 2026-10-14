@@ -22,6 +22,12 @@ database's `activity` table, each exactly once. MEMBERS are deliberately not tou
 here: the app takes users.json in on its own first read after the reload, so the
 app that is still running during this sync never finds its member file gone.
 
+And FIRST, before any of that changes the database: **the daily backup**, a
+consistent copy in data/collection/backups/ (gitignored, owner-only, the newest
+MTG_BACKUPS_KEEP kept, 7 by default). To undo a bad day, put a copy back from a
+console (`cp data/collection/backups/collection-<date>.db data/collection/collection.db`)
+and reload the web app.
+
 `MTG_COLLECTION` set to anything but the database means the operator chose another
 source on purpose: this step then does nothing.
 """
@@ -40,6 +46,25 @@ DECKS = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data", "decks"))
 PINS = os.path.join(COLL_DIR, "pins.csv")
 # Beside the deck folder, exactly where the app writes it (app._activity_path).
 ACTIVITY = os.path.join(os.path.dirname(os.path.abspath(DECKS)), "activity.csv")
+BACKUPS = os.path.join(COLL_DIR, "backups")
+
+
+def _keep():
+    try:
+        return max(1, int(os.environ.get("MTG_BACKUPS_KEEP", "7")))
+    except ValueError:
+        return 7
+
+
+def backup_step(db, backups=None):
+    """Today's copy, taken before the sync changes anything. -> a phrase, or "".
+    A failed backup is reported, and never stops the sync."""
+    import store
+    try:
+        made = store.daily_backup(db, backups or BACKUPS, keep=_keep())
+    except Exception as e:                       # noqa: BLE001
+        return f"backup: FAILED ({type(e).__name__}: {e})"
+    return f"backup: saved {os.path.basename(made)}" if made else ""
 
 
 def decks_step(db, decks=DECKS, pins=PINS):
@@ -55,32 +80,33 @@ def decks_step(db, decks=DECKS, pins=PINS):
     return "decks: up to date"
 
 
-def activity_step(db, activity=ACTIVITY):
+def activity_step(db, activity=None):
     """Take in activity.csv rows the database hasn't seen. -> a phrase, or "".
     A bad file costs this phrase, never the rest of the sync's line."""
     import store
     try:
-        n = store.import_activity(db, activity)
+        n = store.import_activity(db, activity or ACTIVITY)
     except Exception as e:                       # noqa: BLE001
         return f"activity: skipped ({type(e).__name__}: {e})"
     return f"activity: took in {n} row(s) from activity.csv" if n else ""
 
 
 def run(db=DB, export=EXPORT, august=AUGUST, additions=ADDITIONS, decks=DECKS, pins=PINS,
-        activity=ACTIVITY):
-    """-> one line for the sync log."""
+        activity=None, backups=None):
+    """-> one line for the sync log. `activity` and `backups` resolve to the module's
+    paths when CALLED, so the test suite can point them at tmp once (conftest)."""
+    import store
+    env = os.environ.get("MTG_COLLECTION")
+    if env and os.path.abspath(env) != os.path.abspath(db):
+        return f"collection db: skipped (MTG_COLLECTION points at {os.path.basename(env)})"
+    saved = backup_step(db, backups) if store.exists(db) else ""
     line = _collection_step(db, export, august, additions, decks)
-    if line.startswith("collection db: skipped"):
-        return line
-    parts = [line, decks_step(db, decks, pins), activity_step(db, activity)]
+    parts = [line, decks_step(db, decks, pins), activity_step(db, activity), saved]
     return " · ".join(p for p in parts if p)
 
 
 def _collection_step(db, export, august, additions, decks):
     import store
-    env = os.environ.get("MTG_COLLECTION")
-    if env and os.path.abspath(env) != os.path.abspath(db):
-        return f"collection db: skipped (MTG_COLLECTION points at {os.path.basename(env)})"
     if not store.exists(db):
         report = store.seed(db, export if os.path.exists(export) else None,
                             august if os.path.exists(august) else None,

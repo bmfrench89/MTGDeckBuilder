@@ -24,6 +24,8 @@ data/collection/*.db-shm
 # Member accounts (password hashes) — server-only, never committed, never synced
 # (docs/spec-second-login.md). sync_server.sh names its paths explicitly too.
 data/private/
+# The collection database's daily copies (they hold password hashes): server only.
+data/collection/backups/
 
 # Scratch
 scratch/

@@ -302,3 +302,51 @@ def test_a_member_store_that_cannot_be_read_never_fails_the_edit(env, monkeypatc
     r = env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
     assert r.status_code == 302, "the pin is saved; only its log row is lost"
     assert store.activity_rows(env.db) == []
+
+
+# --------------------------------------------------------------------------- #
+# Backups: one file the owner can download, never carrying a password hash
+# --------------------------------------------------------------------------- #
+def test_the_backup_download_is_whole_and_carries_no_hash(env, tmp_path, monkeypatch):
+    import sqlite3
+    import tempfile
+    import users
+    scratch = tmp_path / "tmpdir"
+    scratch.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(scratch))
+    assert users.add_member("sam", "sam-password") is None      # a hash in the database
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    r = env.client.get("/export/backup.db")
+    assert r.status_code == 200 and "attachment" in r.headers["Content-Disposition"]
+    raw = r.get_data()
+    assert raw.startswith(b"SQLite format 3\x00")
+    assert store.people_load(env.db)["members"]["sam"]["hash"].encode() not in raw
+    out = tmp_path / "downloaded.db"
+    out.write_bytes(raw)
+    con = sqlite3.connect(str(out))
+    counts = {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+              for t in ("holdings", "files", "activity", "members")}
+    con.close()
+    assert counts["members"] == 0 and counts["activity"] == 1 and counts["files"] >= 2
+    assert {c.name: c.quantity for c in mtglib.load_collection(str(out))} == _counts(env)
+    assert os.listdir(scratch) == [], "the temporary copy is removed after it is sent"
+
+
+def test_only_the_owner_gets_a_backup_and_only_in_database_mode(env, monkeypatch, tmp_path):
+    import users
+    c = _gate(env, monkeypatch)
+    assert users.add_member("sam", "sam-password") is None
+    _sign_in(c, "sam", "sam-password")
+    assert c.get("/export/backup.db").status_code == 403
+    assert "Download a backup" not in c.get("/collection").get_data(as_text=True)
+    monkeypatch.setattr(env.app, "PASSWORD", None)
+    monkeypatch.setattr(env.app, "COLLECTION", str(tmp_path / "coll" / "collection.csv"))
+    assert env.client.get("/export/backup.db").status_code == 404
+
+
+def test_the_page_offers_a_backup_and_counts_the_daily_copies(env):
+    for day in ("2026-10-13", "2026-10-14"):
+        store.daily_backup(env.db, env.app._backups_dir(), today=day)
+    html = env.client.get("/collection").get_data(as_text=True)
+    assert "Download a backup" in html
+    assert "last 2 days" in html and "newest 2026-10-14" in html

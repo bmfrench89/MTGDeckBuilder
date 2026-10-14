@@ -69,6 +69,10 @@ and stored in this new db", on free hosting ("I'd rather not do paid"). Phase 1a
     longer written or committed. **Download the whole log** is on the Activity page.
   - The DB file is made owner-only (0600) because it now holds password hashes, and no
     download ever includes them.
+- **Backups (2026-10-14):** each day's first sync copies the DB to
+  `data/collection/backups/` before changing anything (7 kept), and the Collection page
+  has **Download a backup** for the owner (no password hashes in it). To undo a bad day:
+  copy a dated file over `data/collection/collection.db` in a console, then reload.
 - **Hosting (D1): stay free for now.** Revisit before Phase 4 (data out of the repo).
   Free alternatives are in the spec's D1.
 - **Still open:**

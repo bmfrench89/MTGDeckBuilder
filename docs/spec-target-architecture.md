@@ -123,9 +123,14 @@ For one household on one web worker, it holds up if `store.py`:
 
 The paid plan's MySQL is the upgrade path if the app ever serves the public.
 
-**Backups:**
+**Backups (built 2026-10-14):**
 - Nightly `sqlite3 .backup` to a dated file on the server (protects against bugs).
-- A **Download backup** button (protects against losing the host). If unattended
+  As built: the free tier has no scheduled tasks, so the daily sync takes it as its
+  first step (before it ingests or captures anything), keeping the newest 7 in
+  `data/collection/backups/` (gitignored, 0600).
+- A **Download backup** button (protects against losing the host). As built: on the
+  Collection page, owner only, with the member accounts emptied so no hash leaves the
+  server. If unattended
   off-host backup is wanted, add it later.
 
 ## 5. The network: who talks to Scryfall, EDHREC and Spellbook
@@ -359,8 +364,9 @@ the big one; Phases 2–4 are mostly deletion.
 
 ## 11. Risks
 
-- **Host loss:** SQLite on one server is a single point of failure. Nightly on-host
-  backups plus the Download backup button cover bugs and the player's own safety copy.
+- **Host loss:** SQLite on one server is a single point of failure. Daily on-host
+  backups plus the Download backup button (both built 2026-10-14) cover bugs and the
+  player's own safety copy.
   Unattended off-host backup waits for Phase 5.
 - **Server CPU:** PythonAnywhere free has a small daily CPU allowance. Heavy engines
   (goldfish at thousands of games) run in the session on pulled data, or in the app only

@@ -38,6 +38,7 @@ CLI:
     python3 scripts/store.py stats  --db D
     python3 scripts/store.py capture|restore|history …     (deck files, see below)
     python3 scripts/store.py activity --db D [--limit N]
+    python3 scripts/store.py backup --db D --to FILE [--without-hashes]
 """
 from __future__ import annotations
 
@@ -889,6 +890,79 @@ def people_summary(path):
         con.close()
 
 
+# --------------------------------------------------------------------------- #
+# Backups (docs/spec-target-architecture.md §4 and §11). Once this file is the
+# only record of the collection, the accounts and the log, it needs copies:
+#   * DAILY, on the server: the sync takes one before it changes anything, so a
+#     bad batch or capture can be undone by putting yesterday's file back, and
+#     keeps the newest few (the free tier's disk is small);
+#   * ON REQUEST, for the player: the same copy with the `members` table emptied
+#     and the file rebuilt, so a password hash never leaves the server — not even
+#     an old one an update left behind in a free page.
+# Both use SQLite's online backup, which is consistent while the app writes.
+# --------------------------------------------------------------------------- #
+BACKUP_PREFIX = "collection-"
+
+
+def backup(path, dest, *, without_hashes=False):
+    """Copy the database to `dest` (owner-only). -> dest."""
+    if not os.path.exists(path):
+        raise FileNotFoundError(path)
+    tmp = dest + ".tmp"
+    with open(tmp, "wb"):
+        pass                         # created first, so it is 0600 before any byte lands
+    _private(tmp)
+    src = sqlite3.connect(path, timeout=10)
+    try:
+        dst = sqlite3.connect(tmp)
+        try:
+            src.backup(dst)
+            if without_hashes:
+                dst.execute("PRAGMA secure_delete=ON")   # zero what DELETE frees …
+                if dst.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                               "AND name='members'").fetchone():
+                    dst.execute("DELETE FROM members")
+                    dst.commit()
+                dst.execute("VACUUM")   # … and rebuild, dropping pages freed long ago
+        finally:
+            dst.close()
+    finally:
+        src.close()
+    os.replace(tmp, dest)
+    return dest
+
+
+def daily_backup(path, backups_dir, *, keep=7, today=None):
+    """Today's copy, once a day, then only the newest `keep` remain.
+    -> the file written, or None when today's copy already exists."""
+    today = today or datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    os.makedirs(backups_dir, exist_ok=True)
+    try:
+        os.chmod(backups_dir, 0o700)
+    except OSError:
+        pass
+    dest = os.path.join(backups_dir, f"{BACKUP_PREFIX}{today}.db")
+    if os.path.exists(dest):
+        return None
+    backup(path, dest)
+    for old in list_backups(backups_dir)[max(1, int(keep)):]:
+        try:
+            os.remove(os.path.join(backups_dir, old["name"]))
+        except OSError:
+            pass
+    return dest
+
+
+def list_backups(backups_dir):
+    """The daily copies, newest first: [{name, date, bytes}]."""
+    out = []
+    for p in glob.glob(os.path.join(backups_dir or "", f"{BACKUP_PREFIX}*.db")):
+        name = os.path.basename(p)
+        out.append({"name": name, "date": name[len(BACKUP_PREFIX):-3],
+                    "bytes": os.path.getsize(p)})
+    return sorted(out, key=lambda b: b["date"], reverse=True)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -920,6 +994,11 @@ def main(argv=None):
     v = sub.add_parser("activity", help="the newest deck-level actions, newest first")
     v.add_argument("--db", default=DEFAULT_DB)
     v.add_argument("--limit", type=int, default=20)
+    b = sub.add_parser("backup", help="a consistent, owner-only copy of the database")
+    b.add_argument("--db", default=DEFAULT_DB)
+    b.add_argument("--to", required=True, help="the copy to write")
+    b.add_argument("--without-hashes", action="store_true",
+                   help="empty the members table in the copy (what the app hands out)")
     a = ap.parse_args(argv)
     if a.cmd == "seed":
         print(seed(a.db, a.export, a.august, a.additions, a.decks_dir, write=a.write))
@@ -934,6 +1013,8 @@ def main(argv=None):
         for r in file_history(a.db, a.file):
             print(f"{r['id']:>5}  {r['at']}  {r['action']}{'  (removed)' if r['removed'] else ''}"
                   f"{'  · ' + r['by'] if r['by'] else ''}")
+    elif a.cmd == "backup":
+        print(backup(a.db, a.to, without_hashes=a.without_hashes))
     elif a.cmd == "activity":
         for r in activity_rows(a.db, limit=a.limit):
             print(f"{r['When']}  {r['By'] or '-'}  {r['Action']}"
