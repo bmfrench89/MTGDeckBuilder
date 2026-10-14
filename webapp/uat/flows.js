@@ -341,6 +341,53 @@ function restore(stem, files) {
     restore(stem, files);
   }
 
+  // F11 · Keyboard only (Wave 1.5): the skip link, then a card name opens the panel,
+  // focus goes in, and Escape brings it back to the card, on both panels.
+  {
+    try {
+      const kb = await b.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+      const k = await kb.newPage();
+      await k.goto(BASE + '/', { waitUntil: 'load', timeout: 300000 });
+      if (k.url().includes('/login')) {
+        await k.fill('input[name=password]', PASS);
+        await Promise.all([k.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), k.click('button[type=submit]')]);
+      }
+      const why = [];
+      await k.goto(`${BASE}/pins`, { waitUntil: 'load', timeout: 300000 });
+      await k.keyboard.press('Tab');
+      const skip = await k.evaluate(() => { const a = document.activeElement; const r = a.getBoundingClientRect();
+        return a.classList.contains('skiplink') && r.top >= 0; });
+      if (!skip) why.push('Tab did not land on a visible skip link');
+      else {
+        await k.keyboard.press('Enter');
+        if (!(await k.evaluate(() => document.activeElement && document.activeElement.id === 'main'))) why.push('the skip link did not move focus to main');
+      }
+      // App panel: a card name is a tab stop; Enter opens; Escape returns focus.
+      const hasCard = await k.evaluate(() => { const c = document.querySelector('[data-card][tabindex="0"]'); if (c) c.focus(); return !!c; });
+      if (!hasCard) why.push('no focusable card name on Pins');
+      else {
+        await k.keyboard.press('Enter');
+        await k.waitForTimeout(400);
+        if (!(await k.evaluate(() => document.activeElement && document.activeElement.classList.contains('cp-close')))) why.push('app panel: focus did not move in');
+        await k.keyboard.press('Escape');
+        await k.waitForTimeout(400);
+        if (!(await k.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-card')))) why.push('app panel: focus did not come back');
+      }
+      // Dashboard panel: a card tile.
+      await k.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
+      await k.evaluate(() => document.querySelector('figure.mc[data-key]').focus());
+      await k.keyboard.press('Enter');
+      await k.waitForTimeout(400);
+      if (!(await k.evaluate(() => document.activeElement && document.activeElement.classList.contains('cm-close')))) why.push('deck panel: focus did not move in');
+      await k.keyboard.press('Escape');
+      await k.waitForTimeout(400);
+      if (!(await k.evaluate(() => document.activeElement && document.activeElement.matches('figure.mc[data-key]')))) why.push('deck panel: focus did not come back');
+      await kb.close();
+      if (why.length) fail('F11 keyboard: skip link + panel focus', why.join('; '));
+      else pass('F11 keyboard: skip link + panel focus', 'skip → main; Enter opens, focus in; Escape returns it (both panels)');
+    } catch (e) { fail('F11 keyboard: skip link + panel focus', String(e).slice(0, 140)); }
+  }
+
   await b.close();
   for (const [s, f, why] of results) console.log(`${s.padEnd(4)} ${f}${why ? ' — ' + why : ''}`);
   process.exit(results.some((r) => r[0] === 'FAIL') ? 1 : 0);

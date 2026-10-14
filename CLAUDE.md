@@ -211,7 +211,7 @@ CI (`.github/workflows/tests.yml`) runs pytest on Python 3.11 and 3.13.
 
 ### One design system, two surfaces
 `scripts/assets/tokens.css` is the single source of truth for the type scale, 4px spacing
-scale, radii and elevation. It deliberately contains **no colours and no fonts** — those
+scale, radii, elevation and the 44 px touch target (`--target`). It deliberately contains **no colours and no fonts** — those
 are the only things a surface may differ on. The web app links it (`/static/tokens.css`);
 generated dashboards **inline** it so the file stays self-contained/offline.
 `tests/test_design_tokens.py` fails if `app.css` redefines a scale token, if `tokens.css`
@@ -254,8 +254,10 @@ Before merging anything that touches templates, CSS, JS or the service worker, r
 panel included; exits 1 on page overflow or a tap target under 24 px, warns under 44 px),
 then read the screenshots. Anything that touches an edit flow also runs
 `webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan, the table card,
-and undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
-earlier version), each read back from the deck FILES (must PASS). The sweep photographs pages; the
+undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
+earlier version) and the keyboard path (skip link, panel focus in and back), each read
+back from the deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
+without an accessible name. The sweep photographs pages; the
 2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
 has the commands.
 

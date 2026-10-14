@@ -17,6 +17,7 @@
    =========================================================================== */
 
 :root {
+  color-scheme: dark;     /* native checkboxes, selects and scrollbars render dark */
   --void: #0F1115;        /* page ground */
   --rail: #12151B;        /* navigation */
   --panel: #171A21;       /* cards */
@@ -56,6 +57,17 @@ body {
 }
 
 a { color: var(--accent); text-decoration: none; }
+/* A link inside running text is underlined: amber alone differs from the text
+   around it by 1.2:1, and colour must never be the only signal (WCAG 1.4.1). */
+:where(p, li, td, dd, .sub, .muted, .faint) a:not(.btn):not(.thchip):not(.tab):not(.cardlink):not(.ut-link) {
+  text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: 1px; }
+/* Keyboard users skip the ten-link rail straight to the page. */
+.skiplink { position: absolute; left: var(--sp-2); top: -100px; z-index: 10000;
+  display: inline-flex; align-items: center; min-height: var(--target);
+  padding: 0 var(--sp-4); border-radius: var(--r-sm);
+  background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.skiplink:focus { top: var(--sp-2); }
+#main:focus { outline: none; }        /* the skip target, not a control */
 /* Hover styling only where a pointer can hover: on a touch screen :hover sticks to
    whatever was tapped last and left a stray underline on a deck title (UAT 2026-10-11). */
 @media (hover: hover) { a:hover { text-decoration: underline; } }
@@ -137,6 +149,8 @@ nav.rail .foot .linkbtn:hover { color: var(--text); }
   nav.rail .more[open] .more-items .linkbtn { min-height: 44px; padding: 0 var(--sp-3);
     text-align: left; font-size: var(--fs-sm); color: var(--muted); }
   body.shell { padding-bottom: 76px; }
+  /* A focused field is never hidden under the bottom bar (WCAG 2.4.11). */
+  html { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 
 .wrap {
@@ -193,6 +207,20 @@ td.num, th.num, td.mono { font-family: var(--font-mono); }
 tbody tr:hover { background: rgba(255,255,255,.025); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tablewrap { overflow-x: auto; border-radius: var(--r-md); }
+/* A wide table becomes one block per row on a phone, so no control sits behind a
+   sideways scroll (the Pins page's Apply buttons, UX audit 2026-10-14). Each cell
+   names its column from data-label. */
+@media (max-width: 640px) {
+  table.stackable, table.stackable tbody, table.stackable tr, table.stackable td {
+    display: block; width: 100%; }
+  table.stackable thead { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; }
+  table.stackable tr { padding: var(--sp-3) 0; border-bottom: 1px solid var(--edge); }
+  table.stackable td { border: 0; padding: var(--sp-1) 0; }
+  table.stackable td[data-label]::before { content: attr(data-label); display: block;
+    color: var(--faint); font-size: var(--fs-2xs); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; }
+}
 
 /* ---------- badges & meters ---------- */
 .pill { display: inline-block; padding: 2px var(--sp-2); border-radius: 6px;
@@ -249,14 +277,19 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .btn.ghost { background: var(--panel2); color: var(--text); border: 1px solid transparent; }
 .btn.ghost:hover { background: #262B36; filter: none; }
 .btn.danger { background: transparent; color: var(--warn); border: 1px solid #4A2A2A; }
-.btn.sm { min-height: 36px; padding: 0 var(--sp-3); font-size: var(--fs-xs); }
+.btn.sm { min-height: var(--target); padding: 0 var(--sp-3); font-size: var(--fs-xs); }
 .linkbtn { background: none; border: none; padding: 0; font: inherit;
            font-size: var(--fs-xs); color: var(--accent); cursor: pointer; }
 .linkbtn:hover { text-decoration: underline; }
 input, textarea, select {
   background: var(--panel2); color: var(--text); border: 1px solid var(--edge);
-  border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); min-height: 40px;
+  border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); min-height: var(--target);
   font-family: var(--font-body); font-size: var(--fs-sm);
+}
+/* iOS zooms the whole page into any field under 16 px; on a touch screen every field
+   is 16 px instead (a font size, never a disabled zoom). */
+@media (pointer: coarse) {
+  input, textarea, select, .collctl select, .collctl input[type=text] { font-size: 16px; }
 }
 textarea { font-family: var(--font-mono); font-size: var(--fs-xs); }
 input::placeholder, textarea::placeholder { color: var(--faint); }
@@ -414,7 +447,7 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 /* ---------- page components (moved out of per-page <style> blocks) ---------- */
 .mt-0 { margin-top: 0; }
 .mb-3 { margin-bottom: var(--sp-3); }
-.thchip { display:inline-flex; align-items:center; min-height: 36px; padding: 0 var(--sp-3);
+.thchip { display:inline-flex; align-items:center; min-height: var(--target); padding: 0 var(--sp-3);
   border-radius: var(--r-sm); font-size: var(--fs-sm); background: var(--panel); border: 1px solid var(--edge);
   color: var(--muted); transition: color .15s ease, background .15s ease; }
 .thchip.on { background: var(--accent-soft); color: var(--gold); border-color: #4A3A14; font-weight:600; }
@@ -428,7 +461,7 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 .collctl select, .collctl input[type=text] { background: var(--panel2); color: var(--text);
   border:1px solid var(--line-strong); border-radius: var(--r-sm);
   padding: var(--sp-2) var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-xs); }
-.colorbtn { width:40px; height:40px; min-height:0; border-radius:50%; border:1px solid var(--line-strong);
+.colorbtn { width:var(--target); height:var(--target); min-height:0; border-radius:50%; border:1px solid var(--line-strong);
   cursor:pointer; font-weight:700; font-family: var(--font-mono); font-size: var(--fs-xs);
   background: var(--panel2); color: var(--muted); transition: background .15s ease, color .15s ease; }
 .colorbtn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }

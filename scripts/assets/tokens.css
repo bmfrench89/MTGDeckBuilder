@@ -15,8 +15,10 @@
    =========================================================================== */
 
 :root {
-  /* type scale — 1.25 (major third) off a 16px base */
-  --fs-2xs: .694rem;
+  /* type scale — 1.25 (major third) off a 16px base. The smallest step is held at
+     12 px, not .694rem (11.1 px): it carries the phone bar's labels and table
+     headers, and 11 px sat at the floor of legible (UX audit 2026-10-14). */
+  --fs-2xs: .75rem;
   --fs-xs:  .833rem;
   --fs-sm:  .95rem;
   --fs-md:  1rem;

@@ -1416,6 +1416,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
    self-contained; identical to what the web app serves at /static/tokens.css */
 {_asset('tokens.css')}
 :root {{
+  color-scheme:dark;   /* every theme is dark: native controls and scrollbars match */
   --void:{t['void']}; --panel:{t['panel']}; --accent:{t['accent']};
   --accent2:{t['accent2']}; --warn:{t['warn']}; --text:{t['text']};
   --muted:{t['muted']}; --gold:{t['gold']};
@@ -1514,7 +1515,11 @@ summary.abtn::-webkit-details-marker {{ display:none; }}
   /* the tile explainers keep two lines on a phone; the full text is in the tabs */
   .tile-note {{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
     overflow:hidden; }}
-  .printbtn {{ min-height:40px; font-size:var(--fs-xs); }}
+  .printbtn {{ min-height:var(--target); font-size:var(--fs-xs); }}
+}}
+/* iOS zooms the page into any field under 16 px: on a touch screen, 16 px fields. */
+@media (pointer:coarse) {{
+  input, select, textarea {{ font-size:16px !important; }}
 }}
 section {{ background:var(--panel); border:1px solid rgba(255,255,255,.06);
   border-radius:var(--r-lg); padding:var(--sp-5); margin:var(--sp-4) 0; }}
@@ -1810,7 +1815,7 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
     block-size:auto !important; }}
   .explain > p {{ display:block !important; }}
 }}
-</style></head><body><div class="wrap">
+</style></head><body><div class="wrap" role="main" id="main">
 {app_bar(stem, editable)}
 <header>
   <h1>{esc(title)}</h1>
@@ -1890,7 +1895,7 @@ figcaption {{ font-family:{t['mono']}; font-size:.72rem; color:{t['muted']};
   figcaption {{ color:#000; }}
   .qty {{ background:none !important; color:#000; border:1px solid #666; }}
 }}
-</style></head><body><div class="wrap">
+</style></head><body><div class="wrap" role="main" id="main">
 <h1>{esc(title)}</h1>
 <div class="banner"><b>Heads up:</b> card images load <b>live from Scryfall by
 name</b> when you open this file. They will <b>not</b> appear in the chat preview

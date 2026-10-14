@@ -73,7 +73,7 @@
             <div id="cm-replacebox" hidden>
               <p class="cm-hint">Click an alternative above to swap it in, or search your whole collection.
                 <b>Shift-click</b> any candidate to simulate the swap first (paired games, no edit).</p>
-              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection&hellip;" autocomplete="off">
+              <input id="cm-search" type="text" class="cm-search" placeholder="Search your collection&hellip;" aria-label="Search your collection for a replacement" autocomplete="off">
               <div id="cm-searchres" class="cm-searchres"></div>
             </div>
           </div>
@@ -237,12 +237,19 @@
     setupEdit(d);
     enrich(d);
     sc.scrollTop=0;
+    // A modal dialog: focus goes in when it opens and back to the card when it
+    // closes, never stranded behind it or dropped to <body> (UX audit 2026-10-14).
+    if(ov.hidden) opener=document.activeElement;
     ov.hidden=false; document.body.style.overflow='hidden';
-    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    requestAnimationFrame(function(){ ov.classList.add('show');
+      var x=ov.querySelector('.cm-close'); if(x) x.focus({preventScroll:true}); });
   }
+  var opener=null;
   function close(){
     ov.classList.remove('show'); document.body.style.overflow='';
     setTimeout(function(){ ov.hidden=true; }, 260);
+    if(opener && document.contains(opener) && opener.focus) opener.focus({preventScroll:true});
+    opener=null;
   }
 
   var ew=document.getElementById('cm-editwrap'), rb=document.getElementById('cm-replacebox'),

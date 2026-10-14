@@ -30,7 +30,7 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: the UX refresh — Wave 0 and undo shipped, rest of Wave 1 next (2026-10-14)
+## START HERE: the UX refresh — Wave 0, undo and accessibility shipped; 1.2–1.4 next (2026-10-14)
 
 The player asked for "deep research … spec out and implement what you think could be best".
 Five research passes plus a hands-on audit of the running app are in
@@ -65,13 +65,17 @@ Five research passes plus a hands-on audit of the running app are in
   - CI checks every change log.
   - `deckcore.deck_card_types` is the one filing precedence (deck attrs, then the
     collection), shared by Add, Replace, Undo and `deck_sections`.
+- **Wave 1.5 accessibility (shipped):**
+  - Every control is named (`tests/test_a11y.py` scans for it).
+  - Card names are tab stops, and both panels move focus in and back.
+  - A skip link and main landmark; underlined text links; dark native controls.
+  - 44 px targets via `--target`; 12 px smallest type; 16 px fields on touch screens.
+  - The Pins table stacks on phones.
+  - The new keyboard flow is F11.
 - **Wave 1 next:**
   - The phone deck page: tabs on the first screen, a text list with a filter.
   - The card panel on `<dialog>`.
   - The dashboard inside the shell.
-  - An accessibility batch.
-  - The Pins page's Apply buttons are only reachable by scrolling sideways on phones (a
-    sweep WARN).
 - **Player decisions open:**
   - D1: should ⚡ propose swaps for approval instead of applying them?
   - D2: watch the household use the app before Wave 3.

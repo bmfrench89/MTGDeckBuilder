@@ -18,8 +18,10 @@
   border-bottom:1px solid rgba(255,255,255,.07); }
 .cm-grab { display:inline-block; width:44px; height:5px; border-radius:3px;
   background:rgba(255,255,255,.22); }
-.cm-close { position:absolute; top:4px; right:12px; background:none; border:none;
-  color:var(--muted); font-size:var(--fs-2xl); line-height:1; cursor:pointer; padding:2px 8px; }
+.cm-close { position:absolute; top:0; right:8px; background:none; border:none;
+  color:var(--muted); font-size:var(--fs-2xl); line-height:1; cursor:pointer; padding:0;
+  min-width:var(--target); min-height:var(--target); display:inline-flex;
+  align-items:center; justify-content:center; border-radius:var(--r-sm); }
 .cm-close:hover { color:var(--text); }
 .cm-scroll { flex:1 1 auto; overflow-y:auto; padding:var(--sp-5) 26px 40px;
   -webkit-overflow-scrolling:touch; }
