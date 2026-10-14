@@ -45,6 +45,11 @@
 
 * { box-sizing: border-box; }
 
+/* `hidden` must always win. A component rule like `.mull-actions{display:flex}`
+   silently beat the attribute and the mulligan trainer logged one hand three times
+   (UX audit 2026-10-14); this retires that bug class on both surfaces. */
+[hidden] { display: none !important; }
+
 /* Keyboard users need to see where they are — on every surface. */
 :focus-visible {
   outline: 2px solid var(--accent);

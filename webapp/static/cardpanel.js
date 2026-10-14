@@ -102,7 +102,10 @@
 
     if (d.decks && d.decks.length) {
       wrap('cp-deckwrap', true);
-      $('cp-decks').textContent = d.decks.join(' · ');
+      // Deck titles as links, not file names joined by dots (UX audit 2026-10-14).
+      $('cp-decks').innerHTML = d.decks.map(function (s) {
+        return '<a href="/deck/' + encodeURIComponent(s) + '">' + esc(title(d, s)) + '</a>';
+      }).join(' · ');
     } else wrap('cp-deckwrap', false);
 
     renderPin(d);
@@ -114,6 +117,8 @@
      The picker offers only decks that actually RUN the card: pinning a card nothing
      plays is the "stale" state the /pins page exists to flag, so we don't mint one.
      An ALREADY-stale pin is the exception — it must be visible and releasable here. */
+  function title(d, stem) { return (d.deck_titles && d.deck_titles[stem]) || stem; }
+
   function renderPin(d) {
     var wrapEl = $('cp-pinwrap'), sel = $('cp-pin-deck'), st = $('cp-pin-state');
     if (!wrapEl || !sel || !st) return;
@@ -123,14 +128,14 @@
     var opts = ['<option value="none">— not pinned —</option>'];
     decks.forEach(function (s) {
       opts.push('<option value="' + esc(s) + '"' + (s === d.pinned ? ' selected' : '') +
-        '>' + esc(s) + (stale && s === d.pinned ? ' (stale)' : '') + '</option>');
+        '>' + esc(title(d, s)) + (stale && s === d.pinned ? ' (stale)' : '') + '</option>');
     });
     sel.innerHTML = opts.join('');
     sel.value = d.pinned || 'none';
     st.textContent = d.pinned
       ? (stale
-        ? 'Pinned to ' + d.pinned + ' — but that deck does not run this card (stale).'
-        : 'Pinned to ' + d.pinned + ' — other decks treat this copy as spoken for.')
+        ? 'Pinned to ' + title(d, d.pinned) + ' — but that deck does not run this card (stale).'
+        : 'Pinned to ' + title(d, d.pinned) + ' — other decks treat this copy as spoken for.')
       : 'Not pinned — freely shared across your decks.';
     wrap('cp-pin-err', false);
     wrapEl.hidden = false;

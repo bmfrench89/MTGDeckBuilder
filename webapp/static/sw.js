@@ -93,9 +93,9 @@ self.addEventListener('fetch', (e) => {
          .b{max-width:32ch;text-align:center}h1{color:#ECEEF2;font-size:1.4rem;margin:0 0 12px}
          p{color:#A9B0BD;line-height:1.5;margin:0 0 8px}code{color:#FFD27A}</style>
        <div class="b"><h1>Can't reach the deckbuilder</h1>
-       <p>This app reads your collection live from the machine running the server.</p>
-       <p>Check that PC is awake, <code>run.bat</code> is running, and your phone is on the
-       same Wi-Fi.</p></div>`,
+       <p>You're offline, or the app's server can't be reached right now.</p>
+       <p>Your decks and collection live on the server, so this page needs a
+       connection. Try again in a moment.</p></div>`,
       { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
     ))
   );

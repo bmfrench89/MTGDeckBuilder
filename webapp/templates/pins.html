@@ -31,7 +31,7 @@
           own copies of">contested</span>{% endif %}</td>
       <td>{{ r.deck_title }}</td>
       <td>{{ r.owned }}</td>
-      <td class="muted">{{ r.in_decks|join(", ") if r.in_decks else "—" }}</td>
+      <td class="muted">{% for d in r.in_decks %}<a href="{{ url_for('deck', stem=d) }}">{{ d|deck_title }}</a>{% if not loop.last %} · {% endif %}{% else %}—{% endfor %}</td>
       <td>
         <form method="post" action="{{ url_for('pins_move') }}" class="pinmove">
           <input type="hidden" name="card" value="{{ r.name }}">

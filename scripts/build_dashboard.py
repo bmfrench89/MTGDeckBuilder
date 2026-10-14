@@ -425,27 +425,34 @@ def build_card_details(sections, enriched, idx, notes, rep=None, ctx=None,
 # Section renderers
 # --------------------------------------------------------------------------- #
 def notes_html(text):
-    def bold(s):
-        return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", esc(s))
+    """The Plan tab: `.notes.md` through deckcore's one markdown-lite reader."""
     out, inlist = [], False
-    for raw in text.splitlines():
-        s = raw.rstrip()
-        if not s.strip():
+    inline = deckcore.notes_inline_html
+    for kind, t in deckcore.notes_blocks(text):
+        if kind == "table":
             if inlist:
                 out.append("</ul>"); inlist = False
+            head, body = t[0], t[1:]
+            out.append("<div class='notes-table'><table><thead><tr>"
+                       + "".join(f"<th>{inline(c)}</th>" for c in head) + "</tr></thead><tbody>"
+                       + "".join("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>"
+                                 for r in body)
+                       + "</tbody></table></div>")
             continue
-        if s.startswith("## ") or s.startswith("# "):
+        if kind == "quote":
             if inlist:
                 out.append("</ul>"); inlist = False
-            out.append(f"<h3>{bold(s.lstrip('# '))}</h3>")
-        elif s.lstrip().startswith(("- ", "* ")):
+            out.append(f"<blockquote class='notes'>{inline(t)}</blockquote>")
+            continue
+        if kind == "li":
             if not inlist:
                 out.append("<ul class='notes'>"); inlist = True
-            out.append(f"<li>{bold(s.lstrip()[2:])}</li>")
-        else:
-            if inlist:
-                out.append("</ul>"); inlist = False
-            out.append(f"<p>{bold(s)}</p>")
+            out.append(f"<li>{deckcore.notes_inline_html(t)}</li>")
+            continue
+        if inlist:
+            out.append("</ul>"); inlist = False
+        tag = "h3" if kind == "h" else "p"
+        out.append(f"<{tag}>{deckcore.notes_inline_html(t)}</{tag}>")
     if inlist:
         out.append("</ul>")
     return "".join(out)
@@ -1544,6 +1551,11 @@ ul.cards li {{ break-inside:avoid; padding:var(--sp-1) 0; }}
 .pr {{ color:var(--muted); font-size:var(--fs-2xs); margin-left:6px; }}
 ul.notes {{ margin:var(--sp-2) 0 var(--sp-3); padding-left:20px; }}
 ul.notes li {{ margin:var(--sp-1) 0; }}
+.notes-table {{ overflow-x:auto; margin:var(--sp-2) 0 var(--sp-3); }}
+.notes-table table {{ border-collapse:collapse; font-size:var(--fs-sm); }}
+.notes-table th, .notes-table td {{ text-align:left; vertical-align:top; padding:var(--sp-1) var(--sp-2);
+  border-bottom:1px solid var(--line); }}
+blockquote.notes {{ margin:var(--sp-2) 0; padding-left:var(--sp-3); border-left:3px solid var(--line-strong); }}
 section p {{ margin:var(--sp-2) 0; }}
 code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
   padding:2px var(--sp-2); border-radius:5px; font-size:var(--fs-xs); }}

@@ -63,7 +63,7 @@
     cards ({{ carddb.pct }}%) have real colors / types / mana value{% if carddb.source != 'snapshot' %} / image ids{% endif %}.
     Curves, color scores, and card-fit scores use them across every deck.
     {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
-    new cards — run <code>enrich.bat</code> again after a Scryfall update.</span>{% endif %}
+    new cards; details are fetched again after your next upload or batch.</span>{% endif %}
     <div class="fs-xs mt-2">
       {% if carddb.produced_covered %}
         <b class="good">Mana production: known</b> for {{ carddb.produced_covered }}/{{ carddb.total }}
@@ -72,14 +72,13 @@
       {% else %}
         <b class="warn">Mana production: unknown</b> — this attrs file predates production
         enrichment, so colored-source counts fall back to color <i>identity</i> (and say so).
-        Re-run <code>enrich.bat</code> to pick it up.
+        It fills in the next time card details are fetched (after an upload or a batch).
       {% endif %}
     </div>
   {% else %}
     <b class="warn">Card DB: not enriched</b> — tools are running on the name-only list, so
-    curves and fit scores are limited. Run <code>enrich.bat</code> (or
-    <code>python scripts/carddb.py --collection &lt;your.csv&gt;</code>) once to pull real
-    colors / types / mana value from Scryfall for your whole collection.
+    curves and fit scores are limited. Real colors, types and mana values are fetched from
+    Scryfall after your next upload or batch add.
   {% endif %}
   {% if enrich_status %}
     {# Background enrichment (webapp/enrich_bg.py). "interrupted" is a real state,
@@ -128,7 +127,7 @@
     {% else %}
     <div class="muted mt-3 fs-xs">Added by hand so far: {{ additions.rows }} rows ·
       {{ additions.copies }} copies{% if additions.latest %} · latest batch: {{ additions.latest }}{% endif %}.
-      Saved to <code>owned_additions.txt</code> and merged everywhere.</div>
+      Saved to your collection and counted everywhere.</div>
     {% endif %}
     {% if additions.copies and not db %}
     <div class="row mt-3">
@@ -209,7 +208,7 @@
     <select id="collSort" class="push"><option value="name">Sort: Name</option><option value="value">Sort: Value</option><option value="mv">Sort: Mana value</option><option value="staple">Sort: Most played (EDHREC)</option></select>
   </div>
   <div class="muted fs-xs mt-3"><b id="collcount"></b> · click a card for details, oracle text &amp; buy links</div>
-  {% if not carddb.on %}<div class="warn fs-xs mt-2">Name-only collection — the color / type / mana-value filters need enrichment (run <code>enrich.bat</code>).</div>{% endif %}
+  {% if not carddb.on %}<div class="warn fs-xs mt-2">Name-only collection — the color / type / mana-value filters need card details, which are fetched after your next upload or batch.</div>{% endif %}
 </div>
 <div id="collgrid" class="cardgrid">
   {% for c in cards %}

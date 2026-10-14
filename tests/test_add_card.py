@@ -333,9 +333,11 @@ def test_replace_reaches_a_dfc_line_through_its_front_face_key(client):
     """The panel's data-key for EDHREC/field rows is often the FRONT FACE alone,
     while the deck file holds the full 'A // B' name. The editor must bridge the
     two forms the same way the route's singleton guard already does."""
+    # Smaug sits under Creatures: the commander itself can't be swapped from the
+    # panel (UX audit 2026-10-14), and this test is about the DFC name bridge.
     (client._decks / "testdeck.txt").write_text(
-        "# Title: Smaug Test\n\n# --- Commander ---\n"
-        "1 Smaug, the Great Calamity // Spew Flame\n\n"
+        "# Title: Smaug Test\n\n# --- Commander ---\n1 Test Commander\n\n"
+        "# --- Creatures ---\n1 Smaug, the Great Calamity // Spew Flame\n\n"
         "# --- Ramp ---\n1 Sol Ring\n", encoding="utf-8")
     r = client.post("/deck/testdeck/card", data={"action": "replace",
                                                  "name": "smaug, the great calamity",

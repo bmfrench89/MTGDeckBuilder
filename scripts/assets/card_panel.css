@@ -59,7 +59,7 @@
 .cm-fitctx { line-height:1.55; margin:11px 0 0; font-size:var(--fs-md); }
 .cm-reasons { margin-top:10px; }
 .cm-reasons summary { color:var(--muted); cursor:pointer; font-size:var(--fs-xs);
-  font-family:__MONO__; }
+  font-family:__MONO__; padding:12px 0; }  /* 44px to tap, not 20 (sweep, WCAG 2.5.8) */
 .cm-reasons ul { list-style:none; padding:0; margin:9px 0 0; font-family:__MONO__;
   font-size:var(--fs-xs); }
 .cm-reasons li { display:grid; grid-template-columns:88px 1fr auto; gap:var(--sp-3);

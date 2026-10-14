@@ -14,6 +14,7 @@ Later steps add `analyze_deck()` here as the single deck-analysis entry point.
 """
 import csv
 import os
+import html
 import re
 
 import memo
@@ -81,6 +82,75 @@ def load_deck_sections(path):
 
 def load_notes(path):
     return open(path, encoding="utf-8").read() if path and os.path.exists(path) else None
+
+
+# Markdown-lite for a deck's `.notes.md`: the ONE reader behind the Plan tab and the
+# Rule-0 table card. Two hand-rolled readers once disagreed with the file and with
+# each other: hard-wrapped lines became separate paragraphs (a sentence split across
+# two table-card bullets) and `*italic*` asterisks reached the screen opponents read
+# (UX audit 2026-10-14).
+_MD_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+_MD_TABLE_SEP = re.compile(r"^\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$")
+
+
+def notes_blocks(text):
+    """`.notes.md` text -> [(kind, value)]: kind "h", "p", "li" or "quote" with a
+    string, or "table" with a list of rows of cells (first row = header). A block
+    runs until a blank line, a heading or a new item, so wrapped lines join into one
+    paragraph or one item; HTML comments are dropped."""
+    blocks, cur, in_comment = [], None, False
+    for raw in (text or "").splitlines():
+        s = raw.strip()
+        if in_comment:
+            in_comment = "-->" not in s
+            continue
+        if s.startswith("<!--"):
+            in_comment = "-->" not in s
+            cur = None
+            continue
+        if not s:
+            cur = None
+            continue
+        if s.startswith("#"):
+            blocks.append(["h", s.lstrip("#").strip()])
+            cur = None
+            continue
+        if s.startswith("|"):
+            if not _MD_TABLE_SEP.match(s):
+                if cur is None or cur[0] != "table":
+                    cur = ["table", []]
+                    blocks.append(cur)
+                cur[1].append([c.strip() for c in s.strip().strip("|").split("|")])
+            continue
+        if s.startswith(">"):
+            q = s.lstrip(">").strip()
+            if cur is not None and cur[0] == "quote":
+                cur[1] += (" " + q) if q else ""
+            else:
+                cur = ["quote", q]
+                blocks.append(cur)
+            continue
+        m = _MD_ITEM.match(raw)
+        if m:
+            cur = ["li", raw[m.end():].strip()]
+            blocks.append(cur)
+        elif cur is not None and cur[0] in ("p", "li", "quote"):
+            cur[1] += " " + s
+        else:
+            cur = ["p", s]
+            blocks.append(cur)
+    return [(k, t) for k, t in blocks if t]
+
+
+def notes_inline_html(s):
+    """Escaped text with `code`, **bold** and *italic* / _italic_ rendered."""
+    h = html.escape(s, quote=False)
+    h = re.sub(r"`([^`]+)`", r"<code>\1</code>", h)
+    h = re.sub(r"\*\*(?!\s)(.+?)(?<!\s)\*\*", r"<b>\1</b>", h)
+    h = re.sub(r"(?<![\w*])\*(?![\s*])(.+?)(?<![\s*])\*(?![\w*])", r"<i>\1</i>", h)
+    h = re.sub(r"(?<![\w])_(?![\s_])(.+?)(?<![\s_])_(?![\w])", r"<i>\1</i>", h)
+    h = re.sub(r"~~(?!\s)(.+?)(?<!\s)~~", r"<s>\1</s>", h)
+    return h
 
 
 def load_buylist(path):

@@ -30,6 +30,39 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
+## START HERE: the UX refresh — Wave 0 shipped, Wave 1 next (2026-10-14)
+
+The player asked for "deep research … spec out and implement what you think could be best".
+Five research passes plus a hands-on audit of the running app are in
+`docs/research-ux-2026-10.md`; the plan and the live tracker are in `docs/spec-ux-refresh.md`.
+- **The finding:** the most valuable work is a phone edit loop the household can trust:
+  validated, undoable one-tap edits; a searchable deck list instead of 15 screens of art;
+  "where is each copy" shown everywhere (players' top unmet wish on Moxfield/Archidekt,
+  already in this app's data).
+- **Wave 0 (shipped):**
+  - Replace is colour-checked and the commander can't be swapped from the sheet.
+  - Add files by card type and warns when a deck leaves 100.
+  - The ⚡ report shows on the deck page and failures are surfaced, not swallowed.
+  - Smaller fixes:
+    - `[hidden]` always hides, which fixes the mulligan triple count.
+    - Assess and the table card get the real clock.
+    - One markdown-lite notes reader.
+    - Wishlist ticks are remembered, and unknown prices say unknown.
+    - Deck titles instead of file names, and plain words.
+    - gzip.
+  - UAT: `webapp/uat/flows.js`. The sweep now fails under 24 px and audits the open panel.
+- **Wave 1 next:**
+  - Undo: a toast, Undo on Changes, restore a version.
+  - The phone deck page: tabs on the first screen, a text list with a filter.
+  - The card panel on `<dialog>`.
+  - The dashboard inside the shell.
+  - An accessibility batch.
+  - The Pins page's Apply buttons are only reachable by scrolling sideways on phones (a
+    sweep WARN).
+- **Player decisions open:**
+  - D1: should ⚡ propose swaps for approval instead of applying them?
+  - D2: watch the household use the app before Wave 3.
+
 ## START HERE: the app now OWNS the collection (collection database, 2026-10-13)
 
 The player wants to stop using Archidekt/ManaPool: "I just need all cards accounted for
