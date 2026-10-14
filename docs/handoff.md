@@ -55,10 +55,15 @@ and stored in this new db", on free hosting ("I'd rather not do paid"). Phase 1a
   The next sync ingests each new block exactly once.
 - **`[floor]` batches:** the 2026-10-13 four-card Beorn fix is marked `[floor]` ("own at
   least", not "one more"). Both loaders honour it, so those four never double-count.
+- **Decks and pins are in the DB too (Phase 1b, 2026-10-14):** every deck file, its
+  companions and `pins.csv` are kept with every version. The app records them after each
+  edit, the sync after each pull. The deck folder is still the working copy; if it is ever
+  missing, the sync rebuilds it from the DB. **Download all decks** (zip) is on the
+  Collection page. Sessions edit deck files exactly as before.
 - **Hosting (D1): stay free for now.** Revisit before Phase 4 (data out of the repo).
   Free alternatives are in the spec's D1.
 - **Still open:**
-  - Phase 1b (decks, pins, members and activity into the DB).
+  - Phase 1b's remainder (members and activity into the DB).
   - Phase 2 (fetchers at the server).
   - The repo is still public.
 

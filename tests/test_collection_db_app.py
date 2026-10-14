@@ -166,3 +166,29 @@ def test_a_tmp_collection_is_never_swapped_for_a_real_database(env, monkeypatch,
     monkeypatch.setattr(env.app, "COLLECTION", csv_path)
     env.client.get("/collection")
     assert env.app.COLLECTION == csv_path
+
+
+def test_an_app_edit_to_a_deck_is_saved_as_a_revision(env):
+    import deckcore
+    r = env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    assert r.status_code == 302
+    held = store.stored_files(env.db)
+    assert "decks/live.txt" in held and "pins.csv" in held
+    assert "sol ring" in held["pins.csv"].lower()
+    hist = store.file_history(env.db, "pins.csv")
+    assert hist[-1]["action"] == "app /deck/live/pin"
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring", "action": "unpin"})
+    assert len(store.file_history(env.db, "pins.csv")) == 2
+
+
+def test_a_refused_write_records_nothing(env):
+    env.client.post("/deck/nope/pin", data={"name": "Sol Ring"})
+    assert store.stored_files(env.db) == {}
+
+
+def test_the_decks_download_and_the_page_line(env):
+    env.client.post("/deck/live/pin", data={"name": "Sol Ring"})
+    r = env.client.get("/export/decks.zip")
+    assert r.status_code == 200 and r.mimetype == "application/zip"
+    html = env.client.get("/collection").get_data(as_text=True)
+    assert "Download all decks" in html and "1 decks and your pins" in html

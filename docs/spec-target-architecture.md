@@ -254,7 +254,18 @@ Phase 4 deletes them.
       **Change a card's count** (sold/traded/lost), **Download my whole collection**,
       and Upload becomes a merge that never lowers a count.
     - [x] Session batches still go to `owned_additions.txt`; the sync ingests each once.
-  - **Phase 1b, still open:** decks, companions, pins, members and activity into the DB.
+  - **Phase 1b, DECKS and PINS shipped 2026-10-14** (the player: "move decks and pins into
+    the db too").
+    - [x] `files` + `file_revisions`: every deck file, its companions and `pins.csv`,
+      with every version (who, when, which route or "sync").
+    - [x] Captured after every successful app write (an `after_request` hook, so no route
+      changed) and by every sync (a session's committed deck edit becomes a revision).
+    - [x] `restore`: a missing deck folder is rebuilt from the database by the sync; one
+      file or an older revision on request (`store.py restore --file … --rev …`).
+    - [x] **Download all decks** (zip) on the Collection page.
+    - The files stay the working copy the engines read until Phase 4 takes data out of
+      the repo; then the database is the only copy and restore is how a host gets them.
+  - **Phase 1b, still open:** members and activity into the DB.
   - [ ] `scripts/store.py` (stdlib sqlite3): schema, migrations, typed accessors returning
     the existing `Card` / deck objects, so the engines barely change.
   - [ ] A one-time importer that reads today's files (`collection.csv`, owned_additions,

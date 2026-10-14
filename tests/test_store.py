@@ -274,9 +274,10 @@ def test_the_sync_seeds_once_then_ingests(world, monkeypatch):
     import collection_db
     monkeypatch.delenv("MTG_COLLECTION", raising=False)
     kw = dict(db=world.db, export=world.export, august=world.august,
-              additions=world.adds, decks=world.decks_dir)
-    assert collection_db.run(**kw).startswith("collection db: SEEDED")
-    assert collection_db.run(**kw) == "collection db: up to date"
+              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"))
+    first = collection_db.run(**kw)
+    assert first.startswith("collection db: SEEDED") and "decks: saved 3 new" in first
+    assert collection_db.run(**kw) == "collection db: up to date · decks: up to date"
     with open(world.adds, "a", encoding="utf-8") as f:
         f.write("\n# --- Batch 2026-10-14 · photos · 1 cards (1 distinct) ---\n1 Brainstorm\n")
     assert "ingested 1 new batch" in collection_db.run(**kw)
@@ -287,7 +288,8 @@ def test_the_sync_step_respects_an_operator_override(world, monkeypatch):
     monkeypatch.setenv("MTG_COLLECTION", world.export)
     assert "skipped" in collection_db.run(db=world.db, export=world.export,
                                           august=world.august, additions=world.adds,
-                                          decks=world.decks_dir)
+                                          decks=world.decks_dir,
+                                          pins=str(world.dir / "pins.csv"))
     assert not os.path.exists(world.db)
 
 
@@ -312,3 +314,113 @@ def test_the_database_is_never_committed():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ignore = open(os.path.join(root, ".gitignore"), encoding="utf-8").read()
     assert "data/collection/*.db" in ignore
+
+
+# --------------------------------------------------------------------------- #
+# Decks and pins (Phase 1b): the database keeps every version; the folder is the
+# working copy, rebuilt from the database when it is gone.
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def decks(world):
+    (world.dir / "pins.csv").write_text("Card,Deck\nLightning Bolt,live\n", encoding="utf-8")
+
+    class D:
+        db = world.db
+        dir = world.decks_dir
+        pins = str(world.dir / "pins.csv")
+    return D
+
+
+def test_capture_records_every_deck_file_and_pins(decks):
+    assert store.capture(decks.db, decks.dir, decks.pins, action="first", by="t") == \
+        {"added": 4, "changed": 0, "removed": 0}
+    held = store.stored_files(decks.db)
+    assert set(held) == {"decks/live.txt", "decks/other.txt", "decks/study.txt", "pins.csv"}
+    assert held["pins.csv"].startswith("Card,Deck")
+    assert store.capture(decks.db, decks.dir, decks.pins) == \
+        {"added": 0, "changed": 0, "removed": 0}, "an unchanged folder records nothing"
+
+
+def test_only_deck_files_and_companions_are_kept(decks):
+    import os
+    for junk in ("notes.txt.bak", ".hidden.txt", "image.png"):
+        open(os.path.join(decks.dir, junk), "w").write("x")
+    open(os.path.join(decks.dir, "live.notes.md"), "w").write("# plan")
+    store.capture(decks.db, decks.dir, decks.pins)
+    held = store.stored_files(decks.db)
+    assert "decks/live.notes.md" in held
+    assert not {"decks/notes.txt.bak", "decks/.hidden.txt", "decks/image.png"} & set(held)
+
+
+def test_an_edit_and_a_removal_are_revisions_and_nothing_is_lost(decks):
+    import os
+    store.capture(decks.db, decks.dir, decks.pins, action="first")
+    p = os.path.join(decks.dir, "live.txt")
+    open(p, "a", encoding="utf-8").write("1 Sol Ring\n")
+    os.remove(os.path.join(decks.dir, "other.txt"))
+    r = store.capture(decks.db, decks.dir, decks.pins, action="app /deck/live/card", by="me")
+    assert r == {"added": 0, "changed": 1, "removed": 1}
+    hist = store.file_history(decks.db, "decks/live.txt")
+    assert [h["action"] for h in hist] == ["first", "app /deck/live/card"]
+    assert hist[-1]["by"] == "me"
+    assert "decks/other.txt" not in store.stored_files(decks.db)
+    assert "decks/other.txt" in store.stored_files(decks.db, live_only=False), \
+        "a removed deck keeps its history"
+
+
+def test_a_lost_working_copy_is_rebuilt_exactly(decks, tmp_path):
+    store.capture(decks.db, decks.dir, decks.pins)
+    fresh, pins = tmp_path / "newhost" / "decks", tmp_path / "newhost" / "pins.csv"
+    assert store.deck_working_copy_missing(str(fresh))
+    written = store.restore(decks.db, str(fresh), str(pins))
+    assert sorted(written) == ["decks/live.txt", "decks/other.txt", "decks/study.txt",
+                               "pins.csv"]
+    assert (fresh / "live.txt").read_text(encoding="utf-8") == LIVE
+    assert pins.read_text(encoding="utf-8").startswith("Card,Deck")
+
+
+def test_a_bulk_restore_never_overwrites_a_file_on_disk(decks):
+    import os
+    store.capture(decks.db, decks.dir, decks.pins)
+    p = os.path.join(decks.dir, "live.txt")
+    open(p, "w", encoding="utf-8").write("# edited since\n")
+    assert store.restore(decks.db, decks.dir, decks.pins) == []
+    assert open(p, encoding="utf-8").read() == "# edited since\n"
+
+
+def test_one_file_restores_to_an_earlier_version_and_that_is_logged(decks):
+    import os
+    store.capture(decks.db, decks.dir, decks.pins, action="first")
+    p = os.path.join(decks.dir, "live.txt")
+    open(p, "w", encoding="utf-8").write("# a bad edit\n")
+    store.capture(decks.db, decks.dir, decks.pins, action="bad")
+    first = store.file_history(decks.db, "decks/live.txt")[0]["id"]
+    assert store.restore(decks.db, decks.dir, decks.pins, key="decks/live.txt", rev=first) \
+        == ["decks/live.txt"]
+    assert open(p, encoding="utf-8").read() == LIVE
+    assert store.file_history(decks.db, "decks/live.txt")[-1]["action"] == f"restore rev {first}"
+    assert store.capture(decks.db, decks.dir, decks.pins) == \
+        {"added": 0, "changed": 0, "removed": 0}, "the restore already recorded itself"
+
+
+def test_the_decks_download_holds_every_live_file(decks):
+    import io
+    import zipfile
+    store.capture(decks.db, decks.dir, decks.pins)
+    z = zipfile.ZipFile(io.BytesIO(store.decks_zip(decks.db)))
+    assert sorted(z.namelist()) == ["decks/live.txt", "decks/other.txt", "decks/study.txt",
+                                    "pins.csv"]
+    assert z.read("decks/live.txt").decode("utf-8") == LIVE
+
+
+def test_the_sync_rebuilds_a_missing_deck_folder(world, monkeypatch, tmp_path):
+    import shutil
+    import collection_db
+    monkeypatch.delenv("MTG_COLLECTION", raising=False)
+    pins = str(world.dir / "pins.csv")
+    kw = dict(db=world.db, export=world.export, august=world.august,
+              additions=world.adds, decks=world.decks_dir, pins=pins)
+    collection_db.run(**kw)
+    shutil.rmtree(world.decks_dir)
+    assert "decks: RESTORED 3 file(s)" in collection_db.run(**kw)
+    assert open(f"{world.decks_dir}/live.txt", encoding="utf-8").read() == LIVE
