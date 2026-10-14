@@ -13,11 +13,16 @@ Usage:
   python3 analyze_collection.py <collection_file> --color BR   # color-identity filter
   python3 analyze_collection.py <collection_file> --name goblin # name search
   python3 analyze_collection.py <collection_file> --list        # with any filter, list cards
+  python3 analyze_collection.py <collection_file> --query "t:dragon free>0" [--list|--json]
+      # the Collection page's search language: types, colour identity, roles, free
+      # copies, decks, dates… (--query-help lists every keyword)
 
 Works with the rich Archidekt CSV (full analysis) or a name-only list (ownership
 counts only; subtype/type/color queries fall back to name matching and warn).
 """
 import argparse
+import json
+import os
 import sys
 from collections import Counter
 
@@ -25,6 +30,8 @@ import mtglib
 
 
 def load(path):
+    if mtglib.is_collection_db(path):          # the server's collection database
+        return mtglib.load_collection(path), "db"
     with open(path, encoding="utf-8") as f:
         text = f.read()
     fmt = mtglib.detect_format(text)
@@ -64,8 +71,8 @@ def summary(cards, fmt):
     have_mv = any(c.mana_value is not None for c in cards)
     have_ident = any(c.identity for c in cards)
 
-    print(f"Collection format: {fmt}"
-          f"  ({'rich CSV' if fmt == 'csv' else 'name-only list'})")
+    kind = {"csv": "rich CSV", "db": "collection database"}.get(fmt, "name-only list")
+    print(f"Collection format: {fmt}  ({kind})")
     print(f"Unique cards : {len(cards)}")
     print(f"Total copies : {total_copies(cards)}")
     if not have_types:
@@ -160,6 +167,25 @@ def filter_cards(cards, args):
     return result, warned
 
 
+def run_query(cards, args):
+    """The Collection page's own search, so a count the skill quotes is the count
+    the player sees (scripts/collection_query.py)."""
+    import collection_query as cq
+    import deckcore
+    pins_path = args.pins or os.path.join(os.path.dirname(args.collection) or ".", "pins.csv")
+    decks_dir = args.decks_dir if os.path.isdir(args.decks_dir) else None
+    recs, ctx = cq.records(cards, decks_dir, pins=deckcore.load_pins(pins_path))
+    res = cq.run(args.query, recs, ctx, order=args.order, group=args.group)
+    if args.json:
+        print(json.dumps(cq.to_json(res), indent=2))
+    else:
+        if decks_dir is None:
+            print(f"[!] No deck folder at {args.decks_dir}: free copies and deck use "
+                  "count no decks.")
+        print(cq.text_report(res, list_all=args.list))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Analyze an MTG collection.")
     ap.add_argument("collection", help="path to collection CSV or name-only list")
@@ -171,7 +197,28 @@ def main():
     ap.add_argument("--color", help="filter by exact color identity, e.g. BR or 'B,R'")
     ap.add_argument("--name", help="substring name search")
     ap.add_argument("--list", action="store_true", help="list matching cards")
+    ap.add_argument("--query", "-q",
+                    help='filter, sort and count in the Collection page\'s search language, '
+                         'e.g. "t:dragon free>0" or "id<=g role:ramp" (see --query-help)')
+    ap.add_argument("--order", help="sort for --query: name, mv, color, type, usd, value, "
+                                    "qty, free, decks, added, power")
+    ap.add_argument("--group", help="group --query results: type, color, mv, role, deck, added")
+    ap.add_argument("--decks-dir", default="data/decks",
+                    help="deck folder --query reads for free copies and deck use "
+                         "(default: data/decks)")
+    ap.add_argument("--pins", help="pins.csv for --query (default: beside the collection)")
+    ap.add_argument("--json", action="store_true", help="--query output as JSON")
+    ap.add_argument("--query-help", action="store_true",
+                    help="print every keyword --query reads, with an example of each")
     args = ap.parse_args()
+
+    if args.query_help:
+        import collection_query as cq
+        for row in cq.help_rows():
+            names = ", ".join(n + ":" if n != "name" else "words" for n in row["names"])
+            ex = f"  e.g. {row['example']}" if row["example"] else ""
+            print(f"{names}{ex}\n    {row['means']}  [{row['support']}]")
+        return 0
 
     try:
         cards, fmt = load(args.collection)
@@ -182,6 +229,9 @@ def main():
     if not cards:
         print("error: no cards parsed from collection.", file=sys.stderr)
         return 2
+
+    if args.query is not None:
+        return run_query(cards, args)
 
     if args.tribes:
         show_tribes(cards, args.top)

@@ -29,6 +29,7 @@ flowchart TB
     deck_fit["deck_fit"]
     conflicts["deck_conflicts<br/>shared / available pool"]
     analyzec["analyze_collection"]
+    cquery["collection_query<br/>the Collection search language:<br/>tri-state, skipped rows counted"]
     simc["similar_commanders"]
     cfind["commander_finder"]
     cimg["card_image<br/>URLs + buy links"]
@@ -188,7 +189,8 @@ inclusion rates drift slowly (the live cache TTL is a week).
 | combo_detector | infinite / 2-card combos present or one-away (`combos.csv`) | mtglib |
 | deck_fit | per-card fit score + `dead_weight()` (below-deck-median passengers) + **`card_value()`** (the ONE scorer both sides of an optimizer swap and the Cuts surface use) + `cut_ranking()` ("if you must cut", advisory, protected cards shown flagged not hidden) (library; no CLI) | mtglib |
 | deck_conflicts | shared-across-decks + `--available` buildable pool | mtglib |
-| analyze_collection | "what can I build?" pool stats by color/type/tribe | mtglib |
+| analyze_collection | "what can I build?" pool stats by color/type/tribe; `--query` runs `collection_query` (the page's own search) | mtglib (collection_query lazily) |
+| collection_query | **The Collection page's search language** (2026-10-14, `docs/spec-collection-rebuild.md`): tokenizer → recursive-descent parser (AND before OR, as on Scryfall) → compiled per-term tests → **tri-state** evaluation (true / false / unknown) over `Rec`s built by `records()` (deck use from sleeved decks only, study lists answer `deck:` only, pins reserve a copy, basics unlimited). Unknown rows are skipped and counted with a reason; a term no card can answer ("t:legendary" with no supertypes) says so; an unreadable term warns and is dropped, never a silent zero. Colours come from the mana cost (the attrs overlay copies identity into `Card.colors`); a carddb row's type line is "main type only" (`_has_type`). `KEYWORDS` is the one vocabulary — the help sheet is generated from it. `run()` returns rows, summary, chips (each with the query text that removes it), groups | mtglib (deckcore, deck_conflicts, deck_fit, similar_commanders inside `records()` only) |
 | similar_commanders / commander_finder | alternate commanders / "build next" ranking | mtglib, deckcore/simc |
 | card_image | Scryfall image URLs + `purchase_links` (TCGplayer/ManaPool/Card Kingdom) | mtglib |
 | oracle_flags | Face-aware derivation from a Scryfall card object: `produced_of()` (what it actually taps for) + `derive_flags()` (v1: `etb-tapped`/`-cond`, `rock`, `dork`, `ramp`, `draw`, `mana2`/`mana3`, `removal`, `wipe`, `counter`; **v2 (2026-08-14, `spec-mana-intelligence.md`): `fetch:land`/`fetch:basic`/`fetch:<type>`/`fetch:basic-<type>` — what a library search can FIND, read from the clause so Demonic Tutor stays silent and Farseek finally registers — plus `mana-restricted`** for "spend this mana only" lands Scryfall reports as full rainbow sources; **v4 (2026-10-11): edict text ("each opponent sacrifices a creature") also reads as `removal`, and `ritual:<n>` / `scale:` / `devotion:` / `extra:` / `lands-are:` carry black's mana engines into goldfish** (`ritual:`/`extra:` map to ramp via `mtglib.FLAG_ROLE_PREFIXES`)). `VOCAB_VERSION` rides every attrs row as `FlagsVer`; flags and their version are one write. v2 tokens map to NO classify() role on purpose. Pure dict-in/set-out, no I/O; heuristic by construction, so curated lists and human verification win | — (`re` only; no repo imports) |

@@ -81,7 +81,12 @@ per-module table — read it before any structural change.
   `carddb.verify_cards`, write a dated batch to `owned_additions.txt`, reconcile a new
   export against the batches, the Upload guard), `narration` (the Watch tab's recorded
   narration: which scenes still need a take in the chosen voice, content-hashed files,
-  scene timing; the synthesis itself runs only on a runner — `narrate.yml`).
+  scene timing; the synthesis itself runs only on a runner — `narrate.yml`),
+  `collection_query` (the Collection page's search language — one string that filters,
+  sorts and counts the pool: a Scryfall subset plus `free>0`, `decks=0`, `deck:`, `for:`,
+  `is:pinned`, `added>=`; true/false/UNKNOWN per row, unknown rows skipped and counted,
+  typos warned never zeroed; `analyze_collection.py --query` is its CLI —
+  `docs/spec-collection-rebuild.md`).
 - **Spokes:** `build_dashboard` (HTML dashboard + card panel), `card_api` (panel JSON),
   `auto_build` (assemble a full 99), plus `optimize`.
 - **The collection database:** `store` (SQLite, stdlib) writes the player's collection on the server (`data/collection/collection.db`, gitignored); `mtglib.load_collection` reads it, so engines never know. Seeded once by the sync (`webapp/collection_db.py`), then it IS the collection — see Data formats.
@@ -113,6 +118,8 @@ python3 webapp/app.py                                  # -> http://127.0.0.1:500
 
 # Core analysis (COLL = data/collection/collection.csv, or the snapshot on a fresh clone)
 python3 scripts/analyze_collection.py $COLL --subtype Dragon --list
+python3 scripts/analyze_collection.py $COLL --query "t:dragon free>0" [--group deck] [--json]
+                                             # the Collection page's search; --query-help
 python3 scripts/deck_stats.py --deck data/decks/<stem>.txt --collection $COLL
 python3 scripts/power.py --rank --collection $COLL
 python3 scripts/manabase.py --deck data/decks/<stem>.txt --collection $COLL
@@ -201,7 +208,10 @@ determinism, the A/A-exact-zero common-random-numbers tripwire, cache invalidati
 that an unreachable Scryfall reports UNVERIFIED instead of guessing), `test_rules`
 (the CR parser against a `SAMPLE_CR` that replicates the official layout *including its
 duplicated Contents headings*, the cp1252 round-trip, and the blocked-network degrade),
-`test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination), `test_clips`
+`test_rulings` (fuzzy-resolution surfacing, stale-okay cache, pagination),
+`test_collection_query` (the search language: "sol" ranks Sol Ring first, `t:dragon`
+counts every Dragon and the rows it had to skip, both readings of "free green ramp", a
+typo warns instead of zeroing, basics unlimited, study lists hold no copies), `test_clips`
 (a scene that shows or names a card the deck doesn't play is skipped and flagged, featured
 cards are protected from the optimizer, a broken storyboard costs the Watch tab and never
 the page, captions can't break out of their script tag) and `test_agents`
