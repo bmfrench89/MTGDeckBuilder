@@ -217,15 +217,24 @@ inclusion rates drift slowly (the live cache TTL is a week).
 
 `app.py` (Flask) is the primary spoke consumer: routes call the engines/spokes and render
 Jinja templates. Shared front-end: `static/cardpanel.{css,js}` (the bottom-sheet card panel,
-site-wide via `data-card`), `static/cardgrid.js` + `static/collection.js` (batch CDN image
-loading — see **[card-images.md](card-images.md)** for the retrieval rules). The **saved-deck dashboard is editable** (`generate(..., editable=True)`): the card panel
+site-wide via `data-card`), `static/cardgrid.js` (batch CDN image loading — see
+**[card-images.md](card-images.md)** for the retrieval rules) and `static/collection.js`
+(the Collection's Cards tab: live search over the server's `/collection/results`, Load
+more, the Filters/help `<dialog>` sheets, List/Grid per device, images resolved near the
+screen). The **saved-deck dashboard is editable** (`generate(..., editable=True)`): the card panel
 gets Remove / Replace (from the alternatives or an owned-card search), `POST /deck/<stem>/card`
 rewrites the deck `.txt` in place, and shared-across-decks status shows in the panel. CLI-rendered
 dashboards keep `editable=False`. Key routes: `/` decks leaderboard · `/deck/<stem>` dashboard (six subtabs; ＋ Add card)
 · `/deck/<stem>/card` (remove/replace, front-face duplicate guard) · `/deck/<stem>/add`
 (validated add + fit verdict) · `/api/deck/<stem>/advise` · `/api/deck/<stem>/sections`
 · `/api/collection/search` (owned autocomplete) · `/build-next` (+ `/…/deck` auto-build,
-"build any commander") · `/collection` (searchable grid) · `/wishlist` · `/shared`
+"build any commander") · `/collection` (three sub-tabs, docs/spec-collection-rebuild.md:
+**Cards** runs `collection_query` on the server over memoised records — `_coll_state` /
+`_coll_url` carry q·scope·order·dir·group·view·n in the URL, the scope chip ANDs the
+parenthesised query, `_coll_compose` / `_coll_form_state` turn the Filters sheet's fields
+into query terms and back; `/collection/results`, `/collection/rows`,
+`/api/collection/count` serve the script; **Add** `/collection/add`; **Manage**
+`/collection/manage`) · `/wishlist` · `/shared`
 · `/api/card/<name>` · `/deck/<stem>/assess.txt` (coaching packet)
 · **`/deck/<stem>/table-card`** (the Rule-0 screen: bracket, Game Changers, MLD/extra
 turns/combos, clock, game plan — phone and print) · **`/deck/<stem>/mulligan`** +

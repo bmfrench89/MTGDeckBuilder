@@ -148,7 +148,7 @@ def test_a_token_is_single_use_and_cannot_traverse(env):
 def test_new_batch_cards_show_up_as_arrivals(env):
     html = _preview(env, "1 Mana Crypt\n")
     env.client.post("/collection/batch/confirm", data={"token": _token(html)})
-    page = env.client.get("/collection").get_data(as_text=True)
+    page = env.client.get("/collection/add").get_data(as_text=True)    # the Add tab
     assert "Review new arrivals" in page and "latest batch" in page
     assert env.client.get("/collection/arrivals").status_code == 200
     packet = env.client.get("/collection/arrivals.txt").get_data(as_text=True)
@@ -222,9 +222,12 @@ def _upload_with_mana_crypt(env):
 def test_covered_rows_are_offered_and_retired_only_on_a_tap(env):
     env.adds.write_text("# --- Batch 2026-10-12 · pasted list · 2 cards (2 distinct) ---\n"
                         "1 Mana Crypt\n1 Lightning Bolt\n", encoding="utf-8")
-    _upload_with_mana_crypt(env)
-    page = env.client.get("/collection").get_data(as_text=True)
+    r = _upload_with_mana_crypt(env)
+    assert r.headers["Location"].endswith("/collection/manage#reconcile"), "the offer is on Manage"
+    page = env.client.get("/collection/manage").get_data(as_text=True)
     assert "Retire them" in page
+    tabs = env.client.get("/collection").get_data(as_text=True)
+    assert 'class="badge"' in tabs, "Manage wears a badge on every tab while the offer waits"
     assert "1 Mana Crypt\n" in env.adds.read_text(encoding="utf-8"), "nothing retired yet"
     env.client.post("/collection/reconcile", data={"action": "retire"})
     text = env.adds.read_text(encoding="utf-8")
@@ -232,7 +235,7 @@ def test_covered_rows_are_offered_and_retired_only_on_a_tap(env):
     import mtglib
     coll = {c.name: c.quantity for c in mtglib.load_collection(str(env.csv))}
     assert coll["Mana Crypt"] == 1, "counted once — the export's copy, not the export's + the batch's"
-    assert "Retire them" not in env.client.get("/collection").get_data(as_text=True)
+    assert "Retire them" not in env.client.get("/collection/manage").get_data(as_text=True)
 
 
 def test_keep_dismisses_the_offer_and_changes_nothing(env):
@@ -241,7 +244,7 @@ def test_keep_dismisses_the_offer_and_changes_nothing(env):
     _upload_with_mana_crypt(env)
     env.client.post("/collection/reconcile", data={"action": "keep"})
     assert env.adds.read_text(encoding="utf-8") == body
-    assert "Retire them" not in env.client.get("/collection").get_data(as_text=True)
+    assert "Retire them" not in env.client.get("/collection/manage").get_data(as_text=True)
 
 
 # --------------------------------------------------------------------------- #
@@ -387,9 +390,9 @@ def test_no_additions_file_is_an_empty_list_not_an_error(env):
 
 
 def test_the_download_button_shows_only_when_there_is_something_to_download(env):
-    assert "Download added cards" not in env.client.get("/collection").get_data(as_text=True)
+    assert "Download added cards" not in env.client.get("/collection/add").get_data(as_text=True)
     env.adds.write_text(ADDS, encoding="utf-8")
-    html = env.client.get("/collection").get_data(as_text=True)
+    html = env.client.get("/collection/add").get_data(as_text=True)
     assert "Download added cards" in html and "/export/additions.txt" in html
 
 

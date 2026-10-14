@@ -244,6 +244,54 @@ extra.
 - **`sweep.js`:** covers the three tabs.
 - **`upgrade.js`:** must PASS.
 
+### As built (2026-10-14)
+
+Measured on a 412 × 915 phone against a scratch copy of the same 3,294 cards:
+
+| | Before | After |
+|---|---|---|
+| First card | 3,572 px down (3.9 screens) | 426–478 px (the first screen) |
+| Page | 11,003 elements, 1.23 MB | about 1,870 elements, about 90 KB for 100 rows |
+| Sort | 4.4–6.6 s (after #194: about 0.6 s) | 115–145 ms, a server round trip |
+| Query | — | 1–10 ms; the records are rebuilt after a write (about 180 ms) |
+
+Details that differ from the plan above, or that it left open:
+
+- **Status messages.**
+  - The summary line is plain text inside the results.
+  - A visually hidden `role="status"` region announces live-search and Load-more
+    results, so a re-rendered region never steals or loses the announcement.
+- **Live search.**
+  - Typing swaps in `/collection/results` after 300 ms. That is the same partial a
+    reload renders.
+  - The URL is replaced, never pushed, so Back never shows a URL whose results aren't on
+    screen.
+- **The Filters sheet:**
+  - It reads the query's sheet-shaped top-level terms back into its fields and carries
+    every other term through untouched as `q_rest`. If that rest is an OR, it is
+    wrapped in parentheses before the sheet's terms are added.
+  - It shows a live "Show N cards" or "No cards match".
+  - Its history entry is popped before the form navigates, so Back never lands on a
+    duplicate page.
+  - Without JavaScript, `?filters=1` / `?help=1` render the sheet open.
+- **List and Grid are one markup.** CSS lays the same rows out as card images.
+  - The choice is remembered per device and applied before paint.
+  - Images resolve by name in batches of 75, only near the screen.
+  - Rows with a Scryfall id skip that and use the CDN URL directly.
+- **On a phone:**
+  - The six scope chips are compact and wrap rather than scroll, so Shared is never
+    hidden past the edge.
+  - A row hides its cost pips and keeps the name, type line and counts.
+- **Sorting.**
+  - "Most played (EDHREC)" is gone until enrichment stores the rank.
+  - "Most valuable cards" is `order:value`.
+  - A new sort key resets the direction.
+- **Every POST lands on its tab:**
+  - add one card, a batch, or an upload → Add;
+  - set a count or reconcile → Manage;
+  - a replace that leaves a reconcile offer → `Manage#reconcile`. The Manage tab wears a
+    badge while that offer waits.
+
 ## 5. Later (Wave 2 extras)
 
 - **Saved household views** in the database: named query strings, such as "Free green
@@ -262,5 +310,5 @@ extra.
 |---|---|
 | Hotfix: observer + study decks (#194) | [x] merged 2026-10-14 |
 | B1: `collection_query.py` + `analyze_collection.py --query` + tests + tool contract | [x] 2026-10-14 |
-| B2: Cards / Add / Manage sub-tabs, server-side query, chips, dialog, paging, UAT | [ ] |
+| B2: Cards / Add / Manage sub-tabs, server-side query, chips, dialog, paging, UAT | [x] 2026-10-14 (see "As built") |
 | Wave 2 extras (§5) | [ ] |

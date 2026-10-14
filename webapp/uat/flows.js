@@ -388,24 +388,95 @@ function restore(stem, files) {
   // F13 · The Collection page sorts without freezing. The accessibility batch's
   // card-name observer re-scanned the whole grid for every tile a sort moved, and
   // every sort froze the page for 4-6 s (17-29 s on a slow phone) while all 14
-  // flows above passed, because none of them sorted 3,294 tiles and timed it.
+  // flows above passed, because none of them sorted 3,294 tiles and timed it. Since
+  // the rebuild (docs/spec-collection-rebuild.md) a sort is a server round trip, so
+  // it is timed from the choice to the new page's first frame.
   {
     try {
       await p.goto(`${BASE}/collection`, { waitUntil: 'load', timeout: 300000 });
       if (!(await p.$('#collSort'))) skip('F13 collection sort is quick', 'no sort control on this build');
       else {
-        const times = [];
-        for (const v of ['mv', 'name', 'mv']) {
+        const times = [], orders = [];
+        for (const v of ['mv', 'free', '']) {
           const t0 = Date.now();
-          await p.selectOption('#collSort', v);
+          await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 60000 }),
+                             p.selectOption('#collSort', v)]);
           await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
           times.push(Date.now() - t0);
+          orders.push(await p.evaluate(() => new URL(location.href).searchParams.get('order') || ''));
         }
         const n = await p.evaluate(() => document.querySelectorAll('[data-card]').length);
-        if (Math.max(...times) > 2500) fail('F13 collection sort is quick', `${n} cards; sorts took ${times.join(' / ')} ms`);
-        else pass('F13 collection sort is quick', `${n} cards; sorts took ${times.join(' / ')} ms`);
+        if (Math.max(...times) > 2500) fail('F13 collection sort is quick', `${n} rows; sorts took ${times.join(' / ')} ms`);
+        else if (orders.join(',') !== 'mv,free,') fail('F13 collection sort is quick', `the URL carried order ${orders.join(' / ')}`);
+        else pass('F13 collection sort is quick', `${n} rows; sorts took ${times.join(' / ')} ms`);
       }
     } catch (e) { fail('F13 collection sort is quick', String(e).slice(0, 140)); }
+  }
+
+  // F14 · The Collection rebuild on a phone (docs/spec-collection-rebuild.md §4): the
+  // first card on the first screen, live search, a scope chip, a chip removing its own
+  // term, the Filters sheet's count agreeing with the page it opens, "Load more"
+  // keeping its depth through a visit to Add and Back, the sub-tabs, and the help
+  // sheet giving focus back.
+  {
+    const why = [];
+    try {
+      await p.goto(`${BASE}/collection`, { waitUntil: 'load', timeout: 300000 });
+      if (!(await p.$('#collQ'))) skip('F14 collection search', 'no search bar on this build');
+      else {
+        const top = await p.evaluate(() => { const r = document.querySelector('.coll-row');
+          return r ? Math.round(r.getBoundingClientRect().top) : 1e9; });
+        if (top > 915) why.push(`first card ${top}px down`);
+        await p.fill('#collQ', 't:creature');
+        await p.waitForFunction(() => /card/.test(document.getElementById('collLive').textContent),
+                                null, { timeout: 15000 });
+        if (!/q=t(%3A|:)creature/.test(p.url())) why.push('live search left the URL behind');
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('.scopes a:has-text("Free")')]);
+        if (!/scope=free/.test(p.url())) why.push('Free chip: no scope in the URL');
+        if (!/free copies/.test(await p.textContent('#collSummary'))) why.push('Free chip: the summary does not say so');
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('.applied .qchip >> nth=0')]);
+        if (/[?&]q=/.test(p.url()) || !/scope=free/.test(p.url())) why.push(`removing the chip gave ${p.url()}`);
+        await p.click('#collFiltersBtn');
+        await p.waitForSelector('#collFilters[open]');
+        await p.check('input[name=fi_c][value=G]');
+        await p.check('input[name=fi_role][value=ramp]');
+        await p.waitForFunction(() => { const t = document.getElementById('collFiltersShow').textContent;
+          return /^Show [\d,]+ card|No cards match/.test(t); }, null, { timeout: 15000 });
+        await p.waitForTimeout(600);                                   // the count settles
+        const label = (await p.textContent('#collFiltersShow')).trim();
+        const want = Number(((label.match(/[\d,]+/) || ['0'])[0]).replace(/,/g, ''));
+        await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('#collFiltersShow')]);
+        const got = Number((((await p.textContent('#collSummary')).match(/^([\d,]+) card/) || [0, '-1'])[1]).replace(/,/g, ''));
+        if (want !== got) why.push(`the sheet said "${label}", the page shows ${got}`);
+        await p.goto(`${BASE}/collection`, { waitUntil: 'load' });
+        const more = p.locator('#collMore');
+        let depth = '';
+        if (await more.count()) {
+          await more.scrollIntoViewIfNeeded();
+          await more.click();
+          await p.waitForFunction(() => document.querySelectorAll('.coll-row').length > 100, null, { timeout: 15000 });
+          const n1 = await p.evaluate(() => document.querySelectorAll('.coll-row').length);
+          await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.click('.subtabs a:has-text("Add")')]);
+          if (!(await p.$('#batch'))) why.push('the Add tab has no batch form');
+          await p.goBack({ waitUntil: 'load' });
+          const n2 = await p.evaluate(() => document.querySelectorAll('.coll-row').length);
+          if (n2 !== n1) why.push(`Back after Load more showed ${n2} rows, not ${n1}`);
+          depth = `; Load more → ${n1} rows, kept through Back`;
+        }
+        await p.goto(`${BASE}/collection/manage`, { waitUntil: 'load' });
+        const cur = await p.evaluate(() => ((document.querySelector('.subtabs [aria-current=page]') || {}).textContent || '').trim());
+        if (!/^Manage/.test(cur)) why.push(`the Manage tab is not marked current ("${cur}")`);
+        await p.goto(`${BASE}/collection`, { waitUntil: 'load' });
+        await p.click('#collHelpBtn');
+        await p.waitForSelector('#collHelp[open]');
+        await p.keyboard.press('Escape');
+        await p.waitForTimeout(300);
+        const focus = await p.evaluate(() => document.activeElement && document.activeElement.id);
+        if (focus !== 'collHelpBtn') why.push(`help closed with focus on "${focus}"`);
+        if (why.length) fail('F14 collection search', why.join('; '));
+        else pass('F14 collection search', `first card at ${top}px; "${label}" = the page${depth}`);
+      }
+    } catch (e) { fail('F14 collection search', (why.join('; ') + ' ' + String(e)).slice(0, 200)); }
   }
 
   // F11 · Keyboard only (Wave 1.5): the skip link, then a card name opens the panel,

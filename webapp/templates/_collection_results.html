@@ -1,0 +1,58 @@
+{#- The Cards tab's results region. The full page includes it; live search swaps it
+    whole from /collection/results, so typing can never show what a reload wouldn't. -#}
+{% if res.warnings %}<ul class="coll-warn">{% for w in res.warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
+<nav class="scopes" aria-label="Which copies">
+  {%- for key, label, _t in scopes %}
+  <a class="thchip{{ ' on' if st.scope == key }}" href="{{ curl(scope=key, n=None) }}"{% if st.scope == key %} aria-current="true"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+</nav>
+{% if res.chips %}
+<div class="applied" role="group" aria-label="Search terms, tap one to remove it">
+  {%- for c in res.chips %}
+  <a class="qchip" href="{{ curl(q=c.remove or None, n=None) }}" title="{{ c.means }}"><span class="mono">{{ c.label }}</span><span aria-hidden="true">✕</span><span class="sr-only"> remove</span></a>
+  {%- endfor %}
+  {% if res.chips|length > 1 %}<a class="qchip clear" href="{{ curl(q=None, n=None) }}">Clear all</a>{% endif %}
+</div>
+{% endif %}
+<p class="coll-summary" id="collSummary">{{ res.summary }}</p>
+<div class="coll-tools">
+  <form method="get" action="{{ url_for('collection_view') }}" class="coll-sort" id="collSortForm">
+    {%- for k in ('q', 'scope', 'view') %}{% if st[k] and not (k == 'scope' and st[k] == 'all') %}<input type="hidden" name="{{ k }}" value="{{ st[k] }}">{% endif %}{% endfor %}
+    <label class="sr-only" for="collSort">Sort by</label>
+    <select id="collSort" name="order">
+      {%- for k, label in orders %}<option value="{{ k }}"{{ ' selected' if sel_order == k }}>{{ label }}</option>{% endfor %}
+    </select>
+    {%- if res.order != 'relevance' %}
+    <a class="btn ghost sm coll-dir" href="{{ curl(dir=('asc' if res.direction == 'desc' else 'desc'), n=None) }}"
+       aria-label="{{ res.order_label }}, {{ 'high to low' if res.direction == 'desc' else 'low to high' }}. Reverse the order">{{ '↓' if res.direction == 'desc' else '↑' }}</a>
+    <input type="hidden" name="dir" value="{{ st.dir }}">
+    {%- endif %}
+    <label class="sr-only" for="collGroup">Group by</label>
+    <select id="collGroup" name="group">
+      {%- for k, label in groups %}<option value="{{ k }}"{{ ' selected' if st.group == k }}>{{ label }}</option>{% endfor %}
+    </select>
+    <noscript><button class="btn ghost sm" type="submit">Apply</button></noscript>
+  </form>
+  <div class="coll-views" role="group" aria-label="Show cards as">
+    <a class="thchip{{ ' on' if st.view != 'grid' }}" data-view="list" href="{{ curl(view='list') }}">List</a>
+    <a class="thchip{{ ' on' if st.view == 'grid' }}" data-view="grid" href="{{ curl(view='grid') }}">Grid</a>
+  </div>
+</div>
+{% if items %}
+<ul class="coll-list" id="collList" data-view="{{ st.view or 'auto' }}">
+{% include "_collection_rows.html" %}
+</ul>
+<p class="coll-count muted fs-xs" id="collCount">Showing {{ '{:,}'.format(shown) }} of {{ '{:,}'.format(res.matched) }}</p>
+{% if shown < res.matched and shown < 5000 %}
+<a class="btn ghost coll-more" id="collMore" href="{{ more_url }}" data-rows="{{ rows_url }}">Load more</a>
+{% endif %}
+{% else %}
+<div class="card coll-empty">
+  <p><b>No cards match.</b>{% if res.skipped %} {{ '{:,}'.format(res.skipped) }} card{{ 's were' if res.skipped != 1 else ' was' }} left out because the data to check {{ 'them' if res.skipped != 1 else 'it' }} isn't there yet.{% endif %}</p>
+  {% if suggest %}<p>Did you mean {% for n in suggest %}<a href="{{ curl(q='!"' ~ n ~ '"', n=None) }}">{{ n }}</a>{{ ', ' if not loop.last }}{% endfor %}?</p>{% endif %}
+  <p class="row">
+    {% if st.q or st.scope != 'all' %}<a class="btn ghost" href="{{ url_for('collection_view') }}">Clear all filters</a>{% endif %}
+    {% if name_words %}<a class="btn ghost" href="https://scryfall.com/search?q={{ name_words|join(' ')|urlencode }}" target="_blank" rel="noopener">Search every card on Scryfall</a>{% endif %}
+  </p>
+</div>
+{% endif %}

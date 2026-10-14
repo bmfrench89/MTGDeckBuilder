@@ -21,6 +21,9 @@ const SIZES = (process.env.UAT_SIZES || '360x780,412x915,600x960,768x1024,884x11
 const UA_M = 'Mozilla/5.0 (Linux; Android 14; SM-F946U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36';
 const exe = fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
 const PAGES = [['home', '/'], ['build', '/build-next'], ['collection', '/collection'],
+               ['coll-grid', '/collection?view=grid&group=type'],
+               ['coll-filters', '/collection?filters=1'], ['coll-help', '/collection?help=1'],
+               ['coll-add', '/collection/add'], ['coll-manage', '/collection/manage'],
                ['wishlist', '/wishlist'], ['shared', '/shared'], ['pins', '/pins'],
                ['import', '/decks/import'], ['arrivals', '/collection/arrivals'],
                ['people', '/people'], ['activity', '/activity']];

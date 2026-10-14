@@ -72,7 +72,8 @@ def test_touch_targets_and_type_floor_are_tokens():
     for rule in (r"\.btn\.sm \{[^}]*min-height: var\(--target\)",
                  r"\.thchip \{[^}]*min-height: var\(--target\)",
                  r"input, textarea, select \{[^}]*min-height: var\(--target\)",
-                 r"\.colorbtn \{[^}]*width:var\(--target\)"):
+                 r"\.qchip \{[^}]*min-height: var\(--target\)",
+                 r"\.subtabs a \{[^}]*min-height: var\(--target\)"):
         assert re.search(rule, css), rule
 
 

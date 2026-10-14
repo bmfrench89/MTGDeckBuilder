@@ -1,0 +1,20 @@
+{#- Rows of the Cards tab: one per card, a header where the group changes. The same
+    markup is the list AND the grid (CSS switches), and "Load more" appends this
+    partial, so every row is built in one place. -#}
+{% for it in items %}
+{% if it.group %}
+<li class="coll-grp"><h3>{{ it.group.label }} <span class="muted fs-xs">{{ '{:,}'.format(it.group.count) }} card{{ 's' if it.group.count != 1 }} · {{ '{:,}'.format(it.group.copies) }} copies · {{ '{:,}'.format(it.group.free) }} free</span></h3></li>
+{% else %}{% set r = it.row %}
+<li class="coll-row" data-card="{{ r.name }}" tabindex="0" role="button"
+    aria-label="{{ r.name }}, {{ r.qty }} owned{% if r.basic %}, basic land{% elif r.short %}, in more decks than copies owned{% else %}, {{ r.free }} free{% endif %}">
+  <img class="coll-img" alt="" loading="lazy" decoding="async" data-name="{{ r.name }}"
+       {%- if r.small %} data-small="{{ r.small }}" data-normal="{{ r.normal }}"{% endif %}>
+  <span class="coll-txt"><span class="coll-name">{{ r.name }}</span>
+    <span class="coll-sub">{{ r.type }}{% if r.mv is not none and r.type != 'Land' %}{{ ' · ' if r.type }}MV {{ r.mv }}{% endif %}
+      {%- if r.decks %} · in {{ r.decks|join(', ') }}{% endif %}{% if r.pinned %} · pinned to {{ r.pinned }}{% endif %}</span></span>
+  <span class="coll-cost" aria-hidden="true">{{ r.pips }}</span>
+  <span class="coll-qty" aria-hidden="true"><b>{{ r.qty }}×</b>
+    {%- if r.basic %}<small>basic</small>{% elif r.short %}<small class="short">short {{ r.short_by }}</small>{% else %}<small class="{{ 'free' if r.free else 'none' }}">{{ r.free }} free</small>{% endif %}</span>
+</li>
+{% endif %}
+{% endfor %}

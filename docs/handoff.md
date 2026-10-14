@@ -30,13 +30,27 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: the Collection rebuild — search engine shipped, the page is next (2026-10-14)
+## START HERE: the Collection rebuild — Cards / Add / Manage and one search language (2026-10-14)
 
 The player asked for sub-tabs on the cluttered Collection page and a filter that matches
-competitors. Research: `docs/research-collection-2026-10.md`. Plan and tracker:
-`docs/spec-collection-rebuild.md`.
-- **Shipped:** the hotfix (#194: every Collection sort froze the page for 4–6 s; "in a
-  deck" counted study lists) and B1, the search engine `scripts/collection_query.py`.
+competitors. Research: `docs/research-collection-2026-10.md`. Plan, as-built notes and
+tracker: `docs/spec-collection-rebuild.md`.
+- **Shipped, the page (B2):**
+  - **Cards** (`/collection`) leads with a sticky search bar, then:
+    - the scope chips (All, Free, In decks, In no deck, Pinned, Shared);
+    - removable query chips, and a summary line that counts skipped rows;
+    - sort with direction, group-by, and List or Grid;
+    - 100 rows per Load more.
+  - The search, the scope, the Filters sheet and every link write ONE query string, and
+    the URL carries it. The server runs it.
+  - **Add** (`/collection/add`) holds the batch, add-one and export forms plus New
+    arrivals. **Manage** (`/collection/manage`) holds the downloads, backups, set a
+    count, history, card data and the reconcile offer.
+  - On a phone the first card moved from 3.9 screens down to the first screen. The page
+    went from 11,003 elements to about 1,870, and sorts take about 130 ms.
+- **Shipped before it:** the hotfix (#194: every Collection sort froze the page for 4–6 s;
+  "in a deck" counted study lists) and B1 (#195), the search engine
+  `scripts/collection_query.py`.
   - One query string filters, sorts and counts: a Scryfall subset plus `free>0`,
     `decks=0`, `deck:`, `for:`, `is:pinned`, `is:shared`, `added>=`, `role:`.
   - Every condition is true / false / unknown. Unknown rows are skipped and COUNTED with a
@@ -44,9 +58,12 @@ competitors. Research: `docs/research-collection-2026-10.md`. Plan and tracker:
   - The skill uses it through `analyze_collection.py <coll> --query "…"` (`--query-help`).
     Quote the skipped count with any number you give the player.
   - On the audit's copy: `t:dragon` 53; free green ramp 70 (`id<=g`) or 47 (`id>=g`).
-- **Next, B2:** the page itself. Cards / Add / Manage sub-tabs with URLs; the Cards tab
-  takes the query with scope chips, removable chips, a filter dialog, sort + group, list
-  or grid, 100 rows per "Load more". Spec §4.
+- **Next (Wave 2 extras, spec §5):**
+  - saved household views;
+  - "download these results";
+  - enrichment storing the EDHREC rank, the full type line and oracle text (then
+    "Most played" and `o:` come back);
+  - a quantity stepper and a free-copies line in the card panel.
 
 ## The UX refresh — Wave 0, undo, accessibility and the phone deck page shipped (2026-10-14)
 

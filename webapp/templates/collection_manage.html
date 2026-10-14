@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Manage · Collection · MTG Deckbuilder{% endblock %}
+{% block content %}
+{% include "_collection_head.html" %}
+
+{% if reconcile %}
+<div class="card mb-4" id="reconcile" style="border-left:3px solid var(--short)">
+  {% set rc = reconcile|sum(attribute='covered') %}
+  <h2 class="mt-0">Already in your new export?</h2>
+  <p>{{ reconcile|length }} card row(s) you added by hand ({{ rc }} cop{{ 'y' if rc == 1 else 'ies' }})
+    are now carried by the export you just uploaded. Retire them so they aren't counted twice?
+    Each row is commented out with today's date, never deleted.</p>
+  <details class="mb-3"><summary class="muted fs-xs">Show the rows</summary>
+    <div class="muted fs-xs mt-2">{% for r in reconcile %}{{ r.covered }}{% if r.covered < r.qty %} of {{ r.qty }}{% endif %} {{ r.name }}{{ ' · ' if not loop.last }}{% endfor %}</div>
+  </details>
+  <form method="post" action="{{ url_for('collection_reconcile') }}" class="row">
+    <button class="btn" type="submit" name="action" value="retire">Retire them</button>
+    <button class="btn ghost" type="submit" name="action" value="keep">Keep them</button>
+  </form>
+</div>
+{% endif %}
+
+{% if db %}
+<div class="card mb-4" id="db" style="border-left:3px solid var(--in)">
+  <h2 class="mt-0">Your collection lives here</h2>
+  <p>This app is the record of every card you own{% if db.seeded_at %} — started
+    {{ db.seeded_at }} from every list you had (your export, the August list, every card
+    added here, and every sleeved deck){% endif %}. Adding, editing and uploads all change
+    this one record, and each change is logged.</p>
+  <div class="row mt-3">
+    <a class="btn" href="{{ url_for('export_collection_csv') }}" download>Download my whole collection</a>
+    {% if db.has_report %}<a class="btn ghost" href="{{ url_for('collection_seed_report') }}">What the start-up found</a>{% endif %}
+    {% if db.report_head %}<span class="muted fs-xs">{{ db.report_head }}</span>{% endif %}
+  </div>
+  {% if db.decks and db.decks.decks %}
+  <div class="row mt-3">
+    <a class="btn ghost" href="{{ url_for('export_decks_zip') }}" download>Download all decks</a>
+    <span class="muted fs-xs">{{ db.decks.decks }} decks{% if db.decks.pins %} and your pins{% endif %}
+      are saved here too, with every version ({{ db.decks.revisions }} so far).</span>
+  </div>
+  {% endif %}
+  {% if me_role == 'owner' %}
+  <div class="row mt-3">
+    <a class="btn ghost" href="{{ url_for('export_backup') }}" download>Download a backup</a>
+    <span class="muted fs-xs">All of it in one file: cards, every deck version, pins and the
+      activity log, without anyone's password.{% if db.backups %} The server also keeps a
+      copy from each of the last {{ db.backups|length }} day{{ 's' if db.backups|length != 1 }}
+      (newest {{ db.backups[0].date }}).{% endif %}</span>
+  </div>
+  {% endif %}
+  <h2 id="edit">Change a card's count</h2>
+  <p class="muted">Sold, traded, lost or miscounted. Set 0 to stop counting it. New cards go
+    through <a href="{{ url_for('collection_add_tab') }}#batch">Add a batch</a>, which checks the name first.</p>
+  <form method="post" action="{{ url_for('collection_set') }}">
+    <div class="row">
+      <input type="text" name="name" placeholder="Card name" aria-label="Card name" style="flex:1" required>
+      <input type="number" name="qty" value="1" min="0" max="999" aria-label="How many you own" style="width:70px" required>
+      <input type="text" name="reason" placeholder="Why (optional)" aria-label="Why (optional)" style="flex:1">
+      <button class="btn" type="submit">Set count</button>
+    </div>
+  </form>
+  <h2 id="history">Recent changes</h2>
+  {% if db.recent %}
+  <div class="fs-xs">{% for r in db.recent %}
+    <div>{{ r.at[:10] }} · <b>{{ r.name }}</b> {{ '+' if r.delta > 0 }}{{ r.delta }} → {{ r.qty_after }}
+      <span class="muted">· {{ r.action }}{% if r.detail %} · {{ r.detail[:60] }}{% endif %}{% if r.by %} · {{ r.by }}{% endif %}</span></div>
+  {% endfor %}</div>
+  {% else %}
+  <p class="muted">No changes yet.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card mt-4" id="carddb" style="border-left:3px solid {{ 'var(--in)' if carddb.on and carddb.pct >= 60 else 'var(--short)' }}">
+  {% if carddb.on %}
+    <b class="good">Card DB: enriched{% if carddb.source == 'snapshot' %}
+    (committed snapshot — name-resolved, no printing ids){% else %}
+    (your own export — exact printings){% endif %}</b> —
+    {{ carddb.covered }}/{{ carddb.total }}
+    cards ({{ carddb.pct }}%) have real colors / types / mana value{% if carddb.source != 'snapshot' %} / image ids{% endif %}.
+    Curves, color scores, and card-fit scores use them across every deck.
+    {% if carddb.pct < 90 %}<span class="muted">Unmatched rows are usually tokens or very
+    new cards; details are fetched again after your next upload or batch.</span>{% endif %}
+    <div class="fs-xs mt-2">
+      {% if carddb.produced_covered %}
+        <b class="good">Mana production: known</b> for {{ carddb.produced_covered }}/{{ carddb.total }}
+        cards ({{ carddb.produced_pct }}%) — manabase source counts use what those lands
+        actually tap for instead of their color identity.
+      {% else %}
+        <b class="warn">Mana production: unknown</b> — this attrs file predates production
+        enrichment, so colored-source counts fall back to color <i>identity</i> (and say so).
+        It fills in the next time card details are fetched (after an upload or a batch).
+      {% endif %}
+    </div>
+  {% else %}
+    <b class="warn">Card DB: not enriched</b> — tools are running on the name-only list, so
+    curves and fit scores are limited. Real colors, types and mana values are fetched from
+    Scryfall after your next upload or batch add.
+  {% endif %}
+  {% if enrich_status %}
+    {# Background enrichment (webapp/enrich_bg.py). "interrupted" is a real state,
+       not an error: PythonAnywhere kills daemon threads on app reload, and saying
+       "running" forever would be a lie with a spinner on it. #}
+    <div class="fs-xs mt-2"><span class="{{ enrich_status.cls }}">{{ enrich_status.text }}</span></div>
+  {% endif %}
+</div>
+{% if not db %}
+<p class="muted fs-xs mt-4">Counts, history and downloads appear here once the collection database exists
+  (the server's sync creates it). Until then, add cards on the <a href="{{ url_for('collection_add_tab') }}">Add</a> tab.</p>
+{% endif %}
+{% endblock %}
