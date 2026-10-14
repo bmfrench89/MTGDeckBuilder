@@ -101,7 +101,8 @@ function audit() {          // runs in the page
           await p.screenshot({ path: `${OUT}/${w}-home-more.png` }); await p.keyboard.press('Escape'); }
       }
       if (name === 'deck') {
-        const fig = p.locator('figure.mc[data-key]').nth(1);
+        // Whichever view shows: a phone opens on the list (Wave 1.2), a desktop on tiles.
+        const fig = p.locator('.dl-row[data-key]:visible, figure.mc[data-key]:visible').nth(1);
         if (await fig.count()) { await fig.scrollIntoViewIfNeeded(); await fig.click(); await p.waitForTimeout(600);
           note(w, 'deck-panel', await p.evaluate(audit));
           await p.screenshot({ path: `${OUT}/${w}-deck-panel.png` }); await p.keyboard.press('Escape'); }

@@ -1,6 +1,6 @@
 # Spec — UX refresh: a phone edit loop the household can trust
 
-**Status: Wave 0, Wave 1.1 (undo) and Wave 1.5 (accessibility) SHIPPED 2026-10-14; 1.2–1.4 next.** This file is the live tracker; tick its boxes.
+**Status: Wave 0, Wave 1.1 (undo), Wave 1.5 (accessibility) and the first slice of 1.2 (the phone deck page) SHIPPED 2026-10-14; the rest of 1.2, then 1.3 and 1.4, next.** This file is the live tracker; tick its boxes.
 **Player ask (2026-10-14):** "What about general app improvements or UI/UX updates. Perform
 deep research and spec out and implement what you think could be best for this site."
 **Evidence:** [`research-ux-2026-10.md`](research-ux-2026-10.md): five research passes (the
@@ -61,7 +61,7 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 | # | Change |
 |---|---|
 | 1.1 | [x] **Undo.** A toast after each panel edit ("Replaced Hulking Raptor with Cultivate · Undo", ≥10 s, paused on focus, `role=status`); a permanent Undo on each row of the deck's Changes page; "Restore this version" over stored revisions; a ⚡ run undone as one batch. Each undo is a new inverse edit through `deckcore.append_changes` with a manual source, so the optimizer never churns it. The Optimize confirm stops promising what doesn't exist until then |
-| 1.2 | [ ] **Phone deck page.** Tab bar inside the first screen (a one-line summary that expands into the tiles); every tab visible (short labels or an edge fade); the Deck tab defaults to a text list (48–56 px rows with a small thumbnail, name, cost, ownership mark) under collapsible section headers with counts; an in-deck filter box; client-side group (section, role, mana value, colour) and sort; the chosen view remembered per device; the image grid one tap away; tap the panel image for a full-screen zoom; tap a curve bar to filter |
+| 1.2 | [~] **Phone deck page.** Tab bar inside the first screen (a one-line summary that expands into the tiles); every tab visible (short labels or an edge fade); the Deck tab defaults to a text list (48–56 px rows with a small thumbnail, name, cost, ownership mark) under collapsible section headers with counts; an in-deck filter box; client-side group (section, role, mana value, colour) and sort; the chosen view remembered per device; the image grid one tap away; tap the panel image for a full-screen zoom; tap a curve bar to filter |
 | 1.3 | [ ] **Card panel on `<dialog>`:** name, ownership line and actions first, then text, then art; 44 px close; deck titles as links; a visible "Simulate first" button (no Shift-click); Back closes the sheet; focus moves in and returns |
 | 1.4 | [ ] **The dashboard inside the shell:** bottom bar and rail on deck pages, one "⋯" menu, titles and back links on deck sub-pages; Activity, Import, New arrivals in the More sheet; "Phone" setup out of it |
 | 1.5 | [x] **Accessibility batch:** labels on every control, focusable card names, underlined links in text, `main` landmark and a skip link, `color-scheme: dark`, `scroll-padding` under sticky bars, a `--target` size token, the smallest type token raised to 12–13 px, inputs at 16 px |
@@ -89,6 +89,26 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
   change log.
 - **UAT.** `flows.js` gained F7–F10: panel replace → toast → Undo, ⚡ → Undo all, Undo on
   the Changes page, and restore an earlier version. All 13 flows PASS.
+
+**Wave 1.2, first slice, as built:**
+- **The glance.** On a phone the ten tiles and five meters fold under one line, e.g. "100
+  cards · Bracket 4 · combo (early) · 3 roles off target · Details ▾". The tabs now start
+  357 px down a 915 px screen instead of about two screens down. A wider screen always
+  shows the tiles; a phone remembers the choice per device; print opens them.
+- **List or Cards.** The Deck tab renders every card twice: as its tile and as a 52 px
+  row with a thumbnail, name, badges, price, and the mana cost as pips at the END of the
+  row. A number before a name reads as a quantity.
+  - A phone opens on the list and a desktop on the cards, remembered per device.
+  - The view is chosen before first paint.
+  - With no JavaScript the page is the old grid, and paper always gets the whole grid.
+- **Find in this deck** filters both views, accent-insensitive, and hides empty
+  sections. Every section header folds its section.
+- **Zoom.** Tap the panel's card image (either panel) for a full-screen look.
+- **The tab row** fades at its edge while tabs sit past it.
+- **Still to do in 1.2:** group and sort (role, mana value, colour) and tap a curve bar
+  to filter. Ownership marks per row belong to 2.2.
+- **UAT.** F12 checks all of the above at 412 px. All 15 flows PASS, the sweep is clean,
+  and upgrade PASS.
 
 **Wave 1.5 as built:**
 - **Names and keyboard access.** Every form control has an accessible name, and
@@ -127,7 +147,7 @@ toggle, fixed) and warns on the Pins Apply buttons and the chip rows (Wave 1).
 
 | Core flow | Today | Target after Waves 0–1 |
 |---|---|---|
-| Open a deck and read one card | 2 taps + 1.7–11.9 screens of scrolling; text needs a live Scryfall call | 2 taps + a few letters in the deck filter |
+| Open a deck and read one card | 2 taps + 1.7–11.9 screens of scrolling; text needs a live Scryfall call | 2 taps + a few letters in the deck filter (**done**: the filter sits on the first screen) |
 | Swap one card | 4 taps; instant, off-colour allowed, no undo | 4 taps; colour-checked; Undo toast (**done**) |
 | Find which deck holds a card | 2 taps, 3.3 screens to the search box, ~1.2 screens in the sheet; answer as slugs | search icon, a few letters, read the row |
 | Paste three cards into the collection | 4 taps after 1.36 screens of scrolling | 4 taps, no scrolling |

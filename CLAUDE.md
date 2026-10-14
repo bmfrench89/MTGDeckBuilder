@@ -255,7 +255,8 @@ panel included; exits 1 on page overflow or a tap target under 24 px, warns unde
 then read the screenshots. Anything that touches an edit flow also runs
 `webapp/uat/flows.js` against a scratch copy: replace, add, ⚡, mulligan, the table card,
 undo through the screens a player taps (the toast, ⚡ Undo all, the Changes page, an
-earlier version) and the keyboard path (skip link, panel focus in and back), each read
+earlier version), the keyboard path (skip link, panel focus in and back) and the phone
+deck page (tabs on the first screen, the list by default, filter, panel, zoom), each read
 back from the deck FILES (must PASS). `tests/test_a11y.py` fails on any form control
 without an accessible name. The sweep photographs pages; the
 2026-10-14 audit found every damaging bug in flows it never ran. `webapp/uat/README.md`
@@ -421,7 +422,8 @@ to the renderer changes the CLI output and the app identically — check both.
   `_asset()` and inlined at render time; don't turn them into external links.
 - **The two surfaces open the card panel from different hooks.** App templates use
   `data-card="<name>"` (`webapp/static/cardpanel.js`); generated dashboards wire their own
-  inlined panel to `figure.mc[data-key], .cardlink[data-key]`. A selector that works on one
+  inlined panel to `figure.mc[data-key], .cardlink[data-key], .dl-row[data-key]` (a Deck-tab
+  list row is the same card as its tile). A selector that works on one
   surface will silently no-op on the other — check both when touching panel wiring.
 - **The goldfish A/B pairs positionally.** `compile_deck` expands copies in deck-file
   order and `simulate_ab` replaces the outgoing card *at the same library indices*, so

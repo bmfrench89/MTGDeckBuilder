@@ -104,4 +104,8 @@ figure.mc .staple.top2k{background:rgba(255,255,255,.55)}
   .cp-grid > div:last-child > :not(#cp-name):not(#cp-tags){grid-column:1 / -1}
   .cp-name{font-size:var(--fs-xl)}
 }
-
+/* full-size look at the panel's card (tap the image; tap again to close) */
+.cp-img{cursor:zoom-in}
+.cp-zoom{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;
+  padding:var(--sp-4);background:rgba(0,0,0,.92);cursor:zoom-out}
+.cp-zoom img{max-width:100%;max-height:100%;width:auto;height:auto;border-radius:4.75%/3.5%}

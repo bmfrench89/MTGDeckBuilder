@@ -265,5 +265,26 @@
     if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(t.getAttribute('data-card')); }
   });
   var x = ov.querySelector('.cp-close'); if (x) x.addEventListener('click', close);
+
+  // Tap the card for a full-screen look (Wave 1.2). A tap, Escape or Enter closes it.
+  var im = $('cp-img');
+  if (im) {
+    im.setAttribute('tabindex', '0'); im.setAttribute('role', 'button');
+    im.title = 'Tap to see the card full size';
+    var zoom = function () {
+      if (!im.getAttribute('src')) return;
+      var z = document.createElement('div'); z.className = 'cp-zoom'; z.tabIndex = -1;
+      z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', (im.alt || 'Card') + ', full size');
+      var big = new Image(); big.src = im.src; big.alt = im.alt || ''; z.appendChild(big);
+      var shut = function () { z.remove(); im.focus({ preventScroll: true }); };
+      z.addEventListener('click', shut);
+      z.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); shut(); }
+      });
+      document.body.appendChild(z); z.focus();
+    };
+    im.addEventListener('click', zoom);
+    im.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); zoom(); } });
+  }
   var pb = $('cp-pin-btn'); if (pb) pb.addEventListener('click', savePin);
 })();

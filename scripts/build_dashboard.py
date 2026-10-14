@@ -178,6 +178,44 @@ ROLE_METERS = (("lands", "Lands"), ("ramp", "Ramp"), ("removal", "Removal"),
                ("draw", "Card draw"), ("wipe", "Board wipes"))
 
 
+def glance_line(rep, assessment=None, ranges=None):
+    """The deck in one line: what a phone shows above the tabs instead of two screens
+    of tiles (the 2026-10-14 audit found the tabs 1.7–2 screens down). Counted the
+    same way as the role meters, so the line and the meters can never disagree."""
+    parts = [f"{rep.get('total_cards', 0)} cards"]
+    if assessment:
+        parts.append(f"Bracket {assessment.get('bracket_effective', assessment.get('bracket'))}")
+        sp = (assessment.get("speed") or {}).get("short")
+        if sp and sp != "—":
+            parts.append(str(sp))
+    table = dict(ranges or deckcore.role_ranges(), lands=deckcore.LAND_RANGE)
+    cats = rep.get("categories") or {}
+    off = 0
+    for key, _label in ROLE_METERS:
+        if key not in table:
+            continue
+        n = rep.get("lands", 0) if key == "lands" else cats.get(key, 0)
+        lo, hi = table[key]
+        off += n < lo or n > hi
+    parts.append("every role in range" if not off
+                 else f"{off} role{'s' if off != 1 else ''} off target")
+    return " · ".join(parts)
+
+
+GLANCE_JS = """<script>(function(){
+  // A phone opens on the one-line summary (unless this device chose otherwise);
+  // a wider screen always shows the tiles, and paper gets them too.
+  var d=document.getElementById('glance'); if(!d) return;
+  var mq=window.matchMedia&&window.matchMedia('(max-width: 640px)'), s=null;
+  try{s=localStorage.getItem('mtg.glance');}catch(e){}
+  if(mq&&mq.matches){ if(s!=='open') d.removeAttribute('open'); }
+  else d.setAttribute('open','');
+  d.addEventListener('toggle',function(){ if(mq&&mq.matches){
+    try{localStorage.setItem('mtg.glance', d.open?'open':'closed');}catch(e){} } });
+  window.addEventListener('beforeprint',function(){ d.setAttribute('open',''); });
+})();</script>"""
+
+
 def role_meters_html(rep, ranges=None):
     """Lands + the four core roles as range meters: the band is this deck's template
     (archetype-widened, `deckcore.role_ranges`), the tick is the deck. Replaces the
@@ -493,58 +531,125 @@ def _new_badge(k, changes):
     return (f"<span class='nb' title='Added{esc(who)} {when} ({c['added']}){esc(why)}'>NEW</span>")
 
 
+_PIP = {"W": "w", "U": "u", "B": "b", "R": "r", "G": "g", "C": "c"}
+
+
+def cost_pips(cost):
+    """A mana cost ("{2}{W}{U}") as small pips for a list row. The front face only:
+    the cost is what a player reads to cast the card from hand. Hybrid and Phyrexian
+    symbols take the colour of their first half."""
+    front = (cost or "").split(" // ")[0]
+    out = []
+    for tok in re.findall(r"\{([^}]+)\}", front):
+        t = tok.upper()
+        cls = _PIP.get(t[0], "n") if not t[0].isdigit() else "n"
+        out.append(f"<span class='pip p-{cls}'>{esc(t.replace('/', ''))}</span>")
+    return "".join(out)
+
+
 def sections_html(sections, enriched, shared=None, images=True, size="small",
                   missing=None, changes=None):
+    """The decklist, grouped by the deck file's own sections.
+
+    With `images` (the dashboard's Deck tab) every card is rendered TWICE, as an
+    image tile and as a text row, under one collapsible header per section. A
+    toolbar picks the view (`decklist.js`, remembered per device: a list on a
+    phone, cards on a desktop) and a box filters both views by name. The audit
+    (2026-10-14) found a phone needed 1.7–11.9 screens of card art to reach one
+    card. Without JavaScript the page shows the image grid exactly as before.
+    Without `images`, it is the plain text list."""
     missing_keys = {mtglib._norm(getattr(c, "name", c)) for c in (missing or [])}
     mv = {mtglib._norm(c.name): c.mana_value for c in enriched}
     pr = {mtglib._norm(c.name): c.price for c in enriched}
     sid = {mtglib._norm(c.name): c.scryfall_id for c in enriched if c.scryfall_id}
-    out = []
-    if images:
-        out.append("<p class='muted imgnote'>Card images load live from Scryfall "
-                   "when opened in a browser. <b>Click any card</b> to enlarge it and "
-                   "see why it's here plus alternatives. <span class='sb'>⇄</span> marks "
-                   "a card shared with another deck (<span class='sb need'>⇄</span> = "
-                   "you'd need more copies).</p>")
+    cost = {mtglib._norm(c.name): c.mana_cost for c in enriched if c.mana_cost}
+
+    def row(q, name, k, thumb=None):
+        m = mv.get(k)
+        mvb = (f"<span class='mv'>{m:g}</span>" if m is not None
+               else "<span class='mv dim'>·</span>")
+        p = pr.get(k)
+        price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
+        qty = f"{q}× " if q > 1 else ""
+        if thumb is None:
+            return (f"<li>{mvb}{qty}{esc(name)}"
+                    f"{_share_badge(k, shared)}{_new_badge(k, changes)}{price}</li>")
+        # A row is a button onto the same card panel as a tile (data-key). The
+        # thumbnail is decorative (alt="", the name is right beside it); data-name
+        # is what the image loader and the filter key on.
+        # The cost sits at the END of the row, as pips (or "MV n" when only the
+        # value is known): a bare number BEFORE a name reads as a quantity, the
+        # very confusion the tiles' captions already dropped (2026-08-20).
+        pips = cost_pips(cost.get(k))
+        tail = (f"<span class='dl-cost' title='Mana cost'>{pips}</span>" if pips
+                else (f"<span class='dl-mv'>MV {m:g}</span>" if m is not None else ""))
+        return (f"<li class='dl-row' data-key='{esc(k)}' data-name='{esc(name.lower())}' "
+                f"tabindex='0' role='button' aria-label='{esc(name)} — details'>"
+                f"<img class='dl-thumb' loading='lazy' data-src='{esc(thumb)}' "
+                f"data-name='{esc(name)}' alt=''>"
+                f"<span class='dl-name'>{qty}{esc(name)}</span>"
+                f"{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
+                f"{_new_badge(k, changes)}{price}{tail}</li>")
+
+    if not images:
+        out = []
+        for label, cards in sections:
+            n = sum(q for q, _ in cards)
+            out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>")
+            out.append("<ul class='cards'>"
+                       + "".join(row(q, name, mtglib._norm(name)) for q, name in cards)
+                       + "</ul>")
+        return "".join(out)
+
+    out = ["<div class='dl' data-view='grid'>",
+           # Pick the view before the first paint, so a phone never flashes the
+           # whole image grid on its way to the list (decklist.js wires the rest).
+           "<script>(function(d){var v=null;try{v=localStorage.getItem('mtg.deckview')}"
+           "catch(e){}if(v!=='list'&&v!=='grid')v=(window.matchMedia&&"
+           "matchMedia('(max-width: 640px)').matches)?'list':'grid';"
+           "d.setAttribute('data-view',v)})(document.currentScript.parentNode)</script>",
+           "<div class='dl-tools'>"
+           "<input type='search' class='dl-q' placeholder='Find in this deck&hellip;' "
+           "aria-label='Find a card in this deck' autocomplete='off'>"
+           "<div class='dl-views' role='group' aria-label='Show cards as'>"
+           "<button type='button' data-view='list' aria-pressed='false'>List</button>"
+           "<button type='button' data-view='grid' aria-pressed='true'>Cards</button>"
+           "</div></div>",
+           "<p class='muted imgnote'>Card images load live from Scryfall "
+           "when opened in a browser. <b>Click any card</b> to enlarge it and "
+           "see why it's here plus alternatives. <span class='sb'>⇄</span> marks "
+           "a card shared with another deck (<span class='sb need'>⇄</span> = "
+           "you'd need more copies).</p>"]
     for label, cards in sections:
         n = sum(q for q, _ in cards)
-        out.append(f"<h3>{esc(label)} <span class='count'>{n}</span></h3>")
-        if images:
-            out.append("<div class='cardgrid'>")
-            for q, name in cards:
-                k = mtglib._norm(name)
-                # No MV in the figcaption: the card image shows the real cost, and a
-                # bare number before the name reads as a QUANTITY — "9 Blasphemous
-                # Act" (MV 9) misled the player on a phone (2026-08-20). The list
-                # view keeps its .mv gutter; it also prints quantity as an explicit
-                # `N× `, so the two can't be confused there.
-                p = pr.get(k)
-                price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
-                qty = f"<span class='qty'>{q}×</span>" if q > 1 else ""
-                cid = sid.get(k)
-                url = (card_image.image_url(cid, size) if cid
-                       else card_image.image_url_by_name(name, size))
-                out.append(
-                    f"<figure class='mc' data-key='{esc(k)}' tabindex='0' "
-                    f"role='button' aria-label='{esc(name)} — details'>"
-                    f"<img loading='lazy' data-src='{esc(url)}' "
-                    f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
-                    f"{_new_badge(k, changes)}"
-                    f"<figcaption>{esc(name)}{price}</figcaption></figure>")
-            out.append("</div>")
-        else:
-            out.append("<ul class='cards'>")
-            for q, name in cards:
-                k = mtglib._norm(name)
-                m = mv.get(k)
-                mvb = (f"<span class='mv'>{m:g}</span>" if m is not None
-                       else "<span class='mv dim'>·</span>")
-                p = pr.get(k)
-                price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
-                qty = f"{q}× " if q > 1 else ""
-                out.append(f"<li>{mvb}{qty}{esc(name)}"
-                           f"{_share_badge(k, shared)}{_new_badge(k, changes)}{price}</li>")
-            out.append("</ul>")
+        tiles, rows = [], []
+        for q, name in cards:
+            k = mtglib._norm(name)
+            # No MV in the figcaption: the card image shows the real cost, and a
+            # bare number before the name reads as a QUANTITY — "9 Blasphemous
+            # Act" (MV 9) misled the player on a phone (2026-08-20). The list
+            # rows keep their .mv gutter; they also print quantity as an explicit
+            # `N× `, so the two can't be confused there.
+            p = pr.get(k)
+            price = f"<span class='pr'>${p:,.2f}</span>" if p else ""
+            qty = f"<span class='qty'>{q}×</span>" if q > 1 else ""
+            cid = sid.get(k)
+            url = (card_image.image_url(cid, size) if cid
+                   else card_image.image_url_by_name(name, size))
+            tiles.append(
+                f"<figure class='mc' data-key='{esc(k)}' data-name='{esc(name.lower())}' "
+                f"tabindex='0' role='button' aria-label='{esc(name)} — details'>"
+                f"<img loading='lazy' data-src='{esc(url)}' "
+                f"alt='{esc(name)}'>{qty}{_share_badge(k, shared)}{_buy_badge(k, missing_keys)}"
+                f"{_new_badge(k, changes)}"
+                f"<figcaption>{esc(name)}{price}</figcaption></figure>")
+            rows.append(row(q, name, k, thumb=url))
+        out.append(f"<div class='dl-sec'><h3 class='dl-h'>"
+                   f"<button type='button' class='dl-tog' aria-expanded='true'>"
+                   f"<span>{esc(label)}</span> <span class='count'>{n}</span></button></h3>"
+                   f"<div class='dl-body'><div class='cardgrid'>{''.join(tiles)}</div>"
+                   f"<ul class='cards dl-list'>{''.join(rows)}</ul></div></div>")
+    out.append("<p class='dl-none muted' hidden>No card in this deck matches.</p></div>")
     return "".join(out)
 
 
@@ -1278,6 +1383,13 @@ TABS_JS = """<script>
       if(history.replaceState){history.replaceState(null,'','#tab-'+k);}
     });
   });
+  // A tab row wider than the phone fades at its right edge until scrolled to the
+  // end, so "More" and the tabs past it read as reachable, not missing.
+  var nav=document.querySelector('.tabs');
+  function edge(){ nav.classList.toggle('more-r',
+    nav.scrollWidth-nav.clientWidth-nav.scrollLeft>8); }
+  if(nav){ nav.addEventListener('scroll',edge,{passive:true});
+    window.addEventListener('resize',edge); edge(); }
 })();
 </script>"""
 
@@ -1629,6 +1741,60 @@ code {{ font-family:{t['mono']}; background:rgba(255,255,255,.06);
 .mc figcaption {{ font-family:{t['mono']}; font-size:var(--fs-2xs); color:var(--muted);
   margin-top:3px; line-height:1.25; }}
 .mc figcaption .pr {{ display:block; margin:0; }}
+/* --- the Deck tab's two views, filter and folding sections (decklist.js) --- */
+.dl[data-view='grid'] .dl-list, .dl[data-view='list'] .cardgrid {{ display:none; }}
+.dl-sec.collapsed .dl-body {{ display:none; }}
+.dl-tools {{ display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:center;
+  margin:var(--sp-3) 0; }}
+.dl-q {{ flex:1 1 150px; min-width:0; min-height:var(--target); padding:0 var(--sp-3);
+  background:rgba(255,255,255,.05); color:var(--text); border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-sm); font:inherit; font-size:var(--fs-sm); }}
+.dl-views {{ display:inline-flex; border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-sm); overflow:hidden; }}
+.dl-views button {{ min-height:var(--target); padding:0 var(--sp-4); border:0;
+  background:transparent; color:var(--muted); font:inherit; font-size:var(--fs-sm);
+  cursor:pointer; }}
+.dl-views button[aria-pressed='true'] {{ background:rgba(255,255,255,.1); color:var(--text);
+  font-weight:600; }}
+h3.dl-h {{ padding:0; }}
+.dl-tog {{ display:flex; align-items:center; gap:var(--sp-2); width:100%;
+  min-height:var(--target); padding:0; margin:0; border:0; background:none;
+  color:inherit; font:inherit; text-align:left; cursor:pointer; }}
+.dl-tog .count {{ float:none; margin-left:auto; }}
+.dl-tog::after {{ content:'▾'; color:var(--muted); font-size:var(--fs-sm);
+  transition:transform .15s ease; }}
+.dl-sec.collapsed .dl-tog::after {{ transform:rotate(-90deg); }}
+ul.dl-list {{ font-family:inherit; font-size:var(--fs-sm); column-gap:var(--sp-6); }}
+ul.dl-list li.dl-row {{ display:flex; align-items:center; gap:var(--sp-3); min-height:52px;
+  padding:var(--sp-1) 0; border-bottom:1px solid rgba(255,255,255,.05); cursor:pointer; }}
+@media (hover:hover) {{ .dl-row:hover .dl-name {{ color:var(--accent); }} }}
+.dl-thumb {{ flex:none; width:36px; height:50px; object-fit:cover; border-radius:3px;
+  background:rgba(255,255,255,.06); }}
+.dl-name {{ flex:1 1 auto; min-width:0; }}
+.dl-cost {{ flex:none; display:inline-flex; gap:2px; }}
+.dl-mv {{ flex:none; color:var(--muted); font-size:var(--fs-xs); white-space:nowrap; }}
+.pip {{ display:inline-flex; align-items:center; justify-content:center; min-width:20px;
+  height:20px; padding:0 3px; border-radius:10px; font-family:{t['mono']};
+  font-size:var(--fs-2xs); font-weight:700; line-height:1; color:#111; background:#CBC2BF; }}
+.pip.p-w {{ background:#F8F6D8; }} .pip.p-u {{ background:#C1D7E9; }}
+.pip.p-b {{ background:#BAB1AB; }} .pip.p-r {{ background:#E49977; }}
+.pip.p-g {{ background:#A3C095; }}
+.dl-row .sb, .dl-row .bb, .dl-row .nb {{ flex:none; }}
+.dl-none {{ margin:var(--sp-4) 0; }}
+/* --- the deck at a glance: one line on a phone, the tiles a tap away --- */
+.glance > summary {{ list-style:none; cursor:pointer; display:flex; align-items:center;
+  gap:var(--sp-3); min-height:var(--target); padding:var(--sp-2) var(--sp-4);
+  margin:0 0 var(--sp-3); background:var(--panel); border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r-md); }}
+.glance > summary::-webkit-details-marker {{ display:none; }}
+.glance-line {{ flex:1 1 auto; min-width:0; font-size:var(--fs-sm); }}
+.glance-more {{ flex:none; color:var(--accent); font-size:var(--fs-xs); white-space:nowrap; }}
+.glance-more::after {{ content:' ▾'; }}
+.glance[open] .glance-more::after {{ content:' ▴'; }}
+@media (min-width:641px) {{ .glance > summary {{ display:none; }} }}
+/* the tab row says when it scrolls: a fade at the edge while more tabs sit past it */
+.tabs.more-r {{ -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); }}
 footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   text-align:center; }}
 @media (max-width:560px) {{ ul.cards {{ columns:1; }} header h1 {{ font-size:var(--fs-2xl); }}
@@ -1700,7 +1866,12 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
      would otherwise drop a position:fixed sheet over the report (Chrome paints it
      on page 1, Firefox repeats it on every page). --- */
   .tabs, .ac, #ac, .bracketform, .buytoggle, .thbtn, .printbtn, .appbar,
-  #cardmodal, .cm-overlay {{ display:none !important; }}
+  #cardmodal, .cm-overlay, .dl-tools, .dl-list, .glance > summary,
+  .dl-tog::after {{ display:none !important; }}
+  /* paper always gets the card grid, every section unfolded, whatever view the
+     screen was on */
+  .dl .cardgrid {{ display:grid !important; }}
+  .dl-sec .dl-body, .dl-sec[hidden], .dl .mc[hidden] {{ display:block !important; }}
 
   /* --- structure: one tab per page turns the report into chapters, and every
      panel already leads with a self-describing <h2>, so losing the tab bar costs
@@ -1829,12 +2000,15 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
     &#128424; Print / Save as PDF</button>
 </header>
 {health_strip}
+<details class="glance" id="glance" open>
+<summary><span class="glance-line">{esc(glance_line(rep, assessment, ranges))}</span><span class="glance-more">Details</span></summary>
 <div class="tiles">{tiles}</div>
 {meters}
+</details>{GLANCE_JS}
 {tabs}
 <footer>Generated by the MTG Commander Deckbuilder. Category counts &amp; any
 prices are heuristic/estimates — verify uncertain cards.</footer>
-</div>{modal_block}{IMG_LOADER}{TABS_JS}{('<script>' + _asset('clips_player.js') + '</script>') if "id='wt-root'" in watch_sec else ''}</body></html>"""
+</div>{modal_block}{IMG_LOADER}{TABS_JS}{('<script>' + _asset('decklist.js') + '</script>') if "class='dl'" in tabs else ''}{('<script>' + _asset('clips_player.js') + '</script>') if "id='wt-root'" in watch_sec else ''}</body></html>"""
 
 
 def render_visual(title, deck, idx, theme, size="normal"):

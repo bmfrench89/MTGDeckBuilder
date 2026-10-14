@@ -30,7 +30,7 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: the UX refresh — Wave 0, undo and accessibility shipped; 1.2–1.4 next (2026-10-14)
+## START HERE: the UX refresh — Wave 0, undo, accessibility and the phone deck page shipped (2026-10-14)
 
 The player asked for "deep research … spec out and implement what you think could be best".
 Five research passes plus a hands-on audit of the running app are in
@@ -72,8 +72,14 @@ Five research passes plus a hands-on audit of the running app are in
   - 44 px targets via `--target`; 12 px smallest type; 16 px fields on touch screens.
   - The Pins table stacks on phones.
   - The new keyboard flow is F11.
+- **Wave 1.2 phone deck page, first slice (shipped):**
+  - A one-line glance replaces the tiles on phones, so the tabs are on the first screen.
+  - The Deck tab has a List/Cards toggle (a list on phones), a "Find in this deck"
+    filter, folding sections, and cost pips at the end of each row.
+  - Tap-to-zoom in both panels, and a fade on the tab row's edge.
+  - It is all in `build_dashboard.sections_html` plus `scripts/assets/decklist.js`.
+  - Still to do: group/sort and curve-bar filtering.
 - **Wave 1 next:**
-  - The phone deck page: tabs on the first screen, a text list with a filter.
   - The card panel on `<dialog>`.
   - The dashboard inside the shell.
 - **Player decisions open:**
