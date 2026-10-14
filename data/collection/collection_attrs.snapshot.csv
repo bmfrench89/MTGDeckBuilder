@@ -2898,6 +2898,7 @@ Thunderhead Gunner,Creature,5,R,{4}{R},Shark;Pirate,,draw,4,4
 Thundering Falls,Land,0,R U,,Island;Mountain,U R,etb-tapped,,4
 Thwart,Instant,4,U,{2}{U}{U},,,counter,,4
 Thwip!,Instant,1,W,{W},,,,,4
+Tiamat,Creature,7,B G R U W,{2}{W}{U}{B}{R}{G},Dragon;God,,,7,4
 Ticket Tortoise,Creature,2,,{2},Turtle,W U B R G,,3,4
 Tidal Bore,Instant,2,U,{1}{U},,,,,4
 Tide Skimmer,Creature,4,U,{3}{U},Drake,,draw,2,4
