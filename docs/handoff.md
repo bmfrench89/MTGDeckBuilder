@@ -6,7 +6,50 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; collection-list refresh waits on the repo going private; blind Ur-Dragon + Giada study copies still waiting on the player's real lists)._
+_Last updated: 2026-10-14 (The Ur-Dragon rebuilt from the full collection database; the repo is moving to the private `bmfrench89/OnTheStAIck`)._
+
+## START HERE: The Ur-Dragon rebuilt from the full collection database (2026-10-14)
+
+The player asked for "the best built Ur-Dragon deck" and said nothing from the old lists,
+built on an incomplete collection, needed keeping. `the-ur-dragon` and the study copy
+`the-ur-dragon-blind-update` were deleted and the deck was rebuilt under the same stem (so the
+Roaming Throne pin still applies). Game plan, every card choice and the protected manabase:
+`data/decks/the-ur-dragon.notes.md`.
+- **The collection used:** the app's **Download my whole collection** CSV (3,315 unique /
+  4,632 copies), saved on the player's PC at `data/private/collection/collection.csv`
+  (gitignored) with the attrs overlays beside it and **no** `owned_additions.txt` — the
+  database export already includes every batch, and `load_collection` would add a sibling
+  additions file a second time. Enriched locally (the PC reaches Scryfall): 3,314/3,315.
+- **Why rebuild, not upgrade:** the database holds **55 Dragons (53 free)**; the old lists saw
+  far fewer. The field's whole dragon core was free: Miirym, Dragon Tempest, Atarka, Lathliss,
+  Dromoka, Scourge of Valkas, Ureni, both Spirit Dragon lands.
+- **Pipeline:** `auto_build` (filler-heavy, as before) → `deck_sections` → `optimize` → a hand
+  pass on verified text (74 cards verified in one `carddb.py --verify` batch). Then validated:
+  100 cards, singleton clean, sections clean, **21/25 of the field's top 25** (the 4 missing
+  are unowned: Tiamat, Terror of the Peaks, Old Gnawbone, Goldspan Dragon — the buylist),
+  **Bracket 3** (1 Game Changer: Consecrated Sphinx), **0 combos** on Commander Spellbook, and
+  two applying optimizer runs in a row change nothing.
+- **Caught by Spellbook:** Ganax + Draconic Visitor is a two-card mandatory loop with
+  "Draw the game" among its results (CR 104.4b, retrieved). Visitor is out and the notes say
+  never to add it back beside Ganax.
+- **Optimizer traps hit (worth knowing for any multicolour deck):**
+  - It values lands by EDHREC inclusion, so basics (76-85%) beat 0% duals and it tried to
+    trade nine duals for basics. The fix is the designed one: protected lands are listed in
+    the notes, **one per line**. The land guard is a plain substring test, and a name wrapped
+    across two lines ("Canopy\nVista") is NOT protected — that let it swap Canopy Vista for
+    Captain America's only Unclaimed Territory, then want that back for a Mountain.
+  - Its draw/removal bands read 5 and 6 because creature-based answers (Steel Hellkite,
+    Ureni the Song Unending, Scavenger Regent's Omen, Dragonlord Silumgar) don't register.
+    The band freezes swaps, which is fine here; the notes count the real interaction.
+- **Goldfish:** keepable 81%, screw 14%, lethal median turn 9 (25% by turn 8). It understates
+  this list — no fetch effects, Ganax Treasures, Lathliss tokens, the Ur-Dragon's draw, or
+  Roaming Throne in the model.
+- **Open for the player:** Mana Drain and Grim Tutor are in this deck (the player moved them
+  into the Ur-Dragon box) AND still in Y'shtola's list. Y'shtola needs two replacements.
+- **Windows notes for sessions on the player's PC:** set `PYTHONIOENCODING=utf-8` (edhrec.py's
+  ✓ crashed the cp1252 console), and 7 tests fail on Windows only — POSIX file modes (0600,
+  the hook's exec bit), running the `.sh` hook directly, and two `carddb` tests that read the
+  real `data/cache/` once a local enrichment has filled it. CI on Linux is the reference.
 
 ## New in the app (2026-10-12): card intake, deck import, Watch controls, a second login
 
@@ -205,14 +248,14 @@ control. The deck runs 25. 0 (with 25+ loyalty among Jaces): exile all but the b
 card of each opponent's library, and Kami makes each player draw a second card every draw
 step. With ~7-8 Islands it reaches 25 in two activations plus Proxy (+3) or Sanctum (+2).
 
-**Held, not judged:** Thorin and The Ur-Dragon wait on the player's real lists (task
-"Compare with the player's lists").
+**Held, not judged:** Thorin waits on the player's real list (task "Compare with the
+player's lists").
 - Thorin flags: Marwyn the Clearcutter (sac a Treasure: draw), the second Solitary Cell, and
   Draconic Visitor. Check Draconic Visitor first: it turns EVERY artifact token into a 5/5
   Dragon, so it eats a Treasure plan.
-- Ur-Dragon flags: Draconic Visitor (11%), Samut Hazoret's Champion (haste triggers Ur-Dragon
-  on the turn a dragon lands), and the three slow lands (Rockfall Vale, Overgrown Farmland,
-  Haunted Ridge).
+- Ur-Dragon flags: **resolved by the 2026-10-14 rebuild** (see the top section). Samut went in;
+  Draconic Visitor was rejected (a mandatory draw loop with Ganax); the slow lands lost to
+  better duals the full collection turned up.
 
 **Bench (playable, an incumbent is better):** Thalia the Survivor, Null Summoner, The
 Echoverse Fulcrum, Ajani Resolute (Y'shtola); Variable Chaser, Diviner of Victory (Kami);
@@ -287,12 +330,11 @@ Not for Beorn:
 ## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
 
 **2026-10-13 update: three "best from the collection" study builds now exist, for the player to
-compare with their own decks.** They are `the-ur-dragon-blind-update`, `giada-blind-build`
-(both refreshed with the new arrivals) and **`thorin-blind-build` (new)**.
+compare with their own decks.** They are `giada-blind-build` and `thorin-blind-build`.
+(`the-ur-dragon-blind-update` was deleted on 2026-10-14 when the Ur-Dragon was rebuilt from the
+full collection database — see the top section.)
 - They were built as one set: no card is used past its owned count across the three, with
   the live decks committed, Y'shtola as a donor and the Killian order reserved.
-- Ur-Dragon: +Birds of Paradise, Beast Within, Scavenger Regent and three slow lands. 21/25
-  of the field's top 25. Bracket 3.
 - Giada: +7 free field cards. 19/25. Bracket 2.
 - Thorin: auto_build's Dwarf core plus 12 hand swaps for the field's free staples. 30
   Dwarves, 21/25, Bracket 2.
@@ -314,7 +356,8 @@ Giada, Font of Hope (#2)**. The plan is to compare it with what they actually bu
 - They have Galadriel's Dismissal and Gleaming Splendor in Giada. `thorin-king-of-durins-folk.txt`
   still lists Gleaming Splendor (1 owned), so Thorin's list is probably stale too.
 
-**Next step: get their Ur-Dragon, Giada, Killian (and Thorin) lists.** The player can now
+**Next step: get their Giada, Killian (and Thorin) lists.** (The Ur-Dragon no longer needs
+one: the player asked for the best build instead, done 2026-10-14.) The player can now
 log them themselves: Decks → **Import a list** (`/decks/import`). A new commander becomes a
 new deck; picking "the new list for: The Ur-Dragon" (or importing a commander that already
 has a deck and tapping **Replace the list of …**) swaps the list in place and logs every
@@ -323,15 +366,10 @@ names on the runner and follow the same shape (tool-contract.md, "Log a deck the
 built").
 1. Diff each list against the blind builds.
 2. Log the real lists as the real decks (`giada-font-of-hope`, `killian-decisive-mentor`).
-3. Update `the-ur-dragon`, and update Y'shtola for the cards that moved out.
+3. Update Y'shtola for the cards that moved out (Mana Drain and Grim Tutor are still in
+   her list AND in the rebuilt Ur-Dragon — the conflict panel shows both).
 
 **Published study copies (`# Study: yes`, they commit nothing):**
-- **`the-ur-dragon-blind-update`**: the logged list plus 6 swaps.
-  - In: Ureni of the Unwritten, Scourge of the Throne, Mana Drain, Grim Tutor,
-    Insatiable Avarice, Reflecting Pool.
-  - Out: Pet Avengers, Parapet Thrasher, Dragonlord Ojutai, Seal of Cleansing,
-    Zurgo and Ojutai, Cinder Glade.
-  - The blind pass independently picked the player's own three moves.
 - **`giada-blind-build`**: `auto_build` + `optimize`, then a hand pass.
   - 31 Angels, 37 lands, 19/25 of the field's top 25, Bracket 2.
   - The player's two catches (Galadriel's Dismissal, Gleaming Splendor) were added
