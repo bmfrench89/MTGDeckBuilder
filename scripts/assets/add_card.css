@@ -31,6 +31,8 @@
   border-radius:var(--r-pill); padding:var(--sp-2) var(--sp-5); font-weight:700;
   font-family:__MONO__; font-size:var(--fs-xs); min-height:44px; }
 .ac-go[disabled] { opacity:.45; cursor:not-allowed; }
+.ac-undo { margin-left:var(--sp-2); background:transparent; color:var(--text);
+  border:1px solid rgba(255,255,255,.3); }
 .ac-picked { color:var(--muted); font-family:__MONO__; font-size:var(--fs-2xs); }
 .ac-hint { color:var(--muted); font-size:var(--fs-2xs); }
 .ac-out { margin-top:var(--sp-4); padding-top:var(--sp-3);

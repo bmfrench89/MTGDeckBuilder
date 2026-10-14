@@ -38,6 +38,21 @@ jobs:
       # its deck (the page would drop it and say so; CI says so first).
       - name: Check deck clips
         run: python3 scripts/clips.py --all --check
+      # Change logs: a hand-written row with an unquoted comma shifts every later
+      # cell. Three such rows (2026-10-14) read "Selvala" as the card and the rest
+      # of its name as the source, so the optimizer ignored the player's own swaps.
+      # Undo refuses a broken row; this keeps one from landing at all.
+      - name: Check deck change logs
+        run: |
+          python3 - <<'EOF'
+          import glob, sys
+          sys.path.insert(0, "scripts")
+          import deckcore
+          bad = [f"{p}: line {r['i'] + 2}" for p in sorted(glob.glob("data/decks/*.changes.csv"))
+                 for r in deckcore.change_rows(p) if not r["ok"]]
+          print("\n".join(bad) or "change logs: every row parses")
+          sys.exit(3 if bad else 0)
+          EOF
       # The analysis scripts are stdlib-only; this catches an accidental new dependency.
       - name: Check scripts import with no extra packages
         run: |

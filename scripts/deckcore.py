@@ -333,6 +333,128 @@ def manual_removals(path):
             if readded.get(k, ("", -1)) < v["seq"]}
 
 
+# --------------------------------------------------------------------------- #
+# Undo (docs/spec-ux-refresh.md, Wave 1.1). An undo never rewrites history: it is
+# a NEW change row that reverses an earlier one, with Source `manual-undo:<i>`.
+# The manual prefix makes the result the player's own choice to every reader
+# above (`manual_adds` protects the card that came back, `manual_removals` holds
+# the one that went out), so the optimizer never churns an undo; the `:<i>`
+# names the row it reversed, so the Changes page can say "Undone".
+# --------------------------------------------------------------------------- #
+UNDO_SOURCE = "manual-undo"
+
+
+def change_rows(path):
+    """Every row of `<deck>.changes.csv` in file order, as dicts carrying the row's
+    position `i`. The position is the row's identity: the file is append-only, and
+    its one rewrite (`_add_by_column`) keeps every row where it was.
+
+    `ok` is False for a row a hand-written line broke. An unquoted comma in
+    "Selvala, Heart of the Wilds" pushes every later cell one column right, and the
+    row then reads as Replaced="Selvala". Undo refuses such a row rather than act
+    on half a name. `undoes` is the position a `manual-undo:<i>` row reversed,
+    else None."""
+    if not (path and os.path.exists(path)):
+        return []
+    out = []
+    with open(path, encoding="utf-8", newline="") as f:
+        for i, r in enumerate(csv.DictReader(f)):
+            # Broken = cells spilled past the header, or a core column missing. A
+            # row short only of the optional By cell is still whole.
+            ok = None not in r and all(isinstance(r.get(k), str) for k in CHANGES_HEADER)
+
+            def cell(k, r=r):
+                v = r.get(k)
+                return v.strip() if isinstance(v, str) else ""
+            src = cell("Source")
+            undoes = None
+            if src.startswith(UNDO_SOURCE + ":"):
+                try:
+                    undoes = int(src.split(":", 1)[1])
+                except ValueError:
+                    undoes = None
+            out.append({"i": i, "card": cell("Card"), "added": cell("Added"),
+                        "replaced": cell("Replaced"), "source": src, "by": cell("By"),
+                        "ok": ok, "undoes": undoes})
+    return out
+
+
+def undone_rows(rows):
+    """Positions whose change is currently reversed: undone by an undo row that has
+    not itself been undone (a redo). The walk runs newest first, so each undo row's
+    own fate is known before it counts against its target."""
+    undone = set()
+    for r in reversed(rows):
+        if r["undoes"] is not None and r["i"] not in undone:
+            undone.add(r["undoes"])
+    return undone
+
+
+def change_sig(rows):
+    """A short fingerprint of exactly these rows. Every Undo button carries one, and
+    the route refuses when the log no longer holds the same rows at those positions
+    (a sync replaced the file, a page left open for a day). Better to refuse than to
+    undo the wrong change."""
+    import hashlib
+    blob = "\x1e".join(
+        "\x1f".join(str(r[k]) for k in ("i", "card", "added", "replaced", "source"))
+        for r in sorted(rows, key=lambda r: r["i"]))
+    return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:12]
+
+
+def undo_step(row):
+    """(take_out, put_back): the edit that reverses one change row. A swap's incoming
+    card goes back out and the card it replaced comes back; an add comes back out;
+    a removal comes back in."""
+    return (row.get("card") or None, row.get("replaced") or None)
+
+
+def commander_keys(text):
+    """Name keys of the deck's commander(s): every card in its Commander section.
+    The section, not the `# Commander:` header, so both partners are covered."""
+    keys, in_cmd = set(), False
+    for raw in text.splitlines():
+        s = raw.strip()
+        sec = re.match(r"^#\s*---\s*(.+?)\s*---\s*$", s)
+        if sec:
+            in_cmd = sec.group(1).strip().lower().startswith("commander")
+        elif in_cmd and s and not s.startswith("#"):
+            for c in mtglib.parse_deck(s):
+                keys |= mtglib.name_keys(c.name)
+    return keys
+
+
+def undo_blocker(row, text, undone=()):
+    """Why this change can't be reversed against the deck as it is NOW, or None.
+
+    Deliberately checked against the deck, not just the log. The log says what
+    happened; the deck says what is true. An undo the deck contradicts (the card
+    has since left, or is already back) would damage the list, so it is refused
+    with the reason. Colour identity needs the collection, so the app checks it."""
+    if row["i"] in undone:
+        return "already undone"
+    if not row.get("ok", True):
+        return ("that line of the log was written by hand with a broken column, so it "
+                "can't be read safely")
+    take_out, put_back = undo_step(row)
+    if not (take_out or put_back):
+        return "it names no card"
+    in_deck = set()
+    for c in mtglib.parse_deck(text):
+        in_deck |= mtglib.name_keys(c.name)
+    if take_out:
+        k = mtglib.name_keys(take_out)
+        if not k & in_deck:
+            return f"{take_out} has since left the deck"
+        if k & commander_keys(text):
+            return f"{take_out} is this deck's commander"
+    if put_back and not mtglib.is_basic(put_back):
+        k = mtglib.name_keys(put_back)
+        if k & in_deck and not (take_out and k & mtglib.name_keys(take_out)):
+            return f"{put_back} is already in the deck"
+    return None
+
+
 PINS = os.path.join(os.path.dirname(__file__), "..", "data", "collection", "pins.csv")
 
 
@@ -822,6 +944,27 @@ def type_bucket(name, types):
         return "Artifacts"
     if "enchantment" in joined:
         return "Enchantments"
+    return None
+
+
+def deck_attrs(deck_path):
+    """The deck's own `.attrs.csv` card data ({} when it has none)."""
+    return load_attrs(os.path.splitext(deck_path)[0] + ".attrs.csv") or {}
+
+
+def deck_card_types(name, idx, attrs=None):
+    """A card's type list as the deck files see it: the deck's own `.attrs.csv`
+    first, then the collection, else None. This is the ONE precedence that
+    `deck_sections` files by, and every app write that picks a section uses it, so
+    a write and the CI section check can't disagree about where a card belongs.
+    They once did: the deck's attrs say The Warring Triad is an Artifact, the
+    collection's say Creature, and an undo re-filed it under Creatures."""
+    a = attrs.get(mtglib._norm(name)) if attrs else None
+    if a and a.get("type"):
+        return [a["type"]]
+    card = mtglib.lookup(idx, name) if idx is not None else None
+    if card is not None and card.types:
+        return card.types
     return None
 
 

@@ -277,6 +277,18 @@ label.field > input, label.field > select, label.field > textarea { width: 100%;
 .arrival > p { margin: 0; }
 .arrival .homes { list-style: none; margin: var(--sp-1) 0 0; padding: 0; }
 .arrival .homes li { padding: var(--sp-1) 0; }
+/* A sub-page's way back is a full-size target, not a 20 px line of text. */
+.crumbs a { display: inline-flex; align-items: center; min-height: var(--target); }
+/* Changes page: each row carries its Undo on the right; a ⚡ run is one group. */
+.chg { display: flex; align-items: center; gap: var(--sp-3); }
+.chg-main { flex: 1 1 auto; min-width: 0; }
+.chg-act { flex: none; }
+.chg-form { margin: 0; }
+.chg-btn { min-height: var(--target); min-width: var(--target); white-space: nowrap; }
+.chg-group { border-bottom: 1px solid var(--edge); padding-bottom: var(--sp-2); }
+.chg-group .arrival { padding-left: var(--sp-3); border-left: 2px solid var(--edge); }
+.chg-head { display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-3); padding: var(--sp-3) 0 var(--sp-1); }
 .chk { accent-color: var(--accent); width: 20px; height: 20px; min-height: 0; }
 label:has(> .chk) { display: inline-flex; align-items: center; gap: var(--sp-2);
   min-height: 44px; cursor: pointer; }
@@ -464,6 +476,11 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 }
 .flash-info { border-left-color: var(--in); }
 .flash-warn { border-left-color: var(--warn); color: var(--warn); }
+/* The undo toast (templates/_undo_toast.html carries its own base style, because the
+   deck dashboard loads no app.css) floats above the phone bar here. */
+@media (max-width: 899px) {
+  body.shell .utoast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
 
 /* Engine-supplied "what this means" notes. The text comes from the analysis
    modules (manabase's explain dict, goldfish's definitions) so the app, the

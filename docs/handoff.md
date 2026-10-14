@@ -30,7 +30,7 @@ _Last updated: 2026-10-13 (binder batch added and Beorn's six swaps applied; col
   which lives in the collection database on the server since 2026-10-14).
   One-time setup is in that spec's §5 — the player picks their own display name there.
 
-## START HERE: the UX refresh — Wave 0 shipped, Wave 1 next (2026-10-14)
+## START HERE: the UX refresh — Wave 0 and undo shipped, rest of Wave 1 next (2026-10-14)
 
 The player asked for "deep research … spec out and implement what you think could be best".
 Five research passes plus a hands-on audit of the running app are in
@@ -51,8 +51,21 @@ Five research passes plus a hands-on audit of the running app are in
     - Deck titles instead of file names, and plain words.
     - gzip.
   - UAT: `webapp/uat/flows.js`. The sweep now fails under 24 px and audits the open panel.
+- **Wave 1.1 Undo (shipped):**
+  - Every edit leaves an Undo toast: panel Remove/Replace, Add (in the sheet), an editor
+    save, and a whole ⚡ run ("Undo all").
+  - The Changes page has Undo/Redo per row and per optimizer run.
+  - In database mode it also lists earlier versions with Restore.
+  - An undo is a new row, `Source=manual-undo:<row>`, so the optimizer never swaps it back.
+  - Rows are identified by position, so `.changes.csv` is append-only: never hand-write
+    or reorder rows.
+  - Three hand-written rows with unquoted commas (the-ur-dragon ×2, yshtola ×1) were
+    repaired. The optimizer now holds Selvala and Kolaghan out of Ur-Dragon and protects
+    Smaug the Impenetrable and Delney.
+  - CI checks every change log.
+  - `deckcore.deck_card_types` is the one filing precedence (deck attrs, then the
+    collection), shared by Add, Replace, Undo and `deck_sections`.
 - **Wave 1 next:**
-  - Undo: a toast, Undo on Changes, restore a version.
   - The phone deck page: tabs on the first screen, a text list with a filter.
   - The card panel on `<dialog>`.
   - The dashboard inside the shell.

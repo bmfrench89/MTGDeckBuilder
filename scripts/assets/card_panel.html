@@ -280,9 +280,11 @@
     if(action==='remove' && !confirm('Remove one copy of '+curKey+' from this deck?')) return;
     var f=new FormData(); f.append('action', action); f.append('name', curKey);
     if(replacement) f.append('replacement', replacement);
-    fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f})
+    // redirect:'manual' — a followed redirect would render the deck page inside
+    // this fetch and spend the Undo toast flashed for the reload that follows.
+    fetch('/deck/'+encodeURIComponent(STEM)+'/card',{method:'POST',body:f,redirect:'manual'})
       .then(function(r){
-        if(r.ok||r.redirected){ location.reload(); return; }
+        if(r.ok||r.redirected||r.type==='opaqueredirect'){ location.reload(); return; }
         r.text().then(function(t){ alert(t||'Edit failed.'); })
                 .catch(function(){ alert('Edit failed.'); });
       })
@@ -320,8 +322,8 @@
       if(!curKey) return;
       var f=new FormData(); f.append('name', curKey);
       f.append('action', pinbtn.dataset.action||'pin');
-      fetch('/deck/'+encodeURIComponent(STEM)+'/pin',{method:'POST',body:f})
-        .then(function(r){ if(r.ok||r.redirected) location.reload(); })
+      fetch('/deck/'+encodeURIComponent(STEM)+'/pin',{method:'POST',body:f,redirect:'manual'})
+        .then(function(r){ if(r.ok||r.redirected||r.type==='opaqueredirect') location.reload(); })
         .catch(function(){ alert('Pin failed \u2014 is the app still running?'); });
     });
     if(si) si.addEventListener('input', function(){

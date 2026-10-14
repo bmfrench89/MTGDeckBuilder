@@ -70,9 +70,12 @@
 </nav>
 <main class="wrap">
 {% with msgs = get_flashed_messages(with_categories=true) %}
-  {% if msgs %}<div class="flashes">
-    {% for cat, m in msgs %}<p class="flash flash-{{ cat }}">{{ m }}</p>{% endfor %}
+  {% set plain = msgs|rejectattr(0, 'equalto', 'undo')|list %}
+  {% if plain %}<div class="flashes">
+    {% for cat, m in plain %}<p class="flash flash-{{ cat }}">{{ m }}</p>{% endfor %}
   </div>{% endif %}
+  {% set toasts = msgs|selectattr(0, 'equalto', 'undo')|map(attribute=1)|select('mapping')|list %}
+  {% if toasts %}{% with t = toasts|last %}{% include "_undo_toast.html" %}{% endwith %}{% endif %}
 {% endwith %}
 {% block content %}{% endblock %}
 <footer>Private to your household · grounded in your own collection</footer>
