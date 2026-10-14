@@ -2167,6 +2167,7 @@ def collection_view():
               "recent": store.recent_changes(COLLECTION, 12),
               "has_report": bool(report),
               "decks": store.decks_summary(COLLECTION),
+              "backups": store.list_backups(_backups_dir()),
               "report_head": report.splitlines()[2] if len(report.splitlines()) > 2 else ""}
     return render_template("collection.html", unique=len(coll), db=db,
                            copies=sum(c.quantity for c in coll), total=total,
@@ -2344,6 +2345,38 @@ def export_collection_csv():
     return Response(store.export_csv(COLLECTION), mimetype="text/csv; charset=utf-8",
                     headers={"Content-Disposition": "attachment; filename="
                              f"my-collection-{date.today().isoformat()}.csv"})
+
+
+def _backups_dir():
+    """Where the sync keeps its daily copies: beside the database (collection_db.py)."""
+    return os.path.join(os.path.dirname(os.path.abspath(COLLECTION)), "backups")
+
+
+@app.route("/export/backup.db")
+def export_backup():
+    """The whole database in one file for the player's own safekeeping (owner only):
+    cards and their ledger, every deck version, pins and the activity log. The
+    member accounts are left out, so a password hash never leaves the server."""
+    _owner_only()
+    db = _members_db()
+    if not db:
+        abort(404)
+    from datetime import date
+    fd, tmp = tempfile.mkstemp(prefix="mtg-backup-", suffix=".db")
+    os.close(fd)
+    try:
+        store.backup(db, tmp, without_hashes=True)
+        with open(tmp, "rb") as f:
+            data = f.read()
+    finally:
+        for p in (tmp, tmp + ".tmp"):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+    return Response(data, mimetype="application/vnd.sqlite3",
+                    headers={"Content-Disposition": "attachment; filename="
+                             f"mtg-backup-{date.today().isoformat()}.db"})
 
 
 @app.route("/export/decks.zip")

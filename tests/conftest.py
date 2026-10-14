@@ -43,6 +43,17 @@ def _no_real_member_accounts(tmp_path_factory, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_real_sync_folders(tmp_path_factory, monkeypatch):
+    """The sync's database step defaults to the real data/collection/backups/ and
+    data/activity.csv. A test that forgets to pass its own must still land in tmp:
+    a backup written into the repo's data/ once came from exactly that."""
+    import collection_db
+    d = tmp_path_factory.mktemp("sync-folders")
+    monkeypatch.setattr(collection_db, "BACKUPS", str(d / "backups"))
+    monkeypatch.setattr(collection_db, "ACTIVITY", str(d / "activity.csv"))
+
+
+@pytest.fixture(autouse=True)
 def _clean_memo():
     """Start (and leave) every test with an empty analysis memo.
 

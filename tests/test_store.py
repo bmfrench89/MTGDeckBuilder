@@ -282,10 +282,13 @@ def test_the_sync_seeds_once_then_ingests(world, monkeypatch):
               activity=str(world.dir / "activity.csv"))
     first = collection_db.run(**kw)
     assert first.startswith("collection db: SEEDED") and "decks: saved 3 new" in first
-    assert collection_db.run(**kw) == "collection db: up to date · decks: up to date"
+    assert "backup" not in first, "nothing to back up before the seed"
+    assert collection_db.run(**kw).startswith(
+        "collection db: up to date · decks: up to date · backup: saved collection-")
     with open(world.adds, "a", encoding="utf-8") as f:
         f.write("\n# --- Batch 2026-10-14 · photos · 1 cards (1 distinct) ---\n1 Brainstorm\n")
-    assert "ingested 1 new batch" in collection_db.run(**kw)
+    third = collection_db.run(**kw)
+    assert "ingested 1 new batch" in third and "backup" not in third, "one copy a day"
 
 
 def test_the_sync_step_respects_an_operator_override(world, monkeypatch):
@@ -574,3 +577,109 @@ def test_a_bad_activity_file_costs_only_its_own_phrase(world, monkeypatch, tmp_p
                              pins=str(world.dir / "pins.csv"), activity=str(bad))
     assert line.startswith("collection db: SEEDED") and "decks: saved 3 new" in line
     assert "activity: skipped" in line
+
+
+
+# --------------------------------------------------------------------------- #
+# Backups (spec §4/§11): the database is the only record of app-side edits,
+# accounts and the log, so the sync keeps daily copies, and the player can download
+# one that never carries a password hash.
+# --------------------------------------------------------------------------- #
+def _tables(path):
+    import sqlite3
+    con = sqlite3.connect(path)
+    try:
+        return {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                for t in ("holdings", "ledger", "files", "members", "activity")}
+    finally:
+        con.close()
+
+
+def _full_world(world):
+    _seed(world)
+    store.capture(world.db, world.decks_dir)
+    store.people_save(world.db, PEOPLE)
+    store.log_activity(world.db, [("2026-10-14 10:00", "Sam", "pin", "live", "Sol Ring")])
+
+
+def test_a_backup_is_a_complete_private_copy(world):
+    import stat
+    _full_world(world)
+    dest = store.backup(world.db, str(world.dir / "copy.db"))
+    assert _tables(dest) == _tables(world.db)
+    assert dest.endswith("copy.db") and not os.path.exists(dest + ".tmp")
+    assert stat.S_IMODE(os.stat(dest).st_mode) & 0o077 == 0
+    assert {c.name: c.quantity for c in mtglib.load_collection(dest)} == \
+        {c.name: c.quantity for c in mtglib.load_collection(world.db)}
+
+
+def test_the_download_copy_carries_no_password_hash_not_even_an_old_one(world):
+    import sqlite3
+    _full_world(world)
+    # An old hash a reset left behind in a freed page. Planted with secure_delete OFF,
+    # which is how many SQLite builds run, so the residue is there on every build.
+    con = sqlite3.connect(world.db)
+    con.execute("PRAGMA secure_delete=OFF")
+    con.executemany("INSERT INTO members(key, display, hash) VALUES(?,?,?)",
+                    [(f"old{i}", "Old", f"scrypt:AN-OLD-HASH-{i:02d}-" + "z" * 200)
+                     for i in range(20)])
+    con.commit()
+    con.execute("DELETE FROM members WHERE key LIKE 'old%'")
+    con.commit()
+    con.close()
+    full = open(store.backup(world.db, str(world.dir / "full.db")), "rb").read()
+    assert b"NOT-A-REAL-HASH" in full, "the server's own copies are complete"
+    assert b"AN-OLD-HASH" in full, "precondition: the freed page still holds old bytes"
+    dest = store.backup(world.db, str(world.dir / "out.db"), without_hashes=True)
+    raw = open(dest, "rb").read()
+    assert b"NOT-A-REAL-HASH" not in raw and b"AN-OLD-HASH" not in raw
+    counts = _tables(dest)
+    assert counts["members"] == 0 and counts["holdings"] == _tables(world.db)["holdings"]
+    assert counts["activity"] == 1 and counts["files"] == 3
+
+
+def test_daily_backups_run_once_a_day_and_keep_the_newest(world):
+    _seed(world)
+    d = str(world.dir / "backups")
+    for day in range(1, 10):
+        assert store.daily_backup(world.db, d, keep=7, today=f"2026-10-0{day}")
+    assert store.daily_backup(world.db, d, keep=7, today="2026-10-09") is None
+    kept = store.list_backups(d)
+    assert [b["date"] for b in kept] == [f"2026-10-0{n}" for n in range(9, 2, -1)]
+    assert all(b["bytes"] > 0 for b in kept)
+
+
+def test_the_sync_backs_up_before_it_changes_anything(world, monkeypatch):
+    import collection_db
+    monkeypatch.delenv("MTG_COLLECTION", raising=False)
+    kw = dict(db=world.db, export=world.export, august=world.august,
+              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"),
+              activity=str(world.dir / "activity.csv"), backups=str(world.dir / "backups"))
+    collection_db.run(**kw)                                        # the seed
+    with open(world.adds, "a", encoding="utf-8") as f:
+        f.write("\n# --- Batch 2026-10-14 · photos · 1 cards (1 distinct) ---\n"
+                "1 Mox Opal\n")
+    assert "ingested 1 new batch" in collection_db.run(**kw)
+    (copy,) = store.list_backups(str(world.dir / "backups"))
+    before = {c.name for c in mtglib.load_collection(str(world.dir / "backups" / copy["name"]))}
+    assert "Mox Opal" not in before, "the copy is the state BEFORE the sync's changes"
+    assert "Mox Opal" in {c.name for c in mtglib.load_collection(world.db)}
+
+
+def test_a_failed_backup_never_stops_the_sync(world, monkeypatch):
+    import collection_db
+    monkeypatch.delenv("MTG_COLLECTION", raising=False)
+    blocker = world.dir / "not-a-folder"
+    blocker.write_text("x", encoding="utf-8")
+    kw = dict(db=world.db, export=world.export, august=world.august,
+              additions=world.adds, decks=world.decks_dir, pins=str(world.dir / "pins.csv"),
+              activity=str(world.dir / "activity.csv"), backups=str(blocker))
+    collection_db.run(**kw)
+    line = collection_db.run(**kw)
+    assert "collection db: up to date" in line and "backup: FAILED" in line
+
+
+def test_backups_never_reach_git():
+    ignore = open(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".gitignore"),
+                  encoding="utf-8").read()
+    assert "data/collection/backups/" in ignore.splitlines()

@@ -24,6 +24,15 @@
       are saved here too, with every version ({{ db.decks.revisions }} so far).</span>
   </div>
   {% endif %}
+  {% if me_role == 'owner' %}
+  <div class="row mt-3">
+    <a class="btn ghost" href="{{ url_for('export_backup') }}" download>Download a backup</a>
+    <span class="muted fs-xs">All of it in one file: cards, every deck version, pins and the
+      activity log, without anyone's password.{% if db.backups %} The server also keeps a
+      copy from each of the last {{ db.backups|length }} day{{ 's' if db.backups|length != 1 }}
+      (newest {{ db.backups[0].date }}).{% endif %}</span>
+  </div>
+  {% endif %}
   <h2 id="edit">Change a card's count</h2>
   <p class="muted">Sold, traded, lost or miscounted. Set 0 to stop counting it. New cards go
     through <a href="#batch">Add a batch</a>, which checks the name first.</p>
