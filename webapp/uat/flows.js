@@ -215,8 +215,9 @@ function restore(stem, files) {
     try {
       await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
       const opened = await p.evaluate((t) => {
-        const f = [...document.querySelectorAll('figure.mc[data-key]')]
-          .find((x) => x.getAttribute('data-key').toLowerCase() === t.toLowerCase());
+        // Whichever view is showing (a phone opens on the list since Wave 1.2).
+        const f = [...document.querySelectorAll('.dl-row[data-key], figure.mc[data-key]')]
+          .find((x) => x.getAttribute('data-key').toLowerCase() === t.toLowerCase() && x.offsetParent);
         if (!f) return false;
         f.scrollIntoView(); f.click(); return true;
       }, target);
@@ -339,6 +340,49 @@ function restore(stem, files) {
       }
     } catch (e) { fail('F10 restore an earlier version', String(e).slice(0, 140)); }
     restore(stem, files);
+  }
+
+  // F12 · The deck page on a phone (Wave 1.2): the tabs on the first screen, the list
+  // by default, the filter narrows it, a row opens the panel, the card zooms.
+  {
+    try {
+      await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
+      const why = [];
+      const st = await p.evaluate(() => {
+        const tabs = document.querySelector('.tabs'), dl = document.querySelector('.dl');
+        const row = document.querySelector('.dl-row'), fig = document.querySelector('figure.mc');
+        return { tabsTop: tabs ? tabs.getBoundingClientRect().top : 1e9, vh: innerHeight,
+                 view: dl && dl.getAttribute('data-view'),
+                 rowShown: !!(row && row.offsetParent), figShown: !!(fig && fig.offsetParent),
+                 glanceOpen: !!(document.getElementById('glance') || {}).open };
+      });
+      if (st.tabsTop > st.vh) why.push(`tabs start ${Math.round(st.tabsTop)}px down, past the first screen (${st.vh}px)`);
+      if (st.view !== 'list' || !st.rowShown || st.figShown) why.push(`view ${st.view}: rows ${st.rowShown ? 'shown' : 'hidden'}, tiles ${st.figShown ? 'shown' : 'hidden'}`);
+      if (st.glanceOpen) why.push('the tiles are open on a phone');
+      const word = target.split(/\s+/)[0].toLowerCase();
+      await p.fill('.dl-q', word);
+      const f = await p.evaluate((w) => {
+        const rows = [...document.querySelectorAll('.dl-row')], shown = rows.filter((r) => r.offsetParent);
+        return { shown: shown.length, all: rows.length,
+                 bad: shown.filter((r) => !r.getAttribute('data-name').includes(w)).length };
+      }, word);
+      if (!(f.shown > 0 && f.shown < f.all && f.bad === 0)) why.push(`filter "${word}": ${f.shown}/${f.all} rows shown, ${f.bad} not matching`);
+      await p.evaluate((t) => {
+        const r = [...document.querySelectorAll('.dl-row')].find((x) => x.offsetParent && x.getAttribute('data-name') === t.toLowerCase());
+        if (r) r.click();
+      }, target);
+      await p.waitForTimeout(500);
+      if (!(await p.evaluate(() => { const o = document.getElementById('cardmodal'); return !!(o && !o.hidden); }))) why.push('a row did not open the card panel');
+      else {
+        await p.click('#cm-img');
+        const zoomed = await p.locator('.cm-zoom').count();
+        if (zoomed) await p.click('.cm-zoom');
+        const gone = !(await p.locator('.cm-zoom').count());
+        if (!zoomed || !gone) why.push(`tap-to-zoom: ${zoomed ? 'opened' : 'did not open'}, ${gone ? 'closed' : 'did not close'}`);
+      }
+      if (why.length) fail('F12 phone deck page', why.join('; '));
+      else pass('F12 phone deck page', `tabs at ${Math.round(st.tabsTop)}px of ${st.vh}; list by default; "${word}" → ${f.shown}/${f.all} rows; row → panel → zoom`);
+    } catch (e) { fail('F12 phone deck page', String(e).slice(0, 140)); }
   }
 
   // F11 · Keyboard only (Wave 1.5): the skip link, then a card name opens the panel,

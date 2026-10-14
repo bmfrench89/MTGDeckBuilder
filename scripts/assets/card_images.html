@@ -4,7 +4,8 @@
   if(!imgs.length) return;
   var byName={};
   imgs.forEach(function(img){
-    var name=img.getAttribute('alt'); if(!name) return;
+    // data-name first: a list thumbnail is decorative (alt="") but still a card.
+    var name=img.getAttribute('data-name')||img.getAttribute('alt'); if(!name) return;
     var k=name.toLowerCase();
     if(!byName[k]) byName[k]={name:name,imgs:[],done:false};
     byName[k].imgs.push(img);

@@ -129,4 +129,9 @@
   .cm-imgmeta { margin-top:var(--sp-2); }
   .cm-alts { grid-template-columns:repeat(3,1fr); }
 }
-
+/* full-size look at the panel's card (tap the image; tap again to close) */
+.cm-img { cursor:zoom-in; }
+.cm-zoom { position:fixed; inset:0; z-index:70; display:flex; align-items:center;
+  justify-content:center; padding:var(--sp-4); background:rgba(0,0,0,.92); cursor:zoom-out; }
+.cm-zoom img { max-width:100%; max-height:100%; width:auto; height:auto;
+  border-radius:4.75% / 3.5%; }

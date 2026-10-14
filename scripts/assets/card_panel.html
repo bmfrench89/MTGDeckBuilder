@@ -353,12 +353,30 @@
       }, 220);
     });
   }
-  document.querySelectorAll('figure.mc[data-key], .cardlink[data-key]').forEach(function(f){
+  document.querySelectorAll('figure.mc[data-key], .cardlink[data-key], .dl-row[data-key]').forEach(function(f){
     f.addEventListener('click',function(e){ e.preventDefault(); open(f.getAttribute('data-key')); });
     f.addEventListener('keydown',function(e){
       if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(f.getAttribute('data-key')); }
     });
   });
+  // Tap the card for a full-screen look (Wave 1.2). A tap, Escape or Enter
+  // closes it, and focus goes back to the card in the panel.
+  img.setAttribute('tabindex','0'); img.setAttribute('role','button');
+  img.title='Tap to see the card full size';
+  function zoom(){
+    if(!img.getAttribute('src')) return;
+    var z=document.createElement('div'); z.className='cm-zoom'; z.tabIndex=-1;
+    z.setAttribute('role','dialog'); z.setAttribute('aria-label',(img.alt||'Card')+', full size');
+    var big=new Image(); big.src=img.src; big.alt=img.alt||''; z.appendChild(big);
+    function shut(){ z.remove(); img.focus({preventScroll:true}); }
+    z.addEventListener('click',shut);
+    z.addEventListener('keydown',function(e){
+      if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); e.stopPropagation(); shut(); }
+    });
+    document.body.appendChild(z); z.focus();
+  }
+  img.addEventListener('click',zoom);
+  img.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); zoom(); } });
   ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
   document.querySelector('#cardmodal .cm-close').addEventListener('click',close);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!ov.hidden) close(); });
