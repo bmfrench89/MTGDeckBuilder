@@ -705,3 +705,9 @@
 1 Ohran Frostfang
 1 Vaultborn Tyrant
 1 Gigantic Big Bear
+
+# --- Batch 2026-10-14 · Tiamat, on the player's word (2026-10-14) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Tiamat

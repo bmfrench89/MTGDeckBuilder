@@ -42,6 +42,7 @@
 1 Vaevictis Asmadi, the Dire
 1 Ureni, the Song Unending
 1 Dragon Broodmother
+1 Tiamat
 
 # --- Instants ---
 1 Swords to Plowshares
@@ -77,7 +78,6 @@
 1 Temur Ascendancy
 1 Rhythm of the Wild
 1 Call the Spirit Dragons
-1 Breaching Dragonstorm
 
 # --- Lands ---
 1 Command Tower

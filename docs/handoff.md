@@ -25,8 +25,10 @@ Roaming Throne pin still applies). Game plan, every card choice and the protecte
   Dromoka, Scourge of Valkas, Ureni, both Spirit Dragon lands.
 - **Pipeline:** `auto_build` (filler-heavy, as before) → `deck_sections` → `optimize` → a hand
   pass on verified text (74 cards verified in one `carddb.py --verify` batch). Then validated:
-  100 cards, singleton clean, sections clean, **21/25 of the field's top 25** (the 4 missing
-  are unowned: Tiamat, Terror of the Peaks, Old Gnawbone, Goldspan Dragon — the buylist),
+  100 cards, singleton clean, sections clean, **22/25 of the field's top 25** (the 3 missing
+  are unowned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon — the buylist; the player
+  confirmed owning **Tiamat** afterwards, logged as an intake batch, and the optimizer swapped
+  it in over Breaching Dragonstorm),
   **Bracket 3** (1 Game Changer: Consecrated Sphinx), **0 combos** on Commander Spellbook, and
   two applying optimizer runs in a row change nothing.
 - **Caught by Spellbook:** Ganax + Draconic Visitor is a two-card mandatory loop with

@@ -125,6 +125,11 @@ an any-colour land and is not one for this deck.
 - **Mana Drain, Grim Tutor and Insatiable Avarice:** the player moved these into the Ur-Dragon
   box (2026-10-12). Y'shtola's list still names Mana Drain and Grim Tutor, so the conflict panel
   flags both until Y'shtola's list is updated.
+- **Tiamat (68% field; the player owns one, confirmed 2026-10-14):** cast, not cheated in, it
+  fetches up to five different Dragons into hand. Cast it for the "if you cast it" trigger —
+  Ureni's or the Ur-Dragon's free put-into-play does NOT trigger it. Good five: whatever closes
+  the game this turn (Scourge of the Throne, Lathliss, Miirym, Atarka, Dromoka) or rebuilds after
+  a wipe. It came in over Breaching Dragonstorm (12%) on the optimizer's own swap.
 - **Grim Tutor / Insatiable Avarice targets:** Dragon Tempest early, Call the Spirit Dragons or
   Roaming Throne once the board is up, Crux of Fate when behind.
 
@@ -132,8 +137,8 @@ an any-colour land and is not one for this deck.
 
 - **Bracket 3.** One Game Changer (Consecrated Sphinx), three tutors, no fast mana, no
   two-card infinites.
-- **Field:** 21 of EDHREC's top 25 for The Ur-Dragon (51,370 decks). The four missing are not
-  owned: Tiamat, Terror of the Peaks, Old Gnawbone, Goldspan Dragon. They are the buy list.
+- **Field:** 22 of EDHREC's top 25 for The Ur-Dragon (51,370 decks). The three missing are not
+  owned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon. They are the buy list.
 - **Goldfish** (3,000 games): keepable 81%, screw 14%, first combat lethal median turn 9 (25% by turn 8).
   It **understates** this deck: it does not model fetch effects (Farseek, Nature's Lore,
   Rampant Growth and Cultivate find no land in the sim), Ganax Treasures, Lathliss
