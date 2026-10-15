@@ -34,7 +34,13 @@ A card that cannot be verified gets verdict UNVERIFIED and no swap — never jud
 from memory of a post-cutoff set. Cite what you verified.
 
 ### 3. Read the card against the ENGINE, not the average deck
-Name the deck's actual engine first (the `.notes.md` game plan), then ask:
+Name the deck's actual engine first (the `.notes.md` game plan). **Then name its 2-3
+packages before judging any single card**: each is an enabler set plus the payoffs that
+need it, for example "life gained on ANY turn" + "each-end-step Angel makers" in Giada.
+Judge every card against the packages and the other 99, not only the commander. Shattered
+Angel was cut on a first pass read card-against-commander, and restored only once the
+each-end-step package was named (2026-10-15). A payoff must never be cut before its
+enablers are counted. Write the packages into the notes (`## Packages`). Then ask:
 - **What does this card multiply?** A trigger-doubler on a trigger-based
   commander (Wizard's Staff on Y'shtola), a damage-doubler with a {1} equip on
   the commander (Mjölnir on Cap), a free-attach on a Colossus Hammer deck

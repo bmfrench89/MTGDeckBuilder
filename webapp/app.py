@@ -1991,6 +1991,14 @@ def _assess_packet(m):
                     fld += f", lift {x['lift']:g}x"
                 L.append(f"    {x['name']} (fit {x['fit']}, {x['role']}, {fld})")
         L.append("")
+    cov = (review or {}).get("field_coverage")
+    if cov and cov.get("owned"):
+        L.append(f"-- FIELD TOP-{cov['top']}: {cov['n_in']} in · of the {cov['owned']} you own, "
+                 f"{cov['n_in']} in ({cov['owned_pct']}%) · {len(cov['not_owned'])} not owned --")
+        for o in cov["owned_out"]:
+            where = "a free copy" if o["free"] else "held by " + ", ".join(o["held_by"])
+            L.append(f"  owned, not in: {o['name']} ({o['inc']}%; {where}) — needs a reason")
+        L.append("")
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())
     return "\n".join(L) + "\n"

@@ -78,6 +78,14 @@ READS_RARE_LIMIT = 6
 # deck_fit.commander_lift) for one under TRADE_GENERIC_LIFT is flagged: the field is
 # trading the deck's own engine for a staple, which is exactly the call a read should make.
 TRADE_GENERIC_LIFT = 2.0
+# Generic-slot upgrades (2026-10-15, the deck-flow review): a widely played rock or
+# removal spell 18 points ahead of a clunkier generic card never cleared the 25-point
+# margin. When BOTH cards are generic for this commander (lift under GENERIC_LIFT) the
+# bar drops to GENERIC_MARGIN, but only on a gain the FIELD shows (inclusion %, not fit):
+# the margin also stops role-template pressure (worth up to 24 points of value) from
+# inventing swaps, and that pressure never moves inclusion. Engine slots keep the 25.
+GENERIC_LIFT = 2.0
+GENERIC_MARGIN = 15
 LAND_FIELD_KEEP = 25
 
 
@@ -678,7 +686,11 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if ck in used_cut or mtglib._norm(add_name) in used_add:
                 continue
             if val_add - val_cut < margin:
-                continue                  # not a clear enough upgrade, like-for-like units
+                gm = min(margin, GENERIC_MARGIN)
+                if not (_generic_pair(cut_name, add_name, ctx)
+                        and field_knows(cut_name) and field_knows(add_name)
+                        and inc_add - inc_cut >= gm and val_add - val_cut >= gm):
+                    continue              # not a clear enough upgrade, like-for-like units
             if inc_add < inc_cut:
                 continue                  # role repair may not overrule the field (above)
             if (not field_knows(cut_name) and inc_add < STRONG_CONSENSUS
@@ -1042,7 +1054,14 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             used_buy_add |= akeys
             break
 
+    try:
+        import edhrec
+        _names = edhrec.field_names(commander, idx)
+    except Exception:
+        _names = {}
     result = {"stem": stem, "commander": commander, "swaps": swaps,
+              "field_coverage": field_coverage(field, _names, in_deck, idx, usage,
+                                               commander),
               "land_swaps": land_swaps, "land_detail": land_detail,
               "buy_swaps": buy_swaps, "land_guard": land_guard,
               "field_size": len(field), "risers": risers, "untyped": untyped,
@@ -1071,6 +1090,55 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
 def proposal_key(kind, cut, add):
     """The stable id of one proposed swap, as the ⚡ review form submits it."""
     return f"{kind}|{cut}|{add}"
+
+
+FIELD_TOP = 25
+
+
+def field_coverage(field, names, in_deck, idx, usage, commander, top=FIELD_TOP):
+    """The field's top-N cards for this commander, split three ways: in the deck, owned
+    but out (free, or held by which decks), and not owned.
+
+    The validation number is coverage of what the player OWNS (2026-10-15, the
+    deck-flow review): raw top-25 overlap punishes a deck for cards nobody owns, which
+    is a buylist fact, not a build fault. Every owned-but-out card should have a
+    reason in the deck's notes; this list is where a session reads them off. None
+    without field data."""
+    if not field:
+        return None
+    ck = mtglib.name_keys(commander) if commander else set()
+    keys = [k for k, _ in sorted(field.items(), key=lambda kv: (-kv[1], kv[0]))
+            if not mtglib.is_basic(k) and k not in ck][:top]
+    held, total = {}, {}
+    for n, v in (usage or {}).items():
+        for kk in mtglib.name_keys(n):
+            held[kk] = sorted(v.get("decks") or {})
+            total[kk] = v.get("total", 0)
+    rows = {"in_deck": [], "owned_out": [], "not_owned": []}
+    for k in keys:
+        name = (names or {}).get(k) or k
+        if k in in_deck:
+            rows["in_deck"].append(name)
+            continue
+        ref = mtglib.lookup(idx, name)
+        if ref is None or (ref.quantity or 0) <= 0:
+            rows["not_owned"].append(name)
+            continue
+        rows["owned_out"].append({"name": ref.name, "inc": field[k],
+                                  "free": (ref.quantity or 0) - total.get(k, 0) > 0,
+                                  "held_by": held.get(k, [])})
+    owned = len(rows["in_deck"]) + len(rows["owned_out"])
+    return {"top": len(keys), "n_in": len(rows["in_deck"]), "owned": owned,
+            "owned_pct": round(100 * len(rows["in_deck"]) / owned) if owned else None,
+            **rows}
+
+
+def _generic_pair(cut, add, ctx):
+    """True when lift says BOTH cards are generic for this commander (under
+    GENERIC_LIFT, both measured). Unmeasured lift is never generic: no data, no discount."""
+    cl, al = deck_fit.lift_of(cut, ctx), deck_fit.lift_of(add, ctx)
+    return (cl is not None and al is not None
+            and cl["lift"] < GENERIC_LIFT and al["lift"] < GENERIC_LIFT)
 
 
 def _lift_detail(cut, add, ctx):
@@ -1124,7 +1192,8 @@ def review_payload(r):
                      for b in r.get("buy_swaps") or []],
             "role_deadlock": r.get("role_deadlock") or {},
             "role_ranges": {k: list(v) for k, v in (r.get("role_ranges") or {}).items()},
-            "untyped": r.get("untyped", 0)}
+            "untyped": r.get("untyped", 0),
+            "field_coverage": r.get("field_coverage")}
 
 
 def apply_chosen(deck_path, coll, idx, decks_dir, chosen, refs=None, by=""):
@@ -1666,6 +1735,15 @@ def main():
         for old, new, avail in r["land_swaps"]:
             tag = " [shared]" if avail == "share" else ""
             print(f"   land  {old:32} ->  {new}{tag}")
+        cov = r.get("field_coverage")
+        if cov and cov.get("owned"):
+            print(f"   field top-{cov['top']}: {cov['n_in']} in the deck · of the "
+                  f"{cov['owned']} you own, {cov['n_in']} in ({cov['owned_pct']}%) · "
+                  f"{len(cov['not_owned'])} not owned")
+            for o in cov["owned_out"]:
+                where = "a free copy" if o["free"] else "held by " + ", ".join(o["held_by"])
+                print(f"      owned, not in: {o['name']} ({o['inc']}%; {where}) — "
+                      f"give it a reason in the notes")
         for cut, ic, add, ia, kind in r.get("buy_swaps", []):
             print(f"   buy   {add} ({ia}%) — would replace {cut} ({ic}%)"
                   f"{'  [land]' if kind == 'land' else ''}  -> .buylist.csv")

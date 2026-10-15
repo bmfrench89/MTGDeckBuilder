@@ -40,6 +40,21 @@ Role counts are the classifier's. Creature-based interaction doesn't register (s
 Ur-Dragon notes). "Detected 2" next to a declared 3 means no Game Changers; the bracket is
 the player's stated intent.
 
+**2026-10-15 (later): the deck-flow review.** The player had Gemini review the build
+workflow and asked for all four bundles, cross-checked first.
+- **Tracker and designs:** `docs/spec-deck-flow-review.md`. Two of Gemini's notes were
+  wrong: Ob Nixilis, the Ascended IS a white Angel, and the top-25 overlap was never a
+  gate.
+- **Shipped (bundle A):**
+  - archetype- and colour-aware auto_build aims (no counterspell quota without blue;
+    protection from `resilience_staples.csv` instead);
+  - a 15-point generic-slot margin, gated on lift and on inclusion gain only;
+  - owned top-25 coverage as the validation number;
+  - packages named before cards are judged.
+- **Next, in order:** B (AI verdicts on the phone), C (engine-first builds), D (trades
+  between decks). D needs `## Protected engine` lists for the six decks without one.
+- Merged earlier the same day: lift (#9) and the Ur-Dragon's Dragonlord Kolaghan (#8).
+
 **2026-10-15: Giada and Thorin, built from the full collection** (the player: "Build the
 best Giada and also build my dwarves deck … I like the idea of dwarves and b list red/white
 dragons that aren't being used by ur dragon"):

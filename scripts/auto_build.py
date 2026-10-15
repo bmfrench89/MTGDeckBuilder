@@ -30,6 +30,51 @@ LAND_TARGET = deckcore.LAND_TARGET   # THE land target — no independent copy
 # band (a tripwire test enforces it), but the exact aim within the band is this
 # builder's own call, so no formula derives one from the other.
 ROLE_QUOTA = [("ramp", 11), ("draw", 10), ("removal", 9), ("wipe", 3), ("counter", 4)]
+# Archetype aims (2026-10-15, the deck-flow review): the fixed quotas above asked a
+# mono-white Angel deck for four counterspells (both the Giada and Thorin drafts pulled
+# in Rebuff the Wicked to fill them) and a go-wide deck for three wraths. Each aim is
+# clamped into that archetype's acceptance band (deckcore.role_ranges), so a fresh build
+# never lands where the optimizer would call it broken. When two archetype words
+# disagree, interaction (removal, wipe) takes the LOWER aim and engine roles take the
+# higher.
+_ARCHETYPE_AIM = {
+    "control": {"counter": 8, "draw": 12, "removal": 7},
+    "draw-engine": {"draw": 13},
+    "artifacts": {"ramp": 12},
+    "landfall": {"ramp": 15},
+    "go-wide": {"wipe": 1}, "tokens": {"wipe": 1}, "aristocrats": {"wipe": 1},
+    "voltron": {"wipe": 1, "removal": 8},
+}
+_LOWER_WINS = {"removal", "wipe"}
+# Without blue, counterspells are a handful of narrow white cards. Those slots go to
+# protection instead, drawn ONLY from the verified resilience list
+# (data/reference/resilience_staples.csv, role "protection").
+PROTECTION_AIM = 3
+
+
+def role_quota(identity, archetype):
+    """(ordered [(role, aim)], protection aim) for a fresh build of this identity and
+    archetype: the house quotas, bent by archetype, counters only with blue, every aim
+    inside the archetype's acceptance band."""
+    q = dict(ROLE_QUOTA)
+    for word in archetype or []:
+        for role, aim in _ARCHETYPE_AIM.get(word, {}).items():
+            base = dict(ROLE_QUOTA)[role]
+            cur = q[role]
+            if role in _LOWER_WINS:
+                q[role] = min(cur, aim) if cur != base else aim
+            else:
+                q[role] = max(cur, aim) if cur != base else aim
+    blue = "U" in set(identity or ())
+    if not blue:
+        q["counter"] = 0
+    bands = deckcore.role_ranges(archetype)
+    for role in q:
+        lo, hi = bands.get(role, (0, 99))
+        q[role] = min(max(q[role], lo), hi)
+    return [(r, q[r]) for r, _ in ROLE_QUOTA], (0 if blue else PROTECTION_AIM)
+
+
 _BASIC = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
 ROLE_LABEL = {"ramp": "Ramp", "draw": "Card advantage", "removal": "Removal",
               "wipe": "Board wipes", "counter": "Counters", "creature": "Creatures",
@@ -264,7 +309,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     for c in nonland:
         by_role.setdefault(c["role"], []).append(c)
     gaps = {}
-    for role, target in ROLE_QUOTA:
+    quota, prot_aim = role_quota(identity, archetype)
+    for role, target in quota:
         picked = 0
         for c in by_role.get(role, []):
             if picked >= target or len([x for x in chosen if not x["is_land"]]) >= spell_budget:
@@ -273,6 +319,17 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
                 picked += 1
         if picked < target:
             gaps[role] = target - picked
+    # 2a) Protection, in the slots a non-blue deck can't fill with counterspells.
+    if prot_aim:
+        prot_keys = power.load_resilience_staples().get("protection", set())
+        picked = 0
+        for c in nonland:
+            if picked >= prot_aim or len([x for x in chosen if not x["is_land"]]) >= spell_budget:
+                break
+            if mtglib.name_keys(c["card"].name) & prot_keys and take(c):
+                picked += 1
+        if picked < prot_aim:
+            gaps["protection"] = prot_aim - picked
     # 2b) Tribal seeding — after the role quotas, run your on-tribe creatures FIRST so a
     # shallow tribe (e.g. 13 Dragons, many pricey) actually shows up instead of losing the
     # synergy slots to cheaper off-tribe cards. Deep tribes were already fine; this fixes thin ones.
@@ -286,7 +343,7 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     # synergy / threats / flex — NON-quota roles first (real synergy / creatures /
     # threats), then any remaining by fit for depth, up to the spell budget. This
     # keeps ramp/draw/removal/wipe/counter at their quotas instead of overfilling.
-    quota_roles = {r for r, _ in ROLE_QUOTA}
+    quota_roles = {r for r, _ in quota}
     def n_spells():
         return sum(1 for x in chosen if not x["is_land"])
     for c in nonland:
@@ -314,6 +371,9 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         role_of.setdefault(r, []).append(c)
         counts[r] = counts.get(r, 0) + 1
     counts["land"] = counts.get("land", 0) + n_basic
+    if prot_aim:
+        counts["protection"] = sum(1 for c in chosen if mtglib.name_keys(c["card"].name)
+                                   & power.load_resilience_staples().get("protection", set()))
 
     sections = [("Commander", [{"name": commander_name, "qty": 1}])]
     # EDHREC-style type sections (the deck-file convention) wherever the pool
@@ -374,8 +434,9 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     except Exception:
         assessment = mana = None
 
-    targets = {"land": LAND_TARGET, "ramp": 11, "draw": 10, "removal": 9,
-               "wipe": 3, "counter": 4}
+    targets = {"land": LAND_TARGET, **dict(quota)}
+    if prot_aim:
+        targets["protection"] = prot_aim
     return {
         "commander": commander_name,
         "identity": "".join(sorted(identity)) or "C",
@@ -450,7 +511,9 @@ if __name__ == "__main__":
     print(f"AUTO-BUILD — {d['commander']}  [{d['identity']}]  ({', '.join(d['archetypes'])})")
     print(f"  total {d['total']} cards" + (f"  (short {d['short']} — pool too shallow)" if d['short'] else ""))
     print("  role     have / target")
-    for role in ["land", "ramp", "draw", "removal", "wipe", "counter"]:
+    for role in ["land", "ramp", "draw", "removal", "wipe", "counter", "protection"]:
+        if role not in d["targets"]:
+            continue
         g = f"  GAP {d['gaps'][role]}" if role in d["gaps"] else ""
         print(f"    {role:<9}{d['counts'].get(role,0):>3} / {d['targets'][role]:<3}{g}")
     if d["nameonly"]:

@@ -283,8 +283,16 @@ file's own type-exclusive section for cards already in the deck, then the field 
 `lands` key (EDHREC's own Lands sections) for incoming candidates, and the name heuristic
 only last — because on a name-only snapshot the spell pass once cut Hidden Lair (a real
 land the hints miss) and proposed Hallowed Fountain as a spell BUY. Untyped counts are
-reported in the CLI/report (`untyped`), never silently guessed around. Validate a tuned deck with EDHREC top-25 overlap — below ~50%
-means something is wrong, so say so rather than shipping quietly.
+reported in the CLI/report (`untyped`), never silently guessed around. Validate a tuned deck by
+its **owned top-25 coverage** (`optimize.field_coverage`, printed as "field top-25: … of the N
+you own, M in"; 2026-10-15). Raw overlap counts cards nobody owns, which is a buylist
+fact, not a build fault. Every owned-but-out card needs a reason in the deck's notes. Raw
+overlap far below ~50% still deserves a sentence, but it is a warning, never a gate.
+Spell swaps between two GENERIC cards (both under 2× lift) need only a 15-point gain, and
+only when the field shows it in inclusion % (`GENERIC_MARGIN`): role-template pressure
+never moves inclusion, so the anti-churn guarantee holds. auto_build's role aims follow
+the archetype and colour (`auto_build.role_quota`): no counterspell quota without blue,
+whose slots go to verified protection (`resilience_staples.csv`).
 
 ### UI changes get UAT'd before merge — `webapp/uat/`
 Unit tests and fresh-browser screenshots passed the Arcane Ledger redesign (2026-10-11),

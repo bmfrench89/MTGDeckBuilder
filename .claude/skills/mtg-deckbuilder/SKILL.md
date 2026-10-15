@@ -102,9 +102,11 @@ python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>    
    utility land (no deck colours) or one with no enrichment is never judged — read those.
 
 It never cuts the commander, basics, curated notes, `.notes.md`-named cards (folded match,
-so a wrapped name still counts) or manual adds. **Validate with EDHREC top-25 overlap**
-(`edhrec.inclusion_map`) as a sanity check — far below ~50% deserves an explanation, but
-overlap is not the goal.
+so a wrapped name still counts) or manual adds. **Validate with owned top-25 coverage**
+(the optimizer prints "field top-25: … of the N you own, M in"): every top-25 card you own
+is either in the deck or has a reason in the notes. Raw overlap counts unowned cards too,
+so it's a warning, never a gate. Far below ~50% deserves a sentence, but overlap is not
+the goal.
 
 *Why the read is the decision:* the field gate traded untapped duals for basics in a
 five-colour deck, would have missed Samut (new set, ~0% field) and ranked Misdirection
