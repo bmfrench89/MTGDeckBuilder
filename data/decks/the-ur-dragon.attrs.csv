@@ -23,6 +23,7 @@ Dragon Broodmother,Creature,6,G R,{2}{R}{R}{R}{G},Dragon,,,4,4
 Dragon Tempest,Enchantment,2,R,{1}{R},,,,,4
 "Dragonhawk, Fate's Tempest",Creature,5,R,{3}{R}{R},Bird;Dragon,,,5,4
 Dragonlord Dromoka,Creature,6,G W,{4}{G}{W},Elder;Dragon,,,5,4
+Dragonlord Kolaghan,Creature,6,B R,{4}{B}{R},Elder;Dragon,,,6,4
 Dragonlord Silumgar,Creature,6,B U,{4}{U}{B},Elder;Dragon,,,3,4
 Dragonspeaker Shaman,Creature,3,R,{1}{R}{R},Human;Barbarian;Shaman,,discount:dragon:2,2,4
 Exotic Orchard,Land,0,,,,W U B R G,,,4
@@ -48,7 +49,6 @@ Marang River Regent // Coil and Catch,Creature,6,U,{4}{U}{U} // {3}{U},Dragon,,d
 Mountain,Land,0,R,,Mountain,R,,,4
 Nature's Lore,Sorcery,2,G,{1}{G},,,fetch:forest;ramp,,4
 "Neriv, Heart of the Storm",Creature,4,B R W,{1}{R}{W}{B},Spirit;Dragon,,,4,4
-"Niv-Mizzet, Visionary",Creature,6,R U,{4}{U}{R},Dragon;Wizard,,,5,4
 Paradise Druid,Creature,2,G,{1}{G},Elf;Druid,W U B R G,dork;ramp,2,4
 Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
 Path to Exile,Instant,1,W,{W},,,removal,,4

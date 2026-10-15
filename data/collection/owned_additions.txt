@@ -717,3 +717,9 @@
 # carries them, the upload offers to retire these rows
 # (docs/spec-card-intake.md §3).
 1 Enlightened Tutor
+
+# --- Batch 2026-10-15 · Dragonlord Kolaghan, on the player's word — new, for the Ur-Dragon (2026-10-15) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Dragonlord Kolaghan

@@ -1,0 +1,150 @@
+{
+ "voice": {
+  "engine": "kokoro-82m",
+  "model": "v1.0",
+  "voice": "af_heart",
+  "speed": 1.0
+ },
+ "takes": {
+  "00cfa6f2a37865f8": {
+   "file": "00cfa6f2a37865f8.mp3",
+   "ms": 12150
+  },
+  "093e5a35cd1a5718": {
+   "file": "093e5a35cd1a5718.mp3",
+   "ms": 12675
+  },
+  "0e69ee6fd858d56b": {
+   "file": "0e69ee6fd858d56b.mp3",
+   "ms": 13775
+  },
+  "195b519104d549a7": {
+   "file": "195b519104d549a7.mp3",
+   "ms": 16300
+  },
+  "26af690401aa8ef2": {
+   "file": "26af690401aa8ef2.mp3",
+   "ms": 10875
+  },
+  "27905c928bbd69a4": {
+   "file": "27905c928bbd69a4.mp3",
+   "ms": 16125
+  },
+  "2a3f17fe9ee6184c": {
+   "file": "2a3f17fe9ee6184c.mp3",
+   "ms": 16250
+  },
+  "2c30ce6eb11cacb3": {
+   "file": "2c30ce6eb11cacb3.mp3",
+   "ms": 17175
+  },
+  "3a9176116013c925": {
+   "file": "3a9176116013c925.mp3",
+   "ms": 14275
+  },
+  "3d05163c384e86eb": {
+   "file": "3d05163c384e86eb.mp3",
+   "ms": 8925
+  },
+  "43179e9511655507": {
+   "file": "43179e9511655507.mp3",
+   "ms": 12000
+  },
+  "4610d0294bc04875": {
+   "file": "4610d0294bc04875.mp3",
+   "ms": 14300
+  },
+  "4686dbb320f79396": {
+   "file": "4686dbb320f79396.mp3",
+   "ms": 11225
+  },
+  "4fc86d1fb548b8e4": {
+   "file": "4fc86d1fb548b8e4.mp3",
+   "ms": 13175
+  },
+  "5b351601f50dea08": {
+   "file": "5b351601f50dea08.mp3",
+   "ms": 14375
+  },
+  "646d8558b901d21f": {
+   "file": "646d8558b901d21f.mp3",
+   "ms": 14525
+  },
+  "65df96f400acb477": {
+   "file": "65df96f400acb477.mp3",
+   "ms": 14925
+  },
+  "7c1e499e9111bff7": {
+   "file": "7c1e499e9111bff7.mp3",
+   "ms": 14375
+  },
+  "8345deef9d958bfb": {
+   "file": "8345deef9d958bfb.mp3",
+   "ms": 9075
+  },
+  "8fc740b60ed26823": {
+   "file": "8fc740b60ed26823.mp3",
+   "ms": 15200
+  },
+  "94b3b7a9a6baff3f": {
+   "file": "94b3b7a9a6baff3f.mp3",
+   "ms": 15800
+  },
+  "98ac2dae3b82860c": {
+   "file": "98ac2dae3b82860c.mp3",
+   "ms": 14000
+  },
+  "ab7ee6da5aa05f91": {
+   "file": "ab7ee6da5aa05f91.mp3",
+   "ms": 16225
+  },
+  "bc16578c23d55963": {
+   "file": "bc16578c23d55963.mp3",
+   "ms": 13975
+  },
+  "c23fcad4f945c57f": {
+   "file": "c23fcad4f945c57f.mp3",
+   "ms": 17125
+  },
+  "c58c44c388522660": {
+   "file": "c58c44c388522660.mp3",
+   "ms": 14000
+  },
+  "ca52a49419a08a60": {
+   "file": "ca52a49419a08a60.mp3",
+   "ms": 15825
+  },
+  "cede869ab23d0ee4": {
+   "file": "cede869ab23d0ee4.mp3",
+   "ms": 10200
+  },
+  "d1a9d644df03eb49": {
+   "file": "d1a9d644df03eb49.mp3",
+   "ms": 15300
+  },
+  "d1d0b1efbca24eac": {
+   "file": "d1d0b1efbca24eac.mp3",
+   "ms": 16450
+  },
+  "debb0f530f2efdc4": {
+   "file": "debb0f530f2efdc4.mp3",
+   "ms": 16925
+  },
+  "e08481982f8d9468": {
+   "file": "e08481982f8d9468.mp3",
+   "ms": 16575
+  },
+  "e1ae99d9aeede637": {
+   "file": "e1ae99d9aeede637.mp3",
+   "ms": 10825
+  },
+  "f1334b72f12d590e": {
+   "file": "f1334b72f12d590e.mp3",
+   "ms": 15100
+  },
+  "fdfac5ce0e8d0390": {
+   "file": "fdfac5ce0e8d0390.mp3",
+   "ms": 18450
+  }
+ }
+}

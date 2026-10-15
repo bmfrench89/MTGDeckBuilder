@@ -1,0 +1,103 @@
+# Title: Giada, Font of Hope
+# Commander: Giada, Font of Hope
+# Colors: W
+# Archetype: tribal-angel lifegain
+# Bracket: 3
+# Source: built 2026-10-15 by a session: auto_build draft + engine-read hand pass
+
+# --- Commander ---
+1 Giada, Font of Hope
+
+# --- Creatures ---
+1 Bishop of Wings
+1 Angel of the Ruins
+1 Ob Nixilis, the Ascended
+1 Serra's Emissary
+1 Radiant, Archangel
+1 Angel of Indemnity
+1 Serra Ascendant
+1 Exemplar of Light
+1 Battle Angels of Tyr
+1 Firemane Commando
+1 Inspiring Overseer
+1 Youthful Valkyrie
+1 Angel of Vitality
+1 Archangel of Tithes
+1 Righteous Valkyrie
+1 Angel of Finality
+1 Angel of Jubilation
+1 Angelic Field Marshal
+1 Gisela, the Broken Blade
+1 Linvala, Keeper of Silence
+1 Metropolis Reformer
+1 Thraben Watcher
+1 Lyra Dawnbringer
+1 Valkyrie Harbinger
+1 Serra Paragon
+1 Angel of Destiny
+1 Sephara, Sky's Blade
+1 Karmic Guide
+1 Baneslayer Angel
+1 Emeria Angel
+1 Avacyn, Angel of Hope
+1 Bruna, the Fading Light
+1 Shattered Angel
+
+# --- Instants ---
+1 Flawless Maneuver
+1 Enlightened Tutor
+1 Heliod's Intervention
+1 Swords to Plowshares
+1 Path to Exile
+1 Reprieve
+1 Disenchant
+1 Destroy Evil
+1 Generous Gift
+1 Flare of Fortitude
+
+# --- Sorceries ---
+1 Austere Command
+1 Cut a Deal
+1 Requisition Raid
+
+# --- Artifacts ---
+1 Pearl Medallion
+1 The Book of Exalted Deeds
+1 Lightning Greaves
+1 Commander's Sphere
+1 Swiftfoot Boots
+1 The Wind Crystal
+1 Sol Ring
+1 Arcane Signet
+1 Mind Stone
+1 Sword of the Animist
+1 Tome of Legends
+
+# --- Enchantments ---
+1 Court of Grace
+1 Angelic Accord
+1 Authority of the Consuls
+1 Sigarda's Splendor
+1 Ghostly Prison
+
+# --- Planeswalkers ---
+1 Serra the Benevolent
+
+# --- Lands ---
+1 Seraph Sanctuary
+1 Path of Ancestry
+1 Bonders' Enclave
+1 Emeria, the Sky Ruin
+1 War Room
+1 Myriad Landscape
+1 Windbrisk Heights
+1 Mistveil Plains
+1 Command Tower
+1 Temple of the False God
+1 Rogue's Passage
+1 Ash Barrens
+1 Country Roads
+1 Fabled Passage
+
+# --- Basics ---
+22 Plains

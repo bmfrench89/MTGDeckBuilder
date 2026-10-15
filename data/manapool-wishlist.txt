@@ -29,12 +29,20 @@
 1 Ancient Tomb
 1 Captain America, Super-Soldier
 1 Herald's Horn
+1 Herald of War
+1 Starnheim Aspirant
+1 Resplendent Angel
 1 Sapphire Medallion
 1 Font of Mythos
 1 High Tide
 1 Chasm Skulker
 1 Terror of the Peaks
 1 Old Gnawbone
+1 Fíli and Kíli, Joyous
+1 Glóin, Dwarf Emissary
+1 Magda, Brazen Outlaw
+1 Ori, Plate Stacker
+1 Mines of Moria
 1 Cyclonic Rift
 1 Esper Sentinel
 1 Smothering Tithe

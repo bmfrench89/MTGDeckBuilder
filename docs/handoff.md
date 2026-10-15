@@ -6,15 +6,21 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-14 (deck stable reviewed end to end: 9 real decks, how-to-play videos for all, two new decks — Tifa and Sephiroth; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-15 (Giada and Thorin built from the full collection: 11 real decks, how-to-play videos for all; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
-## START HERE: the deck stable (2026-10-14)
+## START HERE: the deck stable (2026-10-15)
 
-Nine decks, all REAL builds from the collection: no card claimed past its owned count
-(`deck_conflicts`: no conflicts introduced today), 100 cards each, singleton clean, sections clean.
-The player's actual Giada, Killian and Thorin lists are NOT logged; the player asked for the
-two new decks to be built "to compare what you come up with versus what I have", ignoring
-those physical lists.
+Eleven decks, all REAL builds from the collection: 100 cards each, singleton clean,
+sections clean. `deck_conflicts` reports 7 conflicts, all among the player's older decks:
+- Dina and Y'shtola share Blood Artist, Viscera Seer and Toxic Deluge.
+- Captain America shares Force of Will (pinned to Y'shtola) and Mystic Remora (with Kami).
+- Kami and Y'shtola share Propaganda and Sublime Epiphany.
+
+None involves Giada, Thorin, Tifa or Sephiroth. They're surfaced, not fixed: choosing
+which of the player's decks keeps each copy is the player's call.
+The player's actual Giada, Killian and Thorin lists are NOT logged. The player asked for
+Giada and Thorin to be built "to compare what you come up with versus what I have",
+ignoring those physical lists.
 
 | Deck | Bracket | Lands | Ramp/draw/removal | Keepable | Field top-25 | Clips |
 |---|---|---|---|---|---|---|
@@ -22,17 +28,59 @@ those physical lists.
 | Beorn the Fierce — Bear Den | 3 (detected 2) | 36 | 18/13/12 | 79% | 18/25 | 5 |
 | Captain America, Team Leader | 3 (detected 3) | 37 | 9/12/9 | 80% | 25/25 | 5 |
 | Dina, Essence Brewer | 3 (detected 3) | 37 | 10/8/10 | 80% | 25/25 | 4 |
+| **Giada, Font of Hope** (new 10-15) | 3 (detected 3) | 36 | 6/9/6 | 79% | 19/25 | 5 |
 | Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 18/25 | 5 |
-| **Sephiroth, Fallen Hero** (new) | 3 (detected 2) | 36 | 8/9/8 | 79% | 16/25 | 5 |
+| Sephiroth, Fallen Hero | 3 (detected 2) | 36 | 8/6/8 | 79% | 14/25 | 5 |
 | The Ur-Dragon | 3 (detected 3) | 37 | 10/6/6 | 80% | 22/25 | 5 |
-| **Tifa, Martial Artist** (new) | 3 (detected 2) | 37 | 12/10/9 | 80% | 20/25 | 5 |
+| **Thorin, King of Durin's Folk** (new 10-15) | 3 (detected 2) | 36 | 6/12/6 | 79% | 20/25 | 5 |
+| Tifa, Martial Artist | 3 (detected 2) | 37 | 12/10/8 | 80% | 15/25 | 5 |
 | Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
 
 Role counts are the classifier's. Creature-based interaction doesn't register (see the
 Ur-Dragon notes). "Detected 2" next to a declared 3 means no Game Changers; the bracket is
 the player's stated intent.
 
-**What happened today, in order:**
+**2026-10-15: Giada and Thorin, built from the full collection** (the player: "Build the
+best Giada and also build my dwarves deck … I like the idea of dwarves and b list red/white
+dragons that aren't being used by ur dragon"):
+- **Giada, Font of Hope "Choir of Wings":** 32 Angels. Life gain becomes Angel tokens via
+  Bishop of Wings (+4 per Angel), Angelic Accord, Valkyrie Harbinger, Ob Nixilis the
+  Ascended and The Book of Exalted Deeds, and The Wind Crystal doubles the life. Angel of
+  Destiny is the alternate win. Enlightened Tutor (the player's copy) is the one Game
+  Changer. The six field cards it lacks are all unowned. **Angel audit:** 32 of the 41
+  white or colourless Angels owned are in the deck. The 9 out are weak or Bartolomé's.
+  Shattered Angel came in for Herald of Serra (it gains life on opponents' land drops, and
+  the end-step token-makers check at *each* end step), and Flare of Fortitude for Gleaming
+  Splendor.
+- **Thorin "The Company and the Fire":** every free Dwarf in the collection (all ~30), two
+  changelings, and six red-white Dragons the Ur-Dragon doesn't use. Bifur doubles Thorin's
+  Treasure trigger. Draconic Visitor turns each of those Treasures into a 5/5 flier: no
+  loop, because the Dragons aren't Dwarves. **Maskwood Nexus is deliberately out**: with
+  Visitor it makes a mandatory infinite loop, which is a draw (CR 104.4b). The five field
+  cards it lacks are all unowned.
+- **Process:** `auto_build` over a pool that excluded Tifa and Sephiroth, then a hand pass
+  on verified text, `deck_sections`, an `optimize --json` read (every proposal rejected,
+  with reasons in the notes), then validation.
+- **Priority for shared copies: the player's commanders over the session's own decks.**
+  - Tifa gave up 9 spells and 5 lands, Sephiroth 5 spells and 5 lands, each spell logged
+    `manual-replace` in `.changes.csv`.
+  - Thorin gave back Diamond Pick-Axe, Rogue's Passage and Slayers' Stronghold, because
+    Sephiroth's and Tifa's clips feature them.
+  - Replacements were read against each engine: Hero's Blade (Tifa enters a 7/6),
+    Thickest in the Thicket, Garruk's Packleader, Quarrel, Monstrous Onslaught, Guiding
+    Hydra (counters the whole Sephiroth team every combat), Cloud, Armory Paladin.
+  - Tifa's four stale clip scenes were rewritten. Field overlap: Tifa 20 → 15, Sephiroth
+    16 → 14; both are still above half.
+- Notes, attrs, clips and commanders.csv rows for both new decks.
+- **The Ur-Dragon: Dragonlord Kolaghan in for Niv-Mizzet, Visionary** (the player's call).
+  - Kolaghan is new: logged as an intake batch in `owned_additions.txt`.
+  - It gives every Dragon haste, so The Ur-Dragon's attack trigger fires the turn each
+    Dragon lands. The Niv-Mizzet clip became a haste clip.
+  - Draw count fell 6 → 5.
+  - Consecrated Sphinx is earmarked for the player's planned Ur-Sphinx deck. When it moves,
+    the Ur-Dragon needs a draw piece.
+
+**2026-10-14, in order:**
 - **Deleted, on the player's word:** the four decks that weren't real builds — the Thorin
   auto-draft, the Giada and Thorin study copies, and Tergrid — Iron Fortress (a study build
   with 45 unowned cards; its narration went with it, and `.github/narrate/audition.py` now
@@ -97,7 +145,8 @@ from the app), and **⚡ proposes while the player approves**. Spec and tracker:
 - **First run of the loop (2026-10-14, the Ur-Dragon):** the read found **Niv-Mizzet,
   Visionary**, which EDHREC doesn't list for the Ur-Dragon at all. It draws per point of
   noncombat damage, and Lozhan, Dragon Tempest, Scourge of Valkas and Boros Charm all deal
-  it. The player approved it over Kolaghan. **Enlightened Tutor** (the player owns one,
+  it. The player approved it over Kolaghan. (Replaced 2026-10-15 by Dragonlord Kolaghan, on the
+  player's word; see the top section.) **Enlightened Tutor** (the player owns one,
   logged on their word) stays in their Giada deck by their choice; one copy. Reads gained
   a second lane for rarely-listed cards (Enlightened Tutor at 10% had fallen through
   every net).
@@ -355,11 +404,9 @@ control. The deck runs 25. 0 (with 25+ loyalty among Jaces): exile all but the b
 card of each opponent's library, and Kami makes each player draw a second card every draw
 step. With ~7-8 Islands it reaches 25 in two activations plus Proxy (+3) or Sanctum (+2).
 
-**Held, not judged:** Thorin waits on the player's real list (task "Compare with the
-player's lists").
-- Thorin flags: Marwyn the Clearcutter (sac a Treasure: draw), the second Solitary Cell, and
-  Draconic Visitor. Check Draconic Visitor first: it turns EVERY artifact token into a 5/5
-  Dragon, so it eats a Treasure plan.
+**Thorin, resolved 2026-10-15** by the build (see the top section): Draconic Visitor and
+Solitary Cell are in. Visitor is the second engine, cast when switching from Treasures to
+Dragons. Marwyn was left out.
 - Ur-Dragon flags: **resolved by the 2026-10-14 rebuild** (see the top section). Samut went in;
   Draconic Visitor was rejected (a mandatory draw loop with Ganax); the slow lands lost to
   better duals the full collection turned up.
@@ -432,7 +479,7 @@ Other files changed:
 Not for Beorn:
 - Gardenize goes to Dina (15%), still a proposal.
 - Sphinx's Tutelage goes to Kami (20%), still a proposal.
-- The angels go to Giada once the real list is imported.
+- The angels went to Giada when it was built (2026-10-15).
 
 ## Blind builds vs the player's real decks (2026-10-12) — SUPERSEDED 2026-10-14
 
@@ -468,8 +515,9 @@ Giada, Font of Hope (#2)**. The plan is to compare it with what they actually bu
 - They have Galadriel's Dismissal and Gleaming Splendor in Giada. `thorin-king-of-durins-folk.txt`
   still lists Gleaming Splendor (1 owned), so Thorin's list is probably stale too.
 
-**Next step: get their Giada, Killian (and Thorin) lists.** (The Ur-Dragon no longer needs
-one: the player asked for the best build instead, done 2026-10-14.) The player can now
+**Next step: get their Killian list** (and their own Giada and Thorin lists, if they want
+those compared side by side with the 2026-10-15 builds). The Ur-Dragon no longer needs one:
+the player asked for the best build instead, done 2026-10-14. The player can now
 log them themselves: Decks → **Import a list** (`/decks/import`). A new commander becomes a
 new deck; picking "the new list for: The Ur-Dragon" (or importing a commander that already
 has a deck and tapping **Replace the list of …**) swaps the list in place and logs every
@@ -642,7 +690,7 @@ it; the storyboard was rewritten the same day for the deck's $100-per-card list.
 **Rollout, when the player says go:**
 - Write clips for the six real decks with notes (Beorn, Captain America, Cosmic
   Spider-Man, Dina, The Ur-Dragon, Y'shtola) and the two other Tergrid options.
-- Thorin has no `.notes.md`, so it needs a game plan written first.
+- Thorin has no `.notes.md`, so it needs a game plan written first. (Done 2026-10-15.)
 - Write each storyboard from verified text only, then run `clips.py --deck … --check`.
 
 **Not built:** MP4 export. If it's ever wanted, record the same player on a GitHub

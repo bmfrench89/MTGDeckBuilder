@@ -11,7 +11,7 @@
 # --- Creatures ---
 1 Zack Fair
 1 Puresteel Paladin
-1 Sram, Senior Edificer
+1 Armory Paladin
 1 Danitha Capashen, Paragon
 1 Cid, Freeflier Pilot
 1 Codsworth, Handy Helper
@@ -21,10 +21,11 @@
 1 Bastion Protector
 1 Hanged Executioner
 1 Laelia, the Blade Reforged
-1 Battle Angels of Tyr
+1 Guiding Hydra
 1 Spider-Punk
-1 Smaug the Magnificent
-1 Exemplar of Light
+1 Cloud, Planet's Champion
+1 Silver Sable, Mercenary Leader
+1 White Widow, Free Agent
 
 # --- Instants ---
 1 Swords to Plowshares
@@ -73,7 +74,6 @@
 1 True Conviction
 1 SOLDIER Military Program
 1 Champions from Beyond
-1 Court of Grace
 1 Sheltered by Ghosts
 1 Forge Anew
 1 Monologue Tax
@@ -92,20 +92,16 @@
 1 Sunscorched Divide
 1 Exotic Orchard
 1 Temple of Triumph
-1 Path of Ancestry
-1 Rogue's Passage
-1 Sunbillow Verge
+1 Lorehold Campus
 1 Glittering Massif
 1 Sacred Peaks
-1 Turbulent Steppe
 1 Terramorphic Expanse
 1 Myriad Landscape
 1 Ash Barrens
 1 Fabled Passage
 1 Rabanastre, Royal City
-1 Bonders' Enclave
 1 Buried Ruin
 
 # --- Basics ---
-4 Mountain
-11 Plains
+5 Mountain
+14 Plains

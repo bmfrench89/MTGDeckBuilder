@@ -4,6 +4,11 @@ Built 2026-10-14 by a session at the player's request ("be creative … create 2
 decks from cards I own … bracket 3/4"). Every card is a FREE copy, so there are no conflicts
 with any other deck, Tifa included. It was built second, from what Tifa left.
 
+**2026-10-15:** Giada and Thorin, the player's own commanders, took priority for shared
+copies. This deck swapped out Exemplar of Light, Battle Angels of Tyr, Court of Grace, Sram,
+Smaug the Magnificent and five lands (each spell logged `manual-replace` in
+`.changes.csv`). The replacements below are all modifiers or Equipment payoffs.
+
 ## The engine
 
 **Verified commander text** (Scryfall, 2026-10-14):
@@ -26,6 +31,13 @@ Katana Hero becomes a 9/7 with trample and haste.
   - Living weapon: Bitterthorn.
   - Zack Fair enters with a counter, Spider-Punk has riot, and Guardian Scalelord's backup
     can target itself.
+  - Silver Sable puts a +1/+1 counter on another creature as it enters, and when it attacks
+    a modified creature gains lifelink. White Widow counters two creatures.
+  - Guiding Hydra (X +1/+1 counters): at the beginning of combat on your turn, move one
+    counter off it to put a +1/+1 counter on **each other creature you control**. Every
+    body is modified before Sephiroth attacks.
+  - Cloud, Planet's Champion: while equipped on your turn, double strike and
+    indestructible. As a 7/5 that's 14 damage a swing.
 - **Mass modification:**
   - The Crystal's Chosen: four Heroes, then a +1/+1 counter on each creature you control.
   - Requisition Raid and Collective Effort: a counter on each creature target player
@@ -52,7 +64,8 @@ Katana Hero becomes a 9/7 with trample and haste.
   7/5 double strikers.
 - **Engine and recursion:**
   - Puresteel Paladin: Equipment draws a card, and with metalcraft, equip {0}.
-  - Sram: Aura and Equipment spells draw.
+  - Armory Paladin: each Aura or Equipment spell exiles your top card to play until the end
+    of your next turn.
   - Danitha and Cid: cost reduction. Codsworth: attaches.
   - Forge Anew: equip at instant speed.
   - Skullclamp turns 1/1 Heroes into two cards.
@@ -83,6 +96,7 @@ Katana Hero becomes a 9/7 with trample and haste.
 - Champions from Beyond
 - Rosa, Resolute White Mage
 - Adeline, Resplendent Cathar
+- Guiding Hydra
 
 ## Interaction
 - Removal: Swords to Plowshares, Path to Exile, Chaos Warp, Abrade, Rip Apart, Sheltered by
@@ -112,3 +126,9 @@ Katana Hero becomes a 9/7 with trample and haste.
   demand. Keepable 80%.
 - **Goldfish:** 44% lethal by turn 8, median 9. It doesn't model the 7/5 conversion, so
   read it as a floor.
+
+## After the 2026-10-15 reallocation
+- **Field:** 14 of the top 25 (56%); the swapped-out cards weren't field staples here.
+- **Mana:** 36 lands (5 Mountain, 14 Plains). W 26 sources, R 17 for light demand,
+  keepable 79%.
+- **Interaction 8, ramp 8, draw 6** (detector). Bracket 3 declared, 2 detected.

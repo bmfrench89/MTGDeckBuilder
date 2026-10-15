@@ -41,12 +41,20 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Ancient Tomb** (price n/a, beorn-the-fierce) — replaces Reliquary Tower: Game Changer. Two colorless mana from a land; puts Beorn out a turn earlier with Goreclaw or Radagast.
 - [ ] **Captain America, Super-Soldier** (price n/a, captain-america-team-leader): 64% of Captain America, Team Leader's decks run this.
 - [ ] **Herald's Horn** (price n/a, captain-america-team-leader) — replaces Seal of Cleansing: 83% of Captain America, Team Leader's decks run this.
+- [ ] **Herald of War** (price n/a, giada-font-of-hope) — replaces Radiant, Archangel: 77% of Giada, Font of Hope's decks run this.
+- [ ] **Starnheim Aspirant** (price n/a, giada-font-of-hope) — replaces Cut a Deal: 73% of Giada, Font of Hope's decks run this.
+- [ ] **Resplendent Angel** (price n/a, giada-font-of-hope) — replaces Emeria Angel: 70% of Giada, Font of Hope's decks run this.
 - [ ] **Sapphire Medallion** (price n/a, kami-of-the-crescent-moon) — replaces Fact or Fiction: 66% of Kami of the Crescent Moon's decks run this.
 - [ ] **Font of Mythos** (price n/a, kami-of-the-crescent-moon) — replaces Sword of War and Peace: 64% of Kami of the Crescent Moon's decks run this.
 - [ ] **High Tide** (price n/a, kami-of-the-crescent-moon) — replaces Teferi's Puzzle Box: 62% of Kami of the Crescent Moon's decks run this.
 - [ ] **Chasm Skulker** (price n/a, kami-of-the-crescent-moon) — replaces Imprisoned in the Moon: 55% of Kami of the Crescent Moon's decks run this.
 - [ ] **Terror of the Peaks** (price n/a, the-ur-dragon) — replaces Vaevictis Asmadi, the Dire: 60% of The Ur-Dragon's decks run this.
 - [ ] **Old Gnawbone** (price n/a, the-ur-dragon): 56% of The Ur-Dragon's decks run this.
+- [ ] **Fíli and Kíli, Joyous** (price n/a, thorin-king-of-durins-folk) — replaces Vow to Erebor: 87% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Glóin, Dwarf Emissary** (price n/a, thorin-king-of-durins-folk) — replaces Seize the Spoils: 78% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Magda, Brazen Outlaw** (price n/a, thorin-king-of-durins-folk) — replaces Thrór's Map: 76% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Ori, Plate Stacker** (price n/a, thorin-king-of-durins-folk) — replaces Ori, Keeper of Songs: 71% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Mines of Moria** (price n/a, thorin-king-of-durins-folk) — replaces Spire of Industry: 62% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Cyclonic Rift** (~$35.00, yshtola-nights-blessed): The premier one-sided reset in blue. NOTE: a Game Changer — raises your bracket.
 - [ ] **Ashnod's Altar** (~$35.00, yshtola-nights-blessed) — replaces Fellwar Stone: Fills TWO combo slots in one card: a free sac outlet AND a death->mana payoff ('Sacrifice a creature: Add {C}{C}'). With Sun Titan + Angelic Renewal already in the 99 it is a SECOND independent infinite — infinite colorless into a lethal Exsanguinate — that still wins if Blood Artist has been answered. Price is an ESTIMATE; no price feed is reachable.
 - [ ] **Esper Sentinel** (~$25.00, yshtola-nights-blessed) — replaces Baleful Strix: Best white card-advantage engine; taxes noncreature spells for cards.

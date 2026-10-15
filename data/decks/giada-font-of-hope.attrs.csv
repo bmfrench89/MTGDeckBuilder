@@ -1,0 +1,80 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Angel of Destiny,Creature,5,W,{3}{W}{W},Angel;Cleric,,,2,4
+Angel of Finality,Creature,4,W,{3}{W},Angel,,,3,4
+Angel of Indemnity,Creature,6,W,{5}{W},Angel;Warrior,,,5,4
+Angel of Jubilation,Creature,4,W,{1}{W}{W}{W},Angel,,,3,4
+Angel of Vitality,Creature,3,W,{2}{W},Angel,,,2,4
+Angel of the Ruins,Creature,7,W,{5}{W}{W},Angel,,,5,4
+Angelic Accord,Enchantment,4,W,{3}{W},,,,,4
+Angelic Field Marshal,Creature,4,W,{2}{W}{W},Angel,,,3,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archangel of Tithes,Creature,4,W,{1}{W}{W}{W},Angel,,,3,4
+Ash Barrens,Land,0,,,,C,,,4
+Austere Command,Sorcery,6,W,{4}{W}{W},,,wipe,,4
+Authority of the Consuls,Enchantment,1,W,{W},,,,,4
+"Avacyn, Angel of Hope",Creature,8,W,{5}{W}{W}{W},Angel,,,8,4
+Baneslayer Angel,Creature,5,W,{3}{W}{W},Angel,,,5,4
+Battle Angels of Tyr,Creature,4,W,{2}{W}{W},Angel;Knight,,draw,4,4
+Bishop of Wings,Creature,2,W,{W}{W},Human;Cleric,,,1,4
+Bonders' Enclave,Land,0,,,,C,draw,,4
+"Bruna, the Fading Light",Creature,7,W,{5}{W}{W},Angel;Horror,,,5,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+Country Roads,Land,0,W,,,W,etb-tapped-cond,,4
+Court of Grace,Enchantment,4,W,{2}{W}{W},,,,,4
+Cut a Deal,Sorcery,3,W,{2}{W},,,draw,,4
+Destroy Evil,Instant,2,W,{1}{W},,,removal,,4
+Disenchant,Instant,2,W,{1}{W},,,removal,,4
+Emeria Angel,Creature,4,W,{2}{W}{W},Angel,,,3,4
+"Emeria, the Sky Ruin",Land,0,W,,,W,etb-tapped,,4
+Enlightened Tutor,Instant,1,W,{W},,,,,4
+Exemplar of Light,Creature,4,W,{2}{W}{W},Angel,,draw,3,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Firemane Commando,Creature,4,W,{3}{W},Angel;Soldier,,draw,4,4
+Flare of Fortitude,Instant,4,W,{2}{W}{W},,,,,4
+Flawless Maneuver,Instant,3,W,{2}{W},,,,,4
+Generous Gift,Instant,3,W,{2}{W},,,removal,,4
+Ghostly Prison,Enchantment,3,W,{2}{W},,,,,4
+"Giada, Font of Hope",Creature,2,W,{1}{W},Angel,W,dork;mana-restricted;ramp,2,4
+"Gisela, the Broken Blade",Creature,4,W,{2}{W}{W},Angel;Horror,,,4,4
+Heliod's Intervention,Instant,2,W,{X}{W}{W},,,,,4
+Inspiring Overseer,Creature,3,W,{2}{W},Angel;Cleric,,draw,2,4
+Karmic Guide,Creature,5,W,{3}{W}{W},Angel;Spirit,,,2,4
+Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
+"Linvala, Keeper of Silence",Creature,4,W,{2}{W}{W},Angel,,,3,4
+Lyra Dawnbringer,Creature,5,W,{3}{W}{W},Angel,,,5,4
+Metropolis Reformer,Creature,3,W,{2}{W},Angel;Cleric,,,2,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mistveil Plains,Land,0,W,,Plains,W,etb-tapped,,4
+Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+"Ob Nixilis, the Ascended",Creature,7,W,{5}{W}{W},Angel,,,4,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+Pearl Medallion,Artifact,2,,{2},,,discount:white:1,,4
+Plains,Land,0,W,,Plains,W,,,4
+"Radiant, Archangel",Creature,5,W,{3}{W}{W},Angel,,,3,4
+Reprieve,Instant,2,W,{1}{W},,,draw,,4
+Requisition Raid,Sorcery,1,W,{W},,,removal,,4
+Righteous Valkyrie,Creature,3,W,{2}{W},Angel;Cleric,,,2,4
+Rogue's Passage,Land,0,,,,C,,,4
+"Sephara, Sky's Blade",Creature,7,W,{4}{W}{W}{W},Angel,,,7,4
+Seraph Sanctuary,Land,0,,,,C,,,4
+Serra Ascendant,Creature,1,W,{W},Human;Monk,,,1,4
+Serra Paragon,Creature,4,W,{2}{W}{W},Angel,,,3,4
+Serra the Benevolent,Planeswalker,4,W,{2}{W}{W},Serra,,,,4
+Serra's Emissary,Creature,7,W,{4}{W}{W}{W},Angel,,,7,4
+Shattered Angel,Creature,5,W,{3}{W}{W},Phyrexian;Angel,,,3,4
+Sigarda's Splendor,Enchantment,4,W,{2}{W}{W},,,draw,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Sword of the Animist,Artifact,2,,{2},Equipment,,fetch:basic;ramp,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Temple of the False God,Land,0,,,,C,mana2,,4
+The Book of Exalted Deeds,Artifact,3,W,{W}{W}{W},Book,,,,4
+The Wind Crystal,Artifact,4,W,{2}{W}{W},,,discount:white:1,,4
+Thraben Watcher,Creature,4,W,{2}{W}{W},Angel,,,2,4
+Tome of Legends,Artifact,2,,{2},Book,,draw,,4
+Valkyrie Harbinger,Creature,6,W,{4}{W}{W},Angel;Cleric,,,4,4
+War Room,Land,0,,,,C,draw,,4
+Windbrisk Heights,Land,0,W,,,W,etb-tapped,,4
+Youthful Valkyrie,Creature,2,W,{1}{W},Angel,,,1,4

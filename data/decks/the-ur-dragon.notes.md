@@ -48,17 +48,31 @@ haste until the end step: an Ur-Dragon attack trigger without paying 9). Neriv d
 the damage of creatures that entered this turn; with Samut, Rhythm of the Wild or Lightning Greaves
 granting haste, that is the turn's attack.
 
-**Niv-Mizzet, Visionary turns that damage into cards** (in 2026-10-14 over Kolaghan, the
-Storm's Fury; the player approved it from a session's read). Verified text: "Whenever a
-source you control deals noncombat damage to an opponent, you draw that many cards." Aim
-the damage at a face:
-- Lozhan: casting a 6-drop dragon draws 6.
-- Dragon Tempest and Scourge of Valkas: X damage per dragon entering, X = your dragons.
-- Boros Charm: 4 to a player draws 4.
-Roaming Throne doubles Lozhan's and Scourge's triggers, because both are Dragons. EDHREC
-doesn't list Niv for the Ur-Dragon at all, so the optimizer could never have proposed it.
-It was a "read" (spec-optimizer-judgment Phase C). Kolaghan's +1/+0 per attacking dragon
-was the deck's weakest job.
+**Dragonlord Kolaghan gives every Dragon haste** (2026-10-15, the player's call; it replaced
+Niv-Mizzet, Visionary, which the player had approved on 2026-10-14). Verified text: "Flying,
+haste. Other creatures you control have haste. Whenever an opponent casts a creature or
+planeswalker spell with the same name as a card in their graveyard, that player loses 10
+life."
+
+The Ur-Dragon draws when Dragons attack, so haste is card draw here.
+- **Same-turn attacks:** every Dragon that lands can attack the same turn, so the trigger
+  (draw that many, then put a permanent onto the battlefield) fires a turn earlier.
+- **It's a Dragon itself:**
+  - Eminence makes it cost {3}{B}{R}.
+  - Lozhan deals 6 as you cast it.
+  - Lathliss makes a 5/5 token, and the token gets haste from Kolaghan.
+  - Dragon Tempest and Scourge of Valkas fire when it enters.
+  - Neriv doubles the damage of Dragons that entered this turn, and Dragon Tempest's
+    damage comes from the entering Dragon (Scryfall ruling, 2017-11-17).
+- **Haste from more than one card:** Samut, Temur Ascendancy, Rhythm of the Wild, Lightning
+  Greaves and Dragon Tempest also give it. Kolaghan is the one that survives a Samut kill and
+  counts as a Dragon.
+- **Its last ability:** rarely matters in singleton Commander. The opponent needs a second
+  card with the same name in their graveyard.
+- **The cost:** Niv-Mizzet turned Lozhan's, Tempest's and Scourge's face damage into cards.
+  That damage still happens, but no longer draws. The classifier's draw count fell 6 → 5,
+  and Consecrated Sphinx is earmarked for the player's planned Ur-Sphinx deck. When it
+  leaves, the replacement should be a draw piece, ideally a Dragon.
 
 **Win conditions:** a wide flying board, plus **Call the Spirit Dragons** — dragons become
 indestructible, and an upkeep with five dragons, one of each colour, all getting a counter wins
@@ -160,7 +174,7 @@ an any-colour land and is not one for this deck.
 ## What the numbers say (2026-10-14)
 
 - **Bracket 3.** One Game Changer (Consecrated Sphinx), two tutors plus Tiamat, no fast mana,
-  no two-card infinites (Commander Spellbook, re-checked with Niv-Mizzet in).
+  no two-card infinites (Commander Spellbook, re-checked 2026-10-15 with Dragonlord Kolaghan in: 0 present).
 - **Field:** 22 of EDHREC's top 25 for The Ur-Dragon (51,370 decks). The three missing are not
   owned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon. They are the buy list.
 - **Goldfish** (3,000 games): keepable 81%, screw 14%, first combat lethal median turn 9 (25% by turn 8).
