@@ -844,6 +844,7 @@ Enfeeblement,Enchantment,2,B,{B}{B},Aura,,,,4
 Engineered Plague,Enchantment,3,B,{2}{B},,,,,4
 Enigma Sphinx,Creature,7,B U W,{4}{W}{U}{B},Sphinx,,,5,4
 Enlightened Confidant,Creature,2,W,{1}{W},Kor;Cleric,,,2,4
+Enlightened Tutor,Instant,1,W,{W},,,,,4
 Enraged Flamecaster,Creature,3,R,{2}{R},Elemental;Sorcerer,,,3,4
 Entropic Battlecruiser,Artifact,4,B,{3}{B},Spacecraft,,,3,4
 Entrust the Spark,Sorcery,5,G U,{3}{G}{U},,,,,4
