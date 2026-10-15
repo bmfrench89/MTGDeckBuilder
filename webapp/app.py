@@ -1974,9 +1974,12 @@ def _assess_packet(m):
                          f"{'a free copy' if p['avail'] == 'free' else 'shared'})")
         if review["reads"]:
             L.append("  Owned, free, in colour — and EDHREC doesn't list them for this")
-            L.append("  commander (ranked by the fit heuristic, so read, don't trust):")
+            L.append("  commander, or lists them rarely (ranked by the fit heuristic, so")
+            L.append("  read, don't trust):")
             for x in review["reads"]:
-                L.append(f"    {x['name']} (fit {x['fit']}, {x['role']})")
+                fld = ("not on EDHREC's list" if x.get("field") is None
+                       else f"{x['field']}% field")
+                L.append(f"    {x['name']} (fit {x['fit']}, {x['role']}, {fld})")
         L.append("")
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())

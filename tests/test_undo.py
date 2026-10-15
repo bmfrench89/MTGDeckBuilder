@@ -203,7 +203,7 @@ def test_the_assess_packet_carries_the_proposals_for_a_claude_read(env, monkeypa
     text = env.client.get("/deck/td/assess.txt?raw=1").get_data(as_text=True)
     assert "FOR A CLAUDE READ" in text
     assert "[spell] Sol Ring (10%) -> Counterspell (50%; a free copy)" in text
-    assert "Silent Gem (fit 81, draw)" in text
+    assert "Silent Gem (fit 81, draw, not on EDHREC's list)" in text
     assert "Field % is evidence, not the verdict" in text
 
 

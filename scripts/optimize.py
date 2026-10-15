@@ -70,6 +70,10 @@ LAND_SCORE_MARGIN = 0.6
 READS_LIMIT = 8
 READS_PER_ROLE = 3
 READS_MIN_FIT = 70
+# Below this field %, an owned card is never a "riser" (gate-held advice) — so reads
+# carry it instead, or nothing would.
+RISER_FLOOR = 20
+READS_RARE_LIMIT = 6
 LAND_FIELD_KEEP = 25
 
 
@@ -561,11 +565,16 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # They are the candidates a Claude session reads against the deck's engine (the
     # sleeper audit). Ranked by deck_fit's own score with the field taken out; a free
     # copy, inside the identity, not a land, not held, not reserved, not banned.
-    reads = []
+    read_pool = []
     for ref in coll:
         k = mtglib._norm(ref.name)
+        # A field-listed card BELOW the riser floor reaches no other surface: never a
+        # proposal (the margin), never a riser (the floor) — Enlightened Tutor (10% for
+        # the Ur-Dragon, owned, a Game Changer) fell through every net on 2026-10-14.
+        # So reads are "EDHREC doesn't list it, or lists it under RISER_FLOOR".
         if (not ref.types or ref.is_land or mtglib.is_basic(ref.name)
-                or mtglib.name_keys(ref.name) & in_deck or field_knows(ref.name)
+                or mtglib.name_keys(ref.name) & in_deck
+                or (field_knows(ref.name) and inc_of(ref.name) >= RISER_FLOOR)
                 or k in reserved or k in removed_by_hand or deck_fit.is_banned(k)):
             continue
         if not ref.identity or not (ref.identity <= identity):
@@ -573,20 +582,9 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         if ref.quantity - committed.get(k, 0) < 1:
             continue
         fit = deck_fit.assess_card(ref, rep, ctx, refs)["score"]
-        reads.append((fit, ref.name, role_of(ref.name) or "other"))
-    # The fit engine leans on whichever role the deck is short of (Beorn's first draft of
-    # this list was five board wipes), so at most READS_PER_ROLE per role keeps the
-    # list a spread of ideas, and READS_MIN_FIT drops the filler.
-    reads.sort(key=lambda t: (-t[0], t[1]))
-    per_role, kept = {}, []
-    for f, n, ro in reads:
-        if f < READS_MIN_FIT or len(kept) >= READS_LIMIT:
-            break
-        if per_role.get(ro, 0) >= READS_PER_ROLE:
-            continue
-        per_role[ro] = per_role.get(ro, 0) + 1
-        kept.append({"name": n, "fit": f, "role": ro})
-    reads = kept
+        read_pool.append((fit, ref.name, role_of(ref.name) or "other",
+                          inc_of(ref.name) if field_knows(ref.name) else None))
+    read_pool.sort(key=lambda t: (-t[0], t[1]))
     land_adds.sort(reverse=True)
     buy_adds.sort(reverse=True)
     buy_land_adds.sort(reverse=True)
@@ -762,10 +760,34 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
             if avail != "free" or mtglib._norm(add_name) in used_add:
                 continue
             gap = val_add - val_cut
-            if 0 < gap < margin and inc_add >= 20 and inc_add >= inc_cut:
+            if 0 < gap < margin and inc_add >= RISER_FLOOR and inc_add >= inc_cut:
                 risers.append({"add": add_name, "add_inc": inc_add,
                                "over": cut_name, "over_inc": inc_cut,
                                "gap": round(gap)})
+
+    # ---- reads, finalised: never a card this run already proposes or flags as a riser.
+    # The fit engine leans on whichever role the deck is short of (Beorn's first draft
+    # was five board wipes), so at most READS_PER_ROLE per role keeps the list a spread
+    # of ideas, and READS_MIN_FIT drops the filler.
+    # Two kinds of evidence, two lanes: a card the field lists RARELY carries a real
+    # (small) field %, so up to READS_RARE_LIMIT of those rank by it — the fit heuristic
+    # undervalues tutors and Enlightened Tutor lost its place to eight role-fillers —
+    # and cards the field never lists rank by fit alone, up to READS_LIMIT.
+    taken = used_add | {mtglib._norm(x["add"]) for x in risers}
+    rare = sorted((t for t in read_pool
+                   if t[3] is not None and mtglib._norm(t[1]) not in taken),
+                  key=lambda t: (-t[3], -t[0], t[1]))[:READS_RARE_LIMIT]
+    reads = [{"name": n, "fit": f, "role": ro, "field": inc} for f, n, ro, inc in rare]
+    per_role, silent = {}, []
+    for f, n, ro, inc in read_pool:
+        if f < READS_MIN_FIT or len(silent) >= READS_LIMIT:
+            break
+        if (inc is not None or mtglib._norm(n) in taken
+                or per_role.get(ro, 0) >= READS_PER_ROLE):
+            continue
+        per_role[ro] = per_role.get(ro, 0) + 1
+        silent.append({"name": n, "fit": f, "role": ro, "field": None})
+    reads += silent
 
     # ---- manabase passes. Both need field data: without it every land scores 0 and we
     # can't tell Command Tower from a bad tapland, so we leave the manabase alone. -------

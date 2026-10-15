@@ -38,7 +38,6 @@ Horizon of Progress,Land,0,,,,W U B R G,draw,,4
 Insatiable Avarice,Sorcery,1,B,{B},,,,,4
 Island,Land,0,U,,Island,U,,,4
 Jungle Shrine,Land,0,G R W,,,W R G,etb-tapped;mana2,,4
-"Kolaghan, the Storm's Fury",Creature,5,B R,{3}{B}{R},Dragon,,,4,4
 "Lathliss, Dragon Queen",Creature,6,R,{4}{R}{R},Dragon,,,6,4
 Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
 "Lozhan, Dragons' Legacy",Creature,5,R U,{3}{U}{R},Dragon;Shaman,,,4,4
@@ -49,6 +48,7 @@ Marang River Regent // Coil and Catch,Creature,6,U,{4}{U}{U} // {3}{U},Dragon,,d
 Mountain,Land,0,R,,Mountain,R,,,4
 Nature's Lore,Sorcery,2,G,{1}{G},,,fetch:forest;ramp,,4
 "Neriv, Heart of the Storm",Creature,4,B R W,{1}{R}{W}{B},Spirit;Dragon,,,4,4
+"Niv-Mizzet, Visionary",Creature,6,R U,{4}{U}{R},Dragon;Wizard,,,5,4
 Paradise Druid,Creature,2,G,{1}{G},Elf;Druid,W U B R G,dork;ramp,2,4
 Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
 Path to Exile,Instant,1,W,{W},,,removal,,4

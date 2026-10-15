@@ -711,3 +711,9 @@
 # carries them, the upload offers to retire these rows
 # (docs/spec-card-intake.md §3).
 1 Tiamat
+
+# --- Batch 2026-10-14 · Enlightened Tutor, on the player's word — sleeved in their Giada deck (2026-10-14) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Enlightened Tutor

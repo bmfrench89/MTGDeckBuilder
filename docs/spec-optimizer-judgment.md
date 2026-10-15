@@ -96,6 +96,18 @@ The optimizer's single land pass:
    - **Honest limit:** ties fall back to alphabetical order, and the fit heuristic is
      role-need-heavy (it surfaced Rabid Attack as Ur-Dragon "draw"). It's a starting pool
      for a read, labelled that way on every surface.
+   - **Second lane, the same day.** Enlightened Tutor (owned, a Game Changer, 10% for the
+     Ur-Dragon) fell through every net. It was under the margin, so no proposal; under
+     `RISER_FLOOR` (20), so no riser; and on the field's list, so not a read. So reads
+     now also take owned cards the field lists below `RISER_FLOOR`, in their own lane of
+     up to `READS_RARE_LIMIT` (6), ranked by field %. The fit heuristic undervalues tutors,
+     so that lane can't share the fit-ranked one. Each read carries its `field` % (or None).
+   - **Still a feed, not a net.** With six owned cards at 13-19%, Enlightened Tutor (10%)
+     still ranks seventh. The lane wasn't widened further to force it: player-named cards
+     are always read (card-review-method step 1), and that is the rule that caught it.
+   - **Name-only intake rows have no types**, so a card logged on the player's word isn't
+     read until enrichment types it (`attrs-snapshot.yml` on the runner, or `carddb.py`
+     locally). Never guessed.
 2. **The review packet.** `/deck/<stem>/assess.txt` has a "FOR A CLAUDE READ" block: every
    proposal with its evidence, then the reads, with the instruction to give each one
    swap / wishlist / bench / skip.

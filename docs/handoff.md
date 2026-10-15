@@ -31,8 +31,19 @@ from the app), and **⚡ proposes while the player approves**. Spec and tracker:
   - `optimize.py --json` is the session's feed, and `--approve "<kind>|<out>|<in>"` writes
     only what the player approved.
   - The 25-point spell margin stays, and now only shapes the checkbox list.
-- **The 2026-10-14 reads are heuristic, so read them:**
-  - Ur-Dragon: Lorehold, the Historian, Niv-Mizzet Visionary, Crop Rotation, Abrade.
+- **First run of the loop (2026-10-14, the Ur-Dragon):** the read found **Niv-Mizzet,
+  Visionary**, which EDHREC doesn't list for the Ur-Dragon at all. It draws per point of
+  noncombat damage, and Lozhan, Dragon Tempest, Scourge of Valkas and Boros Charm all deal
+  it. The player approved it over Kolaghan. **Enlightened Tutor** (the player owns one,
+  logged on their word) stays in their Giada deck by their choice; one copy. Reads gained
+  a second lane for rarely-listed cards (Enlightened Tutor at 10% had fallen through
+  every net).
+- **Why the player saw two Ur-Dragon decks:** the hosted app still syncs from the OLD repo,
+  which has the old list AND the deleted study copy. Repointing the server at OnTheStAIck
+  fixes it. A file deleted in git is recorded as "removed" by the sync; only a wholly
+  missing deck folder triggers a restore from the DB.
+- **Other 2026-10-14 reads, still unread by a session (heuristic, so read them):**
+  - Ur-Dragon: done 2026-10-14 (verdicts in its notes.md).
   - Y'shtola: Asylum Visitor, Kor Spiritdancer, Annul.
   - Kami: Hydroblast, Daze, Polymorph.
   None has had a session's read yet: a good first job for the new loop.

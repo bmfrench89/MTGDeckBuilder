@@ -14,6 +14,7 @@ Quantity,Name,Identities,Types,Sub-types,Mana cost,Mana Value
 1,Test Commander,R G,Legendary Creature,Dragon,{R}{G},2
 1,In Deck Spell,R,Instant,,{R},1
 1,Field Listed Spell,R,Instant,,{R},1
+1,Rare Field Spell,G,Instant,,{G},1
 1,Silent Draw A,R,Sorcery,,{1}{R},2
 1,Silent Draw B,R,Sorcery,,{1}{R},2
 1,Silent Draw C,R,Sorcery,,{1}{R},2
@@ -52,7 +53,7 @@ OTHER = """\
 1 Only Copy Elsewhere
 """
 
-FIT = {"Silent Draw A": 90, "Silent Draw B": 89, "Silent Draw C": 88, "Silent Draw D": 87,
+FIT = {"Rare Field Spell": 95, "Silent Draw A": 90, "Silent Draw B": 89, "Silent Draw C": 88, "Silent Draw D": 87,
        "Silent Ramp": 80, "Silent Low Fit": 40, "Off Colour Gem": 99,
        "Only Copy Elsewhere": 99, "Field Listed Spell": 99}
 ROLE = {"Silent Draw A": "draw", "Silent Draw B": "draw", "Silent Draw C": "draw",
@@ -66,7 +67,8 @@ def _setup(tmp_path, monkeypatch):
     (d / "collection.csv").write_text(COLL, encoding="utf-8")
     (d / "deck.txt").write_text(DECK, encoding="utf-8")
     (d / "other.txt").write_text(OTHER, encoding="utf-8")
-    field = {"in deck spell": 40, "field listed spell": 30, "mountain": 90}
+    field = {"in deck spell": 40, "field listed spell": 30, "rare field spell": 10,
+             "mountain": 90}
     monkeypatch.setattr(optimize.deck_fit, "load_field", lambda *a, **k: field)
     monkeypatch.setattr(optimize.deck_fit, "load_field_lands", lambda *a, **k: set())
     monkeypatch.setattr(optimize.deck_fit, "load_synergy", lambda *a, **k: {})
@@ -93,6 +95,20 @@ def test_reads_are_owned_free_in_colour_and_field_silent(tmp_path, monkeypatch):
     assert "Only Copy Elsewhere" not in names, "no free copy"
     assert "Silent Land" not in names, "lands belong to the mana pass"
     assert "Silent Ramp" in names
+
+
+def test_a_card_the_field_lists_rarely_is_a_read_not_lost(tmp_path, monkeypatch):
+    """Enlightened Tutor (10% for the Ur-Dragon) fell through every net on 2026-10-14:
+    under the margin, so no proposal; under RISER_FLOOR, so no riser; on the field's
+    list, so no read. A rarely-listed owned card is now a read, with its field %."""
+    import optimize
+    d, coll, idx = _setup(tmp_path, monkeypatch)
+    r = optimize.optimize(str(d / "deck.txt"), coll, idx, str(d))
+    rare = [x for x in r["reads"] if x["name"] == "Rare Field Spell"]
+    assert rare and rare[0]["field"] == 10
+    silent = [x for x in r["reads"] if x["name"] == "Silent Ramp"]
+    assert silent and silent[0]["field"] is None
+    assert "Field Listed Spell" not in {x["name"] for x in r["reads"]}, ">= RISER_FLOOR"
 
 
 def test_reads_cap_each_role_and_drop_low_fit(tmp_path, monkeypatch):

@@ -48,6 +48,18 @@ haste until the end step: an Ur-Dragon attack trigger without paying 9). Neriv d
 the damage of creatures that entered this turn; with Samut, Rhythm of the Wild or Lightning Greaves
 granting haste, that is the turn's attack.
 
+**Niv-Mizzet, Visionary turns that damage into cards** (in 2026-10-14 over Kolaghan, the
+Storm's Fury; the player approved it from a session's read). Verified text: "Whenever a
+source you control deals noncombat damage to an opponent, you draw that many cards." Aim
+the damage at a face:
+- Lozhan: casting a 6-drop dragon draws 6.
+- Dragon Tempest and Scourge of Valkas: X damage per dragon entering, X = your dragons.
+- Boros Charm: 4 to a player draws 4.
+Roaming Throne doubles Lozhan's and Scourge's triggers, because both are Dragons. EDHREC
+doesn't list Niv for the Ur-Dragon at all, so the optimizer could never have proposed it.
+It was a "read" (spec-optimizer-judgment Phase C). Kolaghan's +1/+0 per attacking dragon
+was the deck's weakest job.
+
 **Win conditions:** a wide flying board, plus **Call the Spirit Dragons** — dragons become
 indestructible, and an upkeep with five dragons, one of each colour, all getting a counter wins
 the game. Its five pips are why the manabase leans on any-colour lands.
@@ -120,11 +132,12 @@ an any-colour land and is not one for this deck.
 - **Samut, Hazoret's Champion over Dragonlord Ojutai:** {1}{R}, "Creatures you control have
   haste." Every dragon attacks the turn it lands (an Ur-Dragon trigger right away), and it turns
   on Neriv's double damage. A Reality Fracture card, so ~0% field: a coverage gap, not a verdict.
-- **Thriving Bluff as the 37th land** (it went in over Lozhan, which came back for Draconic Visitor). A/B over 3,000 paired games: screw 15.6% ->
-  14.1%, keepable 79.6% -> 80.5%, clock unchanged.
+- **Thriving Bluff as the 37th land** (it went in over Lozhan, which came back for Draconic
+  Visitor). A/B over 3,000 paired games: screw 15.6% -> 14.1%, keepable 79.6% -> 80.5%, clock
+  unchanged.
 - **Mana Drain, Grim Tutor and Insatiable Avarice:** the player moved these into the Ur-Dragon
-  box (2026-10-12). Y'shtola's list still names Mana Drain and Grim Tutor, so the conflict panel
-  flags both until Y'shtola's list is updated.
+  box (2026-10-12). Y'shtola gave up her two in exchange for Absorb and Diabolic Tutor
+  (2026-10-14), so no conflict remains.
 - **Tiamat (68% field; the player owns one, confirmed 2026-10-14):** cast, not cheated in, it
   fetches up to five different Dragons into hand. Cast it for the "if you cast it" trigger —
   Ureni's or the Ur-Dragon's free put-into-play does NOT trigger it. Good five: whatever closes
@@ -132,11 +145,22 @@ an any-colour land and is not one for this deck.
   a wipe. It came in over Breaching Dragonstorm (12%) on the optimizer's own swap.
 - **Grim Tutor / Insatiable Avarice targets:** Dragon Tempest early, Call the Spirit Dragons or
   Roaming Throne once the board is up, Crux of Fate when behind.
+- **Enlightened Tutor: not here, by the player's choice (2026-10-14).** It would be strong
+  (finds Dragon Tempest, Call the Spirit Dragons or Roaming Throne for {W}). But the player's
+  one copy is sleeved in their Giada deck and stays there. Don't propose it again unless they
+  buy a second (~$32, estimate).
+- **2026-10-14 reads, judged:**
+  - Bench: Stubborn Denial (ferocious is nearly always on, but the counter suite is full),
+    Smaug Wicked Worm (Treasure draw with Ganax), Majestic Genesis (reveals 9 off the
+    commander's MV, but 8 mana and not a dragon), Lorehold the Historian, Abrade.
+  - Skip: Crop Rotation (a Game Changer for a land), Shimmer Dragon (no artifact count),
+    Blasphemous Act (kills our own dragons; Crux of Fate is the one-sided wipe), Hellkite
+    Tyrant, Clear, Cloud's Limit Break.
 
 ## What the numbers say (2026-10-14)
 
-- **Bracket 3.** One Game Changer (Consecrated Sphinx), three tutors, no fast mana, no
-  two-card infinites.
+- **Bracket 3.** One Game Changer (Consecrated Sphinx), two tutors plus Tiamat, no fast mana,
+  no two-card infinites (Commander Spellbook, re-checked with Niv-Mizzet in).
 - **Field:** 22 of EDHREC's top 25 for The Ur-Dragon (51,370 decks). The three missing are not
   owned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon. They are the buy list.
 - **Goldfish** (3,000 games): keepable 81%, screw 14%, first combat lethal median turn 9 (25% by turn 8).
