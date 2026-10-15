@@ -1956,7 +1956,7 @@ def _assess_packet(m):
     # The judgment layer (spec-optimizer-judgment Phase C, player decision 2026-10-14):
     # the optimizer proposes, a Claude SESSION reads — this block is what it reads.
     try:
-        review = optimize.review_payload(_opt_prev)
+        review = optimize.review_payload(_opt_prev, optimize.load_verdicts(m["path"]))
     except Exception:
         review = None
     if review and (review["proposals"] or review["reads"]):
@@ -1980,6 +1980,9 @@ def _assess_packet(m):
                          f"{'a free copy' if p['avail'] == 'free' else 'shared'})")
                 if p.get("trades_specific"):
                     L.append("          ^ trades a commander-specific card for a generic one")
+                if p.get("verdict"):
+                    v = p["verdict"]
+                    L.append(f"          ^ earlier read ({v['date']}): {v['verdict']} — {v['why']}")
         if review["reads"]:
             L.append("  Owned, free, in colour — and EDHREC doesn't list them for this")
             L.append("  commander, or lists them rarely (rare ones ranked by lift, the rest")
@@ -2164,7 +2167,7 @@ def deck_delete(stem):
         abort(404)
     base = os.path.splitext(m["path"])[0]
     for suffix in (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv",
-                   ".clips.json"):
+                   ".clips.json", ".verdicts.json"):
         try:
             os.remove(base + suffix)
         except OSError:
@@ -2586,8 +2589,14 @@ def deck_optimize_review(stem):
     except Exception as e:              # never silent: the report IS the feature
         app.logger.exception("optimize preview failed for %s", stem)
         r, error = {}, type(e).__name__
+    # A session's saved read of each swap (bundle B): shown beside the SAME swap only.
+    props, reads, stale = optimize.attach_verdicts(
+        optimize.proposals(r) if r else [], (r or {}).get("reads") or [],
+        optimize.load_verdicts(m["path"]))
+    if r:
+        r = dict(r, reads=reads)
     return render_template("optimize_review.html", meta=m, stem=stem, r=r,
-                           props=optimize.proposals(r) if r else [], error=error,
+                           props=props, error=error, verdicts_stale=stale,
                            base_range=optimize.ROLE_RANGE)
 
 

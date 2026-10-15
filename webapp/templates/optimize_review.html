@@ -9,6 +9,7 @@
   this deck's mana. These are signals, not the decision — for a real read of what a
   card does in this deck, take the <a href="{{ url_for('deck_assess', stem=stem) }}">review
   packet</a> to a Claude session.</div>
+{% if verdicts_stale %}<div class="muted fs-xs">Hidden: {{ verdicts_stale }} saved read{{ "s" if verdicts_stale != 1 else "" }} from an earlier session, for swaps that are no longer suggested.</div>{% endif %}
 
 {% if error %}
 <div class="card mt-4 warn">The optimizer stopped with an error ({{ error }}). Nothing was changed.</div>
@@ -46,7 +47,8 @@
           · {% if p.avail == 'free' %}a free copy{% else %}<span class="warn">shared with another deck</span>{% endif %}</div>
         <div class="fs-xs">{% if not p.cut_field_known %}Fit-driven: the field has no opinion on the card going out.
           {% else %}Played by {{ p.add_inc - p.cut_inc }} more points of the field.{% endif %}</div>
-        {% if p.trades_specific %}<div class="fs-xs warn">Trades a card this commander's decks run {{ '%g'|format(p.cut_lift|round(1)) }}× as often as other decks in its colours for a more generic one. Read it before ticking.</div>{% endif %}</td>
+        {% if p.trades_specific %}<div class="fs-xs warn">Trades a card this commander's decks run {{ '%g'|format(p.cut_lift|round(1)) }}× as often as other decks in its colours for a more generic one. Read it before ticking.</div>{% endif %}
+        {% if p.verdict %}<div class="fs-xs mt-2 verdict">Claude's read ({{ p.verdict.date }}): <strong>{{ p.verdict.verdict|capitalize }}</strong> — {{ p.verdict.why }}</div>{% endif %}</td>
     </tr>
     {% endfor %}
     </tbody>
@@ -96,7 +98,8 @@
 <div class="card mb-4 fs-sm">
   {% for x in r.reads %}
   <div><span class="cardlink" data-card="{{ x.name }}">{{ x.name }}</span>
-    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% if x.lift %}, {{ '%g'|format(x.lift|round(1)) }}× the colour average{% endif %}{% endif %}</span></div>
+    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% if x.lift %}, {{ '%g'|format(x.lift|round(1)) }}× the colour average{% endif %}{% endif %}</span>
+    {% if x.verdict %}<div class="fs-xs mt-2 verdict">Claude's read ({{ x.verdict.date }}): <strong>{{ x.verdict.verdict|capitalize }}</strong> — {{ x.verdict.why }}</div>{% endif %}</div>
   {% endfor %}
   <div class="muted fs-xs mt-2">To try one, add it from the deck page: a hand-added card counts
     as your choice, and the optimizer never cuts it.</div>

@@ -95,10 +95,13 @@ python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>    
    list; `reads` are owned, free, in-colour cards EDHREC doesn't list (ranked by a fit
    heuristic). Sweep the free pool (`analyze_collection.py --query`) for engine fits
    neither surfaces. The workflow: `references/card-review-method.md`, last section.
-3. **Present the swap table**, then apply what the player approves — `--approve` per
+3. **Save each verdict** so the phone shows your read:
+   `optimize.py --deck … --verdict "<key>" <swap|skip|bench|wishlist> "<why>"` (keys as
+   `--json` prints them; reads are `read|<name>`). The ⚡ page shows it beside that swap.
+4. **Present the swap table**, then apply what the player approves — `--approve` per
    swap here, or the deck's ⚡ page, which applies only the ticked swaps. (`--apply`
    writes every proposal; use it only when the player approved them all.)
-4. **Lands are scored by mana function** (`manabase.land_mana_score`), not field %; a
+5. **Lands are scored by mana function** (`manabase.land_mana_score`), not field %; a
    utility land (no deck colours) or one with no enrichment is never judged — read those.
 
 It never cuts the commander, basics, curated notes, `.notes.md`-named cards (folded match,

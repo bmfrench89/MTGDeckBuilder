@@ -34,6 +34,7 @@ Usage:
 """
 import argparse
 import glob
+import json
 import os
 import re
 import sys
@@ -1179,13 +1180,84 @@ def proposals(r):
     return out
 
 
-def review_payload(r):
+# ---- verdicts: a session's read, saved for the phone (deck-flow review bundle B) ------
+# The app makes no AI calls (player decision 2026-10-14). A Claude session reads each
+# proposal and read against the engine; `--verdict` saves that read beside the deck as
+# `<stem>.verdicts.json`, the repo sync carries it to the server, and the ⚡ page shows it
+# next to the SAME swap. A verdict is keyed by the proposal key (reads: "read|<name>")
+# and only ever written for a key the optimizer proposes right now, so the file cannot
+# hold a judgment about a swap nobody suggested.
+VERDICTS = ("swap", "skip", "bench", "wishlist")
+
+
+def verdicts_path(deck_path):
+    return os.path.splitext(deck_path)[0] + ".verdicts.json"
+
+
+def read_key(name):
+    return "read|" + name
+
+
+def load_verdicts(deck_path):
+    """{key: {"verdict", "why", "date", "by"}}; {} when the file is absent or broken
+    (a bad file costs the annotations, never the page)."""
+    try:
+        with open(verdicts_path(deck_path), encoding="utf-8") as f:
+            raw = (json.load(f) or {}).get("verdicts") or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return {k: v for k, v in raw.items()
+            if isinstance(v, dict) and v.get("verdict") in VERDICTS and v.get("why")}
+
+
+def record_verdicts(deck_path, r, entries, today=None, by="a Claude session"):
+    """Save (key, verdict, why) entries for keys CURRENT in report `r`. Returns
+    (written keys, stale keys). Raises ValueError on an unknown verdict or empty reason:
+    a verdict without its reason is exactly the unexplained call this replaces."""
+    import datetime
+    current = {p["key"] for p in proposals(r)} | {read_key(x["name"])
+                                                  for x in r.get("reads") or []}
+    have = load_verdicts(deck_path)
+    written, stale = [], []
+    for key, verdict, why in entries:
+        verdict, why = (verdict or "").strip().lower(), (why or "").strip()
+        if verdict not in VERDICTS:
+            raise ValueError(f"verdict must be one of {', '.join(VERDICTS)}: {verdict!r}")
+        if not why:
+            raise ValueError(f"a verdict needs its reason: {key}")
+        if key not in current:
+            stale.append(key)
+            continue
+        have[key] = {"verdict": verdict, "why": why, "by": by,
+                     "date": today or datetime.date.today().isoformat()}
+        written.append(key)
+    if written:
+        with open(verdicts_path(deck_path), "w", encoding="utf-8", newline="\n") as f:
+            json.dump({"version": 1, "verdicts": dict(sorted(have.items()))}, f,
+                      ensure_ascii=False, indent=1)
+            f.write("\n")
+    return written, stale
+
+
+def attach_verdicts(props, reads, verdicts):
+    """Copies of `props` and `reads` with each one's saved verdict (or None), plus the
+    count of saved verdicts whose swap is no longer proposed. Those are never shown
+    against a different swap."""
+    verdicts = verdicts or {}
+    props = [dict(p, verdict=verdicts.get(p["key"])) for p in props]
+    reads = [dict(x, verdict=verdicts.get(read_key(x["name"]))) for x in reads]
+    live = {p["key"] for p in props} | {read_key(x["name"]) for x in reads}
+    return props, reads, sum(1 for k in verdicts if k not in live)
+
+
+def review_payload(r, verdicts=None):
     """Everything a reviewer needs from one report, JSON-safe (`--json`, the assess
     packet): the checkbox proposals with their evidence, the field-silent `reads`, and
     the advisories. Field numbers are evidence here, never a verdict (Phase C)."""
+    props, reads, stale = attach_verdicts(proposals(r), r.get("reads") or [], verdicts)
     return {"stem": r.get("stem"), "commander": r.get("commander"),
             "field_size": r.get("field_size", 0),
-            "proposals": proposals(r), "reads": r.get("reads") or [],
+            "proposals": props, "reads": reads, "verdicts_stale": stale,
             "risers": r.get("risers") or [], "manual_holds": r.get("manual_holds") or [],
             "land_guard": r.get("land_guard") or [],
             "buys": [{"add": b[2], "add_inc": b[3], "replaces": b[0], "kind": b[4]}
@@ -1602,6 +1674,12 @@ def main():
     ap.add_argument("--json", action="store_true",
                     help="print the proposals, reads and advisories as JSON (for a "
                          "Claude session's review; never combined with --apply)")
+    ap.add_argument("--verdict", action="append", default=[], nargs=3,
+                    metavar=("KEY", "VERDICT", "WHY"),
+                    help="save a session's read of one current proposal (KEY as --json "
+                         "prints it) or read ('read|<name>'): VERDICT is swap, skip, bench "
+                         "or wishlist, WHY the reason. Repeatable. The deck's ⚡ page shows "
+                         "it; nothing is applied")
     ap.add_argument("--approve", action="append", default=[], metavar="KIND|OUT|IN",
                     help="write ONLY this proposal (repeatable; keys as --json prints "
                          "them) — what a session runs after the player approves a subset")
@@ -1610,6 +1688,22 @@ def main():
         print("error: --json is the review surface; it never writes. Drop --apply/--approve.",
               file=sys.stderr)
         return 2
+    if args.verdict:
+        if args.all or not args.deck or args.apply or args.approve:
+            print("error: --verdict takes one --deck, on its own", file=sys.stderr)
+            return 2
+        coll = mtglib.load_collection(args.collection)
+        r = optimize(args.deck, coll, mtglib.index_by_name(coll), args.decks_dir)
+        try:
+            written, stale = record_verdicts(args.deck, r, args.verdict)
+        except ValueError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+        for k in written:
+            print(f"   saved  {k}")
+        for k in stale:
+            print(f"   not proposed now, not saved: {k}")
+        return 0
     if args.approve:
         if args.all or not args.deck or args.apply:
             print("error: --approve takes one --deck, and replaces --apply",

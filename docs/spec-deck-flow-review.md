@@ -42,7 +42,7 @@ built. This file is the tracker and the design note for the bundles still to com
 - Packages: card-review-method step 3 now names 2-3 packages before judging any card,
   and notes carry a `## Packages` section.
 
-## B. AI verdicts on the phone — NEXT
+## B. AI verdicts on the phone — SHIPPED
 
 - **The data:** a session records its read of each proposal and read in
   `data/decks/<stem>.verdicts.json` through a CLI (`optimize.py --verdict "<key>"
