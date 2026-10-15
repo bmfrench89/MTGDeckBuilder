@@ -51,8 +51,22 @@ workflow and asked for all four bundles, cross-checked first.
   - a 15-point generic-slot margin, gated on lift and on inclusion gain only;
   - owned top-25 coverage as the validation number;
   - packages named before cards are judged.
-- **Next, in order:** B (AI verdicts on the phone), C (engine-first builds), D (trades
-  between decks). D needs `## Protected engine` lists for the six decks without one.
+- **B, verdicts on the phone:** `optimize.py --verdict "<key>" <swap|skip|bench|wishlist>
+  "<why>"` saves a session's read as `<stem>.verdicts.json`. It only accepts current keys,
+  and the ⚡ page shows each verdict beside the same swap only. **Sessions: save your
+  verdicts** so the player sees them on the phone.
+- **C, engine-first builds:** `engine_spec.py` writes the `<stem>.engine.json` spec.
+  `auto_build --engine` seeds the spec's cards first, and `engine_spec.py --audit` exits 3
+  until every other non-land card has a keep reason. Spec keywords rank the field-silent
+  reads against oracle text that enrichment now caches. Measured on Giada: the draft
+  starts 3 cards closer to the final deck (61 vs 58 of 78).
+- **D, trades between decks:** `optimize.trade_offers` lists cards another deck holds
+  that aren't its core, each with a backfill for the donor.
+  - All 11 decks now have a `## Protected engine` list. Six were written 2026-10-15 from
+    their own notes; Y'shtola's includes the notes' "do not cut" list.
+  - First live result: **Consecrated Sphinx is offered from the Ur-Dragon to Kami**,
+    which is what the future Ur-Sphinx deck will see.
+- PRs #10 (A) → #11 (B) → #12 (C) → #13 (D) stack; merge in that order.
 - Merged earlier the same day: lift (#9) and the Ur-Dragon's Dragonlord Kolaghan (#8).
 
 **2026-10-15: Giada and Thorin, built from the full collection** (the player: "Build the

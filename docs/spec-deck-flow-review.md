@@ -87,7 +87,22 @@ the CLI and the server's background enrichment, off in tests).
   keyword ranking (note 7's feasible version) needs an oracle-text cache written at
   enrichment time (gitignored, like `data/cache/`).
 
-## D. Trades between decks
+## D. Trades between decks — SHIPPED
+
+**The cross-check changed the design twice:**
+- **Donor protection:** "not core there" is not enough. The first run offered Talisman of
+  Conviction out of Captain America (75% of its field) with no backfill, so an offer now
+  needs a free same-role backfill, or a gain over the donor's field % of 15+
+  (`TRADE_GAP`).
+- **What counts as "matters here":** a generic rock worth 42 here is a shuffle, not a
+  trade. It now means engine, ≥2.5× lift, or value 60+. The first run was mostly
+  Fellwar Stones; the second offers Bugenhagen, Wise Elder (Tifa, from Beorn, 0% of the
+  field there) and Elemental Bond (the Ur-Dragon, from Beorn).
+
+**The tests caught two bugs:** another deck's commander could be offered, and hand-added
+cards weren't read as core (the change-log rows are keyed `key`/`name`, not `Card`).
+
+### The original design
 
 - **The core tier:** a deck's explicit `## Protected engine` list. Clip-featured cards
   and `manual-replace` adds also count as core. A deck with no list treats every

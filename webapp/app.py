@@ -1996,6 +1996,16 @@ def _assess_packet(m):
                     fld += ", matches the engine: " + ", ".join(x["matches"])
                 L.append(f"    {x['name']} (fit {x['fit']}, {x['role']}, {fld})")
         L.append("")
+    for o in (review or {}).get("trades") or []:
+        if o is (review or {}).get("trades")[0]:
+            L.append("-- WORTH TRADING FOR (another deck holds every copy; not its core) --")
+        bf = (f"backfill {o['backfill']['name']} ({o['backfill']['inc']}%)"
+              if o.get("backfill") else "no free backfill")
+        L.append(f"  {o['card']} from {o.get('from_title') or o['from']} "
+                 f"({'engine here' if o['engine_here'] else 'value ' + str(o['value_here']) + ' here'}"
+                 f"; {o['inc_there']}% there) — {bf}")
+    if (review or {}).get("trades"):
+        L.append("")
     cov = (review or {}).get("field_coverage")
     if cov and cov.get("owned"):
         L.append(f"-- FIELD TOP-{cov['top']}: {cov['n_in']} in · of the {cov['owned']} you own, "

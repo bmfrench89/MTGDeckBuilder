@@ -106,6 +106,21 @@
 </div>
 {% endif %}
 
+{% if r.trades %}
+<h2 class="mt-4">Worth trading for</h2>
+<div class="sub">Cards another deck holds every copy of, that matter here and aren't part of
+  that deck's core (its protected engine, its clips, or cards you added by hand). A trade
+  changes two decks, so nothing here is applied: swap the card in on this deck, then put the
+  backfill into the other. The backfill is a free card in the same role, so read it first.</div>
+<div class="card mb-4 fs-sm">
+  {% for o in r.trades %}
+  <div class="mb-2"><span class="cardlink" data-card="{{ o.card }}">{{ o.card }}</span>
+    <span class="muted">— from {{ o.from_title or o.from }}{% if o.engine_here %}, part of this deck's engine{% else %}, value {{ o.value_here }} here{% endif %}{% if o.lift_here %}, {{ '%g'|format(o.lift_here|round(1)) }}× the colour average{% endif %}; {{ o.inc_there }}% of the field there</span>
+    <div class="fs-xs">{% if o.backfill %}Backfill for {{ o.from_title or o.from }}: <span class="cardlink" data-card="{{ o.backfill.name }}">{{ o.backfill.name }}</span> ({{ o.backfill.inc }}% of the field there), a free copy.{% else %}No free backfill in the same role, so {{ o.from_title or o.from }} would need one.{% endif %}</div></div>
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if r.buy_swaps %}
 <h2 class="mt-4">Worth buying</h2>
 <div class="card mb-4 fs-sm">

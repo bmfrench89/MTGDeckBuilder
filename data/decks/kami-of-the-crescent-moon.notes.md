@@ -36,6 +36,22 @@ makes them draw two at their next draw step, so they lose to an empty library.
 - Theorist's Proxy's other mode ({U}, sacrifice: your next spell can't be countered) protects
   the turn you go for it.
 
+## Protected engine (don't cut; the extra draws, the punishers and the Jace mill line)
+- Howling Mine
+- Temple Bell
+- Teferi's Ageless Insight
+- Black Vise
+- Iron Maiden
+- Viseling
+- Psychosis Crawler
+- Ebony Owl Netsuke
+- Windfall
+- Prosperity
+- Jace's Archivist
+- Jace, Reality Sculptor
+- Theorist's Proxy
+- Theorist's Sanctum
+
 ## The rest of the audit (2026-10-13)
 - **Geist of Saint Thalia**: noncreature spells cost {1} less. Nearly the whole deck is
   noncreature (rocks, punishers, counters), so this is ramp in practice.

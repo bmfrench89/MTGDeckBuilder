@@ -78,6 +78,28 @@ The Ur-Dragon draws when Dragons attack, so haste is card draw here.
 indestructible, and an upkeep with five dragons, one of each colour, all getting a counter wins
 the game. Its five pips are why the manabase leans on any-colour lands.
 
+## Protected engine (don't cut; discounts, trigger doublers, haste, Dragon payoffs and the alt win)
+- Dragonspeaker Shaman
+- Sarkhan, Soul Aflame
+- Roaming Throne
+- Miirym, Sentinel Wyrm
+- Dragon Tempest
+- Scourge of Valkas
+- Ganax, Astral Hunter
+- Lathliss, Dragon Queen
+- Brainstealer Dragon
+- Dragon Broodmother
+- Scourge of the Throne
+- Lozhan, Dragons' Legacy
+- Hellkite Courser
+- Neriv, Heart of the Storm
+- Dragonlord Kolaghan
+- Samut, Hazoret's Champion
+- Rhythm of the Wild
+- Temur Ascendancy
+- Tiamat
+- Call the Spirit Dragons
+
 ## Interaction (read from verified text, not the role counter)
 
 The optimizer's classifier counts 6 removal and 1 wipe. That undercounts, because the

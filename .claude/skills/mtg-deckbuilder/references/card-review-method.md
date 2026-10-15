@@ -105,7 +105,11 @@ deck is built, rebuilt, or the player asks for a tune-up:
    `optimize.py --deck <deck> --collection <coll> --verdict "<key>" skip "<why>"`
    (repeatable; reads are `read|<name>`; a key the optimizer no longer proposes is
    refused, never saved).
-5. Present the table (step 7), then apply exactly what the player approves:
+5. Read the **trades** too (`--json` → `trades`; the ⚡ page's "Worth trading for"). Each
+   is a card another deck holds that isn't that deck's core, with a backfill for the
+   donor. A trade changes two decks: present both halves, and apply each as an ordinary
+   manual replace only on the player's word.
+6. Present the table (step 7), then apply exactly what the player approves:
    `optimize.py --deck <deck> --collection <coll> --approve "spell|Out|In"` (repeatable;
    the keys are the `key` fields `--json` printed — a key no longer proposed is skipped
    and said so), or send the player to the deck's ⚡ page, which does the same for the

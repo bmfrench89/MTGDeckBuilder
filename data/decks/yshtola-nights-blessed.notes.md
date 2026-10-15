@@ -24,6 +24,31 @@ let the drain grind the table out — then present the loop.
 - Archmage Emeritus — every counterspell and drain instant cantrips.
 - Sun Titan — recurs the cheap engine (Blood Artist, Vito, removal seals).
 
+## Protected engine (don't cut; the drain engine, its doublers and the Seer/Titan/Renewal loop)
+- Vito, Thorn of the Dusk Rose
+- Blood Artist
+- Bastion of Remembrance
+- Viscera Seer
+- Sun Titan
+- Angelic Renewal
+- Exsanguinate
+- Dark Ritual
+- Lotho, Corrupt Shirriff
+- Bloodchief Ascension
+- Delney, Streetwise Lookout
+- Wizard's Staff
+- Archmage Emeritus
+- Rhystic Study
+- Talion, the Kindly Lord
+- Ghostly Prison
+- Norn's Annex
+- Teferi, Time Raveler
+- Force of Will
+- Counterspell
+- Mystical Tutor
+- Dig Through Time
+- Toxic Deluge
+
 ## Physical copies
 Force of Will (pinned here via pins.csv), Rhystic Study, Counterspell, Mystical
 Tutor, Dig Through Time, Sublime Epiphany, Archmage Emeritus and Sun Titan are

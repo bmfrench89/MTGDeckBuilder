@@ -1090,7 +1090,13 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         _names = edhrec.field_names(commander, idx)
     except Exception:
         _names = {}
-    result = {"stem": stem, "commander": commander, "swaps": swaps,
+    import engine_spec
+    try:
+        trades = trade_offers(stem, decks_dir, coll, idx, identity, in_deck, value_of, ctx,
+                              engine_spec.core_keys(engine_spec.load(deck_path)))
+    except Exception:
+        trades = []                       # advisory: never costs the report
+    result = {"stem": stem, "commander": commander, "swaps": swaps, "trades": trades,
               "field_coverage": field_coverage(field, _names, in_deck, idx, usage,
                                                commander),
               "land_swaps": land_swaps, "land_detail": land_detail,
@@ -1124,6 +1130,151 @@ def proposal_key(kind, cut, add):
 
 
 FIELD_TOP = 25
+
+# ---- trades between decks (deck-flow review bundle D) --------------------------------
+# A card every copy of which sits in another deck, valuable HERE, and NOT part of that
+# deck's core, offered with a free backfill for the donor. Never applied: a trade
+# changes two decks, so both sides are the player's call. The Consecrated Sphinx case:
+# an early deck holding a card as generic filler that a later deck is built around.
+TRADE_LIMIT = 6
+# What makes a card worth asking for: it's in this deck's engine spec, it's specific to
+# this commander (lift >= LIFT_TIED in >= LIFT_MIN_INCLUSION of decks), or the field
+# runs it in most decks here. A generic rock worth 42 is a shuffle, not a trade.
+TRADE_MIN_VALUE = 60
+TRADE_BACKFILL_SLACK = 10   # the backfill may sit this many inclusion points below
+# Without a backfill, a trade must be worth clearly more here than the donor's field
+# plays it there: Talisman of Conviction (75% of Captain America decks) is not a trade
+# just because Captain America's notes don't list it (cross-check, 2026-10-15).
+TRADE_GAP = 15
+
+
+def deck_core(deck_path):
+    """(normalized keys, declared?) of a deck's core: its engine spec's engine and
+    packages, else its notes' '## Protected engine' list; plus every card its clips
+    feature and every card the player added by hand. `declared` is False when the deck
+    has neither a spec nor a list. The caller then treats every card its notes NAME as
+    core, the conservative reading."""
+    import engine_spec
+    keys, declared = set(), False
+    core = engine_spec.core_names(engine_spec.load(deck_path))
+    if not core:
+        try:
+            with open(deck_path[:-4] + ".notes.md", encoding="utf-8") as f:
+                core = engine_spec.protected_engine_from_notes(f.read())
+        except OSError:
+            core = []
+    if core:
+        declared = True
+        for n in core:
+            keys |= mtglib.name_keys(n)
+    for n in clipmod.featured_names(deck_path) or []:
+        keys |= mtglib.name_keys(n)
+    for r in deckcore.manual_adds(deck_path[:-4] + ".changes.csv", days=None):
+        if r.get("key"):
+            keys.add(r["key"])
+        keys |= mtglib.name_keys(r.get("name") or "")
+    keys.discard("")
+    return keys, declared
+
+
+def trade_offers(stem, decks_dir, coll, idx, identity, in_deck, value_of, ctx,
+                 engine_keys=frozenset(), limit=TRADE_LIMIT):
+    """Cards held by other decks that would matter here, each with a free backfill for
+    the donor (or None when the donor's colours offer no field-listed one)."""
+    usage = deck_conflicts.scan(decks_dir, idx)
+    # the free, typed, non-land pool, with roles, computed ONCE for every backfill search
+    free_cards, free_n = [], {}
+
+    def _free_copies(b):
+        return free_n.get(b.name, 0)
+    for n, _o, _e, f in deck_conflicts.available_pool(usage, coll):
+        b = mtglib.lookup(idx, n) if f > 0 else None
+        if b is None or not b.types or b.is_land or mtglib.is_basic(b.name):
+            continue
+        free_cards.append((b, deck_fit.primary_role(b), mtglib.name_keys(b.name)))
+        free_n[b.name] = f
+    donors = {}
+    used = {}                             # a backfill copy offered once, not twice
+
+    def donor(y):
+        if y not in donors:
+            path = os.path.join(decks_dir, y + ".txt")
+            try:
+                text = open(path, encoding="utf-8").read()
+            except OSError:
+                donors[y] = None
+                return None
+            cmd = _commander_of(text)
+            keys, declared = deck_core(path)
+            keys |= mtglib.name_keys(cmd) if cmd else set()   # a commander is always core
+            ident = set(re.sub(r"[^WUBRG]", "", (mtglib.deck_header(text, "Colors?") or "").upper()))
+            notes = ""
+            if not declared:
+                try:
+                    notes = open(path[:-4] + ".notes.md", encoding="utf-8").read()
+                except OSError:
+                    notes = ""
+            cards = set()
+            for c in mtglib.parse_deck(text):
+                cards |= mtglib.name_keys(c.name)
+            donors[y] = {"path": path, "ident": ident, "core": keys, "declared": declared,
+                         "title": mtglib.deck_header(text, "Title") or y,
+                         "notes": notes, "cards": cards,
+                         "field": deck_fit.load_field(cmd, idx) or {}}
+        return donors[y]
+
+    offers = []
+    for name, v in usage.items():
+        keys = mtglib.name_keys(name)
+        if mtglib.is_basic(name) or keys & in_deck or v.get("owned", 0) != v.get("total", 0):
+            continue                      # basics, ours already, a free copy exists, or
+                                          # already over-claimed (moving it solves nothing)
+        ref = mtglib.lookup(idx, name)
+        if ref is None or not ref.types or ref.is_land:
+            continue
+        if ref.identity and not ref.identity <= identity:
+            continue                      # outside this deck's colours
+        here = value_of(name, ref)
+        lf = deck_fit.lift_of(name, ctx)
+        inc_here = max(((ctx.get("field") or {}).get(k, 0) for k in keys), default=0)
+        specific = bool(lf and lf["lift"] >= deck_fit.LIFT_TIED
+                        and inc_here >= deck_fit.LIFT_MIN_INCLUSION)
+        engine = bool(keys & engine_keys)
+        if not (engine or here >= TRADE_MIN_VALUE or specific):
+            continue
+        for y in sorted(v.get("decks") or {}):
+            if y == stem:
+                continue                  # never our own donor
+            d = donor(y)
+            if d is None:
+                continue
+            if keys & d["core"]:
+                continue                  # the donor's own engine: never offered
+            if not d["declared"] and deck_fit.named_in_notes(name, d["notes"]):
+                continue                  # no declared core: anything its notes name
+            role = deck_fit.primary_role(ref)
+            inc_there = max((d["field"].get(k, 0) for k in keys), default=0)
+            backfill = None
+            for b, b_role, bkeys in free_cards:
+                if (b_role != role or bkeys & d["cards"] or bkeys & keys
+                        or (b.identity and not b.identity <= d["ident"])
+                        or used.get(b.name, 0) >= _free_copies(b)):
+                    continue
+                inc_b = max((d["field"].get(kk, 0) for kk in bkeys), default=0)
+                if inc_b and inc_b >= inc_there - TRADE_BACKFILL_SLACK and (
+                        backfill is None or inc_b > backfill["inc"]):
+                    backfill = {"name": b.name, "inc": inc_b}
+            if backfill is None and here - inc_there < TRADE_GAP:
+                continue                  # the donor would lose more than we gain
+            if backfill:
+                used[backfill["name"]] = used.get(backfill["name"], 0) + 1
+            offers.append({"card": ref.name, "from": y, "from_title": d["title"],
+                           "value_here": here,
+                           "lift_here": lf["lift"] if lf else None, "engine_here": engine,
+                           "role_there": role, "inc_there": inc_there,
+                           "backfill": backfill})
+    offers.sort(key=lambda o: (not o["engine_here"], -o["value_here"], o["card"]))
+    return offers[:limit]
 
 
 def field_coverage(field, names, in_deck, idx, usage, commander, top=FIELD_TOP):
@@ -1295,7 +1446,8 @@ def review_payload(r, verdicts=None):
             "role_deadlock": r.get("role_deadlock") or {},
             "role_ranges": {k: list(v) for k, v in (r.get("role_ranges") or {}).items()},
             "untyped": r.get("untyped", 0),
-            "field_coverage": r.get("field_coverage")}
+            "field_coverage": r.get("field_coverage"),
+            "trades": r.get("trades") or []}
 
 
 def apply_chosen(deck_path, coll, idx, decks_dir, chosen, refs=None, by=""):
@@ -1868,6 +2020,12 @@ def main():
                 where = "a free copy" if o["free"] else "held by " + ", ".join(o["held_by"])
                 print(f"      owned, not in: {o['name']} ({o['inc']}%; {where}) — "
                       f"give it a reason in the notes")
+        for o in r.get("trades") or []:
+            bf = (f"backfill {o['backfill']['name']} ({o['backfill']['inc']}%)"
+                  if o.get("backfill") else "no field-listed backfill")
+            why = "engine here" if o["engine_here"] else f"value {o['value_here']} here"
+            print(f"   trade  {o['card']} from {o['from']} ({why}; not core there: "
+                  f"{o['role_there']}, {o['inc_there']}%) — {bf}")
         for cut, ic, add, ia, kind in r.get("buy_swaps", []):
             print(f"   buy   {add} ({ia}%) — would replace {cut} ({ic}%)"
                   f"{'  [land]' if kind == 'land' else ''}  -> .buylist.csv")

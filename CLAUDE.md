@@ -297,6 +297,14 @@ only when the field shows it in inclusion % (`GENERIC_MARGIN`): role-template pr
 never moves inclusion, so the anti-churn guarantee holds. auto_build's role aims follow
 the archetype and colour (`auto_build.role_quota`): no counterspell quota without blue,
 whose slots go to verified protection (`resilience_staples.csv`).
+**Trades between decks** (`optimize.trade_offers`, bundle D) are offered, never applied.
+- **What qualifies:** a card another deck holds every copy of, that is NOT that deck's
+  core (`optimize.deck_core`: its engine spec, else its `## Protected engine` list, plus
+  clip-featured cards, hand-added cards and its commander), and that matters here
+  (engine, ≥2.5× lift, or value 60+). A deck with no declared core protects every card
+  its notes name.
+- **The backfill:** each offer carries a free same-role backfill for the donor, or
+  appears only when the gain beats the donor's field % by 15+.
 
 ### UI changes get UAT'd before merge — `webapp/uat/`
 Unit tests and fresh-browser screenshots passed the Arcane Ledger redesign (2026-10-11),

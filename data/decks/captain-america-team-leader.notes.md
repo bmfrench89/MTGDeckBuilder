@@ -48,6 +48,14 @@ Auto-built from owned cards (tribal-aware builder) and hand-checked: the creatur
 (Rhystic Study, Force of Will). Rhystic Study is contested with two other decks — see the
 shared-cards panel before sleeving.
 
+## Protected engine (don't cut; the named Heroes and the counters/Mjölnir package)
+- Kid Loki
+- The Wasp, Winsome Avenger
+- Mjölnir, Hammer of Thor
+- Thor, Asgard's Avenger
+- Silver Sable, Mercenary Leader
+- Warrior's Blades
+
 ## 2026-08-11 sleeper audit adds (manual — do not cut)
 - Mjölnir, Hammer of Thor — 4 damage on ETB, then DOUBLES all damage the equipped
   creature deals; equip worthy is {1} and Cap qualifies (legendary non-Villain,

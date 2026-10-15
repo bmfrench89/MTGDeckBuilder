@@ -48,6 +48,30 @@ Radagast of Rhosgobel takes {2} off the first creature each turn and gives it fl
 The Earth Crystal takes {1} off every green spell, not just creatures. Beorn himself costs
 {G}{G} with Goreclaw and the Crystal out.
 
+## Protected engine (don't cut; the Bears, the Ayula/Crystal counters engine and the picks field data can't see)
+- Goreclaw, Terror of Qal Sisma
+- Little Bear
+- Ayula, Queen Among Bears
+- Rampaging Yao Guai
+- Beorn, Reluctant Host // Till and Tend
+- Surrak and Goreclaw
+- Gigantic Big Bear
+- Studious First-Year // Rampant Growth
+- The Earth King
+- Dancing from Dark to Dawn
+- The Earth Crystal
+- Beorn's Hospitality
+- Hexhaven Invigorator
+- Kogla, the Titan Ape
+- Radagast of Rhosgobel
+- Last March of the Ents
+- Overwhelming Stampede
+- Unnatural Growth
+- Secret Tunnel
+- Cosmic Cube
+- Ghalta the Unstoppable
+- Earth's Mightiest Heroes
+
 ## Piloting
 
 - Mulligan hands with no ramp and only two lands. Keep Goreclaw or Radagast with lands, since

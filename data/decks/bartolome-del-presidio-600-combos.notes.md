@@ -75,6 +75,31 @@ Butler, Paramecia Coloniex, Millikin, the three surveil lands) fills the yard; r
 (Dread Return, Unburial Rites, Summon Undead, Body Snatcher, Valgavoth's Faithful, Memorial
 to Folly, Sevinne's Reclamation) buys the halves back.
 
+## Protected engine (don't cut; every Class A/B/C combo piece, the second outlet and the setup card)
+- Kaya's Ghostform
+- Angelic Renewal
+- Fungal Fortitude
+- Changing Loyalty
+- Necrogen Communion
+- Minion's Return
+- Gift of Immortality
+- Brotherhood Outcast
+- Redemption Choir
+- Danitha, Benalia's Hope
+- Sun Titan
+- Angel of Indemnity
+- Shepherd of the Cosmos
+- Boonweaver Giant
+- Zulaport Cutthroat
+- Bastion of Remembrance
+- Marionette Apprentice
+- Agent of the Iron Throne
+- Ninja Teen
+- Scavenger's Talent
+- Rogue's Passage
+- Dimir House Guard
+- Final Parting
+
 ## Honest weaknesses
 
 - **Graveyard hate is a hard stop.** Rest in Peace, Grafdigger's Cage and Soulless Jailer
