@@ -739,6 +739,7 @@ Dragon's Desire,Sorcery,4,R,{2}{R}{R},,R,ritual:1,,4
 Dragon-Cursed Halls,Land,0,,,,C,,,4
 "Dragonhawk, Fate's Tempest",Creature,5,R,{3}{R}{R},Bird;Dragon,,,5,4
 Dragonlord Dromoka,Creature,6,G W,{4}{G}{W},Elder;Dragon,,,5,4
+Dragonlord Kolaghan,Creature,6,B R,{4}{B}{R},Elder;Dragon,,,6,4
 Dragonlord Ojutai,Creature,5,U W,{3}{W}{U},Elder;Dragon,,,5,4
 Dragonlord Silumgar,Creature,6,B U,{4}{U}{B},Elder;Dragon,,,3,4
 Dragonmaster Outcast,Creature,1,R,{R},Human;Shaman,,,1,4
