@@ -4,8 +4,9 @@
 <nav aria-label="Breadcrumb" class="crumbs"><a href="{{ url_for('deck', stem=stem) }}"><span aria-hidden="true">&larr;&nbsp;</span>{{ meta.title }}</a></nav>
 <h1>⚡ Suggested swaps</h1>
 <div class="sub">Nothing changes until you tick a swap and apply it. Each one shows its
-  evidence: how often the field plays each card, and for lands what each one does for
-  this deck's mana. Field % is one signal, not the decision — for a real read of what a
+  evidence: how often the field plays each card, how many times the colour average that
+  is (1× is a generic card, 5× is this commander's own), and for lands what each one does for
+  this deck's mana. These are signals, not the decision — for a real read of what a
   card does in this deck, take the <a href="{{ url_for('deck_assess', stem=stem) }}">review
   packet</a> to a Claude session.</div>
 
@@ -39,12 +40,13 @@
       <td><input type="checkbox" class="chk" name="pick" value="{{ p.key }}" id="pick-{{ loop.index }}"
            aria-label="Swap {{ p.cut }} for {{ p.add }}"></td>
       <td><span class="cardlink" data-card="{{ p.cut }}">{{ p.cut }}</span>
-        <div class="muted fs-xs">{% if p.cut_field_known %}{{ p.cut_inc }}% of the field{% else %}no field data{% endif %}</div></td>
+        <div class="muted fs-xs">{% if p.cut_field_known %}{{ p.cut_inc }}% of the field{% else %}no field data{% endif %}{% if p.cut_lift %} · {{ '%g'|format(p.cut_lift|round(1)) }}× the colour average{% endif %}</div></td>
       <td><label for="pick-{{ loop.index }}"><span class="cardlink" data-card="{{ p.add }}">{{ p.add }}</span></label>
-        <div class="muted fs-xs">{% if p.add_field_known %}{{ p.add_inc }}% of the field{% else %}no field data{% endif %}
+        <div class="muted fs-xs">{% if p.add_field_known %}{{ p.add_inc }}% of the field{% else %}no field data{% endif %}{% if p.add_lift %} · {{ '%g'|format(p.add_lift|round(1)) }}× the colour average{% endif %}
           · {% if p.avail == 'free' %}a free copy{% else %}<span class="warn">shared with another deck</span>{% endif %}</div>
         <div class="fs-xs">{% if not p.cut_field_known %}Fit-driven: the field has no opinion on the card going out.
-          {% else %}Played by {{ p.add_inc - p.cut_inc }} more points of the field.{% endif %}</div></td>
+          {% else %}Played by {{ p.add_inc - p.cut_inc }} more points of the field.{% endif %}</div>
+        {% if p.trades_specific %}<div class="fs-xs warn">Trades a card this commander's decks run {{ '%g'|format(p.cut_lift|round(1)) }}× as often as other decks in its colours for a more generic one. Read it before ticking.</div>{% endif %}</td>
     </tr>
     {% endfor %}
     </tbody>
@@ -87,13 +89,14 @@
 {% if r.reads %}
 <h2 class="mt-4">Worth a read</h2>
 <div class="sub">Cards you own, with a free copy and in this deck's colours, that EDHREC
-  doesn't list for this commander or lists rarely — so they can never be suggested above. They're ranked by
-  a fit heuristic, not a verdict: read them, or take the
+  doesn't list for this commander or lists rarely — so they can never be suggested above. Rarely-listed
+  cards come first, ranked by lift (how much more this commander's decks run them than other decks
+  in its colours); the rest by a fit heuristic. Neither is a verdict: read them, or take the
   <a href="{{ url_for('deck_assess', stem=stem) }}">review packet</a> to a Claude session.</div>
 <div class="card mb-4 fs-sm">
   {% for x in r.reads %}
   <div><span class="cardlink" data-card="{{ x.name }}">{{ x.name }}</span>
-    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% endif %}</span></div>
+    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% if x.lift %}, {{ '%g'|format(x.lift|round(1)) }}× the colour average{% endif %}{% endif %}</span></div>
   {% endfor %}
   <div class="muted fs-xs mt-2">To try one, add it from the deck page: a hand-added card counts
     as your choice, and the optimizer never cuts it.</div>

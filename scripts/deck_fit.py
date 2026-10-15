@@ -10,6 +10,7 @@ neutral rather than guessing. Treat the number as a guide, not a verdict.
 """
 import csv
 import os
+import math
 import re
 
 import mtglib
@@ -135,7 +136,96 @@ def load_synergy(commander, coll_index=None):
         return {}
 
 
-def deck_context(deck_path, enriched, commander="", field=None, synergy=None):
+def load_field_n(commander, coll_index=None):
+    """The deck count behind a commander's EDHREC numbers (see edhrec.sample_size).
+    None offline or for an unknown commander: lift then runs without shrinkage."""
+    if not commander:
+        return None
+    try:
+        import edhrec
+        return edhrec.sample_size(commander)
+    except Exception:
+        return None
+
+
+# ---- Lift (EDHREC replaced synergy with lift on 2025-12-15: "From Synergy to Lift",
+# Julia Maddalena). For a commander C and a card A, over decks in C's colour identity:
+#     lift(A, C) = P(A | C's decks) / P(A | all decks that could play A)
+# EDHREC shows it on CARD pages only so far; commander pages still show synergy, which
+# is the DIFFERENCE of those two rates. We store both commander-page numbers, so the
+# baseline falls out: baseline = inclusion - synergy, and lift = inclusion / baseline.
+# Two things this adds that EDHREC's published formula doesn't:
+#   * a floor on the baseline - the snapshot holds whole percents, so a baseline under
+#     1 is rounding noise, and dividing by it would mint a 50x "signature" out of nothing;
+#   * shrinkage for small samples - the commander's rate is pulled toward the baseline
+#     by LIFT_PRIOR_DECKS pseudo-decks, so 3 of 20 decks can't read as a sure signal,
+#     while 7,000+ decks (every commander in this stable) are barely moved.
+# Lift is evidence. It feeds the fit score's specificity points and annotates the
+# optimizer's proposals and reads; it decides nothing on its own.
+LIFT_PRIOR_DECKS = 100
+LIFT_BASE_FLOOR = 1.0       # percent
+LIFT_MIN_INCLUSION = 10     # below this a card is a fringe pick, however specific
+LIFT_SIGNATURE = 4.0        # "4x as common in this commander's decks"
+LIFT_TIED = 2.5
+LIFT_POPULAR = 30           # inclusion % that makes a specific card a signature
+
+
+def commander_lift(inclusion, synergy, sample=None):
+    """Shrunk lift of one card for one commander, from EDHREC's commander-page numbers.
+
+    `inclusion` and `synergy` are whole percents as the snapshot stores them; `sample`
+    is the commander's deck count (None: no shrinkage). Returns None when either number
+    is missing - absent data is never a measured 1.0x - else
+    {"lift": ratio, "log": log10(ratio), "base": baseline %}. log 0 = the card is as
+    common here as anywhere in these colours; 1 = ten times as common."""
+    if not inclusion or synergy is None:
+        return None
+    base = max(float(inclusion) - float(synergy), LIFT_BASE_FLOOR)
+    rate = float(inclusion)
+    if sample:
+        rate = (rate * sample + base * LIFT_PRIOR_DECKS) / (sample + LIFT_PRIOR_DECKS)
+    ratio = rate / base
+    return {"lift": round(ratio, 2), "log": round(math.log10(ratio), 3),
+            "base": round(base, 1)}
+
+
+def lift_of(name, ctx):
+    """commander_lift for one card name under a fit context (name_keys aware), or None."""
+    ctx = ctx or {}
+    field, syn = ctx.get("field") or {}, ctx.get("synergy") or {}
+    for k in mtglib.name_keys(name):
+        if k in field and k in syn:
+            return commander_lift(field[k], syn[k], ctx.get("field_n"))
+    return None
+
+
+def fmt_lift(lf):
+    """'5×' / '12×' / '1.3×' — the multiplier as a person reads it."""
+    x = lf["lift"]
+    return f"{x:.0f}×" if x >= 10 else f"{x:.1f}×".replace(".0×", "×")
+
+
+def _lift_points(lf, inclusion):
+    """Specificity points for the staple component: (points, reason) or (0, "")."""
+    if lf is None or not inclusion or inclusion < LIFT_MIN_INCLUSION:
+        return 0, ""
+    x = fmt_lift(lf)
+    if lf["lift"] >= LIFT_SIGNATURE:
+        if inclusion >= LIFT_POPULAR:
+            return 15, (f"a signature card for this commander — {x} as common in its "
+                        f"decks as in other decks of these colours, and {inclusion}% run it")
+        return 13, (f"strongly tied to this commander — {x} as common in its decks as in "
+                    f"other decks of these colours")
+    if lf["lift"] >= LIFT_TIED:
+        if inclusion >= LIFT_POPULAR:
+            return 13, (f"strongly tied to this commander — {x} as common in its decks, "
+                        f"and {inclusion}% run it")
+        return 11, f"more played here than elsewhere — {x} as common in this commander's decks"
+    return 0, ""
+
+
+def deck_context(deck_path, enriched, commander="", field=None, synergy=None,
+                 field_n=None):
     """Identity (set of WUBRG), archetype keywords, and dominant tribe (if the list
     carries subtypes). Color identity comes from the deck's `# Colors:` header.
     `field` is an optional EDHREC inclusion map (see load_field)."""
@@ -173,6 +263,9 @@ def deck_context(deck_path, enriched, commander="", field=None, synergy=None):
     return {"identity": ident, "archetype": archetype, "theme": theme,
             "tribal": tribal, "commander": commander, "field": field or {},
             "synergy": synergy or {},
+            # the deck count behind the field numbers - lift's small-sample shrinkage
+            "field_n": field_n if field_n is not None
+                       else (load_field_n(commander) if field else None),
             # The archetype-aware role template, computed ONCE per deck. Every
             # assess_card call reads it from here; "land" rides along so the one
             # lookup table answers every role.
@@ -317,7 +410,16 @@ def _staple_component(card, refs, ctx=None):
     # ~5 synergy (generic); Dragon Tempest is 77%/69 (a Dragon payoff). Rewarding synergy
     # promotes a commander's signature cards over cards that are merely widely played.
     syn = (ctx or {}).get("synergy", {}).get(n)
-    if syn:
+    # LIFT, when both numbers are there (see commander_lift): synergy is a difference of
+    # two rates, so it shortchanges a card few decks run but this commander runs many
+    # times more than its colours do - and it credits generic-but-popular cards. Lift is
+    # their ratio. Synergy alone (no inclusion row) keeps its old tiers below.
+    lf = commander_lift(inc, syn, (ctx or {}).get("field_n")) if inc else None
+    if lf is not None:
+        spts, sdet = _lift_points(lf, inc)
+        if spts > pts:
+            pts, detail = spts, sdet
+    elif syn:
         if syn >= 50:
             spts, sdet = 15, f"a signature card for this commander (+{syn} synergy vs. the format)"
         elif syn >= 30:

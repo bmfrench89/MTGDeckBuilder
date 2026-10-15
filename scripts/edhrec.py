@@ -334,6 +334,18 @@ def _snapshot_map(commander, key):
     return dict(snap.get(key) or {}) if snap else {}
 
 
+def sample_size(commander):
+    """How many of this commander's decks EDHREC's numbers rest on (`sample_decks` in the
+    committed snapshot), or None when there is no snapshot. Offline by design: lift's
+    small-sample shrinkage (deck_fit.commander_lift) needs the count, and a missing
+    count only means no shrinkage, never a guess."""
+    if not commander:
+        return None
+    snap = _load_snapshot(slugify(commander))
+    n = (snap or {}).get("sample_decks")
+    return n if isinstance(n, int) and n > 0 else None
+
+
 def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
     """{normalized name: synergy} — how much MORE this commander plays a card than decks
     in general. Inclusion alone can't tell a signature card from a format staple:

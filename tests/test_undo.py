@@ -204,7 +204,8 @@ def test_the_assess_packet_carries_the_proposals_for_a_claude_read(env, monkeypa
     assert "FOR A CLAUDE READ" in text
     assert "[spell] Sol Ring (10%) -> Counterspell (50%; a free copy)" in text
     assert "Silent Gem (fit 81, draw, not on EDHREC's list)" in text
-    assert "Field % is evidence, not the verdict" in text
+    assert "Field % and lift are evidence, not the verdict" in text
+    assert "1x = generic" in text, "the packet says what lift means"
 
 
 def test_applying_with_nothing_ticked_changes_nothing(env, monkeypatch):

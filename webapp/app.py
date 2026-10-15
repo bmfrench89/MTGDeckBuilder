@@ -1961,7 +1961,9 @@ def _assess_packet(m):
         review = None
     if review and (review["proposals"] or review["reads"]):
         L.append("-- FOR A CLAUDE READ: WHAT THE OPTIMIZER PROPOSES --")
-        L.append("  Field % is evidence, not the verdict. Read each card's verified text")
+        L.append("  Field % and lift are evidence, not the verdict. Lift = how many times")
+        L.append("  more often this commander's decks run a card than other decks in its")
+        L.append("  colours (1x = generic). Read each card's verified text")
         L.append("  against this deck's engine; give each one swap / wishlist / bench / skip.")
         for p in review["proposals"]:
             if p["kind"] == "land":
@@ -1970,15 +1972,23 @@ def _assess_packet(m):
             else:
                 cf = f"{p['cut_inc']}%" if p["cut_field_known"] else "no field data"
                 af = f"{p['add_inc']}%" if p["add_field_known"] else "no field data"
+                if p.get("cut_lift"):
+                    cf += f", lift {p['cut_lift']:g}x"
+                if p.get("add_lift"):
+                    af += f", lift {p['add_lift']:g}x"
                 L.append(f"  [spell] {p['cut']} ({cf}) -> {p['add']} ({af}; "
                          f"{'a free copy' if p['avail'] == 'free' else 'shared'})")
+                if p.get("trades_specific"):
+                    L.append("          ^ trades a commander-specific card for a generic one")
         if review["reads"]:
             L.append("  Owned, free, in colour — and EDHREC doesn't list them for this")
-            L.append("  commander, or lists them rarely (ranked by the fit heuristic, so")
-            L.append("  read, don't trust):")
+            L.append("  commander, or lists them rarely (rare ones ranked by lift, the rest")
+            L.append("  by the fit heuristic, so read, don't trust):")
             for x in review["reads"]:
                 fld = ("not on EDHREC's list" if x.get("field") is None
                        else f"{x['field']}% field")
+                if x.get("lift"):
+                    fld += f", lift {x['lift']:g}x"
                 L.append(f"    {x['name']} (fit {x['fit']}, {x['role']}, {fld})")
         L.append("")
     L.append("-- DECKLIST --")

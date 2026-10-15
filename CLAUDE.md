@@ -258,7 +258,14 @@ Its guardrails each exist because a naive pass got it wrong: a spell swap needs 
 EDHREC inclusion gain; a card is valued at `max(field %, (fit−60)×2)`; the commander,
 basics, `card_notes.csv` entries and anything named in the deck's `.notes.md` or featured in
 its `.clips.json` are never cut; role counts must stay in template range; lands only swap for lands; with no field data
-the deck is left alone. **Lands are valued by mana function, not field %** (Phase A,
+the deck is left alone. **Specificity is lift, not synergy** (2026-10-15, Phase D):
+`deck_fit.commander_lift` computes EDHREC's lift (their 2025-12 replacement for synergy)
+for commander pages from the inclusion and synergy every snapshot already holds, with a
+1% baseline floor and 100-deck small-sample shrinkage. It sets the fit score's specificity
+points, ranks the rarely-listed reads, and rides on every proposal as `cut_lift`/`add_lift`.
+A `trades_specific` flag marks a ≥4× card cut for one under 2×, as evidence and never a
+veto. An approved ⚡ run re-files only the cards it added, so its Undo all gives back the
+same list. **Lands are valued by mana function, not field %** (Phase A,
 2026-10-14): `manabase.land_mana_score` credits the deck's colours a land makes (weighted
 by the spells' pip demand, two colours at most), subtracts for entering tapped, and adds
 for land types the deck's fetchers want; a swap needs +0.6. There is **no basics quota** —

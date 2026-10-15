@@ -123,6 +123,79 @@ The optimizer's single land pass:
    session as a read. A lower margin would only lengthen the list of field-driven ticks,
    which is the opposite of what the player asked for.
 
+## Phase D — lift replaces synergy (SHIPPED 2026-10-15)
+
+The player: "EDHREC has a new mathematics equation for how to include cards into decks…
+review and implement something similar or better if you can evolve it."
+
+**What EDHREC changed.** "From Synergy to Lift: The Math Behind EDHREC's New Era of
+Recommendations" (Julia Maddalena, 2025-12-15) retired *synergy* on card pages for *lift*.
+Over decks in the shared colour identity, lift(A,B) = P(A and B) / (P(A)·P(B)). It is
+shown as log10, where 0 means independent and 1 means ten times as likely. Synergy is a
+**difference** of two rates. That made it asymmetric, gave big negative scores to
+staples like Sol Ring, and capped specificity at the inclusion rate. Lift is their
+**ratio**. EDHREC hasn't moved commander pages to lift yet (their filters make it
+harder), and the article describes no small-sample correction.
+
+**What we compute** (`deck_fit.commander_lift`):
+- **Commander-card lift:**
+  - Commander pages still show inclusion and synergy, and synergy = inclusion − (the
+    card's rate across decks in these colours).
+  - So every committed snapshot already holds the baseline: baseline = inclusion −
+    synergy, and lift = inclusion ÷ baseline. That is lift(card, commander) in EDHREC's
+    own definition, applied to the page they haven't converted.
+- **A baseline floor of 1%.** Snapshots store whole percents, so a baseline under 1 is
+  rounding noise. Without the floor, 6% vs 0% would mint an infinite "signature".
+- **Small-sample shrinkage:**
+  - The commander's rate is pulled toward the baseline by `LIFT_PRIOR_DECKS` = 100
+    pseudo-decks: rate* = (inclusion·N + baseline·100) / (N + 100).
+  - At this stable's sample sizes (3,700-51,000 decks) it moves almost nothing.
+  - On a 30-deck commander it pulls a 5× reading back to about 2×.
+  - `N` is `sample_decks` from the snapshot (`edhrec.sample_size`). Unknown N means no
+    shrinkage, never a guess.
+
+**Where it acts:**
+- **Fit score:** lift replaced the synergy tiers in `_staple_component`. Calibrated on
+  all 2,506 rows of the 10 snapshot files:
+  - 15 points: a signature card, ≥ 4× its colours and in ≥ 30% of decks.
+  - 13 points: ≥ 4× under 30%, or ≥ 2.5× and in ≥ 30%.
+  - 11 points: ≥ 2.5×.
+  - Nothing under 10% inclusion, however specific.
+  - Results: 68% of cards unchanged, 761 commander-specific cards up 2-5 points (Bear
+    tribal in Beorn, Roaming Throne), and 38 popular-but-generic cards down 2 (Fog, The
+    Great Henge, all under 2.5×). No card both popular and specific loses anything,
+    because the inclusion tier still applies.
+  - Synergy without an inclusion row keeps the old tiers.
+- **Reads:** rarely-listed reads rank by lift (inclusion ≥ 10%), then inclusion. Live
+  result: the Ur-Dragon's list now opens with Broodcaller Scourge (14×), Dragonlord
+  Ojutai and Majestic Genesis (13×). The old order was by raw inclusion.
+- **Proposals carry `cut_lift` / `add_lift`.** `trades_specific` flags a swap that cuts a
+  ≥ 4× card for one under 2×, the engine-for-staple trade. The flag is evidence only and
+  never removes a proposal.
+- **Surfaces:** the ⚡ page ("× the colour average"), the assess packet's FOR A CLAUDE
+  READ block, and `optimize.py --json`.
+
+**Before → after on the live stable** (same cache, same decks):
+- Giada, Thorin, Tifa, Sephiroth, the Ur-Dragon, Dina, Captain America and Y'shtola: no
+  new proposals.
+- Kami gains Psychic Corrosion and Horn of Greed (Kami-specific draw payoffs).
+- Beorn gains Quarrel.
+- Bartolomé's Blood Artist proposal now cuts Throne of the Grim Captain instead of
+  Another Chance.
+- The trade flag fired on nothing current.
+
+**Known bias.** For commanders whose EDHREC data is mostly one precon (Y'shtola, Cloud),
+lift also lifts that precon's own cards, because they co-occur by construction. The read
+should treat a cluster of same-set cards at similar lift as a precon echo, not a
+signal.
+
+**Found on the way (UAT F8):** an approved ⚡ run re-filed *every* card in the deck, and
+its one-tap Undo only reverses the swaps. An artifact creature the player filed under
+Artifacts (The Warring Triad, Bartolomé) moved on every approval and never came back.
+`apply_chosen` now re-files only the cards it added (`_tidy(..., only=)`). The full
+`--apply` pass keeps re-filing everything, per its 2026-08-20 rationale. F8 failed on
+main with the same data and passes now.
+
 ## Not changed (on purpose)
 
 - `auto_build.py` keeps its own basics count. A from-scratch build needs a land template, and

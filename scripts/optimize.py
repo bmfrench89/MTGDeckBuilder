@@ -74,6 +74,10 @@ READS_MIN_FIT = 70
 # carry it instead, or nothing would.
 RISER_FLOOR = 20
 READS_RARE_LIMIT = 6
+# A proposal that cuts a card at least this specific to the commander (lift, see
+# deck_fit.commander_lift) for one under TRADE_GENERIC_LIFT is flagged: the field is
+# trading the deck's own engine for a staple, which is exactly the call a read should make.
+TRADE_GENERIC_LIFT = 2.0
 LAND_FIELD_KEEP = 25
 
 
@@ -718,7 +722,8 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                                  # (role repair), and the preview must say so
                                  # rather than implying the field endorsed it.
                                  "cut_field_known": field_knows(cut_name),
-                                 "add_field_known": field_knows(add_name)})
+                                 "add_field_known": field_knows(add_name),
+                                 **_lift_detail(cut_name, add_name, ctx)})
             used_cut.add(ck)
             used_add.add(mtglib._norm(add_name))
             break
@@ -774,10 +779,20 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
     # undervalues tutors and Enlightened Tutor lost its place to eight role-fillers —
     # and cards the field never lists rank by fit alone, up to READS_LIMIT.
     taken = used_add | {mtglib._norm(x["add"]) for x in risers}
+    # Rarely-listed cards rank by LIFT first: 15% of decks at 7x the colour baseline is a
+    # stronger sleeper than 19% at 1.2x (a staple that just isn't popular here). Inclusion
+    # under LIFT_MIN_INCLUSION earns no lift credit — fringe picks rank by inclusion.
+    def _rare_lift(n, inc):
+        lf = deck_fit.lift_of(n, ctx)
+        return lf["lift"] if lf and inc >= deck_fit.LIFT_MIN_INCLUSION else 0
     rare = sorted((t for t in read_pool
                    if t[3] is not None and mtglib._norm(t[1]) not in taken),
-                  key=lambda t: (-t[3], -t[0], t[1]))[:READS_RARE_LIMIT]
-    reads = [{"name": n, "fit": f, "role": ro, "field": inc} for f, n, ro, inc in rare]
+                  key=lambda t: (-_rare_lift(t[1], t[3]), -t[3], -t[0], t[1]))[:READS_RARE_LIMIT]
+    reads = []
+    for f, n, ro, inc in rare:
+        lf = deck_fit.lift_of(n, ctx)
+        reads.append({"name": n, "fit": f, "role": ro, "field": inc,
+                      "lift": lf["lift"] if lf else None})
     per_role, silent = {}, []
     for f, n, ro, inc in read_pool:
         if f < READS_MIN_FIT or len(silent) >= READS_LIMIT:
@@ -1058,6 +1073,18 @@ def proposal_key(kind, cut, add):
     return f"{kind}|{cut}|{add}"
 
 
+def _lift_detail(cut, add, ctx):
+    """Lift evidence for one swap (deck_fit.commander_lift): each side's multiplier, and
+    whether the swap trades a commander-specific card for a generic one. Evidence only:
+    the flag never removes a proposal, it tells the reader where to look."""
+    cl, al = deck_fit.lift_of(cut, ctx), deck_fit.lift_of(add, ctx)
+    cut_lift = cl["lift"] if cl else None
+    add_lift = al["lift"] if al else None
+    trades = (cut_lift is not None and cut_lift >= deck_fit.LIFT_SIGNATURE
+              and (add_lift is None or add_lift < TRADE_GENERIC_LIFT))
+    return {"cut_lift": cut_lift, "add_lift": add_lift, "trades_specific": trades}
+
+
 def proposals(r):
     """The swaps a preview report proposes, flattened for a review surface: one dict
     per swap with its evidence (spec-optimizer-judgment Phase B). Nothing here decides;
@@ -1072,7 +1099,9 @@ def proposals(r):
                     "cut_inc": d.get("cut_inc"), "add_inc": inc_add,
                     "cut_field_known": d.get("cut_field_known", True),
                     "add_field_known": d.get("add_field_known", True),
-                    "cut_value": d.get("cut_value"), "add_value": d.get("add_value")})
+                    "cut_value": d.get("cut_value"), "add_value": d.get("add_value"),
+                    "cut_lift": d.get("cut_lift"), "add_lift": d.get("add_lift"),
+                    "trades_specific": d.get("trades_specific", False)})
     ldet = {(d["cut"], d["add"]): d for d in (r.get("land_detail") or [])}
     for cut, add, avail in r.get("land_swaps") or []:
         d = ldet.get((cut, add), {})
@@ -1156,7 +1185,9 @@ def apply_chosen(deck_path, coll, idx, decks_dir, chosen, refs=None, by=""):
     if kept or land_swaps:
         _write(deck_path, kept, land_swaps)
         record_changes(deck_path, kept, land_swaps, by=by)
-        _tidy(deck_path, idx)
+        added = {k for s in kept for k in mtglib.name_keys(s[2])}
+        added |= {k for s in land_swaps for k in mtglib.name_keys(s[1])}
+        _tidy(deck_path, idx, only=added)
         out["illegal"] = singleton_violations(deck_path)
         if r.get("buy_swaps"):
             out["buylist_appended"] = append_buylist(deck_path, r["buy_swaps"],
@@ -1255,8 +1286,14 @@ def _section_type_signal(text):
     return sig
 
 
-def _tidy(deck_path, idx):
+def _tidy(deck_path, idx, only=None):
     """Re-file cards under the section that matches their role and merge duplicate lines.
+
+    `only` (a set of normalized names) limits the re-filing to those cards: an approved
+    ⚡ run re-files what it ADDED and nothing else, so its one-tap "Undo all" gives back
+    the list the player had. Re-filing every card there moved The Warring Triad (an
+    artifact creature filed under Artifacts) on every approval, and no undo moved it
+    back (UAT F8, 2026-10-15). The full `--apply` pass keeps re-filing everything.
     Only sections the file ALREADY has are used, so the player's own grouping is kept —
     this just stops a swapped-in ramp spell from sitting under '--- Creatures ---', and
     collapses '1 Forest' + '7 Forest' into one line."""
@@ -1307,6 +1344,9 @@ def _tidy(deck_path, idx):
             ref = mtglib.lookup(idx, name)
             if not ref or not ref.types:
                 keep_here.append(item)            # unknown card: never shuffle it around
+                continue
+            if only is not None and not (mtglib.name_keys(name) & only):
+                keep_here.append(item)            # not this write's card: leave it be
                 continue
             ptype = "Land" if ref.is_land else ref.primary_type
             role = "land" if ref.is_land else deck_fit.primary_role(ref)
@@ -1618,6 +1658,11 @@ def main():
                 if not sw.get("cut_field_known", True) else ""
             print(f"   {sw['cut']:32} ({cf}, value {sw['cut_value']:>3})"
                   f"  ->  {sw['add']} ({af}){tag}{fit_only}")
+            if sw.get("trades_specific"):
+                print(f"      !! cuts a card {sw['cut_lift']:g}x as common in this "
+                      f"commander's decks as its colours for one at "
+                      f"{sw['add_lift'] if sw.get('add_lift') is not None else '?'}x"
+                      f" - read it before approving")
         for old, new, avail in r["land_swaps"]:
             tag = " [shared]" if avail == "share" else ""
             print(f"   land  {old:32} ->  {new}{tag}")

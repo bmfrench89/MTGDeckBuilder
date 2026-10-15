@@ -161,7 +161,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     ctx = {"identity": identity, "archetype": archetype, "theme": "",
            "tribal": None, "commander": commander_name,
            "field": deck_fit.load_field(commander_name, idx),
-           "synergy": deck_fit.load_synergy(commander_name, idx)}
+           "synergy": deck_fit.load_synergy(commander_name, idx),
+           "field_n": deck_fit.load_field_n(commander_name, idx)}
     # tribal awareness: does the commander want a tribe, and does the collection support it?
     tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity)
     tribe_warning = None
