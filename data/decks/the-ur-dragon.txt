@@ -1,7 +1,7 @@
 # Title: The Ur-Dragon
 # Commander: The Ur-Dragon
 # Colors: B G R U W
-# Archetype: Dragon tribal: ramp into eminence, attack for cards
+# Archetype: tribal-dragon ramp
 # Source: rebuilt 2026-10-14 from the full collection database (auto_build pool + EDHREC field + verified-text hand pass)
 
 # --- Commander ---

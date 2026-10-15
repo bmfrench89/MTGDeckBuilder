@@ -1,6 +1,6 @@
 # Spec: the optimizer proposes, judgment decides
 
-**Status:** Phases A and B SHIPPED (2026-10-14). Phase C specified, not started.
+**Status:** Phases A, B and C SHIPPED (2026-10-14).
 **Origin:** the player, 2026-10-14: *"I want the optimizer fixed. I also think part of the
 issue I have with this app is I want more AI intelligent decisions made with you/AI and not
 so reliant on EDHREC. I think EDHREC and AIs decisions can overlap and be used to help but
@@ -83,22 +83,33 @@ The optimizer's single land pass:
 - **`refresh.py --optimize`** prints proposals and writes nothing.
 - **The CLI's `--apply`** is kept, for sessions after a read.
 
-## Phase C — the session is the judgment layer (NOT STARTED)
+## Phase C — the session is the judgment layer (SHIPPED)
 
-1. **Look past EDHREC.** Add a `reads` list to the report: owned, free, in-identity spells
-   EDHREC doesn't list, ranked by `deck_fit` fit and engine words (the deck's `.notes.md`,
-   archetype, commander text). Never proposed for ticking; shown as "worth a read" on the ⚡
-   page and in the packet.
-2. **The review packet** (`/deck/<stem>/assess.txt`) gets an "Optimizer proposals" block:
-   every proposal and read, with evidence, ready for a session to judge.
-3. **`optimize.py --json`** emits `proposals()` plus reads, so a session consumes structured
-   data instead of parsing the CLI text.
-4. **Skill:** step 5 already says read, then apply on the player's go
-   (`SKILL.md`, `tool-contract.md`). Phase C adds a "review the ⚡ proposals" workflow to
-   `card-review-method.md`, with the verdict vocabulary (swap / wishlist / bench / skip) applied
-   to each proposal.
-5. **Spell-pass margin.** Revisit the 25-point field margin once a session reads every
-   proposal anyway. It exists to stop churn in an auto-applying world, and that world is gone.
+1. **Looking past EDHREC.** The report now has `reads`: owned, free, in-identity, nonland
+   cards that EDHREC doesn't list for the commander, so they could never be proposed.
+   - **Ranking:** by `deck_fit.assess_card`'s score, with at most `READS_PER_ROLE` (3)
+     per role and a `READS_MIN_FIT` (70) floor, up to `READS_LIMIT` (8). The fit engine
+     leans on whichever role the deck is short of: Beorn's first draft was five board
+     wipes.
+   - **Presentation:** never tickable. The ⚡ page shows them as "Worth a read", and a
+     read the player wants becomes a manual add.
+   - **Honest limit:** ties fall back to alphabetical order, and the fit heuristic is
+     role-need-heavy (it surfaced Rabid Attack as Ur-Dragon "draw"). It's a starting pool
+     for a read, labelled that way on every surface.
+2. **The review packet.** `/deck/<stem>/assess.txt` has a "FOR A CLAUDE READ" block: every
+   proposal with its evidence, then the reads, with the instruction to give each one
+   swap / wishlist / bench / skip.
+3. **`optimize.py --json`** prints `review_payload()`: proposals with keys, reads, risers,
+   buys, holds, fetch-guard keeps and role bands. It refuses to run with `--apply`.
+   **`--approve "<kind>|<out>|<in>"`** (repeatable) writes only the named proposals,
+   through `apply_chosen`, the same path as the ⚡ page.
+4. **The skill.** `card-review-method.md` gains "Reviewing the optimizer's proposals", and
+   `SKILL.md` step 5, `tool-contract.md` and CLAUDE.md point at `--json` / `--approve`.
+5. **The spell margin stays at 25 points** (decided in Phase C). It now only shapes the
+   *checkbox* list, which should be short and high-confidence. Everything below the margin
+   (risers) and everything EDHREC doesn't list (reads) reaches the player as advice and a
+   session as a read. A lower margin would only lengthen the list of field-driven ticks,
+   which is the opposite of what the player asked for.
 
 ## Not changed (on purpose)
 

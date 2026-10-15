@@ -131,9 +131,8 @@ python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL \
 
 # Build / tune / render
 python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL          # proposals
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL --apply  # write — only
-                                       # after a session has read the proposals and the player agreed
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL [--json] # proposals + reads
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL     --approve "spell|Out|In"            # write ONLY what the player approved, after a session's read
 python3 scripts/build_dashboard.py --deck data/decks/<stem>.txt --collection $COLL \
     --title "…" --commander "…" --theme <default|yshtola|cloud|rakdos|spider> --out x.html
 python3 scripts/refresh.py --collection $COLL [--optimize]   # rebuild all dashboards + wishlist
@@ -239,9 +238,12 @@ evidence, never the verdict, and nothing in the app applies swaps on its own:
   recomputes the proposals server-side, so a stale form can't write anything else).
 - **Build Next** saves the draft as built and opens that same review.
 - **`refresh.py --optimize`** prints every deck's proposals and writes nothing.
-- **A Claude session** is the judgment layer: it reads each proposal's verified text
+- **A Claude session** is the judgment layer: it reads each proposal's verified text —
+  and the `reads`, owned cards EDHREC doesn't list, which can never be proposed —
   against the deck's engine (the sleeper audit, `card-review-method.md`), presents the
-  table, and applies with `optimize.py --deck … --apply` once the player says go. The AI
+  table, and applies with `optimize.py --deck … --approve "<kind>|<out>|<in>"` for
+  exactly what the player says go to. `--json` and the assess packet's "FOR A CLAUDE
+  READ" block are the feeds. The AI
   read runs in sessions only — no API calls from the app (player decision, same day).
 It never runs after a manual edit — the card panel's Remove/Replace and the deck editor
 save the player's choice as-is. Never second-guess a deliberate swap. The optimizer is

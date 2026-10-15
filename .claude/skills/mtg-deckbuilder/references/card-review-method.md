@@ -17,6 +17,10 @@ For each deck (or the deck in question):
 - **Field hits:** cross-reference unplaced owned cards against the commander's
   field snapshot (`data/reference/field/<stem>.json`). Anything the field plays
   is color-legal and comes with an inclusion %.
+- **The optimizer's own feed** (`optimize.py --deck … --json`, or the "FOR A CLAUDE
+  READ" block of `/deck/<stem>/assess.txt`): its `proposals` (each with field % or mana
+  score as evidence) and its `reads` — owned, free, in-colour cards EDHREC doesn't list
+  for this commander, which the optimizer itself can never propose.
 - **Gate-held risers:** the optimizer preview's "own it, gate held it" lines.
 - **Recent arrivals:** the export's `Date Bought` column (`deckcore.new_arrivals`
   when enriched; a rarity filter — rares/mythics/legends — when not: that tier is
@@ -76,3 +80,23 @@ The player sees the full Out → In table with field %s and engine reasons first
 Estimates stay labeled; unverified stays unverified; benched cards get listed
 with their reasons — an honest "zero of the 96 Hobbit cards beat an incumbent"
 is a finding, not a failure.
+
+## Reviewing the optimizer's proposals (player decision 2026-10-14)
+
+The optimizer PROPOSES; a session's read decides (`docs/spec-optimizer-judgment.md`).
+"EDHREC and AI decisions can overlap … but should not be the golden choice." When a
+deck is built, rebuilt, or the player asks for a tune-up:
+
+1. `optimize.py --deck <deck> --collection <coll> --json` — the proposals and reads.
+2. Run every proposal and every read through steps 2-4 above: verified text, read against
+   the engine, one of four verdicts. A proposal is not pre-approved because the field
+   likes it; a read is not dismissed because the field doesn't.
+3. Land proposals carry mana scores, not field %. The score can't see a land's other
+   abilities — check before agreeing to cut a utility land (Dakmor Salvage in a
+   graveyard deck is the standing example).
+4. Present the table (step 7), then apply exactly what the player approves:
+   `optimize.py --deck <deck> --collection <coll> --approve "spell|Out|In"` (repeatable;
+   the keys are the `key` fields `--json` printed — a key no longer proposed is skipped
+   and said so), or send the player to the deck's ⚡ page, which does the same for the
+   swaps they tick. A read the player wants is a manual add (`Source=manual-replace`,
+   steps 6-7), not an optimizer swap.

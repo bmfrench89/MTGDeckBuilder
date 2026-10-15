@@ -181,6 +181,32 @@ def test_opening_optimize_proposes_and_writes_nothing(env, monkeypatch):
     assert not os.path.exists(env.log)
 
 
+def test_the_review_lists_field_silent_reads_without_checkboxes(env, monkeypatch):
+    """Phase C: owned cards EDHREC doesn't list appear as "Worth a read" — never as a
+    tickable swap, because only a read (a session's, or the player's) can judge them."""
+    report = {"swaps": [], "land_swaps": [], "field_size": 9,
+              "reads": [{"name": "Samut, Hazoret's Champion", "fit": 81, "role": "creature"}]}
+    monkeypatch.setattr(env.app.optimize, "optimize", lambda *a, **k: report)
+    page = env.client.get("/deck/td/optimize").get_data(as_text=True)
+    assert "Worth a read" in page and "Hazoret" in page
+    assert 'name="pick"' not in page
+
+
+def test_the_assess_packet_carries_the_proposals_for_a_claude_read(env, monkeypatch):
+    report = {"swaps": [("Sol Ring", 1, "Counterspell", 50, "free")],
+              "swaps_detail": [{"cut": "Sol Ring", "add": "Counterspell", "cut_inc": 10,
+                                "add_inc": 50, "cut_field_known": True,
+                                "add_field_known": True}],
+              "land_swaps": [], "field_size": 9, "risers": [], "manual_holds": [],
+              "reads": [{"name": "Silent Gem", "fit": 81, "role": "draw"}]}
+    monkeypatch.setattr(env.app.optimize, "optimize", lambda *a, **k: report)
+    text = env.client.get("/deck/td/assess.txt?raw=1").get_data(as_text=True)
+    assert "FOR A CLAUDE READ" in text
+    assert "[spell] Sol Ring (10%) -> Counterspell (50%; a free copy)" in text
+    assert "Silent Gem (fit 81, draw)" in text
+    assert "Field % is evidence, not the verdict" in text
+
+
 def test_applying_with_nothing_ticked_changes_nothing(env, monkeypatch):
     import optimize
     called = []

@@ -65,6 +65,11 @@ STRONG_CONSENSUS = 50
 # — e.g. a tapped dual to an untapped one (+0.75), a tapped mono land to a basic of a
 # main colour. A land the field runs this often is kept: the score can't see abilities.
 LAND_SCORE_MARGIN = 0.6
+
+# How many owned, field-silent cards a report offers for a session's read (Phase C).
+READS_LIMIT = 8
+READS_PER_ROLE = 3
+READS_MIN_FIT = 70
 LAND_FIELD_KEEP = 25
 
 
@@ -547,6 +552,41 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         else:
             (land_adds if is_land else adds).append(entry)
     adds.sort(reverse=True)
+
+    # ---- reads: owned cards EDHREC doesn't list (spec-optimizer-judgment Phase C) -------
+    # Every candidate above comes from the field's own list, so a card EDHREC has never
+    # paired with this commander could not be proposed at all — Samut, Hazoret's
+    # Champion (a new set, ~0% field) was the best Ur-Dragon add of 2026-10-14 and only
+    # a read of its text found it. These are NOT proposals: no checkbox, never applied.
+    # They are the candidates a Claude session reads against the deck's engine (the
+    # sleeper audit). Ranked by deck_fit's own score with the field taken out; a free
+    # copy, inside the identity, not a land, not held, not reserved, not banned.
+    reads = []
+    for ref in coll:
+        k = mtglib._norm(ref.name)
+        if (not ref.types or ref.is_land or mtglib.is_basic(ref.name)
+                or mtglib.name_keys(ref.name) & in_deck or field_knows(ref.name)
+                or k in reserved or k in removed_by_hand or deck_fit.is_banned(k)):
+            continue
+        if not ref.identity or not (ref.identity <= identity):
+            continue                      # no identity data: never guess it is legal here
+        if ref.quantity - committed.get(k, 0) < 1:
+            continue
+        fit = deck_fit.assess_card(ref, rep, ctx, refs)["score"]
+        reads.append((fit, ref.name, role_of(ref.name) or "other"))
+    # The fit engine leans on whichever role the deck is short of (Beorn's first draft of
+    # this list was five board wipes), so at most READS_PER_ROLE per role keeps the
+    # list a spread of ideas, and READS_MIN_FIT drops the filler.
+    reads.sort(key=lambda t: (-t[0], t[1]))
+    per_role, kept = {}, []
+    for f, n, ro in reads:
+        if f < READS_MIN_FIT or len(kept) >= READS_LIMIT:
+            break
+        if per_role.get(ro, 0) >= READS_PER_ROLE:
+            continue
+        per_role[ro] = per_role.get(ro, 0) + 1
+        kept.append({"name": n, "fit": f, "role": ro})
+    reads = kept
     land_adds.sort(reverse=True)
     buy_adds.sort(reverse=True)
     buy_land_adds.sort(reverse=True)
@@ -736,6 +776,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
                 "land_swaps": [], "buy_swaps": [], "field_size": 0, "risers": risers,
                 "untyped": untyped, "archetype": list(ctx.get("archetype") or []),
                 "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
+                "reads": reads,
                 "role_ranges": ranges, "swaps_detail": swaps_detail,
                 "role_deadlock": role_deadlock}
 
@@ -970,6 +1011,7 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
               "field_size": len(field), "risers": risers, "untyped": untyped,
               "archetype": list(ctx.get("archetype") or []),
               "archetype_unknown": archetype_unknown, "manual_holds": manual_holds,
+                "reads": reads,
               "role_ranges": ranges, "swaps_detail": swaps_detail,
               "role_deadlock": role_deadlock}
     if apply and (swaps or land_swaps):
@@ -1016,6 +1058,22 @@ def proposals(r):
                     "cut": cut, "add": add, "avail": avail,
                     "cut_score": d.get("cut_score"), "add_score": d.get("add_score")})
     return out
+
+
+def review_payload(r):
+    """Everything a reviewer needs from one report, JSON-safe (`--json`, the assess
+    packet): the checkbox proposals with their evidence, the field-silent `reads`, and
+    the advisories. Field numbers are evidence here, never a verdict (Phase C)."""
+    return {"stem": r.get("stem"), "commander": r.get("commander"),
+            "field_size": r.get("field_size", 0),
+            "proposals": proposals(r), "reads": r.get("reads") or [],
+            "risers": r.get("risers") or [], "manual_holds": r.get("manual_holds") or [],
+            "land_guard": r.get("land_guard") or [],
+            "buys": [{"add": b[2], "add_inc": b[3], "replaces": b[0], "kind": b[4]}
+                     for b in r.get("buy_swaps") or []],
+            "role_deadlock": r.get("role_deadlock") or {},
+            "role_ranges": {k: list(v) for k, v in (r.get("role_ranges") or {}).items()},
+            "untyped": r.get("untyped", 0)}
 
 
 def apply_chosen(deck_path, coll, idx, decks_dir, chosen, refs=None, by=""):
@@ -1410,7 +1468,36 @@ def main():
     ap.add_argument("--max-swaps", type=int, default=40,
                     help="safety cap on how many cards a single pass may change")
     ap.add_argument("--apply", action="store_true", help="write the changes")
+    ap.add_argument("--json", action="store_true",
+                    help="print the proposals, reads and advisories as JSON (for a "
+                         "Claude session's review; never combined with --apply)")
+    ap.add_argument("--approve", action="append", default=[], metavar="KIND|OUT|IN",
+                    help="write ONLY this proposal (repeatable; keys as --json prints "
+                         "them) — what a session runs after the player approves a subset")
     args = ap.parse_args()
+    if args.json and (args.apply or args.approve):
+        print("error: --json is the review surface; it never writes. Drop --apply/--approve.",
+              file=sys.stderr)
+        return 2
+    if args.approve:
+        if args.all or not args.deck or args.apply:
+            print("error: --approve takes one --deck, and replaces --apply",
+                  file=sys.stderr)
+            return 2
+        coll = mtglib.load_collection(args.collection)
+        r = apply_chosen(args.deck, coll, mtglib.index_by_name(coll), args.decks_dir,
+                         args.approve)
+        for cut, _v, add, *_ in r.get("swaps") or []:
+            print(f"   applied  {cut}  ->  {add}")
+        for cut, add, _a in r.get("land_swaps") or []:
+            print(f"   applied  land {cut}  ->  {add}")
+        for k in r.get("stale") or []:
+            print(f"   not proposed now, skipped: {k}")
+        for h in r.get("held") or []:
+            print(f"   held: {h['cut']} -> {h['add']} would push {h['role']} out of range")
+        for qty, name in r.get("illegal") or []:
+            print(f"   !! ILLEGAL: {qty}x {name} — Commander allows one copy")
+        return 0
 
     coll = mtglib.load_collection(args.collection)
     idx = mtglib.index_by_name(coll)
@@ -1428,11 +1515,15 @@ def main():
         print("error: pass --deck or --all", file=sys.stderr)
         return 2
 
+    out_json = []
     for p in paths:
         r = optimize(p, coll, idx, args.decks_dir, refs, margin=args.margin,
                      apply=args.apply, max_swaps=args.max_swaps,
                      owned_only=args.owned_only, include_buys=not args.no_buys,
                      buy_threshold=args.buy_threshold)
+        if args.json:
+            out_json.append(review_payload(r))
+            continue
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
         widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()
                    if rng != ROLE_RANGE.get(role)}
@@ -1548,8 +1639,12 @@ def main():
             n_buy = write_buylist(p, rep)
             if n_buy:
                 print(f"     wrote {r['stem']}.buylist.csv ({n_buy} staples to buy)")
+    if args.json:
+        import json
+        print(json.dumps(out_json if args.all else out_json[0], indent=2))
+        return 0
     if not args.apply:
-        print("\n(dry run — pass --apply to write)")
+        print("\n(proposals only — a session reads them, then --apply on the player's go)")
     return 0
 
 

@@ -84,7 +84,22 @@
 </form>
 {% endif %}
 
-{% set notes = [] %}
+{% if r.reads %}
+<h2 class="mt-4">Worth a read</h2>
+<div class="sub">Cards you own, with a free copy and in this deck's colours, that EDHREC
+  doesn't list for this commander — so they can never be suggested above. They're ranked by
+  a fit heuristic, not a verdict: read them, or take the
+  <a href="{{ url_for('deck_assess', stem=stem) }}">review packet</a> to a Claude session.</div>
+<div class="card mb-4 fs-sm">
+  {% for x in r.reads %}
+  <div><span class="cardlink" data-card="{{ x.name }}">{{ x.name }}</span>
+    <span class="muted">— {{ x.role }}, fit {{ x.fit }}</span></div>
+  {% endfor %}
+  <div class="muted fs-xs mt-2">To try one, add it from the deck page: a hand-added card counts
+    as your choice, and the optimizer never cuts it.</div>
+</div>
+{% endif %}
+
 {% if r.buy_swaps %}
 <h2 class="mt-4">Worth buying</h2>
 <div class="card mb-4 fs-sm">

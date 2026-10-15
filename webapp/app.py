@@ -1953,6 +1953,31 @@ def _assess_packet(m):
             L.append(f"  {r['add']} ({r['add_inc']}%) over {r['over']} "
                      f"({r['over_inc']}%) — {r['gap']} pts short of auto-swap")
         L.append("")
+    # The judgment layer (spec-optimizer-judgment Phase C, player decision 2026-10-14):
+    # the optimizer proposes, a Claude SESSION reads — this block is what it reads.
+    try:
+        review = optimize.review_payload(_opt_prev)
+    except Exception:
+        review = None
+    if review and (review["proposals"] or review["reads"]):
+        L.append("-- FOR A CLAUDE READ: WHAT THE OPTIMIZER PROPOSES --")
+        L.append("  Field % is evidence, not the verdict. Read each card's verified text")
+        L.append("  against this deck's engine; give each one swap / wishlist / bench / skip.")
+        for p in review["proposals"]:
+            if p["kind"] == "land":
+                L.append(f"  [land]  {p['cut']} -> {p['add']}  (mana score "
+                         f"{p['cut_score']} -> {p['add_score']})")
+            else:
+                cf = f"{p['cut_inc']}%" if p["cut_field_known"] else "no field data"
+                af = f"{p['add_inc']}%" if p["add_field_known"] else "no field data"
+                L.append(f"  [spell] {p['cut']} ({cf}) -> {p['add']} ({af}; "
+                         f"{'a free copy' if p['avail'] == 'free' else 'shared'})")
+        if review["reads"]:
+            L.append("  Owned, free, in colour — and EDHREC doesn't list them for this")
+            L.append("  commander (ranked by the fit heuristic, so read, don't trust):")
+            for x in review["reads"]:
+                L.append(f"    {x['name']} (fit {x['fit']}, {x['role']})")
+        L.append("")
     L.append("-- DECKLIST --")
     L.append(ex.deck_text(m["path"]).strip())
     return "\n".join(L) + "\n"

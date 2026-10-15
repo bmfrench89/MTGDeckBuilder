@@ -83,19 +83,21 @@ evidence, never the verdict — "EDHREC and AI decisions can overlap … but sho
 golden choice." The read happens here, in the session; the app makes no AI calls.
 
 ```bash
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>            # proposals
-python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll> --apply    # after your read + the player's go
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll> --json     # proposals + reads
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection <coll>     --approve "spell|Out|In" --approve "land|Out|In"                                  # only what the player approved
 ```
 
 1. **Read every proposal against the deck's engine** (the sleeper audit,
    `references/card-review-method.md`): verified text in, verified text out, what each
    does for THIS commander. Field % is a prior to cite; a 0%-field card can be the best
    add (Samut, Hazoret's Champion in the Ur-Dragon) and a 60% card can be wrong here.
-2. **Look past the proposals too.** The optimizer only proposes cards EDHREC lists; sweep
-   the free pool (`analyze_collection.py --query`) for engine fits it cannot see.
-3. **Present the swap table**, then apply what the player approves — either here
-   (`--apply`, then undo by hand what they reject, logged `Source=manual-replace`) or by
-   pointing them at the deck's ⚡ page, which applies only the ticked swaps.
+2. **Read the `reads` too, and look past them.** Proposals only ever come from EDHREC's
+   list; `reads` are owned, free, in-colour cards EDHREC doesn't list (ranked by a fit
+   heuristic). Sweep the free pool (`analyze_collection.py --query`) for engine fits
+   neither surfaces. The workflow: `references/card-review-method.md`, last section.
+3. **Present the swap table**, then apply what the player approves — `--approve` per
+   swap here, or the deck's ⚡ page, which applies only the ticked swaps. (`--apply`
+   writes every proposal; use it only when the player approved them all.)
 4. **Lands are scored by mana function** (`manabase.land_mana_score`), not field %; a
    utility land (no deck colours) or one with no enrichment is never judged — read those.
 

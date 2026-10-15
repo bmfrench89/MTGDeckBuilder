@@ -24,9 +24,18 @@ from the app), and **⚡ proposes while the player approves**. Spec and tracker:
   recomputed server-side). Build Next opens the review instead of auto-applying.
   `refresh.py --optimize` prints proposals only. UAT on the PC: all 17 flows pass (F4/F8
   rewritten for the review), and the sweep is clean with the review page added.
-- **Phase C, not started:** the session-review path. Owned cards EDHREC doesn't list as
-  "worth a read", proposals in the assess packet, `optimize.py --json`, and revisiting the
-  25-point spell margin.
+- **Phase C, shipped: the session review path.**
+  - `reads`: owned, free, in-colour cards EDHREC doesn't list, ranked by fit (at most 3
+    per role). The ⚡ page shows them as "Worth a read", never as a checkbox.
+  - The assess packet has a "FOR A CLAUDE READ" block.
+  - `optimize.py --json` is the session's feed, and `--approve "<kind>|<out>|<in>"` writes
+    only what the player approved.
+  - The 25-point spell margin stays, and now only shapes the checkbox list.
+- **The 2026-10-14 reads are heuristic, so read them:**
+  - Ur-Dragon: Lorehold, the Historian, Niv-Mizzet Visionary, Crop Rotation, Abrade.
+  - Y'shtola: Asylum Visitor, Kor Spiritdancer, Annul.
+  - Kami: Hydroblast, Daze, Polymorph.
+  None has had a session's read yet: a good first job for the new loop.
 - **Sessions:** step 5 of SKILL.md now reads every proposal against the engine before
   `--apply`. Field % is a prior to cite, never the reason.
 
