@@ -354,3 +354,11 @@ def test_sentence_splitter_keeps_names_and_costs_whole():
                   "B.F.M. is big. Pay 1.5 more.')))")
     assert parts == ["Tap Mana Vault.", "Then cast {3}{B}{B}.", "Dr. Strange waits!",
                      "B.F.M. is big.", "Pay 1.5 more."]
+
+
+def test_durations_round_the_total_not_just_the_seconds():
+    """299.5 s printed as "4:60" (the Sephiroth storyboard, 2026-10-14)."""
+    import clips
+    assert clips._fmt(299.5) == "5:00"
+    assert clips._fmt(59.4) == "0:59"
+    assert clips._fmt(61) == "1:01"

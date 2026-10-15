@@ -116,18 +116,31 @@ def download_bulk(kind="oracle_cards", dest=None, force=False):
     """Download a Scryfall bulk-data file (default 'oracle_cards' — one entry per
     card, ~40 MB, exactly what we need for colors/types/MV/ids). Returns the path.
     Skips the download if a cached copy already exists unless force=True."""
-    dest = dest or os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                "..", "data", "collection", f"scryfall-{kind}.json")
-    dest = os.path.abspath(dest)
-    if os.path.exists(dest) and not force:
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "data", "collection", f"scryfall-{kind}")
+    if dest is None:
+        for ext in (".jsonl.gz", ".json"):        # either format a past run cached
+            if os.path.exists(os.path.abspath(base + ext)) and not force:
+                cached = os.path.abspath(base + ext)
+                print(f"using cached bulk file: {cached} (pass --refresh to re-download)")
+                return cached
+    elif os.path.exists(dest) and not force:
         print(f"using cached bulk file: {dest} (pass --refresh to re-download)")
-        return dest
+        return os.path.abspath(dest)
     print("finding the latest Scryfall bulk file…")
     catalog = json.loads(_get(BULK_LIST_URL))
     entry = next((b for b in catalog.get("data", []) if b.get("type") == kind), None)
     if not entry:
         raise RuntimeError(f"Scryfall has no bulk type '{kind}'")
-    uri, size = entry["download_uri"], entry.get("size", 0)
+    # By 2026-10 Scryfall's catalog offers `jsonl_download_uri` (gzipped JSON Lines) where
+    # it used to offer `download_uri` (one JSON array); `_rows_json` reads both.
+    uri = entry.get("download_uri") or entry.get("jsonl_download_uri")
+    if not uri:
+        raise RuntimeError(f"Scryfall's '{kind}' entry has no download link")
+    size = entry.get("size") or entry.get("compressed_size") or 0
+    if dest is None:
+        dest = base + (".jsonl.gz" if uri.endswith(".jsonl.gz") else ".json")
+    dest = os.path.abspath(dest)
     print(f"downloading {entry.get('name', kind)} (~{size // (1024*1024)} MB) …")
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     req = urllib.request.Request(uri, headers=_HEADERS)
@@ -209,12 +222,41 @@ def _rows_duckdb(bulk_path):
     return _gen()
 
 
+def _open_bulk(bulk_path):
+    """A text handle on a bulk file, gzipped or not (sniffed by magic bytes)."""
+    import gzip
+    with open(bulk_path, "rb") as f:
+        magic = f.read(2)
+    if magic == b"\x1f\x8b":
+        return gzip.open(bulk_path, "rt", encoding="utf-8")
+    return open(bulk_path, encoding="utf-8")
+
+
 def _rows_json(bulk_path):
-    with open(bulk_path, encoding="utf-8") as f:
-        data = json.load(f)
-    for c in data:
-        if c.get("name"):
-            yield c
+    """Cards from a bulk file in either shape Scryfall has published: one JSON array
+    (the old `download_uri`) or JSON Lines, one card per line (the 2026 `jsonl_download_uri`,
+    gzipped). Sniffed from the first non-blank character, not the file name."""
+    with _open_bulk(bulk_path) as f:
+        head = ""
+        while not head:
+            ch = f.read(1)
+            if not ch:
+                return
+            head = ch.strip()
+        if head == "[":
+            data = json.loads(head + f.read())
+            for c in data:
+                if c.get("name"):
+                    yield c
+            return
+        first = head + f.readline()
+        for line in [first] + list(f):
+            line = line.strip().rstrip(",")
+            if not line or line in ("[", "]"):
+                continue
+            c = json.loads(line)
+            if c.get("name"):
+                yield c
 
 
 def build_index(bulk_path, use_duckdb=True):

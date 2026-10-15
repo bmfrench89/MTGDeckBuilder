@@ -6,7 +6,70 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-14 (The Ur-Dragon rebuilt from the full collection database; the repo is moving to the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-14 (deck stable reviewed end to end: 9 real decks, how-to-play videos for all, two new decks — Tifa and Sephiroth; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+
+## START HERE: the deck stable (2026-10-14)
+
+Nine decks, all REAL builds from the collection: no card claimed past its owned count
+(`deck_conflicts`: no conflicts introduced today), 100 cards each, singleton clean, sections clean.
+The player's actual Giada, Killian and Thorin lists are NOT logged; the player asked for the
+two new decks to be built "to compare what you come up with versus what I have", ignoring
+those physical lists.
+
+| Deck | Bracket | Lands | Ramp/draw/removal | Keepable | Field top-25 | Clips |
+|---|---|---|---|---|---|---|
+| Bartolomé del Presidio — 600 Infinite Combos | 4 (detected 4) | 37 | 9/4/5 | 80% | 13/25 | 4 |
+| Beorn the Fierce — Bear Den | 3 (detected 2) | 36 | 18/13/12 | 79% | 18/25 | 5 |
+| Captain America, Team Leader | 3 (detected 3) | 37 | 9/12/9 | 80% | 25/25 | 5 |
+| Dina, Essence Brewer | 3 (detected 3) | 37 | 10/8/10 | 80% | 25/25 | 4 |
+| Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 18/25 | 5 |
+| **Sephiroth, Fallen Hero** (new) | 3 (detected 2) | 36 | 8/9/8 | 79% | 16/25 | 5 |
+| The Ur-Dragon | 3 (detected 3) | 37 | 10/6/6 | 80% | 22/25 | 5 |
+| **Tifa, Martial Artist** (new) | 3 (detected 2) | 37 | 12/10/9 | 80% | 20/25 | 5 |
+| Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
+
+Role counts are the classifier's. Creature-based interaction doesn't register (see the
+Ur-Dragon notes). "Detected 2" next to a declared 3 means no Game Changers; the bracket is
+the player's stated intent.
+
+**What happened today, in order:**
+- **Deleted, on the player's word:** the four decks that weren't real builds — the Thorin
+  auto-draft, the Giada and Thorin study copies, and Tergrid — Iron Fortress (a study build
+  with 45 unowned cards; its narration went with it, and `.github/narrate/audition.py` now
+  reads the Ur-Dragon's storyboard).
+- **How-to-play videos** (Watch tab) for every deck. Each storyboard was drafted from
+  verbatim Scryfall text for every card in the deck (576 + 172 cards verified, 0
+  unverified) and passes `clips.py --check`. 43 clips across 9 decks, about 42 minutes.
+  Every card a clip features is protected from the optimizer. `narrate.yml` records the `af_heart`
+  narration on push.
+- **Engine-read swaps the player approved:**
+  - Kami: Teferi's Ageless Insight, Jace's Archivist, two Islands; archetype `control
+    draw-engine`.
+  - Bartolomé: Sol Ring. Captain America: Dismantling Wave. Beorn: Forest for Tranquil
+    Thicket.
+  - Every other proposal across the decks was judged and skipped, with reasons (this
+    handoff's optimizer section, and each deck's notes).
+- **Notes errors the storyboard reads caught, fixed:**
+  - Dina: Defiling Daemogoth IS a size-aware drain.
+  - Y'shtola: Bloodchief Ascension has no mill; the Sun Titan response timing was wrong;
+    Wizard's Staff's prowess turns off Delney's doubling.
+  - Bartolomé: four answers to graveyard hate, not one.
+  - Kami: Sanctum alone reaches 24, not 25; the deck has 28 Islands.
+- **Wishlists regenerated** (`data/wishlist.md`, `data/manapool-wishlist.txt`): 8 shared
+  copies (~$17, estimate) plus buy-list upgrades; the August files still listed dismantled
+  decks.
+- **Two new decks**, chosen by measuring free coverage of each candidate's EDHREC core
+  (Tifa 17/25 free, Sephiroth 17/25 then 14/25 after Tifa, Fire Lord Azula 10/25…):
+  - **Tifa, Martial Artist "Seventh Heaven"**: power-7 creatures connect, untap, and take
+    another combat. Annie Joins Up doubles both Tifa triggers, so three combats (CR 500.8).
+  - **Sephiroth, Fallen Hero "One-Winged Angel"**: every modified creature is a base 7/5;
+    job-select Equipment, mass counters, Windcrag Siege doubling the attack triggers.
+  - Both decks: `auto_build` draft, then an engine-read hand pass (the auto-build was mostly
+    filler both times), then validation. Notes list the protected engine one card per line.
+- **Fixed on the way:** `carddb.py --download-bulk` (Scryfall's catalog now offers gzipped
+  JSON Lines, not `download_uri`), and `optimize.py --all --json` (study-skip lines went to
+  stdout).
+
 
 ## START HERE: the optimizer proposes, judgment decides (2026-10-14)
 
@@ -371,7 +434,12 @@ Not for Beorn:
 - Sphinx's Tutelage goes to Kami (20%), still a proposal.
 - The angels go to Giada once the real list is imported.
 
-## START HERE TOMORROW: blind builds vs the player's real decks (2026-10-12)
+## Blind builds vs the player's real decks (2026-10-12) — SUPERSEDED 2026-10-14
+
+> The study copies this section describes (`giada-blind-build`, `thorin-blind-build`, and the
+> old `thorin-king-of-durins-folk` auto-draft) were deleted on 2026-10-14 at the player's
+> request, along with Tergrid. The player's real Giada, Killian and Thorin lists are still
+> unlogged. They can come in via Decks → Import a list whenever the player wants them reviewed.
 
 **2026-10-13 update: three "best from the collection" study builds now exist, for the player to
 compare with their own decks.** They are `giada-blind-build` and `thorin-blind-build`.
@@ -2261,7 +2329,12 @@ editor, and the optimizer. `sync_server.sh` (repo root) reconciles: commits only
 three runtime-edited paths (never `git add -A`), rebases before pushing (aborting
 cleanly on conflict), and reloads the app via the WSGI touch unless told not to.
 
-## Current data (season closed 2026-08-10)
+## History and standing processes (2026-08; the deck list here is NOT current)
+
+The deck facts in this section describe the August stable, most of which has since been
+dismantled or rebuilt. The current decks are in "START HERE: the deck stable" at the top.
+The processes recorded here (type sections, owned-only decks, the sleeper audit, the
+engine advisors, enrichment, the goldfish sim, the agents, rules.py) still stand.
 
 - **NEW DECK 2026-08-14: `bruce-banner-incredible-hulk` — Temur (U/R/G), Bracket 3,
   power 71/100.** Built for the player's *brother*, whose card it is — the commander is

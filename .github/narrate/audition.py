@@ -22,8 +22,11 @@ import wave
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "data", "narration", "audition")
-DECK = os.path.join(ROOT, "data", "decks", "tergrid-iron-fortress.txt")
-PICK = [("The pitch", 0), ("The pitch", 2), ("Land her early", 0)]
+# The audition deck: any deck with clips. Tergrid (the prototype) was deleted 2026-10-14
+# with the other non-real decks, so the audition now reads the Ur-Dragon's storyboard.
+STEM = "the-ur-dragon"
+DECK = os.path.join(ROOT, "data", "decks", f"{STEM}.txt")
+PICK = [("The pitch", 0), ("The pitch", 2), ("Make them cheap", 0)]
 
 KOKORO = [("af_heart", "a"), ("af_bella", "a"), ("am_michael", "a"), ("bm_george", "b")]
 PIPER = [("en_US-ryan-high", "en/en_US/ryan/high"), ("en_GB-alan-medium", "en/en_GB/alan/medium")]
@@ -34,7 +37,7 @@ def scenes():
     raw = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "clips.py"),
                           "--deck", DECK, "--json"], capture_output=True, text=True,
                          check=True).stdout
-    clips = {c["title"]: c for c in json.loads(raw)["tergrid-iron-fortress"]["clips"]}
+    clips = {c["title"]: c for c in json.loads(raw)[STEM]["clips"]}
     return [clips[t]["scenes"][i]["speak"] for t, i in PICK]
 
 

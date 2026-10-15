@@ -1,0 +1,91 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Akroma's Will,Instant,4,W,{3}{W},,,,,4
+"Akroma, Angel of Fury",Creature,8,R,{5}{R}{R}{R},Angel,,,6,4
+Annie Joins Up,Enchantment,4,G R W,{1}{R}{G}{W},,,,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Austere Command,Sorcery,6,W,{4}{W}{W},,,wipe,,4
+"Avacyn, Angel of Hope",Creature,8,W,{5}{W}{W}{W},Angel,,,8,4
+Balamb T-Rexaur,Creature,6,G,{4}{G}{G},Dinosaur,,,6,4
+Bastion Protector,Creature,3,W,{2}{W},Human;Soldier,,,3,4
+Battlefield Forge,Land,0,R W,,,W R C,,,4
+Beast Within,Instant,3,G,{2}{G},,,removal,,4
+Big Score,Instant,4,R,{3}{R},,W U B R G,draw,,4
+Brushland,Land,0,G W,,,W G C,,,4
+Bulk Up,Instant,2,R,{1}{R},,,,,4
+Canopy Vista,Land,0,G W,,Forest;Plains,W G,etb-tapped-cond,,4
+Carnage Tyrant,Creature,6,G,{4}{G}{G},Dinosaur,,,7,4
+Challenger Troll,Creature,5,G,{4}{G},Troll,,,6,4
+Champion's Helm,Artifact,3,,{3},Equipment,,,,4
+Chaos Warp,Instant,3,R,{2}{R},,,,,4
+Cinder Glade,Land,0,G R,,Mountain;Forest,R G,etb-tapped-cond,,4
+Clever Concealment,Instant,4,W,{2}{W}{W},,,,,4
+Clifftop Retreat,Land,0,R W,,,W R,etb-tapped-cond,,4
+Coliseum Behemoth,Creature,7,G,{5}{G}{G},Beast,,draw,7,4
+Colossal Majesty,Enchantment,3,G,{2}{G},,,draw,,4
+Colossus Hammer,Artifact,1,,{1},Equipment,,,,4
+Combustible Gearhulk,Creature,6,R,{4}{R}{R},Construct,,draw,6,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Conqueror's Flail,Artifact,2,,{2},Equipment,,,,4
+Cultivate,Sorcery,3,G,{2}{G},,,fetch:basic;ramp,,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Farseek,Sorcery,2,G,{1}{G},,,fetch:island;fetch:mountain;fetch:plains;fetch:swamp;ramp,,4
+Fiery Confluence,Sorcery,4,R,{2}{R}{R},,,removal;wipe,,4
+Fire-Lit Thicket,Land,0,G R,,,R G C,mana3,,4
+Firemane Commando,Creature,4,W,{3}{W},Angel;Soldier,,draw,4,4
+Flawless Maneuver,Instant,3,W,{2}{W},,,,,4
+Forest,Land,0,G,,Forest,G,,,4
+Fortified Village,Land,0,G W,,,W G,etb-tapped-cond,,4
+Furycalm Snarl,Land,0,R W,,,W R,etb-tapped-cond,,4
+Fyndhorn Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Game Trail,Land,0,G R,,,R G,etb-tapped-cond,,4
+Generous Gift,Instant,3,W,{2}{W},,,removal,,4
+Gladiolus Amicitia,Creature,6,G R,{4}{R}{G},Human;Warrior,,fetch:land;ramp,6,4
+"Goreclaw, Terror of Qal Sisma",Creature,4,G,{3}{G},Bear,,,4,4
+Harmonize,Sorcery,4,G,{2}{G}{G},,,draw,,4
+Hellkite Tyrant,Creature,6,R,{4}{R}{R},Dragon,,,6,4
+Heroic Intervention,Instant,2,G,{1}{G},,,,,4
+Inspiring Overseer,Creature,3,W,{2}{W},Angel;Cleric,,draw,2,4
+Jungle Shrine,Land,0,G R W,,,W R G,etb-tapped;mana2,,4
+Krosan Grip,Instant,3,G,{2}{G},,,removal,,4
+Leyline Axe,Artifact,4,,{4},Equipment,,,,4
+Lifestream's Blessing,Instant,6,G,{4}{G}{G},,,draw,,4
+Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
+Llanowar Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Moonshaker Cavalry,Creature,8,W,{5}{W}{W}{W},Spirit;Knight,,,6,4
+Mossfire Valley,Land,0,G R,,,R G,mana2,,4
+Mountain,Land,0,R,,Mountain,R,,,4
+Overgrown Farmland,Land,0,G W,,,W G,etb-tapped-cond,,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+Plains,Land,0,W,,Plains,W,,,4
+Professional Face-Breaker,Creature,3,R,{2}{R},Human;Warrior,,,2,4
+Puresteel Paladin,Creature,2,W,{W}{W},Human;Knight,,draw,2,4
+Rampant Growth,Sorcery,2,G,{1}{G},,,fetch:basic;ramp,,4
+"Red XIII, Proud Warrior",Creature,3,G R,{1}{R}{G},Beast;Warrior,,,3,4
+"Rhino, Barreling Brute",Creature,7,G R,{3}{R}{R}{G}{G},Human;Villain,,draw,6,4
+Rockfall Vale,Land,0,G R,,,R G,etb-tapped-cond,,4
+Rogue's Passage,Land,0,,,,C,,,4
+Rootbound Crag,Land,0,G R,,,R G,etb-tapped-cond,,4
+Rugged Prairie,Land,0,R W,,,W R C,mana3,,4
+Saber-Tooth Moose-Lion,Creature,6,G,{4}{G}{G},Elk;Cat,,,7,4
+Savage Land Dinosaur,Creature,6,G,{4}{G}{G},Dinosaur,,,7,4
+Selfless Spirit,Creature,2,W,{1}{W},Spirit;Cleric,,,2,4
+Slayers' Stronghold,Land,0,R W,,,C,,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Spectator Seating,Land,0,R W,,,W R,etb-tapped-cond,,4
+"Spider-Rex, Daring Dino",Creature,6,G,{4}{G}{G},Spider;Dinosaur;Hero,,,6,4
+Steelshaper's Gift,Sorcery,1,W,{W},,,,,4
+Stroke of Midnight,Instant,3,W,{2}{W},,,removal,,4
+Sungrass Prairie,Land,0,G W,,,W G,mana2,,4
+Sunpetal Grove,Land,0,G W,,,W G,etb-tapped-cond,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Sword of the Animist,Artifact,2,,{2},Equipment,,fetch:basic;ramp,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+"Terrian, World Tyrant",Creature,5,G,{2}{G}{G}{G},Dinosaur;Ooze,,,9,4
+"Tifa, Martial Artist",Creature,4,G R W,{1}{R}{G}{W},Human;Monk,,,4,4
+Vandalblast,Sorcery,1,R,{R},,,removal,,4
+"Vincent, Vengeful Atoner",Creature,3,R,{2}{R},Assassin,,,3,4
+Wild Growth,Enchantment,1,G,{G},Aura,G,,,4
+Wood Elves,Creature,3,G,{2}{G},Elf;Scout,,fetch:forest;ramp,1,4
+Wrecking Ball Arm,Artifact,2,,{2},Equipment,,,,4

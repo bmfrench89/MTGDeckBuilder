@@ -84,10 +84,9 @@
 # --- Lands ---
 1 Roiling Canopy
 1 Mosswort Bridge
-1 Tranquil Thicket
 1 Secret Tunnel
 1 Rogue's Passage
 1 Reliquary Tower
 
 # --- Basics ---
-30 Forest
+31 Forest

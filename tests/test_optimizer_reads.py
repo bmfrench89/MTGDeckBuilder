@@ -178,3 +178,18 @@ def test_review_payload_is_json_safe():
     json.dumps(p)
     assert p["buys"] == [{"add": "Z", "add_inc": 70, "replaces": "A", "kind": "spell"}]
     assert p["role_ranges"] == {"draw": [8, 12]}
+
+
+def test_json_all_stays_parseable_with_a_study_deck(tmp_path, monkeypatch, capsys):
+    """`--all` announces skipped study copies; under --json that note goes to stderr,
+    or a session's `json.load` of the whole run fails (2026-10-14)."""
+    import optimize
+    d, _coll, _idx = _setup(tmp_path, monkeypatch)
+    (d / "study.txt").write_text(OTHER.replace("# Title: O", "# Title: S\n# Study: yes"),
+                                 encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["optimize.py", "--all", "--decks-dir", str(d),
+                                      "--collection", str(d / "collection.csv"), "--json"])
+    assert optimize.main() == 0
+    cap = capsys.readouterr()
+    payload = json.loads(cap.out)
+    assert isinstance(payload, list) and "skip study copy: study.txt" in cap.err

@@ -117,8 +117,10 @@ deck's favor, and the text audit *upgraded* several cards the counters undervalu
 
 **Vito, Thorn of the Dusk Rose** is the single best add available and the only owned copy is
 load-bearing in `yshtola-nights-blessed` (named in that deck's notes as its drain payoff).
-It is the one card here worth *buying* — it is the magnitude-aware lifegain payoff this deck
-otherwise lacks. Do not take it off the other deck without deciding which one sleeves it.
+It is the one card here worth *buying*. It converts each life gain the moment it happens.
+(Corrected 2026-10-14: the deck already has a magnitude-aware payoff in **Defiling Daemogoth**,
+verified: "At the beginning of your end step, each opponent loses X life, where X is the
+amount of life you gained this turn." Vito adds the instant version.) Do not take it off the other deck without deciding which one sleeves it.
 
 ## 2026-10-13 Reality Fracture add (manual — do not cut)
 - **Vraska, the Cutting Glare**: a 4/4 deathtouch for {B}{B}{G}. With six or more lands, its ETB

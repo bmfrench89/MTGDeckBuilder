@@ -47,7 +47,12 @@ creatures — and this deck's whole engine lives on exactly those bodies: **Y'sh
 herself is printed power 2** (both triggers double: the end-step draw becomes draw 2,
 and every MV≥3 noncreature spell becomes 4 damage to each opponent + 4 life), **Blood
 Artist (0/1)** drains twice per death, and **Vito (1/3)** doubles every drain his
-lifegain trigger converts. Field agrees: 39% of Y'shtola decks run her. Replaced Read
+lifegain trigger converts. Field agrees: 39% of Y'shtola decks run her.
+**Caveat with Wizard's Staff** (verified: "Equipped creature has prowess"): each
+noncreature spell pumps an equipped Y'shtola +1/+1 until end of turn. Once she is at
+power 3 or more, Delney stops doubling her later triggers that turn, including the
+end-step draw. The Staff's own "triggers an additional time" still applies. So with
+the Staff on, Delney doubles only the turn's first spell trigger. Replaced Read
 the Bones (6%) — a one-shot draw the doubled end-step trigger out-draws over any game
 longer than two turns.
 
@@ -72,8 +77,11 @@ not a bracket jump.
   bodies (a dying Baleful Strix, a spent Solemn Simulacrum) into scry + drain triggers.
 - Pilot: assemble as Seer early (1 mana, unassuming) → Renewal turn N → Sun Titan
   turn N+1 with the loop online at once; or reanimate/recur Titan with the Renewal
-  already down. Hold the loop until you can win through open mana — a kill spell on
-  Sun Titan **in response to the Renewal trigger** breaks the chain.
+  already down. Hold the loop until you can win through open mana. Instant-speed
+  interaction mid-loop breaks the chain: graveyard exile while the Renewal trigger is on
+  the stack (Sun Titan is already in the graveyard then), or removing Viscera Seer.
+  (Corrected 2026-10-14: the old line said "a kill spell on Sun Titan in response", but
+  Titan is in the graveyard at that point.)
 - Bench (owned, uncommitted, one swap each if the table hates it or wants more
   redundancy): Woe Strider / Fanatical Devotion / Martyr's Cause (more free outlets —
   Martyr's Cause also prevents one damage source per iteration), Gift of Immortality
@@ -93,10 +101,13 @@ records it, and the assess surfaces show it beside the detected estimate.
 - **Bloodchief Ascension** (in over Observed Stasis) — the deck's own commander
   advances it: every MV≥3 noncreature spell drains each opponent 2, and "an
   opponent lost 2 or more life this turn" is exactly the quest condition, so it is
-  usually online in two-three turns without playing differently. Once live, every
-  point of opponent life loss doubles into 2 more plus 2 mill — Blood Artist,
-  Vito, Bastion and Y'shtola herself all feed it, and the Seer loop with it on
-  board drains the table twice as fast.
+  usually online in two-three turns without playing differently. Once live (three or
+  more quest counters), verified: "Whenever a card is put into an opponent's graveyard
+  from anywhere … that player lose 2 life … you gain 2 life". So their resolving spells,
+  their dying creatures and their discards each drain 2, and Vito turns the 2 gained
+  into more drain. (Corrected 2026-10-14: an older line said it "doubles life loss
+  plus 2 mill". The card has no mill, and it triggers on cards hitting a graveyard,
+  not on life loss.)
 - **Ghostly Prison + Norn's Annex** (in over Eye of Nidhogg / White Auracite) —
   the pillowfort. Attackers pay 2 generic (Prison) and {W/P} — 2 life if they
   have no white — per creature (Annex). A go-wide board paying life to attack

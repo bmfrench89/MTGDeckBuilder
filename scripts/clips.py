@@ -389,7 +389,9 @@ def _deck_cards(deck_path):
 
 
 def _fmt(sec):
-    return f"{int(sec // 60)}:{int(round(sec % 60)):02d}"
+    # Round the TOTAL first: rounding only the seconds printed 299.5 s as "4:60".
+    m, s = divmod(int(round(sec)), 60)
+    return f"{m}:{s:02d}"
 
 
 def main(argv=None):

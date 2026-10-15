@@ -1531,7 +1531,9 @@ def main():
         # --deck to preview it on purpose (2026-10-11 audit, R11).
         study = [p for p in paths if deck_conflicts.is_study_deck(p)]
         for p in study:
-            print(f"skip study copy: {os.path.basename(p)}")
+            # stderr under --json: stdout must stay one parseable document
+            print(f"skip study copy: {os.path.basename(p)}",
+                  file=sys.stderr if args.json else sys.stdout)
         paths = [p for p in paths if p not in study]
     if not paths or paths == [None]:
         print("error: pass --deck or --all", file=sys.stderr)

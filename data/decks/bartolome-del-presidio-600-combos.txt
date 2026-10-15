@@ -50,7 +50,6 @@
 1 Corpse Churn
 1 Disenchant
 1 Generous Gift
-1 Unseal the Necropolis
 1 Wake the Dead
 1 Vindictive Triumph
 
@@ -78,6 +77,7 @@
 1 Throne of the Grim Captain
 1 Wayfarer's Bauble
 1 Lich's Relic
+1 Sol Ring
 
 # --- Enchantments ---
 1 Agent of the Iron Throne

@@ -79,7 +79,10 @@ to Folly, Sevinne's Reclamation) buys the halves back.
 
 - **Graveyard hate is a hard stop.** Rest in Peace, Grafdigger's Cage and Soulless Jailer
   turn off every one of the 44 engines, because every Class B trigger reads the graveyard.
-  The deck has no answer to an enchantment-based static beyond Disenchant.
+  Answers to a graveyard-hate permanent, verified 2026-10-14: Disenchant (artifact or
+  enchantment), Leonin Relic-Warder (exiles an artifact or enchantment until it leaves),
+  Generous Gift (any permanent) and Seal from Existence (any nonland permanent). Soulless
+  Jailer is a creature, so it falls to Generous Gift or Seal.
 - **The basics are inverted.** Verified colored pip demand is **W 28 / B 37** (8 double-W
   cards vs 4 double-B), but the list runs **12 Plains / 9 Swamp**. Cross-checked both ways
   (2026-08-19): the graveyard-side costs my count omits are white (Unburial Rites flashback
