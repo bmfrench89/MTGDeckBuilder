@@ -52,7 +52,7 @@ _LOWER_WINS = {"removal", "wipe"}
 PROTECTION_AIM = 3
 
 
-def role_quota(identity, archetype):
+def role_quota(identity, archetype, overrides=None):
     """(ordered [(role, aim)], protection aim) for a fresh build of this identity and
     archetype: the house quotas, bent by archetype, counters only with blue, every aim
     inside the archetype's acceptance band."""
@@ -65,6 +65,9 @@ def role_quota(identity, archetype):
                 q[role] = min(cur, aim) if cur != base else aim
             else:
                 q[role] = max(cur, aim) if cur != base else aim
+    for role, aim in (overrides or {}).items():
+        if role in q:
+            q[role] = aim                 # an engine spec's own aims win
     blue = "U" in set(identity or ())
     if not blue:
         q["counter"] = 0
@@ -169,7 +172,7 @@ def _tribe_and_support(commander_name, idx, archetype, coll, identity):
 
 
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
-          identity=None, skip_deck=None):
+          identity=None, skip_deck=None, engine=None):
     """Build a deck for `commander_name`. If the commander is in the curated
     commanders.csv we use its colors + archetype tags. Otherwise (any commander
     typed by the player) pass `identity` (WUBRG letters, e.g. from Scryfall's
@@ -305,13 +308,35 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
     # 2) Nonland spells — fill role quotas, then synergy/flex to hit the spell budget.
     spell_budget = (DECK_SIZE - 1) - LAND_TARGET            # 62 with 37 lands
     nonland = [x for x in cands if not x["is_land"]]
+    # 1b) Engine first (deck-flow review bundle C). A session's engine spec names the
+    # cards the deck is FOR; they go in before any quota, and count toward it. A named
+    # card that can't come in is reported with the reason, never silently dropped.
+    seeded, engine_missing = [], []
+    if engine:
+        import engine_spec
+        by_key = {}
+        for c in cands:
+            for k in mtglib.name_keys(c["name"]):
+                by_key.setdefault(k, c)
+        for name in engine_spec.core_names(engine):
+            c = next((by_key[k] for k in mtglib.name_keys(name) if k in by_key), None)
+            if c is None:
+                ref = mtglib.lookup(idx, name)
+                why = ("not owned" if ref is None else
+                       "outside the colour identity" if _color_legal(ref, identity) is False
+                       else "every copy is in another deck")
+                engine_missing.append({"name": name, "why": why})
+                continue
+            if take(c):
+                seeded.append(c["name"])
     by_role = {}
     for c in nonland:
         by_role.setdefault(c["role"], []).append(c)
     gaps = {}
-    quota, prot_aim = role_quota(identity, archetype)
+    quota, prot_aim = role_quota(identity, archetype, (engine or {}).get("aims"))
     for role, target in quota:
-        picked = 0
+        # seeded engine cards already fill part of their role's quota
+        picked = sum(1 for x in chosen if not x["is_land"] and x["role"] == role)
         for c in by_role.get(role, []):
             if picked >= target or len([x for x in chosen if not x["is_land"]]) >= spell_budget:
                 break
@@ -443,6 +468,11 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "archetypes": archetype,
         "sections": sections,
         "counts": counts, "targets": targets, "gaps": gaps,
+        # engine-first labels: what the spec put in, what it couldn't, and every other
+        # non-land card, which the hand pass must keep WITH a reason or cut
+        "engine_cards": seeded, "engine_missing": engine_missing,
+        "filler": ([c["name"] for c in chosen if not c["is_land"]
+                    and c["name"] not in set(seeded)] if engine else []),
         "basics": basics,
         "total": 1 + len(chosen) + n_basic,
         "short": max(0, short),
@@ -492,6 +522,10 @@ if __name__ == "__main__":
                          "the commander is neither in commanders.csv nor enriched in "
                          "the collection — take it from a VERIFIED source (carddb.py "
                          "--verify prints an 'identity:' line), never from memory.")
+    ap.add_argument("--engine", default=None, metavar="SPEC",
+                    help="a session's <stem>.engine.json: its engine and package cards go "
+                         "in before any quota, and every other card is labelled filler "
+                         "(engine_spec.py --audit then wants a keep reason for each)")
     args = ap.parse_args()
     try:
         coll = mtglib.load_collection(args.collection)
@@ -500,7 +534,15 @@ if __name__ == "__main__":
         raise SystemExit(2)
     idx = mtglib.index_by_name(coll)
     try:
-        d = build(args.commander, coll, idx, args.decks_dir, identity=args.identity)
+        spec = None
+        if args.engine:
+            import engine_spec
+            spec = engine_spec.load(args.engine)
+            if spec is None:
+                print(f"error: no readable engine spec at {args.engine}", file=sys.stderr)
+                raise SystemExit(2)
+        d = build(args.commander, coll, idx, args.decks_dir, identity=args.identity,
+                  engine=spec)
     except UnknownIdentity as e:
         print(f"error: {e.message}", file=sys.stderr)
         raise SystemExit(3)
@@ -510,6 +552,12 @@ if __name__ == "__main__":
         print(json.dumps(d, indent=2)); raise SystemExit(0)
     print(f"AUTO-BUILD — {d['commander']}  [{d['identity']}]  ({', '.join(d['archetypes'])})")
     print(f"  total {d['total']} cards" + (f"  (short {d['short']} — pool too shallow)" if d['short'] else ""))
+    if d.get("engine_cards") or d.get("engine_missing"):
+        print(f"  engine first: {len(d['engine_cards'])} seeded before the quotas")
+        for m in d.get("engine_missing") or []:
+            print(f"    could not seed {m['name']}: {m['why']}")
+        print(f"  filler: {len(d['filler'])} non-land cards need a keep reason or a cut "
+              f"(engine_spec.py --audit)")
     print("  role     have / target")
     for role in ["land", "ramp", "draw", "removal", "wipe", "counter", "protection"]:
         if role not in d["targets"]:

@@ -517,7 +517,7 @@ def snapshot_counts(path, additions_path=None):
 # Keys are "decks/<file>" and "pins.csv", relative, so tmp dirs work the same.
 # --------------------------------------------------------------------------- #
 DECK_SUFFIXES = (".txt", ".notes.md", ".attrs.csv", ".buylist.csv", ".changes.csv",
-                 ".clips.json", ".verdicts.json")
+                 ".clips.json", ".verdicts.json", ".engine.json")
 
 
 def _sha(text):

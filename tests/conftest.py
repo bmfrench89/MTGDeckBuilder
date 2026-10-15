@@ -89,6 +89,25 @@ def _no_network_and_no_real_cache(monkeypatch, tmp_path_factory):
     import edhrec
     cache = tmp_path_factory.mktemp("edhrec-cache")
     monkeypatch.setattr(edhrec, "CACHE_DIR", str(cache), raising=False)
+    # Scryfall's card cache too (2026-10-15). `carddb.py --collection` keeps every
+    # enriched card's text there for engine keywords, and --verify / the fuzzy retry
+    # READ it: a test that ran the CLI wrote Sol Ring into the real data/cache, and a
+    # later test then "resolved" the card it was simulating as unreachable. The same
+    # leak through the player's populated PC cache was the two "Windows-only"
+    # carddb_enrich failures.
+    import carddb
+    monkeypatch.setattr(carddb, "VERIFY_CACHE_DIR",
+                        str(tmp_path_factory.mktemp("scryfall-cache")), raising=False)
+    # And Commander Spellbook (found the same day): a deck-page test reached the live
+    # API and wrote its answers into the real data/cache/spellbook. Blocked like
+    # EDHREC; a test that wants combos still monkeypatches `spellbook._post`.
+    import spellbook
+
+    def _spellbook_blocked(*_a, **_kw):
+        raise OSError("network blocked in tests: monkeypatch spellbook._post")
+    monkeypatch.setattr(spellbook, "CACHE_DIR",
+                        str(tmp_path_factory.mktemp("spellbook-cache")), raising=False)
+    monkeypatch.setattr(spellbook, "_post", _spellbook_blocked, raising=False)
 
     def _blocked(*_a, **_kw):
         raise AssertionError(

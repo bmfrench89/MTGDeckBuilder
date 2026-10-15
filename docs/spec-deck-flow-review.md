@@ -57,7 +57,21 @@ built. This file is the tracker and the design note for the bundles still to com
   key can differ from the session's. Matching on the key means a verdict appears only
   for the exact swap it judged.
 
-## C. Engine-first builds
+## C. Engine-first builds — SHIPPED
+
+**Measured (Giada, same pool, spec taken from her notes' protected engine):** the draft
+without a spec already held 58 of the final deck's 78 non-basic cards; with it, 61. So the
+hand pass changes 23 cards instead of 26. That's a modest gain, because the scorer already
+liked most of Giada's engine. The larger lever is the audit: none of the 23 can stay
+without a written reason.
+
+**Keyword reads, live:** an Ur-Dragon spec with the keyword "noncombat damage" puts
+Niv-Mizzet, Visionary and Smaug the Impenetrable at the top of the field-silent reads. That
+was the find a session made by hand on 2026-10-14. Coverage grows with each enrichment,
+which now keeps every owned card's text in the local cache (opt-in in `enrich_api`, on for
+the CLI and the server's background enrichment, off in tests).
+
+### The original design
 
 - **The engine spec:** a session writes it before auto_build:
   - the named engine cards (verified text, counted pool);

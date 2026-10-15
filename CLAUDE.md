@@ -82,6 +82,10 @@ per-module table — read it before any structural change.
   export against the batches, the Upload guard), `narration` (the Watch tab's recorded
   narration: which scenes still need a take in the chosen voice, content-hashed files,
   scene timing; the synthesis itself runs only on a runner — `narrate.yml`),
+  `engine_spec` (a deck's `<stem>.engine.json`: engine cards, packages, role aims and
+  engine keywords, written by a session BEFORE the draft; `auto_build --engine` seeds it
+  ahead of every quota, and `engine_spec.py --audit` exits 3 until every other non-land
+  card is kept with a reason or cut; deck-flow review bundle C; mtglib only),
   `collection_query` (the Collection page's search language — one string that filters,
   sorts and counts the pool: a Scryfall subset plus `free>0`, `decks=0`, `deck:`, `for:`,
   `is:pinned`, `added>=`; true/false/UNKNOWN per row, unknown rows skipped and counted,
@@ -367,7 +371,11 @@ Opponents' cards are `ph` placeholders, never named; nothing is rendered to a vi
 only by `optimize.py --verdict "<key>" <swap|skip|bench|wishlist> "<why>"`, which refuses
 any key the optimizer isn't proposing right now. The ⚡ page shows each verdict beside
 the SAME swap and hides stale ones with a count. This is how the AI read reaches the phone
-while the app makes no AI calls. Deck-flow review bundle B, `docs/spec-deck-flow-review.md`).
+while the app makes no AI calls. Deck-flow review bundle B, `docs/spec-deck-flow-review.md`),
+`.engine.json` (the deck's engine spec, written through `engine_spec.py` only: its core
+cards are protected from the optimizer like notes-named ones, and its keywords rank the
+field-silent reads against oracle text cached by enrichment and `--verify`, which `carddb`
+keeps in `data/cache/scryfall/`).
 
 **Collection database (server, 2026-10-13+)** — `data/collection/collection.db`, gitignored, never synced. The server sync seeds it ONCE as the union of every record (private export, the committed August list, every `owned_additions.txt` block, every sleeved deck: `store.seed`, report on the Collection page) and from then on it is the collection: app adds/edits go straight to it (every change in its `ledger`), an Upload only MERGES (never lowers a count), and batches a session commits to `owned_additions.txt` are ingested once each by the next sync. A `[floor]` line in a batch's comments means "own at least this many" (raise, don't add) in both the database and the file loader. Sessions still add cards exactly as before (`intake.py` → a dated batch); never write the database from a session, and never re-seed one. **Decks and pins live there too (Phase 1b, 2026-10-14):** the database keeps every deck file (`<stem>.txt` and its companions) and `pins.csv` with every revision (`files` + `file_revisions`). The deck folder stays the working copy every engine reads; `store.capture` records it after every successful app write and every sync (so a session's committed deck edit becomes a revision with the next pull), and `store.restore` rebuilds the folder only when it is missing (a new host) or one file on request. Edit decks exactly as before. **So do members and the activity log (Phase 1b, 2026-10-14):** in database mode `users.py` keeps the member store in the database (`members` + the owner's settings in `meta`; it takes `data/private/users.json` in on its first read and renames it `users.json.moved-to-db`, and the database is chmod 0600 because it now holds the hashes), and deck-level actions go to its `activity` table instead of `data/activity.csv` (the sync and the Activity page take in any rows still in that file, each once). No download ever includes the `members` table. **Backups (2026-10-14):** the sync's first act each day is `store.daily_backup` — a consistent copy in `data/collection/backups/collection-<date>.db` (gitignored, 0600, newest `MTG_BACKUPS_KEEP`=7 kept), taken BEFORE that sync ingests or captures anything; the owner's **Download a backup** (`/export/backup.db`) is the same copy with the `members` table emptied and the file rebuilt (VACUUM), so no hash leaves the server. Undo a bad day from a console: copy a dated file over `collection.db`, then reload the web app.
 

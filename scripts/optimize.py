@@ -188,6 +188,11 @@ def _protected(deck_path, commander):
     featured = clipmod.featured_names(deck_path)
     if featured:
         notes += "\n" + "\n".join(featured).lower()
+    # An engine spec's engine and package cards are the deck's stated core (bundle C).
+    import engine_spec
+    core = engine_spec.core_names(engine_spec.load(deck_path))
+    if core:
+        notes += "\n" + "\n".join(core).lower()
     try:
         # ONLY hand-written notes count as "the player values this card". The loader also
         # returns machine-drafted notes (card_notes.generated.csv) which cover most of the
@@ -806,15 +811,40 @@ def optimize(deck_path, coll, idx, decks_dir, refs=None, margin=25, apply=False,
         lf = deck_fit.lift_of(n, ctx)
         reads.append({"name": n, "fit": f, "role": ro, "field": inc,
                       "lift": lf["lift"] if lf else None})
+    # Engine keywords (bundle C): when the deck's engine spec names keywords and the
+    # card's oracle text is cached locally, a field-silent card that matches ranks first
+    # and skips the fit floor. Niv-Mizzet, Visionary ("noncombat damage") was found by
+    # hand on 2026-10-14; this is how the next one surfaces on its own.
+    import engine_spec
+    keywords = [k.lower() for k in ((engine_spec.load(deck_path) or {}).get("keywords") or [])]
+
+    def kw_hits(name):
+        if not keywords:
+            return []
+        try:
+            import carddb
+            text = carddb.cached_oracle_text(name)
+        except Exception:
+            text = None
+        return [k for k in keywords if text and k in text.lower()]
+
+    silent_pool = [(f, n, ro, inc, kw_hits(n) if inc is None else [])
+                   for f, n, ro, inc in read_pool]
+    if keywords:
+        silent_pool.sort(key=lambda t: (-len(t[4]), -t[0], t[1]))
     per_role, silent = {}, []
-    for f, n, ro, inc in read_pool:
-        if f < READS_MIN_FIT or len(silent) >= READS_LIMIT:
+    for f, n, ro, inc, hits in silent_pool:
+        if len(silent) >= READS_LIMIT:
             break
+        if f < READS_MIN_FIT and not hits:
+            if not keywords:
+                break                     # sorted by fit: nothing further clears it
+            continue
         if (inc is not None or mtglib._norm(n) in taken
                 or per_role.get(ro, 0) >= READS_PER_ROLE):
             continue
         per_role[ro] = per_role.get(ro, 0) + 1
-        silent.append({"name": n, "fit": f, "role": ro, "field": None})
+        silent.append({"name": n, "fit": f, "role": ro, "field": None, "matches": hits})
     reads += silent
 
     # ---- manabase passes. Both need field data: without it every land scores 0 and we

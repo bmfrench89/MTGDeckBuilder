@@ -40,7 +40,8 @@ need it, for example "life gained on ANY turn" + "each-end-step Angel makers" in
 Judge every card against the packages and the other 99, not only the commander. Shattered
 Angel was cut on a first pass read card-against-commander, and restored only once the
 each-end-step package was named (2026-10-15). A payoff must never be cut before its
-enablers are counted. Write the packages into the notes (`## Packages`). Then ask:
+enablers are counted. Write the packages into the notes (`## Packages`) and into the deck's
+engine spec (`engine_spec.py`), whose keywords then rank the field-silent reads. Then ask:
 - **What does this card multiply?** A trigger-doubler on a trigger-based
   commander (Wizard's Staff on Y'shtola), a damage-doubler with a {1} equip on
   the commander (Mjölnir on Cap), a free-attach on a Colossus Hammer deck

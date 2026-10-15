@@ -447,7 +447,8 @@ def _fold_name(name):
 
 
 def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
-               include_ids=True, fuzzy_delay=0.7, fuzzy_cache_dir=None):
+               include_ids=True, fuzzy_delay=0.7, fuzzy_cache_dir=None,
+               text_cache_dir=None):
     """Enrich via Scryfall's /cards/collection API — no ~40 MB bulk download.
     ~1 request per 75 cards. Returns (matched, total, sorted unmatched names).
 
@@ -485,6 +486,8 @@ def enrich_api(collection_path, out_path, delay=0.1, log=None, fuzzy=True,
         for i in range(0, len(submit), _BATCH):
             data, _nf = _post_collection(submit[i:i + _BATCH])
             for c in data:
+                if text_cache_dir:        # oracle text for engine keywords (bundle C)
+                    _remember_text(c, text_cache_dir)
                 # EVERY matching collection row, not just the first. Two rows can
                 # legitimately fold to one Scryfall card — a collection listing both
                 # "Murderous Rider" and "Murderous Rider // Swift End" wants the same
@@ -631,6 +634,27 @@ def _cache_get(key, cache_dir, ttl=None):
     if time.time() - float(entry.get("fetched") or 0) > ttl:
         return None
     return entry.get("card") or None
+
+
+def _remember_text(card, cache_dir):
+    """Keep an enriched card object in the verify cache, so its oracle text is readable
+    offline (`cached_oracle_text`). Best effort: a failed write never fails enrichment."""
+    try:
+        if card.get("name"):
+            _cache_put(_verify_key(card["name"]), card, cache_dir)
+    except Exception:
+        pass
+
+
+def cached_oracle_text(name, cache_dir=None):
+    """A card's oracle text from the local Scryfall cache (written by --verify and by
+    enrichment), or None when it was never cached. No network, and no expiry: errata
+    are rare, and a missing text only means the card isn't keyword-ranked."""
+    card = _cache_get(_verify_key(name), cache_dir or VERIFY_CACHE_DIR, ttl=10 ** 12)
+    if not card:
+        return None
+    text = oracle_flags.oracle_text_of(card)
+    return text or None
 
 
 def _cache_put(key, card, cache_dir):
@@ -1013,7 +1037,7 @@ def main():
             print("enriching via Scryfall /cards/collection API (no bulk download)…")
             matched, total, unmatched = enrich_api(
                 args.collection, out, log=print, include_ids=not args.no_ids,
-                fuzzy_cache_dir=VERIFY_CACHE_DIR)
+                fuzzy_cache_dir=VERIFY_CACHE_DIR, text_cache_dir=VERIFY_CACHE_DIR)
             print(f"Matched {matched}/{total} owned cards "
                   f"({round(100 * matched / total) if total else 0}%).")
             unmatched_n = len(unmatched)

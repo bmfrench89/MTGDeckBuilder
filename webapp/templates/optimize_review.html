@@ -98,7 +98,7 @@
 <div class="card mb-4 fs-sm">
   {% for x in r.reads %}
   <div><span class="cardlink" data-card="{{ x.name }}">{{ x.name }}</span>
-    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% if x.lift %}, {{ '%g'|format(x.lift|round(1)) }}× the colour average{% endif %}{% endif %}</span>
+    <span class="muted">— {{ x.role }}, fit {{ x.fit }}, {% if x.field is none %}not on EDHREC's list{% else %}{{ x.field }}% of the field{% if x.lift %}, {{ '%g'|format(x.lift|round(1)) }}× the colour average{% endif %}{% endif %}</span>{% if x.matches %} <span class="fs-xs">· matches your engine: {{ x.matches|join(', ') }}</span>{% endif %}
     {% if x.verdict %}<div class="fs-xs mt-2 verdict">Claude's read ({{ x.verdict.date }}): <strong>{{ x.verdict.verdict|capitalize }}</strong> — {{ x.verdict.why }}</div>{% endif %}</div>
   {% endfor %}
   <div class="muted fs-xs mt-2">To try one, add it from the deck page: a hand-added card counts

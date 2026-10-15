@@ -81,7 +81,11 @@ def _run(csv_path, attrs_path, enrich=None):
     try:
         if enrich is None:
             import carddb
-            enrich = carddb.enrich_api
+
+            def enrich(csv, attrs):
+                # also keep each card's oracle text for engine keywords (bundle C)
+                return carddb.enrich_api(csv, attrs,
+                                         text_cache_dir=carddb.VERIFY_CACHE_DIR)
         matched, total, unmatched = enrich(csv_path, attrs_path)
         _write_status({"when": time.time(), "state": "done", "matched": matched,
                        "total": total,

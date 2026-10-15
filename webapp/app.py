@@ -1992,6 +1992,8 @@ def _assess_packet(m):
                        else f"{x['field']}% field")
                 if x.get("lift"):
                     fld += f", lift {x['lift']:g}x"
+                if x.get("matches"):
+                    fld += ", matches the engine: " + ", ".join(x["matches"])
                 L.append(f"    {x['name']} (fit {x['fit']}, {x['role']}, {fld})")
         L.append("")
     cov = (review or {}).get("field_coverage")
@@ -2167,7 +2169,7 @@ def deck_delete(stem):
         abort(404)
     base = os.path.splitext(m["path"])[0]
     for suffix in (".txt", ".notes.md", ".buylist.csv", ".attrs.csv", ".changes.csv",
-                   ".clips.json", ".verdicts.json"):
+                   ".clips.json", ".verdicts.json", ".engine.json"):
         try:
             os.remove(base + suffix)
         except OSError:

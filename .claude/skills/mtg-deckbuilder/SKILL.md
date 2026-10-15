@@ -65,6 +65,15 @@ thin, say so and either propose a better-supported direction or a short, honest 
 work" below.*
 
 ### 4. Build / tune the list
+**Engine first.** Before `auto_build`, read the commander and the counted pool, then write
+the deck's engine spec: `engine_spec.py --deck <path> --init` (from the notes' protected
+engine, if any), and add the engine cards, 2-3 packages (enablers + payoffs), any role aims
+and engine keywords (specific phrases such as "noncombat damage", never a broad word like
+"sacrifice", which matches half the pool). Draft with `auto_build.py "<commander>" --engine <stem>.engine.json`.
+Every other non-land card is FILLER: keep it with `engine_spec.py --keep "<card>" "<why>"`
+or cut it, until `engine_spec.py --audit` passes. No card stays because nothing argued it
+out (the Consecrated Sphinx lesson, 2026-10-15).
+
 Assemble the 99 (+ commander) from owned cards. As you go:
 - Run `deck_stats.py` to check curve, colored-pip demand vs. manabase, and category counts
   (ramp / removal / draw / lands). Tune against the ratios in `references/deckbuilding-principles.md`.
