@@ -1,0 +1,59 @@
+{
+ "commander": "Mister Fantastic",
+ "written": "2026-10-16",
+ "engine": [
+  "Mister Fantastic, Reed Richards",
+  "The Thing, Ben Grimm",
+  "Invisible Woman, Sue Storm",
+  "Human Torch, Johnny Storm",
+  "The Astonishing Ant-Man",
+  "Iron Man, Armored Avenger",
+  "Shang-Chi and the Ten Rings",
+  "Pensive Professor",
+  "Annie Joins Up",
+  "Fiery Emancipation",
+  "Unstoppable Plan",
+  "Valeria Richards, Precocious",
+  "Whirlwind of Thought",
+  "Enlightened Tutor",
+  "Idyllic Tutor",
+  "Mystical Tutor"
+ ],
+ "packages": [
+  {
+   "name": "Noncreature spells pay off",
+   "enablers": [],
+   "payoffs": [
+    "The Vision",
+    "Monica Rambeau // Photon, Living Light",
+    "Rhystic Study",
+    "Mystic Remora",
+    "King T'Challa // Black Panther, Hope Enduring"
+   ]
+  }
+ ],
+ "aims": {
+  "ramp": 10,
+  "removal": 7
+ },
+ "keywords": [
+  "hero",
+  "noncreature spell",
+  "draw a card",
+  "token"
+ ],
+ "keep": {
+  "Bruce Banner // The Incredible Hulk": "a Hero for Human Torch, and {X}{X} draws X: every card a Torch ping",
+  "Consecrated Sphinx": "draws two whenever an opponent draws, so every opponent's draw step pings them through Human Torch",
+  "Force of Will": "a counterspell that protects the combo turn",
+  "Mana Drain": "a counterspell that protects the combo turn",
+  "Disenchant": "artifact and enchantment removal",
+  "Vandalblast": "artifact removal: overloaded, it destroys every artifact you don't control",
+  "Mind Stone": "a rock: ramp toward Mister Fantastic's four colours, and mana for the Unstoppable Plan loop",
+  "Commander's Sphere": "a rock: ramp toward Mister Fantastic's four colours, and mana for the Unstoppable Plan loop",
+  "Wayfarer's Bauble": "a rock: ramp toward Mister Fantastic's four colours, and mana for the Unstoppable Plan loop",
+  "Talisman of Creativity": "a rock: ramp toward Mister Fantastic's four colours, and mana for the Unstoppable Plan loop"
+ },
+ "uat": {},
+ "version": 1
+}

@@ -1,0 +1,72 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+"Aclazotz, Deepest Betrayal // Temple of the Dead",Creature,5,B,{3}{B}{B},Bat;God,B,draw,4,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archfiend of Despair,Creature,8,B,{6}{B}{B},Demon,,,6,4
+Asylum Visitor,Creature,2,B,{1}{B},Vampire;Wizard,,draw,3,4
+Bandit's Talent,Enchantment,2,B,{1}{B},Class,,,,4
+Bloodchief Ascension,Enchantment,1,B,{B},,,,,4
+Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Burglar Rat,Creature,2,B,{1}{B},Rat,,,1,4
+Charcoal Diamond,Artifact,2,B,{2},,B,ramp;rock,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+Dark Deal,Sorcery,3,B,{2}{B},,,,,4
+Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
+Defile,Instant,1,B,{B},,,,,4
+Delirium Skeins,Sorcery,3,B,{2}{B},,,,,4
+Diabolic Tutor,Sorcery,4,B,{2}{B}{B},,,,,4
+Duress,Sorcery,1,B,{B},,,,,4
+Elderfang Disciple,Creature,2,B,{1}{B},Elf;Cleric,,,1,4
+Entropic Battlecruiser,Artifact,4,B,{3}{B},Spacecraft,,,3,4
+Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
+Fell Specter,Creature,4,B,{3}{B},Specter,,,1,4
+Final Parting,Sorcery,5,B,{3}{B}{B},,,,,4
+Geier Reach Sanitarium,Land,0,,,,C,,,4
+Geth's Grimoire,Artifact,4,,{4},Book,,draw,,4
+Go for the Throat,Instant,2,B,{1}{B},,,removal,,4
+"Gonti, Night Minister",Creature,4,B,{2}{B}{B},Aetherborn;Rogue,,,3,4
+Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
+Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
+Hecteyes,Creature,2,B,{1}{B},Ooze;Horror,,,1,4
+Hopeless Nightmare,Enchantment,1,B,{B},,,,,4
+Hymn to Tourach,Sorcery,2,B,{B}{B},,,,,4
+Imp's Mischief,Instant,2,B,{1}{B},,,,,4
+Jet Medallion,Artifact,2,,{2},,,discount:black:1,,4
+Liliana of the Veil,Planeswalker,3,B,{1}{B}{B},Liliana,,,,4
+Liliana's Caress,Enchantment,2,B,{1}{B},,,,,4
+Megrim,Enchantment,3,B,{2}{B},,,,,4
+Memorial to Folly,Land,0,B,,,B,etb-tapped,,4
+Mindslicer,Creature,4,B,{2}{B}{B},Horror,,,4,4
+Mutilate,Sorcery,4,B,{2}{B}{B},,,wipe,,4
+Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+Necrogoyf,Creature,5,B,{3}{B}{B},Lhurgoyf,,,*,4
+Nezumi Informant,Creature,2,B,{1}{B},Rat;Rogue,,,1,4
+Oppression,Enchantment,3,B,{1}{B}{B},,,,,4
+Painful Quandary,Enchantment,5,B,{3}{B}{B},,,,,4
+Phyrexian Arena,Enchantment,3,B,{1}{B}{B},,,draw,,4
+Pilfer,Sorcery,2,B,{1}{B},,,,,4
+Pit Automaton,Creature,2,,{2},Construct,C,dork;mana-restricted;mana2;ramp;rock,0,4
+Plaguecrafter,Creature,3,B,{2}{B},Human;Shaman,,,3,4
+Pox Plague,Sorcery,5,B,{B}{B}{B}{B}{B},,,,,4
+Raiders' Wake,Enchantment,4,B,{3}{B},,,,,4
+Rankle's Prank,Sorcery,4,B,{2}{B}{B},,,removal,,4
+"Rankle, Master of Pranks",Creature,4,B,{2}{B}{B},Faerie;Rogue,,draw,3,4
+Realm of Koh,Land,0,B,,,B,etb-tapped-cond,,4
+Refurbished Familiar,Creature,4,B,{3}{B},Zombie;Rat,,draw,2,4
+Sandman's Quicksand,Sorcery,3,B,{1}{B}{B},,,wipe,,4
+Sangromancer,Creature,4,B,{2}{B}{B},Vampire;Shaman,,,3,4
+Sheoldred's Edict,Instant,2,B,{1}{B},,,removal,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Syphon Mind,Sorcery,4,B,{3}{B},,,draw,,4
+"Tergrid, God of Fright // Tergrid's Lantern",Creature,5,B,{3}{B}{B} // {3}{B},God,,,4,4
+The Master of Lake-town,Creature,3,B,{1}{B}{B},Human;Advisor,,draw,3,4
+The Raven Man,Creature,2,B,{1}{B},Human;Wizard,,,2,4
+Tinybones Joins Up,Enchantment,1,B,{B},,,,,4
+"Tinybones, Bauble Burglar",Creature,2,B,{1}{B},Skeleton;Rogue,,,1,4
+"Tinybones, Pocket Nuisance",Creature,3,B,{2}{B},Skeleton;Rogue,,,2,4
+"Tourach, Dread Cantor",Creature,2,B,{1}{B},Human;Cleric,,,2,4
+Vicious Rumors,Sorcery,1,B,{B},,,,,4
+Virus Beetle,Creature,2,B,{1}{B},Insect,,,1,4
+Waste Not,Enchantment,2,B,{1}{B},,B,draw;mana2,,4
+Witch's Cottage,Land,0,B,,Swamp,B,etb-tapped-cond,,4
+Withering Torment,Instant,3,B,{2}{B},,,removal,,4

@@ -1,0 +1,38 @@
+{
+ "commander": "Tinybones, Bauble Burglar",
+ "written": "2026-10-16",
+ "engine": [
+  "Waste Not",
+  "Megrim",
+  "Liliana's Caress",
+  "Geth's Grimoire",
+  "Tergrid, God of Fright",
+  "Gonti, Night Minister",
+  "Tinybones, Pocket Nuisance",
+  "Bandit's Talent",
+  "The Raven Man",
+  "Painful Quandary",
+  "Dark Deal",
+  "Syphon Mind",
+  "The Master of Lake-town",
+  "Bloodchief Ascension",
+  "Pox Plague",
+  "Archfiend of Despair",
+  "Diabolic Tutor",
+  "Grim Tutor",
+  "Final Parting"
+ ],
+ "packages": [],
+ "aims": {},
+ "keywords": [
+  "discards",
+  "cards in hand",
+  "you don't own"
+ ],
+ "keep": {
+  "Pit Automaton": "its {C}{C} pays only for activated abilities, and this deck activates every turn: Tinybones and The Raven Man ({3}{B}), Bandit's Talent's levels, Geier Reach Sanitarium",
+  "Sandman's Quicksand": "mayhem: discarded to your own Oppression, Dark Deal, Delirium Skeins or Liliana, it is cast from the graveyard as a one-sided -2/-2 wipe"
+ },
+ "uat": {},
+ "version": 1
+}

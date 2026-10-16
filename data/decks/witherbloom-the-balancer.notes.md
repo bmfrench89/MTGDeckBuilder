@@ -34,14 +34,21 @@ loops forever.
    loses life, that player mills that many cards."
    - Once the Ascension has three quest counters, every card put into an opponent's
      graveyard costs them 2 life.
-   - That life loss mills them, the milled cards cost more life, and both their library
-     and their life total run out.
+   - That life loss mills them, and the milled cards cost more life. It ends when their
+     life or their library runs out, usually life first: 20 milled cards are 40 life.
+     An empty library loses at their next draw.
    - A quest counter goes on at any end step where an opponent lost 2+ life, so the
      drains charge it.
 3. **Pox Plague + Archfiend of Despair.** Pox Plague: each player loses half their life,
    discards half their hand and sacrifices half their permanents. Archfiend: "At the
    beginning of each end step, each opponent loses life equal to the life that player
-   lost this turn." Opponents lose half, then the same half again. You lose half too.
+   lost this turn." Opponents lose half, rounded down, then the same amount again at
+   the end step.
+   - At an even life total that's all of it.
+   - At an odd total it leaves them at 1 (31 → 16 → 1), and any other point they lose
+     that turn finishes it. Zulaport Cutthroat does it when Pox makes you sacrifice
+     creatures.
+   - You lose half your life too.
 4. **Grievous Wound + Archfiend of Despair.** Grievous Wound (on a player): "Whenever
    enchanted player is dealt damage, they lose half their life, rounded up." One point
    of damage takes half their life, and the end step repeats it.

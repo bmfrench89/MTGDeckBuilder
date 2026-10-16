@@ -1,0 +1,94 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+An Offer You Can't Refuse,Instant,1,U,{U},,W U B R G,counter,,4
+Annie Joins Up,Enchantment,4,G R W,{1}{R}{G}{W},,,,,4
+Arcane Denial,Instant,2,U,{1}{U},,,counter;draw,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Baxter Building,Land,0,,,,W U B R G C,draw,,4
+Beast Within,Instant,3,G,{2}{G},,,removal,,4
+Birds of Paradise,Creature,1,G,{G},Bird,W U B R G,dork;ramp,0,4
+Brainstorm,Instant,1,U,{U},,,draw,,4
+Bruce Banner // The Incredible Hulk,Creature,1,G R U,{U} // {2}{R}{R}{G}{G},Human;Scientist;Hero,,draw,1,4
+Canopy Vista,Land,0,G W,,Forest;Plains,W G,etb-tapped-cond,,4
+Chaos Warp,Instant,3,R,{2}{R},,,,,4
+Chromatic Lantern,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+Cinder Glade,Land,0,G R,,Mountain;Forest,R G,etb-tapped-cond,,4
+Cleansing Nova,Sorcery,5,W,{3}{W}{W},,,wipe,,4
+Clever Concealment,Instant,4,W,{2}{W}{W},,,,,4
+Clifftop Retreat,Land,0,R W,,,W R,etb-tapped-cond,,4
+Coastal Peak,Land,0,R U,,Island;Mountain,U R,etb-tapped,,4
+Collective Effort,Sorcery,3,W,{1}{W}{W},,,removal,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+Consecrated Sphinx,Creature,6,U,{4}{U}{U},Sphinx,,draw,4,4
+Counterspell,Instant,2,U,{U}{U},,,counter,,4
+Cultivate,Sorcery,3,G,{2}{G},,,fetch:basic;ramp,,4
+Cut a Deal,Sorcery,3,W,{2}{W},,,draw,,4
+Cyclonic Rift,Instant,2,U,{1}{U},,,,,4
+Disenchant,Instant,2,W,{1}{W},,,removal,,4
+Enlightened Tutor,Instant,1,W,{W},,,,,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Farseek,Sorcery,2,G,{1}{G},,,fetch:island;fetch:mountain;fetch:plains;fetch:swamp;ramp,,4
+Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Fiery Emancipation,Enchantment,6,R,{3}{R}{R}{R},,,,,4
+Force of Will,Instant,5,U,{3}{U}{U},,,counter,,4
+Forest,Land,0,G,,Forest,G,,,4
+Frantic Search,Instant,3,U,{2}{U},,,draw,,4
+Germination Practicum,Sorcery,5,G,{3}{G}{G},Lesson,,,,4
+Glacial Fortress,Land,0,U W,,,W U,etb-tapped-cond,,4
+Glittering Massif,Land,0,R W,,Mountain;Plains,W R,etb-tapped,,4
+Heroic Intervention,Instant,2,G,{1}{G},,,,,4
+"Human Torch, Johnny Storm",Creature,3,R,{2}{R},Human;Hero,,draw,2,4
+Idyllic Beachfront,Land,0,U W,,Plains;Island,W U,etb-tapped,,4
+Idyllic Tutor,Sorcery,3,W,{2}{W},,,,,4
+"Invisible Woman, Sue Storm",Creature,5,W,{4}{W},Human;Hero,,,2,4
+"Iron Man, Armored Avenger",Creature,4,U,{3}{U},Human;Hero,,draw,2,4
+Irrigated Farmland,Land,0,U W,,Plains;Island,W U,etb-tapped,,4
+Island,Land,0,U,,Island,U,,,4
+It's Clobberin' Time!,Sorcery,3,G,{2}{G},,,removal,,4
+"King T'Challa // Black Panther, Hope Enduring",Creature,3,U W,{1}{W}{U} // {4}{W}{U},Human;Noble;Hero,,draw,3,4
+Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
+Mana Drain,Instant,2,U,{U}{U},,C,counter,,4
+Meticulous Archive,Land,0,U W,,Plains;Island,W U,etb-tapped,,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mister Fantastic,Creature,3,G R U W,{2}{U},Human;Scientist;Hero,,draw,2,4
+"Mister Fantastic, Reed Richards",Creature,4,U,{3}{U},Human;Scientist;Hero,,draw,2,4
+Mistveil Plains,Land,0,W,,Plains,W,etb-tapped,,4
+Monica Rambeau,Creature,3,R W,{2}{W} // {2}{R}{W}{W},Human;Hero,,,3,4
+Monologue Tax,Enchantment,3,W,{2}{W},,,,,4
+Mountain,Land,0,R,,Mountain,R,,,4
+Mystic Remora,Enchantment,1,U,{U},,,draw,,4
+Mystical Tutor,Instant,1,U,{U},,,,,4
+Nature's Lore,Sorcery,2,G,{1}{G},,,fetch:forest;ramp,,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+Pensive Professor,Creature,3,U,{1}{U}{U},Human;Wizard,,draw,0,4
+Plains,Land,0,W,,Plains,W,,,4
+Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
+Radiant Summit,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,4
+Rampant Growth,Sorcery,2,G,{1}{G},,,fetch:basic;ramp,,4
+Reliquary Tower,Land,0,,,,C,,,4
+Rhystic Study,Enchantment,3,U,{2}{U},,,draw,,4
+Rootbound Crag,Land,0,G R,,,R G,etb-tapped-cond,,4
+Sacred Peaks,Land,0,R W,,Mountain;Plains,W R,etb-tapped,,4
+Scorched Geyser,Land,0,R U,,Island;Mountain,U R,etb-tapped-cond,,4
+Shang-Chi and the Ten Rings,Creature,3,U W,{1}{W}{U},Human;Warrior;Hero,,draw,2,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Spectator Seating,Land,0,R W,,,W R,etb-tapped-cond,,4
+Sulfur Falls,Land,0,R U,,,U R,etb-tapped-cond,,4
+Sunpetal Grove,Land,0,G W,,,W G,etb-tapped-cond,,4
+Swan Song,Instant,1,U,{U},,,counter,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Talisman of Creativity,Artifact,2,R U,{2},,U R C,ramp;rock,,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+The Astonishing Ant-Man,Creature,2,G U,{G}{U},Human;Scientist;Hero,,draw,1,4
+"The Thing, Ben Grimm",Creature,6,G,{5}{G},Human;Hero,,,7,4
+The Vision,Creature,4,,{4},Robot;Hero,,draw,2,4
+Thought Vessel,Artifact,2,,{2},,C,ramp;rock,,4
+Tragic Arrogance,Sorcery,5,W,{3}{W}{W},,,,,4
+Unstoppable Plan,Enchantment,3,U,{2}{U},,,,,4
+"Valeria Richards, Precocious",Creature,4,U,{3}{U},Human;Scientist;Hero,,discount:noncreature:1;draw,3,4
+Vandalblast,Sorcery,1,R,{R},,,removal,,4
+Wayfarer's Bauble,Artifact,1,,{1},,,fetch:basic;ramp,,4
+Whirlwind of Thought,Enchantment,4,R U W,{1}{U}{R}{W},,,draw,,4

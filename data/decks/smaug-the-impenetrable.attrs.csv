@@ -1,0 +1,85 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Abrade,Instant,2,R,{1}{R},,,removal,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+"Atsushi, the Blazing Sky",Creature,4,R,{2}{R}{R},Dragon;Spirit,,,4,4
+Big Score,Instant,4,R,{3}{R},,W U B R G,draw,,4
+Blasphemous Act,Sorcery,9,R,{8}{R},,,wipe,,4
+Bloodfell Caves,Land,0,B R,,,B R,etb-tapped,,4
+Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Brash Taunter,Creature,5,R,{4}{R},Goblin,,,1,4
+Chaos Warp,Instant,3,R,{2}{R},,,,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Crypt Rats,Creature,3,B,{2}{B},Rat,,,1,4
+Dark Fortress,Land,0,B R,,,B R C,,,4
+Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
+Deadly Dispute,Instant,2,B,{1}{B},,W U B R G,draw,,4
+Decadent Dragon // Expensive Taste,Creature,4,B R,{2}{R}{R} // {2}{B},Dragon,,,4,4
+Desolation of Smaug,Sorcery,4,R,{2}{R}{R},,W U B R G,mana-restricted,,4
+Diabolic Tutor,Sorcery,4,B,{2}{B}{B},,,,,4
+Draconic Visitor,Creature,5,R,{3}{R}{R},Dragon,,,5,4
+Dragon Tempest,Enchantment,2,R,{1}{R},,,,,4
+Dragon's Desire,Sorcery,4,R,{2}{R}{R},,R,ritual:1,,4
+Dragon-Cursed Halls,Land,0,,,,C,,,4
+"Dragonhawk, Fate's Tempest",Creature,5,R,{3}{R}{R},Bird;Dragon,,,5,4
+Dragonlord Kolaghan,Creature,6,B R,{4}{B}{R},Elder;Dragon,,,6,4
+Dragonspeaker Shaman,Creature,3,R,{1}{R}{R},Human;Barbarian;Shaman,,discount:dragon:2,2,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Exsanguinate,Sorcery,2,B,{X}{B}{B},,,,,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Faithless Looting,Sorcery,1,R,{R},,,draw,,4
+Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
+Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Fiery Emancipation,Enchantment,6,R,{3}{R}{R}{R},,,,,4
+Final Parting,Sorcery,5,B,{3}{B}{B},,,,,4
+Foreboding Ruins,Land,0,B R,,,B R,etb-tapped-cond,,4
+"Ganax, Astral Hunter",Creature,5,R,{4}{R},Dragon,W U B R G,,3,4
+Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
+Haunted Ridge,Land,0,B R,,,B R,etb-tapped-cond,,4
+Hellkite Courser,Creature,6,R,{4}{R}{R},Dragon,,,6,4
+Hellkite Tyrant,Creature,6,R,{4}{R}{R},Dragon,,,6,4
+"Junji, the Midnight Sky",Creature,5,B,{3}{B}{B},Dragon;Spirit,,,5,4
+"Kolaghan, the Storm's Fury",Creature,5,B R,{3}{B}{R},Dragon,,,4,4
+Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
+Marionette Apprentice,Creature,2,B,{1}{B},Human;Artificer,,,1,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mirkwood Bats,Creature,4,B,{3}{B},Bat,,,2,4
+Mountain,Land,0,R,,Mountain,R,,,4
+Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+Night's Whisper,Sorcery,2,B,{1}{B},,,draw,,4
+Obsidian Charmaw,Creature,5,R,{3}{R}{R},Dragon,,,4,4
+Parapet Thrasher,Creature,4,R,{2}{R}{R},Dragon,,,4,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Phyrexian Arena,Enchantment,3,B,{1}{B}{B},,,draw,,4
+Professional Face-Breaker,Creature,3,R,{2}{R},Human;Warrior,,,2,4
+Rakdos Charm,Instant,2,B R,{B}{R},,,removal,,4
+Rakdos Signet,Artifact,2,B R,{2},,B R,mana2;ramp;rock,,4
+Reliquary Tower,Land,0,,,,C,,,4
+Return the Favor,Instant,2,R,{R}{R},,,,,4
+Rogue's Passage,Land,0,,,,C,,,4
+Scavenger Regent // Exude Toxin,Creature,4,B,{3}{B} // {X}{B}{B},Dragon,,,4,4
+Seize the Spoils,Sorcery,3,R,{2}{R},,W U B R G,draw,,4
+Self-Destruct,Instant,2,R,{1}{R},,,,,4
+Sign in Blood,Sorcery,2,B,{B}{B},,,,,4
+Smaug the Impenetrable,Creature,7,B R,{5}{B}{R},Dragon,,,8,4
+Smaug the Magnificent,Creature,4,R,{2}{R}{R},Dragon,,,4,4
+"Smaug, Wicked Worm",Creature,5,B R,{3}{B}{R},Dragon,,draw,5,4
+Smoldering Marsh,Land,0,B R,,Swamp;Mountain,B R,etb-tapped-cond,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Stir Up Trouble,Sorcery,1,B,{B},,,removal,,4
+Stone-Giant of High Pass,Creature,7,R,{5}{R}{R},Giant,,,7,4
+Sulfurous Springs,Land,0,B R,,,B R C,,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Talisman of Indulgence,Artifact,2,B R,{2},,B R C,ramp;rock,,4
+Temple of Malice,Land,0,B R,,,B R,etb-tapped,,4
+Terminate,Instant,2,B R,{B}{R},,,removal,,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+The Misty Mountains Cold,Enchantment,3,R,{2}{R},Saga,W U B R G,,,4
+The Reaver Cleaver,Artifact,3,R,{2}{R},Equipment,,,,4
+The Sackville-Bagginses,Creature,2,B,{1}{B},Halfling;Citizen,,draw,2,4
+Thought Vessel,Artifact,2,,{2},,C,ramp;rock,,4
+Turbulent Crater,Land,0,B R,,Swamp;Mountain,B R,etb-tapped-cond,,4
+Vandalblast,Sorcery,1,R,{R},,,removal,,4
+Wayfarer's Bauble,Artifact,1,,{1},,,fetch:basic;ramp,,4
+Wrathful Red Dragon,Creature,5,R,{3}{R}{R},Dragon,,,5,4

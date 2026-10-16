@@ -1,0 +1,107 @@
+# Title: Smaug the Impenetrable (theory)
+# Commander: Smaug the Impenetrable
+# Colors: B R
+# Archetype: combo treasure tribal-dragon
+# Bracket: 4
+# Study: yes
+# Source: theory build 2026-10-16 from the whole collection (every card counted, decks included); not sleeved
+
+# --- Commander ---
+1 Smaug the Impenetrable
+
+# --- Creatures ---
+1 Smaug, Wicked Worm
+1 The Sackville-Bagginses
+1 Smaug the Magnificent
+1 Dragonhawk, Fate's Tempest
+1 Wrathful Red Dragon
+1 Hellkite Tyrant
+1 Draconic Visitor
+1 Atsushi, the Blazing Sky
+1 Decadent Dragon // Expensive Taste
+1 Parapet Thrasher
+1 Scavenger Regent // Exude Toxin
+1 Professional Face-Breaker
+1 Ganax, Astral Hunter
+1 Obsidian Charmaw
+1 Dragonlord Kolaghan
+1 Hellkite Courser
+1 Junji, the Midnight Sky
+1 Kolaghan, the Storm's Fury
+1 Brash Taunter
+1 Crypt Rats
+1 Stone-Giant of High Pass
+1 Mirkwood Bats
+1 Marionette Apprentice
+1 Dragonspeaker Shaman
+
+# --- Instants ---
+1 Return the Favor
+1 Dark Ritual
+1 Deadly Dispute
+1 Abrade
+1 Big Score
+1 Rakdos Charm
+1 Terminate
+1 Chaos Warp
+1 Self-Destruct
+
+# --- Sorceries ---
+1 Exsanguinate
+1 Dragon's Desire
+1 Desolation of Smaug
+1 Night's Whisper
+1 Feed the Swarm
+1 Seize the Spoils
+1 Sign in Blood
+1 Faithless Looting
+1 Vandalblast
+1 Stir Up Trouble
+1 Blasphemous Act
+1 Diabolic Tutor
+1 Grim Tutor
+1 Final Parting
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Sol Ring
+1 Rakdos Signet
+1 Talisman of Indulgence
+1 Fellwar Stone
+1 Mind Stone
+1 Thought Vessel
+1 Wayfarer's Bauble
+1 The Reaver Cleaver
+1 Swiftfoot Boots
+1 Lightning Greaves
+
+# --- Enchantments ---
+1 Phyrexian Arena
+1 The Misty Mountains Cold
+1 Dragon Tempest
+1 Fiery Emancipation
+
+# --- Lands ---
+1 Command Tower
+1 Dragon-Cursed Halls
+1 Smoldering Marsh
+1 Haunted Ridge
+1 Sulfurous Springs
+1 Exotic Orchard
+1 Bojuka Bog
+1 Dark Fortress
+1 Foreboding Ruins
+1 Reliquary Tower
+1 Path of Ancestry
+1 Terramorphic Expanse
+1 Myriad Landscape
+1 Rogue's Passage
+1 Evolving Wilds
+1 Fabled Passage
+1 Bloodfell Caves
+1 Temple of Malice
+1 Turbulent Crater
+
+# --- Basics ---
+12 Mountain
+6 Swamp

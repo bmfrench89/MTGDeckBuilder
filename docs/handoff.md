@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-16 (the Lab: theory decks get their own view; Witherbloom, the Balancer is the first theory deck, a Bracket 4 combo build from the whole collection; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-16 (the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -48,6 +48,43 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-16 (later): three more theory decks, and clips for all four.** The player:
+"Can you create how to play videos for this deck in the Lab? Id also like to see any
+others that you came up with".
+- **Witherbloom, the Balancer:** 5 clips (40 scenes). The clip work corrected two notes
+  claims:
+  - The Master + Ascension chain ends when life OR library runs out, usually life.
+  - Pox Plague + Archfiend leaves an odd life total at 1, so one more point is needed.
+- **Smaug the Impenetrable** (theory, B4): noncombat damage to Smaug makes Treasures,
+  and Draconic Visitor makes them 5/5 Dragons. Three infinites:
+  - Visitor + Dragon Tempest;
+  - Stone-Giant of High Pass, with Mirkwood Bats, Marionette Apprentice or the
+    Sackville-Bagginses as the drain;
+  - Ganax + Visitor. It's MANDATORY: with neither Tempest nor the Bats out it draws the
+    game (CR 104.4b), and the notes and clips say so.
+
+  The deck passes every gate (keepable 81%). Its field's own damage engines
+  (Pyrohemia, Mayhem Devil, Pain for All) aren't owned and head the buylist.
+- **Mister Fantastic** (theory, B4): Spellbook finds 6 combos.
+  - The Four loop.
+  - Reed + Sue + Iron Man, Shang-Chi and the Ten Rings, or Ant-Man.
+  - Pensive Professor + Iron Man.
+  - Mister Fantastic + Unstoppable Plan. It nets mana only when the nonland permanents
+    make more than {R}{G}{W}{U} across two untaps. Three any-colour rocks already do.
+
+  Niv-Mizzet, Visionary was cut for Talisman of Creativity. Spellbook lists Human Torch
+  + Niv as a combo, but the chain is mandatory and costs a card per point of damage, so
+  it decks you before it deals 120 to a full table. The notes say never to add Niv back.
+  Annie Joins Up doubles the legendary triggers. The first draft's 20 type-line Heroes
+  were 0% in the field and were cut. The deck passes every gate (commander by turn 4 in
+  71% of games).
+- **Tinybones, Bauble Burglar (B4 theory):** a copy of the real deck with seven swaps:
+  The Master + Bloodchief Ascension, Pox Plague + Archfiend, and three tutors. The real
+  B3 deck is untouched. Its clips reuse three of the real deck's and add two for the
+  combos.
+- All four theory decks are Bracket 4 and claim no copies; the conflicts are still the
+  same 7.
 
 **2026-10-16: the Lab, and the first theory deck.** The player asked whether any Bracket 4
 infinite-combo deck exists besides Bartolomé, "even if it meant breaking down a deck",

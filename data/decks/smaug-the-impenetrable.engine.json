@@ -1,0 +1,63 @@
+{
+ "commander": "Smaug the Impenetrable",
+ "written": "2026-10-16",
+ "engine": [
+  "Draconic Visitor",
+  "Dragon Tempest",
+  "Stone-Giant of High Pass",
+  "Ganax, Astral Hunter",
+  "Mirkwood Bats",
+  "Fiery Emancipation",
+  "Wrathful Red Dragon",
+  "Brash Taunter",
+  "Blasphemous Act",
+  "Self-Destruct",
+  "Crypt Rats",
+  "Hellkite Tyrant",
+  "Smaug the Magnificent",
+  "Diabolic Tutor",
+  "Grim Tutor",
+  "Final Parting"
+ ],
+ "packages": [
+  {
+   "name": "Treasure makers (Dragons with Visitor out)",
+   "enablers": [],
+   "payoffs": [
+    "Big Score",
+    "Professional Face-Breaker",
+    "The Reaver Cleaver",
+    "The Misty Mountains Cold",
+    "Smaug, Wicked Worm",
+    "The Sackville-Bagginses",
+    "Deadly Dispute",
+    "Marionette Apprentice",
+    "Decadent Dragon // Expensive Taste",
+    "Atsushi, the Blazing Sky"
+   ]
+  }
+ ],
+ "aims": {
+  "ramp": 10,
+  "removal": 7
+ },
+ "keywords": [
+  "treasure",
+  "damage",
+  "dragon"
+ ],
+ "keep": {
+  "Dragonhawk, Fate's Tempest": "a Dragon: each one adds 1 to Dragon Tempest's X, and Wrathful Red Dragon turns damage dealt to it into damage",
+  "Parapet Thrasher": "a Dragon: each one adds 1 to Dragon Tempest's X, and Wrathful Red Dragon turns damage dealt to it into damage",
+  "Obsidian Charmaw": "a Dragon: each one adds 1 to Dragon Tempest's X, and Wrathful Red Dragon turns damage dealt to it into damage",
+  "Junji, the Midnight Sky": "a Dragon: each one adds 1 to Dragon Tempest's X, and Wrathful Red Dragon turns damage dealt to it into damage",
+  "Kolaghan, the Storm's Fury": "a Dragon: each one adds 1 to Dragon Tempest's X, and Wrathful Red Dragon turns damage dealt to it into damage",
+  "Scavenger Regent // Exude Toxin": "a Dragon whose Omen is a one-sided wipe: each non-Dragon creature gets -X/-X",
+  "Hellkite Courser": "puts Smaug onto the battlefield from the command zone with haste, without paying for him",
+  "Dragonlord Kolaghan": "gives every other creature haste, Draconic Visitor's Dragon tokens included",
+  "Stir Up Trouble": "cheap creature removal: sacrifice a spare Treasure instead of paying {4}",
+  "Wayfarer's Bauble": "ramp: a basic land onto the battlefield for {2}"
+ },
+ "uat": {},
+ "version": 1
+}
