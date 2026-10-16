@@ -21,7 +21,6 @@ Evacuation,Instant,5,U,{3}{U}{U},,,,,4
 Everflowing Chalice,Artifact,0,,{0},,C,ramp;rock,,4
 Exclude,Instant,3,U,{2}{U},,,counter;draw,,4
 Fabricate,Sorcery,3,U,{2}{U},,,,,4
-Fact or Fiction,Instant,4,U,{3}{U},,,,,4
 Faerie Mastermind,Creature,2,U,{1}{U},Faerie;Rogue,,draw,2,4
 Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
 Field of Ruin,Land,0,,,,C,,,4
@@ -39,7 +38,6 @@ Kappa Cannoneer,Creature,6,U,{5}{U},Turtle;Warrior,,,4,4
 Lonely Sandbar,Land,0,U,,,U,etb-tapped,,4
 Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
 Mulldrifter,Creature,5,U,{4}{U},Elemental,,draw,2,4
-Murmuring Mystic,Creature,4,U,{3}{U},Human;Wizard,,,1,4
 Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
 Mystic Confluence,Instant,5,U,{3}{U}{U},,,counter;draw,,4
 Mystic Remora,Enchantment,1,U,{U},,,draw,,4
@@ -79,3 +77,5 @@ Worn Powerstone,Artifact,3,,{3},,C,mana2;ramp;rock,,4
 Theorist's Proxy,Creature,2,U,{1}{U},Illusion,,,0,4
 Geist of Saint Thalia,Creature,2,U,{1}{U},Spirit;Cleric,,discount:noncreature:1,1,4
 Theorist's Sanctum,Land,0,U,,Island,U,etb-tapped-cond,,4
+Fascination,Sorcery,2,U,{X}{U}{U},,,,,4
+Body of Knowledge,Creature,5,U,{3}{U}{U},Avatar,,,*,4

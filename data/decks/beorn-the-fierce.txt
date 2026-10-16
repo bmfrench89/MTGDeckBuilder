@@ -39,12 +39,11 @@
 1 Hexhaven Invigorator
 1 Lizard, Connors's Curse
 1 Little Bear
-1 Whiptongue Hydra
+1 Ordinary Bear
 1 Mirkwood Pathmaker
 1 The Earth King
 1 Selvala, Heart of the Wilds
 1 Hulk, Brutal Brawler
-1 Wood Elves
 
 # --- Instants ---
 1 Crop Rotation
@@ -74,6 +73,7 @@
 1 Cosmic Cube
 
 # --- Enchantments ---
+1 Springleaf Parade
 1 Beorn's Hospitality
 1 Garruk's Uprising
 1 Elemental Bond

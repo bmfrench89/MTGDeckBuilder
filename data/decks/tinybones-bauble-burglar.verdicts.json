@@ -1,0 +1,17 @@
+{
+ "version": 1,
+ "verdicts": {
+  "land|Memorial to Folly|Swamp": {
+   "verdict": "skip",
+   "why": "Memorial returns Gray Merchant or Mindslicer from the graveyard to hand, an ability the land score can't see; the deck still has 31 Swamps.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "spell|Mutilate|Mind Stone": {
+   "verdict": "skip",
+   "why": "Every Mind Stone is in another deck, so this would share a copy; Mutilate is one of two wipes. A free Commander's Sphere fills the ramp gap instead (A/B +0.6% engine online, ±0.5).",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  }
+ }
+}

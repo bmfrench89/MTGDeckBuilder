@@ -60,6 +60,11 @@ LIST_KEYS = ("engine", "keywords")
 # in step; this module may not import a spoke).
 AIM_ROLES = ("ramp", "draw", "removal", "wipe", "counter")
 PACKAGE_KINDS = ("enablers", "payoffs")
+# Deck UAT targets (deck_uat.py's DEFAULTS keys; a tripwire test keeps them in step).
+# Whole numbers: percents for *_pct / *_min / *_max, turns for *_turn, a count for
+# engine_min.
+UAT_KEYS = ("keepable_min", "screw_max", "engine_turn", "engine_min", "engine_pct",
+            "commander_turn", "commander_pct")
 
 
 def spec_path(deck_path):
@@ -85,6 +90,8 @@ def load(path):
                     if isinstance(v, (int, float))}
     spec["keep"] = {k: v for k, v in (spec.get("keep") or {}).items()
                     if isinstance(k, str) and isinstance(v, str) and v.strip()}
+    spec["uat"] = {k: int(v) for k, v in (spec.get("uat") or {}).items()
+                   if k in UAT_KEYS and isinstance(v, (int, float))}
     return spec
 
 
@@ -130,8 +137,19 @@ def _section_cards(notes_text, heading_prefixes):
         if on:
             m = re.match(r"^\s*-\s+(.+?)\s*$", line)
             if m:
-                out.append(m.group(1))
+                out += _bullet_names(m.group(1))
     return out
+
+
+def _bullet_names(text):
+    """The card names one bullet carries. `**Name**` segments win when present (Dina's
+    "**Bloodghast**, **Nether Traitor** — why" lists several per line). Otherwise it's
+    the text before an " — " explanation, which is how the sleeper-audit lists annotate a
+    card. Before 2026-10-15 the whole line came back, so no card in Dina's list matched."""
+    bold = re.findall(r"\*\*(.+?)\*\*", text)
+    if bold:
+        return [b.strip() for b in bold if b.strip()]
+    return [text.split(" — ", 1)[0].strip()]
 
 
 def protected_engine_from_notes(notes_text):
@@ -217,6 +235,16 @@ def _edit_spec(path, args):
         except ValueError:
             print(f"error: an aim is a whole number: {role} {n}", file=sys.stderr)
             return 2
+    for key, n in args.uat:
+        if key not in UAT_KEYS:
+            print(f"error: no UAT target {key!r}; targets are {', '.join(UAT_KEYS)}",
+                  file=sys.stderr)
+            return 2
+        try:
+            spec["uat"][key] = int(n)
+        except ValueError:
+            print(f"error: a UAT target is a whole number: {key} {n}", file=sys.stderr)
+            return 2
     for group in args.package:
         if len(group) < 3 or group[1] not in PACKAGE_KINDS:
             print("error: --package takes a name, enablers|payoffs, then one or more cards",
@@ -231,7 +259,7 @@ def _edit_spec(path, args):
         pkg[kind] = list(pkg.get(kind) or []) + [c for c in cards if mtglib._norm(c) not in have]
     save(path, spec)
     print(f"   spec: {len(spec['keywords'])} keyword(s) · aims {spec['aims'] or '—'} · "
-          f"{len(spec['packages'])} package(s)")
+          f"{len(spec['packages'])} package(s) · UAT {spec['uat'] or 'defaults'}")
     return 0
 
 
@@ -254,6 +282,8 @@ def main(argv=None):
     ap.add_argument("--package", action="append", default=[], nargs="+",
                     metavar="NAME_KIND_CARDS",
                     help="--package \"name\" enablers|payoffs \"Card A\" \"Card B\"")
+    ap.add_argument("--uat", action="append", default=[], nargs=2, metavar=("KEY", "N"),
+                    help=f"a deck UAT target for deck_uat.py ({', '.join(UAT_KEYS)})")
     ap.add_argument("--audit", action="store_true",
                     help="list non-land cards with no engine/package/keep reason; exit 3")
     args = ap.parse_args(argv)
@@ -278,10 +308,10 @@ def main(argv=None):
             return 2
         save(path, {"commander": commander,
                     "written": datetime.date.today().isoformat(), "engine": engine,
-                    "packages": [], "aims": {}, "keywords": [], "keep": {}})
+                    "packages": [], "aims": {}, "keywords": [], "keep": {}, "uat": {}})
         print(f"wrote {path}: {len(engine)} engine cards from the notes"
               + ("" if engine else " (the notes have no '## Protected engine' list)"))
-    if args.keyword or args.aim or args.package:
+    if args.keyword or args.aim or args.package or args.uat:
         rc = _edit_spec(path, args)
         if rc:
             return rc

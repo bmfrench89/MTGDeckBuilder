@@ -20,7 +20,6 @@
 1 Ribtruss Roaster
 1 Gilded Goose
 1 Environmental Scientist
-1 Mindful Biomancer
 1 Jadar, Ghoulcaller of Nephalia
 1 Nether Traitor
 1 Umbral Collar Zealot
@@ -61,7 +60,6 @@
 # --- Sorceries ---
 1 Witherbloom Command
 1 Culling Ritual
-1 Feed the Swarm
 1 Final Act
 1 Toxic Deluge
 1 Deadly Brew
@@ -69,6 +67,7 @@
 1 Immoral Bargain
 
 # --- Artifacts ---
+1 Cauldron of Essence
 1 Sol Ring
 1 Arcane Signet
 
@@ -78,6 +77,9 @@
 1 Awakening Zone
 1 Blight Mound
 1 Moldervine Reclamation
+
+# --- Planeswalkers ---
+1 Professor Dellian Fel
 
 # --- Lands ---
 1 Command Tower
@@ -92,9 +94,9 @@
 1 Haunted Mire
 1 Temple of Malady
 1 Titan's Grave
-1 Witherbloom Campus
+1 Deathcap Glade
 1 Terramorphic Expanse
-1 Jungle Hollow
+1 Tainted Wood
 1 Evolving Wilds
 1 Viridescent Bog
 1 Twilight Mire

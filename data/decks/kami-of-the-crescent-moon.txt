@@ -12,7 +12,7 @@
 1 Faerie Mastermind
 1 Jin-Gitaxias, Progress Tyrant
 1 Theorist's Proxy
-1 Murmuring Mystic
+1 Body of Knowledge
 1 Geist of Saint Thalia
 1 Palladium Myr
 1 Psychosis Crawler
@@ -30,7 +30,6 @@
 1 Cyclonic Rift
 1 Evacuation
 1 Exclude
-1 Fact or Fiction
 1 Into the Roil
 1 Mystic Confluence
 1 Pongify
@@ -43,6 +42,7 @@
 1 Whir of Invention
 
 # --- Sorceries ---
+1 Fascination
 1 Curse of the Swine
 1 Fabricate
 1 Preordain

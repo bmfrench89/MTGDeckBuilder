@@ -1,0 +1,95 @@
+# Title: Tinybones, Bauble Burglar
+# Commander: Tinybones, Bauble Burglar
+# Colors: B
+# Archetype: control discard group-slug
+# Bracket: 3
+# Source: built 2026-10-15 by a session: engine-first auto_build draft + engine-read hand pass
+
+# --- Commander ---
+1 Tinybones, Bauble Burglar
+
+# --- Creatures ---
+1 Tergrid, God of Fright // Tergrid's Lantern
+1 Gonti, Night Minister
+1 Tinybones, Pocket Nuisance
+1 The Raven Man
+1 Rankle, Master of Pranks
+1 Tourach, Dread Cantor
+1 Aclazotz, Deepest Betrayal // Temple of the Dead
+1 Fell Specter
+1 Sangromancer
+1 Asylum Visitor
+1 Burglar Rat
+1 Elderfang Disciple
+1 Nezumi Informant
+1 Virus Beetle
+1 Hecteyes
+1 Stony-Voiced Goblins
+1 Rank Rat
+1 Liliana's Specter
+1 Refurbished Familiar
+1 Necrogoyf
+1 Mindslicer
+1 Gray Merchant of Asphodel
+1 Plaguecrafter
+1 Pit Automaton
+
+# --- Instants ---
+1 Dark Ritual
+1 Go for the Throat
+1 Withering Torment
+1 Defile
+1 Sheoldred's Edict
+1 Village Rites
+1 Imp's Mischief
+
+# --- Sorceries ---
+1 Syphon Mind
+1 Dark Deal
+1 Delirium Skeins
+1 Vicious Rumors
+1 Duress
+1 Pilfer
+1 Hymn to Tourach
+1 Mind Rake
+1 Rankle's Prank
+1 Let's Play a Game
+1 Feed the Swarm
+1 Sandman's Quicksand
+1 Mutilate
+1 Night's Whisper
+
+# --- Artifacts ---
+1 Commander's Sphere
+1 Sol Ring
+1 Arcane Signet
+1 Jet Medallion
+1 Charcoal Diamond
+1 Geth's Grimoire
+1 Entropic Battlecruiser
+
+# --- Enchantments ---
+1 Waste Not
+1 Megrim
+1 Liliana's Caress
+1 Bandit's Talent
+1 Painful Quandary
+1 Oppression
+1 Raiders' Wake
+1 Tinybones Joins Up
+1 Hopeless Nightmare
+1 Phyrexian Arena
+
+# --- Planeswalkers ---
+1 Liliana of the Veil
+
+# --- Lands ---
+1 Geier Reach Sanitarium
+1 Bojuka Bog
+1 Witch's Cottage
+1 Myriad Landscape
+1 Memorial to Folly
+1 Realm of Koh
+
+# --- Basics ---
+30 Swamp

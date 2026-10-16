@@ -43,6 +43,8 @@
 1 Lorehold, the Historian
 1 Bifur, Melodic Rider
 1 Hellkite Tyrant
+1 Iron Hills Stalwart
+1 Belladonna Took
 
 # --- Instants ---
 1 Swords to Plowshares
@@ -51,10 +53,8 @@
 1 Chaos Warp
 1 Thorin's Last Stand
 1 Settle the Wreckage
-1 Vow to Erebor
 
 # --- Sorceries ---
-1 Seize the Spoils
 1 Blasphemous Act
 
 # --- Artifacts ---

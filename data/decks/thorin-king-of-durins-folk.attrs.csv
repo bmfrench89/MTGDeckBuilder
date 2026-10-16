@@ -53,7 +53,6 @@ Rubble Rouser,Creature,3,R,{2}{R},Dwarf;Sorcerer,R,dork;draw;ramp,1,4
 Rugged Prairie,Land,0,R W,,,W R C,mana3,,4
 Sacred Peaks,Land,0,R W,,Mountain;Plains,W R,etb-tapped,,4
 Secret Tunnel,Land,0,,,Cave,C,,,4
-Seize the Spoils,Sorcery,3,R,{2}{R},,W U B R G,draw,,4
 Settle the Wreckage,Instant,4,W,{2}{W}{W},,,wipe,,4
 Shattered Acolyte,Creature,2,W,{1}{W},Dwarf;Warlock,,,2,4
 Smaug the Magnificent,Creature,4,R,{2}{R}{R},Dragon,,,4,4
@@ -79,7 +78,8 @@ Thorin's Last Stand,Instant,4,W,{2}{W}{W},,,removal,,4
 Thrór's Map,Artifact,2,,{2},,,draw;fetch:basic,,4
 Tocasia's Welcome,Enchantment,3,W,{2}{W},,,draw,,4
 Turbulent Steppe,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,4
-Vow to Erebor,Instant,2,W,{1}{W},,,,,4
 Web Up,Enchantment,3,W,{2}{W},,,removal,,4
 White Auracite,Artifact,4,W,{2}{W}{W},,W,ramp;rock,,4
 Óin the Brave,Creature,2,R,{1}{R},Dwarf;Warrior,,draw,1,4
+Iron Hills Stalwart,Creature,5,R,{4}{R},Dwarf;Warrior,,,4,4
+Belladonna Took,Creature,2,W,{1}{W},Halfling;Citizen,,draw,2,4

@@ -75,7 +75,8 @@ per-module table — read it before any structural change.
   `card_image`, `oracle_flags` (dict-in/set-out oracle derivation; `re` only — it
   imports nothing else in the repo), `goldfish` (seeded Monte Carlo for *sequenced*
   play — the questions `manabase`'s exact-but-unconditional closed forms cannot reach;
-  `deck_stats`/`deckcore` are imported inside its loader only), `clips` (the Watch tab's
+  `deck_stats`/`deckcore` are imported inside functions only: the loader, and the A/B
+  swap's basic-land synthesis), `clips` (the Watch tab's
   storyboard gate — every card a clip shows must be in the deck; mtglib only), `intake`
   (card intake + deck import: parse a pasted list or CSV, resolve every line through
   `carddb.verify_cards`, write a dated batch to `owned_additions.txt`, reconcile a new
@@ -86,6 +87,11 @@ per-module table — read it before any structural change.
   engine keywords, written by a session BEFORE the draft; `auto_build --engine` seeds it
   ahead of every quota, and `engine_spec.py --audit` exits 3 until every other non-land
   card is kept with a reason or cut; deck-flow review bundle C; mtglib only),
+  `deck_uat` (the build's test run, docs/spec-deck-uat.md: goldfish frequencies turned
+  into gates (keepable, screw, the engine online by turn 6, the commander on time) with
+  thresholds calibrated on the real decks and per-deck targets in the spec's `uat`; its
+  `ab()` replays the identical games with one card swapped, and `optimize.py --json --ab`
+  attaches that to every proposal),
   `collection_query` (the Collection page's search language — one string that filters,
   sorts and counts the pool: a Scryfall subset plus `free>0`, `decks=0`, `deck:`, `for:`,
   `is:pinned`, `added>=`; true/false/UNKNOWN per row, unknown rows skipped and counted,
@@ -132,6 +138,10 @@ python3 scripts/deck_conflicts.py --collection $COLL [--available]
 python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL [--games 5000]
 python3 scripts/goldfish.py --deck data/decks/<stem>.txt --collection $COLL \
     --ab "Out Card=In Card"          # swap one card, replay the identical games
+python3 scripts/deck_uat.py --deck data/decks/<stem>.txt --collection $COLL   # the deck's UAT
+                                     # gates; exit 3 on a fail; --all; --ab "Out=In"
+python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL --json --ab
+                                     # every proposal carries its paired A/B
 
 # Build / tune / render
 python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]

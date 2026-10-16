@@ -60,6 +60,11 @@
 1 Magda, Brazen Outlaw
 1 Ori, Plate Stacker
 1 Mines of Moria
+1 Tinybones, Trinket Thief
+1 Crypt Ghast
+1 Cabal Coffers
+1 Bottomless Pit
+1 Necrogen Mists
 1 Cyclonic Rift
 1 Esper Sentinel
 1 Smothering Tithe

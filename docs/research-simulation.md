@@ -1,5 +1,13 @@
 # Research — Mass playtesting / simulation ("prove what cards mathematically work")
 
+> **2026-10-15 update: see [spec-deck-uat.md](spec-deck-uat.md).**
+> - The goldfish now runs as the build's UAT gates (v1 shipped).
+> - Tier 2 moves from deferred to planned: it's calibrated from Playgroup's published
+>   tables of 6,934 real Commander games instead of invented numbers.
+> - Tier 3 is reframed: Forge's headless `sim -f Commander` needs no engine of our own,
+>   so it becomes an optional smoke test on a runner. It's still limited by the
+>   pilots, so it's never a verdict.
+
 **Status:** assessment + phased ladder, 2026-08-10. **Tier 1 is now SHIPPED** —
 `scripts/goldfish.py` (spec: [spec-engine-upgrades.md](spec-engine-upgrades.md) §6,
 tracker Phase 7), with the scope lock formally lifted in

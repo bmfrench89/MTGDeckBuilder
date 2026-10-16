@@ -153,13 +153,21 @@ _basics_by_demand = deckcore.basics_by_demand
 _TRIBAL_MIN = 12  # owned in-color members before a tribal build is honest (grounding rule #2)
 
 
-def _tribe_and_support(commander_name, idx, archetype, coll, identity):
+def _tribe_and_support(commander_name, idx, archetype, coll, identity, known=False):
     """The tribe a commander is built around + how many in-color members you own.
     Candidates: 'tribal-X' archetype tags + the commander's own non-'Human' subtypes;
-    pick whichever the collection best supports (so we never force a tribe you can't field)."""
+    pick whichever the collection best supports (so we never force a tribe you can't field).
+
+    A curated commander (`known`: it has a commanders.csv row) takes its tribe ONLY from
+    its tags. The curated archetype is the strategy, and the creature type on the
+    commander's own line is not one. Found 2026-10-15: Tinybones, Bauble Burglar is a
+    Skeleton Rogue, and the draft for a discard deck came back as Rogue tribal. Twelve
+    curated commanders read the same way, among them Y'shtola and Eriette as Warlocks.
+    An uncurated commander has no other signal, so its subtypes stay candidates (Beorn
+    the Fierce's Bears)."""
     cands = [a.split("-", 1)[1].lower() for a in archetype if a.startswith("tribal-")]
     ref = mtglib.lookup(idx, commander_name)
-    if ref and ref.subtypes:
+    if ref and ref.subtypes and not known:
         cands += [s.lower() for s in ref.subtypes if s.lower() != "human"]
     best, best_n = None, 0
     for tribe in dict.fromkeys(cands):
@@ -238,7 +246,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
            "field_n": deck_fit.load_field_n(commander_name, idx),
            "field_base": deck_fit.load_field_base(commander_name, idx)}
     # tribal awareness: does the commander want a tribe, and does the collection support it?
-    tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity)
+    tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity,
+                                        known=known)
     tribe_warning = None
     if tribe and tribe_n >= _TRIBAL_MIN:
         ctx["tribal"] = tribe

@@ -159,3 +159,10 @@ of the gap to 600 is the second sacrifice outlet and Spellbook's finer-grained e
 
 Both cuts were removal-only Auras that the optimizer itself rated lowest (8% field), so the
 lattice is untouched.
+
+## 2026-10-15 arrival (manual — do not cut)
+- **Ichor Wellspring**: a {2} artifact. "When this artifact enters or is put into a graveyard
+  from the battlefield, draw a card." Bartolomé sacrifices artifacts as well as creatures,
+  so it is fodder that draws once on the way in and once on the way out. In over Throne of
+  the Grim Captain: its craft needs a Dinosaur, a Merfolk, a Pirate and a Vampire, and this
+  deck has no Dinosaur, Merfolk or Pirate.

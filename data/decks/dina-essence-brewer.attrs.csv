@@ -12,7 +12,6 @@ Smothering Abomination,Creature,4,B,,draw,3,4
 Ribtruss Roaster,Creature,5,G,,,3,3
 Gilded Goose,Creature,1,G,W U B R G,dork;ramp,3,0
 Environmental Scientist,Creature,2,G,,fetch:basic,3,2
-Mindful Biomancer,Creature,2,G,,,3,2
 "Jadar, Ghoulcaller of Nephalia",Creature,2,B,,,3,1
 Nether Traitor,Creature,2,B,,,3,1
 Umbral Collar Zealot,Creature,2,B,,,3,3
@@ -49,7 +48,6 @@ Infernal Grasp,Instant,2,B,,removal,3,
 Witherbloom Command,Sorcery,2,B G,,removal,3,
 Culling Ritual,Sorcery,4,B G,B G,,3,
 Shared Roots,Sorcery,2,G,,fetch:basic;ramp,3,
-Feed the Swarm,Sorcery,2,B,,removal,3,
 Final Act,Sorcery,6,B,,wipe,3,
 Toxic Deluge,Sorcery,3,B,,wipe,3,
 Deadly Brew,Sorcery,2,B G,,,3,
@@ -74,9 +72,7 @@ Grim Backwoods,Land,0,B G,C,draw,3,
 Haunted Mire,Land,0,B G,B G,etb-tapped,3,
 Temple of Malady,Land,0,B G,B G,etb-tapped,3,
 Titan's Grave,Land,0,B G,B G,etb-tapped,3,
-Witherbloom Campus,Land,0,B G,B G,etb-tapped,3,
 Terramorphic Expanse,Land,0,,,fetch:basic;ramp,3,
-Jungle Hollow,Land,0,B G,B G,etb-tapped,3,
 Evolving Wilds,Land,0,,,fetch:basic;ramp,3,
 Viridescent Bog,Land,0,B G,B G,mana2,3,
 Twilight Mire,Land,0,B G,B G C,mana3,3,
@@ -88,3 +84,7 @@ Path of Ancestry,Land,0,,W U B R G,etb-tapped,3,
 Forest,Land,0,G,G,,3,
 Swamp,Land,0,B,B,,3,
 "Vraska, the Cutting Glare",Creature,3,B G,,,4,4
+Cauldron of Essence,Artifact,3,B G,,,4,
+Professor Dellian Fel,Planeswalker,4,B G,,draw,4,
+Tainted Wood,Land,0,B G,B G C,,4,
+Deathcap Glade,Land,0,B G,B G,etb-tapped-cond,4,

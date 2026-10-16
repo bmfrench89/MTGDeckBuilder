@@ -132,3 +132,15 @@ Secret Tunnel push damage through (Beorn and any converted creature share the Be
 
 The field data can't see these cards, so the optimizer proposes cutting them for Grizzly Bears or
 Fog. Those would be clear downgrades.
+
+## 2026-10-15 arrivals (manual — do not cut)
+- **Ordinary Bear**: a vanilla 4/5 Bear for {3}{G}, so a 6/7 next to Beorn. It is a
+  natural Bear toward Beorn's three-Bear draw, and it triggers Ayula as it enters. In over
+  Whiptongue Hydra, which only answers fliers. Scrapshooter and Bugenhagen still do.
+- **Springleaf Parade**: {X}{G}{G} enchantment. "When this enchantment enters, create X 1/1
+  colorless Shapeshifter creature tokens with changeling." Changelings are every creature
+  type, so each one is a Bear: a 3/3 with Beorn, and an Ayula trigger as it enters. Its
+  second line, "Creature tokens you control have '{T}: Add one mana of any color'", turns
+  every token into a mana dork, including Dancing from Dark to Dawn's Bears and The Earth
+  King's. In over Wood Elves. The ramp counter drops from 18 to 17 because it can't see
+  token mana.

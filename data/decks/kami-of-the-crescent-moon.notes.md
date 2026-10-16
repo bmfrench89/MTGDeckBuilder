@@ -70,3 +70,17 @@ makes them draw two at their next draw step, so they lose to an empty library.
   this way." A repeatable wheel: the full hands it hands out feed Black Vise, Iron Maiden,
   Viseling and Ebony Owl Netsuke, and the cards you draw feed Psychosis Crawler.
 - **Halimar Depths and Lonely Sandbar to Islands.** Each Island is +1 empower for Jace.
+
+## 2026-10-15 arrivals (manual — do not cut)
+- **Fascination**: {X}{U}{U} sorcery. Choose one: "Each player draws X cards", or "Each
+  player mills X cards".
+  - The draw mode loads Black Vise, Iron Maiden and Viseling, and with Psychosis Crawler
+    out each card you draw costs every opponent 1 life.
+  - The mill mode mills you too. It's a finisher only when the opponents' libraries are
+    shorter than yours, as after Jace's 0.
+  - In over Fact or Fiction.
+- **Body of Knowledge**: {3}{U}{U} Avatar. Its power and toughness equal the cards in your
+  hand; "You have no maximum hand size"; "Whenever this creature is dealt damage, draw that
+  many cards." Kami's extra draws grow it. It is a Reliquary Tower on a body (the
+  collection's only Tower is in Beorn). Each card it draws pings the table through
+  Psychosis Crawler. In over Murmuring Mystic.

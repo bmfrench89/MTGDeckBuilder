@@ -93,6 +93,7 @@ deck's favor, and the text audit *upgraded* several cards the counters undervalu
   Gorma / Teacher's Pest / Trystan (all real engine pieces on text — keep),
   **Environmental Scientist, Mindful Biomancer, Old-Growth Educator — BENCH**: fine
   bodies, weakest verified text in the 99, and the first cuts if the player wants slots.
+  (Mindful Biomancer went first, on 2026-10-15, for Cauldron of Essence.)
 
 ## Known limits
 
@@ -126,3 +127,28 @@ amount of life you gained this turn." Vito adds the instant version.) Do not tak
 - **Vraska, the Cutting Glare**: a 4/4 deathtouch for {B}{B}{G}. With six or more lands, its ETB
   destroys a permanent an opponent controls (they get a Treasure). It is removal, then a
   4-power body for Dina's ratchet (X=4). In over Shared Roots (6% field).
+
+## 2026-10-15 arrivals (manual — do not cut)
+- **Cauldron of Essence**: {1}{B}{G} artifact. "Whenever a creature you control dies, each
+  opponent loses 1 life and you gain 1 life." Its "{1}{B}{G}, {T}, Sacrifice a creature:
+  Return target creature card from your graveyard to the battlefield" is sorcery speed. It
+  works as a sacrifice outlet that triggers Dina's draw and reanimates. Each gain is one
+  lifegain event, so Dina, Soul Steeper drains one more. In over **Mindful Biomancer**,
+  the first of the three benched cards above. Trystan stays: the round-2 read keeps it as
+  an engine piece. (Corrected before applying: a session's swap table had named Trystan.)
+- **Professor Dellian Fel**: {2}{B}{G} planeswalker, loyalty 5.
+  - +2: gain 3 life.
+  - 0: draw a card and lose 1 life.
+  - −3: destroy target creature.
+  - −6: emblem, "Whenever you gain life, target opponent loses that much life".
+
+  The −6 emblem is the Vito effect from "Wishlist" above, on a card you own. In over Feed
+  the Swarm: the removal counter reads 9 (was 10) because it doesn't count a loyalty
+  ability, and the −3 is the replacement. Commander Spellbook lists Dellian plus Exquisite
+  Blood, or plus Bloodthirsty Conqueror, as a two-card infinite drain. Neither is owned,
+  so don't buy one without deciding the bracket first.
+- **Tainted Wood** over Jungle Hollow. It always enters untapped, and taps for {B} or {G}
+  while you control a Swamp (seven here). With no Swamp it still taps for {C}.
+- **Deathcap Glade** over Witherbloom Campus. It enters untapped once you control two other
+  lands; the Campus always entered tapped. The goldfish counts conditional lands as tapped,
+  so its A/B shows zero for this swap. The gain is real from turn 3.

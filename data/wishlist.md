@@ -16,8 +16,8 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 ## Cards in a deck you don't own yet
 - _none_ 
 
-## Upgrades from deck buy-lists  ~$332.00
-- [ ] **Elas il-Kor, Sadistic Pilgrim** (price n/a, bartolome-del-presidio-600-combos) — replaces Throne of the Grim Captain: 62% of Bartolomé del Presidio's decks run this.
+## Upgrades from deck buy-lists  ~$381.00
+- [ ] **Elas il-Kor, Sadistic Pilgrim** (price n/a, bartolome-del-presidio-600-combos): 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Cruel Celebrant** (price n/a, bartolome-del-presidio-600-combos) — replaces Noble's Purse: 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Maskwood Nexus** (price n/a, beorn-the-fierce) — replaces Necklace of Girion: Makes every creature you control every creature type, so your whole board is Bears. Beorn's +2/+2 hits everything and the draw-two is live from his first combat. The single biggest upgrade.
 - [ ] **Wilson, Refined Grizzly** (price n/a, beorn-the-fierce) — replaces Managorger Hydra: 76%. A 2-mana Bear with reach, vigilance, trample, ward 2, and can't be countered. Next to Beorn it's a 4/4 on turn two.
@@ -25,11 +25,11 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Lumra, Bellow of the Woods** (price n/a, beorn-the-fierce) — replaces Mirkwood Pathmaker: 53%. A Bear whose size equals your lands, and it returns lands from your graveyard on entry. Every land is a landfall trigger.
 - [ ] **Craterhoof Behemoth** (price n/a, beorn-the-fierce) — replaces Hulking Raptor: The best green finisher: haste, and the team gets +X/+X and trample. Radagast lets you flash it in.
 - [ ] **The Great Henge** (price n/a, beorn-the-fierce) — replaces Beorn's Hospitality: Costs {G}{G} next to Beorn. Taps for GG, and every creature you cast gets a +1/+1 counter and draws a card.
-- [ ] **Emerald Medallion** (price n/a, beorn-the-fierce) — replaces Ilysian Caryatid: 62%. Stacks with The Earth Crystal: with both out every green spell costs {2} less, on top of Goreclaw and Radagast.
+- [ ] **Emerald Medallion** (price n/a, beorn-the-fierce): 62%. Stacks with The Earth Crystal: with both out every green spell costs {2} less, on top of Goreclaw and Radagast.
 - [ ] **Werebear** (price n/a, beorn-the-fierce) — replaces Elvish Mystic: 76%. A mana dork that is also a Bear, so it counts toward Beorn's three from turn two.
 - [ ] **Evercoat Ursine** (price n/a, beorn-the-fierce) — replaces Germination Practicum: 69%. A trampling Bear that hides away two cards and plays one free on each hit.
 - [ ] **Owlbear Cub** (price n/a, beorn-the-fierce) — replaces Lizard, Connors's Curse: 71%. A 3-mana Bear that puts a creature from your top eight into play attacking, against anyone with eight or more lands.
-- [ ] **Vastlands Scavenger** (price n/a, beorn-the-fierce) — replaces Whiptongue Hydra: 59%. A deathtouch Bear whose prepared spell mills seven and puts a creature from them onto the battlefield. Cutting Whiptongue leaves Scrapshooter and Bugenhagen as your answers to fliers.
+- [ ] **Vastlands Scavenger** (price n/a, beorn-the-fierce): 59%. A deathtouch Bear whose prepared spell mills seven and puts a creature from them onto the battlefield. Cutting Whiptongue leaves Scrapshooter and Bugenhagen as your answers to fliers.
 - [ ] **Castle Garenbrig** (price n/a, beorn-the-fierce) — replaces Forest: A land that untaps for six mana toward creatures once you have four lands.
 - [ ] **Boseiju, Who Endures** (price n/a, beorn-the-fierce) — replaces Forest: A Forest that is also artifact, enchantment or nonbasic-land removal, and costs less with legends out (Beorn is one).
 - [ ] **Argoth, Sanctum of Nature** (price n/a, beorn-the-fierce) — replaces Forest: A land that makes a 2/2 Bear token each turn you have spare mana. Enters untapped with Beorn out.
@@ -51,7 +51,7 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Herald of War** (price n/a, giada-font-of-hope) — replaces Radiant, Archangel: 77% of Giada, Font of Hope's decks run this.
 - [ ] **Starnheim Aspirant** (price n/a, giada-font-of-hope) — replaces Cut a Deal: 73% of Giada, Font of Hope's decks run this.
 - [ ] **Resplendent Angel** (price n/a, giada-font-of-hope) — replaces Emeria Angel: 70% of Giada, Font of Hope's decks run this.
-- [ ] **Sapphire Medallion** (price n/a, kami-of-the-crescent-moon) — replaces Fact or Fiction: 66% of Kami of the Crescent Moon's decks run this.
+- [ ] **Sapphire Medallion** (price n/a, kami-of-the-crescent-moon): 66% of Kami of the Crescent Moon's decks run this.
 - [ ] **Font of Mythos** (price n/a, kami-of-the-crescent-moon) — replaces Sword of War and Peace: 64% of Kami of the Crescent Moon's decks run this.
 - [ ] **High Tide** (price n/a, kami-of-the-crescent-moon) — replaces Teferi's Puzzle Box: 62% of Kami of the Crescent Moon's decks run this.
 - [ ] **Chasm Skulker** (price n/a, kami-of-the-crescent-moon) — replaces Imprisoned in the Moon: 55% of Kami of the Crescent Moon's decks run this.
@@ -61,7 +61,7 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Urza's Incubator** (~$20.00, the-ur-sphinx) — replaces Patchwork Banner: 65% of the field, 28x lift: Sphinx spells cost {2} less. With the eminence and Unesh, Consecrated Sphinx costs {U}{U}.
 - [ ] **Raffine's Tower** (~$13.00, the-ur-sphinx) — replaces Soured Springs: 58% of the field: all three colours (enters tapped), with cycling.
 - [ ] **Watery Grave** (~$10.00, the-ur-sphinx) — replaces Treno, Dark City: 63% of the field: untapped blue-black in place of a tapland.
-- [ ] **Godless Shrine** (~$8.00, the-ur-sphinx): 58% of the field: untapped white-black in place of a tapland.
+- [ ] **Godless Shrine** (~$8.00, the-ur-sphinx) — replaces Meticulous Commons: 58% of the field: untapped white-black in place of a tapland.
 - [ ] **Sapphire Medallion** (~$8.00, the-ur-sphinx) — replaces Mind Stone: 45% of the field: every blue spell costs {1} less, which is nearly the whole deck.
 - [ ] **Hallowed Fountain** (~$7.00, the-ur-sphinx) — replaces Temple of Enlightenment: 64% of the field: untapped white-blue. The mana is this deck's main weakness.
 - [ ] **Uldaros Theorix** (~$3.00, the-ur-sphinx) — replaces Scholar of the Lost Trove: 59% of the field: a Sphinx that copies one card of each type from your graveyard and casts up to 6 mana value of them free. The mills and Unesh's piles stock it.
@@ -70,11 +70,16 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Kindred Judgment** (~$2.00, the-ur-sphinx) — replaces Time Wipe: 43% of the field: name Sphinx, and every other creature dies. A one-sided wipe for this deck.
 - [ ] **Sphinx of False Conclusions** (~$1.00, the-ur-sphinx) — replaces Curator of Mysteries: 66% of the field: a 4-mana flash flier Sphinx that loots when it attacks and returns once as a token copy when it dies.
 - [ ] **Void Rend** (~$1.00, the-ur-sphinx) — replaces Stroke of Midnight: A second copy (yours is in Y'shtola): uncounterable instant removal for any nonland permanent.
-- [ ] **Fíli and Kíli, Joyous** (price n/a, thorin-king-of-durins-folk) — replaces Vow to Erebor: 87% of Thorin, King of Durin's Folk's decks run this.
-- [ ] **Glóin, Dwarf Emissary** (price n/a, thorin-king-of-durins-folk) — replaces Seize the Spoils: 78% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Fíli and Kíli, Joyous** (price n/a, thorin-king-of-durins-folk): 87% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Glóin, Dwarf Emissary** (price n/a, thorin-king-of-durins-folk): 78% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Magda, Brazen Outlaw** (price n/a, thorin-king-of-durins-folk) — replaces Thrór's Map: 76% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Ori, Plate Stacker** (price n/a, thorin-king-of-durins-folk) — replaces Ori, Keeper of Songs: 71% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Mines of Moria** (price n/a, thorin-king-of-durins-folk) — replaces Spire of Industry: 62% of Thorin, King of Durin's Folk's decks run this.
+- [ ] **Cabal Coffers** (~$21.00, tinybones-bauble-burglar) — replaces Swamp: 46% of the field: {2}, {T}: add {B} for each Swamp you control.
+- [ ] **Crypt Ghast** (~$13.00, tinybones-bauble-burglar) — replaces Commander's Sphere: 49% of the field: each Swamp taps for an extra {B}, and extort drains on every spell. This deck runs 31 Swamps.
+- [ ] **Bottomless Pit** (~$6.00, tinybones-bauble-burglar) — replaces Mind Rake: 48% of the field: each player discards a card at random at their upkeep, a punisher trigger on every opponent's turn.
+- [ ] **Necrogen Mists** (~$5.00, tinybones-bauble-burglar) — replaces Rank Rat: 41% of the field: each player discards a card at their upkeep. Symmetric, like Oppression; play it when your hand is emptier than theirs.
+- [ ] **Tinybones, Trinket Thief** (~$4.00, tinybones-bauble-burglar) — replaces Stony-Voiced Goblins: 53% of the field, the only top-25 card not owned: at each end step, if an opponent discarded, you draw and lose 1; {4}{B}{B}: each opponent with no cards in hand loses 10.
 - [ ] **Cyclonic Rift** (~$35.00, yshtola-nights-blessed): The premier one-sided reset in blue. NOTE: a Game Changer — raises your bracket.
 - [ ] **Ashnod's Altar** (~$35.00, yshtola-nights-blessed) — replaces Fellwar Stone: Fills TWO combo slots in one card: a free sac outlet AND a death->mana payoff ('Sacrifice a creature: Add {C}{C}'). With Sun Titan + Angelic Renewal already in the 99 it is a SECOND independent infinite — infinite colorless into a lethal Exsanguinate — that still wins if Blood Artist has been answered. Price is an ESTIMATE; no price feed is reachable.
 - [ ] **Esper Sentinel** (~$25.00, yshtola-nights-blessed) — replaces Baleful Strix: Best white card-advantage engine; taxes noncreature spells for cards.
@@ -92,4 +97,4 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Hallowed Fountain** (price n/a, yshtola-nights-blessed) — replaces Demolition Field: 55% of Y'shtola, Night's Blessed's decks run this.
 - [ ] **Exquisite Blood** (price n/a, yshtola-nights-blessed): Completes a combo: Exquisite Blood + Vito, Thorn of the Dusk Rose → Drain the whole table to 0
 
-**Rough total (shared + upgrades): ~$349.13** — prices are your export's MARKET / buy-list estimates.
+**Rough total (shared + upgrades): ~$398.13** — prices are your export's MARKET / buy-list estimates.

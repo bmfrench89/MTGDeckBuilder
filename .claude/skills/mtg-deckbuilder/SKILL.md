@@ -125,6 +125,17 @@ is either in the deck or has a reason in the notes. Raw overlap counts unowned c
 so it's a warning, never a gate. Far below ~50% deserves a sentence, but overlap is not
 the goal.
 
+**Then run the deck's UAT** (`deck_uat.py --deck … --collection …`, docs/spec-deck-uat.md):
+- **The gates:** a keepable opening seven, not screwed on turn 4, the deck's ENGINE online
+  by turn 6, and the commander on time.
+- **A failed gate goes back to the hand pass,** like a failed check. Nobody tunes a
+  threshold to pass. A deck whose plan genuinely differs sets its own target with
+  `engine_spec.py --uat KEY N`, and the reason goes in the notes.
+- **Every swap you judge** gets its paired A/B (`optimize.py --json --ab`, or
+  `deck_uat.py --ab "Out=In"`). Quote the effect in the verdict: field % says what others
+  play; the A/B says what the swap does to THIS deck. It's goldfish evidence (no
+  opponent), so removal and counters never look good in it. The read stays the verdict.
+
 *Why the read is the decision:* the field gate traded untapped duals for basics in a
 five-colour deck, would have missed Samut (new set, ~0% field) and ranked Misdirection
 (redirects) over Absorb (counters + drains with Vito) for Y'shtola — all caught by reading

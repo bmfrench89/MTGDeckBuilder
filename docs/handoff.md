@@ -6,13 +6,14 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-15 (Eriette of the Charmed Apple built for a second pilot from cards bought for it: eleven decks; the Ur-Sphinx built engine-first; Tifa and Sephiroth deleted; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-15 (deck UAT v1: every deck runs acceptance gates on the goldfish; 11 arrival swaps; Tinybones, Bauble Burglar built engine-first: twelve decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
-Eleven decks, all REAL builds from the collection: 100 cards each, singleton clean,
+Twelve decks, all REAL builds from the collection: 100 cards each, singleton clean,
 sections clean. Every one is Bracket 3 or higher except Thorin and Eriette, both 2 (the
-player's call for Thorin; Eriette has no free Game Changer). `deck_conflicts` reports 7 conflicts, all
+player's call for Thorin; Eriette has no free Game Changer). **Every deck passes its deck
+UAT** (`deck_uat.py --all`, docs/spec-deck-uat.md). `deck_conflicts` reports 7 conflicts, all
 among the player's older decks:
 - Dina and Y'shtola share Blood Artist, Viscera Seer and Toxic Deluge.
 - Captain America shares Force of Will (pinned to Y'shtola) and Mystic Remora (with Kami).
@@ -26,15 +27,16 @@ ignoring those physical lists.
 
 | Deck | Bracket | Lands | Ramp/draw/removal | Keepable | Field top-25 | Clips |
 |---|---|---|---|---|---|---|
-| Bartolomé del Presidio — 600 Infinite Combos | 4 (detected 4) | 37 | 9/4/5 | 80% | 12/25 | 4 |
-| Beorn the Fierce — Bear Den | 3 (detected 3) | 36 | 18/13/12 | 79% | 17/25 | 5 |
+| Bartolomé del Presidio — 600 Infinite Combos | 4 (detected 4) | 37 | 9/5/5 | 80% | 13/25 | 4 |
+| Beorn the Fierce — Bear Den | 3 (detected 3) | 36 | 17/13/11 | 79% | 17/25 | 5 |
 | Captain America, Team Leader | 3 (detected 3) | 37 | 9/12/9 | 80% | 24/25 | 5 |
-| Dina, Essence Brewer | 3 (detected 3) | 37 | 10/8/10 | 80% | 25/25 | 4 |
+| Dina, Essence Brewer | 3 (detected 3) | 37 | 10/9/9 | 80% | 25/25 | 4 |
 | Giada, Font of Hope | 3 (detected 3) | 36 | 6/8/6 | 79% | 19/25 | 5 |
 | Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 17/25 | 5 |
 | The Ur-Dragon | 3 (detected 3) | 37 | 10/5/6 | 80% | 19/25 | 5 |
 | **The Ur-Sphinx** (new 10-15) | 3 (detected 3) | 37 | 12/13/9 | 80% | 19/25 | 5 |
 | Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/11/6 | 79% | 20/25 | 5 |
+| **Tinybones, Bauble Burglar** (new 10-15) | 3 (detected 3) | 36 | 6/10/6 | 80% | 24/25 | 5 |
 | **Eriette of the Charmed Apple** (new 10-15) | 2 (detected 2) | 36 | 6/11/4 | 79% | 24/25 | 5 |
 | Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
 
@@ -46,6 +48,53 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-15 (night): deck UAT, the arrival swaps, Tinybones.** The player: "Yes merge,
+not sure exact copies but give me your recommendation if it's even worth it, do the swap,
+build Tinybones, start building the testing".
+- **Merged:** #17 (Eriette). Both repos at bb834c8.
+- **Deck UAT v1** (`scripts/deck_uat.py`, docs/spec-deck-uat.md). The goldfish is now
+  acceptance gates, the deck-side twin of `webapp/uat/`. Gates and defaults:
+  - Keepable ≥ 75% and screwed ≤ 25%.
+  - Engine online: 1+ engine cards cast by turn 6 (2+ once the list has 25+) in ≥ 50% of
+    games. The deck's own engine is the oracle: the spec's core, else the notes' protected
+    list.
+  - Commander cast by its mana value + 1 in ≥ 50%, informational at 7+ mana.
+  - Every swap gets a paired A/B (`deck_uat.py --ab "Out=In"`, `optimize.py --json --ab`).
+  - Calibrated on the 11 decks. The first pass failed Captain America, whose declared
+    engine was six sleeper-audit picks. Its spec now declares the 25 Heroes. All 12 decks
+    pass.
+  - Fixed on the way:
+    - Dina's bold protected list parsed to nothing (`engine_spec._bullet_names`).
+    - The A/B couldn't swap in a basic (`goldfish.swap_compiled`).
+    - auto_build drafted curated commanders as tribal from their type line:
+      Tinybones as Rogues, and Y'shtola and Eriette read as Warlocks. A commanders.csv row
+      now takes its tribe only from `tribal-*` tags.
+- **Arrival swaps applied:** 11, each `manual-replace`, each A/B'd (all within ±1%), notes
+  under a dated "arrivals" section in each deck:
+  - Bartolomé: Ichor Wellspring.
+  - Beorn: Ordinary Bear and Springleaf Parade.
+  - Dina: Cauldron of Essence, Professor Dellian Fel, Tainted Wood and Deathcap Glade.
+  - Kami: Fascination and Body of Knowledge.
+  - Thorin: Iron Hills Stalwart and Belladonna Took.
+
+  The Cauldron replaced Mindful Biomancer, not Trystan: Dina's notes keep Trystan as an
+  engine piece. Six stale buylist targets were blanked by the optimizer's sweep.
+- **Tinybones, Bauble Burglar** (new, Bracket 3 via Tergrid): mono-black discard, "The
+  Stash", from the player's Argon idea. All 19 of its pieces are free.
+  - 24 of the field's top 25 (11,629 decks); the 25th, Trinket Thief, heads the buylist.
+  - 0 combos, every gate passes.
+  - Creative lines in the notes: order Tergrid's and Tinybones' triggers; Gonti's
+    Treasure for every stolen spell; Sandman's Quicksand discarded and cast for mayhem as
+    a one-sided wipe; Pit Automaton's ability-only mana.
+- **Sphinx's Approach: not recommended.**
+  - It needs five through the graveyard: four there, plus the one being cast.
+  - With ten copies in 99 cards, five are seen by the 30th card in 14% of games and by
+    the 40th in 37%. Seeing isn't casting, at 3 mana each.
+  - The Ur-Sphinx's mill could help only once the 9-drop is attacking (cast by turn 10
+    in half the games).
+  - The payoff is one Sphinx onto the battlefield, which the eminence already makes
+    cheap. The ten slots would come from removal and ramp.
 
 **2026-10-15 (evening): Eriette, a second pilot's deck; both repos synced; the workflow
 page updated.** The player: "I bought these cards for a deck that either eriette the charmed
@@ -92,11 +141,7 @@ well, try not to put too many contested cards."
   - All decks: 7 conflicts, the same pre-existing ones. Singleton and sections clean
     across 11 decks.
 - **Open for the player:**
-  - **Sphinx's Approach:** the player has "about 10". The tutor needs five copies, and it
-    fires by 40 and 50 cards seen in 37% and 64% of games with ten copies. Proposed for
-    the Ur-Sphinx; record the exact count before adding any.
-  - The 12 new-arrival swaps are still waiting on the player's go. Thorin's Dwarven
-    Provisioner line is now used: it replaced Sram.
+  - Sphinx's Approach and the arrival swaps: both settled the same night (see above).
 - **The workflow page** (https://claude.ai/artifact/9tw3AXkXkrJrFZLob1Y8qC, version 3) now
   shows the engine spec, the audit, verdicts on the phone, trades and intake.
 

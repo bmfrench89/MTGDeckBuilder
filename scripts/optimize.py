@@ -1696,6 +1696,27 @@ def manual_adds_review(deck_path, coll):
     return out
 
 
+def attach_ab(payload, deck_path, coll, collection_path=None, games=800):
+    """Deck UAT gate 4: put a paired A/B (deck_uat.ab, identical shuffles) on every
+    proposal in a review payload, as `ab` (the gate deltas) and `ab_summary` (one line a
+    verdict can quote). Field % says how often others play a card; this says what the
+    swap does to THIS deck's engine and commander timing. A failed run leaves the
+    proposal without `ab`, never with a made-up number."""
+    import deck_uat
+    for prop in payload.get("proposals") or []:
+        try:
+            res = deck_uat.ab(deck_path, coll, prop["cut"], prop["add"], games=games,
+                              collection_path=collection_path)
+        except Exception as e:                       # the feed must not die on one swap
+            res = {"error": type(e).__name__}
+        if res and not res.get("error"):
+            prop["ab"] = res["deltas"]
+            prop["ab_summary"] = deck_uat.ab_summary(res)
+        else:
+            prop["ab_error"] = (res or {}).get("error") or "no result"
+    return payload
+
+
 def main():
     ap = argparse.ArgumentParser(description="Optimize a deck against what the field plays.")
     ap.add_argument("--deck")
@@ -1718,6 +1739,12 @@ def main():
     ap.add_argument("--json", action="store_true",
                     help="print the proposals, reads and advisories as JSON (for a "
                          "Claude session's review; never combined with --apply)")
+    ap.add_argument("--ab", action="store_true",
+                    help="with --json: put a paired A/B (deck_uat.py, identical shuffles) "
+                         "on every proposal: the swap's effect on the engine, commander "
+                         "timing, keepable hands and screw")
+    ap.add_argument("--ab-games", type=int, default=800,
+                    help="games per A/B arm with --ab (default 800)")
     ap.add_argument("--verdict", action="append", default=[], nargs=3,
                     metavar=("KEY", "VERDICT", "WHY"),
                     help="save a session's read of one current proposal (KEY as --json "
@@ -1795,7 +1822,10 @@ def main():
         if args.json:
             # the saved verdicts ride along, as on the ⚡ page: a session reading this
             # feed sees what an earlier session already judged
-            out_json.append(review_payload(r, load_verdicts(p) if p else None))
+            payload = review_payload(r, load_verdicts(p) if p else None)
+            if args.ab and p:
+                attach_ab(payload, p, coll, args.collection, games=args.ab_games)
+            out_json.append(payload)
             continue
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
         widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()

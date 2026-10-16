@@ -162,6 +162,30 @@ def test_tribal_tags_must_be_singular_to_resolve(tmp_path):
     assert tribe is None and n == 0, "a plural tag matches no subtype — that's the bug"
 
 
+def test_a_curated_commander_takes_its_tribe_only_from_its_tags(tmp_path):
+    """Tinybones, Bauble Burglar is a Skeleton Rogue, and its discard deck came back as
+    Rogue tribal (2026-10-15). A commanders.csv row is the strategy; the type line is
+    only a fallback for a commander nobody curated."""
+    rows = ["Quantity,Name,Mana Value,Colors,Identities,Mana cost,Types,Sub-types,Rarity,Scryfall ID,MARKET",
+            "1,Sneaky Boss,2,B,B,{1}{B},Legendary Creature,Skeleton;Rogue,rare,sb000000,1.00"]
+    for i in range(12):
+        rows.append(f"1,Alley Rogue {i},2,B,B,{{1}}{{B}},Creature,Rogue,common,ar{i:06d},0.10")
+    p = tmp_path / "rogues.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+
+    # 13 Rogues in the pool: the twelve plus the commander itself.
+    assert auto_build._tribe_and_support(
+        "Sneaky Boss", idx, ["discard", "control"], coll, {"B"}, known=True) == (None, 0)
+    assert auto_build._tribe_and_support(
+        "Sneaky Boss", idx, [], coll, {"B"}) == ("rogue", 13), \
+        "an uncurated commander still reads its own type line"
+    assert auto_build._tribe_and_support(
+        "Sneaky Boss", idx, ["tribal-rogue"], coll, {"B"}, known=True) == ("rogue", 13), \
+        "a curated tribal tag still makes the tribe"
+
+
 def test_every_curated_tribal_tag_is_a_real_subtype_shape():
     """Guard the reference file itself: no tribal tag may be plural.
 

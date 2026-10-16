@@ -1,0 +1,63 @@
+{
+ "commander": "Captain America, Team Leader",
+ "written": "2026-10-15",
+ "engine": [
+  "Kid Loki",
+  "The Wasp, Winsome Avenger",
+  "Mjölnir, Hammer of Thor",
+  "Thor, Asgard's Avenger",
+  "Silver Sable, Mercenary Leader",
+  "Warrior's Blades"
+ ],
+ "packages": [
+  {
+   "name": "Heroes entering under Cap",
+   "enablers": [],
+   "payoffs": [
+    "Kid Loki",
+    "Agent Phil Coulson",
+    "Rescue, Pepper Potts",
+    "Spectacular Spider-Man",
+    "The Wasp, Winsome Avenger",
+    "Ant-Man, Elusive Avenger",
+    "Black Widow, Agile Avenger",
+    "Captain America, Living Legend",
+    "Captain America, Wings of Freedom",
+    "Director Nick Fury",
+    "Falcon and Redwing",
+    "Firebird, Blazing Ranger",
+    "Shang-Chi and the Ten Rings",
+    "Silver Sable, Mercenary Leader",
+    "Iron Man, Armored Avenger",
+    "Photon, Mighty Marvel",
+    "Scarlet Witch, Chaotic Avenger",
+    "Thor, Asgard's Avenger",
+    "Captain Mar-Vell, Space-Born",
+    "SP//dr, Piloted by Peni",
+    "War Machine, Avenging Arsenal",
+    "Winter Soldier, Reborn Avenger",
+    "Professor Hulk",
+    "She-Hulk, Wallbreaker",
+    "Captain Marvel, Apex Avenger"
+   ]
+  }
+ ],
+ "aims": {},
+ "keywords": [
+  "hero",
+  "+1/+1 counter"
+ ],
+ "keep": {
+  "Force of Will": "the control shell that protects Cap's clock (notes: How it wins)",
+  "Essence Scatter": "the control shell that protects Cap's clock (notes: How it wins)",
+  "Memory Lapse": "the control shell that protects Cap's clock (notes: How it wins)",
+  "Dispatch": "the control shell that protects Cap's clock (notes: How it wins)",
+  "Abrade": "the control shell that protects Cap's clock (notes: How it wins)",
+  "Solitary Cell": "Reality Fracture add (manual 2026-10-13): exiles a nonland permanent of MV 3 or less; draws off a legendary discard",
+  "Mystic Remora": "the long-game draw engine (notes: Sequencing tips)",
+  "Archaeomancer's Map": "ramp: two basic Plains to hand, then a free land drop whenever an opponent pulls ahead on lands",
+  "Seal of Cleansing": "the artifact/enchantment answer, cast early and held face-up"
+ },
+ "uat": {},
+ "version": 1
+}

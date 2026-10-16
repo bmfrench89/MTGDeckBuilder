@@ -65,6 +65,7 @@ had spent its effort hand-reasoning.
 | Full deck analytics | **`deckcore.analyze_deck()`** | `deck_stats.py` on a deck with an `.attrs.csv` — it does **not** read the companion and reports 31 lands / empty curve where the hub reports 37 / real |
 | Mana math | `manabase.py` | hypergeometrics by hand |
 | Sequenced play, mulligans, A/B a swap | `goldfish.py` | assert a swap is better without replaying it |
+| Does this deck pass its UAT (consistency, engine online by turn 6, commander on time)? What does a swap do to it? | `deck_uat.py --deck … --collection …` (exit 3 on a failed gate; `--all` for every deck; `--ab "Out=In"` paired deltas); `optimize.py --json --ab` puts that A/B on every proposal | call a deck finished, or a swap good, without running the gates. Field % says what others play; the A/B says what the swap does to THIS deck |
 | Power / bracket | `power.py` | assign a bracket by feel |
 | Combos present or one-away | `combo_detector.py` | |
 | Dashboard | `build_dashboard.py`, or `refresh.py` for all | hand-write HTML |

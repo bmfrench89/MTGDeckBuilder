@@ -67,5 +67,5 @@ Tyvar's Stand,Instant,1,G,{X}{G},,,,,4
 Unnatural Growth,Enchantment,5,G,{1}{G}{G}{G}{G},,,,,4
 Vaultborn Tyrant,Creature,7,G,{5}{G}{G},Dinosaur,,draw,6,4
 Verdant Kraken,Creature,7,G,{4}{G}{G}{G},Plant;Kraken,G,,6,4
-Whiptongue Hydra,Creature,6,G,{5}{G},Lizard;Hydra,,,4,4
-Wood Elves,Creature,3,G,{2}{G},Elf;Scout,,fetch:forest;ramp,1,4
+Ordinary Bear,Creature,4,G,{3}{G},Bear,,,4,4
+Springleaf Parade,Enchantment,2,G,{X}{G}{G},,W U B R G,,,4

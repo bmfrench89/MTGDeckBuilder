@@ -139,3 +139,14 @@ Pick-Axe, Rogue's Passage and Slayers' Stronghold, which were cheap to replace.
 - **Mana:** 36 lands (9 Mountain, 9 Plains), R 26 / W 25 sources, keepable 79%.
 - **Goldfish:** combat-only lethal median turn 9. It models no Treasures, no Dwarf pumps
   and no Dragon tokens, so read it as a floor.
+
+## 2026-10-15 arrivals (manual — do not cut)
+- **Iron Hills Stalwart**: a 4/5 Dwarf Warrior with reach and trample for {4}{R}. "When
+  this creature enters, attach target Equipment you control to up to one target creature
+  you control." A Dwarf, so Thorin makes a Treasure, and it moves Equipment on a body
+  instead of a trick. In over Vow to Erebor.
+- **Belladonna Took**: a {1}{W} 2/2. "Whenever a token you control enters": the first time
+  each turn you gain 1 life, the second time you draw a card, and the third time each
+  creature you control gets a +1/+1 counter. Thorin's Treasures, Fíli's Dwarves and At the
+  Door's tokens are all tokens. A Dwarf cast with Fíli out is already three tokens: Thorin's
+  Treasure, Fíli's Dwarf, and that Dwarf's own Treasure. In over Seize the Spoils.

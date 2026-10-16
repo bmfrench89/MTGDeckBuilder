@@ -1469,6 +1469,53 @@ def simulate_disrupted(compiled, disruption, games=DEFAULT_GAMES, seed=0,
     return rep_b
 
 
+def swap_compiled(compiled, out_name, in_name, idx):
+    """Arm B of an A/B: `compiled` with ONE card swapped **at the same library
+    indices**, so both arms replay identical shuffles (common random numbers).
+
+    Returns {"compiled", "positions", "ref"}, or {"error": ...} when the outgoing card
+    isn't in the library, the incoming name doesn't resolve in the collection (never
+    an invented card), or the swap would break singleton. `simulate_ab` and
+    `deck_uat` both build their B arm here, so the pairing has one implementation."""
+    library = compiled["library"]
+    keys = mtglib.name_keys(out_name)
+    positions = [i for i, sc in enumerate(library) if mtglib.name_keys(sc.name) & keys]
+    if not positions:
+        return {"error": f"'{out_name}' isn't in this deck's library — nothing to swap "
+                         "out. (The commander lives in the command zone and can't be "
+                         "A/B'd.)"}
+    ref = mtglib.lookup(idx, in_name) if idx else None
+    if ref is None and mtglib.is_basic(in_name):
+        # Basics are always owned and the export leaves them out (grounding rule 9).
+        # Build the card exactly as the loader builds the deck's own basics. Found
+        # 2026-10-15: every optimizer land swap into a Swamp came back "Can't resolve".
+        import deck_stats
+        ref = deck_stats.basic_land_card(in_name, 1)
+    if ref is None:
+        return {"error": f"Can't resolve '{in_name}' in the collection — refusing to "
+                         "simulate a card I can't look up. Add it to the collection "
+                         "(or fix the spelling) and re-run."}
+    # Singleton guard, positional: the incoming card may occupy the slots being
+    # vacated (that's the A/A identity run) but must not already sit elsewhere.
+    # Basics are exempt, as they are from the format's singleton rule.
+    held = set(positions)
+    others = {sc.key for i, sc in enumerate(library) if i not in held}
+    if not mtglib.is_basic(ref.name) and mtglib.name_keys(ref.name) & others:
+        return {"error": f"'{ref.name}' is already elsewhere in this deck — a swap "
+                         "would break singleton."}
+
+    incoming = compile_card(ref)
+    lib_b = list(library)
+    for i in positions:
+        lib_b[i] = incoming
+    ff_b = [n for n in (compiled.get("fetch_flagged") or ())
+            if not (mtglib.name_keys(n) & keys)]
+    if not incoming.is_land and any(f.startswith("fetch:") for f in (ref.flags or ())):
+        ff_b.append(ref.name)
+    return {"compiled": _recount(dict(compiled, library=lib_b, fetch_flagged=ff_b)),
+            "positions": positions, "ref": ref}
+
+
 def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
                 turns=TURNS, mulligan=True, on_play=True, disruption=None):
     """Swap ONE card and re-run the identical games — common random numbers.
@@ -1481,35 +1528,10 @@ def simulate_ab(compiled, out_name, in_name, idx, games=DEFAULT_GAMES, seed=0,
     The incoming card must resolve in the collection through `mtglib.lookup` — an
     unresolvable name gets a refusal, never an invented card. Returns
     `{'error': ...}` on refusal."""
-    library = compiled["library"]
-    keys = mtglib.name_keys(out_name)
-    positions = [i for i, sc in enumerate(library) if mtglib.name_keys(sc.name) & keys]
-    if not positions:
-        return {"error": f"'{out_name}' isn't in this deck's library — nothing to swap "
-                         "out. (The commander lives in the command zone and can't be "
-                         "A/B'd.)"}
-    ref = mtglib.lookup(idx, in_name) if idx else None
-    if ref is None:
-        return {"error": f"Can't resolve '{in_name}' in the collection — refusing to "
-                         "simulate a card I can't look up. Add it to the collection "
-                         "(or fix the spelling) and re-run."}
-    # Singleton guard, positional: the incoming card may occupy the slots being
-    # vacated (that's the A/A identity run) but must not already sit elsewhere.
-    held = set(positions)
-    others = {sc.key for i, sc in enumerate(library) if i not in held}
-    if mtglib.name_keys(ref.name) & others:
-        return {"error": f"'{ref.name}' is already elsewhere in this deck — a swap "
-                         "would break singleton."}
-
-    incoming = compile_card(ref)
-    lib_b = list(library)
-    for i in positions:
-        lib_b[i] = incoming
-    ff_b = [n for n in (compiled.get("fetch_flagged") or ())
-            if not (mtglib.name_keys(n) & keys)]
-    if not incoming.is_land and any(f.startswith("fetch:") for f in (ref.flags or ())):
-        ff_b.append(ref.name)
-    comp_b = _recount(dict(compiled, library=lib_b, fetch_flagged=ff_b))
+    swap = swap_compiled(compiled, out_name, in_name, idx)
+    if "error" in swap:
+        return swap
+    comp_b, positions, ref = swap["compiled"], swap["positions"], swap["ref"]
 
     seeds = _game_seeds(seed, games)
     # Both arms get the SAME disruption schedule (it is seeded off the same per-game

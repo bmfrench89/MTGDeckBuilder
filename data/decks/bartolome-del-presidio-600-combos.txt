@@ -74,7 +74,7 @@
 1 Orzhov Signet
 1 Prismatic Lens
 1 Talisman of Hierarchy
-1 Throne of the Grim Captain
+1 Ichor Wellspring
 1 Wayfarer's Bauble
 1 Lich's Relic
 1 Sol Ring
