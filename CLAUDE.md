@@ -297,12 +297,16 @@ only when the field shows it in inclusion % (`GENERIC_MARGIN`): role-template pr
 never moves inclusion, so the anti-churn guarantee holds. auto_build's role aims follow
 the archetype and colour (`auto_build.role_quota`): no counterspell quota without blue,
 whose slots go to verified protection (`resilience_staples.csv`).
-**Trades between decks** (`optimize.trade_offers`, bundle D) are offered, never applied.
+**Trades between decks** (`trades.trade_offers`, bundle D; a library both `optimize` and
+`auto_build` call, so a fresh draft sees them too) are offered, never applied. After the
+Fable review (2026-10-15): every card a donor's notes NAME is core (the optimizer's cut
+protection says the same), unless its notes list it under `## Earmarked for other decks`;
+backfills must share a FUNCTIONAL role (ramp, draw, removal, wipe, counter), never just a
+type; pinned cards are never offered.
 - **What qualifies:** a card another deck holds every copy of, that is NOT that deck's
-  core (`optimize.deck_core`: its engine spec, else its `## Protected engine` list, plus
-  clip-featured cards, hand-added cards and its commander), and that matters here
-  (engine, ≥2.5× lift, or value 60+). A deck with no declared core protects every card
-  its notes name.
+  core (`trades.deck_core`: its engine spec, else its `## Protected engine` / `## Protected
+  cards` list, plus clip-featured cards, hand-added cards, its commander and every card its
+  notes name), and that matters here (engine, ≥2.5× lift, or value 60+).
 - **The backfill:** each offer carries a free same-role backfill for the donor, or
   appears only when the gain beats the donor's field % by 15+.
 

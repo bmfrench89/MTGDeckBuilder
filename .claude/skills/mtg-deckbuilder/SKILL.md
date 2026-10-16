@@ -71,7 +71,9 @@ engine, if any), and add the engine cards, 2-3 packages (enablers + payoffs), an
 and engine keywords (specific phrases such as "noncombat damage", never a broad word like
 "sacrifice", which matches half the pool). Draft with `auto_build.py "<commander>" --engine <stem>.engine.json`.
 Every other non-land card is FILLER: keep it with `engine_spec.py --keep "<card>" "<why>"`
-or cut it, until `engine_spec.py --audit` passes. No card stays because nothing argued it
+(or `--keep-many "<why>" "<A>" "<B>"` for a group) or cut it, until `engine_spec.py --audit`
+passes. Cards the commander's field runs in 10%+ of decks need no reason. The draft also
+lists trades: cards another deck holds that this deck wants. No card stays because nothing argued it
 out (the Consecrated Sphinx lesson, 2026-10-15).
 
 Assemble the 99 (+ commander) from owned cards. As you go:

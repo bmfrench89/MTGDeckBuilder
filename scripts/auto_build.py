@@ -171,6 +171,31 @@ def _tribe_and_support(commander_name, idx, archetype, coll, identity):
     return best, best_n
 
 
+def _draft_trades(commander_name, skip_deck, decks_dir, coll, idx, identity, chosen, ctx,
+                  refs, rep0, engine):
+    """trades.trade_offers for a draft that may not have a deck file yet. Advisory: a
+    failure is reported in the output, never a failed build."""
+    if not decks_dir or not os.path.isdir(decks_dir):
+        return []
+    try:
+        import trades
+        import engine_spec
+        in_deck = set()
+        for c in chosen:
+            in_deck |= mtglib.name_keys(c["name"])
+        in_deck |= mtglib.name_keys(commander_name)
+        field = ctx.get("field") or {}
+
+        def value_of(name, ref=None):
+            ref = ref or mtglib.lookup(idx, name)
+            return deck_fit.card_value(name, ref, rep0, ctx, refs, field)
+        stem = skip_deck or ("__draft__:" + mtglib._norm(commander_name))
+        return trades.trade_offers(stem, decks_dir, coll, idx, identity, in_deck,
+                                   value_of, ctx, engine_spec.core_keys(engine))
+    except Exception as e:
+        return [{"error": f"{type(e).__name__}: {e}"[:200]}]
+
+
 def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=True,
           identity=None, skip_deck=None, engine=None):
     """Build a deck for `commander_name`. If the commander is in the curated
@@ -210,7 +235,8 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
            "tribal": None, "commander": commander_name,
            "field": deck_fit.load_field(commander_name, idx),
            "synergy": deck_fit.load_synergy(commander_name, idx),
-           "field_n": deck_fit.load_field_n(commander_name, idx)}
+           "field_n": deck_fit.load_field_n(commander_name, idx),
+           "field_base": deck_fit.load_field_base(commander_name, idx)}
     # tribal awareness: does the commander want a tribe, and does the collection support it?
     tribe, tribe_n = _tribe_and_support(commander_name, idx, archetype, coll, identity)
     tribe_warning = None
@@ -224,6 +250,7 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
 
     # Candidate pool: owned minus copies committed to your other decks (basics exempt).
     # No decks folder => nothing is committed anywhere, so the whole collection is free.
+    _reserved = set()
     if respect_commitments and decks_dir:
         usage = deck_conflicts.scan(decks_dir, idx, skip=skip_deck)
         pool_names = [row[0] for row in deck_conflicts.available_pool(usage, coll)]
@@ -323,17 +350,27 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
             if c is None:
                 ref = mtglib.lookup(idx, name)
                 why = ("not owned" if ref is None else
+                       "banned in Commander" if deck_fit.is_banned(ref.name) else
                        "outside the colour identity" if _color_legal(ref, identity) is False
+                       else "pinned to another deck" if deckcore.pin_key(name) in _reserved
                        else "every copy is in another deck")
                 engine_missing.append({"name": name, "why": why})
                 continue
             if take(c):
                 seeded.append(c["name"])
+        # A seeded LAND replaces a basic, not a spell: recount, or the basics below are
+        # sized from the pre-seed count and the draft comes out at 101 (Fable review,
+        # 2026-10-15: Forbidding Watchtower in Giada's spec did exactly that).
+        n_nonbasic_land = sum(1 for x in chosen if x["is_land"])
     by_role = {}
     for c in nonland:
         by_role.setdefault(c["role"], []).append(c)
     gaps = {}
     quota, prot_aim = role_quota(identity, archetype, (engine or {}).get("aims"))
+    # a spec's aim is clamped into the archetype's band; say so rather than ignore it
+    aims_clamped = [{"role": r, "asked": a, "got": dict(quota).get(r)}
+                    for r, a in ((engine or {}).get("aims") or {}).items()
+                    if r in dict(quota) and dict(quota)[r] != a]
     for role, target in quota:
         # seeded engine cards already fill part of their role's quota
         picked = sum(1 for x in chosen if not x["is_land"] and x["role"] == role)
@@ -473,6 +510,11 @@ def build(commander_name, coll, idx, decks_dir, refs=None, respect_commitments=T
         "engine_cards": seeded, "engine_missing": engine_missing,
         "filler": ([c["name"] for c in chosen if not c["is_land"]
                     and c["name"] not in set(seeded)] if engine else []),
+        "aims_clamped": aims_clamped,
+        # cards another deck holds that would matter here: on the DRAFT, so a new deck
+        # (the Ur-Sphinx) sees Consecrated Sphinx before it has a file (Fable review)
+        "trades": _draft_trades(commander_name, skip_deck, decks_dir, coll, idx, identity,
+                                chosen, ctx, refs, rep0, engine),
         "basics": basics,
         "total": 1 + len(chosen) + n_basic,
         "short": max(0, short),
@@ -558,6 +600,17 @@ if __name__ == "__main__":
             print(f"    could not seed {m['name']}: {m['why']}")
         print(f"  filler: {len(d['filler'])} non-land cards need a keep reason or a cut "
               f"(engine_spec.py --audit)")
+    for c in d.get("aims_clamped") or []:
+        print(f"  aim clamped: {c['role']} {c['asked']} -> {c['got']} (the archetype's band)")
+    for o in d.get("trades") or []:
+        if o.get("error"):
+            print(f"  trades: could not compute ({o['error']})")
+            continue
+        bf = (f"backfill {o['backfill']['name']}" if o.get("backfill")
+              else "no like-for-like backfill")
+        tag = " [earmarked for another deck]" if o.get("earmarked") else ""
+        print(f"  held elsewhere, worth asking for: {o['card']} from "
+              f"{o.get('from_title') or o['from']}{tag} — {bf}")
     print("  role     have / target")
     for role in ["land", "ramp", "draw", "removal", "wipe", "counter", "protection"]:
         if role not in d["targets"]:

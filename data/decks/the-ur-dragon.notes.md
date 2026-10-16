@@ -100,6 +100,11 @@ the game. Its five pips are why the manabase leans on any-colour lands.
 - Tiamat
 - Call the Spirit Dragons
 
+## Earmarked for other decks
+Set aside on the player's word (2026-10-15): the trades lane may offer these to another deck
+even though these notes name them. The replacement should be a draw piece, ideally a Dragon.
+- Consecrated Sphinx
+
 ## Interaction (read from verified text, not the role counter)
 
 The optimizer's classifier counts 6 removal and 1 wipe. That undercounts, because the

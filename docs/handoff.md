@@ -66,7 +66,13 @@ workflow and asked for all four bundles, cross-checked first.
     their own notes; Y'shtola's includes the notes' "do not cut" list.
   - First live result: **Consecrated Sphinx is offered from the Ur-Dragon to Kami**,
     which is what the future Ur-Sphinx deck will see.
-- PRs #10 (A) → #11 (B) → #12 (C) → #13 (D) stack; merge in that order.
+- PRs #10-#13 merged 2026-10-15. **A Fable review** found a 101-card engine-first draft
+  and trades offering a donor's notes-named card with Fog as backfill. Both are fixed,
+  with more in `docs/spec-deck-flow-review.md` ("The Fable review").
+- **The Sphinx:** the Ur-Dragon's notes now have `## Earmarked for other decks` with
+  Consecrated Sphinx, and a Kami or Ur-Sphinx draft is offered it.
+- **Until cutover,** main is mirrored to the old public MTGDeckBuilder repo after every
+  merge (the hosted app still syncs from it).
 - Merged earlier the same day: lift (#9) and the Ur-Dragon's Dragonlord Kolaghan (#8).
 
 **2026-10-15: Giada and Thorin, built from the full collection** (the player: "Build the

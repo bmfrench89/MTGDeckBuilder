@@ -106,12 +106,15 @@ def core_keys(spec):
     return keys
 
 
-def protected_engine_from_notes(notes_text):
-    """The card lines under a notes file's '## Protected engine' heading."""
+def _section_cards(notes_text, heading_prefixes):
+    """Bullet card lines under any `## ` heading starting with one of the prefixes.
+    Only a `## ` heading ends a section: a `#` or `###` heading does not, so a list goes
+    right before the next `## ` (the Captain America placement trap)."""
     out, on = [], False
     for line in (notes_text or "").splitlines():
         if line.startswith("## "):
-            on = line.lower().startswith("## protected engine")
+            low = line.lower()
+            on = any(low.startswith(p) for p in heading_prefixes)
             continue
         if on:
             m = re.match(r"^\s*-\s+(.+?)\s*$", line)
@@ -120,9 +123,29 @@ def protected_engine_from_notes(notes_text):
     return out
 
 
-def audit(deck_path, spec=None):
+def protected_engine_from_notes(notes_text):
+    """The card lines under a notes file's protected list: `## Protected engine`, or
+    `## Protected cards` (Dina's heading, found by the Fable review)."""
+    return _section_cards(notes_text, ("## protected engine", "## protected cards"))
+
+
+def earmarked_from_notes(notes_text):
+    """Cards the notes set aside for ANOTHER deck (`## Earmarked for other decks`). The
+    trades lane may offer these even though the notes name them."""
+    return _section_cards(notes_text, ("## earmarked",))
+
+
+# The audit wants a reason only where nothing else argues a card in (Fable review,
+# 2026-10-15). 25-40 --keep calls per deck invited rubber stamps, which is anchoring with
+# extra steps. A card this commander's field runs in FIELD_EXEMPT% or more of decks
+# already has the field's case behind it, so the reasons go where the risk is.
+FIELD_EXEMPT = 10
+
+
+def audit(deck_path, spec=None, field=None):
     """(unexplained non-land cards, core cards missing from the deck). The commander,
-    basics and lands are exempt: lands are judged by the mana pass."""
+    basics and lands are exempt: lands are judged by the mana pass. So is any card the
+    commander's field (`field`, {normalized name: %}) runs in FIELD_EXEMPT% or more."""
     spec = spec if spec is not None else load(deck_path)
     text = open(deck_path, encoding="utf-8").read()
     commander = mtglib.deck_header(text, "Commander") or ""
@@ -139,6 +162,8 @@ def audit(deck_path, spec=None):
         if keys & cmd_keys or mtglib.is_basic(c.name) or mtglib._norm(c.name) in lands:
             continue
         if keys & (core | keep):
+            continue
+        if field and max((field.get(k, 0) for k in keys), default=0) >= FIELD_EXEMPT:
             continue
         unexplained.append(c.name)
     missing = [n for n in core_names(spec) if not (mtglib.name_keys(n) & present)]
@@ -167,6 +192,9 @@ def main(argv=None):
                     help="write a spec from the notes' '## Protected engine' list")
     ap.add_argument("--keep", action="append", default=[], nargs=2,
                     metavar=("CARD", "WHY"), help="record why a non-engine card stays")
+    ap.add_argument("--keep-many", action="append", default=[], nargs="+",
+                    metavar="WHY_THEN_CARDS",
+                    help="one reason for several cards: --keep-many \"why\" \"Card A\" \"Card B\"")
     ap.add_argument("--audit", action="store_true",
                     help="list non-land cards with no engine/package/keep reason; exit 3")
     args = ap.parse_args(argv)
@@ -186,6 +214,11 @@ def main(argv=None):
                     "packages": [], "aims": {}, "keywords": [], "keep": {}})
         print(f"wrote {path}: {len(engine)} engine cards from the notes"
               + ("" if engine else " (the notes have no '## Protected engine' list)"))
+    for group in args.keep_many:
+        if len(group) < 2:
+            print("error: --keep-many takes a reason, then one or more cards", file=sys.stderr)
+            return 2
+        args.keep += [[card, group[0]] for card in group[1:]]
     if args.keep:
         spec = load(path)
         if spec is None:
@@ -209,7 +242,14 @@ def main(argv=None):
         if spec is None:
             print(f"no engine spec at {path} — nothing to audit against")
             return 3
-        unexplained, missing = audit(args.deck, spec)
+        field = None
+        try:                              # the field is evidence the CLI fetches; audit()
+            import deck_fit               # itself stays pure and takes it as a parameter
+            text = open(args.deck, encoding="utf-8").read()
+            field = deck_fit.load_field(mtglib.deck_header(text, "Commander") or "")
+        except Exception:
+            field = None
+        unexplained, missing = audit(args.deck, spec, field)
         for n in missing:
             print(f"   engine card not in the deck: {n}")
         for n in unexplained:

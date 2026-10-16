@@ -20,6 +20,42 @@ built. This file is the tracker and the design note for the bundles still to com
 | 9 | Soft vs hard claims, and a Trades lane | Agree, with a correction | The core tier must be a deck's explicit `## Protected engine` list, not any mention in its notes. The Ur-Dragon's notes name Consecrated Sphinx only to explain its bracket. Only 5 of 11 decks have that list today |
 | 10 | Pre-computed AI verdicts for the phone app | Agree | Fits the 2026-10-14 decision: no AI calls from the app |
 
+## The Fable review (2026-10-15) — FIXED
+
+An independent review (Fable) found two real bugs and several precision issues. All are
+fixed in the follow-up PR:
+1. **101-card drafts (high):** an engine spec naming a land the land pass skipped gave a
+   101-card draft, because the basics were sized before seeding. `auto_build` now recounts
+   lands after seeding (test: a seeded land replaces a basic).
+2. **Trades stripping a donor's protection (high):** Smuggler's Surprise, the hexproof
+   answer in Beorn's wipe plan, was offered with Fog as the "backfill".
+   - Notes-named cards are now core on every deck, matching the optimizer's cut
+     protection.
+   - `## Earmarked for other decks` releases a named card on purpose (the Ur-Dragon's
+     Consecrated Sphinx).
+   - Backfills need a functional role (ramp, draw, removal, wipe, counter).
+   - Pins are respected, and a failing trades lane now warns instead of going silent.
+3. **Lift precision (medium):** the baseline is now stored to one decimal. The wording
+   "EDHREC's own definition" was corrected in spec-optimizer-judgment Phase D.
+4. **The motivating case at build time (medium):** trades moved to `scripts/trades.py`,
+   and `auto_build` now lists them on the draft. A fresh Kami draft is offered Consecrated
+   Sphinx (earmarked) before any deck file exists. `## Protected cards` (Dina's heading)
+   now counts.
+5. **Audit burden (medium):** cards the commander's field runs in ≥10% of decks need no
+   keep reason, and `--keep-many "<why>" A B C` covers a group.
+6. **Low:** clamped spec aims are reported (`aims_clamped`), and `engine_missing` names
+   banned and pinned cards precisely.
+7. **The margin decision (low):** `GENERIC_MARGIN` reverses a Phase C note that a lower
+   margin lengthens the tick list. The player asked for every Gemini bundle, and the
+   measured cost was two extra proposals across 11 decks, so the reversal stands.
+   Revisit if the ⚡ lists grow.
+8. **Latent, not fixed:** `Card.is_land` would read a full "Sorcery // Land" type line as a
+   land. Enriched data stores front faces only (0 of 57 live DFCs affected), so it can't
+   bite today.
+
+Fable confirmed the verdicts on Gemini's notes 4 (Ob Nixilis is a white Angel), 5 (no
+overlap gate exists) and 8 (handled for enriched data).
+
 ## A. Quick wins — SHIPPED (this PR)
 
 - `auto_build.role_quota(identity, archetype)`:

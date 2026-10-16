@@ -125,6 +125,17 @@ def _sections(page):
     return page.get("container", {}).get("json_dict", {}).get("cardlists") or []
 
 
+def _base(cv):
+    """The card's rate across decks that could run it, to one decimal: inclusion minus
+    synergy, from the RAW numbers. The stored inclusion and synergy are whole percents,
+    and their difference was off by up to a point; at a 2-3% baseline that flipped 15% of
+    lift tiers (Fable review, 2026-10-15). None without the raw counts."""
+    nd, pot = cv.get("num_decks"), cv.get("potential_decks")
+    if not (nd and pot) or cv.get("synergy") is None:
+        return None
+    return round(100 * nd / pot - 100 * cv["synergy"], 1)
+
+
 def _inclusion(cv):
     """Percent of this commander's decks that run the card (num_decks/potential_decks)."""
     nd, pot = cv.get("num_decks"), cv.get("potential_decks")
@@ -201,6 +212,7 @@ def recommendations(commander, coll_index, ttl=CACHE_TTL, pins=None, for_stem=No
             ref = mtglib.lookup(coll_index, name)
             card = {"name": name, "inclusion": _inclusion(cv),
                     "synergy": round((cv.get("synergy") or 0) * 100),
+                    "base": _base(cv),
                     "owned": bool(ref), "qty": ref.quantity if ref else 0,
                     "pinned_to": _pinned_elsewhere(name, pins, for_stem)}
             cards.append(card)
@@ -255,7 +267,7 @@ def _renorm_snapshot(snap):
     so they are re-derived on read rather than trusted."""
     if not isinstance(snap, dict):
         return snap
-    for key in ("inclusion", "synergy"):
+    for key in ("inclusion", "synergy", "base"):
         m = snap.get(key)
         if isinstance(m, dict):
             out = {}
@@ -278,7 +290,7 @@ def _distill(rec):
     "…Lands…" section. It matters because an unowned candidate has no collection
     ref to type it — without this, the optimizer's spell pass once proposed
     Hallowed Fountain (a land the name heuristic misses) as a BUY for Absorb."""
-    inclusion, synergy, names, lands = {}, {}, {}, set()
+    inclusion, synergy, names, lands, base = {}, {}, {}, set(), {}
     for sec in rec.get("sections", []):
         is_land_sec = "land" in (sec.get("header") or "").lower()
         for c in sec.get("cards", []):
@@ -293,10 +305,12 @@ def _distill(rec):
             for k in keys:
                 if inc and inc > inclusion.get(k, 0):
                     inclusion[k] = inc
+                    if c.get("base") is not None:
+                        base[k] = c["base"]   # the baseline of the row inclusion came from
                 if syn is not None and syn > synergy.get(k, -999):
                     synergy[k] = syn
     return {"inclusion": inclusion, "synergy": synergy, "names": names,
-            "lands": sorted(lands)}
+            "lands": sorted(lands), "base": base}
 
 
 def save_snapshot(commander, coll_index=None, ttl=CACHE_TTL):
@@ -370,6 +384,23 @@ def synergy_map(commander, coll_index=None, ttl=CACHE_TTL):
             front = mtglib.front_face(c["name"])
             if front and front != c["name"]:
                 out.setdefault(mtglib._norm(front), syn)
+    return out
+
+
+def base_map(commander, coll_index=None, ttl=CACHE_TTL):
+    """{normalized name: baseline %} to one decimal (see `_base`), or {} when neither the
+    live data nor the snapshot carries it (snapshots written before 2026-10-15). An
+    absent baseline only means lift falls back to inclusion minus synergy."""
+    rec = recommendations(commander, coll_index if coll_index is not None else {}, ttl)
+    if rec.get("error") or rec.get("source") == "snapshot":
+        return _snapshot_map(commander, "base")
+    out = {}
+    for sec in rec.get("sections", []):
+        for c in sec.get("cards", []):
+            if c.get("base") is None or not c.get("name"):
+                continue
+            for k in {mtglib._norm(c["name"]), mtglib._norm(mtglib.front_face(c["name"]))}:
+                out.setdefault(k, c["base"])
     return out
 
 

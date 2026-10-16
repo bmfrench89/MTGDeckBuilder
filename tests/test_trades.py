@@ -29,8 +29,12 @@ def _deck(title, commander, cards):
             + "".join(f"1 {c}\n" for c in cards) + "\n# --- Basics ---\n30 Forest\n")
 
 
+ROLES = {}
+
+
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    ROLES.clear()
     d = tmp_path / "decks"
     d.mkdir()
     (tmp_path / "c.csv").write_text(COLL, encoding="utf-8")
@@ -41,7 +45,7 @@ def world(tmp_path, monkeypatch):
     fields = {"Here Commander": {"wanted card": 30, "core card": 30, "named card": 30},
               "There Commander": {"wanted card": 10, "spare card": 15}}
     monkeypatch.setattr(deck_fit, "load_field", lambda cmd, *a, **k: fields.get(cmd, {}))
-    monkeypatch.setattr(deck_fit, "primary_role", lambda c: "enchantment")
+    monkeypatch.setattr(deck_fit, "primary_role", lambda c: ROLES.get(c.name, "draw"))
     coll = mtglib.load_collection(str(tmp_path / "c.csv"))
     return d, coll, mtglib.index_by_name(coll)
 
@@ -121,3 +125,47 @@ def test_deck_core_reads_spec_list_clips_and_hand_adds(tmp_path):
         "Card,Added,Replaced,Source\nA,2026-10-15,Z,manual-replace\n", encoding="utf-8")
     keys, _ = optimize.deck_core(str(p))
     assert mtglib._norm("A") in keys, "the player's own add is core"
+
+
+
+# ---- the Fable review fixes (2026-10-15) --------------------------------------------------
+
+def test_a_card_the_donors_notes_name_stays_core_even_with_a_declared_list(world):
+    """Smuggler's Surprise was offered out of Beorn, whose wipe plan names it, because a
+    declared list used to switch the notes check off. The optimizer protects notes-named
+    cards from cuts; the trades lane must agree."""
+    d = world[0]
+    (d / "there.notes.md").write_text(
+        "## Protected engine\n- Core Card\n\n## Wipe plan\nKeep Named Card up.\n",
+        encoding="utf-8")
+    names = {o["card"] for o in _offers(world)}
+    assert "Named Card" not in names and "Wanted Card" in names
+
+
+def test_an_earmark_releases_a_named_card(world):
+    d = world[0]
+    (d / "there.notes.md").write_text(
+        "## Protected engine\n- Core Card\n\nNamed Card is earmarked.\n\n"
+        "## Earmarked for other decks\n- Named Card\n", encoding="utf-8")
+    offers = _offers(world)
+    named = [o for o in offers if o["card"] == "Named Card"]
+    assert named and named[0]["earmarked"] is True
+    assert offers[0]["card"] == "Named Card", "an earmarked card leads the list"
+
+
+def test_a_backfill_must_do_the_same_job(world):
+    """Fog is a 'spell'; so is Smuggler's Surprise. A type is not a job: no backfill."""
+    d = world[0]
+    (d / "there.notes.md").write_text("## Protected engine\n- Core Card\n", encoding="utf-8")
+    ROLES.update({"Wanted Card": "spell", "Named Card": "spell", "Spare Card": "spell"})
+    offers = _offers(world, value=60)
+    assert offers and all(o["backfill"] is None for o in offers)
+
+
+def test_a_pinned_card_is_never_offered(world):
+    d, coll, idx = world
+    (d / "there.notes.md").write_text("## Protected engine\n- Core Card\n", encoding="utf-8")
+    offers = optimize.trade_offers("here", str(d), coll, idx, {"G"}, set(),
+                                   lambda n, ref=None: 65, {"field": {}},
+                                   pins={"wanted card": "there"})
+    assert "Wanted Card" not in {o["card"] for o in offers}

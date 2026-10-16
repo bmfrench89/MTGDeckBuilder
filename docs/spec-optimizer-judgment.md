@@ -142,8 +142,15 @@ harder), and the article describes no small-sample correction.
   - Commander pages still show inclusion and synergy, and synergy = inclusion − (the
     card's rate across decks in these colours).
   - So every committed snapshot already holds the baseline: baseline = inclusion −
-    synergy, and lift = inclusion ÷ baseline. That is lift(card, commander) in EDHREC's
-    own definition, applied to the page they haven't converted.
+    synergy, and lift = inclusion ÷ baseline.
+  - **Not exactly EDHREC's lift** (corrected after the Fable review, 2026-10-15): synergy's
+    baseline is the card's rate across ALL decks that could run the card, not across decks
+    in the commander's colour identity. For a 4-5 colour commander that inflates every
+    card (the Ur-Dragon's reads all sit at 6-14×), so a lift is comparable within one
+    commander, not across commanders.
+  - **Precision:** since 2026-10-15 snapshots store the baseline to one decimal from the
+    raw counts (`base`, `edhrec._base`). Whole-percent inputs had moved 47 of 2,067
+    specificity tiers at ≥10% inclusion.
 - **A baseline floor of 1%.** Snapshots store whole percents, so a baseline under 1 is
   rounding noise. Without the floor, 6% vs 0% would mint an infinite "signature".
 - **Small-sample shrinkage:**

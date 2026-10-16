@@ -220,3 +220,59 @@ def test_keyword_matches_rank_first_and_skip_the_fit_floor(tmp_path, monkeypatch
     silent = [x for x in r["reads"] if x["field"] is None]
     assert silent[0]["name"] == "Damage Draw", "the engine match leads despite fit 55"
     assert silent[0]["matches"] == ["noncombat damage"]
+
+
+
+# ---- the Fable review fixes (2026-10-15) --------------------------------------------------
+
+def test_a_seeded_land_replaces_a_basic_and_the_draft_stays_100(tmp_path):
+    """Forbidding Watchtower in Giada's spec made a 101-card draft: the basics were sized
+    before the seed went in."""
+    rows = ["Quantity,Name,Identities,Types,Sub-types,Mana cost,Mana Value",
+            "1,Test Commander,W,Legendary Creature,Angel,{W},1"]
+    rows += [f"1,White Soldier {i},W,Creature,Soldier,{{1}}{{W}},2" for i in range(80)]
+    rows += [f"1,W Land {i:02},W,Land,,,0" for i in range(30)]
+    p = tmp_path / "pool.csv"
+    p.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    coll = mtglib.load_collection(str(p))
+    idx = mtglib.index_by_name(coll)
+    plain = auto_build.build("Test Commander", coll, idx, decks_dir=None, identity={"W"})
+    taken = {c["name"] for _t, cards in plain["sections"] for c in cards}
+    spare = next(f"W Land {i:02}" for i in range(29, -1, -1) if f"W Land {i:02}" not in taken)
+    spec = {"engine": [spare], "packages": [], "aims": {}, "keywords": [], "keep": {}}
+    d = auto_build.build("Test Commander", coll, idx, decks_dir=None, identity={"W"},
+                         engine=spec)
+    assert d["engine_cards"] == [spare]
+    assert d["total"] == 100 and d["counts"]["land"] == plain["counts"]["land"]
+
+
+def test_a_clamped_aim_is_reported(tmp_path):
+    coll, idx = _pool(tmp_path)
+    spec = {"engine": [], "packages": [], "aims": {"draw": 20}, "keywords": [], "keep": {}}
+    d = auto_build.build("Test Commander", coll, idx, decks_dir=None, identity={"W"},
+                         engine=spec)
+    assert d["aims_clamped"] == [{"role": "draw", "asked": 20, "got": 12}]
+
+
+def test_the_protected_cards_heading_counts_too():
+    notes = "## Protected cards (Dina)\n- Blood Artist\n## Other\n- Not This\n"
+    assert engine_spec.protected_engine_from_notes(notes) == ["Blood Artist"]
+    assert engine_spec.earmarked_from_notes(
+        "## Earmarked for other decks\n- Consecrated Sphinx\n") == ["Consecrated Sphinx"]
+
+
+def test_the_field_argues_its_own_cards_in(deck):
+    engine_spec.main(["--deck", deck, "--init"])
+    spec = engine_spec.load(deck)
+    field = {mtglib._norm("Filler Bear"): 35, mtglib._norm("Kept Spell"): 4}
+    unexplained, _missing = engine_spec.audit(deck, spec, field)
+    assert unexplained == ["Kept Spell"], "35% of decks is a reason; 4% is not"
+
+
+def test_keep_many_takes_one_reason_for_several_cards(deck):
+    engine_spec.main(["--deck", deck, "--init"])
+    assert engine_spec.main(["--deck", deck, "--keep-many", "the two-drop curve",
+                             "Filler Bear", "Kept Spell"]) == 0
+    keep = engine_spec.load(deck)["keep"]
+    assert keep == {"Filler Bear": "the two-drop curve", "Kept Spell": "the two-drop curve"}
+    assert engine_spec.main(["--deck", deck, "--keep-many", "only a reason"]) == 2

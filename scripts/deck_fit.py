@@ -170,7 +170,18 @@ LIFT_TIED = 2.5
 LIFT_POPULAR = 30           # inclusion % that makes a specific card a signature
 
 
-def commander_lift(inclusion, synergy, sample=None):
+def load_field_base(commander, coll_index=None):
+    """The precise baselines (edhrec.base_map), {} offline or for old snapshots."""
+    if not commander:
+        return {}
+    try:
+        import edhrec
+        return edhrec.base_map(commander, coll_index)
+    except Exception:
+        return {}
+
+
+def commander_lift(inclusion, synergy, sample=None, base=None):
     """Shrunk lift of one card for one commander, from EDHREC's commander-page numbers.
 
     `inclusion` and `synergy` are whole percents as the snapshot stores them; `sample`
@@ -180,7 +191,9 @@ def commander_lift(inclusion, synergy, sample=None):
     common here as anywhere in these colours; 1 = ten times as common."""
     if not inclusion or synergy is None:
         return None
-    base = max(float(inclusion) - float(synergy), LIFT_BASE_FLOOR)
+    # the precise baseline when the snapshot carries it; else whole-percent arithmetic
+    base = max(float(base) if base is not None else float(inclusion) - float(synergy),
+               LIFT_BASE_FLOOR)
     rate = float(inclusion)
     if sample:
         rate = (rate * sample + base * LIFT_PRIOR_DECKS) / (sample + LIFT_PRIOR_DECKS)
@@ -193,9 +206,10 @@ def lift_of(name, ctx):
     """commander_lift for one card name under a fit context (name_keys aware), or None."""
     ctx = ctx or {}
     field, syn = ctx.get("field") or {}, ctx.get("synergy") or {}
+    bases = ctx.get("field_base") or {}
     for k in mtglib.name_keys(name):
         if k in field and k in syn:
-            return commander_lift(field[k], syn[k], ctx.get("field_n"))
+            return commander_lift(field[k], syn[k], ctx.get("field_n"), bases.get(k))
     return None
 
 
@@ -266,6 +280,8 @@ def deck_context(deck_path, enriched, commander="", field=None, synergy=None,
             # the deck count behind the field numbers - lift's small-sample shrinkage
             "field_n": field_n if field_n is not None
                        else (load_field_n(commander) if field else None),
+            # the precise baselines behind lift (edhrec._base); {} on old snapshots
+            "field_base": load_field_base(commander) if field else {},
             # The archetype-aware role template, computed ONCE per deck. Every
             # assess_card call reads it from here; "land" rides along so the one
             # lookup table answers every role.
@@ -414,7 +430,8 @@ def _staple_component(card, refs, ctx=None):
     # two rates, so it shortchanges a card few decks run but this commander runs many
     # times more than its colours do - and it credits generic-but-popular cards. Lift is
     # their ratio. Synergy alone (no inclusion row) keeps its old tiers below.
-    lf = commander_lift(inc, syn, (ctx or {}).get("field_n")) if inc else None
+    lf = (commander_lift(inc, syn, (ctx or {}).get("field_n"),
+                         ((ctx or {}).get("field_base") or {}).get(n)) if inc else None)
     if lf is not None:
         spts, sdet = _lift_points(lf, inc)
         if spts > pts:

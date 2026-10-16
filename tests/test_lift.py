@@ -281,3 +281,16 @@ def test_the_full_apply_pass_still_refiles_everything(tmp_path):
     optimize._tidy(str(deck), mtglib.index_by_name(coll))
     art = deck.read_text(encoding="utf-8").split("# --- Artifacts ---")
     assert len(art) == 1 or "Robot Friend" not in art[1].split("# ---")[0]
+
+
+def test_a_precise_baseline_wins_over_whole_percent_arithmetic():
+    """Fable review: inclusion 20 and synergy 16 are each rounded, so 20-16 can be off by
+    a point. The snapshot now stores the baseline from the raw counts."""
+    assert deck_fit.commander_lift(20, 16, base=4.3)["lift"] == pytest.approx(20 / 4.3, abs=0.01)
+    assert deck_fit.commander_lift(6, 6, base=0.4)["base"] == deck_fit.LIFT_BASE_FLOOR
+
+
+def test_lift_of_reads_the_precise_baseline_from_the_context():
+    k = mtglib._norm("Card")
+    ctx = {"field": {k: 12}, "synergy": {k: 10}, "field_base": {k: 2.6}}
+    assert deck_fit.lift_of("Card", ctx)["lift"] == pytest.approx(12 / 2.6, abs=0.01)
