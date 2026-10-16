@@ -250,18 +250,20 @@ def role_meters_html(rep, ranges=None):
     return f"<div class='rmeters'>{''.join(out)}</div>" if out else ""
 
 
-def app_bar(stem, editable):
+def app_bar(stem, editable, lab=False):
     """The web app's chrome for a saved deck: a way back to the deck list and the
     deck's own actions. Emitted only on the editable (app) surface — a downloaded or
     CLI dashboard has no server for these links to reach, the same rule as the
-    add-card picker and the bracket form."""
+    add-card picker and the bracket form. A theory deck's way back is the Lab."""
     if not (editable and stem):
         return ""
     s = esc(stem)
+    back = ("<a href='/lab'><span aria-hidden='true'>&larr;&nbsp;</span>The Lab</a>" if lab
+            else "<a href='/'><span aria-hidden='true'>&larr;&nbsp;</span>All decks</a>")
     return (
         "<div class='appbar'>"
         "<nav aria-label='Breadcrumb' class='crumbs'>"
-        "<a href='/'><span aria-hidden='true'>&larr;&nbsp;</span>All decks</a></nav>"
+        f"{back}</nav>"
         "<div class='appacts'>"
         f"<a class='abtn primary' href='/deck/{s}/edit'>Edit list</a>"
         # ⚡ opens a review of SUGGESTED swaps; nothing is written until the player
@@ -678,6 +680,50 @@ def shared_html(shared):
     return (note + "<div class='tablewrap'><table class='data'><thead><tr>"
             "<th>Card</th><th>Status</th><th>Shared with</th></tr></thead><tbody>"
             + "".join(rows) + "</tbody></table></div>")
+
+
+def lab_html(lab, editable=False, stem=""):
+    """The Lab tab: what building this theory deck for real would take
+    (docs/spec-lab.md). A theory deck claims no copies, so its cards are grouped by
+    where they live now: in another deck (named), spare in the collection, or not
+    owned. On the app surface a button makes it a real deck."""
+    if not lab:
+        return ""
+    titles = lab.get("titles") or {}
+    held, free, missing = lab["held"], lab["free"], lab["missing"]
+
+    def links(names):
+        return " <span aria-hidden='true'>&middot;</span> ".join(
+            f"<a class='cardlink' data-card=\"{esc(n)}\" "
+            f"data-key='{esc(mtglib._norm(n))}'>{esc(n)}</a>" for n in names)
+
+    decks_word = "deck" if len(held) == 1 else "decks"
+    out = [("<p class='labsum'>A theory deck may use any card you own, even ones "
+            "sleeved in another deck, and it claims no copies. Building it for real "
+            f"would take <b>{lab['held_cards']}</b> of its cards from <b>{len(held)}</b> "
+            f"other {decks_word}. <b>{len(free)}</b> are spare copies in your "
+            + (f"collection, and you don't own <b>{len(missing)}</b>.</p>" if missing
+               else "collection, and you own every card.</p>"))]
+    if editable and stem:
+        ask = ("Make this a real deck? It starts claiming its copies"
+               + (f": {lab['held_cards']} of its cards are in other decks now and "
+                  "would show as contested." if lab["held_cards"] else "."))
+        out.append(f"<form method='post' action='/deck/{esc(stem)}/lab' class='labform' "
+                   f"onsubmit=\"return confirm({esc(json.dumps(ask))});\">"
+                   "<input type='hidden' name='to' value='decks'>"
+                   "<button type='submit' class='printbtn'>Make it a real deck</button>"
+                   "</form>")
+    for d, names in held.items():
+        out.append(f"<h3>From {esc(titles.get(d, d))} <span class='count'>{len(names)}"
+                   f"</span></h3><p class='lablist'>{links(names)}</p>")
+    if free:
+        out.append(f"<h3>Spare copies <span class='count'>{len(free)}</span></h3>"
+                   f"<p class='lablist'>{links(free)}</p>")
+    if missing:
+        out.append(f"<h3>Not owned <span class='count'>{len(missing)}</span></h3>"
+                   "<p class='muted'>The Buy tab has these, with what each would "
+                   f"replace.</p><p class='lablist'>{links(missing)}</p>")
+    return "<section><h2>The Lab</h2>" + "".join(out) + "</section>"
 
 
 def curve_note(enriched):
@@ -1428,7 +1474,7 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
                      assessment=None, similar=None, details=None, combos=None, mana=None,
                      editable=False, stem="", missing=None, changes=None,
                      dead=None, cuts=None, has_field=True, sim=None, ranges=None,
-                     clips=None):
+                     clips=None, lab=None):
     t = THEMES.get(theme, THEMES["default"])
     heading = t.get("heading", "var(--accent)")
     modal_css = card_modal_css(t)
@@ -1509,7 +1555,9 @@ def render_dashboard(title, commander, subtitle, rep, enriched, theme,
     # Grouping is presentation only — every section's generator is untouched, and the
     # order inside each tab matches the old top-to-bottom page order.
     watch_sec = clips_html(clips)
-    tab_css, tabs = tabs_block([
+    # A theory deck opens on the Lab: what it would take to build it for real.
+    lab_sec = lab_html(lab, editable=editable, stem=stem)
+    tab_css, tabs = tabs_block(([("lab", "Lab", lab_sec)] if lab_sec else []) + [
         ("deck",  "Deck",  deck_sec + own_sec),
         ("watch", "Watch", watch_sec),
         ("mana",  mana_label,  curve_sec + pip_sec + mana_sec),
@@ -1659,6 +1707,13 @@ tr.warn td {{ color:var(--warn); }}
 h3 {{ font-family:{t['head']}; color:var(--gold); margin:var(--sp-4) 0 var(--sp-2);
   border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:4px; }}
 h3 .count {{ color:var(--muted); font-size:var(--fs-xs); float:right; }}
+/* the Lab tab (docs/spec-lab.md): card names wrap as a list, never a table */
+.labtag {{ display:inline-block; margin-top:var(--sp-2); padding:var(--sp-1) var(--sp-3);
+  border:1px dashed var(--muted); border-radius:var(--r-pill); color:var(--muted);
+  font-size:var(--fs-xs); }}
+.labsum {{ max-width:68ch; }}
+.lablist {{ line-height:1.9; overflow-wrap:anywhere; }}
+.labform {{ margin:var(--sp-2) 0 var(--sp-4); }}
 ul.cards {{ list-style:none; padding:0; margin:0; columns:2; column-gap:var(--sp-5);
   font-family:{t['mono']}; font-size:var(--fs-xs); }}
 ul.cards li {{ break-inside:avoid; padding:var(--sp-1) 0; }}
@@ -1986,11 +2041,12 @@ footer {{ color:var(--muted); font-size:var(--fs-xs); margin-top:30px;
   .explain > p {{ display:block !important; }}
 }}
 </style></head><body><div class="wrap" role="main" id="main">
-{app_bar(stem, editable)}
+{app_bar(stem, editable, lab=bool(lab))}
 <header>
   <h1>{esc(title)}</h1>
   <div class="sub">{esc(subtitle)}</div>
   {f'<div class="cmd">Commander: {esc(commander)}</div>' if commander else ''}
+  {'<div class="labtag">Theory deck &middot; in the Lab &middot; claims no copies</div>' if lab else ''}
   <!-- Emitted on BOTH surfaces, unlike every other control here: window.print()
        needs no server, so it is the one button that still works in a downloaded
        file. It hides itself in print (see .printbtn in the @media print block). -->
@@ -2083,6 +2139,19 @@ search couldn't match.</div>
 _SIM_UNSET = object()   # "not passed" — distinct from an explicit sim=None
 
 
+def _deck_titles(decks_dir):
+    """{stem: title} for every deck in the folder, for naming a theory deck's donors."""
+    out = {}
+    for p in deck_conflicts.deck_files(decks_dir):
+        try:
+            text = open(p, encoding="utf-8").read(4000)
+        except OSError:
+            continue
+        stem = deck_conflicts.deck_label(p)
+        out[stem] = mtglib.deck_header(text, "Title") or stem
+    return out
+
+
 def generate(deck_path, collection_path, title="Commander Deck", commander="",
              subtitle="Commander (EDH) deck dashboard", theme="default",
              decks_dir=None, size="normal", want_visual=False, editable=False,
@@ -2158,8 +2227,17 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
             pass                       # narration is a nicety; the clip still plays
 
     shared = None
+    lab = None
     dd = decks_dir if decks_dir is not None else os.path.dirname(deck_path)
-    if dd:
+    if dd and deck_conflicts.is_study_deck(deck_path):
+        # A theory deck claims no copies, so "shared across decks" would read "fully
+        # self-contained", which is false. The Lab tab says where each card lives.
+        try:
+            lab = deck_conflicts.lab_sources(deck, idx, deck_conflicts.scan(dd, idx))
+            lab["titles"] = _deck_titles(dd)
+        except Exception:
+            lab = None
+    elif dd:
         try:
             shared = deck_conflicts.shared_for_deck(deck_path, idx, dd)
         except Exception:
@@ -2250,7 +2328,7 @@ def generate(deck_path, collection_path, title="Commander Deck", commander="",
                                  editable=editable, stem=url_stem, missing=missing,
                                  changes=changes, dead=dead, cuts=cuts,
                                  has_field=bool((ctx or {}).get("field")), sim=sim,
-                                 clips=clips,
+                                 clips=clips, lab=lab,
                                  ranges=(ctx or {}).get("role_ranges")
                                  or deckcore.role_ranges((ctx or {}).get("archetype")))
     visual = render_visual(title, deck, idx, theme, size) if want_visual else None

@@ -1,0 +1,89 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Animist's Awakening,Sorcery,1,G,{X}{G},,,,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archfiend of Despair,Creature,8,B,{6}{B}{B},Demon,,,6,4
+Army of the Damned,Sorcery,8,B,{5}{B}{B}{B},,,,,4
+Assassin's Trophy,Instant,2,B G,{B}{G},,,removal,,4
+Beledros Witherbloom,Creature,7,B G,{5}{B}{G},Elder;Dragon,,,4,4
+Birds of Paradise,Creature,1,G,{G},Bird,W U B R G,dork;ramp,0,4
+Blood Artist,Creature,2,B,{1}{B},Vampire,,,0,4
+Bloodchief Ascension,Enchantment,1,B,{B},,,,,4
+Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Carrion Feeder,Creature,1,B,{B},Zombie,,,1,4
+"Chatterfang, Squirrel General",Creature,3,B G,{2}{G},Squirrel;Warrior,,,3,4
+Collective Resistance,Instant,2,G,{1}{G},,,removal,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Damnable Pact,Sorcery,2,B,{X}{B}{B},,,,,4
+Dark Ritual,Instant,1,B,{B},,B,mana3;ritual:3,,4
+Deadly Dispute,Instant,2,B,{1}{B},,W U B R G,draw,,4
+Deathcap Glade,Land,0,B G,,,B G,etb-tapped-cond,,4
+Diabolic Tutor,Sorcery,4,B,{2}{B}{B},,,,,4
+Elvish Mystic,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Eternal Witness,Creature,3,G,{1}{G}{G},Human;Shaman,,,2,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Exsanguinate,Sorcery,2,B,{X}{B}{B},,,,,4
+Ezuri's Predation,Sorcery,8,G,{5}{G}{G}{G},,,,,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
+Festering Thicket,Land,0,B G,,Swamp;Forest,B G,etb-tapped,,4
+Final Parting,Sorcery,5,B,{3}{B}{B},,,,,4
+For the Common Good,Sorcery,1,G,{X}{X}{G},,,,,4
+Forest,Land,0,G,,Forest,G,,,4
+Fyndhorn Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Glorious Decay,Instant,2,G,{1}{G},,,draw;removal,,4
+Grievous Wound,Enchantment,5,B,{3}{B}{B},Aura,,,,4
+Grim Backwoods,Land,0,B G,,,C,draw,,4
+Grim Tutor,Sorcery,3,B,{1}{B}{B},,,,,4
+Haunted Mire,Land,0,B G,,Swamp;Forest,B G,etb-tapped,,4
+Heroic Intervention,Instant,2,G,{1}{G},,,,,4
+In Garruk's Wake,Sorcery,9,B,{7}{B}{B},,,wipe,,4
+Infernal Grasp,Instant,2,B,{1}{B},,,removal,,4
+Inside Information,Sorcery,2,B,{X}{B}{B},,,,,4
+Khalni Garden,Land,0,G,,,G,etb-tapped,,4
+Lightning Greaves,Artifact,2,,{2},Equipment,,,,4
+Llanowar Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+Llanowar Wastes,Land,0,B G,,,B G C,,,4
+Mirkwood Bats,Creature,4,B,{3}{B},Bat,,,2,4
+Necroblossom Snarl,Land,0,B G,,,B G,etb-tapped-cond,,4
+Night's Whisper,Sorcery,2,B,{1}{B},,,draw,,4
+Noxious Newt,Creature,2,G,{1}{G},Salamander,G,dork;ramp,1,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+Pest Infestation,Sorcery,1,G,{X}{X}{G},,,,,4
+Plumb the Forbidden,Instant,2,B,{1}{B},,,draw,,4
+Pox Plague,Sorcery,5,B,{B}{B}{B}{B}{B},,,,,4
+Reliquary Tower,Land,0,,,,C,,,4
+Rise of the Dark Realms,Sorcery,9,B,{7}{B}{B},,,,,4
+Second Harvest,Instant,4,G,{2}{G}{G},,,,,4
+Sedgemoor Witch,Creature,3,B,{2}{B},Human;Warlock,,,3,4
+Shamanic Revelation,Sorcery,5,G,{3}{G}{G},,,draw,,4
+Shoot the Sheriff,Instant,2,B,{1}{B},,,removal,,4
+Skullclamp,Artifact,1,,{1},Equipment,,draw,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Springleaf Parade,Enchantment,2,G,{X}{G}{G},,W U B R G,,,4
+Sprout Swarm,Instant,2,G,{1}{G},,,,,4
+Stensian Sanguinist // Exsanguinate,Creature,2,B,{1}{B} // {X}{B}{B},Vampire;Cleric,,,2,4
+Stir Up Trouble,Sorcery,1,B,{B},,,removal,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Tainted Wood,Land,0,B G,,,B G C,,,4
+Temple of Malady,Land,0,B G,,,B G,etb-tapped,,4
+Tendershoot Dryad,Creature,5,G,{4}{G},Dryad,,,2,4
+"Tergrid, God of Fright // Tergrid's Lantern",Creature,5,B,{3}{B}{B} // {3}{B},God,,,4,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+The Master of Lake-town,Creature,3,B,{1}{B}{B},Human;Advisor,,draw,3,4
+Turbulent Fen,Land,0,B G,,Swamp;Forest,B G,etb-tapped-cond,,4
+Twilight Mire,Land,0,B G,,,B G C,mana3,,4
+Twitching Doll,Creature,2,G,{1}{G},Spider;Toy,W U B R G,dork;ramp;rock,2,4
+Umbral Collar Zealot,Creature,2,B,{1}{B},Human;Cleric,,,3,4
+Up the Beanstalk,Enchantment,2,G,{1}{G},,,draw,,4
+Vernal Fen,Land,0,B G,,Swamp;Forest,B G,etb-tapped-cond,,4
+Village Rites,Instant,1,B,{B},,,draw,,4
+Viridescent Bog,Land,0,B G,,,B G,mana2,,4
+Viscera Seer,Creature,1,B,{B},Vampire;Wizard,,,1,4
+Witherbloom Charm,Instant,2,B G,{B}{G},,,draw;removal,,4
+"Witherbloom, the Balancer",Creature,8,B G,{6}{B}{G},Elder;Dragon,,,5,4
+Woe Strider,Creature,3,B,{2}{B},Horror,,,3,4
+Woodland Cemetery,Land,0,B G,,,B G,etb-tapped-cond,,4
+"Yahenni, Undying Partisan",Creature,3,B,{2}{B},Aetherborn;Vampire,,,2,4
+Zulaport Cutthroat,Creature,2,B,{1}{B},Human;Rogue;Ally,,,1,4

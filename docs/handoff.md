@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-15 (deck UAT v1: every deck runs acceptance gates on the goldfish; 11 arrival swaps; Tinybones, Bauble Burglar built engine-first: twelve decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-16 (the Lab: theory decks get their own view; Witherbloom, the Balancer is the first theory deck, a Bracket 4 combo build from the whole collection; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -48,6 +48,43 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-16: the Lab, and the first theory deck.** The player asked whether any Bracket 4
+infinite-combo deck exists besides Bartolomé, "even if it meant breaking down a deck",
+then: "this is a theory based deck so any card, even in decks are free reign", then
+"maybe we update the deck page UI and allow another way to view brainstormed decks?"
+- **The combo comb:** Commander Spellbook's bulk export (114,932 combos) was matched
+  against the 3,561 owned cards. The client's find-my-combos caps a request at 600
+  cards, so a whole collection can't go through it.
+  - 411 combos are fully owned, and 378 of those win or go infinite. 251 are
+    Bartolomé-style white-black loops.
+  - The persist loops look owned but aren't: the player owns no persist creature.
+  - The Ur-Dragon already holds a late 3-card infinite: Miirym + Dracogenesis + Marang
+    River Regent, with Temur Ascendancy for haste.
+- **Witherbloom, the Balancer** is saved as a theory deck (`# Study: yes`, Bracket 4).
+  - Its four two-card combos: Witherbloom + Sprout Swarm, The Master of Lake-town +
+    Bloodchief Ascension, Pox Plague + Archfiend, Grievous Wound + Archfiend.
+  - It holds all 19 of the field's top-25 cards that the player owns, and passes every
+    gate.
+  - Building it for real would take 44 cards from 12 decks, 27 of them Dina's. 42 are
+    spare copies.
+  - power.py reads it as 3 because its curated combo list lacks these combos; the
+    header says 4.
+- **The Lab** (docs/spec-lab.md):
+  - The Decks page has two tabs, Your decks (`/`) and Lab (`/lab`).
+  - A Lab card says "N from other decks · F free · M to buy", then the top donor decks.
+  - A theory deck's page opens on a Lab tab listing every card under the deck it lives
+    in now, then spare copies, then not owned, with Make it a real deck.
+  - "Move to the Lab" and "Make it a real deck" flip only the Study header, byte for
+    byte. Moving to the Lab drops the deck's pins.
+- **Fixed on the way:**
+  - Deck cards now headline the player's declared bracket, with "detected N" beside it.
+    They showed the detected number, so Y'shtola read 3.
+  - The deck menu's confirms survive an apostrophe. Delete on Y'shtola ran with no
+    confirmation.
+- **UAT:** upgrade.js PASS, sweep.js clean, flows.js all PASS including the new F15
+  (the Lab). The sweep's only warnings, the home chips at 360 and 412 px, are the same
+  on main.
 
 **2026-10-15 (night): deck UAT, the arrival swaps, Tinybones.** The player: "Yes merge,
 not sure exact copies but give me your recommendation if it's even worth it, do the swap,

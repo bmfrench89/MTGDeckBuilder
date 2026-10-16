@@ -456,7 +456,9 @@ row only when the player hears a name said wrong, never a guessed pronunciation)
 templates. Config via env: `MTG_COLLECTION`, `MTG_DECKS_DIR`, `MTG_PORT`, `MTG_HOST`
 (`0.0.0.0` for phone access — noted as a LAN exposure in the README).
 
-Key routes: `/` decks leaderboard · `/deck/<stem>` live dashboard · `/deck/<stem>/card`
+Key routes: `/` decks leaderboard (sleeved decks) · `/lab` the Lab: theory decks, `# Study: yes`
+(docs/spec-lab.md) · `/deck/<stem>/lab` (POST `to=lab|decks`: move a deck in or out) ·
+`/deck/<stem>` live dashboard (a theory deck opens on its Lab tab) · `/deck/<stem>/card`
 (remove/replace) · `/deck/<stem>/optimize` · `/deck/<stem>/pin` · `/deck/<stem>/assess[.txt]`
 (coaching packet) · `/build-next` (+ `/…/deck`, `/…/save`) · `/collection` — three sub-tabs
 (docs/spec-collection-rebuild.md): **Cards** (`?q=` the one query language + `scope`, `order`,

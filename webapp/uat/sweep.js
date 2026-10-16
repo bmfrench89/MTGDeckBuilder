@@ -26,7 +26,7 @@ const PAGES = [['home', '/'], ['build', '/build-next'], ['collection', '/collect
                ['coll-add', '/collection/add'], ['coll-manage', '/collection/manage'],
                ['wishlist', '/wishlist'], ['shared', '/shared'], ['pins', '/pins'],
                ['import', '/decks/import'], ['arrivals', '/collection/arrivals'],
-               ['people', '/people'], ['activity', '/activity']];
+               ['people', '/people'], ['activity', '/activity'], ['lab', '/lab']];
 
 function audit() {          // runs in the page
   const vw = document.documentElement.clientWidth;
@@ -91,7 +91,11 @@ function audit() {          // runs in the page
     }
     const deckHref = await p.evaluate(() => (document.querySelector('.deckcard .name a') || {}).getAttribute?.('href'));
     const pages = deckHref ? [...PAGES, ['deck', deckHref], ['changes', deckHref + '/changes'],
-                              ['optimize', deckHref + '/optimize']] : PAGES;
+                              ['optimize', deckHref + '/optimize']] : [...PAGES];
+    // A theory deck's page opens on its Lab tab (docs/spec-lab.md): photograph one too.
+    await p.goto(BASE + '/lab', { waitUntil: 'load', timeout: 300000 });
+    const labHref = await p.evaluate(() => (document.querySelector('.deckcard.theory .name a') || {}).getAttribute?.('href'));
+    if (labHref) pages.push(['lab-deck', labHref]);
     for (const [name, url] of pages) {
       await p.goto(BASE + url, { waitUntil: 'load', timeout: 300000 });
       await p.waitForTimeout(300);

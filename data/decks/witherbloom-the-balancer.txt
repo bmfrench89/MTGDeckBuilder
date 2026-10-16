@@ -1,0 +1,111 @@
+# Title: Witherbloom, the Balancer (theory)
+# Commander: Witherbloom, the Balancer
+# Colors: B G
+# Archetype: combo aristocrats tokens
+# Bracket: 4
+# Study: yes
+# Source: theory build 2026-10-16 from the whole collection (every card counted, decks included); not sleeved
+
+# --- Commander ---
+1 Witherbloom, the Balancer
+
+# --- Creatures ---
+1 Llanowar Elves
+1 Elvish Mystic
+1 Birds of Paradise
+1 Fyndhorn Elves
+1 Noxious Newt
+1 Twitching Doll
+1 Beledros Witherbloom
+1 The Master of Lake-town
+1 Chatterfang, Squirrel General
+1 Sedgemoor Witch
+1 Zulaport Cutthroat
+1 Blood Artist
+1 Tergrid, God of Fright // Tergrid's Lantern
+1 Mirkwood Bats
+1 Viscera Seer
+1 Carrion Feeder
+1 Stensian Sanguinist // Exsanguinate
+1 Umbral Collar Zealot
+1 Woe Strider
+1 Yahenni, Undying Partisan
+1 Archfiend of Despair
+1 Eternal Witness
+1 Tendershoot Dryad
+
+# --- Instants ---
+1 Dark Ritual
+1 Assassin's Trophy
+1 Witherbloom Charm
+1 Deadly Dispute
+1 Plumb the Forbidden
+1 Village Rites
+1 Glorious Decay
+1 Infernal Grasp
+1 Shoot the Sheriff
+1 Collective Resistance
+1 Sprout Swarm
+1 Heroic Intervention
+1 Second Harvest
+
+# --- Sorceries ---
+1 Shamanic Revelation
+1 Night's Whisper
+1 Stir Up Trouble
+1 Feed the Swarm
+1 In Garruk's Wake
+1 Ezuri's Predation
+1 Exsanguinate
+1 Pest Infestation
+1 For the Common Good
+1 Damnable Pact
+1 Animist's Awakening
+1 Inside Information
+1 Diabolic Tutor
+1 Grim Tutor
+1 Rise of the Dark Realms
+1 Army of the Damned
+1 Final Parting
+1 Pox Plague
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+1 Skullclamp
+1 Lightning Greaves
+1 Swiftfoot Boots
+
+# --- Enchantments ---
+1 Grievous Wound
+1 Up the Beanstalk
+1 Springleaf Parade
+1 Bloodchief Ascension
+
+# --- Lands ---
+1 Command Tower
+1 Khalni Garden
+1 Llanowar Wastes
+1 Woodland Cemetery
+1 Vernal Fen
+1 Bojuka Bog
+1 Deathcap Glade
+1 Twilight Mire
+1 Turbulent Fen
+1 Exotic Orchard
+1 Fabled Passage
+1 Necroblossom Snarl
+1 Reliquary Tower
+1 Tainted Wood
+1 Temple of Malady
+1 Viridescent Bog
+1 Festering Thicket
+1 Haunted Mire
+1 Path of Ancestry
+1 Terramorphic Expanse
+1 Evolving Wilds
+1 Grim Backwoods
+
+# --- Basics ---
+5 Forest
+9 Swamp

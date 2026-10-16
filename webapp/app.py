@@ -600,6 +600,8 @@ def deck_meta(stem):
         "colors": _hdr(text, "Colors"),
         "archetype": _hdr(text, "Archetype"),
         "absurd_qty": _absurd_quantities(text),
+        # A theory build (`# Study: yes`): it lives in the Lab, not with your decks.
+        "study": deck_conflicts.is_study_deck(path),
     }
 
 
@@ -728,7 +730,32 @@ def _role_meters(rep, archetype):
 @app.route("/")
 def index():
     """Deck leaderboard. Each row carries a small health summary so the page answers
-    'which deck needs attention?', not just 'which is strongest'."""
+    'which deck needs attention?', not just 'which is strongest'. Theory builds live
+    in the Lab (/lab), so this page is the decks you actually sleeve."""
+    return _decks_page("decks")
+
+
+@app.route("/lab")
+def lab():
+    """The Lab: theory builds (`# Study: yes`) that may use any card you own, even
+    ones sleeved in other decks (docs/spec-lab.md). They claim no copies, so instead
+    of "ready to sleeve" each one says what building it for real would take, and
+    from which decks."""
+    return _decks_page("lab")
+
+
+def _lab_summary(lab, titles):
+    """The Lab card's one-line story: how many cards would leave which decks, how
+    many are free, how many you'd buy. Top three donors, by title."""
+    if not lab:
+        return None
+    donors = [(titles.get(d, d), len(cs)) for d, cs in lab["held"].items()]
+    return {"held": lab["held_cards"], "free": len(lab["free"]),
+            "missing": len(lab["missing"]), "donors": donors[:3],
+            "more": max(0, len(donors) - 3)}
+
+
+def _decks_page(view):
     coll, idx = collection_index()
     # one scan for every deck, rather than one per row
     try:
@@ -741,8 +768,14 @@ def index():
             for d in v["decks"]:
                 short_by_deck[d] = short_by_deck.get(d, 0) + 1
 
+    metas = list_decks()
+    titles = {m["stem"]: m["title"] for m in metas}
+    counts = {"decks": sum(1 for m in metas if not m["study"]),
+              "lab": sum(1 for m in metas if m["study"])}
     rows = []
-    for m in list_decks():
+    for m in metas:
+        if m["study"] != (view == "lab"):
+            continue
         qty_error = _qty_message(m["absurd_qty"]) if m["absurd_qty"] else None
         res, rep = None, None
         if not qty_error:                 # an absurd quantity is never simulated
@@ -763,27 +796,85 @@ def index():
             to_buy = sum(1 for c in deck if mtglib.lookup(idx, c.name) is None
                          and not mtglib.is_basic(c.name))
         except Exception:
-            total, to_buy = None, 0
+            deck, total, to_buy = [], None, 0
         label = deck_conflicts.deck_label(m["path"])
+        lab = None
+        if m["study"]:
+            try:
+                lab = _lab_summary(deck_conflicts.lab_sources(deck, idx, usage), titles)
+            except Exception:
+                lab = None
         rows.append({**m, "assess": res, "total": total, "to_buy": to_buy,
                      "contested": short_by_deck.get(label, 0), "qty_error": qty_error,
                      "roles": _role_meters(rep, m.get("archetype")),
-                     "identity": _deck_pips(m, idx),
-                     "study": deck_conflicts.is_study_deck(m["path"])})
+                     "identity": _deck_pips(m, idx), "lab": lab})
     # Phase D: the 0-100 composite is gone, so the leaderboard sorts on shipped
     # axes — bracket, then how fast the deck actually wins, then interaction.
     # Explainable in one sentence, which the composite never was.
     rows.sort(key=lambda r: power.rank_key_for(r["assess"]))
-    brackets = sorted({r["assess"]["bracket"] for r in rows if r["assess"]})
-    try:
-        # "I just scanned these — where do they go?" Only fires when the collection
-        # export carries acquisition dates; empty on the name-only snapshot.
-        arrivals = deckcore.new_arrivals(coll, DECKS_DIR)
-    except Exception:
-        arrivals = []
+    brackets = sorted({r["assess"].get("bracket_effective") or r["assess"]["bracket"]
+                       for r in rows if r["assess"]})
+    arrivals = []
+    if view == "decks":
+        try:
+            # "I just scanned these — where do they go?" Only fires when the
+            # collection export carries acquisition dates; empty on the name-only
+            # snapshot. Arrivals go into real decks, so the Lab doesn't show them.
+            arrivals = deckcore.new_arrivals(coll, DECKS_DIR)
+        except Exception:
+            arrivals = []
     return render_template("index.html", decks=rows, brackets=brackets, page="home",
-                           arrivals=arrivals,
+                           view=view, counts=counts, arrivals=arrivals,
                            sync_enabled=sync.enabled(), sync_status=sync.status_view())
+
+
+@app.route("/deck/<stem>/lab", methods=["POST"])
+def deck_lab_move(stem):
+    """Move a deck between your decks and the Lab: `to=lab` adds `# Study: yes`, and
+    `to=decks` removes it (docs/spec-lab.md). Nothing else in the file changes.
+
+    Moving to the Lab keeps the list but frees its copies for your other decks, so
+    the pins that reserved copies for it are dropped, as Delete drops them. A deck
+    coming out of the Lab starts claiming its copies, and its cards may then show as
+    contested; the message says how many."""
+    m = deck_meta(stem)
+    if not m:
+        abort(404)
+    to = request.form.get("to")
+    if to not in ("lab", "decks"):
+        abort(400)
+    text = open(m["path"], encoding="utf-8", newline="").read()
+    new = deck_conflicts.set_study(text, to == "lab")
+    if new != text:
+        tmp = m["path"] + ".part"
+        with open(tmp, "w", encoding="utf-8", newline="") as f:
+            f.write(new)
+        os.replace(tmp, m["path"])
+        _invalidate(stem)
+        _note("move to lab" if to == "lab" else "move out of lab", stem, m["title"])
+    if to == "lab":
+        pins = deckcore.load_pins()
+        left = {c: d for c, d in pins.items() if d != stem}
+        if len(left) != len(pins):
+            deckcore.save_pins(left)
+        flash(f"Moved “{m['title']}” to the Lab. It keeps its list, and its cards are "
+              "free again for your other decks.")
+        return redirect(url_for("lab"))
+    coll, idx = collection_index()
+    try:
+        usage = deck_conflicts.scan(DECKS_DIR, idx)
+        # Contested means another deck wants the same copy; a card nobody owns is a
+        # buy, not a conflict, and the deck page already says so.
+        short = sum(1 for v in usage.values()
+                    if stem in v["decks"] and len(v["decks"]) > 1
+                    and v["total"] > v["owned"])
+    except Exception:
+        short = 0
+    flash(f"“{m['title']}” is a real deck now."
+          + (f" {short} of its cards are also in other decks, beyond the copies you own"
+             " — they show as contested until you choose where they go." if short else
+             " Every card it uses is a spare copy, so nothing is contested."))
+    return redirect(url_for("deck", stem=stem))
 
 
 @app.route("/deck/<stem>")

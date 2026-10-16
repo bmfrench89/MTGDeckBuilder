@@ -370,6 +370,12 @@ label:has(> .chk) { display: inline-flex; align-items: center; gap: var(--sp-2);
                     color: var(--muted); }
 .deckcard .status .ok { color: var(--in-text); }
 .deckcard .status .bad { color: var(--warn); }
+/* A theory deck (the Lab): a dashed edge, and a status that says what building it
+   for real would take instead of whether it is ready to sleeve. */
+.deckcard.theory { border-style: dashed; }
+.deckcard.theory .status { flex-wrap: wrap; }
+.deckcard .status .labline { color: var(--text); }
+.deckcard .status .labfrom { flex-basis: 100%; font-size: var(--fs-xs); }
 .deckcard .roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
                    gap: var(--sp-2); padding: var(--sp-3) 0; border-top: 1px solid var(--edge);
                    border-bottom: 1px solid var(--edge); }
@@ -530,12 +536,16 @@ footer { color: var(--faint); font-size: var(--fs-xs); text-align: center;
 .subtabs a:hover { color: var(--text); text-decoration: none; }
 .subtabs a[aria-current="page"] { color: var(--text); font-weight: 700;
   border-bottom-color: var(--accent); }
-.subtabs .badge, .collbar .cnt { display: inline-flex; align-items: center;
+.subtabs .badge, .subtabs .cnt, .collbar .cnt { display: inline-flex; align-items: center;
   justify-content: center; min-width: 20px; height: 20px; padding: 0 var(--sp-1);
   border-radius: var(--r-pill); font-family: var(--font-mono); font-size: var(--fs-2xs);
   font-weight: 700; }
 .subtabs .badge { background: var(--short); color: #1A0E05; }
 .collbar .cnt { background: var(--accent); color: var(--accent-ink); }
+/* Decks page: Your decks / Lab (docs/spec-lab.md). A count is neutral, never the
+   orange that means "something waits for you"; the current tab's count is amber. */
+.subtabs .cnt { background: var(--panel2); color: var(--muted); }
+.subtabs a[aria-current="page"] .cnt { background: var(--accent); color: var(--accent-ink); }
 
 .collbar { position: sticky; top: 0; z-index: 6; display: flex; gap: var(--sp-2);
   align-items: center; margin: 0 calc(-1 * var(--sp-2)); padding: var(--sp-2);

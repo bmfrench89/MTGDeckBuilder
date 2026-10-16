@@ -81,7 +81,9 @@ function restore(stem, files) {
   const decks = fs.readdirSync(DECKS).filter((f) => f.endsWith('.txt')).sort();
   let stem = null, deck = null;
   for (const f of decks) {
-    const d = parseDeck(read(path.join(DECKS, f)));
+    const text = read(path.join(DECKS, f));
+    if (/^#\s*study\s*:\s*(yes|true|1)\s*$/im.test(text)) continue;   // a Lab deck claims no copies
+    const d = parseDeck(text);
     if (d.colors && d.colors.length < 5 && d.commander.length && d.cards.some((n) => !BASICS.test(n))) {
       stem = f.slice(0, -4); deck = d; break;
     }
@@ -479,6 +481,41 @@ function restore(stem, files) {
         else pass('F14 collection search', `first card at ${top}px; "${label}" = the page${depth}`);
       }
     } catch (e) { fail('F14 collection search', (why.join('; ') + ' ' + String(e)).slice(0, 200)); }
+  }
+
+  // F15 · The Lab (docs/spec-lab.md): move a deck to the Lab from its menu, find it
+  // there as a theory deck, open it on its Lab tab, then make it a real deck again.
+  // The file must change by exactly one header line, and come back byte for byte.
+  {
+    const files = snapshot(stem);
+    const before = read(deckFile);
+    try {
+      const why = [];
+      await p.goto(BASE + '/', { waitUntil: 'load', timeout: 300000 });
+      const card = p.locator('article.deckcard', { has: p.locator(`.name a[href="/deck/${stem}"]`) }).first();
+      await card.locator('details.menu > summary').click();
+      p.once('dialog', (d) => d.accept());
+      await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+        card.locator('button', { hasText: 'Move to the Lab' }).click()]);
+      if (!p.url().endsWith('/lab')) why.push(`the move landed on ${p.url()}`);
+      const was = before.split(/\r?\n/);
+      const added = read(deckFile).split(/\r?\n/).filter((l) => !was.includes(l));
+      if (added.join('|') !== '# Study: yes') why.push(`the file changed by ${JSON.stringify(added)}`);
+      if (!(await p.locator(`article.deckcard.theory .name a[href="/deck/${stem}"]`).count())) why.push('the deck is not in the Lab');
+      if (!(await p.locator('nav.subtabs a[aria-current="page"]', { hasText: 'Lab' }).count())) why.push('the Lab tab is not current');
+      await p.goto(`${BASE}/deck/${stem}`, { waitUntil: 'load', timeout: 300000 });
+      const first = await p.evaluate(() => { const l = document.querySelector('nav.tabs label'); return l && l.getAttribute('for'); });
+      if (first !== 'tab-lab') why.push(`the deck page's first tab is ${first}`);
+      if (!(await p.locator('.crumbs a[href="/lab"]').count())) why.push('no way back to the Lab');
+      await p.click('label[for="tab-lab"]');
+      p.once('dialog', (d) => d.accept());
+      await Promise.all([p.waitForNavigation({ waitUntil: 'load', timeout: 300000 }),
+        p.locator('form.labform button').click()]);
+      if (read(deckFile) !== before) why.push('making it real did not give back the same file');
+      if (why.length) fail('F15 the Lab: move in and back', why.join('; '));
+      else pass('F15 the Lab: move in and back', 'menu → Lab (one header line) → Lab tab first → a real deck again, byte for byte');
+    } catch (e) { fail('F15 the Lab: move in and back', String(e).slice(0, 160)); }
+    restore(stem, files);
   }
 
   // F11 · Keyboard only (Wave 1.5): the skip link, then a card name opens the panel,

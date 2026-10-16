@@ -1,29 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Decks · MTG Deckbuilder{% endblock %}
+{% block title %}{{ 'Lab' if view == 'lab' else 'Decks' }} · MTG Deckbuilder{% endblock %}
 {% block content %}
 <header class="pagehead">
   <div>
+    {% if view == 'lab' %}
+    <h1>The Lab</h1>
+    <div class="sub">Theory decks. A theory deck may use any card you own, even ones
+      sleeved in another deck, and it claims no copies. Each card shows what building
+      it for real would take, and from which decks.</div>
+    {% else %}
     <h1>Your decks</h1>
     <div class="sub">Ranked by bracket, then speed. Each card shows whether the deck is
       ready to sleeve and how its core roles sit against their targets.</div>
+    {% endif %}
   </div>
   <div class="acts">
     <a class="btn ghost" href="{{ url_for('deck_import') }}">Import a list</a>
     <a class="btn" href="{{ url_for('build_next') }}">+ Build a deck</a>
   </div>
 </header>
+<nav class="subtabs" aria-label="Decks">
+  <a href="{{ url_for('index') }}"{% if view != 'lab' %} aria-current="page"{% endif %}>Your decks
+    <span class="cnt" aria-hidden="true">{{ counts.decks }}</span><span class="sr-only"> ({{ counts.decks }})</span></a>
+  <a href="{{ url_for('lab') }}"{% if view == 'lab' %} aria-current="page"{% endif %}>Lab
+    <span class="cnt" aria-hidden="true">{{ counts.lab }}</span><span class="sr-only"> ({{ counts.lab }} theory {{ 'deck' if counts.lab == 1 else 'decks' }})</span></a>
+</nav>
 
+{% if decks %}
 <div class="filterbar mb-4" id="deckfilters">
-  <input id="deckq" type="search" placeholder="Filter decks…" autocomplete="off"
-         aria-label="Filter decks by name or commander">
+  <input id="deckq" type="search" placeholder="Filter {{ 'theory decks' if view == 'lab' else 'decks' }}…" autocomplete="off"
+         aria-label="Filter {{ 'theory decks' if view == 'lab' else 'decks' }} by name or commander">
   <div class="chips" role="group" aria-label="Show">
     <a class="thchip on" data-f="all" href="#">All</a>
     {% for b in brackets %}<a class="thchip" data-f="b{{ b }}" href="#">Bracket {{ b }}</a>{% endfor %}
+    {% if view != 'lab' %}
     <a class="thchip" data-f="ready" href="#" title="100 cards, nothing to buy, no contested copies">Ready to sleeve</a>
     <a class="thchip" data-f="attention" href="#" title="Wrong card count, cards to buy, or contested copies">Needs attention</a>
+    {% endif %}
   </div>
   <span class="muted fs-xs" id="deckcount" aria-live="polite"></span>
 </div>
+{% elif view == 'lab' %}
+<div class="card mb-4 labempty">
+  <h3 class="mt-0">No theory decks yet</h3>
+  <p>A theory deck is a list you want to try on paper: the best build from everything
+    you own, a deck you're thinking of breaking down, or a commander you haven't sleeved.
+    It claims no copies, so it never makes your real decks' cards contested.</p>
+  <p class="muted">To add one, use <b>Move to the Lab</b> in a deck's menu on
+    <a href="{{ url_for('index') }}">Your decks</a>, or ask a session for a theory build.</p>
+</div>
+{% endif %}
 
 {% set pipbg = {'W': '#F4EBC9', 'U': '#5AA9E6', 'B': '#8C7FA8', 'R': '#E5654B', 'G': '#4FAE6E'} %}
 {% set colornames = {'W': 'white', 'U': 'blue', 'B': 'black', 'R': 'red', 'G': 'green'} %}
@@ -31,8 +57,8 @@
 {% for d in decks %}
 {% set ready = d.total == 100 and not d.to_buy and not d.contested and not d.qty_error %}
 {% set ident = d.identity or [] %}
-<article class="deckcard" data-name="{{ (d.title ~ ' ' ~ d.commander)|lower }}"
-     data-bracket="{{ d.assess.bracket if d.assess else '' }}"
+<article class="deckcard{{ ' theory' if d.study }}" data-name="{{ (d.title ~ ' ' ~ d.commander)|lower }}"
+     data-bracket="{{ (d.assess.bracket_effective or d.assess.bracket) if d.assess else '' }}"
      data-ready="{{ '1' if ready else '0' }}" aria-labelledby="dk-{{ d.stem }}">
   <span class="stripe" aria-hidden="true"
     {%- if ident|length == 1 %} style="background:{{ pipbg[ident[0]] }}"
@@ -49,14 +75,28 @@
 
   <div class="badges">
     {% if d.assess %}
-      <span class="pill b{{ d.assess.bracket }}">Bracket {{ d.assess.bracket }} · {{ d.assess.bracket_name }}</span>
+      {#- The player's setting is the headline and the detected verdict rides beside it
+          when they differ (power.with_declared's contract, as on the deck page). -#}
+      {% set eb = d.assess.bracket_effective or d.assess.bracket %}
+      <span class="pill b{{ eb }}"{% if d.assess.bracket_mismatch %} title="Your setting. The card signals read Bracket {{ d.assess.bracket_detected }}."{% endif %}>Bracket {{ eb }} · {{ d.assess.bracket_effective_name or d.assess.bracket_name }}</span>
+      {% if d.assess.bracket_mismatch %}<span class="muted fs-xs">detected {{ d.assess.bracket_detected }}</span>{% endif %}
     {% endif %}
-    {% if d.study %}<span class="tag" title="# Study: yes — kept for review, holds no physical copies">Study copy</span>{% endif %}
+    {% if d.study %}<span class="tag" title="A theory deck: it may use any card you own and claims no copies">Theory</span>{% endif %}
   </div>
 
   <div class="status">
     {% if d.qty_error %}
       <span class="bad" title="{{ d.qty_error }}">⚠ Fix the quantity typo in Edit</span>
+    {% elif d.study %}
+      {% if d.lab %}
+      <span class="labline">{{ d.lab.held }} from other decks · {{ d.lab.free }} free
+        {%- if d.lab.missing %} · <span class="bad">{{ d.lab.missing }} to buy</span>{% endif %}</span>
+      {% if d.lab.donors %}<span class="muted labfrom">From
+        {% for t, n in d.lab.donors %}{{ t }} {{ n }}{{ ' · ' if not loop.last }}{% endfor %}
+        {%- if d.lab.more %} · +{{ d.lab.more }} more{% endif %}</span>{% endif %}
+      {% else %}
+      <span class="muted">Claims no copies</span>
+      {% endif %}
     {% elif ready %}
       <span class="ok">✓ Ready to sleeve</span>
     {% else %}
@@ -112,8 +152,31 @@
         <hr>
         <a href="{{ url_for('deck_optimize_review', stem=d.stem) }}"
            title="See suggested swaps — nothing changes until you approve">⚡ Optimize</a>
+        {#- Each confirm's text goes through tojson: a title with an apostrophe
+            (Y'shtola, Night's Blessed) used to break the inline JS string, and a
+            broken handler submits WITHOUT asking. -#}
+        {% if d.study %}
+        {% set ask = 'Make “' ~ d.title ~ '” a real deck? It starts claiming its copies'
+                     ~ (': ' ~ d.lab.held ~ ' of its cards are in other decks now and would show as contested.'
+                        if d.lab and d.lab.held else '.') %}
+        <form method="post" action="{{ url_for('deck_lab_move', stem=d.stem) }}"
+          onsubmit="return confirm({{ ask|tojson|forceescape }});">
+          <input type="hidden" name="to" value="decks">
+          <button class="linkbtn" type="submit" title="Move it to Your decks: it starts claiming its copies">Make it a real deck</button>
+        </form>
+        {% else %}
+        {% set ask = 'Move “' ~ d.title ~ '” to the Lab? It keeps its list, notes and history, '
+                     ~ 'but stops claiming copies, so its cards are free for your other decks.' %}
+        <form method="post" action="{{ url_for('deck_lab_move', stem=d.stem) }}"
+          onsubmit="return confirm({{ ask|tojson|forceescape }});">
+          <input type="hidden" name="to" value="lab">
+          <button class="linkbtn" type="submit" title="Keep the list as a theory deck: it stops claiming copies">Move to the Lab</button>
+        </form>
+        {% endif %}
+        {% set ask = 'Delete “' ~ d.title ~ '” with its notes, buy list and change log? Its saved '
+                     ~ 'versions are kept, so it can be brought back — but it leaves your decks now.' %}
         <form method="post" action="{{ url_for('deck_delete', stem=d.stem) }}"
-          onsubmit="return confirm('Delete &quot;{{ d.title }}&quot; with its notes, buy list and change log? Its saved versions are kept, so it can be brought back — but it leaves your decks now.');">
+          onsubmit="return confirm({{ ask|tojson|forceescape }});">
           <button class="linkbtn danger" type="submit" title="Delete this deck">Delete</button>
         </form>
       </div>
@@ -138,6 +201,7 @@
   </div>
 </div>
 {% endif %}
+{% if view != 'lab' %}
 <div class="card" id="maint">
   <div class="row">
     <form method="post" action="{{ url_for('refresh') }}">
@@ -159,6 +223,7 @@
   </div>
   {% endif %}
 </div>
+{% endif %}
 <script>
 (function () {
   // Client-side: the whole list is already on the page, so filtering is instant and
@@ -166,6 +231,7 @@
   var rows = [].slice.call(document.querySelectorAll('.deckcard'));
   var chips = [].slice.call(document.querySelectorAll('#deckfilters .thchip'));
   var q = document.getElementById('deckq'), count = document.getElementById('deckcount');
+  if (!q) return;          // an empty Lab has no filter bar
   var active = 'all';
   function apply() {
     var term = (q.value || '').trim().toLowerCase(), shown = 0;

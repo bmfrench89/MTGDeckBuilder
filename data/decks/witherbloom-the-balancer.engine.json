@@ -1,0 +1,74 @@
+{
+ "commander": "Witherbloom, the Balancer",
+ "written": "2026-10-16",
+ "engine": [
+  "Sprout Swarm",
+  "Mirkwood Bats",
+  "Zulaport Cutthroat",
+  "Blood Artist",
+  "Viscera Seer",
+  "Carrion Feeder",
+  "Exsanguinate",
+  "Stensian Sanguinist",
+  "Chatterfang, Squirrel General",
+  "The Master of Lake-town",
+  "Bloodchief Ascension",
+  "Archfiend of Despair",
+  "Pox Plague",
+  "Grievous Wound",
+  "Diabolic Tutor",
+  "Grim Tutor",
+  "Final Parting",
+  "Tergrid, God of Fright"
+ ],
+ "packages": [
+  {
+   "name": "Witherbloom's discount on big sorceries",
+   "enablers": [],
+   "payoffs": [
+    "In Garruk's Wake",
+    "Rise of the Dark Realms",
+    "Army of the Damned",
+    "Ezuri's Predation",
+    "Shamanic Revelation",
+    "Pest Infestation",
+    "For the Common Good",
+    "Damnable Pact",
+    "Inside Information"
+   ]
+  },
+  {
+   "name": "Saproling fodder and outlets",
+   "enablers": [
+    "Woe Strider",
+    "Yahenni, Undying Partisan",
+    "Umbral Collar Zealot",
+    "Sedgemoor Witch",
+    "Tendershoot Dryad"
+   ],
+   "payoffs": []
+  }
+ ],
+ "aims": {
+  "ramp": 10,
+  "removal": 8
+ },
+ "keywords": [
+  "create",
+  "token",
+  "sacrifice",
+  "affinity"
+ ],
+ "keep": {
+  "Infernal Grasp": "cheap creature removal: the deck aims for 8, and these cost 1-2 mana",
+  "Shoot the Sheriff": "cheap creature removal: the deck aims for 8, and these cost 1-2 mana",
+  "Stir Up Trouble": "cheap creature removal: the deck aims for 8, and these cost 1-2 mana",
+  "Feed the Swarm": "cheap creature removal: the deck aims for 8, and these cost 1-2 mana",
+  "Glorious Decay": "flexible instant interaction: artifact or enchantment removal, and Collective Resistance can also give Witherbloom hexproof and indestructible",
+  "Collective Resistance": "flexible instant interaction: artifact or enchantment removal, and Collective Resistance can also give Witherbloom hexproof and indestructible",
+  "Village Rites": "an instant-speed sacrifice outlet: two cards for a spent token",
+  "Up the Beanstalk": "draws a card off every discounted big sorcery, since a discount doesn't change mana value"
+ },
+ "uat": {},
+ "version": 1
+}

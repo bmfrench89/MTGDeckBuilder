@@ -16,7 +16,8 @@ PASS means the very first open after the deploy applied the server's current
 stylesheets, rule for rule. FAIL names the stale sheet.
 
 **2. The device sweep** — every main page at phone, Fold, tablet and desktop widths,
-plus the deck-card menu, phone More sheet and card panel, and the Collection's three
+plus the deck-card menu, phone More sheet and card panel, the Lab and a theory deck's page
+(when one exists), and the Collection's three
 tabs with its grid, Filters sheet and help sheet open:
 
 ```bash
@@ -67,6 +68,10 @@ Then undo, through the screens a player taps (Wave 1.1):
   removing only its own term, the Filters sheet's "Show N cards" equal to the page it
   opens, Load more kept through a visit to Add and Back, Manage marked current, and the
   help sheet handing focus back on Escape.
+- F15: The Lab (docs/spec-lab.md):
+  1. Move to the Lab from the phone menu. The file changes by exactly one header line.
+  2. Find the deck in the Lab (the tab current), open it on its Lab tab, and make it a
+     real deck again. The file comes back byte for byte.
 
 Each must give back the same list, compared section by section.
 

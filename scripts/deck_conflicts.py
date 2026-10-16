@@ -50,6 +50,35 @@ def is_study_deck(path):
     return bool(_STUDY_RE.search(head))
 
 
+_HEADER_RE = re.compile(r"^#\s*[A-Za-z][\w ]*:")
+
+
+def set_study(text, on):
+    """The deck file's text with its `# Study: yes` header switched on or off.
+
+    This is the one edit that moves a deck between your decks and the Lab, and
+    nothing else in the file may change: sections, quantities and comments are the
+    player's (test_lab pins it byte for byte). On: the line goes after the last
+    `# Key: value` header at the top of the file. Off: every Study line is removed.
+    The file's own line ending is kept."""
+    nl = "\r\n" if "\r\n" in text else "\n"
+    lines = text.splitlines(keepends=True)
+    if not on:
+        return "".join(ln for ln in lines if not _STUDY_RE.match(ln.rstrip("\r\n")))
+    if _STUDY_RE.search("".join(lines[:40])):
+        return text
+    at = 0
+    for i, ln in enumerate(lines):
+        if _HEADER_RE.match(ln):
+            at = i + 1
+        elif ln.strip():
+            break
+    if at and not lines[at - 1].endswith(("\n", "\r")):
+        lines[at - 1] += nl
+    lines.insert(at, "# Study: yes" + nl)
+    return "".join(lines)
+
+
 def deck_label(path):
     return os.path.splitext(os.path.basename(path))[0]
 
@@ -203,6 +232,46 @@ def shared_for_deck(deck_path, collection_index, decks_dir=None):
             "covered": u["total"] <= u["owned"],
         }
     return out
+
+
+def lab_sources(deck_cards, collection_index, usage):
+    """Where a THEORY deck's cards would come from if it were sleeved for real.
+
+    A study copy claims no copies, so "is it ready to sleeve?" means nothing for it.
+    The Lab asks this instead (docs/spec-lab.md). Each card is one of three things:
+    - free: a spare copy in the collection;
+    - held: every copy is in another deck, and those decks are named;
+    - missing: not owned at all.
+
+    `deck_cards` is the parsed deck. `usage` is a scan() of the REAL decks (study
+    copies are skipped by default, so one theory deck never "holds" a card from
+    another). Basics are always owned and are left out.
+
+    Returns {"free": [...], "held": {deck: [...]}, "held_cards": n, "missing": [...]}.
+    Names stay in deck-file order. The held decks are sorted by how many cards they
+    would give up. A card held by two decks is listed under both, since either could
+    give it up, and is counted once in held_cards."""
+    by_key = {mtglib._norm(mtglib.front_face(n)): u for n, u in usage.items()}
+    free, held, missing, seen, held_n = [], {}, [], set(), 0
+    for c in deck_cards:
+        ck = mtglib._norm(mtglib.front_face(c.name))
+        if mtglib.is_basic(c.name) or ck in seen:
+            continue
+        seen.add(ck)
+        ref = mtglib.lookup(collection_index, c.name)
+        owned = ref.quantity if ref else 0
+        if owned <= 0:
+            missing.append(c.name)
+            continue
+        u = by_key.get(ck)
+        if owned - (u["total"] if u else 0) >= max(1, c.quantity):
+            free.append(c.name)
+            continue
+        held_n += 1
+        for d in sorted((u or {}).get("decks", {})):
+            held.setdefault(d, []).append(c.name)
+    held = dict(sorted(held.items(), key=lambda kv: (-len(kv[1]), kv[0])))
+    return {"free": free, "held": held, "held_cards": held_n, "missing": missing}
 
 
 def main():
