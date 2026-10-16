@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-16 (the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-16 (Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -48,6 +48,24 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-16 (night): Elephant Grass into Beorn.** The player: "I want to see if elephant
+grass can fit into my beorn deck. I like it but want the math on it".
+- **The math:** the cumulative upkeep costs 1, 2, 3, 4 (10 mana over four turns). Cast on
+  turn 2, the fourth upkeep takes 75% of that turn's mana on average; cast on turn 6, 54%.
+  The notes carry the table: hold it two or three turns, then let it go.
+- **The cut is Mirkwood Pathmaker**, a {2}{G} creature with no abilities. A paired A/B
+  (4,000 games) shows no measurable change. Logged `manual-replace`.
+- **Vaultborn Tyrant is in the notes' "Deliberate picks the field data can't see".** It was
+  the first suggested cut, and the player pushed back: "Vaultborn tyrant is a very powerful
+  card though". It draws on every power-4+ creature entering, which next to Beorn is most
+  of the deck. EDHREC's Beorn page doesn't list it, so the optimizer scored it 0 and
+  proposed cutting it for Quarrel.
+- **Open on ⚡: Elder Gargaroth → Quarrel**, the next card the field data doesn't list.
+  Quarrel ({1}{G} instant, a one-sided bite) is a real option here: the player owns 2 free
+  copies, and draw is over its range (13 of 8-12). It's the player's call.
+- Beorn still passes its UAT (keepable 80%, engine online 75%). Its owned field top-25 is
+  17 of 18, and the conflicts are still 7.
 
 **2026-10-16 (later): three more theory decks, and clips for all four.** The player:
 "Can you create how to play videos for this deck in the Lab? Id also like to see any

@@ -129,9 +129,16 @@ Secret Tunnel push damage through (Beorn and any converted creature share the Be
   {G} with Goreclaw too. It gives the whole team trample. The fit score only sees the printed 9.
 - **Earth's Mightiest Heroes**: tap 5 power (teamwork) to put every creature from the top eight
   onto the battlefield.
+- **Vaultborn Tyrant**: "Whenever this creature or another creature you control with power 4 or
+  greater enters, you gain 3 life and draw a card." With Beorn out, 21 of the deck's other 34
+  creatures enter with power 4 or more, and so do Dancing from Dark to Dawn's and The Earth
+  King's Bear tokens: each one is a card and 3 life. When it dies, if it's not a token, it comes
+  back as a token copy. EDHREC's Beorn page doesn't list it, so on 2026-10-16 the optimizer
+  scored it 0 and proposed cutting it for Quarrel. The player: "Vaultborn tyrant is a very
+  powerful card".
 
-The field data can't see these cards, so the optimizer proposes cutting them for Grizzly Bears or
-Fog. Those would be clear downgrades.
+The field data can't see these cards, so the optimizer proposes cutting them for Grizzly Bears,
+Fog or Quarrel. Those would be clear downgrades.
 
 ## 2026-10-15 arrivals (manual — do not cut)
 - **Ordinary Bear**: a vanilla 4/5 Bear for {3}{G}, so a 6/7 next to Beorn. It is a
@@ -144,3 +151,25 @@ Fog. Those would be clear downgrades.
   every token into a mana dork, including Dancing from Dark to Dawn's Bears and The Earth
   King's. In over Wood Elves. The ramp counter drops from 18 to 17 because it can't see
   token mana.
+
+## 2026-10-16: Elephant Grass (the player's pick — do not cut)
+- **Elephant Grass**: {G} enchantment. "Cumulative upkeep {1}. Black creatures can't attack
+  you. Nonblack creatures can't attack you unless their controller pays {2} for each creature
+  they control that's attacking you." Your own attacks aren't taxed. In over Mirkwood
+  Pathmaker, a {2}{G} creature with no abilities whose power and toughness equal your land
+  count. The deck already has a hexproof creature that does that job for the same cost.
+- **The upkeep is rent.** Each upkeep adds an age counter, and you pay {1} per counter or
+  sacrifice it: 1, then 2, then 3, then 4, so 10 mana for four turns. The average share of
+  that turn's mana it takes (goldfish, 2,000 games):
+
+  | Cast on | 1st upkeep | 2nd | 3rd | 4th |
+  |---|---|---|---|---|
+  | Turn 2 | 1 (32%) | 2 (51%) | 3 (64%) | 4 (75%) |
+  | Turn 4 | 1 (22%) | 2 (39%) | 3 (53%) | 4 (63%) |
+  | Turn 6 | 1 (18%) | 2 (32%) | 3 (44%) | 4 (54%) |
+
+  Hold it for two or three turns, then stop paying and let it go. Cast early, it covers the
+  turns before Beorn's board can block. Cast late, the same rent is a smaller share.
+- **Paired A/B** (4,000 games, Pathmaker out, Elephant Grass in): no measurable change.
+  Keepable stays 80% and screwed 15%, engine online moves +0.1% and the commander on time
+  +0.2%. The goldfish has no opponents, so it can't see what the tax saves you.

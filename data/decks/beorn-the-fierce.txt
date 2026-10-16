@@ -40,7 +40,6 @@
 1 Lizard, Connors's Curse
 1 Little Bear
 1 Ordinary Bear
-1 Mirkwood Pathmaker
 1 The Earth King
 1 Selvala, Heart of the Wilds
 1 Hulk, Brutal Brawler
@@ -80,6 +79,7 @@
 1 Dancing from Dark to Dawn
 1 Unnatural Growth
 1 Kenrith's Transformation
+1 Elephant Grass
 
 # --- Lands ---
 1 Roiling Canopy

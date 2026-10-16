@@ -14,6 +14,7 @@ Dungrove Elder,Creature,3,G,{2}{G},Treefolk,,,*,4
 Earth's Mightiest Heroes,Sorcery,6,G,{4}{G}{G},,,,,4
 Elder Gargaroth,Creature,5,G,{3}{G}{G},Beast,,draw,6,4
 Elemental Bond,Enchantment,3,G,{2}{G},,,draw,,4
+Elephant Grass,Enchantment,1,G,{G},,,,,4
 Elvish Mystic,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
 Ezuri's Predation,Sorcery,8,G,{5}{G}{G}{G},,,,,4
 Forest,Land,0,G,,Forest,G,,,4
@@ -36,7 +37,6 @@ Little Bear,Creature,3,G,{2}{G},Bear,,,3,4
 Llanowar Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
 "Loot, Exuberant Explorer",Creature,3,G,{2}{G},Beast;Noble,,,1,4
 Managorger Hydra,Creature,3,G,{2}{G},Hydra,,,1,4
-Mirkwood Pathmaker,Creature,3,G,{2}{G},Elf;Ranger,,,*,4
 Mosswort Bridge,Land,0,G,,,G,etb-tapped,,4
 Nature's Lore,Sorcery,2,G,{1}{G},,,fetch:forest;ramp,,4
 Necklace of Girion,Artifact,3,G,{2}{G},,G,ramp;rock,,4
