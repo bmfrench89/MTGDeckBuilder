@@ -29,6 +29,13 @@
 1 Ancient Tomb
 1 Captain America, Super-Soldier
 2 Herald's Horn
+1 Hall of Heliod's Generosity
+3 Godless Shrine
+1 Lord Skitter's Blessing
+1 Reprobation
+1 Sphere of Safety
+1 Ondu Spiritdancer
+1 Greater Auramancy
 1 Herald of War
 1 Starnheim Aspirant
 1 Resplendent Angel
@@ -42,7 +49,6 @@
 1 Sphinx of False Conclusions
 2 Hallowed Fountain
 2 Watery Grave
-2 Godless Shrine
 1 Void Rend
 1 Raffine's Tower
 1 Uldaros Theorix

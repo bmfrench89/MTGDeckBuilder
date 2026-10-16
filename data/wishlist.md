@@ -16,7 +16,7 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 ## Cards in a deck you don't own yet
 - _none_ 
 
-## Upgrades from deck buy-lists  ~$278.00
+## Upgrades from deck buy-lists  ~$332.00
 - [ ] **Elas il-Kor, Sadistic Pilgrim** (price n/a, bartolome-del-presidio-600-combos) — replaces Throne of the Grim Captain: 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Cruel Celebrant** (price n/a, bartolome-del-presidio-600-combos) — replaces Noble's Purse: 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Maskwood Nexus** (price n/a, beorn-the-fierce) — replaces Necklace of Girion: Makes every creature you control every creature type, so your whole board is Bears. Beorn's +2/+2 hits everything and the draw-two is live from his first combat. The single biggest upgrade.
@@ -41,6 +41,13 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Ancient Tomb** (price n/a, beorn-the-fierce) — replaces Reliquary Tower: Game Changer. Two colorless mana from a land; puts Beorn out a turn earlier with Goreclaw or Radagast.
 - [ ] **Captain America, Super-Soldier** (price n/a, captain-america-team-leader): 64% of Captain America, Team Leader's decks run this.
 - [ ] **Herald's Horn** (price n/a, captain-america-team-leader) — replaces Seal of Cleansing: 83% of Captain America, Team Leader's decks run this.
+- [ ] **Greater Auramancy** (~$21.00, eriette-of-the-charmed-apple) — replaces Hyena Umbra: Your other enchantments and your enchanted creatures have shroud (36%).
+- [ ] **Hall of Heliod's Generosity** (~$10.00, eriette-of-the-charmed-apple) — replaces Myriad Landscape: Puts an enchantment from your graveyard on top of your library. The one top-25 card the deck lacks (57% of Eriette decks).
+- [ ] **Ondu Spiritdancer** (~$10.00, eriette-of-the-charmed-apple) — replaces Eidolon of Countless Battles: Copies an enchantment once each turn (51%).
+- [ ] **Godless Shrine** (~$8.00, eriette-of-the-charmed-apple) — replaces Orzhov Guildgate: Untapped white-black.
+- [ ] **Sphere of Safety** (~$3.00, eriette-of-the-charmed-apple) — replaces Ghostly Prison: Attacking you costs {X} per creature, X = your enchantments: far more than Ghostly Prison's {2} in this deck (47%).
+- [ ] **Lord Skitter's Blessing** (~$1.00, eriette-of-the-charmed-apple) — replaces Codsworth, Handy Helper: An extra card every draw step while you control an enchanted creature, and its Wicked Role is an Aura (52%).
+- [ ] **Reprobation** (~$1.00, eriette-of-the-charmed-apple) — replaces Clawing Torment: Any creature, even a commander, loses all abilities and becomes a 0/1 (44%).
 - [ ] **Herald of War** (price n/a, giada-font-of-hope) — replaces Radiant, Archangel: 77% of Giada, Font of Hope's decks run this.
 - [ ] **Starnheim Aspirant** (price n/a, giada-font-of-hope) — replaces Cut a Deal: 73% of Giada, Font of Hope's decks run this.
 - [ ] **Resplendent Angel** (price n/a, giada-font-of-hope) — replaces Emeria Angel: 70% of Giada, Font of Hope's decks run this.
@@ -54,10 +61,10 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Urza's Incubator** (~$20.00, the-ur-sphinx) — replaces Patchwork Banner: 65% of the field, 28x lift: Sphinx spells cost {2} less. With the eminence and Unesh, Consecrated Sphinx costs {U}{U}.
 - [ ] **Raffine's Tower** (~$13.00, the-ur-sphinx) — replaces Soured Springs: 58% of the field: all three colours (enters tapped), with cycling.
 - [ ] **Watery Grave** (~$10.00, the-ur-sphinx) — replaces Treno, Dark City: 63% of the field: untapped blue-black in place of a tapland.
-- [ ] **Godless Shrine** (~$8.00, the-ur-sphinx) — replaces Temple of Silence: 58% of the field: untapped white-black in place of a tapland.
+- [ ] **Godless Shrine** (~$8.00, the-ur-sphinx): 58% of the field: untapped white-black in place of a tapland.
 - [ ] **Sapphire Medallion** (~$8.00, the-ur-sphinx) — replaces Mind Stone: 45% of the field: every blue spell costs {1} less, which is nearly the whole deck.
 - [ ] **Hallowed Fountain** (~$7.00, the-ur-sphinx) — replaces Temple of Enlightenment: 64% of the field: untapped white-blue. The mana is this deck's main weakness.
-- [ ] **Uldaros Theorix** (~$3.00, the-ur-sphinx) — replaces Inspired Sphinx: 59% of the field: a Sphinx that copies one card of each type from your graveyard and casts up to 6 mana value of them free. The mills and Unesh's piles stock it.
+- [ ] **Uldaros Theorix** (~$3.00, the-ur-sphinx) — replaces Scholar of the Lost Trove: 59% of the field: a Sphinx that copies one card of each type from your graveyard and casts up to 6 mana value of them free. The mills and Unesh's piles stock it.
 - [ ] **Herald's Horn** (~$3.00, the-ur-sphinx) — replaces Power Sink: 58% of the field: Sphinxes cost {1} less, and a Sphinx on top of your library goes to hand at each upkeep.
 - [ ] **Dovin's Veto** (~$2.00, the-ur-sphinx) — replaces Negate: 46% of the field: Negate that can't be countered.
 - [ ] **Kindred Judgment** (~$2.00, the-ur-sphinx) — replaces Time Wipe: 43% of the field: name Sphinx, and every other creature dies. A one-sided wipe for this deck.
@@ -85,4 +92,4 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Hallowed Fountain** (price n/a, yshtola-nights-blessed) — replaces Demolition Field: 55% of Y'shtola, Night's Blessed's decks run this.
 - [ ] **Exquisite Blood** (price n/a, yshtola-nights-blessed): Completes a combo: Exquisite Blood + Vito, Thorn of the Dusk Rose → Drain the whole table to 0
 
-**Rough total (shared + upgrades): ~$295.13** — prices are your export's MARKET / buy-list estimates.
+**Rough total (shared + upgrades): ~$349.13** — prices are your export's MARKET / buy-list estimates.

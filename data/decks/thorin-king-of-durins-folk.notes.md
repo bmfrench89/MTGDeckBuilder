@@ -39,7 +39,6 @@ Pick-Axe, Rogue's Passage and Slayers' Stronghold, which were cheap to replace.
   - Balin, Loremaster: wheel your hand, and with a story, deal that much to each opponent.
   - The Arkenstone draws at your end step. Its adventure, Seek the Heart, tutors Bifur or
     Fíli.
-  - Sram: Equipment spells draw.
 - **Equipment** (Kíli makes the first equip each turn free once you have a story):
   - Dwarven Mattock, Bloodforged Battle-Axe (copies itself on damage, and the copies are
     artifact tokens), Long-Lost Lances (first strike), Orcrist, The Reaver Cleaver,
@@ -128,6 +127,9 @@ Pick-Axe, Rogue's Passage and Slayers' Stronghold, which were cheap to replace.
 - **Bracket 2** (the player's call, 2026-10-15): no Game Changers, tutors or combos. The only
   Game Changer you own in red-white is Enlightened Tutor, and it's Giada's.
   It plays at the top of Bracket 2: a doubled engine, 9 interaction, 12 draw.
+- **Sram went to the Eriette deck (2026-10-15).** The player gave that list priority. Dwarven
+  Provisioner took the slot: another 2-mana Dwarf (a Treasure on entry), and {3}{W} gives
+  the team +1/+1 for a turn, a sink for spare Treasures.
 - **Field:** 20 of EDHREC's top 25 for this Thorin (7,870 decks). None of the other 5 are
   owned: Fíli and Kíli, Joyous; Glóin, Dwarf Emissary; Magda, Brazen Outlaw; Ori, Plate
   Stacker; Gimli of the Glittering Caves. They're the buy list.

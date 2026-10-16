@@ -54,6 +54,7 @@
 1 Destroy Evil
 1 Generous Gift
 1 Flare of Fortitude
+1 Akroma's Will
 
 # --- Sorceries ---
 1 Austere Command
@@ -78,7 +79,6 @@
 1 Angelic Accord
 1 Authority of the Consuls
 1 Sigarda's Splendor
-1 Ghostly Prison
 
 # --- Planeswalkers ---
 1 Serra the Benevolent

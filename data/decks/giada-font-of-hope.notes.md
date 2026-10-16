@@ -92,8 +92,12 @@ kept it.
   - Austere Command.
   - Ob Nixilis, the Ascended destroys every *tapped* creature your opponents control. Cast
     it after they attack.
-- **Taxes:** Ghostly Prison, Archangel of Tithes, Linvala (no activated abilities for
-  their creatures).
+- **Taxes:** Archangel of Tithes and Linvala (no activated abilities for their
+  creatures). Ghostly Prison went to the Eriette deck on 2026-10-15.
+- **Akroma's Will** took its slot, at 45% of Giada decks. Its copy came free when Tifa was
+  deleted. If you control a commander as you cast it, you may choose both modes: until
+  end of turn your creatures gain flying, vigilance and double strike, plus lifelink,
+  indestructible and protection from each colour.
 
 ## Pilot notes
 - Giada on turn 2 (goldfish: 84% by turn 2). Then sequence Angels cheapest first: every
@@ -110,8 +114,9 @@ kept it.
   Herald of War, Starnheim Aspirant, Resplendent Angel, Archangel of Thune, Herald's Horn,
   Emeria Shepherd. They're the buy list.
 - **Optimizer read:** it proposed Ghostly Prison → Akroma's Will (held by Tifa), and
-  Mistveil Plains and Windbrisk Heights → Plains. All rejected: Ghostly Prison is the tax
-  piece, and both lands do work in a 22-Plains deck.
+  Mistveil Plains and Windbrisk Heights → Plains. All rejected at the time: Ghostly
+  Prison was the tax piece, and both lands do work in a 22-Plains deck. On 2026-10-15
+  Ghostly Prison went to Eriette and Akroma's Will came in after all.
 - **Mana:** 36 lands (22 Plains), 28 W sources, keepable 79%. Giada herself taps for Angels.
 - **Goldfish:** combat-only lethal median turn 9. It models no tokens, no life gain and
   no Angel of Destiny, so read it as a floor.

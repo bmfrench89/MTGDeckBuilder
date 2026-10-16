@@ -48,7 +48,6 @@
 1 Beast Within
 1 Chaos Warp
 1 Assassin's Trophy
-1 Anguished Unmaking
 1 Counterspell
 1 Mana Drain
 1 Heroic Intervention
@@ -71,6 +70,7 @@
 1 Lightning Greaves
 
 # --- Enchantments ---
+1 Banishing Light
 1 Dracogenesis
 1 Dragon Tempest
 1 Up the Beanstalk

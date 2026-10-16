@@ -125,7 +125,8 @@ the game. Its five pips are why the manabase leans on any-colour lands.
 The optimizer's classifier counts 6 removal and 1 wipe. That undercounts, because the
 creature-based answers are invisible to it:
 - **Spot removal:** Swords to Plowshares, Path to Exile, Beast Within, Chaos Warp,
-  Assassin's Trophy, Anguished Unmaking.
+  Assassin's Trophy, Banishing Light (in for Anguished Unmaking, which went to the Eriette
+  deck on 2026-10-15).
 - **On a body:** Steel Hellkite (X: destroy each nonland permanent with MV X of a player it hit),
   Dragonlord Silumgar (steals a creature or planeswalker), Ureni, the Song Unending (X damage
   divided, X = your lands), Scalelord Reckoner (punishes targeting a Dragon), Marang River Regent (bounces two).

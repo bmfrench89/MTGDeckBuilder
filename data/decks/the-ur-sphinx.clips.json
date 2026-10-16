@@ -169,10 +169,9 @@
       "title": "The attack: free spells",
       "scenes": [
         {"dur": 7, "head": "Three Sphinxes attack",
-         "sub": "[[Swiftfoot Boots]] gave [[The Ur-Sphinx]] hexproof and haste: it swings the turn it lands, with [[Unesh, Criosphinx Sovereign|Unesh]] and [[Yennett, Cryptic Sovereign|Yennett]].",
-         "say": "Three Sphinxes attack. Swiftfoot Boots gave The Ur-Sphinx hexproof and haste, so it swings the turn it lands, along with Unesh and Yennett. Yennett has vigilance, so it doesn't tap.",
+         "sub": "[[The Ur-Sphinx]] attacks with [[Unesh, Criosphinx Sovereign|Unesh]] and [[Yennett, Cryptic Sovereign|Yennett]]: three Sphinxes, so each player mills three.",
+         "say": "Three Sphinxes attack: The Ur-Sphinx, Unesh and Yennett, so each player mills three. Yennett has vigilance, so it doesn't tap.",
          "cards": [{"name": "The Ur-Sphinx", "zone": "mine", "id": "ur", "fx": ["tap", "glow"]},
-                   {"name": "Swiftfoot Boots", "zone": "mine", "id": "boots"},
                    {"name": "Unesh, Criosphinx Sovereign", "zone": "mine", "id": "unesh", "fx": "tap"},
                    {"name": "Yennett, Cryptic Sovereign", "zone": "mine", "id": "yennett"},
                    {"ph": "Opponent 1", "zone": "theirs", "id": "o1"},

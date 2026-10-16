@@ -1,0 +1,105 @@
+# Title: Eriette of the Charmed Apple
+# Commander: Eriette of the Charmed Apple
+# Colors: B W
+# Archetype: auras goad pillowfort voltron
+# Bracket: 2
+# Source: the player's own deck list (cards bought for it), built 2026-10-15; two engine-read upgrades and the lands added by a session
+
+# --- Commander ---
+1 Eriette of the Charmed Apple
+
+# --- Creatures ---
+1 Ashiok's Reaper
+1 Neva, Stalked by Nightmares
+1 Transcendent Envoy
+1 Pearl-Ear, Imperial Advisor
+1 Starfield Mystic
+1 Archon of Sun's Grace
+1 Danitha Capashen, Paragon
+1 Kor Spiritdancer
+1 Scriv, the Obligator
+1 Killian, Decisive Mentor
+1 Heliod's Pilgrim
+1 Killian, Ink Duelist
+1 Hateful Eidolon
+1 Eiganjo Dynastorian // Replenish
+1 Eidolon of Countless Battles
+1 Light-Paws, Emperor's Voice
+1 Sram, Senior Edificer
+1 Mesa Enchantress
+1 Hero of Iroas
+1 Codsworth, Handy Helper
+
+# --- Instants ---
+1 Path to Exile
+1 Anguished Unmaking
+1 Swords to Plowshares
+1 Not Dead After All
+
+# --- Sorceries ---
+1 Winds of Rath
+1 Retether
+1 Open the Armory
+
+# --- Artifacts ---
+1 Arcane Signet
+1 Orzhov Signet
+1 Commander's Sphere
+1 Talisman of Hierarchy
+1 Swiftfoot Boots
+1 Sol Ring
+
+# --- Enchantments ---
+1 Parasitic Impetus
+1 Stab Wound
+1 Vampiric Link
+1 Redemption Arc
+1 Planar Disruption
+1 Angelic Gift
+1 Martial Impetus
+1 Sage's Reverie
+1 Spirit Mantle
+1 Ghoulish Impetus
+1 Sheltered by Ghosts
+1 Angelic Destiny
+1 Coercive Impetus
+1 Ghostly Prison
+1 Minion's Return
+1 Rune of Mortality
+1 Clawing Torment
+1 Songbirds' Blessing
+1 Ethereal Armor
+1 Darksteel Mutation
+1 Grievous Wound
+1 Kaya's Ghostform
+1 Nurgle's Rot
+1 All That Glitters
+1 Timely Ward
+1 Changing Loyalty
+1 Hyena Umbra
+1 Sigil of the Empty Throne
+1 Spirit Link
+1 Gift of Immortality
+
+# --- Lands ---
+1 Temple of Silence
+1 Orzhov Guildgate
+1 Command Tower
+1 Fetid Heath
+1 Shineshadow Snarl
+1 Desolate Mire
+1 Orzhov Basilica
+1 Tainted Field
+1 Scoured Barrens
+1 Isolated Chapel
+1 Caves of Koilos
+1 Castle Locthwain
+1 Rogue's Passage
+1 Exotic Orchard
+1 Evolving Wilds
+1 Terramorphic Expanse
+1 Myriad Landscape
+
+# --- Basics ---
+12 Plains
+7 Swamp

@@ -6,12 +6,13 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-15 (the Ur-Sphinx built engine-first; Tifa and Sephiroth deleted, so the stable is ten decks, all Bracket 3 or higher; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-15 (Eriette of the Charmed Apple built for a second pilot from cards bought for it: eleven decks; the Ur-Sphinx built engine-first; Tifa and Sephiroth deleted; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
-Ten decks, all REAL builds from the collection: 100 cards each, singleton clean,
-sections clean, every one Bracket 3 or higher except Thorin (2, the player's call). `deck_conflicts` reports 7 conflicts, all
+Eleven decks, all REAL builds from the collection: 100 cards each, singleton clean,
+sections clean. Every one is Bracket 3 or higher except Thorin and Eriette, both 2 (the
+player's call for Thorin; Eriette has no free Game Changer). `deck_conflicts` reports 7 conflicts, all
 among the player's older decks:
 - Dina and Y'shtola share Blood Artist, Viscera Seer and Toxic Deluge.
 - Captain America shares Force of Will (pinned to Y'shtola) and Mystic Remora (with Kami).
@@ -32,8 +33,9 @@ ignoring those physical lists.
 | Giada, Font of Hope | 3 (detected 3) | 36 | 6/8/6 | 79% | 19/25 | 5 |
 | Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 17/25 | 5 |
 | The Ur-Dragon | 3 (detected 3) | 37 | 10/5/6 | 80% | 19/25 | 5 |
-| **The Ur-Sphinx** (new 10-15) | 3 (detected 3) | 37 | 12/12/9 | 80% | 20/25 | 5 |
-| Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/12/6 | 79% | 20/25 | 5 |
+| **The Ur-Sphinx** (new 10-15) | 3 (detected 3) | 37 | 12/13/9 | 80% | 19/25 | 5 |
+| Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/11/6 | 79% | 20/25 | 5 |
+| **Eriette of the Charmed Apple** (new 10-15) | 2 (detected 2) | 36 | 6/11/4 | 79% | 24/25 | 5 |
 | Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
 
 Role counts are the classifier's. Creature-based interaction doesn't register (see the
@@ -44,6 +46,59 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-15 (evening): Eriette, a second pilot's deck; both repos synced; the workflow
+page updated.** The player: "I bought these cards for a deck that either eriette the charmed
+or killan … can be the commander … make the deck but then review it for improvements as
+well, try not to put too many contested cards."
+- **Merged:** #14 (Fable fixes) and #16, which replaced #15: #15 closed when #14's branch
+  was deleted. Both repos are at 8ce22ff, and the old public repo was fast-forwarded with
+  nothing to carry back.
+- **The deck list is the player's.** A first message listed 44 cards bought for it, the
+  last one cut off. The player then gave the full 75-card list: "any cards in this list
+  take priority for this deck as long as they don't have better replacements".
+  - "Angu" was Anguished Unmaking.
+  - Eriette and Light-Paws, Emperor's Voice were the only cards not recorded, and each
+    went in as an intake batch.
+- **Commander: Eriette over Killian.** Free coverage of the EDHREC core: top-25 22 vs 18,
+  top-100 56 vs 48. Killian, Decisive Mentor plays in the 99.
+- **The build is the player's list,** plus two upgrades and the lands:
+  - Inkshield became Gift of Immortality (52% of the field vs 18%; an Aura, so it counts
+    for the drain).
+  - Eriette's Whisper became Codsworth, Handy Helper (Aura mana and ward {2} for Eriette).
+  - Six lands joined the list's 11: Castle Locthwain, Rogue's Passage, Exotic Orchard and
+    three fetchers. With basics that's 36.
+  - The session's own first build, a draft and hand pass with zero contested cards, was
+    replaced by the list.
+- **The list took priority over the session-built decks.** Twelve swaps, each logged
+  `manual-replace`:
+  - The Ur-Sphinx gave up nine: Temple of Silence, Shineshadow Snarl, Orzhov Basilica,
+    Tainted Field and Caves of Koilos (for Scoured Barrens, Meticulous Commons, Study
+    Hall, a Swamp and a Plains), Orzhov Signet and Talisman of Hierarchy (for Commander's
+    Sphere and Wayfarer's Bauble), Swiftfoot Boots (for Brainstorm) and Swords to
+    Plowshares (for Banishing Light). Its land sources are now U 23, W 17 and B 15.
+  - The Ur-Dragon gave up Anguished Unmaking, for Banishing Light. The first pick, Beast
+    Within, was already in the deck. The singleton check caught it, and the log row was
+    rewritten before any commit.
+  - Thorin gave up Sram, for Dwarven Provisioner.
+  - Giada gave up Ghostly Prison, for Akroma's Will (45% of Giada decks, freed when Tifa
+    was deleted). Her protect clip and the Ur-Sphinx's attack clip were rewritten without
+    the departed cards.
+  - Bartolomé and Y'shtola keep everything: their copies are no longer contested.
+- **Validated:**
+  - Eriette: 100 cards, singleton clean, audit clean with every non-spec list card at
+    10%+ of the field, Bracket 2, 0 combos, 0 proposals. Owned top-25 coverage is 24/24;
+    only Hall of Heliod's Generosity is unowned, and it heads the buylist.
+  - All decks: 7 conflicts, the same pre-existing ones. Singleton and sections clean
+    across 11 decks.
+- **Open for the player:**
+  - **Sphinx's Approach:** the player has "about 10". The tutor needs five copies, and it
+    fires by 40 and 50 cards seen in 37% and 64% of games with ten copies. Proposed for
+    the Ur-Sphinx; record the exact count before adding any.
+  - The 12 new-arrival swaps are still waiting on the player's go. Thorin's Dwarven
+    Provisioner line is now used: it replaced Sram.
+- **The workflow page** (https://claude.ai/artifact/9tw3AXkXkrJrFZLob1Y8qC, version 3) now
+  shows the engine spec, the audit, verdicts on the phone, trades and intake.
 
 **2026-10-15 (latest): the Ur-Sphinx, and the stable trimmed to Bracket 3+.** The player:
 "I own dracogenesis … put it in ur dragon with a rhystic study. I own 3 of those. One for

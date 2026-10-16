@@ -1,0 +1,84 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+All That Glitters,Enchantment,2,W,{1}{W},Aura,,,,4
+Angelic Destiny,Enchantment,4,W,{2}{W}{W},Aura,,,,4
+Angelic Gift,Enchantment,2,W,{1}{W},Aura,,draw,,4
+Anguished Unmaking,Instant,3,B W,{1}{W}{B},,,removal,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archon of Sun's Grace,Creature,4,W,{2}{W}{W},Archon,,,3,4
+Ashiok's Reaper,Creature,4,B,{3}{B},Nightmare,,draw,3,4
+Castle Locthwain,Land,0,B,,,B,draw;etb-tapped-cond,,4
+Caves of Koilos,Land,0,B W,,,W B C,,,4
+Changing Loyalty,Enchantment,2,B,{1}{B},Aura,,,,4
+Clawing Torment,Enchantment,1,B,{B},Aura,,,,4
+"Codsworth, Handy Helper",Creature,3,W,{2}{W},Robot,W,dork;mana-restricted;mana2;ramp;rock,2,4
+Coercive Impetus,Enchantment,3,B,{2}{B},Aura,,draw,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Commander's Sphere,Artifact,3,,{3},,W U B R G,draw;ramp;rock,,4
+"Danitha Capashen, Paragon",Creature,3,W,{2}{W},Human;Knight,,discount:equipment:1,2,4
+Darksteel Mutation,Enchantment,2,W,{1}{W},Aura,,,,4
+Desolate Mire,Land,0,B W,,,W B,mana2,,4
+Eidolon of Countless Battles,Creature,3,W,{1}{W}{W},Spirit,,,0,4
+Eiganjo Dynastorian // Replenish,Creature,3,W,{2}{W} // {3}{W},Fox;Advisor,,,2,4
+Eriette of the Charmed Apple,Creature,3,B W,{1}{W}{B},Human;Warlock,,,2,4
+Ethereal Armor,Enchantment,1,W,{W},Aura,,,,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Fetid Heath,Land,0,B W,,,W B C,mana3,,4
+Ghostly Prison,Enchantment,3,W,{2}{W},,,,,4
+Ghoulish Impetus,Enchantment,3,B,{2}{B},Aura,,,,4
+Gift of Immortality,Enchantment,3,W,{2}{W},Aura,,,,4
+Grievous Wound,Enchantment,5,B,{3}{B}{B},Aura,,,,4
+Hateful Eidolon,Creature,1,B,{B},Spirit,,draw,1,4
+Heliod's Pilgrim,Creature,3,W,{2}{W},Human;Cleric,,,1,4
+Hero of Iroas,Creature,2,W,{1}{W},Human;Soldier,,discount:aura:1,2,4
+Hyena Umbra,Enchantment,1,W,{W},Aura,,,,4
+Isolated Chapel,Land,0,B W,,,W B,etb-tapped-cond,,4
+Kaya's Ghostform,Enchantment,1,B,{B},Aura,,,,4
+"Killian, Decisive Mentor",Creature,3,B W,{1}{W}{B},Human;Warlock,,draw,2,4
+"Killian, Ink Duelist",Creature,2,B W,{W}{B},Human;Warlock,,,2,4
+Kor Spiritdancer,Creature,2,W,{1}{W},Kor;Wizard,,draw,0,4
+"Light-Paws, Emperor's Voice",Creature,2,W,{1}{W},Fox;Advisor,,,2,4
+Martial Impetus,Enchantment,3,W,{2}{W},Aura,,,,4
+Mesa Enchantress,Creature,3,W,{1}{W}{W},Human;Druid,,draw,0,4
+Minion's Return,Enchantment,3,B,{2}{B},Aura,,,,4
+Myriad Landscape,Land,0,,,,C,etb-tapped;fetch:basic;ramp,,4
+"Neva, Stalked by Nightmares",Creature,4,B W,{2}{W}{B},Human;Noble,,,2,4
+Not Dead After All,Instant,1,B,{B},,,,,4
+Nurgle's Rot,Enchantment,1,B,{B},Aura,,,,4
+Open the Armory,Sorcery,2,W,{1}{W},,,,,4
+Orzhov Basilica,Land,0,B W,,,W B,etb-tapped;mana2,,4
+Orzhov Guildgate,Land,0,B W,,Gate,W B,etb-tapped,,4
+Orzhov Signet,Artifact,2,B W,{2},,W B,mana2;ramp;rock,,4
+Parasitic Impetus,Enchantment,3,B,{2}{B},Aura,,,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+"Pearl-Ear, Imperial Advisor",Creature,3,W,{1}{W}{W},Fox;Advisor,,draw,3,4
+Plains,Land,0,W,,Plains,W,,,4
+Planar Disruption,Enchantment,2,W,{1}{W},Aura,,,,4
+Redemption Arc,Enchantment,3,W,{2}{W},Aura,,,,4
+Retether,Sorcery,4,W,{3}{W},,,,,4
+Rogue's Passage,Land,0,,,,C,,,4
+Rune of Mortality,Enchantment,2,B,{1}{B},Aura;Rune,,draw,,4
+Sage's Reverie,Enchantment,4,W,{3}{W},Aura,,draw,,4
+Scoured Barrens,Land,0,B W,,,W B,etb-tapped,,4
+"Scriv, the Obligator",Creature,4,B W,{2}{W}{B},Inkling;Bird,,,2,4
+Sheltered by Ghosts,Enchantment,2,W,{1}{W},Aura,,removal,,4
+Shineshadow Snarl,Land,0,B W,,,W B,etb-tapped-cond,,4
+Sigil of the Empty Throne,Enchantment,5,W,{3}{W}{W},,,,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Songbirds' Blessing,Enchantment,4,W,{3}{W},Aura,,,,4
+Spirit Link,Enchantment,1,W,{W},Aura,,,,4
+Spirit Mantle,Enchantment,2,W,{1}{W},Aura,,,,4
+"Sram, Senior Edificer",Creature,2,W,{1}{W},Dwarf;Advisor,,draw,2,4
+Stab Wound,Enchantment,3,B,{2}{B},Aura,,,,4
+Starfield Mystic,Creature,2,W,{1}{W},Human;Cleric,,discount:enchantment:1,2,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Tainted Field,Land,0,B W,,,W B C,,,4
+Talisman of Hierarchy,Artifact,2,B W,{2},,W B C,ramp;rock,,4
+Temple of Silence,Land,0,B W,,,W B,etb-tapped,,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+Timely Ward,Enchantment,3,W,{2}{W},Aura,,,,4
+Transcendent Envoy,Creature,2,W,{1}{W},Griffin,,discount:aura:1,1,4
+Vampiric Link,Enchantment,1,B,{B},Aura,,,,4
+Winds of Rath,Sorcery,5,W,{3}{W}{W},,,wipe,,4

@@ -76,8 +76,8 @@ that player milled this way without paying its mana cost."*
 - **Unesh before the other big Sphinxes.** Every later Sphinx costs 3 less and draws a pile.
 - **Warden of Evos Isle early.** A 3-drop that makes every later Sphinx, and the Ur-Sphinx
   itself, cost 1 less.
-- **Cast the Ur-Sphinx when it can attack soon or be protected.** Swiftfoot Boots gives it
-  hexproof and haste: attack the turn it lands and the mill fires at once.
+- **Cast the Ur-Sphinx when you can protect it.** It costs nine and draws every table's
+  removal. Hold up Spectacular Tactics, Stone by Sunlight or a counterspell when you can.
 - **Time Wipe returns ONE of your creatures to hand, then destroys the rest.** Usually
   that's Unesh: recast it for a fresh pile. Returning the Ur-Sphinx dodges commander tax,
   which applies only to casts from the command zone (CR 903.8). But its eminence is off
@@ -93,14 +93,14 @@ that player milled this way without paying its mana cost."*
 # Weaknesses to respect
 - **The mana.** Esper with no shocks or fetches: you own none of the field's Hallowed
   Fountain, Watery Grave, Godless Shrine or Raffine's Tower (buylist). Land sources are
-  blue 22, white 18 and black 16, with Karsten targets of ~23 each. Arcane Signet, the
-  three Talismans, the three Signets, Chromatic Lantern and Patchwork Banner fix too. The
+  blue 23, white 17 and black 15, with Karsten targets of ~23 each. Arcane Signet, two
+  Talismans, two Signets, Commander's Sphere, Wayfarer's Bauble, Chromatic Lantern and
+  Patchwork Banner fix too. The
   WWUU cards (Azor, Isperia, Dream Trawler) are the hardest casts.
 - **Slow.** Average mana value ~4.2, and a combat clock around turn 9. The discounts are
   what make it play like a 4-mana deck.
-- **Thin protection.** Swiftfoot Boots, plus the protect modes of Spectacular Tactics,
-  Stone by Sunlight and Getaway Glamer. Sphinx of the Final Word makes your instants and
-  sorceries uncounterable.
+- **Thin protection.** Only the protect modes of Spectacular Tactics, Stone by Sunlight and
+  Getaway Glamer. Sphinx of the Final Word makes your instants and sorceries uncounterable.
 - **Graveyard hate** blanks Rise of the Dark Realms, Scholar of the Lost Trove and Sphinx
   of Forgotten Lore.
 
@@ -133,6 +133,12 @@ Kwia Vigorbloom is green-white, so 33 are in Esper colours.
     Basilica → Port Town and Temple of Silence → Avengers Hangar (both cost a black
     source).
   - Void Rend wishlisted: the only copy is in Y'shtola.
+- **Nine cards went to the Eriette deck (2026-10-15).** The player gave its list priority
+  over the session-built decks:
+  - Temple of Silence, Shineshadow Snarl, Orzhov Basilica, Tainted Field and Caves of
+    Koilos, for Scoured Barrens, Meticulous Commons, Study Hall, a Swamp and a Plains.
+  - Orzhov Signet and Talisman of Hierarchy, for Commander's Sphere and Wayfarer's Bauble.
+  - Swiftfoot Boots, for Brainstorm. Swords to Plowshares, for Banishing Light.
 
 ## Protected engine (don't cut: the discounts, the card flow and the free casts)
 - Unesh, Criosphinx Sovereign

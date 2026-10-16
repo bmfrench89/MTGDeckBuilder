@@ -1,4 +1,5 @@
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Akroma's Will,Instant,4,W,{3}{W},,,,,4
 Angel of Destiny,Creature,5,W,{3}{W}{W},Angel;Cleric,,,2,4
 Angel of Finality,Creature,4,W,{3}{W},Angel,,,3,4
 Angel of Indemnity,Creature,6,W,{5}{W},Angel;Warrior,,,5,4
@@ -34,7 +35,6 @@ Firemane Commando,Creature,4,W,{3}{W},Angel;Soldier,,draw,4,4
 Flare of Fortitude,Instant,4,W,{2}{W}{W},,,,,4
 Flawless Maneuver,Instant,3,W,{2}{W},,,,,4
 Generous Gift,Instant,3,W,{2}{W},,,removal,,4
-Ghostly Prison,Enchantment,3,W,{2}{W},,,,,4
 "Giada, Font of Hope",Creature,2,W,{1}{W},Angel,W,dork;mana-restricted;ramp,2,4
 "Gisela, the Broken Blade",Creature,4,W,{2}{W}{W},Angel;Horror,,,4,4
 Heliod's Intervention,Instant,2,W,{X}{W}{W},,,,,4

@@ -1,0 +1,78 @@
+{
+ "commander": "Eriette of the Charmed Apple",
+ "written": "2026-10-15",
+ "engine": [
+  "Killian, Decisive Mentor",
+  "Killian, Ink Duelist",
+  "Mesa Enchantress",
+  "Kor Spiritdancer",
+  "Transcendent Envoy",
+  "Sage's Reverie",
+  "Parasitic Impetus",
+  "Coercive Impetus",
+  "Hateful Eidolon",
+  "Winds of Rath"
+ ],
+ "packages": [
+  {
+   "name": "Auras on the table's creatures",
+   "enablers": [
+    "Heliod's Pilgrim",
+    "Open the Armory",
+    "Light-Paws, Emperor's Voice"
+   ],
+   "payoffs": [
+    "Ghoulish Impetus",
+    "Martial Impetus",
+    "Redemption Arc",
+    "Stab Wound",
+    "Clawing Torment",
+    "Darksteel Mutation",
+    "Planar Disruption",
+    "Scriv, the Obligator"
+   ]
+  },
+  {
+   "name": "One big threat",
+   "enablers": [
+    "Danitha Capashen, Paragon",
+    "Starfield Mystic",
+    "Pearl-Ear, Imperial Advisor",
+    "Sram, Senior Edificer"
+   ],
+   "payoffs": [
+    "Ethereal Armor",
+    "All That Glitters",
+    "Spirit Mantle",
+    "Angelic Destiny",
+    "Timely Ward",
+    "Hyena Umbra"
+   ]
+  },
+  {
+   "name": "Card flow and recursion",
+   "enablers": [],
+   "payoffs": [
+    "Sigil of the Empty Throne",
+    "Archon of Sun's Grace",
+    "Ashiok's Reaper",
+    "Neva, Stalked by Nightmares",
+    "Retether",
+    "Kaya's Ghostform",
+    "Eiganjo Dynastorian // Replenish"
+   ]
+  }
+ ],
+ "aims": {
+  "wipe": 2,
+  "ramp": 9
+ },
+ "keywords": [
+  "aura",
+  "enchanted creature",
+  "enchantment spell",
+  "goad"
+ ],
+ "keep": {},
+ "version": 1
+}

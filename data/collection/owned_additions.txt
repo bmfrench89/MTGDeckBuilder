@@ -1038,3 +1038,15 @@
 3 Head of the Hunt
 3 Kíli the Resourceful
 2 Lab Rats
+
+# --- Batch 2026-10-15 · Eriette of the Charmed Apple, bought for the new Orzhov Auras deck (the player's word; the other 43 cards on that purchase list were already recorded) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Eriette of the Charmed Apple
+
+# --- Batch 2026-10-15 · Light-Paws, Emperor's Voice, on the deck list the player gave for Eriette (player's word) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Light-Paws, Emperor's Voice

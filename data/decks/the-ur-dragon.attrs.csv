@@ -1,8 +1,8 @@
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
-Anguished Unmaking,Instant,3,B W,{1}{W}{B},,,removal,,4
 Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
 Assassin's Trophy,Instant,2,B G,{B}{G},,,removal,,4
 "Atarka, World Render",Creature,7,G R,{5}{R}{G},Dragon,,,6,4
+Banishing Light,Enchantment,3,W,{2}{W},,,removal,,4
 Battlefield Forge,Land,0,R W,,,W R C,,,4
 Beast Within,Instant,3,G,{2}{G},,,removal,,4
 Birds of Paradise,Creature,1,G,{G},Bird,W U B R G,dork;ramp,0,4

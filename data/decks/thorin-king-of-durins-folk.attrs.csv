@@ -20,6 +20,7 @@ Draconic Visitor,Creature,5,R,{3}{R}{R},Dragon,,,5,4
 "Dwalin, Weaponmaster",Creature,2,R W,{1}{R/W},Dwarf;Warrior,,,2,4
 Dwarven Mattock,Artifact,2,,{2},Equipment,,,,4
 Dwarven Mauler,Creature,1,R,{R},Dwarf;Warrior,,,2,4
+Dwarven Provisioner,Creature,2,W,{1}{W},Dwarf;Citizen,,,2,4
 Dwarven Shortsword,Artifact,4,W,{3}{W},Equipment,,,,4
 Dáin Ironfoot,Creature,3,R,{2}{R},Dwarf;Warrior,,,1,4
 Dáin's Company,Creature,2,R W,{R}{W},Dwarf;Warrior,,,2,4
@@ -60,7 +61,6 @@ Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
 Solitary Cell,Artifact,2,R W,{R}{W},,,draw,,4
 Spectator Seating,Land,0,R W,,,W R,etb-tapped-cond,,4
 Spire of Industry,Land,0,,,,W U B R G C,,,4
-"Sram, Senior Edificer",Creature,2,W,{1}{W},Dwarf;Advisor,,draw,2,4
 "Sting, Bilbo's Sword",Artifact,2,,{2},Equipment,,,,4
 Sunbillow Verge,Land,0,R W,,,W R,,,4
 Sunscorched Divide,Land,0,R W,,,W R,mana2,,4
