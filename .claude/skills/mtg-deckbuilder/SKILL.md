@@ -67,9 +67,12 @@ work" below.*
 ### 4. Build / tune the list
 **Engine first.** Before `auto_build`, read the commander and the counted pool, then write
 the deck's engine spec: `engine_spec.py --deck <path> --init` (from the notes' protected
-engine, if any), and add the engine cards, 2-3 packages (enablers + payoffs), any role aims
-and engine keywords (specific phrases such as "noncombat damage", never a broad word like
-"sacrifice", which matches half the pool). Draft with `auto_build.py "<commander>" --engine <stem>.engine.json`.
+engine list; add `--commander "<name>"` when the deck file doesn't exist yet). Then add 2-3
+packages with `--package "<name>" enablers|payoffs "<A>" "<B>"`, any role aims with
+`--aim <role> <n>`, and engine keywords with `--keyword "<phrase>"`: specific phrases such as
+"noncombat damage", never a broad word like "sacrifice", which matches half the pool. Draft
+with `auto_build.py "<commander>" --engine <stem>.engine.json`. The spec's `<stem>` names the
+deck being drafted, so a card pinned to it counts as available (`--stem` overrides).
 Every other non-land card is FILLER: keep it with `engine_spec.py --keep "<card>" "<why>"`
 (or `--keep-many "<why>" "<A>" "<B>"` for a group) or cut it, until `engine_spec.py --audit`
 passes. Cards the commander's field runs in 10%+ of decks need no reason. The draft also

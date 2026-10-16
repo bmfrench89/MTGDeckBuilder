@@ -265,8 +265,8 @@
                    {"ph": "Treasure tokens", "zone": "mine", "id": "tt"},
                    {"ph": "Their creatures", "zone": "grave", "id": "theirs", "fx": "dim"}]},
         {"dur": 6.5, "head": "Thorin, King of Durin's Folk",
-         "sub": "Bracket 3 · a Treasure per Dwarf, power per token · the full plan is in the Plan tab.",
-         "say": "Thorin, King of Durin's Folk. Bracket three. A Treasure for every Dwarf, and power for every token. The full plan is in the Plan tab.",
+         "sub": "Bracket 2 · a Treasure per Dwarf, power per token · the full plan is in the Plan tab.",
+         "say": "Thorin, King of Durin's Folk. Bracket two. A Treasure for every Dwarf, and power for every token. The full plan is in the Plan tab.",
          "cards": [{"name": "Thorin, King of Durin's Folk", "zone": "hero", "id": "thorin"}]}
       ]
     }

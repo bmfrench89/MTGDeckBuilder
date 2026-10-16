@@ -32,8 +32,15 @@ pool and ranks nothing.
 Sessions write it through this CLI, never by hand:
 
     python3 scripts/engine_spec.py --deck data/decks/<stem>.txt --init     # from notes
+    python3 scripts/engine_spec.py --deck data/decks/<stem>.txt --keyword "whenever a sphinx"
+    python3 scripts/engine_spec.py --deck data/decks/<stem>.txt --aim draw 12
+    python3 scripts/engine_spec.py --deck data/decks/<stem>.txt         --package "free casts" payoffs "Enigma Sphinx" "Yennett, Cryptic Sovereign"
     python3 scripts/engine_spec.py --deck data/decks/<stem>.txt --keep "Card" "why"
     python3 scripts/engine_spec.py --deck data/decks/<stem>.txt --audit   # exit 3 on gaps
+
+A spec comes BEFORE the draft, so `--init` on a deck that doesn't exist yet takes the
+commander from `--commander` (the notes beside the would-be deck still supply the
+engine list).
 
 stdlib + mtglib only. A missing or broken spec reads as None: no spec, no seeding, and
 the audit says so rather than passing.
@@ -49,6 +56,10 @@ import mtglib
 
 VERSION = 1
 LIST_KEYS = ("engine", "keywords")
+# The roles an aim may name: auto_build's ROLE_QUOTA roles (a tripwire test keeps the two
+# in step; this module may not import a spoke).
+AIM_ROLES = ("ramp", "draw", "removal", "wipe", "counter")
+PACKAGE_KINDS = ("enablers", "payoffs")
 
 
 def spec_path(deck_path):
@@ -184,6 +195,46 @@ def _land_lines(text):
     return out
 
 
+def _edit_spec(path, args):
+    """Apply --keyword / --aim / --package to the spec at `path`. All-or-nothing: one bad
+    argument writes nothing."""
+    spec = load(path)
+    if spec is None:
+        print(f"error: no spec at {path}; run --init first", file=sys.stderr)
+        return 2
+    for phrases in args.keyword:
+        for k in phrases:
+            k = k.strip()
+            if k and k.lower() not in {x.lower() for x in spec["keywords"]}:
+                spec["keywords"].append(k)
+    for role, n in args.aim:
+        if role not in AIM_ROLES:
+            print(f"error: no role {role!r}; aims take {', '.join(AIM_ROLES)}",
+                  file=sys.stderr)
+            return 2
+        try:
+            spec["aims"][role] = int(n)
+        except ValueError:
+            print(f"error: an aim is a whole number: {role} {n}", file=sys.stderr)
+            return 2
+    for group in args.package:
+        if len(group) < 3 or group[1] not in PACKAGE_KINDS:
+            print("error: --package takes a name, enablers|payoffs, then one or more cards",
+                  file=sys.stderr)
+            return 2
+        name, kind, cards = group[0].strip(), group[1], group[2:]
+        pkg = next((p for p in spec["packages"] if p.get("name") == name), None)
+        if pkg is None:
+            pkg = {"name": name, "enablers": [], "payoffs": []}
+            spec["packages"].append(pkg)
+        have = {mtglib._norm(c) for c in pkg.get(kind) or []}
+        pkg[kind] = list(pkg.get(kind) or []) + [c for c in cards if mtglib._norm(c) not in have]
+    save(path, spec)
+    print(f"   spec: {len(spec['keywords'])} keyword(s) · aims {spec['aims'] or '—'} · "
+          f"{len(spec['packages'])} package(s)")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Write and audit a deck's engine spec "
                                              "(<stem>.engine.json).")
@@ -195,6 +246,14 @@ def main(argv=None):
     ap.add_argument("--keep-many", action="append", default=[], nargs="+",
                     metavar="WHY_THEN_CARDS",
                     help="one reason for several cards: --keep-many \"why\" \"Card A\" \"Card B\"")
+    ap.add_argument("--commander", help="with --init before the deck exists: the commander")
+    ap.add_argument("--keyword", action="append", default=[], nargs="+", metavar="PHRASE",
+                    help="oracle-text phrases the engine wants (case-insensitive)")
+    ap.add_argument("--aim", action="append", default=[], nargs=2, metavar=("ROLE", "N"),
+                    help=f"a role count the draft should aim for ({', '.join(AIM_ROLES)})")
+    ap.add_argument("--package", action="append", default=[], nargs="+",
+                    metavar="NAME_KIND_CARDS",
+                    help="--package \"name\" enablers|payoffs \"Card A\" \"Card B\"")
     ap.add_argument("--audit", action="store_true",
                     help="list non-land cards with no engine/package/keep reason; exit 3")
     args = ap.parse_args(argv)
@@ -208,12 +267,24 @@ def main(argv=None):
             engine = protected_engine_from_notes(open(notes, encoding="utf-8").read())
         except OSError:
             engine = []
-        text = open(args.deck, encoding="utf-8").read()
-        save(path, {"commander": mtglib.deck_header(text, "Commander") or "",
+        try:
+            text = open(args.deck, encoding="utf-8").read()
+        except OSError:
+            text = ""
+        commander = mtglib.deck_header(text, "Commander") or args.commander or ""
+        if not commander:
+            print(f"error: {args.deck} doesn't exist yet; name the commander with "
+                  f"--commander", file=sys.stderr)
+            return 2
+        save(path, {"commander": commander,
                     "written": datetime.date.today().isoformat(), "engine": engine,
                     "packages": [], "aims": {}, "keywords": [], "keep": {}})
         print(f"wrote {path}: {len(engine)} engine cards from the notes"
               + ("" if engine else " (the notes have no '## Protected engine' list)"))
+    if args.keyword or args.aim or args.package:
+        rc = _edit_spec(path, args)
+        if rc:
+            return rc
     for group in args.keep_many:
         if len(group) < 2:
             print("error: --keep-many takes a reason, then one or more cards", file=sys.stderr)

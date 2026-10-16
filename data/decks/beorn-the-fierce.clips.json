@@ -260,8 +260,8 @@
          "cards": [{"name": "Last March of the Ents", "zone": "stack", "fx": "glow"},
                    {"name": "Beorn the Fierce", "zone": "mine", "id": "beorn"}]},
         {"dur": 7.5, "head": "Beorn the Fierce — Bear Den",
-         "sub": "No Game Changers: it plays as a strong Bracket 2 or a light 3. The full plan is in the Plan tab.",
-         "say": "Beorn the Fierce, Bear Den. No Game Changers: it plays as a strong bracket two, or a light three. The full plan is in the Plan tab.",
+         "sub": "One Game Changer, [[Crop Rotation]], makes it Bracket 3. The full plan is in the Plan tab.",
+         "say": "Beorn the Fierce, Bear Den. One Game Changer, [[Crop Rotation]], makes it bracket three. The full plan is in the Plan tab.",
          "cards": [{"name": "Beorn the Fierce", "zone": "hero", "id": "beorn"}]}
       ]
     }

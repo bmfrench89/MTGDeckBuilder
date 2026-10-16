@@ -16,7 +16,7 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 ## Cards in a deck you don't own yet
 - _none_ 
 
-## Upgrades from deck buy-lists  ~$151.00
+## Upgrades from deck buy-lists  ~$278.00
 - [ ] **Elas il-Kor, Sadistic Pilgrim** (price n/a, bartolome-del-presidio-600-combos) — replaces Throne of the Grim Captain: 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Cruel Celebrant** (price n/a, bartolome-del-presidio-600-combos) — replaces Noble's Purse: 62% of Bartolomé del Presidio's decks run this.
 - [ ] **Maskwood Nexus** (price n/a, beorn-the-fierce) — replaces Necklace of Girion: Makes every creature you control every creature type, so your whole board is Bears. Beorn's +2/+2 hits everything and the draw-two is live from his first combat. The single biggest upgrade.
@@ -48,8 +48,21 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Font of Mythos** (price n/a, kami-of-the-crescent-moon) — replaces Sword of War and Peace: 64% of Kami of the Crescent Moon's decks run this.
 - [ ] **High Tide** (price n/a, kami-of-the-crescent-moon) — replaces Teferi's Puzzle Box: 62% of Kami of the Crescent Moon's decks run this.
 - [ ] **Chasm Skulker** (price n/a, kami-of-the-crescent-moon) — replaces Imprisoned in the Moon: 55% of Kami of the Crescent Moon's decks run this.
-- [ ] **Terror of the Peaks** (price n/a, the-ur-dragon) — replaces Vaevictis Asmadi, the Dire: 60% of The Ur-Dragon's decks run this.
+- [ ] **Terror of the Peaks** (price n/a, the-ur-dragon): 60% of The Ur-Dragon's decks run this.
 - [ ] **Old Gnawbone** (price n/a, the-ur-dragon): 56% of The Ur-Dragon's decks run this.
+- [ ] **Sphinx Ambassador** (~$49.00, the-ur-sphinx) — replaces Sphinx Sovereign: 47% of the field: on combat damage, put a creature from that player's library onto your battlefield. Price is the obstacle.
+- [ ] **Urza's Incubator** (~$20.00, the-ur-sphinx) — replaces Patchwork Banner: 65% of the field, 28x lift: Sphinx spells cost {2} less. With the eminence and Unesh, Consecrated Sphinx costs {U}{U}.
+- [ ] **Raffine's Tower** (~$13.00, the-ur-sphinx) — replaces Soured Springs: 58% of the field: all three colours (enters tapped), with cycling.
+- [ ] **Watery Grave** (~$10.00, the-ur-sphinx) — replaces Treno, Dark City: 63% of the field: untapped blue-black in place of a tapland.
+- [ ] **Godless Shrine** (~$8.00, the-ur-sphinx) — replaces Temple of Silence: 58% of the field: untapped white-black in place of a tapland.
+- [ ] **Sapphire Medallion** (~$8.00, the-ur-sphinx) — replaces Mind Stone: 45% of the field: every blue spell costs {1} less, which is nearly the whole deck.
+- [ ] **Hallowed Fountain** (~$7.00, the-ur-sphinx) — replaces Temple of Enlightenment: 64% of the field: untapped white-blue. The mana is this deck's main weakness.
+- [ ] **Uldaros Theorix** (~$3.00, the-ur-sphinx) — replaces Inspired Sphinx: 59% of the field: a Sphinx that copies one card of each type from your graveyard and casts up to 6 mana value of them free. The mills and Unesh's piles stock it.
+- [ ] **Herald's Horn** (~$3.00, the-ur-sphinx) — replaces Power Sink: 58% of the field: Sphinxes cost {1} less, and a Sphinx on top of your library goes to hand at each upkeep.
+- [ ] **Dovin's Veto** (~$2.00, the-ur-sphinx) — replaces Negate: 46% of the field: Negate that can't be countered.
+- [ ] **Kindred Judgment** (~$2.00, the-ur-sphinx) — replaces Time Wipe: 43% of the field: name Sphinx, and every other creature dies. A one-sided wipe for this deck.
+- [ ] **Sphinx of False Conclusions** (~$1.00, the-ur-sphinx) — replaces Curator of Mysteries: 66% of the field: a 4-mana flash flier Sphinx that loots when it attacks and returns once as a token copy when it dies.
+- [ ] **Void Rend** (~$1.00, the-ur-sphinx) — replaces Stroke of Midnight: A second copy (yours is in Y'shtola): uncounterable instant removal for any nonland permanent.
 - [ ] **Fíli and Kíli, Joyous** (price n/a, thorin-king-of-durins-folk) — replaces Vow to Erebor: 87% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Glóin, Dwarf Emissary** (price n/a, thorin-king-of-durins-folk) — replaces Seize the Spoils: 78% of Thorin, King of Durin's Folk's decks run this.
 - [ ] **Magda, Brazen Outlaw** (price n/a, thorin-king-of-durins-folk) — replaces Thrór's Map: 76% of Thorin, King of Durin's Folk's decks run this.
@@ -72,4 +85,4 @@ _You use these in more decks than you own copies. Buy the extra copies, or just 
 - [ ] **Hallowed Fountain** (price n/a, yshtola-nights-blessed) — replaces Demolition Field: 55% of Y'shtola, Night's Blessed's decks run this.
 - [ ] **Exquisite Blood** (price n/a, yshtola-nights-blessed): Completes a combo: Exquisite Blood + Vito, Thorn of the Dusk Rose → Drain the whole table to 0
 
-**Rough total (shared + upgrades): ~$168.13** — prices are your export's MARKET / buy-list estimates.
+**Rough total (shared + upgrades): ~$295.13** — prices are your export's MARKET / buy-list estimates.

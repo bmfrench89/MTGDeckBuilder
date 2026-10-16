@@ -1,0 +1,53 @@
+{
+ "version": 1,
+ "verdicts": {
+  "land|Orzhov Basilica|Port Town": {
+   "verdict": "skip",
+   "why": "The Basilica is a black source and taps for two toward a 9-mana commander and 7-8-mana Sphinxes; Port Town would leave black at 15 sources.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "land|Shineshadow Snarl|Fatehold Annex": {
+   "verdict": "skip",
+   "why": "Fatehold Annex enters tapped unless you control a planeswalker, and this deck runs none; the swap also trades a black source for a white-blue one.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "land|Shineshadow Snarl|Port Town": {
+   "verdict": "skip",
+   "why": "Both enter untapped on a reveal; the swap trades a black source for a third white-blue one and leaves black at 15 sources.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "land|Soured Springs|Port Town": {
+   "verdict": "skip",
+   "why": "Trades a black source for a third white-blue one; black would fall to 15 land sources for a commander and ten three-colour spells that need it.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "land|Temple of Silence|Avengers Hangar": {
+   "verdict": "skip",
+   "why": "Lateral: both enter tapped, and the Hangar trades a black source and scry 1 for a third white-blue source and 1 life.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "spell|Rise of the Dark Realms|Fellwar Stone": {
+   "verdict": "skip",
+   "why": "Rise is the finisher: the Ur-Sphinx mills every player each attack, Unesh bins half of every pile, and both sweepers fill every graveyard, so Rise returns a whole table of creatures. Fellwar Stone is a generic rock, and your copy is committed to another deck.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "spell|Stroke of Midnight|Fellwar Stone": {
+   "verdict": "skip",
+   "why": "Stroke of Midnight is the deck's only instant answer to any nonland permanent (Despark needs mana value 4+). Ramp is already 12, and your Fellwar Stone is committed to another deck. A second Void Rend (buylist) is its upgrade.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  },
+  "spell|Stroke of Midnight|Void Rend": {
+   "verdict": "wishlist",
+   "why": "Void Rend is the better card here (uncounterable, no token for the opponent), but your only copy is in Y'shtola. A second copy is on the buylist to replace Stroke of Midnight.",
+   "by": "a Claude session",
+   "date": "2026-10-15"
+  }
+ }
+}

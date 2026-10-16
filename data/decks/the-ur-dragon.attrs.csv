@@ -15,10 +15,10 @@ Chaos Warp,Instant,3,R,{2}{R},,,,,4
 Chromatic Lantern,Artifact,3,,{3},,W U B R G,ramp;rock,,4
 Cinder Glade,Land,0,G R,,Mountain;Forest,R G,etb-tapped-cond,,4
 Command Tower,Land,0,,,,W U B R G,,,4
-Consecrated Sphinx,Creature,6,U,{4}{U}{U},Sphinx,,draw,4,4
 Counterspell,Instant,2,U,{U}{U},,,counter,,4
 Crux of Fate,Sorcery,5,B,{3}{B}{B},,,wipe,,4
 Cultivate,Sorcery,3,G,{2}{G},,,fetch:basic;ramp,,4
+Dracogenesis,Enchantment,8,R,{6}{R}{R},,,,,4
 Dragon Broodmother,Creature,6,G R,{2}{R}{R}{R}{G},Dragon,,,4,4
 Dragon Tempest,Enchantment,2,R,{1}{R},,,,,4
 "Dragonhawk, Fate's Tempest",Creature,5,R,{3}{R}{R},Bird;Dragon,,,5,4
@@ -56,6 +56,7 @@ Plains,Land,0,W,,Plains,W,,,4
 Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
 Rampant Growth,Sorcery,2,G,{1}{G},,,fetch:basic;ramp,,4
 Reflecting Pool,Land,0,,,,W U B R G,,,4
+Rhystic Study,Enchantment,3,U,{2}{U},,,draw,,4
 Rhythm of the Wild,Enchantment,3,G R,{1}{R}{G},,,,,4
 "Rith, Liberated Primeval",Creature,5,G R W,{2}{R}{G}{W},Dragon,,,5,4
 Roaming Throne,Creature,4,,{4},Golem,,,4,4
@@ -92,7 +93,6 @@ Underground River,Land,0,B U,,,U B C,,,4
 Up the Beanstalk,Enchantment,2,G,{1}{G},,,draw,,4
 Ureni of the Unwritten,Creature,7,G R U,{4}{G}{U}{R},Spirit;Dragon,,,7,4
 "Ureni, the Song Unending",Creature,8,G R U,{5}{G}{U}{R},Spirit;Dragon,,,10,4
-"Vaevictis Asmadi, the Dire",Creature,6,B G R,{3}{B}{R}{G},Elder;Dragon,,,6,4
 Willowrush Verge,Land,0,G U,,,U G,,,4
 Wrathful Red Dragon,Creature,5,R,{3}{R}{R},Dragon,,,5,4
 Zurgo and Ojutai,Creature,5,R U W,{2}{U}{R}{W},Orc;Dragon,,,4,4

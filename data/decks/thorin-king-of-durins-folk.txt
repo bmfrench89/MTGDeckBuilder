@@ -2,7 +2,7 @@
 # Commander: Thorin, King of Durin's Folk
 # Colors: R W
 # Archetype: tribal-dwarf artifacts treasure equipment go-wide dragons
-# Bracket: 3
+# Bracket: 2
 # Source: built 2026-10-15 by a session: auto_build draft + engine-read hand pass (Dwarves first, a B-list of red-white dragons the Ur-Dragon doesn't use)
 
 # --- Commander ---

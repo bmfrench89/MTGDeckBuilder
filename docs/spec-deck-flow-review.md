@@ -107,6 +107,19 @@ was the find a session made by hand on 2026-10-14. Coverage grows with each enri
 which now keeps every owned card's text in the local cache (opt-in in `enrich_api`, on for
 the CLI and the server's background enrichment, off in tests).
 
+**First full run: the Ur-Sphinx (2026-10-15).** The spec named 8 engine cards and 2
+packages, and the draft seeded all 20 before any quota. The hand pass then changed 7
+spells and 9 lands. The audit wanted reasons for 11 cards, and the field's 10% exemption
+covered the rest. The run found two gaps, both fixed:
+- **Writing a spec:** the CLI could only `--init` and `--keep`, though the docstring says
+  specs are never hand-written. It gained `--commander` (init before the deck file
+  exists), `--keyword`, `--aim` (roles checked against `auto_build.ROLE_QUOTA` by a
+  tripwire test) and `--package`. A bad argument writes nothing.
+- **Pins:** the `auto_build` CLI never told `build()` which deck it was drafting, so
+  Consecrated Sphinx, pinned to the-ur-sphinx before the draft, came back "pinned to
+  another deck". The CLI now passes `skip_deck` as Build Next does: `--stem`, defaulting
+  to the `--engine` spec's filename.
+
 ### The original design
 
 - **The engine spec:** a session writes it before auto_build:

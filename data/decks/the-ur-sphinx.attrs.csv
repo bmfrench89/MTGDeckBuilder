@@ -1,0 +1,89 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+"Atemsis, All-Seeing",Creature,6,U,{3}{U}{U}{U},Sphinx,,draw,4,4
+"Azor, the Lawbringer",Creature,6,U W,{2}{W}{W}{U}{U},Sphinx,,draw,6,4
+Azorius Signet,Artifact,2,U W,{2},,W U,mana2;ramp;rock,,4
+Bojuka Bog,Land,0,B,,,B,etb-tapped,,4
+Caves of Koilos,Land,0,B W,,,W B C,,,4
+Changeling Wayfinder,Creature,3,,{3},Shapeshifter,,fetch:basic,1,4
+Chromatic Lantern,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+Cloud's Limit Break,Instant,2,W,{1}{W},,,removal;wipe,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Consecrated Sphinx,Creature,6,U,{4}{U}{U},Sphinx,,draw,4,4
+Counterspell,Instant,2,U,{U}{U},,,counter,,4
+Curator of Mysteries,Creature,4,U,{2}{U}{U},Sphinx,,,4,4
+Dazzling Sphinx,Creature,5,U,{3}{U}{U},Sphinx,,,4,4
+Defiler of Dreams,Creature,5,U,{3}{U}{U},Phyrexian;Sphinx,,draw,4,4
+Deserted Beach,Land,0,U W,,,W U,etb-tapped-cond,,4
+Despark,Instant,2,B W,{W}{B},,,removal,,4
+Dimir Signet,Artifact,2,B U,{2},,U B,mana2;ramp;rock,,4
+Disenchant,Instant,2,W,{1}{W},,,removal,,4
+Dream Eater,Creature,6,U,{4}{U}{U},Nightmare;Sphinx,,,4,4
+Dream Trawler,Creature,6,U W,{2}{W}{W}{U}{U},Sphinx,,draw,3,4
+Drowned Catacomb,Land,0,B U,,,U B,etb-tapped-cond,,4
+Elenda and Azor,Creature,6,B U W,{3}{W}{U}{B},Vampire;Knight;Sphinx,,draw,6,4
+Enigma Sphinx,Creature,7,B U W,{4}{W}{U}{B},Sphinx,,,5,4
+Essence Scatter,Instant,2,U,{1}{U},,,counter,,4
+Ethersworn Sphinx,Creature,9,U W,{7}{W}{U},Sphinx,,,4,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Fabled Passage,Land,0,,,,,fetch:basic;ramp,,4
+Getaway Glamer,Instant,1,W,{W},,,removal,,4
+Glacial Fortress,Land,0,U W,,,W U,etb-tapped-cond,,4
+Gleaming Bastion,Land,0,U W,,,W U C,,,4
+Hidden Lair,Land,0,B U,,,U B C,,,4
+Island,Land,0,U,,Island,U,,,4
+Isolated Chapel,Land,0,B W,,,W B,etb-tapped-cond,,4
+"Isperia, Supreme Judge",Creature,6,U W,{2}{W}{W}{U}{U},Sphinx,,draw,6,4
+Magister Sphinx,Creature,7,B U W,{4}{W}{U}{B},Sphinx,,,5,4
+Master of Predicaments,Creature,5,U,{3}{U}{U},Sphinx,,,4,4
+Medomai the Ageless,Creature,6,U W,{4}{W}{U},Sphinx,,,4,4
+Mind Stone,Artifact,2,,{2},,C,draw;ramp;rock,,4
+Mystic Gate,Land,0,U W,,,W U C,mana3,,4
+Negate,Instant,2,U,{1}{U},,,counter,,4
+Orzhov Basilica,Land,0,B W,,,W B,etb-tapped;mana2,,4
+Orzhov Signet,Artifact,2,B W,{2},,W B,mana2;ramp;rock,,4
+Patchwork Banner,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+Path to Exile,Instant,1,W,{W},,,removal,,4
+Plains,Land,0,W,,Plains,W,,,4
+Power Sink,Instant,1,U,{X}{U},,,counter,,4
+Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
+"Raffine, Scheming Seer",Creature,3,B U W,{W}{U}{B},Sphinx;Demon,,,1,4
+Rhystic Study,Enchantment,3,U,{2}{U},,,draw,,4
+Rise of the Dark Realms,Sorcery,9,B,{7}{B}{B},,,,,4
+Scholar of the Lost Trove,Creature,7,U,{5}{U}{U},Sphinx,,,5,4
+Shineshadow Snarl,Land,0,B W,,,W B,etb-tapped-cond,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Soured Springs,Land,0,B U,,Desert,U B,etb-tapped,,4
+Spectacular Tactics,Instant,2,W,{1}{W},,,removal,,4
+Sphinx Sovereign,Creature,8,B U W,{4}{W}{U}{U}{B},Sphinx,,,6,4
+Sphinx of Enlightenment,Creature,6,U,{4}{U}{U},Sphinx,,draw,5,4
+Sphinx of Foresight,Creature,4,U,{2}{U}{U},Sphinx,,,4,4
+Sphinx of Forgotten Lore,Creature,4,U,{2}{U}{U},Sphinx,,,3,4
+Sphinx of Uthuun,Creature,7,U,{5}{U}{U},Sphinx,,,5,4
+Sphinx of the Final Word,Creature,7,U,{5}{U}{U},Sphinx,,,5,4
+Sphinx of the Second Sun,Creature,8,U,{6}{U}{U},Sphinx,,,6,4
+Sphinx of the Steel Wind,Creature,8,B U W,{5}{W}{U}{B},Sphinx,,,6,4
+Sphinx's Revelation,Instant,3,U W,{X}{W}{U}{U},,,draw,,4
+Stone by Sunlight,Instant,2,W,{1}{W},,,removal,,4
+Stroke of Midnight,Instant,3,W,{2}{W},,,removal,,4
+Sunken Ruins,Land,0,B U,,,U B C,mana3,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Swiftfoot Boots,Artifact,2,,{2},Equipment,,,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Tainted Field,Land,0,B W,,,W B C,,,4
+Talisman of Dominance,Artifact,2,B U,{2},,U B C,ramp;rock,,4
+Talisman of Hierarchy,Artifact,2,B W,{2},,W B C,ramp;rock,,4
+Talisman of Progress,Artifact,2,U W,{2},,W U C,ramp;rock,,4
+Temple of Enlightenment,Land,0,U W,,,W U,etb-tapped,,4
+Temple of Silence,Land,0,B W,,,W B,etb-tapped,,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+The Mind Stone,Artifact,2,W,{1}{W},Infinity;Stone,W,ramp;rock,,4
+The Ur-Sphinx,Creature,9,B U W,{6}{W}{U}{B},Sphinx;Avatar,,discount-cmd:sphinx:1,10,4
+Time Wipe,Sorcery,5,U W,{2}{W}{W}{U},,,wipe,,4
+"Tivit, Seller of Secrets",Creature,6,B U W,{3}{W}{U}{B},Sphinx;Rogue,,,6,4
+Tragic Arrogance,Sorcery,5,W,{3}{W}{W},,,,,4
+"Treno, Dark City",Land,0,B U,,Town,U B,etb-tapped,,4
+"Unesh, Criosphinx Sovereign",Creature,6,U,{4}{U}{U},Sphinx,,discount:sphinx:2,4,4
+Warden of Evos Isle,Creature,3,U,{2}{U},Bird;Wizard,,,2,4
+Windreader Sphinx,Creature,7,U,{5}{U}{U},Sphinx,,draw,3,4
+"Yennett, Cryptic Sovereign",Creature,5,B U W,{2}{W}{U}{B},Sphinx,,draw,3,4

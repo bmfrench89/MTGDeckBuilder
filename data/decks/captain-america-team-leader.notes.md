@@ -31,8 +31,9 @@ turn. Put a +1/+1 counter on that Hero and a +1/+1 counter on Captain America."*
 - Attack with everything Cap has grown; vigilance means you keep blockers up anyway.
 - Save counterspells for wraths and the table's engine, not for the first threat you see.
   This deck rebuilds from a wipe better than most, but Cap himself is the exception.
-- Rhystic Study / Mystic Remora carry the long game — deploy them on an off-turn when
-  you can still hold up an answer.
+- Mystic Remora carries the long game — deploy it on an off-turn when you can still hold
+  up an answer. SP//dr, Piloted by Peni is the other draw engine: every Hero that entered
+  under Cap carries a +1/+1 counter, so each one that connects draws a card.
 
 # Weaknesses to respect
 - **Cap is the deck.** Once he's grown, he eats removal. Play around one wrath; don't
@@ -44,9 +45,9 @@ turn. Put a +1/+1 counter on that Hero and a +1/+1 counter on Captain America."*
 
 # Grounding note
 Auto-built from owned cards (tribal-aware builder) and hand-checked: the creature base is
-**all Heroes** — no off-tribe filler. Bracket 3 / power ~70, with 2 Game Changers
-(Rhystic Study, Force of Will). Rhystic Study is contested with two other decks — see the
-shared-cards panel before sleeving.
+**all Heroes** — no off-tribe filler. Bracket 3, with 1 Game Changer (Force of Will).
+Rhystic Study left on 2026-10-15: the player's three copies went to the Ur-Dragon,
+Y'shtola and the Ur-Sphinx, and SP//dr, Piloted by Peni (51% of the field) took the slot.
 
 ## Protected engine (don't cut; the named Heroes and the counters/Mjölnir package)
 - Kid Loki

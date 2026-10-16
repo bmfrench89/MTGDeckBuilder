@@ -549,6 +549,18 @@ def deck_text(deck):
     return "\n".join(lines).rstrip() + "\n"
 
 
+def draft_stem(stem=None, engine_path=None):
+    """The deck a CLI draft becomes: `--stem`, else the `<stem>` of an `--engine`
+    `<stem>.engine.json`, else None. Build Next passes the same thing as `skip_deck`, so
+    the draft's own copies and its pins count as available. Without it a card pinned to
+    the deck being built read as "pinned to another deck" (the Ur-Sphinx's Consecrated
+    Sphinx, 2026-10-15)."""
+    if stem:
+        return stem
+    base = os.path.basename(engine_path or "")
+    return base[:-len(".engine.json")] if base.endswith(".engine.json") else None
+
+
 if __name__ == "__main__":
     import argparse
     import json
@@ -568,6 +580,10 @@ if __name__ == "__main__":
                     help="a session's <stem>.engine.json: its engine and package cards go "
                          "in before any quota, and every other card is labelled filler "
                          "(engine_spec.py --audit then wants a keep reason for each)")
+    ap.add_argument("--stem", default=None,
+                    help="the deck this draft becomes (data/decks/<stem>.txt): its own "
+                         "copies and its pins count as available, as in Build Next. "
+                         "Defaults to the <stem> of --engine's <stem>.engine.json")
     args = ap.parse_args()
     try:
         coll = mtglib.load_collection(args.collection)
@@ -584,7 +600,7 @@ if __name__ == "__main__":
                 print(f"error: no readable engine spec at {args.engine}", file=sys.stderr)
                 raise SystemExit(2)
         d = build(args.commander, coll, idx, args.decks_dir, identity=args.identity,
-                  engine=spec)
+                  engine=spec, skip_deck=draft_stem(args.stem, args.engine))
     except UnknownIdentity as e:
         print(f"error: {e.message}", file=sys.stderr)
         raise SystemExit(3)

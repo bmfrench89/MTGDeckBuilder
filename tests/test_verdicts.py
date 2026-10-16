@@ -83,6 +83,23 @@ def test_the_cli_saves_and_reports(tmp_path, monkeypatch, capsys):
     assert optimize.main() == 2
 
 
+def test_the_json_feed_carries_saved_verdicts(tmp_path, monkeypatch, capsys):
+    """The ⚡ page attached saved verdicts but `--json`, the feed a session reads, did
+    not: a later session couldn't see what had already been judged (2026-10-15)."""
+    deck = tmp_path / "d.txt"
+    deck.write_text("1 X\n", encoding="utf-8")
+    (tmp_path / "c.csv").write_text("Quantity,Name\n1,X\n", encoding="utf-8")
+    monkeypatch.setattr(optimize, "optimize", lambda *a, **k: R)
+    optimize.record_verdicts(str(deck), R, [(KEY, "skip", "the cut is the engine")])
+    monkeypatch.setattr(sys, "argv", ["optimize.py", "--deck", str(deck), "--collection",
+                                      str(tmp_path / "c.csv"), "--decks-dir", str(tmp_path),
+                                      "--json"])
+    assert optimize.main() == 0
+    out = json.loads(capsys.readouterr().out)
+    payload = out[0] if isinstance(out, list) else out
+    assert payload["proposals"][0]["verdict"]["verdict"] == "skip"
+
+
 def test_the_server_keeps_the_file_with_the_deck():
     assert ".verdicts.json" in store.DECK_SUFFIXES
 

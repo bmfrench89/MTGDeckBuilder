@@ -1793,7 +1793,9 @@ def main():
                      owned_only=args.owned_only, include_buys=not args.no_buys,
                      buy_threshold=args.buy_threshold)
         if args.json:
-            out_json.append(review_payload(r))
+            # the saved verdicts ride along, as on the ⚡ page: a session reading this
+            # feed sees what an earlier session already judged
+            out_json.append(review_payload(r, load_verdicts(p) if p else None))
             continue
         print(f"\n=== {r['stem']} — {r['commander']} ({r['field_size']} field cards) ===")
         widened = {role: rng for role, rng in (r.get("role_ranges") or {}).items()

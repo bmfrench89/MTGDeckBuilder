@@ -70,9 +70,28 @@ The Ur-Dragon draws when Dragons attack, so haste is card draw here.
 - **Its last ability:** rarely matters in singleton Commander. The opponent needs a second
   card with the same name in their graveyard.
 - **The cost:** Niv-Mizzet turned Lozhan's, Tempest's and Scourge's face damage into cards.
-  That damage still happens, but no longer draws. The classifier's draw count fell 6 → 5,
-  and Consecrated Sphinx is earmarked for the player's planned Ur-Sphinx deck. When it
-  leaves, the replacement should be a draw piece, ideally a Dragon.
+  That damage still happens, but no longer draws. The classifier's draw count fell 6 → 5.
+
+**Rhystic Study in for Consecrated Sphinx** (2026-10-15, the player's own edit in the app).
+The Sphinx moved to the player's new Ur-Sphinx deck, and Rhystic Study keeps the draw. The
+player owns three copies: this deck, Y'shtola and the Ur-Sphinx.
+
+**Dracogenesis in for Vaevictis Asmadi, the Dire** (2026-10-15, the player's call; a new
+card). Verified text: "You may cast Dragon spells without paying their mana costs."
+- **How it gets out:** eight mana, but The Ur-Dragon's attack trigger puts a permanent card
+  from your hand onto the battlefield. That's how it usually arrives.
+- **What it does:** every Dragon after it is free. Lozhan still deals each one's full mana
+  value as damage, because a free cast is still a cast.
+- **The cut:** Vaevictis was the weakest unprotected card (value 28, no field data). Its
+  attack makes every player, you included, sacrifice a permanent you target.
+- **A three-card loop it completes** (Commander Spellbook, 2026-10-15):
+  - Dracogenesis, Miirym, Sentinel Wyrm and Marang River Regent.
+  - Cast Marang free, and Miirym copies it. The copy's enter trigger returns the original
+    Marang and another permanent to hand. Recast Marang free and repeat.
+  - The result is repeated bounces until opponents have no nonland permanents.
+  - The bounce is "up to two", so the loop is optional and can't force a drawn game.
+  - It needs an 8-mana enchantment and two 6-drops, a late and expensive combo, which
+    Bracket 3 allows (docs/power-and-brackets.md).
 
 **Win conditions:** a wide flying board, plus **Call the Spirit Dragons** — dragons become
 indestructible, and an upkeep with five dragons, one of each colour, all getting a counter wins
@@ -82,6 +101,7 @@ the game. Its five pips are why the manabase leans on any-colour lands.
 - Dragonspeaker Shaman
 - Sarkhan, Soul Aflame
 - Roaming Throne
+- Dracogenesis
 - Miirym, Sentinel Wyrm
 - Dragon Tempest
 - Scourge of Valkas
@@ -100,11 +120,6 @@ the game. Its five pips are why the manabase leans on any-colour lands.
 - Tiamat
 - Call the Spirit Dragons
 
-## Earmarked for other decks
-Set aside on the player's word (2026-10-15): the trades lane may offer these to another deck
-even though these notes name them. The replacement should be a draw piece, ideally a Dragon.
-- Consecrated Sphinx
-
 ## Interaction (read from verified text, not the role counter)
 
 The optimizer's classifier counts 6 removal and 1 wipe. That undercounts, because the
@@ -113,8 +128,7 @@ creature-based answers are invisible to it:
   Assassin's Trophy, Anguished Unmaking.
 - **On a body:** Steel Hellkite (X: destroy each nonland permanent with MV X of a player it hit),
   Dragonlord Silumgar (steals a creature or planeswalker), Ureni, the Song Unending (X damage
-  divided, X = your lands), Vaevictis Asmadi (each player sacrifices a permanent you target),
-  Scalelord Reckoner (punishes targeting a Dragon), Marang River Regent (bounces two).
+  divided, X = your lands), Scalelord Reckoner (punishes targeting a Dragon), Marang River Regent (bounces two).
 - **One-sided wipes:** Crux of Fate (choose non-Dragons) and Scavenger Regent's Omen,
   Exude Toxin (each non-Dragon creature gets -X/-X).
 - **Counters:** Counterspell, Mana Drain.
@@ -200,8 +214,10 @@ an any-colour land and is not one for this deck.
 
 ## What the numbers say (2026-10-14)
 
-- **Bracket 3.** One Game Changer (Consecrated Sphinx), two tutors plus Tiamat, no fast mana,
-  no two-card infinites (Commander Spellbook, re-checked 2026-10-15 with Dragonlord Kolaghan in: 0 present).
+- **Bracket 3.** One Game Changer (Rhystic Study, since the Sphinx left on 2026-10-15), two
+  tutors plus Tiamat, no fast mana, no two-card infinites. Commander Spellbook, re-checked
+  2026-10-15: one THREE-card combo (Dracogenesis + Miirym + Marang River Regent), which is
+  late and expensive.
 - **Field:** 22 of EDHREC's top 25 for The Ur-Dragon (51,370 decks). The three missing are not
   owned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon. They are the buy list.
 - **Goldfish** (3,000 games): keepable 81%, screw 14%, first combat lethal median turn 9 (25% by turn 8).

@@ -1,0 +1,110 @@
+# Title: The Ur-Sphinx
+# Commander: The Ur-Sphinx
+# Colors: B U W
+# Archetype: draw-engine tribal-sphinx
+# Bracket: 3
+# Source: built 2026-10-15 by a session: engine-first auto_build draft + engine-read hand pass
+
+# --- Commander ---
+1 The Ur-Sphinx
+
+# --- Creatures ---
+1 Defiler of Dreams
+1 Yennett, Cryptic Sovereign
+1 Consecrated Sphinx
+1 Azor, the Lawbringer
+1 Elenda and Azor
+1 Dream Trawler
+1 Isperia, Supreme Judge
+1 Atemsis, All-Seeing
+1 Sphinx of Enlightenment
+1 Windreader Sphinx
+1 Raffine, Scheming Seer
+1 Sphinx of Forgotten Lore
+1 Sphinx of Foresight
+1 Curator of Mysteries
+1 Unesh, Criosphinx Sovereign
+1 Dazzling Sphinx
+1 Master of Predicaments
+1 Medomai the Ageless
+1 Tivit, Seller of Secrets
+1 Dream Eater
+1 Enigma Sphinx
+1 Sphinx of the Second Sun
+1 Magister Sphinx
+1 Sphinx of the Steel Wind
+1 Ethersworn Sphinx
+1 Sphinx of the Final Word
+1 Sphinx of Uthuun
+1 Scholar of the Lost Trove
+1 Sphinx Sovereign
+1 Warden of Evos Isle
+1 Changeling Wayfinder
+
+# --- Instants ---
+1 Path to Exile
+1 Swords to Plowshares
+1 Sphinx's Revelation
+1 Despark
+1 Spectacular Tactics
+1 Disenchant
+1 Stone by Sunlight
+1 Cloud's Limit Break
+1 Getaway Glamer
+1 Counterspell
+1 Negate
+1 Essence Scatter
+1 Power Sink
+1 Stroke of Midnight
+
+# --- Sorceries ---
+1 Time Wipe
+1 Rise of the Dark Realms
+1 Tragic Arrogance
+
+# --- Artifacts ---
+1 Swiftfoot Boots
+1 Chromatic Lantern
+1 Arcane Signet
+1 Sol Ring
+1 Talisman of Progress
+1 Talisman of Dominance
+1 The Mind Stone
+1 Azorius Signet
+1 Talisman of Hierarchy
+1 Dimir Signet
+1 Orzhov Signet
+1 Mind Stone
+1 Patchwork Banner
+
+# --- Enchantments ---
+1 Rhystic Study
+
+# --- Lands ---
+1 Command Tower
+1 Exotic Orchard
+1 Isolated Chapel
+1 Deserted Beach
+1 Drowned Catacomb
+1 Fabled Passage
+1 Glacial Fortress
+1 Prairie Stream
+1 Bojuka Bog
+1 Caves of Koilos
+1 Temple of Silence
+1 Mystic Gate
+1 Shineshadow Snarl
+1 Temple of Enlightenment
+1 Sunken Ruins
+1 Tainted Field
+1 Gleaming Bastion
+1 Terramorphic Expanse
+1 Orzhov Basilica
+1 Treno, Dark City
+1 Hidden Lair
+1 Soured Springs
+
+# --- Basics ---
+9 Island
+4 Plains
+2 Swamp

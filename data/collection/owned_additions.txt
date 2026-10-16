@@ -723,3 +723,318 @@
 # carries them, the upload offers to retire these rows
 # (docs/spec-card-intake.md §3).
 1 Dragonlord Kolaghan
+
+# --- Batch 2026-10-15 · Dracogenesis, on the player's word — for the Ur-Dragon (2026-10-15) · 1 cards (1 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Dracogenesis
+
+# --- Batch 2026-10-15 · Rhystic Study: the player owns 3 (player's word) · 1 cards (1 distinct) ---
+# The player: "I own 3 of those. One for Ur dragon, one for ystola and one for Ur sphinx."
+# The export holds 2.
+# [floor] This row means "own at least this many", not new copies: the loader and the
+# database raise Rhystic Study to 3.
+3 Rhystic Study
+
+# --- Batch 2026-10-15 · the player's master list, new cards and extra copies only · 390 new copies (292 distinct) ---
+# The player uploaded MTG_Master_Collection (518 lines) and asked to add only the new
+# cards, without duplicating what is already recorded. Checked against the collection:
+# 240 cards it lacked (311 copies) and 52 it held fewer copies of (79 more).
+# Left out: 203 cards already recorded at the list's count or more, the basics
+# (always owned) and two tokens (Human Cleric, Spirit).
+# [floor] Each row is the list's count, "own at least this many": the loader and the
+# database raise a card to it and never add on top, so a copy the server already has is
+# never counted twice.
+4 Pillage the Bog
+2 Friendly Neighborhood
+1 Meticulous Archive
+2 Voidslime
+1 Oscorp Industries
+2 Merciless Enforcers
+1 Ominous Asylum
+1 Sinister Hideout
+2 Mob Lookout
+1 Spring Splasher
+1 Stagecoach Security
+1 Gold Pan
+1 Form a Posse
+1 Take for a Ride
+1 Tomb Trawler
+1 Rustler Rampage
+1 Back for More
+2 Explosive Derailment
+1 Voracious Varmint
+1 Frontier Seeker
+1 Slickshot Lockpicker
+2 Rise of the Varmints
+2 Shoot the Sheriff
+1 Venom's Hunger
+2 Loxodon Eavesdropper
+2 Magnifying Glass
+2 Projektor Inspector
+2 Museum Nightwatch
+1 King T'Challa // Black Panther, Hope Enduring
+2 Galvanize
+1 Snarling Gorehound
+1 Clandestine Meddler
+1 Repulsive Mutation
+1 Case of the Pilfered Proof
+1 Evidence Examiner
+2 Faerie Snoop
+1 Innocent Bystander
+1 Caught Red-Handed
+1 Leering Onlooker
+1 Elvenking's Harper
+1 Goblin-town
+5 Confusticate and Bebother
+1 Bard, Heir of Girion
+1 Andúril, Flame of the West
+3 Old Thrush
+2 Dwarven Provisioner
+2 Wargling
+1 Pinecone Strike
+1 Sai, Master Thopterist
+1 Forsaken Monument
+1 Nevinyrral's Disk
+1 Steel Overseer
+1 Nettlecyst
+1 Graaz, Unstoppable Juggernaut
+1 Broodstar
+1 Master Transmuter
+1 Misleading Signpost
+1 Research Thief
+1 Thought Monitor
+1 Vedalken Archmage
+1 Adaptive Omnitool
+1 Cultivator's Caravan
+1 Darksteel Juggernaut
+1 All Is Dust
+1 Stormtide Leviathan
+1 Sphinx of Uthuun
+1 Mind Spring
+1 Tidespout Tyrant
+1 Nadir Kraken
+1 Body of Knowledge
+1 Animist's Awakening
+1 Arbor Elf
+1 Cauldron of Essence
+1 Chatterfang, Squirrel General
+1 Damnable Pact
+1 Deathcap Glade
+1 Eternal Witness
+1 For the Common Good
+1 In Garruk's Wake
+1 Insidious Roots
+1 Khalni Garden
+1 Mirkwood Bats
+1 Nature's Rhythm
+1 Noxious Newt
+1 Professor Dellian Fel
+1 Putrefy
+1 Saproling Migration
+1 Scute Swarm
+1 Second Harvest
+1 Sedgemoor Witch
+1 Springleaf Parade
+1 Sprout Swarm
+1 Sylvan Offering
+1 Tainted Wood
+1 Twitching Doll
+1 Arterial Flow
+1 Creeping Dread
+1 Junji, the Midnight Sky
+1 Miasmic Mummy
+2 Rank Rat
+1 Seeker's Folly
+1 Tergrid, God of Fright // Tergrid's Lantern
+1 Village Rites
+2 Hallway Heckler // Vicious Verse
+1 Refute Destiny
+2 Saheeli, Jewel of Avishkar
+2 Saheeli, Consul of Oversight
+1 Undulating Witness
+1 Wrecking Gecko
+2 Predictive Preparations
+1 Extended Absence
+1 Compel Brutality
+1 Semester Foreseer // Peer Review
+1 Artifist Acumen
+2 Vigorbloom Vanguard // Seed Suture
+2 Essence Burn
+2 Way of the Pyromancer
+2 Way of the Cryomancer
+2 Loot, the Nexus
+2 Charge the Sanctum
+2 Transformative Commons
+2 Twinned Vision
+2 Fatehold Annex
+3 Heartwood Crafter // Soul Tether
+1 Twisted Fates
+1 Winter, Team Player
+1 Winter, Tormented Loner
+2 Bestial Incursion
+1 Graft Surgeon
+1 Mindseeker Oculus
+1 Awaken the Inferno
+1 Generous Revival
+1 Stingerquill Charm
+1 Arni, Humble Scribe
+2 Campus Crier
+1 Something Worth Saving
+2 Vigorbloom Annex
+1 Hexhaven Battalion
+1 Inspired Tethermage
+3 Apex Witchstalker
+1 Kotis, the Fangkeeper
+2 Your Fate Ends Here
+1 Mind Meanderer
+1 Infinite Coursework
+1 Fateshaper Aspirant
+1 Eardrum Rattler
+2 Hexhaven Dueling Arena
+2 Murmuring Volume
+1 Stingerquill Annex
+1 Arcane Amphisbaena
+1 Heartstring Puller
+1 Fatehold Chronologist // Peer Review
+1 Konstrari Charm
+1 Theorix Charm
+1 Ruric Thar, Biomagus
+1 Way of the Paradox
+1 Way of the Mind Sculptor
+1 Great Fierce Bee
+1 Spontaneous Generation
+1 The Darkness Crystal
+1 Fascination
+1 Blossom-Blessed Angel // Seed Suture
+1 Dissipate
+1 Rage into the Valley
+1 Ornithopter of Paradise
+1 Silver Myr
+1 Ichor Wellspring
+1 Konstrari Annex
+2 Dedicated Commons
+1 Desperate Futurescribe
+1 Terminal Criticism
+1 Traxos, Scourge Eternal
+1 Traxos, Academy Guardian
+2 Edgar, Ancient Bloodlord
+2 Vigorbloom Charm
+2 Command the Stage
+2 Kiora of Salt and Sand
+2 Craftwork Crusher
+2 Kiora of Fire and Ashes
+1 Yargle, Glutton of Urborg
+1 Yargle, Goliath of Otaria
+2 Yuriko, Blade of the Mighty
+1 Primal Witchstalker
+1 Koth of the Homestead
+1 Tetsuko Umezawa, Pursuer
+1 Tetsuko Umezawa, Fugitive
+1 Violent Echoes
+2 Innovative Commons
+2 Meticulous Commons
+3 Hapatra, the Desert Frost
+1 Yoshimaru, Beloved Companion
+2 Way of the Necromancer
+2 Paradox Shaper // Omit Variables
+1 Yuriko, Hope from the Shadows
+1 Massacre Girl, Most Wanted
+2 Rescue Girl, First Responder
+1 Pia, Aether Ascetic
+2 Jiang Yanggu, Alone
+2 Countersculpt
+1 Prophesied End
+2 Tinybones, Pocket Nuisance
+1 Earthshaker
+1 Edgar, Moonlit Sovereign
+2 Tomik, Orzhov Lawmage
+1 Ghalta the Immovable
+2 Prudent Fateseer // Peer Review
+1 Loot, the Anomaly
+1 Gallia, the Merrymaker
+1 Gallia, Tragic Host
+1 Clash of Elements
+1 Teyo, Diamondblade Mage
+1 Teyo, Lightshield Expert
+1 Koth, the Geomancer
+1 Mabel, Valley Hero
+1 Mabel, Bitter Recluse
+1 Formidable Commons
+1 Theorix Annex
+1 Way of the Deathbringer
+1 Bloombrute
+1 Fulminous Forte
+1 Arni, Renowned Champion
+1 Perfected Theory
+1 Stingerquill Voxmancer // Vicious Verse
+1 Tomik, Izzet Sparkmage
+1 Multiply by Zero
+1 Break Under Pressure
+2 Hapatra, the Desert Fang
+2 Woodwork Prodigy // Soul Tether
+1 Fblthp, Impossibly Lost
+1 Way of the Healer
+2 Proft, Consulting Detective
+1 Danitha, Spear of Agony
+1 Danitha, Sword of Hope
+1 Rewrite Regrets
+1 Pia, Determined Rebuilder
+1 Way of the Warlord
+1 Recursive Recruitment
+1 Grim Repriser
+1 Way of the Mentor
+1 Proft, Sinister Mastermind
+2 Spinneret and Spiderling
+2 Sting, Bilbo's Sword
+2 Subway Train
+4 Pumpkin Bombardment
+2 Guy in the Chair
+2 City Pigeon
+2 Lurking Lizards
+2 Reckless Lackey
+2 Seize the Secrets
+2 Nezumi Linkbreaker
+2 Sterling Supplier
+2 Mirage Mesa
+3 Agency Coroner
+3 Dáin's Company
+3 Bolg's Company
+2 Mirkwood Meditator
+5 Esgaroth Garrison
+3 Gigantic Big Bear
+3 Belladonna Took
+2 Bejeweled Warg
+2 The Misty Mountains Cold
+3 The Sackville-Bagginses
+3 Boughside Wanderers
+4 Stir Up Trouble
+4 Nori, Teller of Tales
+7 Moment of Glory
+4 Enchanted River's Grasp
+4 Goblin-town Flunkies
+4 Wood Elves
+3 Goblin Plate Mail
+4 Thorin's Last Stand
+3 Duskwatch Hunter
+2 Dori, Bearer of Friends
+3 Patient Instructor
+4 Front Porch Sentries
+2 Gollum the Abandoned
+4 Long-Bodied Grey Dog
+4 Lakeshore Apothecary
+3 Ordinary Bear
+4 Reverent Howl
+2 Gandalf, Wandering Wizard
+2 Bard's Company
+2 Iron Hills Stalwart
+2 Roll-Roll-Roll-Roll
+2 Along the Crooked Way
+3 Radagast of Rhosgobel
+3 Morlun, Devourer of Spiders
+2 Rocket-Powered Goblin Glider
+3 Down in the Valley
+3 Head of the Hunt
+3 Kíli the Resourceful
+2 Lab Rats

@@ -1,45 +1,91 @@
-Name,Type
-Arcane Signet,Artifact
-Sol Ring,Artifact
-Talisman of Progress,Artifact
-Talisman of Conviction,Artifact
-Talisman of Creativity,Artifact
-Thought Vessel,Artifact
-Relic of Legends,Artifact
-Fellwar Stone,Artifact
-Archaeomancer's Map,Artifact
-Tome of Legends,Artifact
-Mystic Remora,Enchantment
-Visions of Beyond,Instant
-Rhystic Study,Enchantment
-Kindred Discovery,Enchantment
-Reconnaissance Mission,Enchantment
-Abrade,Instant
-Dispatch,Instant
-Swords to Plowshares,Instant
-Metallic Mimic,Creature
-Rip Apart,Sorcery
-Seal of Cleansing,Enchantment
-Seal of Fire,Enchantment
-Hero's Blade,Artifact
-Austere Command,Sorcery
-Counterspell,Instant
-Force of Will,Instant
-Essence Scatter,Instant
-Memory Lapse,Instant
-Arcane Denial,Instant
-Herald's Horn,Artifact
-Door of Destinies,Artifact
-Folk Hero,Enchantment
-"Captain Marvel, Apex Avenger",Creature
-"Captain America, Wings of Freedom",Creature
-"Captain America, Super-Soldier",Creature
-"Black Widow, Agile Avenger",Creature
-Avengers Quinjet,Artifact
-Spectacular Spider-Man,Creature
-"Silver Sable, Mercenary Leader",Creature
-"Mjölnir, Hammer of Thor",Artifact
-"Captain Mar-Vell, Space-Born",Creature
-"Thor, Asgard's Avenger",Creature
-Warrior's Blades,Artifact
-Solitary Cell,Artifact
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Abrade,Instant,2,R,{1}{R},,,removal,,4
+Agent Phil Coulson,Creature,2,W,{1}{W},Human;Spy;Hero,,,2,4
+"Ant-Man, Elusive Avenger",Creature,3,R U,{1}{U}{R},Human;Rogue;Hero,,,1,4
+Arcane Denial,Instant,2,U,{1}{U},,,counter;draw,,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archaeomancer's Map,Artifact,3,W,{2}{W},,,fetch:basic-plains;ramp,,4
+Austere Command,Sorcery,6,W,{4}{W}{W},,,wipe,,4
+Avengers Assemble!,Enchantment,5,W,{4}{W},,,draw,,4
+Avengers Quinjet,Artifact,5,,{5},Vehicle,,,4,4
+Avengers Tower,Land,0,,,,W U B R G C,mana-restricted,,4
+Battlefield Forge,Land,0,R W,,,W R C,,,4
+"Black Widow, Agile Avenger",Creature,3,R W,{1}{R}{W},Human;Spy;Hero,,draw,2,4
+"Captain America, Living Legend",Creature,3,U W,{1}{W}{U},Human;Soldier;Hero,,,3,4
+"Captain America, Team Leader",Creature,3,R U W,{R}{W}{U},Human;Soldier;Hero,,,3,4
+"Captain America, Wings of Freedom",Creature,3,W,{2}{W},Human;Soldier;Hero,,,3,4
+"Captain Mar-Vell, Space-Born",Creature,5,W,{4}{W},Kree;Soldier;Hero,,,4,4
+"Captain Marvel, Apex Avenger",Creature,7,R W,{5}{R}{W},Human;Kree;Hero,,,4,4
+Clifftop Retreat,Land,0,R W,,,W R,etb-tapped-cond,,4
+Coastal Peak,Land,0,R U,,Island;Mountain,U R,etb-tapped,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Counterspell,Instant,2,U,{U}{U},,,counter,,4
+Director Nick Fury,Creature,3,R U W,{U}{R}{W},Human;Spy;Hero,,discount:hero:1,2,4
+Dismantling Wave,Sorcery,3,W,{2}{W},,,wipe,,4
+Dispatch,Instant,1,W,{W},,,,,4
+Door of Destinies,Artifact,4,,{4},,,,,4
+Essence Scatter,Instant,2,U,{1}{U},,,counter,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Falcon and Redwing,Creature,3,W,{2}{W},Human;Bird;Hero,,,1,4
+Fellwar Stone,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+"Firebird, Blazing Ranger",Creature,3,R,{2}{R},Human;Ranger;Hero,,,1,4
+Folk Hero,Enchantment,2,W,{1}{W},Background,,draw,,4
+Force of Will,Instant,5,U,{3}{U}{U},,,counter,,4
+Frostboil Snarl,Land,0,R U,,,U R,etb-tapped-cond,,4
+Furycalm Snarl,Land,0,R W,,,W R,etb-tapped-cond,,4
+Glacial Fortress,Land,0,U W,,,W U,etb-tapped-cond,,4
+Glittering Massif,Land,0,R W,,Mountain;Plains,W R,etb-tapped,,4
+Heroic Sacrifice,Instant,2,W,{1}{W},,,draw,,4
+"Iron Man, Armored Avenger",Creature,4,U,{3}{U},Human;Hero,,draw,2,4
+Irrigated Farmland,Land,0,U W,,Plains;Island,W U,etb-tapped,,4
+Island,Land,0,U,,Island,U,,,4
+"Jarvis, Earth's Mightiest Butler",Creature,3,U,{2}{U},Human;Advisor,,draw,1,4
+Kid Loki,Creature,1,U,{U},God;Hero;Villain,,,1,4
+Kindred Discovery,Enchantment,5,U,{3}{U}{U},,,draw,,4
+Memory Lapse,Instant,2,U,{1}{U},,,counter,,4
+Metallic Mimic,Creature,2,,{2},Shapeshifter,,,2,4
+Methods of the Mighty,Instant,4,W,{3}{W},,,removal,,4
+"Mjölnir, Hammer of Thor",Artifact,4,R,{3}{R},Equipment,,,,4
+Mountain,Land,0,R,,Mountain,R,,,4
+Mystic Monastery,Land,0,R U W,,,W U R,etb-tapped;mana2,,4
+Mystic Remora,Enchantment,1,U,{U},,,draw,,4
+Path of Ancestry,Land,0,,,,W U B R G,etb-tapped,,4
+"Photon, Mighty Marvel",Creature,4,R,{3}{R},Human;Hero,,,2,4
+Plains,Land,0,W,,Plains,W,,,4
+Plaza of Heroes,Land,0,,,,W U B R G C,mana-restricted,,4
+Port Town,Land,0,U W,,,W U,etb-tapped-cond,,4
+Prairie Stream,Land,0,U W,,Plains;Island,W U,etb-tapped-cond,,4
+Professor Hulk,Creature,6,U,{4}{U}{U},Gamma;Scientist;Hero,,,6,4
+Radiant Summit,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,4
+Raise the Palisade,Sorcery,5,U,{4}{U},,,,,4
+Reconnaissance Mission,Enchantment,4,U,{2}{U}{U},,,draw,,4
+Relic of Legends,Artifact,3,,{3},,W U B R G,ramp;rock,,4
+"Rescue, Pepper Potts",Creature,2,U,{1}{U},Human;Hero,,,2,4
+Rip Apart,Sorcery,2,R W,{R}{W},,,removal,,4
+Riverpyre Verge,Land,0,R U,,,U R,,,4
+"SP//dr, Piloted by Peni",Creature,5,U W,{3}{W}{U},Spider;Hero,,draw,4,4
+"Scarlet Witch, Chaotic Avenger",Creature,4,R U,{2}{U}{R},Mutant;Warlock;Hero,,,3,4
+Scavenger Grounds,Land,0,,,Desert,C,,,4
+Scorched Geyser,Land,0,R U,,Island;Mountain,U R,etb-tapped-cond,,4
+Seal of Cleansing,Enchantment,2,W,{1}{W},,,removal,,4
+Secluded Courtyard,Land,0,,,,W U B R G C,mana-restricted,,4
+Shang-Chi and the Ten Rings,Creature,3,U W,{1}{W}{U},Human;Warrior;Hero,,draw,2,4
+"She-Hulk, Wallbreaker",Creature,6,R,{5}{R},Gamma;Hero,,,5,4
+"Silver Sable, Mercenary Leader",Creature,3,W,{2}{W},Human;Mercenary;Hero,,,2,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Solitary Cell,Artifact,2,R W,{R}{W},,,draw,,4
+Spectacular Spider-Man,Creature,2,W,{1}{W},Spider;Human;Hero,,,3,4
+Spectator Seating,Land,0,R W,,,W R,etb-tapped-cond,,4
+Sulfur Falls,Land,0,R U,,,U R,etb-tapped-cond,,4
+Swords to Plowshares,Instant,1,W,{W},,,removal,,4
+Talisman of Conviction,Artifact,2,R W,{2},,W R C,ramp;rock,,4
+Talisman of Creativity,Artifact,2,R U,{2},,U R C,ramp;rock,,4
+Talisman of Progress,Artifact,2,U W,{2},,W U C,ramp;rock,,4
+"The Wasp, Winsome Avenger",Creature,2,U,{1}{U},Human;Hero,,,2,4
+"Thor, Asgard's Avenger",Creature,4,R,{2}{R}{R},God;Warrior;Hero,,,4,4
+Thought Vessel,Artifact,2,,{2},,C,ramp;rock,,4
+Unclaimed Territory,Land,0,,,,W U B R G C,mana-restricted,,4
+"War Machine, Avenging Arsenal",Creature,5,R,{4}{R},Human;Hero,,,3,4
+Warrior's Blades,Artifact,4,R W,{2}{R}{W},Equipment,,,,4
+West Coast Expansion,Sorcery,2,U,{X}{U}{U},,,draw,,4
+"Winter Soldier, Reborn Avenger",Creature,5,W,{4}{W},Human;Soldier;Hero,,,3,4

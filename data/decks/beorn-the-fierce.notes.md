@@ -71,6 +71,7 @@ The Earth Crystal takes {1} off every green spell, not just creatures. Beorn him
 - Cosmic Cube
 - Ghalta the Unstoppable
 - Earth's Mightiest Heroes
+- Crop Rotation
 
 ## Piloting
 
@@ -95,13 +96,20 @@ two mana up after a big turn. Ezuri's Predation is the deck's only wipe, and it 
 
 ## Bracket path (target 3, room for 4)
 
-As built, the deck has no Game Changers, so the bracket rules put it at **Bracket 2**. In play
-it's a strong 2 or a light 3. The header declares **3** as the intent. The buy list's tiers are
-the path:
-- **Bracket 3** (1-3 Game Changers): Natural Order, Worldly Tutor, Biorhythm.
+**Crop Rotation is the deck's one Game Changer** (2026-10-15, the player's call, in for
+Ilysian Caryatid), so the bracket rules now put it at **Bracket 3**, matching the header.
+- **What it does here:** {G}, instant, sacrifice a land: put any land from your library onto
+  the battlefield. A land entering is a Dancing Bear and a Hospitality trigger, so this is
+  both at instant speed.
+- **With Roiling Canopy out:** fetching a basic Forest gives a creature +3/+3, as a combat
+  trick after blocks. That needs five other Forests still out after the sacrifice.
+- **Other targets:** Secret Tunnel makes two Bears unblockable, and Gaea's Cradle if you buy
+  it.
+
+The buy list's tiers are the rest of the path:
+- **Bracket 3** (up to 3 Game Changers) has room for two of Natural Order, Worldly Tutor and
+  Biorhythm.
 - **Bracket 4** (4+): add Survival of the Fittest, Gaea's Cradle, Ancient Tomb.
-Crop Rotation is a Game Changer you already own (2 free copies). It's weak here on its own,
-but it fetches Gaea's Cradle at instant speed if you buy that.
 
 ## Win
 

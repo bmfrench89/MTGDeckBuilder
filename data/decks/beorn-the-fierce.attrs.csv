@@ -8,6 +8,7 @@ Beorn's Hospitality,Enchantment,2,G,{1}{G},,,,,4
 "Beorn, Reluctant Host // Till and Tend",Creature,5,G,{4}{G} // {1}{G},Human;Bear;Shapeshifter,,,5,4
 "Bugenhagen, Wise Elder",Creature,2,G,{1}{G},Human;Shaman,W U B R G,dork;draw;ramp,1,4
 Cosmic Cube,Artifact,5,,{5},,,,,4
+Crop Rotation,Instant,1,G,{G},,,fetch:land;ramp,,4
 Dancing from Dark to Dawn,Enchantment,5,G,{3}{G}{G},,,,,4
 Dungrove Elder,Creature,3,G,{2}{G},Treefolk,,,*,4
 Earth's Mightiest Heroes,Sorcery,6,G,{4}{G}{G},,,,,4
@@ -26,7 +27,6 @@ Heroic Intervention,Instant,2,G,{1}{G},,,,,4
 Hexhaven Invigorator,Creature,4,G,{G}{G}{G}{G},Chimera;Horror,,fetch:land;ramp,6,4
 "Hulk, Brutal Brawler",Creature,4,G,{2}{G}{G},Gamma;Berserker;Hero,,,4,4
 Hulking Raptor,Creature,4,G,{2}{G}{G},Dinosaur,G,mana2,5,4
-Ilysian Caryatid,Creature,2,G,{1}{G},Plant,W U B R G,dork;ramp,1,4
 It's Clobberin' Time!,Sorcery,3,G,{2}{G},,,removal,,4
 Kenrith's Transformation,Enchantment,2,G,{1}{G},Aura,,draw,,4
 "Kogla, the Titan Ape",Creature,6,G,{3}{G}{G}{G},Ape,,,7,4
@@ -63,7 +63,6 @@ Terrific Team-Up,Instant,4,G,{3}{G},,,,,4
 The Earth Crystal,Artifact,4,G,{2}{G}{G},,,discount:green:1,,4
 The Earth King,Creature,4,G,{3}{G},Human;Noble;Ally,,fetch:basic;ramp,2,4
 Tireless Tracker,Creature,3,G,{2}{G},Human;Scout,,,3,4
-Tranquil Thicket,Land,0,G,,,G,etb-tapped,,4
 Tyvar's Stand,Instant,1,G,{X}{G},,,,,4
 Unnatural Growth,Enchantment,5,G,{1}{G}{G}{G}{G},,,,,4
 Vaultborn Tyrant,Creature,7,G,{5}{G}{G},Dinosaur,,draw,6,4

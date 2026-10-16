@@ -1,0 +1,68 @@
+{
+ "commander": "The Ur-Sphinx",
+ "written": "2026-10-15",
+ "engine": [
+  "Unesh, Criosphinx Sovereign",
+  "Defiler of Dreams",
+  "Warden of Evos Isle",
+  "Yennett, Cryptic Sovereign",
+  "Windreader Sphinx",
+  "Enigma Sphinx",
+  "Consecrated Sphinx",
+  "Rhystic Study"
+ ],
+ "packages": [
+  {
+   "name": "Sphinx discounts pay for the top end",
+   "enablers": [
+    "Warden of Evos Isle",
+    "Unesh, Criosphinx Sovereign",
+    "Defiler of Dreams"
+   ],
+   "payoffs": [
+    "Sphinx of the Second Sun",
+    "Magister Sphinx",
+    "Sphinx of the Steel Wind",
+    "Ethersworn Sphinx"
+   ]
+  },
+  {
+   "name": "Attack triggers",
+   "enablers": [],
+   "payoffs": [
+    "Azor, the Lawbringer",
+    "Elenda and Azor",
+    "Dream Trawler",
+    "Raffine, Scheming Seer",
+    "Dazzling Sphinx",
+    "Master of Predicaments",
+    "Medomai the Ageless",
+    "Sphinx of Forgotten Lore"
+   ]
+  }
+ ],
+ "aims": {
+  "ramp": 12,
+  "wipe": 2
+ },
+ "keywords": [
+  "sphinx",
+  "with flying",
+  "without paying its mana cost",
+  "whenever you attack"
+ ],
+ "keep": {
+  "Disenchant": "the cheapest answer to an artifact or enchantment",
+  "Cloud's Limit Break": "2 mana kills a tapped attacker; Omnislash during an opponent's combat destroys all their tapped attackers while our Sphinxes stand untapped",
+  "Stroke of Midnight": "instant answer to any nonland permanent; holds the slot until a second Void Rend arrives (buylist)",
+  "Time Wipe": "the reset that keeps the engine: return Unesh (or the commander) to hand first, then recast it",
+  "Tragic Arrogance": "we choose what every player keeps: our best Sphinx stays, their best threats go, and sacrifice beats indestructible",
+  "Mind Stone": "ramp toward a 9-mana commander; cycles away when the mana is no longer needed",
+  "Spectacular Tactics": "two-mode 2-mana instant: protects Unesh or the commander (hexproof / indestructible / a blink), or kills a big threat",
+  "Stone by Sunlight": "two-mode 2-mana instant: protects Unesh or the commander (hexproof / indestructible / a blink), or kills a big threat",
+  "Getaway Glamer": "two-mode 2-mana instant: protects Unesh or the commander (hexproof / indestructible / a blink), or kills a big threat",
+  "Essence Scatter": "cheap counters: the field's An Offer, Arcane Denial, Swan Song and Mana Drain are all committed to other decks",
+  "Power Sink": "cheap counters: the field's An Offer, Arcane Denial, Swan Song and Mana Drain are all committed to other decks"
+ },
+ "version": 1
+}

@@ -28,16 +28,27 @@
 1 Gaea's Cradle
 1 Ancient Tomb
 1 Captain America, Super-Soldier
-1 Herald's Horn
+2 Herald's Horn
 1 Herald of War
 1 Starnheim Aspirant
 1 Resplendent Angel
-1 Sapphire Medallion
+2 Sapphire Medallion
 1 Font of Mythos
 1 High Tide
 1 Chasm Skulker
 1 Terror of the Peaks
 1 Old Gnawbone
+1 Urza's Incubator
+1 Sphinx of False Conclusions
+2 Hallowed Fountain
+2 Watery Grave
+2 Godless Shrine
+1 Void Rend
+1 Raffine's Tower
+1 Uldaros Theorix
+1 Dovin's Veto
+1 Kindred Judgment
+1 Sphinx Ambassador
 1 Fíli and Kíli, Joyous
 1 Glóin, Dwarf Emissary
 1 Magda, Brazen Outlaw
@@ -52,10 +63,7 @@
 1 Anguished Unmaking
 1 Sceptre of Eternal Glory
 1 Curiosity
-1 Watery Grave
-1 Godless Shrine
 1 Painful Truths
-1 Hallowed Fountain
 1 Ashnod's Altar
 1 Pitiless Plunderer
 1 Exquisite Blood

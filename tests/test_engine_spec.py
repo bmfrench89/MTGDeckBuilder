@@ -276,3 +276,75 @@ def test_keep_many_takes_one_reason_for_several_cards(deck):
     keep = engine_spec.load(deck)["keep"]
     assert keep == {"Filler Bear": "the two-drop curve", "Kept Spell": "the two-drop curve"}
     assert engine_spec.main(["--deck", deck, "--keep-many", "only a reason"]) == 2
+
+
+# ---- writing the rest of a spec through the CLI (the Ur-Sphinx build, 2026-10-15) ---------
+
+def test_init_before_the_deck_exists_takes_the_commander(tmp_path):
+    """A spec comes before the draft: the deck file isn't there yet."""
+    deck = str(tmp_path / "new.txt")
+    (tmp_path / "new.notes.md").write_text(NOTES, encoding="utf-8")
+    assert engine_spec.main(["--deck", deck, "--init"]) == 2, "no commander, no spec"
+    assert engine_spec.main(["--deck", deck, "--init", "--commander", "Test Commander"]) == 0
+    spec = engine_spec.load(deck)
+    assert spec["commander"] == "Test Commander"
+    assert spec["engine"] == ["Engine One", "Engine Two"]
+
+
+def test_keywords_aims_and_packages_are_written_through_the_cli(deck):
+    engine_spec.main(["--deck", deck, "--init"])
+    assert engine_spec.main(["--deck", deck, "--keyword", "whenever a sphinx", "flying",
+                             "--keyword", "Flying", "--aim", "draw", "12",
+                             "--package", "free casts", "payoffs", "Engine One",
+                             "--package", "free casts", "enablers", "Kept Spell",
+                             "--package", "free casts", "payoffs", "engine one"]) == 0
+    spec = engine_spec.load(deck)
+    assert spec["keywords"] == ["whenever a sphinx", "flying"], "case-insensitive dedupe"
+    assert spec["aims"] == {"draw": 12}
+    assert spec["packages"] == [{"name": "free casts", "enablers": ["Kept Spell"],
+                                 "payoffs": ["Engine One"]}]
+    assert "Kept Spell" in engine_spec.core_names(spec)
+
+
+def test_a_bad_aim_or_package_writes_nothing(deck):
+    engine_spec.main(["--deck", deck, "--init"])
+    before = engine_spec.load(deck)
+    assert engine_spec.main(["--deck", deck, "--aim", "lifegain", "5"]) == 2
+    assert engine_spec.main(["--deck", deck, "--aim", "draw", "lots"]) == 2
+    assert engine_spec.main(["--deck", deck, "--package", "p", "payoff", "A"]) == 2
+    assert engine_spec.main(["--deck", deck, "--package", "p", "payoffs"]) == 2
+    assert engine_spec.main(["--deck", deck, "--keyword", "x", "--aim", "nope", "1"]) == 2
+    assert engine_spec.load(deck) == before
+
+
+def test_aim_roles_match_the_builders_quota_roles():
+    assert set(engine_spec.AIM_ROLES) == {r for r, _ in auto_build.ROLE_QUOTA}
+
+
+def test_a_card_pinned_to_the_deck_being_drafted_is_seeded(tmp_path, monkeypatch):
+    """The Ur-Sphinx's Consecrated Sphinx was pinned to the-ur-sphinx before the draft,
+    and the CLI read the pin as another deck's: it never passed the draft's own stem."""
+    import deckcore
+    coll, idx = _pool(tmp_path)
+    decks = tmp_path / "decks"
+    decks.mkdir()
+    pins = tmp_path / "pins.csv"
+    pins.write_text("Card,Deck\nobscure engine,new-deck\n", encoding="utf-8")
+    monkeypatch.setattr(deckcore, "PINS", str(pins))
+    spec = {"engine": ["Obscure Engine"], "packages": [], "aims": {}, "keywords": [],
+            "keep": {}}
+    other = auto_build.build("Test Commander", coll, idx, str(decks), identity={"W"},
+                             engine=spec)
+    assert other["engine_missing"] == [{"name": "Obscure Engine",
+                                        "why": "pinned to another deck"}]
+    stem = auto_build.draft_stem(None, str(decks / "new-deck.engine.json"))
+    assert stem == "new-deck"
+    own = auto_build.build("Test Commander", coll, idx, str(decks), identity={"W"},
+                           engine=spec, skip_deck=stem)
+    assert own["engine_cards"] == ["Obscure Engine"] and own["total"] == 100
+
+
+def test_draft_stem_prefers_the_explicit_stem():
+    assert auto_build.draft_stem("mine", "x/other.engine.json") == "mine"
+    assert auto_build.draft_stem(None, None) is None
+    assert auto_build.draft_stem(None, "x/spec.json") is None

@@ -34,6 +34,7 @@
 1 Captain Mar-Vell, Space-Born
 1 Thor, Asgard's Avenger
 1 War Machine, Avenging Arsenal
+1 SP//dr, Piloted by Peni
 
 # --- Instants ---
 1 Abrade
@@ -73,7 +74,6 @@
 # --- Enchantments ---
 1 Avengers Assemble!
 1 Mystic Remora
-1 Rhystic Study
 1 Kindred Discovery
 1 Reconnaissance Mission
 1 Seal of Cleansing

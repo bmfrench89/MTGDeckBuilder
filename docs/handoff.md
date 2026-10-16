@@ -6,17 +6,18 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-15 (Giada and Thorin built from the full collection: 11 real decks, how-to-play videos for all; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-15 (the Ur-Sphinx built engine-first; Tifa and Sephiroth deleted, so the stable is ten decks, all Bracket 3 or higher; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
-Eleven decks, all REAL builds from the collection: 100 cards each, singleton clean,
-sections clean. `deck_conflicts` reports 7 conflicts, all among the player's older decks:
+Ten decks, all REAL builds from the collection: 100 cards each, singleton clean,
+sections clean, every one Bracket 3 or higher except Thorin (2, the player's call). `deck_conflicts` reports 7 conflicts, all
+among the player's older decks:
 - Dina and Y'shtola share Blood Artist, Viscera Seer and Toxic Deluge.
 - Captain America shares Force of Will (pinned to Y'shtola) and Mystic Remora (with Kami).
 - Kami and Y'shtola share Propaganda and Sublime Epiphany.
 
-None involves Giada, Thorin, Tifa or Sephiroth. They're surfaced, not fixed: choosing
+None involves Giada, Thorin or the Ur-Sphinx. They're surfaced, not fixed: choosing
 which of the player's decks keeps each copy is the player's call.
 The player's actual Giada, Killian and Thorin lists are NOT logged. The player asked for
 Giada and Thorin to be built "to compare what you come up with versus what I have",
@@ -24,21 +25,79 @@ ignoring those physical lists.
 
 | Deck | Bracket | Lands | Ramp/draw/removal | Keepable | Field top-25 | Clips |
 |---|---|---|---|---|---|---|
-| Bartolomé del Presidio — 600 Infinite Combos | 4 (detected 4) | 37 | 9/4/5 | 80% | 13/25 | 4 |
-| Beorn the Fierce — Bear Den | 3 (detected 2) | 36 | 18/13/12 | 79% | 18/25 | 5 |
-| Captain America, Team Leader | 3 (detected 3) | 37 | 9/12/9 | 80% | 25/25 | 5 |
+| Bartolomé del Presidio — 600 Infinite Combos | 4 (detected 4) | 37 | 9/4/5 | 80% | 12/25 | 4 |
+| Beorn the Fierce — Bear Den | 3 (detected 3) | 36 | 18/13/12 | 79% | 17/25 | 5 |
+| Captain America, Team Leader | 3 (detected 3) | 37 | 9/12/9 | 80% | 24/25 | 5 |
 | Dina, Essence Brewer | 3 (detected 3) | 37 | 10/8/10 | 80% | 25/25 | 4 |
-| **Giada, Font of Hope** (new 10-15) | 3 (detected 3) | 36 | 6/9/6 | 79% | 19/25 | 5 |
-| Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 18/25 | 5 |
-| Sephiroth, Fallen Hero | 3 (detected 2) | 36 | 8/6/8 | 79% | 14/25 | 5 |
-| The Ur-Dragon | 3 (detected 3) | 37 | 10/6/6 | 80% | 22/25 | 5 |
-| **Thorin, King of Durin's Folk** (new 10-15) | 3 (detected 2) | 36 | 6/12/6 | 79% | 20/25 | 5 |
-| Tifa, Martial Artist | 3 (detected 2) | 37 | 12/10/8 | 80% | 15/25 | 5 |
+| Giada, Font of Hope | 3 (detected 3) | 36 | 6/8/6 | 79% | 19/25 | 5 |
+| Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 17/25 | 5 |
+| The Ur-Dragon | 3 (detected 3) | 37 | 10/5/6 | 80% | 19/25 | 5 |
+| **The Ur-Sphinx** (new 10-15) | 3 (detected 3) | 37 | 12/12/9 | 80% | 20/25 | 5 |
+| Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/12/6 | 79% | 20/25 | 5 |
 | Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
 
 Role counts are the classifier's. Creature-based interaction doesn't register (see the
 Ur-Dragon notes). "Detected 2" next to a declared 3 means no Game Changers; the bracket is
 the player's stated intent.
+
+Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, and
+EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
+validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
+and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-15 (latest): the Ur-Sphinx, and the stable trimmed to Bracket 3+.** The player:
+"I own dracogenesis … put it in ur dragon with a rhystic study. I own 3 of those. One for
+Ur dragon, one for ystola and one for Ur sphinx which you can also build now. You can also
+delete the tifa and sephiroth decks. I only want a deck if it's bracket 3 or higher right
+now".
+- **Collection:** Dracogenesis is logged as an intake batch. A `[floor]` batch raises
+  Rhystic Study to 3 (the export holds 2).
+- **The player's master list (later the same day, 518 lines):** "only add the new ones from
+  this list don't duplicate what we already have".
+  - Every line was resolved through `intake.py` and checked against the collection.
+  - The new cards and extra copies went into ONE `[floor]` batch: 240 new cards (311
+    copies) and 52 cards owned in more copies than recorded (79 more). A floor row raises a
+    count and never adds on top, so the server can't double a copy it already has.
+  - Skipped: 203 cards already recorded at the list's count, the basics, and two tokens.
+  - The PC's private additions and card data carry the same rows. Locally that's 3,559
+    unique cards and 5,027 copies, from 3,319 and 4,637.
+  - Sphinx of Uthuun arrived and replaced Inspired Sphinx in the Ur-Sphinx.
+  - The other decks' arrivals were engine-read and presented to the player as a swap
+    table. Nothing is applied until the player says go.
+- **The Ur-Dragon:**
+  - The player's own app edit (Consecrated Sphinx → Rhystic Study) is in.
+  - Dracogenesis replaced Vaevictis Asmadi, the Dire (`manual-replace`).
+  - Dracogenesis + Miirym + Marang River Regent is a three-card loop on Commander
+    Spellbook. It's late and expensive, so it fits Bracket 3 (the notes explain it).
+  - Game Changer: Rhystic Study.
+- **Captain America** gave up its Rhystic Study, since the three copies are allocated, for
+  SP//dr, Piloted by Peni. It's in 51% of its field, and every Hero that entered under Cap
+  is modified, so each one that connects draws.
+- **Deleted:** Tifa and Sephiroth, with their notes, clips, narration and field snapshots.
+  Both were detected Bracket 2.
+- **The Ur-Sphinx:** the first build to run the whole engine-first flow.
+  - The spec named 20 cards: 8 engine and 2 packages. `auto_build --engine` seeded all 20.
+  - A hand pass on verified text made 7 spell and 9 land changes.
+  - The optimizer read approved 2 land swaps and saved 6 verdicts.
+  - `engine_spec --audit` is clean.
+  - Validation: 100 cards, singleton clean, Bracket 3 with no combos. The Game Changers are
+    Consecrated Sphinx (pinned here) and Rhystic Study; Medomai is the one extra-turn card.
+  - Owned top-25 coverage is 20/21. Path of Ancestry is the one out: all seven copies are
+    in other decks.
+  - Keepable 80%. The mana is the weak point (land sources W 18, U 22, B 16); the shocks
+    and Raffine's Tower are on its buylist.
+- **Fixed on the way:**
+  - `auto_build`'s CLI read a pin to the deck being drafted as another deck's: Consecrated
+    Sphinx came back "pinned to another deck". It now passes the draft's stem, as Build
+    Next always did (`--stem`, defaulting to the `--engine` spec's filename).
+  - `engine_spec.py` gained `--commander` (init before the deck exists), `--keyword`,
+    `--aim` and `--package`, so a whole spec is written through the CLI.
+- **Thorin and Beorn under "only Bracket 3 or higher":**
+  - Thorin stays and plays as a Bracket 2, the player's call. Its only owned Game Changer
+    is Enlightened Tutor, which is Giada's.
+  - Beorn took Crop Rotation for Ilysian Caryatid, also the player's call, and now reads a
+    true Bracket 3. Its notes cover the instant-speed land drop: a Dancing Bear, a
+    Hospitality trigger, and Roiling Canopy's +3/+3 on a fetched Forest.
 
 **2026-10-15 (later): the deck-flow review.** The player had Gemini review the build
 workflow and asked for all four bundles, cross-checked first.
@@ -69,8 +128,8 @@ workflow and asked for all four bundles, cross-checked first.
 - PRs #10-#13 merged 2026-10-15. **A Fable review** found a 101-card engine-first draft
   and trades offering a donor's notes-named card with Fog as backfill. Both are fixed,
   with more in `docs/spec-deck-flow-review.md` ("The Fable review").
-- **The Sphinx:** the Ur-Dragon's notes now have `## Earmarked for other decks` with
-  Consecrated Sphinx, and a Kami or Ur-Sphinx draft is offered it.
+- **The Sphinx:** it moved to the Ur-Sphinx and is pinned there (the player's app edit
+  swapped it for Rhystic Study). The Ur-Dragon's Earmarked section is gone.
 - **Until cutover,** main is mirrored to the old public MTGDeckBuilder repo after every
   merge (the hosted app still syncs from it).
 - Merged earlier the same day: lift (#9) and the Ur-Dragon's Dragonlord Kolaghan (#8).
@@ -97,6 +156,7 @@ dragons that aren't being used by ur dragon"):
   on verified text, `deck_sections`, an `optimize --json` read (every proposal rejected,
   with reasons in the notes), then validation.
 - **Priority for shared copies: the player's commanders over the session's own decks.**
+  (Tifa and Sephiroth, below, were deleted on 2026-10-15.)
   - Tifa gave up 9 spells and 5 lands, Sephiroth 5 spells and 5 lands, each spell logged
     `manual-replace` in `.changes.csv`.
   - Thorin gave back Diamond Pick-Axe, Rogue's Passage and Slayers' Stronghold, because
@@ -112,8 +172,8 @@ dragons that aren't being used by ur dragon"):
   - It gives every Dragon haste, so The Ur-Dragon's attack trigger fires the turn each
     Dragon lands. The Niv-Mizzet clip became a haste clip.
   - Draw count fell 6 → 5.
-  - Consecrated Sphinx is earmarked for the player's planned Ur-Sphinx deck. When it moves,
-    the Ur-Dragon needs a draw piece.
+  - Consecrated Sphinx moved to the Ur-Sphinx on 2026-10-15, and Rhystic Study took its
+    draw slot.
 
 **2026-10-14, in order:**
 - **Deleted, on the player's word:** the four decks that weren't real builds — the Thorin
@@ -141,14 +201,9 @@ dragons that aren't being used by ur dragon"):
 - **Wishlists regenerated** (`data/wishlist.md`, `data/manapool-wishlist.txt`): 8 shared
   copies (~$17, estimate) plus buy-list upgrades; the August files still listed dismantled
   decks.
-- **Two new decks**, chosen by measuring free coverage of each candidate's EDHREC core
-  (Tifa 17/25 free, Sephiroth 17/25 then 14/25 after Tifa, Fire Lord Azula 10/25…):
-  - **Tifa, Martial Artist "Seventh Heaven"**: power-7 creatures connect, untap, and take
-    another combat. Annie Joins Up doubles both Tifa triggers, so three combats (CR 500.8).
-  - **Sephiroth, Fallen Hero "One-Winged Angel"**: every modified creature is a base 7/5;
-    job-select Equipment, mass counters, Windcrag Siege doubling the attack triggers.
-  - Both decks: `auto_build` draft, then an engine-read hand pass (the auto-build was mostly
-    filler both times), then validation. Notes list the protected engine one card per line.
+- **Two new decks, Tifa, Martial Artist and Sephiroth, Fallen Hero**, were built from free
+  EDHREC coverage and deleted on 2026-10-15 on the player's word: both were detected
+  Bracket 2, and the player wants only Bracket 3+ decks. Their lists are in git history.
 - **Fixed on the way:** `carddb.py --download-bulk` (Scryfall's catalog now offers gzipped
   JSON Lines, not `download_uri`), and `optimize.py --all --json` (study-skip lines went to
   stdout).
@@ -218,7 +273,8 @@ Roaming Throne pin still applies). Game plan, every card choice and the protecte
   are unowned: Terror of the Peaks, Old Gnawbone, Goldspan Dragon — the buylist; the player
   confirmed owning **Tiamat** afterwards, logged as an intake batch, and the optimizer swapped
   it in over Breaching Dragonstorm),
-  **Bracket 3** (1 Game Changer: Consecrated Sphinx), **0 combos** on Commander Spellbook, and
+  **Bracket 3** (1 Game Changer: Consecrated Sphinx; Rhystic Study since 2026-10-15, when
+  the Sphinx moved to the Ur-Sphinx), **0 combos** on Commander Spellbook, and
   two applying optimizer runs in a row change nothing.
 - **Caught by Spellbook:** Ganax + Draconic Visitor is a two-card mandatory loop with
   "Draw the game" among its results (CR 104.4b, retrieved). Visitor is out and the notes say

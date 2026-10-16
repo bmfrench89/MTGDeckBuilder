@@ -11,7 +11,6 @@
 # --- Creatures ---
 1 Llanowar Elves
 1 Elvish Mystic
-1 Ilysian Caryatid
 1 Studious First-Year // Rampant Growth
 1 Hulking Raptor
 1 Loot, Exuberant Explorer
@@ -48,6 +47,7 @@
 1 Wood Elves
 
 # --- Instants ---
+1 Crop Rotation
 1 Beast Within
 1 Archdruid's Charm
 1 Ram Through
