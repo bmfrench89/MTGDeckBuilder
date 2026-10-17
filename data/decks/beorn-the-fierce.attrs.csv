@@ -1,4 +1,5 @@
 Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Ancient Adamantoise,Creature,8,G,{5}{G}{G}{G},Turtle,,,8,4
 Archdruid's Charm,Instant,3,G,{G}{G}{G},,,fetch:land;ramp;removal,,4
 "Ayula, Queen Among Bears",Creature,2,G,{1}{G},Bear,,,2,4
 Beast Whisperer,Creature,4,G,{2}{G}{G},Elf;Druid,,draw,2,4
@@ -21,7 +22,6 @@ Forest,Land,0,G,,Forest,G,,,4
 Garruk's Uprising,Enchantment,3,G,{2}{G},,,draw,,4
 Germination Practicum,Sorcery,5,G,{3}{G}{G},Lesson,,,,4
 Ghalta the Unstoppable,Creature,9,G,{8}{G},Elder;Dinosaur,,,8,4
-"Ghalta, Primal Hunger",Creature,12,G,{10}{G}{G},Elder;Dinosaur,,,12,4
 Gigantic Big Bear,Creature,7,G,{5}{G}{G},Bear,,,10,4
 "Goreclaw, Terror of Qal Sisma",Creature,4,G,{3}{G},Bear,,,4,4
 Heroic Intervention,Instant,2,G,{1}{G},,,,,4

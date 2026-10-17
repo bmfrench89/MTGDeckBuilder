@@ -6,7 +6,7 @@
     <h1>New arrivals</h1>
     <div class="sub">{{ r.cards|length }} card{{ 's' if r.cards|length != 1 }} added since
       {{ r.since }} that aren't in any sleeved deck. Each one lists the decks whose colors
-      can play it.</div>
+      can play it, then the Lab's theory decks, which claim no copies.</div>
   </div>
   <div class="acts">
     <a class="btn ghost" href="{{ url_for('collection_arrivals_txt') }}">Review packet (text)</a>
@@ -31,7 +31,8 @@
       {% if c.qty > 1 %}<span class="muted">×{{ c.qty }}</span>{% endif %}
       <span class="faint fs-xs">· added {{ c.date }}</span></div>
     {% if c.nameonly %}<div class="muted fs-xs">No color data yet — enrichment will place it.</div>
-    {% elif not c.homes %}<div class="muted fs-xs">No deck in its colors.</div>
+    {% else %}
+    {% if not c.homes %}<div class="muted fs-xs">No {{ 'sleeved ' if c.lab }}deck in its colors.</div>
     {% else %}
     <ul class="homes fs-xs">
       {% for h in c.homes[:3] %}
@@ -40,6 +41,15 @@
       {% endfor %}
       {% if c.homes|length > 3 %}<li class="muted">+{{ c.homes|length - 3 }} more deck{{ 's' if c.homes|length > 4 }} in its colors</li>{% endif %}
     </ul>
+    {% endif %}
+    {% if c.lab %}
+    <ul class="homes labhomes fs-xs">
+      {% for h in c.lab %}
+      <li><span class="faint">Lab ·</span> <a href="{{ url_for('deck', stem=h.stem) }}">{{ h.title }}</a>
+        <span class="muted">· {% if not h.has_field %}no field data{% elif h.field_pct %}field {{ h.field_pct }}%{% else %}not in its field list{% endif %} · fit {{ h.fit }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
     {% endif %}
   </div>
   {% endfor %}

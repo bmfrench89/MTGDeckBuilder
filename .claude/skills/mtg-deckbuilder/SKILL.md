@@ -220,6 +220,10 @@ one of four verdicts per card (swap/wishlist/bench/skip, never a silent drop) �
 protect adds with `Source=manual-replace` + the curated role lists → validate →
 present the swap table before applying. It exists because a 4%-field trigger-doubler
 (Wizard's Staff) turned out to be the best add of the session that ratified it.
+**It covers the Lab too** (player, 2026-10-16). Every theory deck (`# Study: yes`) the card
+is legal in gets its own verdict: swap, bench or skip. A theory deck claims no copies, so it
+can take a card its sleeved home also takes. When subagents do the reads, name the Lab decks
+in their prompts.
 
 ## Collection access
 

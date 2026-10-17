@@ -245,3 +245,59 @@ def test_a_real_deck_page_has_no_lab_tab(env):
                        commander="Real Commander", decks_dir=str(env.decks),
                        editable=True, sim=None)["dashboard"]
     assert "<label for='tab-lab'>" not in page and ">All decks</a>" in page
+
+
+# --- The Lab in reviews (2026-10-16) ---
+# A new card's review asked only the sleeved decks, so no theory deck was ever offered
+# as a home. A theory deck claims no copies, so it can take a card its sleeved home
+# also takes: the review lists it as a home of its own, after the sleeved ones.
+
+def _dated_collection(tmp_path, day):
+    """The env collection with a Date Added column. Llanowar Elves (in the sleeved
+    deck), Spare Bear (only in the theory deck) and a new Fresh Bear arrive today."""
+    rows = COLL.strip().splitlines()
+    recent = ("Llanowar Elves", "Spare Bear")
+    out = [rows[0] + ",Date Added"]
+    out += [r + "," + (day if r.split(",")[1] in recent else "2026-01-01") for r in rows[1:]]
+    out.append(f"1,Fresh Bear,2,G,G,{{1}}{{G}},Creature,Bear,rare,fb000001,1.00,{day}")
+    path = tmp_path / "dated.csv"
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return str(path)
+
+
+def test_the_arrivals_review_offers_the_lab_as_a_home_of_its_own(env, tmp_path):
+    import datetime
+    import deckcore
+    path = _dated_collection(tmp_path, datetime.date.today().isoformat())
+    review = deckcore.arrivals_review(mtglib.load_collection(path), str(env.decks), path,
+                                      field_fn=lambda cmd, idx: {})
+    cards = {c["name"]: c for c in review["cards"]}
+    # The sleeved deck holds Llanowar Elves. The theory deck holds no copies, so a
+    # card that sits only there is still unplaced.
+    assert "Llanowar Elves" not in cards and {"Fresh Bear", "Spare Bear"} <= set(cards)
+    fresh = cards["Fresh Bear"]
+    assert [h["stem"] for h in fresh["homes"]] == ["real-deck"], "sleeved homes unchanged"
+    assert [h["stem"] for h in fresh["lab"]] == ["theory-deck"], "the Lab is a home too"
+    # Spare Bear already sits in the theory deck: never offered as its home again (the
+    # sweep caught King T'Challa offered to the Mister Fantastic deck that runs him).
+    spare = cards["Spare Bear"]
+    assert spare["lab"] == [] and spare["in_lab"] == ["theory-deck"]
+    packet = deckcore.arrivals_packet(review)
+    assert "-> real-deck · Lab: theory-deck" in packet
+    assert "Spare Bear" in packet and "already in the Lab: theory-deck" in packet
+    real, lab = packet.index("## Y'shtola's Real Deck"), packet.index("## Theory Deck")
+    assert real < lab, "sleeved decks first: the physical card's home is the first call"
+    assert "Lab theory deck, claims no copies" in packet[lab:].splitlines()[0]
+    assert "wishlist never applies" in packet
+
+
+def test_the_arrivals_page_lists_lab_homes_on_their_own_line(env, tmp_path, monkeypatch):
+    import datetime
+    path = _dated_collection(tmp_path, datetime.date.today().isoformat())
+    monkeypatch.setattr(env.app, "COLLECTION", path)
+    page = env.client.get("/collection/arrivals").get_data(as_text=True)
+    assert "Fresh Bear" in page and "Real Deck</a>" in page
+    lab = page[page.index('class="homes labhomes'):]
+    assert "Lab ·" in lab and "Theory Deck</a>" in lab
+    packet = env.client.get("/collection/arrivals.txt").get_data(as_text=True)
+    assert "Lab: theory-deck" in packet

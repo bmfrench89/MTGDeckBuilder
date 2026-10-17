@@ -368,6 +368,10 @@ collection (the Tergrid options; the Bartolomé deck tech was one until the play
 cards on 2026-10-12). It commits no physical copies:
 `deck_conflicts.scan`, the free pool, the wishlist and `optimize --all` skip it
 (`deck_conflicts.is_study_deck`). Name it with `--deck` to analyze it on purpose.
+Reviews still ask it (player, 2026-10-16; docs/spec-lab.md):
+- The New arrivals review lists Lab homes on their own line.
+- The sleeper audit gives every Lab deck its own verdict.
+- `deck_uat.py --all` tests it, tagged `[Lab]`.
 
 **Deck companions** (auto-detected next to `<stem>.txt`):
 `.notes.md` (game plan — markdown-lite; cards named here are protected from the optimizer),

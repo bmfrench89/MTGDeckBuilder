@@ -46,6 +46,9 @@ signal: about $1+ per LLM game, misread cards, and 1v1 only for MageZero.
   `commander_turn` and `commander_pct`. A target that differs from the default needs its
   reason in the deck's notes.
 - **A failed gate** sends the deck back to the hand pass, and the CLI exits 3.
+- **`--all` covers the Lab** (2026-10-16). It runs every deck file, the theory decks
+  included, and tags them `[Lab]`. The gates judge the list, not the copies, and
+  until then `--all` skipped the Lab.
 - **The A/B** replays the identical shuffles with one card swapped (`goldfish.swap_compiled`,
   common random numbers). Swapping a card with itself is exactly zero, a test pins that,
   and the interval measures the swap rather than the luck.

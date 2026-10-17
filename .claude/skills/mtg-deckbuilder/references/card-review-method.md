@@ -9,9 +9,27 @@ numbers are a *prior*; reading the card against the deck's engine is the *verdic
 Triggers: "review my new cards", "sleeper audit", "did these get scanned?",
 "would X make my decks better?", or any time a batch of cards enters the collection.
 
+## The Lab is part of every review (player, 2026-10-16)
+
+"What about the lab decks did you consider those as well? Need to ensure they are part
+of the consideration." A review of three arrivals read the sleeved decks only, so none
+of the Lab's four theory decks was asked. Now:
+- **Every Lab deck the card is legal in gets a verdict.** A Lab deck is a theory deck
+  (`# Study: yes`, docs/spec-lab.md).
+- **A Lab deck claims no copies.** It can take a card even when a sleeved deck takes the
+  only copy, and it never competes for the physical card.
+- **Its verdict is SWAP, BENCH or SKIP.** WISHLIST never applies to a deck that holds no
+  copies.
+- **The arrivals review lists Lab homes on their own line** (`deckcore.arrivals_review`'s
+  `lab`). Its packet gives each Lab deck its own section, after the sleeved decks.
+- **Delegating the reads to subagents? Name the Lab decks in their prompts.** List them
+  with `grep -l "^# Study: yes" data/decks/*.txt`. A prompt that lists only the sleeved
+  decks is how all four were missed.
+
 ## The loop
 
-For each deck (or the deck in question):
+For each deck the card is legal in, the Lab's theory decks included (or the deck in
+question):
 
 ### 1. Build the candidate pool — counted, not vibed
 - **Field hits:** cross-reference unplaced owned cards against the commander's
@@ -62,6 +80,9 @@ engine spec (`engine_spec.py`), whose keywords then rank the field-silent reads.
 - **WISHLIST** — right card, no free copy (`deck_conflicts` says it's committed).
 - **BENCH** — playable, doesn't beat an incumbent; say which incumbent and why.
 - **SKIP/UNVERIFIED** — with the reason (draft chaff, off-identity, text unverifiable).
+
+A Lab deck gets SWAP, BENCH or SKIP, never WISHLIST (it holds no copies). Its swap is
+logged and protected exactly like a sleeved deck's (step 6).
 
 ### 5. Cuts come from the bottom of the field list — after the engine filter
 Build the deck's in-deck field-% list ascending, then STRIKE engine pieces,

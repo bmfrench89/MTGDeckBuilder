@@ -287,7 +287,8 @@ def _pct(x):
 
 def print_report(r):
     mark = "PASS" if r["pass"] else "FAIL"
-    print(f"{mark}  {r['deck']} ({r['commander']}): {r['games']} games, seed {r['seed']}, "
+    lab = " [Lab]" if r.get("lab") else ""
+    print(f"{mark}  {r['deck']}{lab} ({r['commander']}): {r['games']} games, seed {r['seed']}, "
           f"engine cards from the {r['engine_source'] or 'nowhere'} "
           f"({r['engine_cards']} castable)")
     for g in r["gates"]:
@@ -311,8 +312,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Deck UAT: run a deck's acceptance gates on "
                                              "the goldfish simulator.")
     ap.add_argument("--deck", help="data/decks/<stem>.txt")
-    ap.add_argument("--all", action="store_true", help="every deck in --decks-dir "
-                                                       "(study copies skipped)")
+    ap.add_argument("--all", action="store_true", help="every deck in --decks-dir, the "
+                                                       "Lab's theory decks included and "
+                                                       "tagged [Lab]")
     ap.add_argument("--decks-dir", default="data/decks")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--games", type=int, default=UAT_GAMES)
@@ -342,10 +344,12 @@ def main(argv=None):
                 print(f"   {m}: {_pct(d['a'])} -> {_pct(d['b'])}  "
                       f"({d['delta'] * 100:+.1f}% ±{d['ci95'] * 100:.1f})")
         return 2 if res.get("error") else 0
+    import deck_conflicts
     if args.all:
-        import deck_conflicts
-        paths = [p for p in sorted(glob.glob(os.path.join(args.decks_dir, "*.txt")))
-                 if not deck_conflicts.is_study_deck(p)]
+        # The Lab's theory decks are tested too, tagged [Lab]: a theory deck is still a
+        # deck someone may sleeve, and the gates are about the list, not about copies.
+        # (They were skipped until 2026-10-16, so `--all` never covered the Lab.)
+        paths = sorted(glob.glob(os.path.join(args.decks_dir, "*.txt")))
     else:
         paths = [args.deck]
     reports, failed = [], 0
@@ -355,6 +359,7 @@ def main(argv=None):
             print(f"error: {p} can't be compiled for a simulation", file=sys.stderr)
             failed += 1
             continue
+        r["lab"] = deck_conflicts.is_study_deck(p)
         reports.append(r)
         failed += 0 if r["pass"] else 1
         if not args.json:
@@ -363,8 +368,9 @@ def main(argv=None):
         print(json.dumps(reports if args.all else (reports[0] if reports else None),
                          indent=1))
     elif args.all:
+        lab = sum(1 for r in reports if r.get("lab"))
         print(f"{sum(1 for r in reports if r['pass'])} of {len(paths)} deck(s) pass "
-              f"every gate")
+              f"every gate" + (f" ({lab} of them in the Lab)" if lab else ""))
     return 3 if failed else 0
 
 

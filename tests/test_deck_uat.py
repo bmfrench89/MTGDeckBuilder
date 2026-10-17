@@ -190,3 +190,21 @@ def test_optimize_attaches_an_ab_to_every_proposal(monkeypatch):
     assert "+5.0%" in good["ab_summary"]
     assert bad["ab_error"] == "refused" and "ab" not in bad
     assert calls == [("Old", "New"), ("Old2", "Bad")]
+
+
+def test_all_covers_the_lab_and_tags_it(tmp_path, capsys):
+    """`--all` skipped theory decks until 2026-10-16, so the Lab never got a test run."""
+    deck, coll = _write(tmp_path, engine_mv=1)
+    text = open(deck, encoding="utf-8").read().replace("# Title: T\n",
+                                                       "# Title: T\n# Study: yes\n", 1)
+    (tmp_path / "lab-deck.txt").write_text(text, encoding="utf-8")
+    (tmp_path / "lab-deck.notes.md").write_text(
+        (tmp_path / "test-deck.notes.md").read_text(encoding="utf-8"), encoding="utf-8")
+    args = ["--all", "--decks-dir", str(tmp_path), "--collection", coll, "--games", "200"]
+    assert deck_uat.main(args + ["--json"]) == 0
+    reps = {r["deck"]: r for r in json.loads(capsys.readouterr().out)}
+    assert set(reps) == {"test-deck", "lab-deck"}
+    assert reps["lab-deck"]["lab"] is True and reps["test-deck"]["lab"] is False
+    deck_uat.main(args)
+    out = capsys.readouterr().out
+    assert "lab-deck [Lab]" in out and "(1 of them in the Lab)" in out

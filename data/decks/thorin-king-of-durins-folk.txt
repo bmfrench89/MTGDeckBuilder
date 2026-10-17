@@ -45,6 +45,7 @@
 1 Hellkite Tyrant
 1 Iron Hills Stalwart
 1 Belladonna Took
+1 Gandalf the White
 
 # --- Instants ---
 1 Swords to Plowshares
@@ -60,7 +61,6 @@
 # --- Artifacts ---
 1 Sol Ring
 1 Arcane Signet
-1 Thrór's Map
 1 Bloodforged Battle-Axe
 1 Solitary Cell
 1 Dwarven Mattock

@@ -173,3 +173,22 @@ Fog or Quarrel. Those would be clear downgrades.
 - **Paired A/B** (4,000 games, Pathmaker out, Elephant Grass in): no measurable change.
   Keepable stays 80% and screwed 15%, engine online moves +0.1% and the commander on time
   +0.2%. The goldfish has no opponents, so it can't see what the tax saves you.
+
+## 2026-10-16: Ancient Adamantoise (the player's pick — do not cut)
+- **Ancient Adamantoise**: a {5}{G}{G}{G} 8/20 Turtle. "Vigilance, ward {3}. Damage isn't
+  removed from this creature during cleanup steps. All damage that would be dealt to you
+  and other permanents you control is dealt to this creature instead. When this creature
+  dies, exile it and create ten tapped Treasure tokens." In over Ghalta, Primal Hunger, so
+  the 7+ mana slots stay at seven.
+- **Your fights become one-sided.** Ayula's fight on every Bear that enters, Kogla's enter
+  fight and Ezuri's Predation's Beasts deal their damage and take none back. Your attackers
+  survive any block until the Turtle has soaked 20.
+- **Cost:** Goreclaw, Radagast and The Earth Crystal together bring it down to {G}{G}{G}.
+- **Payoffs:** its power 8 draws off Vaultborn Tyrant, Elemental Bond and Garruk's Uprising.
+  Last March of the Ents draws 20 off its toughness, or 22 as a Beorn Bear.
+- **Watch out:**
+  - While it's out, Hexhaven Invigorator is never dealt damage, so its land fetch stops.
+  - Deathtouch damage dealt to anything of yours is dealt to the Turtle, and kills it.
+  - Its damage stays marked, so 20 in total over the game kills it. Then you get ten
+    tapped Treasures.
+- **Paired A/B** (4,000 games, Ghalta, Primal Hunger out): no measurable change.

@@ -126,7 +126,8 @@ Pick-Axe, Rogue's Passage and Slayers' Stronghold, which were cheap to replace.
 ## The numbers (2026-10-15)
 - **Bracket 2** (the player's call, 2026-10-15): no Game Changers, tutors or combos. The only
   Game Changer you own in red-white is Enlightened Tutor, and it's Giada's.
-  It plays at the top of Bracket 2: a doubled engine, 9 interaction, 12 draw.
+  It plays at the top of Bracket 2: a doubled engine, 9 interaction, 12 draw. Gandalf
+  (2026-10-16, below) is a second doubler.
 - **Sram went to the Eriette deck (2026-10-15).** The player gave that list priority. Dwarven
   Provisioner took the slot: another 2-mana Dwarf (a Treasure on entry), and {3}{W} gives
   the team +1/+1 for a turn, a sink for spare Treasures.
@@ -150,3 +151,23 @@ Pick-Axe, Rogue's Passage and Slayers' Stronghold, which were cheap to replace.
   creature you control gets a +1/+1 counter. Thorin's Treasures, Fíli's Dwarves and At the
   Door's tokens are all tokens. A Dwarf cast with Fíli out is already three tokens: Thorin's
   Treasure, Fíli's Dwarf, and that Dwarf's own Treasure. In over Seize the Spoils.
+
+## 2026-10-16: Gandalf the White (the player's pick — do not cut)
+- **Gandalf the White**: a {3}{W}{W} 4/5 with flash. "You may cast legendary spells and
+  artifact spells as though they had flash. If a legendary permanent or an artifact
+  entering or leaving the battlefield causes a triggered ability of a permanent you
+  control to trigger, that ability triggers an additional time." In over Thrór's Map, the
+  deck's slowest card flow ({2}, {T}: draw, then discard).
+- **What it doubles:** 20 of the deck's Dwarves are legendary, Thorin included (verified
+  type lines). When one enters, Thorin's Treasure, Fíli the Pathfinder's 2/2 Dwarf and
+  Giott's loot all trigger twice.
+  - Every Treasure is an artifact, so Belladonna Took's token trigger doubles too. It still
+    pays out only on its first three resolutions each turn.
+  - Fíli's Dwarf tokens aren't legendary, so their own Treasures aren't doubled.
+- **Flash:** cast Dwarves and Equipment at the end of an opponent's turn.
+- **No loop:** Draconic Visitor's tokens are Dragons, neither artifacts nor legendary, so
+  Gandalf never doubles them. The Maskwood Nexus warning above still stands.
+- **Bracket:** still Bracket 2 by the rules: Gandalf isn't a Game Changer, a tutor or a
+  combo. But with a second doubler beside Bifur, the deck sits even higher in Bracket 2.
+- **Field:** 10% of this Thorin's EDHREC decks (synergy +9). Thorin is the only commander
+  among the player's decks whose field lists him.

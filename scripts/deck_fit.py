@@ -619,7 +619,8 @@ def protected_keys(deck_path, commander, cards, notes_text=None):
     """The ONE answer to "which cards in this deck must never be offered as a cut":
     the commander, basics, cards with a hand-written card_notes.csv entry, cards
     named in the deck's .notes.md, cards its Watch-tab clips show or name
-    (.clips.json), and the player's own manual adds (.changes.csv).
+    (.clips.json), the engine spec's core (.engine.json), and the player's own
+    manual adds (.changes.csv).
 
     Shared by the optimizer's Cuts surface and the dashboard's dead-weight panel —
     the two had drifted (the webapp dropped notes-named cards, the dashboard
@@ -643,10 +644,20 @@ def protected_keys(deck_path, commander, cards, notes_text=None):
     except Exception:
         manual = set()
     featured = {k for n in clipmod.featured_names(deck_path) for k in mtglib.name_keys(n)}
+    # The engine spec's engine and package cards are the deck's stated core (bundle C).
+    # The optimizer's swap pass honoured them (optimize._protected) while this list
+    # didn't, so the Cuts ranking offered spec-core cards, Smaug's Deadly Dispute among
+    # them (found by the Lab review, 2026-10-16).
+    try:
+        import engine_spec
+        core = {k for n in engine_spec.core_names(engine_spec.load(deck_path))
+                for k in mtglib.name_keys(n)}
+    except Exception:
+        core = set()
     for c in cards:
         keys = set(mtglib.name_keys(c.name))
         if (mtglib.is_basic(c.name) or keys & curated or keys & manual
-                or keys & featured or named_in_notes(c.name, notes_text)):
+                or keys & featured or keys & core or named_in_notes(c.name, notes_text)):
             keep |= keys
     return keep
 

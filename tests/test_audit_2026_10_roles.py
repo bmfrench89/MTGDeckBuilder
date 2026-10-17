@@ -127,6 +127,22 @@ def test_protected_keys_covers_commander_basics_and_notes(tmp_path):
     assert "other" not in keep
 
 
+def test_protected_keys_covers_the_engine_spec_core(tmp_path):
+    """The optimizer's swap pass protected an engine spec's core cards, but this list
+    didn't, so the Cuts ranking offered them: Smaug's Deadly Dispute among them
+    (the Lab review, 2026-10-16). One answer for both."""
+    import engine_spec
+    deck = tmp_path / "d.txt"
+    deck.write_text("# Commander: Cmd\n1 Cmd\n1 Package Card\n1 Loose Card\n10 Forest\n",
+                    encoding="utf-8")
+    engine_spec.main(["--deck", str(deck), "--init", "--package", "Drain", "payoffs",
+                      "Package Card"])
+    assert "Package Card" in engine_spec.core_names(engine_spec.load(str(deck)))
+    cards = [mtglib.Card(name=n) for n in ("Cmd", "Package Card", "Loose Card", "Forest")]
+    keep = deck_fit.protected_keys(str(deck), "Cmd", cards, notes_text="")
+    assert "package card" in keep and "loose card" not in keep
+
+
 # --- D1: banned cards are never recommended --------------------------------------------
 def test_banned_list_filters_staples_and_alternatives(tmp_path):
     assert deck_fit.is_banned("Dockside Extortionist")

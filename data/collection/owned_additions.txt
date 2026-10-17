@@ -1050,3 +1050,11 @@
 # carries them, the upload offers to retire these rows
 # (docs/spec-card-intake.md §3).
 1 Light-Paws, Emperor's Voice
+
+# --- Batch 2026-10-16 · three new cards from the player's photos: Orcish Bowmasters, Ancient Adamantoise, Gandalf the White · 3 cards (3 distinct) ---
+# Added in the app. New copies on top of the export; when a future export
+# carries them, the upload offers to retire these rows
+# (docs/spec-card-intake.md §3).
+1 Orcish Bowmasters
+1 Ancient Adamantoise
+1 Gandalf the White

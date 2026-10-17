@@ -1312,8 +1312,16 @@ def arrivals_review(coll, decks_dir, collection, days=30, now=None, field_fn=Non
     whose `# Colors:` header covers the card's identity. A card with no colour data
     (the name-only snapshot) gets no homes and `nameonly: True` — never a guess.
 
+    The Lab's theory decks (`# Study: yes`, docs/spec-lab.md) are homes too, in their
+    own `lab` list. A theory deck claims no copies, so it can take a card its sleeved
+    home also takes; it never competes for the physical card, which is why it gets
+    its own list instead of crowding the sleeved homes. A review that skipped the Lab
+    never asked whether a new card belonged there (2026-10-16). A Lab deck that already
+    runs the card is never offered as its home; `in_lab` names those decks.
+
     -> {"since", "latest", "cards": [{name, qty, date, identity, nameonly,
-        homes: [{stem, title, commander, field_pct, fit, band}]}], "decks": [...]}"""
+        homes: [{stem, title, commander, field_pct, fit, band}], lab: [same],
+        in_lab: [stem]}], "decks": [{..., lab}]}"""
     import datetime
     import glob
     import deck_fit
@@ -1328,13 +1336,15 @@ def arrivals_review(coll, decks_dir, collection, days=30, now=None, field_fn=Non
             text = open(p, encoding="utf-8").read()
         except (OSError, UnicodeDecodeError):
             continue
-        if mtglib.deck_header(text, "Study").strip().lower().startswith("y"):
-            continue
+        lab = mtglib.deck_header(text, "Study").strip().lower().startswith("y")
+        keys = set()
         for c in mtglib.parse_deck(text):
-            placed |= mtglib.name_keys(c.name)
+            keys |= mtglib.name_keys(c.name)
+        if not lab:
+            placed |= keys
         cmd = re.split(r"\s{2,}|\(", mtglib.deck_header(text, "Commander"))[0].strip()
         decks.append({"stem": os.path.splitext(os.path.basename(p))[0], "path": p,
-                      "text": text, "commander": cmd,
+                      "text": text, "commander": cmd, "lab": lab, "keys": keys,
                       "title": mtglib.deck_header(text, "Title") or cmd,
                       "identity": set(re.findall(
                           r"[WUBRG]", mtglib.deck_header(text, "Colors?").upper()))})
@@ -1346,16 +1356,20 @@ def arrivals_review(coll, decks_dir, collection, days=30, now=None, field_fn=Non
         if mtglib.name_keys(c.name) & placed:
             continue
         known = bool(c.types) or bool(c.identity)
+        # Lab decks that already run it: never offered as its home again.
+        in_lab = [dk["stem"] for dk in decks
+                  if dk["lab"] and mtglib.name_keys(c.name) & dk["keys"]]
         cards.append({"card": c, "name": c.name, "qty": c.quantity, "date": d,
                       "identity": "".join(x for x in "WUBRG" if x in (c.identity or ())),
-                      "nameonly": not known, "homes": []})
+                      "nameonly": not known, "homes": [], "lab": [], "in_lab": in_lab})
     if any(not r["nameonly"] for r in cards):
         refs = power.load_refs()
         for dk in decks:
             if not dk["identity"]:
                 continue
             fits = [r for r in cards if not r["nameonly"]
-                    and set(r["card"].identity or ()) <= dk["identity"]]
+                    and set(r["card"].identity or ()) <= dk["identity"]
+                    and dk["stem"] not in r["in_lab"]]
             if not fits:
                 continue
             try:
@@ -1370,18 +1384,19 @@ def arrivals_review(coll, decks_dir, collection, days=30, now=None, field_fn=Non
                 fit = deck_fit.assess_card(r["card"], a["report"], ctx, refs)
                 pct = max((field.get(k) or 0 for k in mtglib.name_keys(r["name"])),
                           default=0) if field else None
-                r["homes"].append({"stem": dk["stem"], "title": dk["title"],
-                                   "commander": dk["commander"],
-                                   "field_pct": pct, "has_field": bool(field),
-                                   "fit": fit["score"], "band": fit["band"]})
+                r["lab" if dk["lab"] else "homes"].append({
+                    "stem": dk["stem"], "title": dk["title"], "commander": dk["commander"],
+                    "field_pct": pct, "has_field": bool(field),
+                    "fit": fit["score"], "band": fit["band"]})
     for r in cards:
-        r["homes"].sort(key=lambda h: (-(h["field_pct"] or 0), -h["fit"], h["title"]))
+        for key in ("homes", "lab"):
+            r[key].sort(key=lambda h: (-(h["field_pct"] or 0), -h["fit"], h["title"]))
         best = r["homes"][0] if r["homes"] else None
         r["best"] = ((best["field_pct"] or 0), best["fit"]) if best else (-1, -1)
         del r["card"]
     cards.sort(key=lambda r: (-r["best"][0], -r["best"][1], r["name"]))
     return {"since": since, "latest": latest, "now": now, "cards": cards,
-            "decks": [{k: v for k, v in dk.items() if k != "text"} | {
+            "decks": [{k: v for k, v in dk.items() if k not in ("text", "keys")} | {
                 "engine": _deck_engine_summary(dk["path"], dk["text"])}
                 for dk in decks]}
 
@@ -1397,21 +1412,35 @@ def arrivals_packet(review, top=8):
            "# card's verified text against the deck's engine (the sleeper audit,",
            "# .claude/skills/mtg-deckbuilder/references/card-review-method.md) and give",
            "# every card a verdict — swap / wishlist / bench / skip. None silently dropped.",
+           "# The Lab's theory decks are homes too. They claim no copies, so a card can go",
+           "# into a Lab deck AND its sleeved home: give each Lab deck its own verdict",
+           "# (swap / bench / skip; wishlist never applies to a deck that holds no copies).",
            "",
            f"## Arrivals not in any sleeved deck — since {review['since']} "
            f"({len(cards)} cards, {sum(r['qty'] for r in cards)} copies)"]
     for r in sorted(cards, key=lambda x: x["name"].lower()):
-        homes = ", ".join(h["stem"] for h in r["homes"]) or (
-            "no colour data — can't place" if r["nameonly"] else "no deck in its colours")
+        lab = ", ".join(h["stem"] for h in r.get("lab", []))
+        if r["nameonly"]:
+            homes = "no colour data — can't place"
+        else:
+            homes = ", ".join(h["stem"] for h in r["homes"]) or (
+                "no sleeved deck in its colours" if lab else "no deck in its colours")
+            if lab:
+                homes += f" · Lab: {lab}"
+        if r.get("in_lab"):
+            homes += f" · already in the Lab: {', '.join(r['in_lab'])}"
         out.append(f"{r['qty']} {r['name']}  [{r['date']}] -> {homes}")
-    for dk in review["decks"]:
-        rows = [(r, h) for r in cards for h in r["homes"] if h["stem"] == dk["stem"]]
+    # Sleeved decks first, then the Lab: the physical card's home is the first call.
+    for dk in sorted(review["decks"], key=lambda d: bool(d.get("lab"))):
+        key = "lab" if dk.get("lab") else "homes"
+        rows = [(r, h) for r in cards for h in r.get(key, []) if h["stem"] == dk["stem"]]
         if not rows:
             continue
         rows.sort(key=lambda t: (-(t[1]["field_pct"] or 0), -t[1]["fit"]))
         colors = "".join(x for x in "WUBRG" if x in dk["identity"]) or "C"
-        out += ["", f"## {dk['title']} — {dk['commander']} ({colors}) · {len(rows)} legal "
-                    f"arrivals, top {min(top, len(rows))}"]
+        where = " · Lab theory deck, claims no copies" if dk.get("lab") else ""
+        out += ["", f"## {dk['title']} — {dk['commander']} ({colors}){where} · "
+                    f"{len(rows)} legal arrivals, top {min(top, len(rows))}"]
         if dk.get("engine"):
             out.append(f"Engine (from the deck's notes): {dk['engine']}")
         for r, h in rows[:top]:

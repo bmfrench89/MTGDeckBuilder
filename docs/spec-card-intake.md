@@ -149,6 +149,12 @@ covers the latest batch, plus anything newer than N days.
     `data/reference/field/<commander>.json` and the deck-fit score.
 - Top candidates come first, and the panel labels these numbers as **a prior**. The
   method's rule is that field % is a prior and the engine read is the verdict.
+- **The Lab is a home too** (2026-10-16). Each card lists the Lab's theory decks in its
+  colors on their own line, after the sleeved homes, and the packet gives each one its
+  own section.
+  - A theory deck claims no copies, so it never competes for the physical card.
+  - It was left out until then, and a review of three arrivals never asked the four Lab
+    decks.
 - **"Copy review packet"** is a text export, like `/deck/<stem>/assess.txt`. It holds:
   - the batch;
   - the candidates for each deck;

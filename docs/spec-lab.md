@@ -51,6 +51,27 @@ the wrong question:
   breadcrumb leads back to the Lab. The false Shared Across Decks panel is gone for
   theory decks. A downloaded dashboard keeps the Lab tab, without the dead button.
 
+## The Lab in reviews (2026-10-16)
+The player, after a review of three new cards read only the sleeved decks: "What about
+the lab decks did you consider those as well? Need to ensure they are part of the
+consideration."
+
+**What includes the Lab:**
+- **The New arrivals review** (`deckcore.arrivals_review`) lists the Lab decks in a card's
+  colors on their own line, after the sleeved homes. Its packet gives each one its own
+  section.
+- **The sleeper audit** (`card-review-method.md`) gives every Lab deck its own verdict: swap,
+  bench or skip. Subagent prompts must name the Lab decks.
+- **`deck_uat.py --all`** tests the Lab decks too, tagged `[Lab]`.
+- **The runner workflows already did.** The field snapshots and the narration cover every
+  deck file.
+
+**What still skips the Lab, on purpose:**
+- The copy accounting: `deck_conflicts.scan`, the free pool and the wishlist. A theory
+  deck holds no physical cards.
+- `optimize --all`. It tunes toward the free pool, which a theory deck isn't bound by.
+  Name one with `--deck` to read its proposals.
+
 ## Fixed on the way
 **Every confirm on the deck menu now passes its text through `tojson`.** A title with
 an apostrophe (Y'shtola, Night's Blessed) broke the inline `confirm('…')` string, and a

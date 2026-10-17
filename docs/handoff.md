@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-16 (Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-16 (three new cards: Gandalf the White in Thorin, Ancient Adamantoise in Beorn, Orcish Bowmasters unplaced while the player re-reviews it; reviews now include the Lab; Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -35,7 +35,7 @@ ignoring those physical lists.
 | Kami of the Crescent Moon | 3 (detected 3) | 36 | 9/14/3 | 79% | 17/25 | 5 |
 | The Ur-Dragon | 3 (detected 3) | 37 | 10/5/6 | 80% | 19/25 | 5 |
 | **The Ur-Sphinx** (new 10-15) | 3 (detected 3) | 37 | 12/13/9 | 80% | 19/25 | 5 |
-| Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/11/6 | 79% | 20/25 | 5 |
+| Thorin, King of Durin's Folk | 2 (detected 2) | 36 | 6/10/6 | 79% | 20/25 | 5 |
 | **Tinybones, Bauble Burglar** (new 10-15) | 3 (detected 3) | 36 | 6/10/6 | 80% | 24/25 | 5 |
 | **Eriette of the Charmed Apple** (new 10-15) | 2 (detected 2) | 36 | 6/11/4 | 79% | 24/25 | 5 |
 | Y'shtola, Night's Blessed | 4 (detected 3) | 38 | 11/14/7 | 82% | 21/25 | 5 |
@@ -48,6 +48,47 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-16 (late): three new cards, and reviews include the Lab.** The player photographed
+Orcish Bowmasters, Ancient Adamantoise and Gandalf the White: "Log them and see where they
+fit best or don't fit".
+- **Logged:** one intake batch, verified on Scryfall. None was owned before. The batch is
+  mirrored into `data/private/collection/owned_additions.txt` for local analysis.
+- **Gandalf the White → Thorin, for Thrór's Map.**
+  - 20 legendary Dwarves, so Thorin's Treasure, Fíli's Dwarf and Giott's loot trigger twice
+    for each.
+  - Every Treasure is an artifact, so Belladonna Took's token trigger doubles as well.
+  - Field 10% (synergy +9). Still Bracket 2, but it's a second doubler beside Bifur.
+  - The deck UAT passes; engine online is 52% (needs 50%).
+  - Magda's buylist row now replaces Patchwork Banner: both are a Dwarf anthem plus mana.
+- **Ancient Adamantoise → Beorn, for Ghalta, Primal Hunger.**
+  - Ayula's, Kogla's and Ezuri's Predation's fights become one-sided.
+  - The cost: Hexhaven's land fetch is off while it's out, and deathtouch kills it.
+  - Gargaroth → Quarrel is still open on ⚡. With the Turtle in, the read leans skip.
+- **Orcish Bowmasters is unplaced: the player wants to re-review it.**
+  - Its Game Changer status rules out Eriette (Bracket 2). It would take the Ur-Sphinx's
+    last Game Changer slot.
+  - Best sleeved homes:
+    - Tinybones, cutting Mutilate. Dark Deal, Geier Reach Sanitarium and Rankle make
+      opponents draw. Mutilate kills your own Tinybones. Don't cut Hymn to Tourach: 24% of
+      Tinybones decks run it against 2.2% of all decks, a 10.8× lift.
+    - Y'shtola, cutting Tataru Taru. Delney doubles Bowmasters' triggers, and Sun Titan and
+      Viscera Seer rebuy it.
+  - Lab homes, which claim no copies:
+    - Witherbloom, cutting Deadly Dispute: a ping triggers Grievous Wound, so with Archfiend
+      out one ping kills.
+    - Tinybones B4, cutting Mutilate.
+    - Smaug, cutting Kolaghan, the Storm's Fury.
+- **The Lab is part of every review now** (the player: "Need to ensure they are part of
+  the consideration with invoking workflows"). The first pass had read only the sleeved
+  decks.
+  - The arrivals review lists Lab homes on their own line, and its packet gives each Lab
+    deck a section.
+  - `deck_uat --all` tags theory decks `[Lab]`: 16 of 16 pass.
+  - The method, skill, tool contract and CLAUDE.md say subagent prompts must name the Lab
+    decks.
+  - `deck_fit.protected_keys` now honours engine specs. The cut ranking had offered
+    spec-core cards.
 
 **2026-10-16 (night): Elephant Grass into Beorn.** The player: "I want to see if elephant
 grass can fit into my beorn deck. I like it but want the math on it".

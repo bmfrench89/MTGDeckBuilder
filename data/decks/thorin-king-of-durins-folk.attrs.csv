@@ -29,6 +29,7 @@ Feisty Spikeling,Creature,2,R W,{1}{R/W},Shapeshifter,,,2,4
 Flock Impostor,Creature,3,W,{2}{W},Shapeshifter,,,2,4
 Furycalm Snarl,Land,0,R W,,,W R,etb-tapped-cond,,4
 Fíli the Pathfinder,Creature,4,W,{3}{W},Dwarf;Scout,,,2,4
+Gandalf the White,Creature,5,W,{3}{W}{W},Avatar;Wizard,,,4,4
 "Giott, King of the Dwarves",Creature,2,R W,{R}{W},Dwarf;Noble,,draw,1,4
 Glittering Massif,Land,0,R W,,Mountain;Plains,W R,etb-tapped,,4
 Glóin the Mighty // Easy Pickings,Creature,4,R,{3}{R} // {2}{R},Dwarf;Warrior,R,mana2;wipe,4,4
@@ -75,7 +76,6 @@ Thorin Oakenshield,Creature,2,R W,{R}{W},Dwarf;Noble,,,3,4
 Thorin's Last Stand,Instant,4,W,{2}{W}{W},,,removal,,4
 "Thorin, King of Durin's Folk",Creature,5,R W,{3}{R}{W},Dwarf;Noble,,,4,4
 "Thorin, Mountain-king",Creature,4,R,{3}{R},Dwarf;Noble,,,3,4
-Thrór's Map,Artifact,2,,{2},,,draw;fetch:basic,,4
 Tocasia's Welcome,Enchantment,3,W,{2}{W},,,draw,,4
 Turbulent Steppe,Land,0,R W,,Mountain;Plains,W R,etb-tapped-cond,,4
 Web Up,Enchantment,3,W,{2}{W},,,removal,,4
