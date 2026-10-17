@@ -1,0 +1,53 @@
+{
+ "version": 1,
+ "verdicts": {
+  "land|Game Trail|Molten Slagheap": {
+   "verdict": "skip",
+   "why": "Molten Slagheap taps for colourless; it only makes black or red through storage counters. Game Trail is an untapped red-green dual.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Burnished Hart|Rhythm of the Wild": {
+   "verdict": "wishlist",
+   "why": "Rhythm (60% of Vaevictis decks) gives every creature Avacyn returns riot, a counter or haste, and makes creature spells uncounterable. Your only copy is in The Ur-Dragon, so it's on the buylist rather than taken.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Champion's Helm|Ichor Wellspring": {
+   "verdict": "skip",
+   "why": "Wellspring is cheap fodder for Vaevictis's self-sacrifice, but the deck already makes fodder every turn (Woe Strider's Goat, Grave Titan's and Gisa's Zombies, Doctor Doom's Doombots), and your copy is in Bartolomé. Helm keeps Vaevictis safe.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Fyndhorn Elves|Sakura-Tribe Elder": {
+   "verdict": "wishlist",
+   "why": "Sakura-Tribe Elder sacrifices itself for a land and Avacyn returns it every end step: a land every turn. Your copy is in Dina; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Ghoulcaller Gisa|Lightning Greaves": {
+   "verdict": "wishlist",
+   "why": "Greaves protects Vaevictis and gives him haste. All three copies are in other decks; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Massacre Girl, Most Wanted|Swiftfoot Boots": {
+   "verdict": "wishlist",
+   "why": "Boots protects Vaevictis, but all four copies are in other decks, and Champion's Helm already gives him hexproof. Buylist, behind Greaves.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Talisman of Indulgence|Solemn Simulacrum": {
+   "verdict": "wishlist",
+   "why": "Solemn ramps when it enters and draws when it dies, again every time Avacyn returns it. Your copy is in Y'shtola; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  },
+  "spell|Wild Growth|Birds of Paradise": {
+   "verdict": "wishlist",
+   "why": "Birds fixes all three colours. Your copy is in The Ur-Dragon; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-16"
+  }
+ }
+}

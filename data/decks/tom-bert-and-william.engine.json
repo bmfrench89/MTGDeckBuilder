@@ -1,0 +1,113 @@
+{
+ "commander": "Tom, Bert, and William",
+ "written": "2026-10-17",
+ "engine": [
+  "Avacyn, Angel of Horror",
+  "Carrion Feeder",
+  "Woe Strider",
+  "Yahenni, Undying Partisan",
+  "Ghalta, Primal Hunger",
+  "Gigantic Big Bear",
+  "Yargle, Glutton of Urborg",
+  "Gray Merchant of Asphodel",
+  "Archon of Cruelty",
+  "Fleshbag Marauder",
+  "Bone Shredder",
+  "God-Eternal Bontu",
+  "Grave Titan",
+  "Sepulchral Primordial",
+  "Junji, the Midnight Sky",
+  "Twilight Diviner",
+  "Mazirek, Kraul Death Priest",
+  "Part in Friendship",
+  "Archfiend of Despair"
+ ],
+ "packages": [
+  {
+   "name": "Big bodies, big draws",
+   "enablers": [
+    "Ghalta, Primal Hunger",
+    "Gigantic Big Bear",
+    "Yargle, Glutton of Urborg",
+    "Saber-Tooth Moose-Lion",
+    "Carnage Tyrant",
+    "Goreclaw, Terror of Qal Sisma"
+   ],
+   "payoffs": [
+    "Mazirek, Kraul Death Priest"
+   ]
+  },
+  {
+   "name": "What dies comes back",
+   "enablers": [
+    "Avacyn, Angel of Horror",
+    "Carrion Feeder",
+    "Woe Strider",
+    "Yahenni, Undying Partisan",
+    "Part in Friendship"
+   ],
+   "payoffs": [
+    "Gray Merchant of Asphodel",
+    "Archon of Cruelty",
+    "Fleshbag Marauder",
+    "Bone Shredder",
+    "God-Eternal Bontu",
+    "Grave Titan",
+    "Sepulchral Primordial",
+    "Junji, the Midnight Sky",
+    "Twilight Diviner",
+    "Ayara, First of Locthwain"
+   ]
+  },
+  {
+   "name": "The drain finish",
+   "enablers": [],
+   "payoffs": [
+    "Archfiend of Despair",
+    "Massacre Girl, Most Wanted",
+    "Gray Merchant of Asphodel"
+   ]
+  }
+ ],
+ "aims": {
+  "ramp": 13,
+  "removal": 9,
+  "wipe": 2,
+  "draw": 9
+ },
+ "keywords": [
+  "sacrifice another creature",
+  "when this creature dies",
+  "each opponent loses",
+  "can't be countered"
+ ],
+ "keep": {
+  "Unrooted Ancestor": "More outlets and sacrifice-for-cards: each nontoken creature they kill comes back at end step with Avacyn out. Unrooted Ancestor and Deadly Dispute work at instant speed, and Phyrexian Vault can sacrifice the target of an exile spell.",
+  "Deadly Dispute": "More outlets and sacrifice-for-cards: each nontoken creature they kill comes back at end step with Avacyn out. Unrooted Ancestor and Deadly Dispute work at instant speed, and Phyrexian Vault can sacrifice the target of an exile spell.",
+  "Phyrexian Vault": "More outlets and sacrifice-for-cards: each nontoken creature they kill comes back at end step with Avacyn out. Unrooted Ancestor and Deadly Dispute work at instant speed, and Phyrexian Vault can sacrifice the target of an exile spell.",
+  "Midnight Reaper": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Agent Venom": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Skullclamp": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Phyrexian Arena": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Bloodgift Demon": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Read the Bones": "Pays off every nontoken death or adds steady cards: Midnight Reaper and Agent Venom draw, Skullclamp draws two, Phyrexian Arena and Bloodgift Demon draw every upkeep, and Read the Bones digs.",
+  "Ilysian Caryatid": "Ramp a top-heavy deck: Ilysian Caryatid fixes and makes two with a power-4 creature out; Wood Elves, Springbloom Druid and Burnished Hart ramp again each time Avacyn returns them.",
+  "Wood Elves": "Ramp a top-heavy deck: Ilysian Caryatid fixes and makes two with a power-4 creature out; Wood Elves, Springbloom Druid and Burnished Hart ramp again each time Avacyn returns them.",
+  "Springbloom Druid": "Ramp a top-heavy deck: Ilysian Caryatid fixes and makes two with a power-4 creature out; Wood Elves, Springbloom Druid and Burnished Hart ramp again each time Avacyn returns them.",
+  "Burnished Hart": "Ramp a top-heavy deck: Ilysian Caryatid fixes and makes two with a power-4 creature out; Wood Elves, Springbloom Druid and Burnished Hart ramp again each time Avacyn returns them.",
+  "Murder": "Interaction: Murder at instant speed, Witherbloom Charm (removal or sacrifice-a-permanent for two cards), Krosan Grip for artifacts and enchantments, Pick Your Poison as a one-mana edict.",
+  "Witherbloom Charm": "Interaction: Murder at instant speed, Witherbloom Charm (removal or sacrifice-a-permanent for two cards), Krosan Grip for artifacts and enchantments, Pick Your Poison as a one-mana edict.",
+  "Krosan Grip": "Interaction: Murder at instant speed, Witherbloom Charm (removal or sacrifice-a-permanent for two cards), Krosan Grip for artifacts and enchantments, Pick Your Poison as a one-mana edict.",
+  "Pick Your Poison": "Interaction: Murder at instant speed, Witherbloom Charm (removal or sacrifice-a-permanent for two cards), Krosan Grip for artifacts and enchantments, Pick Your Poison as a one-mana edict.",
+  "Villainous Wrath": "One-sided wipes with Avacyn out: both destroy, so only your nontoken creatures come back at end step. Archfiend of Depravity is a wipe at every opponent's end step.",
+  "Deadly Tempest": "One-sided wipes with Avacyn out: both destroy, so only your nontoken creatures come back at end step. Archfiend of Depravity is a wipe at every opponent's end step.",
+  "Archfiend of Depravity": "One-sided wipes with Avacyn out: both destroy, so only your nontoken creatures come back at end step. Archfiend of Depravity is a wipe at every opponent's end step.",
+  "Evil Reawakened": "Reanimation for the fatty the commander made you discard: Evil Reawakened returns it with two counters, and Gravedigger regrows one on every return.",
+  "Gravedigger": "Reanimation for the fatty the commander made you discard: Evil Reawakened returns it with two counters, and Gravedigger regrows one on every return.",
+  "Champion's Helm": "Protection: Champion's Helm gives the legendary commander hexproof, and Snakeskin Veil saves Avacyn from a targeted exile.",
+  "Snakeskin Veil": "Protection: Champion's Helm gives the legendary commander hexproof, and Snakeskin Veil saves Avacyn from a targeted exile.",
+  "Apex Witchstalker": "A 6-power body to sacrifice for six cards, or basic landcycling for {2} when you need a land."
+ },
+ "uat": {},
+ "version": 1
+}

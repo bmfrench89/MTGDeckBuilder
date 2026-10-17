@@ -1,0 +1,76 @@
+Name,Type,MV,Colors,Cost,Sub-types,Produced,Flags,Power,FlagsVer
+Agent Venom,Creature,3,B,{2}{B},Symbiote;Soldier;Hero,,draw,2,4
+Apex Witchstalker,Creature,6,B,{4}{B}{B},Wolf,,,6,4
+Arcane Signet,Artifact,2,,{2},,W U B R G,ramp;rock,,4
+Archfiend of Depravity,Creature,5,B,{3}{B}{B},Demon,,,5,4
+Archfiend of Despair,Creature,8,B,{6}{B}{B},Demon,,,6,4
+Archon of Cruelty,Creature,8,B,{6}{B}{B},Archon,,draw,6,4
+"Avacyn, Angel of Horror",Creature,8,B,{5}{B}{B}{B},Angel,,,8,4
+"Ayara, First of Locthwain",Creature,3,B,{B}{B}{B},Elf;Noble,,draw,2,4
+Beast Within,Instant,3,G,{2}{G},,,removal,,4
+Bloodgift Demon,Creature,5,B,{3}{B}{B},Demon,,,5,4
+Bone Shredder,Creature,3,B,{2}{B},Phyrexian;Minion,,,1,4
+Burnished Hart,Creature,3,,{3},Elk,,fetch:basic;ramp,2,4
+Carnage Tyrant,Creature,6,G,{4}{G}{G},Dinosaur,,,7,4
+Carrion Feeder,Creature,1,B,{B},Zombie,,,1,4
+Champion's Helm,Artifact,3,,{3},Equipment,,,,4
+Command Tower,Land,0,,,,W U B R G,,,4
+Cultivate,Sorcery,3,G,{2}{G},,,fetch:basic;ramp,,4
+Deadly Dispute,Instant,2,B,{1}{B},,W U B R G,draw,,4
+Deadly Tempest,Sorcery,6,B,{4}{B}{B},,,wipe,,4
+Eternal Witness,Creature,3,G,{1}{G}{G},Human;Shaman,,,2,4
+Evil Reawakened,Sorcery,5,B,{4}{B},,,,,4
+Evolving Wilds,Land,0,,,,,fetch:basic;ramp,,4
+Exotic Orchard,Land,0,,,,W U B R G,,,4
+Farseek,Sorcery,2,G,{1}{G},,,fetch:island;fetch:mountain;fetch:plains;fetch:swamp;ramp,,4
+Feed the Swarm,Sorcery,2,B,{1}{B},,,removal,,4
+Fleshbag Marauder,Creature,3,B,{2}{B},Zombie;Warrior,,,3,4
+Forest,Land,0,G,,Forest,G,,,4
+Formidable Commons,Land,0,B G,,,B G,etb-tapped-cond,,4
+Fyndhorn Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+"Ghalta, Primal Hunger",Creature,12,G,{10}{G}{G},Elder;Dinosaur,,,12,4
+Gigantic Big Bear,Creature,7,G,{5}{G}{G},Bear,,,10,4
+God-Eternal Bontu,Creature,5,B,{3}{B}{B},Zombie;God,,,5,4
+"Goreclaw, Terror of Qal Sisma",Creature,4,G,{3}{G},Bear,,,4,4
+Grave Titan,Creature,6,B,{4}{B}{B},Giant,,,6,4
+Gravedigger,Creature,4,B,{3}{B},Zombie,,,2,4
+Gray Merchant of Asphodel,Creature,5,B,{3}{B}{B},Zombie,,,2,4
+Heroic Intervention,Instant,2,G,{1}{G},,,,,4
+Ilysian Caryatid,Creature,2,G,{1}{G},Plant,W U B R G,dork;ramp,1,4
+Jungle Hollow,Land,0,B G,,,B G,etb-tapped,,4
+"Junji, the Midnight Sky",Creature,5,B,{3}{B}{B},Dragon;Spirit,,,5,4
+Krosan Grip,Instant,3,G,{2}{G},,,removal,,4
+Llanowar Elves,Creature,1,G,{G},Elf;Druid,G,dork;ramp,1,4
+"Massacre Girl, Most Wanted",Creature,5,B,{4}{B},Human;Assassin,,,4,4
+"Mazirek, Kraul Death Priest",Creature,5,B G,{3}{B}{G},Insect;Shaman,,,2,4
+Midnight Reaper,Creature,3,B,{2}{B},Zombie;Knight,,draw,3,4
+Mirkwood,Land,0,B G,,,B G,etb-tapped,,4
+Murder,Instant,3,B,{1}{B}{B},,,removal,,4
+Part in Friendship,Enchantment,5,G,{4}{G},,,,,4
+Phyrexian Arena,Enchantment,3,B,{1}{B}{B},,,draw,,4
+Phyrexian Vault,Artifact,3,,{3},,,draw,,4
+Pick Your Poison,Sorcery,1,G,{G},,,removal,,4
+Putrefy,Instant,3,B G,{1}{B}{G},,,removal,,4
+Rampant Growth,Sorcery,2,G,{1}{G},,,fetch:basic;ramp,,4
+Read the Bones,Sorcery,3,B,{2}{B},,,draw,,4
+Saber-Tooth Moose-Lion,Creature,6,G,{4}{G}{G},Elk;Cat,,,7,4
+Sepulchral Primordial,Creature,7,B,{5}{B}{B},Avatar,,,5,4
+Skullclamp,Artifact,1,,{1},Equipment,,draw,,4
+Snakeskin Veil,Instant,1,G,{G},,,,,4
+Sol Ring,Artifact,1,,{1},,C,mana2;ramp;rock,,4
+Springbloom Druid,Creature,3,G,{2}{G},Elf;Druid,,fetch:basic;ramp,1,4
+Subterranean Cavern,Land,0,B G,,,B G,etb-tapped,,4
+Swamp,Land,0,B,,Swamp,B,,,4
+Terramorphic Expanse,Land,0,,,,,fetch:basic;ramp,,4
+Thriving Grove,Land,0,G,,,W U B R G,etb-tapped,,4
+"Tom, Bert, and William",Creature,5,B G,{3}{B}{G},Troll,,,5,4
+Twilight Diviner,Creature,3,B,{2}{B},Elf;Cleric,,,3,4
+Unrooted Ancestor,Creature,3,B,{2}{B},Spirit;Cleric,,,3,4
+Villainous Wrath,Sorcery,5,B,{3}{B}{B},,,wipe,,4
+Wild Growth,Enchantment,1,G,{G},Aura,G,,,4
+Witherbloom Campus,Land,0,B G,,,B G,etb-tapped,,4
+Witherbloom Charm,Instant,2,B G,{B}{G},,,draw;removal,,4
+Woe Strider,Creature,3,B,{2}{B},Horror,,,3,4
+Wood Elves,Creature,3,G,{2}{G},Elf;Scout,,fetch:forest;ramp,1,4
+"Yahenni, Undying Partisan",Creature,3,B,{2}{B},Aetherborn;Vampire,,,2,4
+"Yargle, Glutton of Urborg",Creature,5,B,{4}{B},Frog;Spirit,,,9,4

@@ -1,0 +1,106 @@
+{
+ "commander": "Vaevictis Asmadi, the Dire",
+ "written": "2026-10-16",
+ "engine": [
+  "Avacyn, Angel of Horror",
+  "Tom, Bert, and William",
+  "Carrion Feeder",
+  "Woe Strider",
+  "Yahenni, Undying Partisan",
+  "Gray Merchant of Asphodel",
+  "Archon of Cruelty",
+  "Fleshbag Marauder",
+  "Bone Shredder",
+  "God-Eternal Bontu",
+  "Grave Titan",
+  "Sepulchral Primordial",
+  "Junji, the Midnight Sky",
+  "Kardur, Doomscourge",
+  "Mazirek, Kraul Death Priest",
+  "Twilight Diviner",
+  "Haunted Crossroads",
+  "Undergrowth Recon"
+ ],
+ "packages": [
+  {
+   "name": "Your sacrifice comes back",
+   "enablers": [
+    "Avacyn, Angel of Horror",
+    "Tom, Bert, and William",
+    "Carrion Feeder",
+    "Woe Strider",
+    "Yahenni, Undying Partisan"
+   ],
+   "payoffs": [
+    "Gray Merchant of Asphodel",
+    "Archon of Cruelty",
+    "Fleshbag Marauder",
+    "Bone Shredder",
+    "God-Eternal Bontu",
+    "Grave Titan",
+    "Sepulchral Primordial",
+    "Junji, the Midnight Sky",
+    "Kardur, Doomscourge",
+    "Mazirek, Kraul Death Priest",
+    "Twilight Diviner"
+   ]
+  },
+  {
+   "name": "Stack the top, then attack",
+   "enablers": [
+    "Haunted Crossroads",
+    "Woe Strider",
+    "Twilight Diviner"
+   ],
+   "payoffs": []
+  },
+  {
+   "name": "Lands come back",
+   "enablers": [
+    "Undergrowth Recon"
+   ],
+   "payoffs": []
+  }
+ ],
+ "aims": {
+  "ramp": 12,
+  "removal": 9,
+  "wipe": 2,
+  "draw": 9
+ },
+ "keywords": [
+  "sacrifice another creature",
+  "when this creature dies",
+  "top of your library",
+  "each opponent loses"
+ ],
+ "keep": {
+  "Unrooted Ancestor": "More ways to kill your own creatures on demand. Each one Avacyn returns at end step, so every sacrifice is a card, Zombies or a Treasure, not a loss. Unrooted Ancestor and Deadly Dispute work at instant speed, which dodges exile removal.",
+  "Ghoulcaller Gisa": "More ways to kill your own creatures on demand. Each one Avacyn returns at end step, so every sacrifice is a card, Zombies or a Treasure, not a loss. Unrooted Ancestor and Deadly Dispute work at instant speed, which dodges exile removal.",
+  "Deadly Dispute": "More ways to kill your own creatures on demand. Each one Avacyn returns at end step, so every sacrifice is a card, Zombies or a Treasure, not a loss. Unrooted Ancestor and Deadly Dispute work at instant speed, which dodges exile removal.",
+  "Phyrexian Vault": "More ways to kill your own creatures on demand. Each one Avacyn returns at end step, so every sacrifice is a card, Zombies or a Treasure, not a loss. Unrooted Ancestor and Deadly Dispute work at instant speed, which dodges exile removal.",
+  "Midnight Reaper": "Pays off every nontoken death: Midnight Reaper and Agent Venom draw a card, Massacre Girl pings an opponent and gains 1, Skullclamp draws two from the clamped creature.",
+  "Agent Venom": "Pays off every nontoken death: Midnight Reaper and Agent Venom draw a card, Massacre Girl pings an opponent and gains 1, Skullclamp draws two from the clamped creature.",
+  "Massacre Girl, Most Wanted": "Pays off every nontoken death: Midnight Reaper and Agent Venom draw a card, Massacre Girl pings an opponent and gains 1, Skullclamp draws two from the clamped creature.",
+  "Skullclamp": "Pays off every nontoken death: Midnight Reaper and Agent Venom draw a card, Massacre Girl pings an opponent and gains 1, Skullclamp draws two from the clamped creature.",
+  "Gravedigger": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Burnished Hart": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Clifftop Lookout": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Lys Alana Informant": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Curse-Marred Demon": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Doctor Doom": "Enter triggers that repeat each time Avacyn returns them: Gravedigger regrows a creature, Burnished Hart and Clifftop Lookout ramp, Lys Alana Informant surveils for Vaevictis's flip, Curse-Marred Demon tutors, Doctor Doom makes two 3/3 Doombots.",
+  "Ilysian Caryatid": "Early mana for a 6-mana, three-colour commander. The deck UAT's commander gate passes with them; Ilysian Caryatid fixes all three colours.",
+  "Fyndhorn Elves": "Early mana for a 6-mana, three-colour commander. The deck UAT's commander gate passes with them; Ilysian Caryatid fixes all three colours.",
+  "Putrefy": "Interaction: instant-speed creature and artifact removal (Putrefy, Unlicensed Disintegration), split-second artifact and enchantment removal (Krosan Grip), and a one-mana edict on artifacts, enchantments or fliers (Pick Your Poison).",
+  "Unlicensed Disintegration": "Interaction: instant-speed creature and artifact removal (Putrefy, Unlicensed Disintegration), split-second artifact and enchantment removal (Krosan Grip), and a one-mana edict on artifacts, enchantments or fliers (Pick Your Poison).",
+  "Krosan Grip": "Interaction: instant-speed creature and artifact removal (Putrefy, Unlicensed Disintegration), split-second artifact and enchantment removal (Krosan Grip), and a one-mana edict on artifacts, enchantments or fliers (Pick Your Poison).",
+  "Pick Your Poison": "Interaction: instant-speed creature and artifact removal (Putrefy, Unlicensed Disintegration), split-second artifact and enchantment removal (Krosan Grip), and a one-mana edict on artifacts, enchantments or fliers (Pick Your Poison).",
+  "Villainous Wrath": "One-sided wipes with Avacyn out: your nontoken creatures die and come back at end step, theirs don't. Whiptongue Hydra only kills fliers, and Avacyn and Vaevictis come back.",
+  "Whiptongue Hydra": "One-sided wipes with Avacyn out: your nontoken creatures die and come back at end step, theirs don't. Whiptongue Hydra only kills fliers, and Avacyn and Vaevictis come back.",
+  "Champion's Helm": "Protection: Champion's Helm gives Vaevictis hexproof (he is legendary) without stopping him targeting your own permanents; Snakeskin Veil saves Avacyn from a targeted exile.",
+  "Snakeskin Veil": "Protection: Champion's Helm gives Vaevictis hexproof (he is legendary) without stopping him targeting your own permanents; Snakeskin Veil saves Avacyn from a targeted exile.",
+  "Read the Bones": "Card draw: scry 2, then draw two. You draw the cards you scried, so it doesn't set Vaevictis's flip."
+ },
+ "uat": {},
+ "version": 1
+}

@@ -1,0 +1,35 @@
+{
+ "version": 1,
+ "verdicts": {
+  "spell|Apex Witchstalker|Psychosis Crawler": {
+   "verdict": "wishlist",
+   "why": "The finisher here: each opponent loses 1 for every card you draw, so sacrificing Ghalta draws 12 and drains 12 from everyone. Your copy is in Kami of the Crescent Moon (your brother's deck), so buy another.",
+   "by": "a Claude session",
+   "date": "2026-10-17"
+  },
+  "spell|Bloodgift Demon|Assassin's Trophy": {
+   "verdict": "wishlist",
+   "why": "Instant-speed answer to any permanent. Both copies are in Dina and The Ur-Dragon; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-17"
+  },
+  "spell|Burnished Hart|Selvala, Heart of the Wilds": {
+   "verdict": "wishlist",
+   "why": "Selvala taps for mana equal to your biggest creature's power, and Ghalta is 12. Your copy is in Beorn; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-17"
+  },
+  "spell|Champion's Helm|Garruk's Uprising": {
+   "verdict": "wishlist",
+   "why": "Draws on every power-4 creature entering, again on each Avacyn return. Your copy is in Beorn; buylist.",
+   "by": "a Claude session",
+   "date": "2026-10-17"
+  },
+  "spell|Putrefy|Toxic Deluge": {
+   "verdict": "wishlist",
+   "why": "A wipe that Avacyn makes one-sided, but your copy is in Dina and Y'shtola. This deck already runs Villainous Wrath and Deadly Tempest.",
+   "by": "a Claude session",
+   "date": "2026-10-17"
+  }
+ }
+}

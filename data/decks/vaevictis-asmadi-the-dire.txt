@@ -1,0 +1,107 @@
+# Title: Vaevictis Asmadi — The Gamble and the Grave
+# Commander: Vaevictis Asmadi, the Dire
+# Colors: B G R
+# Archetype: aristocrats reanimator ramp
+# Source: built 2026-10-16 around Avacyn, Angel of Horror; inspired by Jurassic Magic's Vaevictis video
+# Study: yes
+
+# --- Commander ---
+1 Vaevictis Asmadi, the Dire
+
+# --- Creatures ---
+1 Avacyn, Angel of Horror
+1 Tom, Bert, and William
+1 Carrion Feeder
+1 Woe Strider
+1 Yahenni, Undying Partisan
+1 Unrooted Ancestor
+1 Ghoulcaller Gisa
+1 Gray Merchant of Asphodel
+1 Archon of Cruelty
+1 Fleshbag Marauder
+1 Bone Shredder
+1 God-Eternal Bontu
+1 Grave Titan
+1 Sepulchral Primordial
+1 Junji, the Midnight Sky
+1 Kardur, Doomscourge
+1 Mazirek, Kraul Death Priest
+1 Twilight Diviner
+1 Eternal Witness
+1 Gravedigger
+1 Massacre Girl, Most Wanted
+1 Midnight Reaper
+1 Agent Venom
+1 Burnished Hart
+1 Springbloom Druid
+1 Wood Elves
+1 Llanowar Elves
+1 Clifftop Lookout
+1 Lys Alana Informant
+1 Curse-Marred Demon
+1 Whiptongue Hydra
+1 Anger
+1 Doctor Doom
+1 Ilysian Caryatid
+1 Fyndhorn Elves
+
+# --- Instants ---
+1 Putrefy
+1 Terminate
+1 Unlicensed Disintegration
+1 Chaos Warp
+1 Beast Within
+1 Deadly Dispute
+1 Krosan Grip
+1 Heroic Intervention
+1 Snakeskin Veil
+
+# --- Sorceries ---
+1 Farseek
+1 Rampant Growth
+1 Cultivate
+1 Read the Bones
+1 Pick Your Poison
+1 Blasphemous Act
+1 Villainous Wrath
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+1 Rakdos Signet
+1 Talisman of Indulgence
+1 Skullclamp
+1 Champion's Helm
+1 Phyrexian Vault
+
+# --- Enchantments ---
+1 Phyrexian Arena
+1 Haunted Crossroads
+1 Undergrowth Recon
+1 Wild Growth
+
+# --- Lands ---
+1 Command Tower
+1 Exotic Orchard
+1 Sulfurous Springs
+1 Cinder Glade
+1 Rootbound Crag
+1 Game Trail
+1 Rockfall Vale
+1 Haunted Ridge
+1 Foreboding Ruins
+1 Dark Fortress
+1 Temple of Malice
+1 Temple of Abandon
+1 Witherbloom Campus
+1 Jungle Hollow
+1 Urborg Volcano
+1 Fire-Lit Thicket
+1 Evolving Wilds
+1 Terramorphic Expanse
+1 Formidable Commons
+
+# --- Basics ---
+9 Swamp
+6 Forest
+3 Mountain

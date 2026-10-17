@@ -6,7 +6,7 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-16 (three new cards: Gandalf the White in Thorin, Ancient Adamantoise in Beorn, Orcish Bowmasters unplaced while the player re-reviews it; reviews now include the Lab; Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds four theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, and a Bracket 4 copy of Tinybones; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-17 (two Avacyn, Angel of Horror decks in the Lab, compared: Vaevictis Asmadi, the Dire and Tom, Bert, and William; three new cards: Gandalf the White in Thorin, Ancient Adamantoise in Beorn, Orcish Bowmasters unplaced while the player re-reviews it; reviews now include the Lab; Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds six theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, a Bracket 4 copy of Tinybones, Vaevictis and Tom, Bert, and William; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -48,6 +48,71 @@ Field top-25 counts were recomputed 2026-10-15 against the refreshed snapshots, 
 EDHREC's lists moved: the Ur-Dragon reads 19/25 where it read 22. Owned coverage is the
 validation number. Every deck has all of its owned top-25 in except Bartolomé, Beorn, Kami
 and the Ur-Sphinx (Path of Ancestry, whose seven copies are all in other decks).
+
+**2026-10-17: the two Avacyn decks, side by side in the Lab.** The player, after asking
+whether another commander would suit Avacyn: "Go ahead and make both decks with vaevictis
+and tom bert and William as commander in the lab and let's see how they compare."
+- **Both are theory decks on the same footing,** free copies only. Either can become a real
+  deck without taking a card from another deck.
+- **Tom, Bert, and William** ("Big Bodies, Big Draws"): sacrifice a huge creature to the
+  commander for cards equal to its power, and Avacyn returns it at end step. The bodies are
+  Ghalta, Primal Hunger (12; freed when the Turtle took its Beorn slot), Gigantic Big Bear
+  (10), Yargle (9), Saber-Tooth Moose-Lion and Carnage Tyrant (7). Around them:
+  - the same aristocrats core as Vaevictis;
+  - Part in Friendship, Ayara, both Archfiends;
+  - a buylist led by Psychosis Crawler (its copy is in Kami), Jarad and Bygone Colossus.
+- **How they compare** (4,000 identical goldfish games):
+
+  | Commander cast by | Turn 5 | Turn 6 | Turn 7 | Turn 8 |
+  |---|---|---|---|---|
+  | Tom, Bert, and William | 36% | 56% | 68% | 77% |
+  | Vaevictis | 20% | 35% | 51% | 62% |
+
+  - Both pass every deck UAT gate.
+  - Avacyn is cast by turn 10 in only 3-4% of games in either deck. She is one card in 99,
+    and all three owned black tutors are in sleeved decks: Grim Tutor (Ur-Dragon),
+    Diabolic (Y'shtola), Final Parting (Bartolomé). Both decks win as aristocrats decks
+    first.
+- **Next: decks playing each other.** The player asked for a system where all the decks
+  play each other in simulations: "Kami and tiny bones/tergrid are my brothers decks". The
+  plan is the deck-UAT spec's Forge household pod; see docs/spec-deck-uat.md.
+
+**2026-10-16 (late night): Vaevictis Asmadi, the Dire, built around Avacyn, Angel of
+Horror** (moved to the Lab 2026-10-17). The player: "I want to build a deck with Avacyn the angel horror black card either
+as a commander or in the 99. Go through the entire collection carefully … use this video for
+inspiration. I'd be happy to use that dragon at the commander if nothing else I own is
+better."
+- **The video:** Jurassic Magic's Vaevictis build, "The Eater of Elders", with Avacyn in its
+  99.
+  - The decklist came from Moxfield through its API. The captions can't be fetched, because
+    YouTube signs them per session.
+  - The player owns 40 of its 100 cards: 22 free, 15 held by other decks, and 56 not owned.
+- **The commander choice:** a full scan found 161 legendary creatures with black in their
+  identity, 123 of them free.
+  - Tom, Bert, and William multiply Avacyn's loop best on their own text, and they're in
+    the 99.
+  - Vaevictis's B/R/G is the only seat that also holds red and the dragon himself: 1,534
+    free nonland cards and 88 ramp, against 1,021 and 74 for black-green.
+- **The engine** (notes and spec, 18 cards, 3 packages):
+  - Free and {1} sacrifice outlets feed creatures whose enter triggers repeat each time
+    Avacyn returns them: Gray Merchant, Archon of Cruelty, Fleshbag, Grave Titan,
+    Sepulchral Primordial, God-Eternal Bontu.
+  - Twilight Diviner copies one returning creature a turn.
+  - Bone Shredder's unpaid echo is removal every turn.
+  - Scry and surveil set up Vaevictis's flip.
+  - Undergrowth Recon makes a land a free sacrifice.
+- **Validation:**
+  - Deck UAT PASS: keepable 81%, engine online 63%, commander by turn 7 in 52%. It first
+    failed at 48%; Ilysian Caryatid and Fyndhorn Elves fixed it.
+  - A/Bs showed the 9/6/3 Swamp/Forest/Mountain split is the best one.
+  - Conflicts are still 7, because every card was free.
+  - Spellbook finds no combos.
+- **Buylist (12):** Wulfgar of Icewind Dale (doubles Vaevictis's attack trigger), Grave
+  Betrayal, Sakura-Tribe Elder, Solemn, Sensei's Top, Rhythm, Greaves, Ignoble Hierarch,
+  Birds, Etali and two shocklands.
+- **The ⚡ verdicts** mark the share proposals (cards other decks hold) wishlist, and Molten
+  Slagheap skip.
+- **Bowmasters is deliberately out,** pending the player's re-review.
 
 **2026-10-16 (late): three new cards, and reviews include the Lab.** The player photographed
 Orcish Bowmasters, Ancient Adamantoise and Gandalf the White: "Log them and see where they

@@ -1,0 +1,97 @@
+# Title: Tom, Bert, and William — Big Bodies, Big Draws
+# Commander: Tom, Bert, and William
+# Colors: B G
+# Archetype: aristocrats reanimator ramp
+# Study: yes
+# Source: built 2026-10-17 around Avacyn, Angel of Horror, to compare with Vaevictis Asmadi
+
+# --- Commander ---
+1 Tom, Bert, and William
+
+# --- Creatures ---
+1 Avacyn, Angel of Horror
+1 Carrion Feeder
+1 Woe Strider
+1 Yahenni, Undying Partisan
+1 Unrooted Ancestor
+1 Ghalta, Primal Hunger
+1 Gigantic Big Bear
+1 Yargle, Glutton of Urborg
+1 Saber-Tooth Moose-Lion
+1 Carnage Tyrant
+1 Gray Merchant of Asphodel
+1 Archon of Cruelty
+1 Fleshbag Marauder
+1 Bone Shredder
+1 God-Eternal Bontu
+1 Grave Titan
+1 Sepulchral Primordial
+1 Junji, the Midnight Sky
+1 Twilight Diviner
+1 Ayara, First of Locthwain
+1 Mazirek, Kraul Death Priest
+1 Midnight Reaper
+1 Agent Venom
+1 Massacre Girl, Most Wanted
+1 Archfiend of Despair
+1 Archfiend of Depravity
+1 Bloodgift Demon
+1 Apex Witchstalker
+1 Eternal Witness
+1 Gravedigger
+1 Llanowar Elves
+1 Fyndhorn Elves
+1 Ilysian Caryatid
+1 Wood Elves
+1 Springbloom Druid
+1 Burnished Hart
+1 Goreclaw, Terror of Qal Sisma
+
+# --- Instants ---
+1 Putrefy
+1 Beast Within
+1 Murder
+1 Witherbloom Charm
+1 Krosan Grip
+1 Deadly Dispute
+1 Heroic Intervention
+1 Snakeskin Veil
+
+# --- Sorceries ---
+1 Farseek
+1 Rampant Growth
+1 Cultivate
+1 Feed the Swarm
+1 Pick Your Poison
+1 Evil Reawakened
+1 Villainous Wrath
+1 Deadly Tempest
+1 Read the Bones
+
+# --- Artifacts ---
+1 Sol Ring
+1 Arcane Signet
+1 Skullclamp
+1 Champion's Helm
+1 Phyrexian Vault
+
+# --- Enchantments ---
+1 Part in Friendship
+1 Phyrexian Arena
+1 Wild Growth
+
+# --- Lands ---
+1 Command Tower
+1 Exotic Orchard
+1 Witherbloom Campus
+1 Jungle Hollow
+1 Formidable Commons
+1 Mirkwood
+1 Subterranean Cavern
+1 Thriving Grove
+1 Evolving Wilds
+1 Terramorphic Expanse
+
+# --- Basics ---
+16 Swamp
+11 Forest
