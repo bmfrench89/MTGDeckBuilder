@@ -85,6 +85,7 @@ An Offer You Can't Refuse,Instant,1,U,{U},,W U B R G,counter,,4
 An Unexpected Party // At the Door,Enchantment,4,W,{2}{W}{W} // {X}{2}{W},,,,,4
 Anaba Bodyguard,Creature,4,R,{3}{R},Minotaur,,,2,4
 Ancestral Mask,Enchantment,3,G,{2}{G},Aura,,,,4
+Ancient Adamantoise,Creature,8,G,{5}{G}{G}{G},Turtle,,,8,4
 "Andúril, Flame of the West",Artifact,3,,{3},Equipment,,,,4
 Angel of Destiny,Creature,5,W,{3}{W}{W},Angel;Cleric,,,2,4
 Angel of Finality,Creature,4,W,{3}{W},Angel,,,3,4
@@ -1119,6 +1120,7 @@ Galuf's Final Act,Instant,2,G,{1}{G},,,,,4
 Galvanize,Instant,2,R,{1}{R},,,,,4
 Game Trail,Land,0,G R,,,R G,etb-tapped-cond,,4
 "Ganax, Astral Hunter",Creature,5,R,{4}{R},Dragon,W U B R G,,3,4
+Gandalf the White,Creature,5,W,{3}{W}{W},Avatar;Wizard,,,4,4
 "Gandalf, Goblins' Bane // Flameshape",Creature,3,R,{2}{R} // {1}{R},Avatar;Wizard,,,2,4
 "Gandalf, Spark Starter",Creature,6,R,{4}{R}{R},Avatar;Wizard,,,4,4
 "Gandalf, Wandering Wizard",Creature,5,U,{4}{U},Avatar;Wizard,,draw,4,4
@@ -2019,6 +2021,7 @@ Opportunity,Instant,6,U,{4}{U}{U},,,,,4
 Oppression,Enchantment,3,B,{1}{B}{B},,,,,4
 Oracle's Restoration,Sorcery,1,G,{G},,,draw,,4
 Oraxid,Creature,4,U,{3}{U},Crab;Beast,,,2,4
+Orcish Bowmasters,Creature,2,B,{1}{B},Orc;Archer,,,1,4
 Orcish Librarian,Creature,2,R,{1}{R},Orc,,,1,4
 Orcish Settlers,Creature,2,R,{1}{R},Orc,,,1,4
 "Orcrist, Goblin-cleaver",Artifact,3,,{3},Equipment,,,,4
