@@ -92,6 +92,11 @@ per-module table — read it before any structural change.
   thresholds calibrated on the real decks and per-deck targets in the spec's `uat`; its
   `ab()` replays the identical games with one card swapped, and `optimize.py --json --ab`
   attaches that to every proposal),
+  `forge_pod` (the household pod, docs/spec-forge-pod.md: every deck plays the others in
+  Forge's AI simulator on the player's PC: `.dck` export, a report of cards Forge can't
+  play, a rotated 4-seat schedule, one JVM per game, and a timed-out game counted as
+  abandoned, never won; the app's Matchups page reads the newest
+  `data/reference/pod/<date>.json`),
   `collection_query` (the Collection page's search language — one string that filters,
   sorts and counts the pool: a Scryfall subset plus `free>0`, `decks=0`, `deck:`, `for:`,
   `is:pinned`, `added>=`; true/false/UNKNOWN per row, unknown rows skipped and counted,
@@ -142,6 +147,9 @@ python3 scripts/deck_uat.py --deck data/decks/<stem>.txt --collection $COLL   # 
                                      # gates; exit 3 on a fail; --all; --ab "Out=In"
 python3 scripts/optimize.py --deck data/decks/<stem>.txt --collection $COLL --json --ab
                                      # every proposal carries its paired A/B
+python3 scripts/forge_pod.py --install            # once, on the PC: Forge 2.0.15 (Java 17+)
+python3 scripts/forge_pod.py --games-per-deck 16   # the household pod: the decks play each
+                                     # other in Forge's AI; --check lists cards Forge can't play
 
 # Build / tune / render
 python3 scripts/auto_build.py "<commander>" --collection $COLL [--txt|--json]
@@ -189,7 +197,9 @@ the runner), the hosted app's daily/on-demand sync pulls code + snapshots down, 
 the server re-enriches (Scryfall is reachable there) and re-scores everything on the
 full private CSV. A sandbox session's job ends at *merge*, plus an honest note of
 what the loop will finish. The one true PC-only task is `rules.py`'s Comprehensive
-Rules download (wizards.com is blocked everywhere else). Physical tasks (sleeving,
+Rules download (wizards.com is blocked everywhere else). The household pod
+(`forge_pod.py`) also runs on the PC for now, because its runner workflow isn't built
+(docs/spec-forge-pod.md). Physical tasks (sleeving,
 buying, pulling basics) are for the player, not a machine. Note that *pulling* basics
 is a physical task; *buying* them is not a thing — see the basics rule under Data formats.
 
@@ -476,7 +486,7 @@ downloads, backups, set a count, history, card data, the reconcile offer) · `/w
 so the next export carries them and the upload's reconcile retires the rows) · `/collection/upload/decide`
 (the Upload guard's second tap) · `/collection/reconcile` · `/collection/arrivals[.txt]` ·
 `/decks/import` (+ `/confirm`: the player's own list → a new deck or a new list for one) ·
-`/people` (owner only: named members) · `/activity` · `/deck/<stem>/changes` (+ `/undo`:
+`/people` (owner only: named members) · `/activity` · `/matchups` (the household pod's newest run, read-only) · `/deck/<stem>/changes` (+ `/undo`:
 reverse logged rows; `/restore`: an earlier stored version, database mode) ·
 `/narration/<stem>/<file>` (a deck's recorded narration — manifest-listed takes only,
 immutable caching; the service worker never touches it).

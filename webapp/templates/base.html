@@ -27,6 +27,7 @@
   'shared': '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
   'pins': '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
   'mobile': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  'matchups': '<path d="M4 4l11 11M13 17l4-4M16 16l3 3M20 4L9 15M7 13l4 4M8 16l-3 3"/>',
   'more': '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
   'people': '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/>',
 } %}
@@ -44,6 +45,7 @@
   <div class="rail-label">Across decks</div>
   {{ tab('shared', 'shared_view', 'Shared', secondary=true) }}
   {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck', secondary=true) }}
+  {{ tab('matchups', 'matchups_view', 'Matchups', 'The decks play each other in simulated games', secondary=true) }}
   {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone', secondary=true) }}
   {% if auth_enabled and me_role == 'owner' %}{{ tab('people', 'people', 'People', 'Who can sign in', secondary=true) }}{% endif %}
   <details class="more">
@@ -51,6 +53,7 @@
     <div class="more-items">
       {{ tab('shared', 'shared_view', 'Shared') }}
       {{ tab('pins', 'pins_page', 'Pins', 'Physical copies reserved for one deck') }}
+      {{ tab('matchups', 'matchups_view', 'Matchups', 'The decks play each other in simulated games') }}
       {{ tab('mobile', 'mobile', 'Phone', 'Install on your phone') }}
       {% if auth_enabled and me_role == 'owner' %}{{ tab('people', 'people', 'People', 'Who can sign in') }}{% endif %}
       {% if auth_enabled %}

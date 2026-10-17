@@ -57,6 +57,7 @@ import intake
 import collection_query as cq
 import card_image
 import proxy_sheet as px
+import forge_pod
 
 import sync
 import enrich_bg
@@ -121,6 +122,8 @@ users.database = _members_db
 
 DECKS_DIR = os.environ.get("MTG_DECKS_DIR", os.path.join(ROOT, "data/decks"))
 ADDITIONS = os.path.join(ROOT, "data/collection/owned_additions.txt")
+# The household pod's results (scripts/forge_pod.py); the Matchups page reads the newest.
+POD_DIR = forge_pod.RESULTS_DIR
 
 app = Flask(__name__)
 
@@ -2533,6 +2536,38 @@ def shared_view():
     unpriced = sum(1 for c in conf if not c["buy_cost"])   # unknown, never $0
     return render_template("shared.html", conf=conf, total=total, unpriced=unpriced,
                            page="shared")
+
+
+@app.route("/matchups")
+def matchups_view():
+    """The household pod (docs/spec-forge-pod.md): every deck plays every other in
+    Forge's AI simulator. This page reads the newest run: standings against the 25% a
+    4-seat game gives by chance, then each deck's record against each deck it met.
+    The games run on the PC (scripts/forge_pod.py); the page never starts one."""
+    path, res = forge_pod.latest_results(POD_DIR)
+    if not res:
+        return render_template("matchups.html", res=None, page="matchups")
+    current = {m["stem"]: m for m in list_decks()}
+    stored = {d["stem"]: d for d in res.get("decks") or []}
+    size = res["meta"].get("pod_size", forge_pod.POD_SIZE)
+
+    def who(stem):
+        # Today's title for a deck that still exists; the run's own for one that doesn't.
+        m, d = current.get(stem), stored.get(stem) or {}
+        return {"stem": stem, "title": (m or {}).get("title") or d.get("title") or stem,
+                "here": m is not None, "lab": m["study"] if m else bool(d.get("study")),
+                "unsupported": d.get("unsupported") or [],
+                "ai_flagged": d.get("ai_flagged") or []}
+
+    rows = []
+    for r in res["aggregate"]["standings"]:
+        share, turn = r.get("win_share"), r.get("avg_forge_turn")
+        rows.append({**r, **who(r["stem"]),
+                     "pct": None if share is None else round(share * 100),
+                     "round": None if turn is None else round(forge_pod.round_of(turn, size)),
+                     "vs": [{**m, **who(m["stem"])} for m in forge_pod.matchups(res, r["stem"])]})
+    return render_template("matchups.html", res=res, meta=res["meta"], rows=rows,
+                           page="matchups")
 
 
 @app.route("/build-next")

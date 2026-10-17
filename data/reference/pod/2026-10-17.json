@@ -1,0 +1,3187 @@
+{
+ "meta": {
+  "forge": "2.0.15",
+  "date": "2026-10-17",
+  "pod_size": 4,
+  "games": 72,
+  "finished": 71,
+  "abandoned": 1,
+  "games_per_deck": 16,
+  "timeout": 600,
+  "seed": 17
+ },
+ "decks": [
+  {
+   "stem": "bartolome-del-presidio-600-combos",
+   "title": "Bartolomé del Presidio — 600 Infinite Combos",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Corpse Augur",
+    "Wake the Dead",
+    "Infernal Offering",
+    "Orzhov Signet",
+    "Prismatic Lens",
+    "Dakmor Salvage"
+   ]
+  },
+  {
+   "stem": "beorn-the-fierce",
+   "title": "Beorn the Fierce — Bear Den",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Beast Within",
+    "Kenrith's Transformation"
+   ]
+  },
+  {
+   "stem": "captain-america-team-leader",
+   "title": "Captain America, Team Leader",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Dispatch"
+   ]
+  },
+  {
+   "stem": "dina-essence-brewer",
+   "title": "Dina, Essence Brewer",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Viscera Seer",
+    "Toxic Deluge",
+    "Immoral Bargain",
+    "Viridescent Bog",
+    "Twilight Mire"
+   ]
+  },
+  {
+   "stem": "eriette-of-the-charmed-apple",
+   "title": "Eriette of the Charmed Apple",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Orzhov Signet",
+    "Darksteel Mutation",
+    "Timely Ward",
+    "Fetid Heath",
+    "Desolate Mire"
+   ]
+  },
+  {
+   "stem": "giada-font-of-hope",
+   "title": "Giada, Font of Hope",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": []
+  },
+  {
+   "stem": "kami-of-the-crescent-moon",
+   "title": "Kami of the Crescent Moon",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Psychosis Crawler",
+    "Jace's Archivist",
+    "Mystic Confluence",
+    "Swan Song",
+    "Fascination",
+    "Curse of the Swine",
+    "Windfall",
+    "Folio of Fancies",
+    "Blast Zone"
+   ]
+  },
+  {
+   "stem": "mister-fantastic",
+   "title": "Mister Fantastic (theory)",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Swan Song",
+    "Beast Within",
+    "Tragic Arrogance"
+   ]
+  },
+  {
+   "stem": "smaug-the-impenetrable",
+   "title": "Smaug the Impenetrable (theory)",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Rakdos Charm",
+    "Faithless Looting",
+    "Rakdos Signet"
+   ]
+  },
+  {
+   "stem": "the-ur-dragon",
+   "title": "The Ur-Dragon",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Beast Within"
+   ]
+  },
+  {
+   "stem": "the-ur-sphinx",
+   "title": "The Ur-Sphinx",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Tragic Arrogance",
+    "Azorius Signet",
+    "Dimir Signet",
+    "Mystic Gate",
+    "Sunken Ruins"
+   ]
+  },
+  {
+   "stem": "thorin-king-of-durins-folk",
+   "title": "Thorin, King of Durin's Folk",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Rugged Prairie",
+    "Sunscorched Divide"
+   ]
+  },
+  {
+   "stem": "tinybones-bauble-burglar-b4",
+   "title": "Tinybones, Bauble Burglar (B4 theory)",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Imp's Mischief",
+    "Dark Deal"
+   ]
+  },
+  {
+   "stem": "tinybones-bauble-burglar",
+   "title": "Tinybones, Bauble Burglar",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Imp's Mischief",
+    "Dark Deal"
+   ]
+  },
+  {
+   "stem": "tom-bert-and-william",
+   "title": "Tom, Bert, and William — Big Bodies, Big Draws",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "God-Eternal Bontu",
+    "Beast Within",
+    "Deadly Tempest",
+    "Phyrexian Vault",
+    "Wild Growth"
+   ]
+  },
+  {
+   "stem": "vaevictis-asmadi-the-dire",
+   "title": "Vaevictis Asmadi — The Gamble and the Grave",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Ghoulcaller Gisa",
+    "God-Eternal Bontu",
+    "Beast Within",
+    "Rakdos Signet",
+    "Phyrexian Vault",
+    "Haunted Crossroads",
+    "Wild Growth",
+    "Fire-Lit Thicket"
+   ]
+  },
+  {
+   "stem": "witherbloom-the-balancer",
+   "title": "Witherbloom, the Balancer (theory)",
+   "study": true,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Viscera Seer",
+    "Twilight Mire",
+    "Viridescent Bog"
+   ]
+  },
+  {
+   "stem": "yshtola-nights-blessed",
+   "title": "Y'shtola, Night's Blessed",
+   "study": false,
+   "cards": 100,
+   "unsupported": [],
+   "ai_flagged": [
+    "Viscera Seer",
+    "Toxic Deluge",
+    "Darkwater Catacombs",
+    "Skycloud Expanse",
+    "Fetid Heath",
+    "Sunken Ruins",
+    "Desolate Mire"
+   ]
+  }
+ ],
+ "games": [
+  {
+   "winner": "thorin-king-of-durins-folk",
+   "abandoned": null,
+   "turn": 32,
+   "seconds": 54.193,
+   "outcomes": {
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has won because all opponents have lost",
+    "mister-fantastic": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 1,
+   "seats": [
+    "smaug-the-impenetrable",
+    "thorin-king-of-durins-folk",
+    "mister-fantastic",
+    "dina-essence-brewer"
+   ],
+   "wall_seconds": 71.7
+  },
+  {
+   "winner": "tinybones-bauble-burglar-b4",
+   "abandoned": null,
+   "turn": 28,
+   "seconds": 245.273,
+   "outcomes": {
+    "tinybones-bauble-burglar-b4": "has won because all opponents have lost",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 2,
+   "seats": [
+    "tinybones-bauble-burglar-b4",
+    "kami-of-the-crescent-moon",
+    "captain-america-team-leader",
+    "the-ur-sphinx"
+   ],
+   "wall_seconds": 262.9
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 38.609,
+   "outcomes": {
+    "giada-font-of-hope": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "the-ur-dragon": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 3,
+   "seats": [
+    "giada-font-of-hope",
+    "yshtola-nights-blessed",
+    "tom-bert-and-william",
+    "the-ur-dragon"
+   ],
+   "wall_seconds": 54.7
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 77.434,
+   "outcomes": {
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "beorn-the-fierce": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 4,
+   "seats": [
+    "tinybones-bauble-burglar",
+    "bartolome-del-presidio-600-combos",
+    "eriette-of-the-charmed-apple",
+    "beorn-the-fierce"
+   ],
+   "wall_seconds": 95.9
+  },
+  {
+   "winner": null,
+   "abandoned": "timed out (Forge then names every survivor a winner)",
+   "turn": 21,
+   "seconds": 600.163,
+   "outcomes": {
+    "the-ur-dragon": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has won because all opponents have lost",
+    "witherbloom-the-balancer": "has won because all opponents have lost",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 5,
+   "seats": [
+    "the-ur-dragon",
+    "vaevictis-asmadi-the-dire",
+    "witherbloom-the-balancer",
+    "thorin-king-of-durins-folk"
+   ],
+   "wall_seconds": 616.5
+  },
+  {
+   "winner": "yshtola-nights-blessed",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 116.602,
+   "outcomes": {
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 6,
+   "seats": [
+    "witherbloom-the-balancer",
+    "beorn-the-fierce",
+    "the-ur-sphinx",
+    "yshtola-nights-blessed"
+   ],
+   "wall_seconds": 132.9
+  },
+  {
+   "winner": "smaug-the-impenetrable",
+   "abandoned": null,
+   "turn": 16,
+   "seconds": 27.649,
+   "outcomes": {
+    "bartolome-del-presidio-600-combos": "has lost due to accumulation of 21 damage from generals",
+    "dina-essence-brewer": "has lost due to accumulation of 21 damage from generals",
+    "smaug-the-impenetrable": "has won because all opponents have lost",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 7,
+   "seats": [
+    "bartolome-del-presidio-600-combos",
+    "dina-essence-brewer",
+    "smaug-the-impenetrable",
+    "tinybones-bauble-burglar-b4"
+   ],
+   "wall_seconds": 44.4
+  },
+  {
+   "winner": "tinybones-bauble-burglar",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 88.703,
+   "outcomes": {
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has won because all opponents have lost",
+    "giada-font-of-hope": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 8,
+   "seats": [
+    "eriette-of-the-charmed-apple",
+    "tinybones-bauble-burglar",
+    "giada-font-of-hope",
+    "tom-bert-and-william"
+   ],
+   "wall_seconds": 106.0
+  },
+  {
+   "winner": "kami-of-the-crescent-moon",
+   "abandoned": null,
+   "turn": 16,
+   "seconds": 40.028,
+   "outcomes": {
+    "kami-of-the-crescent-moon": "has won because all opponents have lost",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 9,
+   "seats": [
+    "kami-of-the-crescent-moon",
+    "captain-america-team-leader",
+    "vaevictis-asmadi-the-dire",
+    "mister-fantastic"
+   ],
+   "wall_seconds": 57.2
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 32.84,
+   "outcomes": {
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 10,
+   "seats": [
+    "yshtola-nights-blessed",
+    "giada-font-of-hope",
+    "tinybones-bauble-burglar-b4",
+    "eriette-of-the-charmed-apple"
+   ],
+   "wall_seconds": 51.6
+  },
+  {
+   "winner": "kami-of-the-crescent-moon",
+   "abandoned": null,
+   "turn": 26,
+   "seconds": 148.025,
+   "outcomes": {
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has won because all opponents have lost",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 11,
+   "seats": [
+    "tom-bert-and-william",
+    "the-ur-sphinx",
+    "kami-of-the-crescent-moon",
+    "bartolome-del-presidio-600-combos"
+   ],
+   "wall_seconds": 165.0
+  },
+  {
+   "winner": "witherbloom-the-balancer",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 310.191,
+   "outcomes": {
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has won because all opponents have lost",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 12,
+   "seats": [
+    "thorin-king-of-durins-folk",
+    "witherbloom-the-balancer",
+    "beorn-the-fierce",
+    "vaevictis-asmadi-the-dire"
+   ],
+   "wall_seconds": 327.3
+  },
+  {
+   "winner": "mister-fantastic",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 44.955,
+   "outcomes": {
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "mister-fantastic": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 13,
+   "seats": [
+    "captain-america-team-leader",
+    "the-ur-dragon",
+    "tinybones-bauble-burglar",
+    "mister-fantastic"
+   ],
+   "wall_seconds": 62.1
+  },
+  {
+   "winner": "vaevictis-asmadi-the-dire",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 36.09,
+   "outcomes": {
+    "vaevictis-asmadi-the-dire": "has won because all opponents have lost",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 14,
+   "seats": [
+    "vaevictis-asmadi-the-dire",
+    "smaug-the-impenetrable",
+    "dina-essence-brewer",
+    "yshtola-nights-blessed"
+   ],
+   "wall_seconds": 54.1
+  },
+  {
+   "winner": "smaug-the-impenetrable",
+   "abandoned": null,
+   "turn": 18,
+   "seconds": 31.549,
+   "outcomes": {
+    "mister-fantastic": "has lost due to accumulation of 21 damage from generals",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "giada-font-of-hope": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 15,
+   "seats": [
+    "mister-fantastic",
+    "tom-bert-and-william",
+    "giada-font-of-hope",
+    "smaug-the-impenetrable"
+   ],
+   "wall_seconds": 48.8
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 26.897,
+   "outcomes": {
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "tinybones-bauble-burglar": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 16,
+   "seats": [
+    "kami-of-the-crescent-moon",
+    "tinybones-bauble-burglar-b4",
+    "eriette-of-the-charmed-apple",
+    "tinybones-bauble-burglar"
+   ],
+   "wall_seconds": 44.9
+  },
+  {
+   "winner": "captain-america-team-leader",
+   "abandoned": null,
+   "turn": 20,
+   "seconds": 52.266,
+   "outcomes": {
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "captain-america-team-leader": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 17,
+   "seats": [
+    "the-ur-sphinx",
+    "witherbloom-the-balancer",
+    "thorin-king-of-durins-folk",
+    "captain-america-team-leader"
+   ],
+   "wall_seconds": 69.9
+  },
+  {
+   "winner": "beorn-the-fierce",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 31.958,
+   "outcomes": {
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "beorn-the-fierce": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 18,
+   "seats": [
+    "dina-essence-brewer",
+    "the-ur-dragon",
+    "bartolome-del-presidio-600-combos",
+    "beorn-the-fierce"
+   ],
+   "wall_seconds": 49.2
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 25,
+   "seconds": 33.999,
+   "outcomes": {
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 19,
+   "seats": [
+    "captain-america-team-leader",
+    "eriette-of-the-charmed-apple",
+    "tinybones-bauble-burglar",
+    "tinybones-bauble-burglar-b4"
+   ],
+   "wall_seconds": 50.9
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 28,
+   "seconds": 214.688,
+   "outcomes": {
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 20,
+   "seats": [
+    "giada-font-of-hope",
+    "yshtola-nights-blessed",
+    "the-ur-dragon",
+    "vaevictis-asmadi-the-dire"
+   ],
+   "wall_seconds": 232.4
+  },
+  {
+   "winner": "beorn-the-fierce",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 34.556,
+   "outcomes": {
+    "beorn-the-fierce": "has won because all opponents have lost",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 21,
+   "seats": [
+    "beorn-the-fierce",
+    "smaug-the-impenetrable",
+    "dina-essence-brewer",
+    "tom-bert-and-william"
+   ],
+   "wall_seconds": 50.3
+  },
+  {
+   "winner": "mister-fantastic",
+   "abandoned": null,
+   "turn": 26,
+   "seconds": 313.038,
+   "outcomes": {
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "mister-fantastic": "has won because all opponents have lost",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 22,
+   "seats": [
+    "thorin-king-of-durins-folk",
+    "mister-fantastic",
+    "witherbloom-the-balancer",
+    "the-ur-sphinx"
+   ],
+   "wall_seconds": 328.5
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 32,
+   "seconds": 132.153,
+   "outcomes": {
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 23,
+   "seats": [
+    "bartolome-del-presidio-600-combos",
+    "giada-font-of-hope",
+    "kami-of-the-crescent-moon",
+    "witherbloom-the-balancer"
+   ],
+   "wall_seconds": 147.3
+  },
+  {
+   "winner": "yshtola-nights-blessed",
+   "abandoned": null,
+   "turn": 27,
+   "seconds": 33.304,
+   "outcomes": {
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has won because all opponents have lost",
+    "the-ur-dragon": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 24,
+   "seats": [
+    "the-ur-sphinx",
+    "tinybones-bauble-burglar-b4",
+    "yshtola-nights-blessed",
+    "the-ur-dragon"
+   ],
+   "wall_seconds": 49.1
+  },
+  {
+   "winner": "beorn-the-fierce",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 35.318,
+   "outcomes": {
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "beorn-the-fierce": "has won because all opponents have lost",
+    "mister-fantastic": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 25,
+   "seats": [
+    "tinybones-bauble-burglar",
+    "thorin-king-of-durins-folk",
+    "beorn-the-fierce",
+    "mister-fantastic"
+   ],
+   "wall_seconds": 51.2
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 25.71,
+   "outcomes": {
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 26,
+   "seats": [
+    "smaug-the-impenetrable",
+    "captain-america-team-leader",
+    "tom-bert-and-william",
+    "eriette-of-the-charmed-apple"
+   ],
+   "wall_seconds": 43.4
+  },
+  {
+   "winner": "dina-essence-brewer",
+   "abandoned": null,
+   "turn": 28,
+   "seconds": 69.249,
+   "outcomes": {
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "dina-essence-brewer": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 27,
+   "seats": [
+    "vaevictis-asmadi-the-dire",
+    "bartolome-del-presidio-600-combos",
+    "kami-of-the-crescent-moon",
+    "dina-essence-brewer"
+   ],
+   "wall_seconds": 85.2
+  },
+  {
+   "winner": "mister-fantastic",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 34.301,
+   "outcomes": {
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0",
+    "mister-fantastic": "has won because all opponents have lost",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 28,
+   "seats": [
+    "eriette-of-the-charmed-apple",
+    "mister-fantastic",
+    "smaug-the-impenetrable",
+    "thorin-king-of-durins-folk"
+   ],
+   "wall_seconds": 50.5
+  },
+  {
+   "winner": "vaevictis-asmadi-the-dire",
+   "abandoned": null,
+   "turn": 25,
+   "seconds": 40.588,
+   "outcomes": {
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has won because all opponents have lost",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 29,
+   "seats": [
+    "dina-essence-brewer",
+    "vaevictis-asmadi-the-dire",
+    "captain-america-team-leader",
+    "tinybones-bauble-burglar-b4"
+   ],
+   "wall_seconds": 56.2
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 42.845,
+   "outcomes": {
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 30,
+   "seats": [
+    "beorn-the-fierce",
+    "tinybones-bauble-burglar",
+    "the-ur-dragon",
+    "giada-font-of-hope"
+   ],
+   "wall_seconds": 59.3
+  },
+  {
+   "winner": "bartolome-del-presidio-600-combos",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 284.69,
+   "outcomes": {
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has won because all opponents have lost",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 31,
+   "seats": [
+    "witherbloom-the-balancer",
+    "tom-bert-and-william",
+    "bartolome-del-presidio-600-combos",
+    "kami-of-the-crescent-moon"
+   ],
+   "wall_seconds": 301.0
+  },
+  {
+   "winner": "yshtola-nights-blessed",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 32.531,
+   "outcomes": {
+    "yshtola-nights-blessed": "has won because all opponents have lost",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 32,
+   "seats": [
+    "yshtola-nights-blessed",
+    "the-ur-sphinx",
+    "tinybones-bauble-burglar-b4",
+    "captain-america-team-leader"
+   ],
+   "wall_seconds": 49.0
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 26,
+   "seconds": 73.508,
+   "outcomes": {
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 33,
+   "seats": [
+    "tom-bert-and-william",
+    "dina-essence-brewer",
+    "bartolome-del-presidio-600-combos",
+    "giada-font-of-hope"
+   ],
+   "wall_seconds": 88.8
+  },
+  {
+   "winner": "the-ur-sphinx",
+   "abandoned": null,
+   "turn": 31,
+   "seconds": 90.759,
+   "outcomes": {
+    "mister-fantastic": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "the-ur-sphinx": "has won because all opponents have lost",
+    "tinybones-bauble-burglar": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 34,
+   "seats": [
+    "mister-fantastic",
+    "vaevictis-asmadi-the-dire",
+    "the-ur-sphinx",
+    "tinybones-bauble-burglar"
+   ],
+   "wall_seconds": 106.6
+  },
+  {
+   "winner": "smaug-the-impenetrable",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 30.692,
+   "outcomes": {
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has lost due to accumulation of 21 damage from generals",
+    "smaug-the-impenetrable": "has won because all opponents have lost",
+    "witherbloom-the-balancer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 35,
+   "seats": [
+    "thorin-king-of-durins-folk",
+    "eriette-of-the-charmed-apple",
+    "smaug-the-impenetrable",
+    "witherbloom-the-balancer"
+   ],
+   "wall_seconds": 45.2
+  },
+  {
+   "winner": "yshtola-nights-blessed",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 103.071,
+   "outcomes": {
+    "the-ur-dragon": "has lost because life total reached 0",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has won because all opponents have lost",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 36,
+   "seats": [
+    "the-ur-dragon",
+    "beorn-the-fierce",
+    "yshtola-nights-blessed",
+    "kami-of-the-crescent-moon"
+   ],
+   "wall_seconds": 118.7
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 25,
+   "seconds": 70.599,
+   "outcomes": {
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost trying to draw cards from empty library",
+    "the-ur-dragon": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 37,
+   "seats": [
+    "kami-of-the-crescent-moon",
+    "thorin-king-of-durins-folk",
+    "vaevictis-asmadi-the-dire",
+    "the-ur-dragon"
+   ],
+   "wall_seconds": 87.9
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 20,
+   "seconds": 101.161,
+   "outcomes": {
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 38,
+   "seats": [
+    "giada-font-of-hope",
+    "dina-essence-brewer",
+    "mister-fantastic",
+    "witherbloom-the-balancer"
+   ],
+   "wall_seconds": 116.3
+  },
+  {
+   "winner": "beorn-the-fierce",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 59.671,
+   "outcomes": {
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "beorn-the-fierce": "has won because all opponents have lost",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 39,
+   "seats": [
+    "tinybones-bauble-burglar",
+    "tom-bert-and-william",
+    "beorn-the-fierce",
+    "bartolome-del-presidio-600-combos"
+   ],
+   "wall_seconds": 76.5
+  },
+  {
+   "winner": "the-ur-sphinx",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 32.177,
+   "outcomes": {
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "the-ur-sphinx": "has won because all opponents have lost",
+    "yshtola-nights-blessed": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 40,
+   "seats": [
+    "tinybones-bauble-burglar-b4",
+    "smaug-the-impenetrable",
+    "the-ur-sphinx",
+    "yshtola-nights-blessed"
+   ],
+   "wall_seconds": 47.9
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 45.956,
+   "outcomes": {
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 41,
+   "seats": [
+    "eriette-of-the-charmed-apple",
+    "the-ur-dragon",
+    "witherbloom-the-balancer",
+    "captain-america-team-leader"
+   ],
+   "wall_seconds": 62.2
+  },
+  {
+   "winner": "the-ur-sphinx",
+   "abandoned": null,
+   "turn": 28,
+   "seconds": 36.085,
+   "outcomes": {
+    "the-ur-sphinx": "has won because all opponents have lost",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 42,
+   "seats": [
+    "the-ur-sphinx",
+    "tinybones-bauble-burglar-b4",
+    "dina-essence-brewer",
+    "tom-bert-and-william"
+   ],
+   "wall_seconds": 52.1
+  },
+  {
+   "winner": "tinybones-bauble-burglar",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 88.343,
+   "outcomes": {
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "giada-font-of-hope": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has won because all opponents have lost",
+    "beorn-the-fierce": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 43,
+   "seats": [
+    "yshtola-nights-blessed",
+    "giada-font-of-hope",
+    "tinybones-bauble-burglar",
+    "beorn-the-fierce"
+   ],
+   "wall_seconds": 104.6
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 48.473,
+   "outcomes": {
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "mister-fantastic": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 44,
+   "seats": [
+    "bartolome-del-presidio-600-combos",
+    "kami-of-the-crescent-moon",
+    "eriette-of-the-charmed-apple",
+    "mister-fantastic"
+   ],
+   "wall_seconds": 65.2
+  },
+  {
+   "winner": "vaevictis-asmadi-the-dire",
+   "abandoned": null,
+   "turn": 30,
+   "seconds": 50.476,
+   "outcomes": {
+    "vaevictis-asmadi-the-dire": "has won because all opponents have lost",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 45,
+   "seats": [
+    "vaevictis-asmadi-the-dire",
+    "captain-america-team-leader",
+    "thorin-king-of-durins-folk",
+    "smaug-the-impenetrable"
+   ],
+   "wall_seconds": 65.6
+  },
+  {
+   "winner": "tinybones-bauble-burglar",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 54.018,
+   "outcomes": {
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 46,
+   "seats": [
+    "smaug-the-impenetrable",
+    "bartolome-del-presidio-600-combos",
+    "mister-fantastic",
+    "tinybones-bauble-burglar"
+   ],
+   "wall_seconds": 70.0
+  },
+  {
+   "winner": "kami-of-the-crescent-moon",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 112.127,
+   "outcomes": {
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has won because all opponents have lost",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 47,
+   "seats": [
+    "tinybones-bauble-burglar-b4",
+    "kami-of-the-crescent-moon",
+    "vaevictis-asmadi-the-dire",
+    "witherbloom-the-balancer"
+   ],
+   "wall_seconds": 127.3
+  },
+  {
+   "winner": "tom-bert-and-william",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 23.57,
+   "outcomes": {
+    "tom-bert-and-william": "has won because all opponents have lost",
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 48,
+   "seats": [
+    "tom-bert-and-william",
+    "yshtola-nights-blessed",
+    "thorin-king-of-durins-folk",
+    "captain-america-team-leader"
+   ],
+   "wall_seconds": 39.3
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 37.936,
+   "outcomes": {
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "the-ur-sphinx": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 49,
+   "seats": [
+    "beorn-the-fierce",
+    "eriette-of-the-charmed-apple",
+    "giada-font-of-hope",
+    "the-ur-sphinx"
+   ],
+   "wall_seconds": 52.7
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 55.25,
+   "outcomes": {
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "the-ur-dragon": "has won because all opponents have lost",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 50,
+   "seats": [
+    "dina-essence-brewer",
+    "the-ur-dragon",
+    "tom-bert-and-william",
+    "eriette-of-the-charmed-apple"
+   ],
+   "wall_seconds": 71.4
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 59.947,
+   "outcomes": {
+    "the-ur-dragon": "has won because all opponents have lost",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 51,
+   "seats": [
+    "the-ur-dragon",
+    "thorin-king-of-durins-folk",
+    "captain-america-team-leader",
+    "smaug-the-impenetrable"
+   ],
+   "wall_seconds": 75.6
+  },
+  {
+   "winner": "mister-fantastic",
+   "abandoned": null,
+   "turn": 27,
+   "seconds": 55.047,
+   "outcomes": {
+    "mister-fantastic": "has won because all opponents have lost",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 52,
+   "seats": [
+    "mister-fantastic",
+    "the-ur-sphinx",
+    "yshtola-nights-blessed",
+    "vaevictis-asmadi-the-dire"
+   ],
+   "wall_seconds": 70.9
+  },
+  {
+   "winner": "tinybones-bauble-burglar-b4",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 34.555,
+   "outcomes": {
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has won because all opponents have lost",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 53,
+   "seats": [
+    "witherbloom-the-balancer",
+    "tinybones-bauble-burglar-b4",
+    "dina-essence-brewer",
+    "bartolome-del-presidio-600-combos"
+   ],
+   "wall_seconds": 50.2
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 66.347,
+   "outcomes": {
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 54,
+   "seats": [
+    "giada-font-of-hope",
+    "beorn-the-fierce",
+    "kami-of-the-crescent-moon",
+    "tinybones-bauble-burglar"
+   ],
+   "wall_seconds": 82.6
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 20,
+   "seconds": 89.651,
+   "outcomes": {
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 55,
+   "seats": [
+    "dina-essence-brewer",
+    "mister-fantastic",
+    "beorn-the-fierce",
+    "giada-font-of-hope"
+   ],
+   "wall_seconds": 105.1
+  },
+  {
+   "winner": "smaug-the-impenetrable",
+   "abandoned": null,
+   "turn": 20,
+   "seconds": 35.297,
+   "outcomes": {
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has won because all opponents have lost",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 56,
+   "seats": [
+    "captain-america-team-leader",
+    "smaug-the-impenetrable",
+    "tinybones-bauble-burglar-b4",
+    "kami-of-the-crescent-moon"
+   ],
+   "wall_seconds": 51.0
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 42.249,
+   "outcomes": {
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "tom-bert-and-william": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 57,
+   "seats": [
+    "thorin-king-of-durins-folk",
+    "eriette-of-the-charmed-apple",
+    "bartolome-del-presidio-600-combos",
+    "tom-bert-and-william"
+   ],
+   "wall_seconds": 58.3
+  },
+  {
+   "winner": "tinybones-bauble-burglar",
+   "abandoned": null,
+   "turn": 29,
+   "seconds": 47.894,
+   "outcomes": {
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "tinybones-bauble-burglar": "has won because all opponents have lost",
+    "yshtola-nights-blessed": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 58,
+   "seats": [
+    "the-ur-sphinx",
+    "witherbloom-the-balancer",
+    "tinybones-bauble-burglar",
+    "yshtola-nights-blessed"
+   ],
+   "wall_seconds": 64.7
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 38.784,
+   "outcomes": {
+    "the-ur-dragon": "has won because all opponents have lost",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 59,
+   "seats": [
+    "the-ur-dragon",
+    "witherbloom-the-balancer",
+    "vaevictis-asmadi-the-dire",
+    "mister-fantastic"
+   ],
+   "wall_seconds": 54.2
+  },
+  {
+   "winner": "dina-essence-brewer",
+   "abandoned": null,
+   "turn": 23,
+   "seconds": 68.145,
+   "outcomes": {
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "dina-essence-brewer": "has won because all opponents have lost",
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 60,
+   "seats": [
+    "tinybones-bauble-burglar-b4",
+    "dina-essence-brewer",
+    "eriette-of-the-charmed-apple",
+    "thorin-king-of-durins-folk"
+   ],
+   "wall_seconds": 83.7
+  },
+  {
+   "winner": "yshtola-nights-blessed",
+   "abandoned": null,
+   "turn": 20,
+   "seconds": 29.103,
+   "outcomes": {
+    "kami-of-the-crescent-moon": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has won because all opponents have lost",
+    "tom-bert-and-william": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 61,
+   "seats": [
+    "kami-of-the-crescent-moon",
+    "the-ur-sphinx",
+    "yshtola-nights-blessed",
+    "tom-bert-and-william"
+   ],
+   "wall_seconds": 44.5
+  },
+  {
+   "winner": "beorn-the-fierce",
+   "abandoned": null,
+   "turn": 28,
+   "seconds": 32.162,
+   "outcomes": {
+    "beorn-the-fierce": "has won because all opponents have lost",
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "the-ur-dragon": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 62,
+   "seats": [
+    "beorn-the-fierce",
+    "tinybones-bauble-burglar",
+    "the-ur-dragon",
+    "captain-america-team-leader"
+   ],
+   "wall_seconds": 48.3
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 19,
+   "seconds": 53.567,
+   "outcomes": {
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost",
+    "smaug-the-impenetrable": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 63,
+   "seats": [
+    "bartolome-del-presidio-600-combos",
+    "vaevictis-asmadi-the-dire",
+    "giada-font-of-hope",
+    "smaug-the-impenetrable"
+   ],
+   "wall_seconds": 69.2
+  },
+  {
+   "winner": "bartolome-del-presidio-600-combos",
+   "abandoned": null,
+   "turn": 18,
+   "seconds": 76.487,
+   "outcomes": {
+    "the-ur-dragon": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has won because all opponents have lost",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "giada-font-of-hope": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 64,
+   "seats": [
+    "the-ur-dragon",
+    "bartolome-del-presidio-600-combos",
+    "beorn-the-fierce",
+    "giada-font-of-hope"
+   ],
+   "wall_seconds": 92.0
+  },
+  {
+   "winner": "eriette-of-the-charmed-apple",
+   "abandoned": null,
+   "turn": 26,
+   "seconds": 35.95,
+   "outcomes": {
+    "vaevictis-asmadi-the-dire": "has lost because life total reached 0",
+    "mister-fantastic": "has lost because life total reached 0",
+    "captain-america-team-leader": "has lost because life total reached 0",
+    "eriette-of-the-charmed-apple": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 65,
+   "seats": [
+    "vaevictis-asmadi-the-dire",
+    "mister-fantastic",
+    "captain-america-team-leader",
+    "eriette-of-the-charmed-apple"
+   ],
+   "wall_seconds": 51.3
+  },
+  {
+   "winner": "kami-of-the-crescent-moon",
+   "abandoned": null,
+   "turn": 24,
+   "seconds": 54.236,
+   "outcomes": {
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has won because all opponents have lost",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 66,
+   "seats": [
+    "tom-bert-and-william",
+    "kami-of-the-crescent-moon",
+    "smaug-the-impenetrable",
+    "dina-essence-brewer"
+   ],
+   "wall_seconds": 69.9
+  },
+  {
+   "winner": "tinybones-bauble-burglar-b4",
+   "abandoned": null,
+   "turn": 22,
+   "seconds": 44.429,
+   "outcomes": {
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 67,
+   "seats": [
+    "yshtola-nights-blessed",
+    "witherbloom-the-balancer",
+    "the-ur-sphinx",
+    "tinybones-bauble-burglar-b4"
+   ],
+   "wall_seconds": 60.0
+  },
+  {
+   "winner": "witherbloom-the-balancer",
+   "abandoned": null,
+   "turn": 31,
+   "seconds": 97.315,
+   "outcomes": {
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "yshtola-nights-blessed": "has lost because life total reached 0",
+    "witherbloom-the-balancer": "has won because all opponents have lost",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 68,
+   "seats": [
+    "tinybones-bauble-burglar",
+    "yshtola-nights-blessed",
+    "witherbloom-the-balancer",
+    "thorin-king-of-durins-folk"
+   ],
+   "wall_seconds": 115.3
+  },
+  {
+   "winner": "captain-america-team-leader",
+   "abandoned": null,
+   "turn": 32,
+   "seconds": 90.71,
+   "outcomes": {
+    "captain-america-team-leader": "has won because all opponents have lost",
+    "tom-bert-and-william": "has lost because life total reached 0",
+    "dina-essence-brewer": "has lost because life total reached 0",
+    "kami-of-the-crescent-moon": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 69,
+   "seats": [
+    "captain-america-team-leader",
+    "tom-bert-and-william",
+    "dina-essence-brewer",
+    "kami-of-the-crescent-moon"
+   ],
+   "wall_seconds": 108.7
+  },
+  {
+   "winner": "vaevictis-asmadi-the-dire",
+   "abandoned": null,
+   "turn": 15,
+   "seconds": 17.989,
+   "outcomes": {
+    "tinybones-bauble-burglar": "has lost because life total reached 0",
+    "tinybones-bauble-burglar-b4": "has lost because life total reached 0",
+    "bartolome-del-presidio-600-combos": "has lost because life total reached 0",
+    "vaevictis-asmadi-the-dire": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 70,
+   "seats": [
+    "tinybones-bauble-burglar",
+    "tinybones-bauble-burglar-b4",
+    "bartolome-del-presidio-600-combos",
+    "vaevictis-asmadi-the-dire"
+   ],
+   "wall_seconds": 34.5
+  },
+  {
+   "winner": "giada-font-of-hope",
+   "abandoned": null,
+   "turn": 17,
+   "seconds": 35.663,
+   "outcomes": {
+    "eriette-of-the-charmed-apple": "has lost because life total reached 0",
+    "beorn-the-fierce": "has lost because life total reached 0",
+    "smaug-the-impenetrable": "has lost because life total reached 0",
+    "giada-font-of-hope": "has won because all opponents have lost"
+   },
+   "unsupported": [],
+   "game": 71,
+   "seats": [
+    "eriette-of-the-charmed-apple",
+    "beorn-the-fierce",
+    "smaug-the-impenetrable",
+    "giada-font-of-hope"
+   ],
+   "wall_seconds": 51.2
+  },
+  {
+   "winner": "the-ur-dragon",
+   "abandoned": null,
+   "turn": 21,
+   "seconds": 35.54,
+   "outcomes": {
+    "mister-fantastic": "has lost because life total reached 0",
+    "the-ur-dragon": "has won because all opponents have lost",
+    "thorin-king-of-durins-folk": "has lost because life total reached 0",
+    "the-ur-sphinx": "has lost because life total reached 0"
+   },
+   "unsupported": [],
+   "game": 72,
+   "seats": [
+    "mister-fantastic",
+    "the-ur-dragon",
+    "thorin-king-of-durins-folk",
+    "the-ur-sphinx"
+   ],
+   "wall_seconds": 51.1
+  }
+ ],
+ "aggregate": {
+  "standings": [
+   {
+    "stem": "giada-font-of-hope",
+    "games": 16,
+    "finished": 16,
+    "wins": 11,
+    "abandoned": 0,
+    "win_share": 0.6875,
+    "avg_forge_turn": 22.25
+   },
+   {
+    "stem": "eriette-of-the-charmed-apple",
+    "games": 16,
+    "finished": 16,
+    "wins": 8,
+    "abandoned": 0,
+    "win_share": 0.5,
+    "avg_forge_turn": 22.125
+   },
+   {
+    "stem": "the-ur-dragon",
+    "games": 16,
+    "finished": 15,
+    "wins": 6,
+    "abandoned": 1,
+    "win_share": 0.4,
+    "avg_forge_turn": 23.2
+   },
+   {
+    "stem": "beorn-the-fierce",
+    "games": 16,
+    "finished": 16,
+    "wins": 5,
+    "abandoned": 0,
+    "win_share": 0.3125,
+    "avg_forge_turn": 21.75
+   },
+   {
+    "stem": "yshtola-nights-blessed",
+    "games": 16,
+    "finished": 16,
+    "wins": 5,
+    "abandoned": 0,
+    "win_share": 0.3125,
+    "avg_forge_turn": 23.75
+   },
+   {
+    "stem": "vaevictis-asmadi-the-dire",
+    "games": 16,
+    "finished": 15,
+    "wins": 4,
+    "abandoned": 1,
+    "win_share": 0.26666666666666666,
+    "avg_forge_turn": 23.866666666666667
+   },
+   {
+    "stem": "kami-of-the-crescent-moon",
+    "games": 16,
+    "finished": 16,
+    "wins": 4,
+    "abandoned": 0,
+    "win_share": 0.25,
+    "avg_forge_turn": 23.6875
+   },
+   {
+    "stem": "mister-fantastic",
+    "games": 16,
+    "finished": 16,
+    "wins": 4,
+    "abandoned": 0,
+    "win_share": 0.25,
+    "avg_forge_turn": 23.125
+   },
+   {
+    "stem": "smaug-the-impenetrable",
+    "games": 16,
+    "finished": 16,
+    "wins": 4,
+    "abandoned": 0,
+    "win_share": 0.25,
+    "avg_forge_turn": 21.625
+   },
+   {
+    "stem": "tinybones-bauble-burglar",
+    "games": 16,
+    "finished": 16,
+    "wins": 4,
+    "abandoned": 0,
+    "win_share": 0.25,
+    "avg_forge_turn": 23.875
+   },
+   {
+    "stem": "the-ur-sphinx",
+    "games": 16,
+    "finished": 16,
+    "wins": 3,
+    "abandoned": 0,
+    "win_share": 0.1875,
+    "avg_forge_turn": 24.6875
+   },
+   {
+    "stem": "tinybones-bauble-burglar-b4",
+    "games": 16,
+    "finished": 16,
+    "wins": 3,
+    "abandoned": 0,
+    "win_share": 0.1875,
+    "avg_forge_turn": 22.5
+   },
+   {
+    "stem": "witherbloom-the-balancer",
+    "games": 16,
+    "finished": 15,
+    "wins": 2,
+    "abandoned": 1,
+    "win_share": 0.13333333333333333,
+    "avg_forge_turn": 23.666666666666668
+   },
+   {
+    "stem": "bartolome-del-presidio-600-combos",
+    "games": 16,
+    "finished": 16,
+    "wins": 2,
+    "abandoned": 0,
+    "win_share": 0.125,
+    "avg_forge_turn": 22.375
+   },
+   {
+    "stem": "captain-america-team-leader",
+    "games": 16,
+    "finished": 16,
+    "wins": 2,
+    "abandoned": 0,
+    "win_share": 0.125,
+    "avg_forge_turn": 24.0625
+   },
+   {
+    "stem": "dina-essence-brewer",
+    "games": 16,
+    "finished": 16,
+    "wins": 2,
+    "abandoned": 0,
+    "win_share": 0.125,
+    "avg_forge_turn": 23.9375
+   },
+   {
+    "stem": "thorin-king-of-durins-folk",
+    "games": 16,
+    "finished": 15,
+    "wins": 1,
+    "abandoned": 1,
+    "win_share": 0.06666666666666667,
+    "avg_forge_turn": 23.866666666666667
+   },
+   {
+    "stem": "tom-bert-and-william",
+    "games": 16,
+    "finished": 16,
+    "wins": 1,
+    "abandoned": 0,
+    "win_share": 0.0625,
+    "avg_forge_turn": 23.0625
+   }
+  ],
+  "head_to_head": {
+   "bartolome-del-presidio-600-combos": {
+    "beorn-the-fierce": [
+     1,
+     4
+    ],
+    "captain-america-team-leader": [
+     0,
+     0
+    ],
+    "dina-essence-brewer": [
+     0,
+     5
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     3
+    ],
+    "giada-font-of-hope": [
+     1,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     5
+    ],
+    "mister-fantastic": [
+     0,
+     2
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     3
+    ],
+    "the-ur-dragon": [
+     1,
+     2
+    ],
+    "the-ur-sphinx": [
+     0,
+     1
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     3
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     4
+    ],
+    "tom-bert-and-william": [
+     1,
+     5
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     0
+    ]
+   },
+   "beorn-the-fierce": {
+    "bartolome-del-presidio-600-combos": [
+     2,
+     4
+    ],
+    "captain-america-team-leader": [
+     1,
+     1
+    ],
+    "dina-essence-brewer": [
+     2,
+     3
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     3
+    ],
+    "giada-font-of-hope": [
+     0,
+     7
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     2
+    ],
+    "mister-fantastic": [
+     1,
+     2
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     2
+    ],
+    "the-ur-dragon": [
+     2,
+     5
+    ],
+    "the-ur-sphinx": [
+     0,
+     2
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     2
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     0
+    ],
+    "tinybones-bauble-burglar": [
+     3,
+     7
+    ],
+    "tom-bert-and-william": [
+     2,
+     2
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     1
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     3
+    ]
+   },
+   "captain-america-team-leader": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     0
+    ],
+    "beorn-the-fierce": [
+     0,
+     1
+    ],
+    "dina-essence-brewer": [
+     1,
+     2
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     4
+    ],
+    "giada-font-of-hope": [
+     0,
+     0
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     4
+    ],
+    "mister-fantastic": [
+     0,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     4
+    ],
+    "the-ur-dragon": [
+     0,
+     4
+    ],
+    "the-ur-sphinx": [
+     1,
+     3
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     4
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     5
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     3
+    ],
+    "tom-bert-and-william": [
+     1,
+     3
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     4
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     2
+    ]
+   },
+   "dina-essence-brewer": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     5
+    ],
+    "beorn-the-fierce": [
+     0,
+     3
+    ],
+    "captain-america-team-leader": [
+     0,
+     2
+    ],
+    "eriette-of-the-charmed-apple": [
+     1,
+     2
+    ],
+    "giada-font-of-hope": [
+     0,
+     3
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     3
+    ],
+    "mister-fantastic": [
+     0,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     5
+    ],
+    "the-ur-dragon": [
+     0,
+     2
+    ],
+    "the-ur-sphinx": [
+     0,
+     1
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     2
+    ],
+    "tinybones-bauble-burglar-b4": [
+     1,
+     5
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     0
+    ],
+    "tom-bert-and-william": [
+     0,
+     6
+    ],
+    "vaevictis-asmadi-the-dire": [
+     1,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     1
+    ]
+   },
+   "eriette-of-the-charmed-apple": {
+    "bartolome-del-presidio-600-combos": [
+     3,
+     3
+    ],
+    "beorn-the-fierce": [
+     1,
+     3
+    ],
+    "captain-america-team-leader": [
+     4,
+     4
+    ],
+    "dina-essence-brewer": [
+     0,
+     2
+    ],
+    "giada-font-of-hope": [
+     0,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     2,
+     2
+    ],
+    "mister-fantastic": [
+     2,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     4
+    ],
+    "the-ur-dragon": [
+     1,
+     2
+    ],
+    "the-ur-sphinx": [
+     0,
+     1
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     4
+    ],
+    "tinybones-bauble-burglar-b4": [
+     2,
+     4
+    ],
+    "tinybones-bauble-burglar": [
+     3,
+     4
+    ],
+    "tom-bert-and-william": [
+     2,
+     4
+    ],
+    "vaevictis-asmadi-the-dire": [
+     1,
+     1
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     1
+    ]
+   },
+   "giada-font-of-hope": {
+    "bartolome-del-presidio-600-combos": [
+     3,
+     4
+    ],
+    "beorn-the-fierce": [
+     5,
+     7
+    ],
+    "captain-america-team-leader": [
+     0,
+     0
+    ],
+    "dina-essence-brewer": [
+     3,
+     3
+    ],
+    "eriette-of-the-charmed-apple": [
+     3,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     2,
+     2
+    ],
+    "mister-fantastic": [
+     2,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     2,
+     3
+    ],
+    "the-ur-dragon": [
+     2,
+     4
+    ],
+    "the-ur-sphinx": [
+     1,
+     1
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     0
+    ],
+    "tinybones-bauble-burglar-b4": [
+     1,
+     1
+    ],
+    "tinybones-bauble-burglar": [
+     2,
+     4
+    ],
+    "tom-bert-and-william": [
+     1,
+     4
+    ],
+    "vaevictis-asmadi-the-dire": [
+     2,
+     2
+    ],
+    "witherbloom-the-balancer": [
+     2,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     2,
+     4
+    ]
+   },
+   "kami-of-the-crescent-moon": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     5
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     1,
+     4
+    ],
+    "dina-essence-brewer": [
+     1,
+     3
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     2
+    ],
+    "giada-font-of-hope": [
+     0,
+     2
+    ],
+    "mister-fantastic": [
+     1,
+     2
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     2
+    ],
+    "the-ur-dragon": [
+     0,
+     2
+    ],
+    "the-ur-sphinx": [
+     1,
+     3
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar-b4": [
+     1,
+     4
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     2
+    ],
+    "tom-bert-and-william": [
+     2,
+     5
+    ],
+    "vaevictis-asmadi-the-dire": [
+     2,
+     4
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     2
+    ]
+   },
+   "mister-fantastic": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     2
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     1,
+     3
+    ],
+    "dina-essence-brewer": [
+     0,
+     3
+    ],
+    "eriette-of-the-charmed-apple": [
+     1,
+     3
+    ],
+    "giada-font-of-hope": [
+     0,
+     3
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     2
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     4
+    ],
+    "the-ur-dragon": [
+     1,
+     3
+    ],
+    "the-ur-sphinx": [
+     2,
+     4
+    ],
+    "thorin-king-of-durins-folk": [
+     2,
+     5
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     0
+    ],
+    "tinybones-bauble-burglar": [
+     1,
+     4
+    ],
+    "tom-bert-and-william": [
+     0,
+     1
+    ],
+    "vaevictis-asmadi-the-dire": [
+     1,
+     5
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     1
+    ]
+   },
+   "smaug-the-impenetrable": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     3
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     1,
+     4
+    ],
+    "dina-essence-brewer": [
+     1,
+     5
+    ],
+    "eriette-of-the-charmed-apple": [
+     1,
+     4
+    ],
+    "giada-font-of-hope": [
+     1,
+     3
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     2
+    ],
+    "mister-fantastic": [
+     1,
+     4
+    ],
+    "the-ur-dragon": [
+     0,
+     1
+    ],
+    "the-ur-sphinx": [
+     0,
+     1
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     5
+    ],
+    "tinybones-bauble-burglar-b4": [
+     2,
+     3
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     1
+    ],
+    "tom-bert-and-william": [
+     1,
+     4
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     1
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     2
+    ]
+   },
+   "the-ur-dragon": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     2
+    ],
+    "beorn-the-fierce": [
+     0,
+     5
+    ],
+    "captain-america-team-leader": [
+     1,
+     4
+    ],
+    "dina-essence-brewer": [
+     1,
+     2
+    ],
+    "eriette-of-the-charmed-apple": [
+     1,
+     2
+    ],
+    "giada-font-of-hope": [
+     1,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     2
+    ],
+    "mister-fantastic": [
+     2,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     1
+    ],
+    "the-ur-sphinx": [
+     1,
+     2
+    ],
+    "thorin-king-of-durins-folk": [
+     3,
+     3
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     3
+    ],
+    "tom-bert-and-william": [
+     2,
+     2
+    ],
+    "vaevictis-asmadi-the-dire": [
+     2,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     4
+    ]
+   },
+   "the-ur-sphinx": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     1
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     0,
+     3
+    ],
+    "dina-essence-brewer": [
+     1,
+     1
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     1
+    ],
+    "giada-font-of-hope": [
+     0,
+     1
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     3
+    ],
+    "mister-fantastic": [
+     1,
+     4
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     1
+    ],
+    "the-ur-dragon": [
+     0,
+     2
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     3
+    ],
+    "tinybones-bauble-burglar-b4": [
+     2,
+     6
+    ],
+    "tinybones-bauble-burglar": [
+     1,
+     2
+    ],
+    "tom-bert-and-william": [
+     1,
+     3
+    ],
+    "vaevictis-asmadi-the-dire": [
+     1,
+     2
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     5
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     8
+    ]
+   },
+   "thorin-king-of-durins-folk": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     1
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     0,
+     4
+    ],
+    "dina-essence-brewer": [
+     1,
+     2
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     4
+    ],
+    "giada-font-of-hope": [
+     0,
+     0
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     1
+    ],
+    "mister-fantastic": [
+     1,
+     5
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     5
+    ],
+    "the-ur-dragon": [
+     0,
+     3
+    ],
+    "the-ur-sphinx": [
+     0,
+     3
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     2
+    ],
+    "tom-bert-and-william": [
+     0,
+     2
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     5
+    ],
+    "yshtola-nights-blessed": [
+     0,
+     2
+    ]
+   },
+   "tinybones-bauble-burglar-b4": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     3
+    ],
+    "beorn-the-fierce": [
+     0,
+     0
+    ],
+    "captain-america-team-leader": [
+     1,
+     5
+    ],
+    "dina-essence-brewer": [
+     1,
+     5
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     4
+    ],
+    "giada-font-of-hope": [
+     0,
+     1
+    ],
+    "kami-of-the-crescent-moon": [
+     1,
+     4
+    ],
+    "mister-fantastic": [
+     0,
+     0
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     3
+    ],
+    "the-ur-dragon": [
+     0,
+     1
+    ],
+    "the-ur-sphinx": [
+     2,
+     6
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     3
+    ],
+    "tom-bert-and-william": [
+     0,
+     1
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     2,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     5
+    ]
+   },
+   "tinybones-bauble-burglar": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     4
+    ],
+    "beorn-the-fierce": [
+     1,
+     7
+    ],
+    "captain-america-team-leader": [
+     0,
+     3
+    ],
+    "dina-essence-brewer": [
+     0,
+     0
+    ],
+    "eriette-of-the-charmed-apple": [
+     1,
+     4
+    ],
+    "giada-font-of-hope": [
+     2,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     2
+    ],
+    "mister-fantastic": [
+     1,
+     4
+    ],
+    "smaug-the-impenetrable": [
+     1,
+     1
+    ],
+    "the-ur-dragon": [
+     0,
+     3
+    ],
+    "the-ur-sphinx": [
+     1,
+     2
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     2
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     3
+    ],
+    "tom-bert-and-william": [
+     1,
+     2
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     2
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     2
+    ],
+    "yshtola-nights-blessed": [
+     2,
+     3
+    ]
+   },
+   "tom-bert-and-william": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     5
+    ],
+    "beorn-the-fierce": [
+     0,
+     2
+    ],
+    "captain-america-team-leader": [
+     1,
+     3
+    ],
+    "dina-essence-brewer": [
+     0,
+     6
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     4
+    ],
+    "giada-font-of-hope": [
+     0,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     5
+    ],
+    "mister-fantastic": [
+     0,
+     1
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     4
+    ],
+    "the-ur-dragon": [
+     0,
+     2
+    ],
+    "the-ur-sphinx": [
+     0,
+     3
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     2
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     1
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     2
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     0
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     1
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     3
+    ]
+   },
+   "vaevictis-asmadi-the-dire": {
+    "bartolome-del-presidio-600-combos": [
+     1,
+     3
+    ],
+    "beorn-the-fierce": [
+     0,
+     1
+    ],
+    "captain-america-team-leader": [
+     2,
+     4
+    ],
+    "dina-essence-brewer": [
+     2,
+     3
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     1
+    ],
+    "giada-font-of-hope": [
+     0,
+     2
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     4
+    ],
+    "mister-fantastic": [
+     0,
+     5
+    ],
+    "smaug-the-impenetrable": [
+     2,
+     3
+    ],
+    "the-ur-dragon": [
+     0,
+     3
+    ],
+    "the-ur-sphinx": [
+     0,
+     2
+    ],
+    "thorin-king-of-durins-folk": [
+     1,
+     3
+    ],
+    "tinybones-bauble-burglar-b4": [
+     2,
+     3
+    ],
+    "tinybones-bauble-burglar": [
+     1,
+     2
+    ],
+    "tom-bert-and-william": [
+     0,
+     0
+    ],
+    "witherbloom-the-balancer": [
+     0,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     3
+    ]
+   },
+   "witherbloom-the-balancer": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     3
+    ],
+    "beorn-the-fierce": [
+     1,
+     2
+    ],
+    "captain-america-team-leader": [
+     0,
+     2
+    ],
+    "dina-essence-brewer": [
+     0,
+     2
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     2
+    ],
+    "giada-font-of-hope": [
+     0,
+     2
+    ],
+    "kami-of-the-crescent-moon": [
+     0,
+     3
+    ],
+    "mister-fantastic": [
+     0,
+     3
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     1
+    ],
+    "the-ur-dragon": [
+     0,
+     2
+    ],
+    "the-ur-sphinx": [
+     0,
+     5
+    ],
+    "thorin-king-of-durins-folk": [
+     2,
+     5
+    ],
+    "tinybones-bauble-burglar-b4": [
+     0,
+     3
+    ],
+    "tinybones-bauble-burglar": [
+     1,
+     2
+    ],
+    "tom-bert-and-william": [
+     0,
+     1
+    ],
+    "vaevictis-asmadi-the-dire": [
+     1,
+     3
+    ],
+    "yshtola-nights-blessed": [
+     1,
+     4
+    ]
+   },
+   "yshtola-nights-blessed": {
+    "bartolome-del-presidio-600-combos": [
+     0,
+     0
+    ],
+    "beorn-the-fierce": [
+     2,
+     3
+    ],
+    "captain-america-team-leader": [
+     1,
+     2
+    ],
+    "dina-essence-brewer": [
+     0,
+     1
+    ],
+    "eriette-of-the-charmed-apple": [
+     0,
+     1
+    ],
+    "giada-font-of-hope": [
+     0,
+     4
+    ],
+    "kami-of-the-crescent-moon": [
+     2,
+     2
+    ],
+    "mister-fantastic": [
+     0,
+     1
+    ],
+    "smaug-the-impenetrable": [
+     0,
+     2
+    ],
+    "the-ur-dragon": [
+     2,
+     4
+    ],
+    "the-ur-sphinx": [
+     4,
+     8
+    ],
+    "thorin-king-of-durins-folk": [
+     0,
+     2
+    ],
+    "tinybones-bauble-burglar-b4": [
+     2,
+     5
+    ],
+    "tinybones-bauble-burglar": [
+     0,
+     3
+    ],
+    "tom-bert-and-william": [
+     1,
+     3
+    ],
+    "vaevictis-asmadi-the-dire": [
+     0,
+     3
+    ],
+    "witherbloom-the-balancer": [
+     1,
+     4
+    ]
+   }
+  }
+ }
+}

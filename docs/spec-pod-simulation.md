@@ -6,6 +6,8 @@ backlog it for now"). **No phase of this spec is scheduled.** It exists so the i
 a shape, an honest cost estimate, and promotion criteria — instead of resurfacing every
 few months as a vague "what about opponents?".
 
+**Update 2026-10-17:** the player asked for every deck to play the others, and the Forge route shipped as the household pod (`scripts/forge_pod.py`, `docs/spec-forge-pod.md`): real 4-player games on the PC with Forge's AI piloting every seat. The statistical and scripted tiers below remain backlog.
+
 **Prior scope decisions this spec must respect** (`research-simulation.md`, ratified
 2026-08-10): tier-1 goldfishing is in scope (shipped — `goldfish.py`); tier-2 scripted
 opponents were **deferred**; tier-3 full game simulation was **rejected**. The

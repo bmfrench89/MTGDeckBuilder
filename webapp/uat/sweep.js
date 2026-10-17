@@ -26,7 +26,8 @@ const PAGES = [['home', '/'], ['build', '/build-next'], ['collection', '/collect
                ['coll-add', '/collection/add'], ['coll-manage', '/collection/manage'],
                ['wishlist', '/wishlist'], ['shared', '/shared'], ['pins', '/pins'],
                ['import', '/decks/import'], ['arrivals', '/collection/arrivals'],
-               ['people', '/people'], ['activity', '/activity'], ['lab', '/lab']];
+               ['people', '/people'], ['activity', '/activity'], ['lab', '/lab'],
+               ['matchups', '/matchups']];
 
 function audit() {          // runs in the page
   const vw = document.documentElement.clientWidth;

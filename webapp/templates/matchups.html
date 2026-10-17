@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Matchups · MTG Deckbuilder{% endblock %}
+{% block content %}
+{#
+  The household pod (docs/spec-forge-pod.md): every deck plays every other in Forge's
+  AI simulator. The games run on the PC (scripts/forge_pod.py); this page only reads
+  the newest results file, so it never starts a game and never makes a claim the
+  run didn't. Forge's AI is a rough pilot, and the page says so before any number.
+#}
+<h1>Matchups</h1>
+<div class="sub">Every deck plays the others in Forge's AI simulator: four-player Commander
+  games with the seats rotated. Forge's AI pilots aggressive decks fairly and combo and
+  control decks badly, so this is a sketch of how the decks match up, never a verdict.
+  By chance alone, a deck wins 25% of four-player games.</div>
+
+{% if not res %}
+<div class="card">
+  <p>No pod has run yet. The games run on the PC:</p>
+  <pre class="podcmd">python scripts/forge_pod.py --install
+python scripts/forge_pod.py --games-per-deck 16</pre>
+  <p class="muted">The results go to data/reference/pod/ and show here once they're
+    committed and synced.</p>
+</div>
+{% else %}
+<p class="muted">Forge {{ meta.forge }} · {{ meta.games }} games on {{ meta.date }} ·
+  {{ meta.finished }} finished{% if meta.abandoned %}, {{ meta.abandoned }} stopped
+  without a winner (not scored){% endif %}.</p>
+
+<div class="card tablewrap">
+<table class="data podtable">
+  <thead><tr><th>Deck</th><th>Win share</th><th class="num">Won</th>
+    <th class="num" title="Each player's own turn count">Ends about turn</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td class="deck">{% if r.here %}<a href="{{ url_for('deck', stem=r.stem) }}">{{ r.title }}</a>{% else %}{{ r.title }}
+      <span class="tag">not in your decks now</span>{% endif %}
+      {% if r.lab %}<span class="tag">Lab</span>{% endif %}</td>
+    <td class="share">{% if r.pct is none %}<span class="muted">no finished games</span>{% else %}
+      <span class="podshare"><span class="podbar" role="img"
+        aria-label="Won {{ r.pct }}% of its finished games; chance is 25%"><span
+        class="fill{{ ' above' if r.pct > 25 }}" style="width: {{ r.pct }}%"></span><span
+        class="chance"></span></span><b>{{ r.pct }}%</b></span>{% endif %}</td>
+    <td class="num won"><span class="podlbl">won </span>{{ r.wins }} of {{ r.finished }}{% if r.abandoned %}
+      <span class="muted">(+{{ r.abandoned }} unscored)</span>{% endif %}</td>
+    <td class="num turn"><span class="podlbl">· ends about turn </span>{{ r['round'] if r['round'] is not none else '—' }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted fs-sm">The tick on each bar is chance (25%). Turn is each player's own turn
+  count, averaged over the games that deck finished.</p>
+
+<h2>Head to head</h2>
+<p class="muted">Each deck's record in the games it shared with one other deck. A third
+  deck can win a four-player game, so the two win counts can add up to less than the
+  games together.</p>
+<div class="podlist">
+{% for r in rows %}
+<details class="card podvs">
+  <summary><b>{{ r.title }}</b> <span class="muted">won {{ r.wins }} of {{ r.finished }}</span></summary>
+  {% if r.vs %}
+  <table class="data podh2h">
+    <thead><tr><th>Against</th><th class="num">Games</th><th class="num">Won</th>
+      <th class="num">They won</th></tr></thead>
+    <tbody>
+    {% for m in r.vs %}
+    <tr><td>{{ m.title }}{% if m.lab %} <span class="tag">Lab</span>{% endif %}</td>
+      <td class="num">{{ m.met }}</td><td class="num">{{ m.won }}</td>
+      <td class="num">{{ m.they_won }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No finished games yet.</p>{% endif %}
+  {% if r.unsupported %}<p class="warn">Forge can't play {{ r.unsupported|join(', ') }}. It
+    removes those cards when the game starts, so this deck played short.</p>{% endif %}
+  {% if r.ai_flagged %}<p class="muted fs-sm">Forge marks {{ r.ai_flagged|length }} of its
+    cards as ones its AI plays badly: {{ r.ai_flagged|join(', ') }}.</p>{% endif %}
+</details>
+{% endfor %}
+</div>
+{% endif %}
+
+<style>
+.podcmd { font-family: var(--font-mono); font-size: var(--fs-sm); white-space: pre-wrap;
+  overflow-wrap: anywhere; margin: var(--sp-2) 0; }
+.podshare { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.podbar { position: relative; display: inline-block; width: 120px; height: 8px;
+  border-radius: var(--r-pill); background: var(--edge); }
+.podbar .fill { position: absolute; left: 0; top: 0; bottom: 0; max-width: 100%;
+  border-radius: var(--r-pill); background: var(--in); }
+.podbar .fill.above { background: var(--accent); }
+.podbar .chance { position: absolute; left: 25%; top: -3px; width: 2px; height: 14px;
+  margin-left: -1px; border-radius: 1px; background: var(--text); }
+.podvs > summary { cursor: pointer; min-height: var(--target); display: flex;
+  align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.podh2h { margin-top: var(--sp-2); }
+.podlbl { display: none; }
+/* A phone gets each deck in three short lines (name, bar, record) instead of the
+   generic stacked table, which spent ~200 px a deck on right-aligned label rows. */
+@media (max-width: 640px) {
+  .podtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; }
+  .podtable, .podtable tbody { display: block; }
+  .podtable tr { display: grid; grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "deck deck" "share share" "won turn"; column-gap: var(--sp-1);
+    row-gap: var(--sp-1); padding: var(--sp-3) 0; border-bottom: 1px solid var(--edge); }
+  .podtable td { border: 0; padding: 0; }
+  .podtable td.deck { grid-area: deck; }
+  .podtable td.share { grid-area: share; }
+  .podtable td.won, .podtable td.turn { font-family: inherit; text-align: left;
+    font-size: var(--fs-xs); color: var(--muted); }
+  .podtable td.won { grid-area: won; }
+  .podtable td.turn { grid-area: turn; }
+  .podlbl { display: inline; }
+}
+.podh2h td:first-child { overflow-wrap: anywhere; }
+</style>
+{% endblock %}

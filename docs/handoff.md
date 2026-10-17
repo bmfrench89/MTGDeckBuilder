@@ -6,7 +6,31 @@ in git (`git log` — commit messages in this repo are deliberately substantial)
 Architecture: `docs/codemap.md`. Working rules: `CLAUDE.md`. Grounding rules
 (canonical): `.claude/skills/mtg-deckbuilder/references/grounding-rules.md`.
 
-_Last updated: 2026-10-17 (two Avacyn, Angel of Horror decks in the Lab, compared: Vaevictis Asmadi, the Dire and Tom, Bert, and William; three new cards: Gandalf the White in Thorin, Ancient Adamantoise in Beorn, Orcish Bowmasters unplaced while the player re-reviews it; reviews now include the Lab; Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds six theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, a Bracket 4 copy of Tinybones, Vaevictis and Tom, Bert, and William; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+_Last updated: 2026-10-17 (the household pod: every deck plays the others in Forge's AI, with a Matchups page; two Avacyn, Angel of Horror decks in the Lab, compared: Vaevictis Asmadi, the Dire and Tom, Bert, and William; three new cards: Gandalf the White in Thorin, Ancient Adamantoise in Beorn, Orcish Bowmasters unplaced while the player re-reviews it; reviews now include the Lab; Elephant Grass in Beorn for Mirkwood Pathmaker; the Lab holds six theory decks, each with Watch-tab clips: Witherbloom, Smaug the Impenetrable, Mister Fantastic, a Bracket 4 copy of Tinybones, Vaevictis and Tom, Bert, and William; twelve sleeved decks; the repo lives at the private `bmfrench89/OnTheStAIck`)._
+
+## The household pod: the decks play each other (2026-10-17)
+
+The player asked for "a system where all of our decks can play against each other in
+simulations". `scripts/forge_pod.py` plays four-player Commander games in Forge 2.0.15's
+AI simulator on the PC. The app's **Matchups** page (`/matchups`) shows the newest run.
+The design, the caveats and the first run's numbers are in `docs/spec-forge-pod.md`.
+- **On the PC:** Forge is unpacked in `data/cache/forge/2.0.15/` (gitignored, ~300 MB),
+  with Java 21. Run `python scripts/forge_pod.py --games-per-deck 16 --workers 2 --seed <n>`:
+  about 55 minutes for 18 decks. Memory sets the worker count, not cores. With two 2 GB
+  JVMs and VS Code open, the PC had 0.4 GB free. `--resume` continues a stopped run.
+- **First run** (72 games, every deck including the Lab, 71 finished):
+  - **Giada** won 11 of 16, the only deck clearly above the 25% chance rate.
+  - **Kami of the Crescent Moon and Tinybones** belong to another household player. Each
+    won 4 of 16, exactly chance. Tinybones's B4 Lab copy won 3 of 16.
+  - **The two Avacyn Lab decks:** Vaevictis won 4 of 15, and Tom, Bert, and William won
+    1 of 16. Forge's script gives TBW's sacrifice-to-draw ability no AI logic, and in a
+    logged game the AI never used it. That result measures the pilot, not the deck.
+- **Read it as a sketch:**
+  - Forge's AI pilots beatdown well and combo and control badly.
+  - 16 games is about ±11 points.
+  - Commit each run's JSON so the page and the next session see it.
+- **Next (not built):** a runner workflow, pinned matchups (one group of decks against
+  another), and merging runs for bigger samples.
 
 ## START HERE: the deck stable (2026-10-15)
 
@@ -73,9 +97,7 @@ and tom bert and William as commander in the lab and let's see how they compare.
     and all three owned black tutors are in sleeved decks: Grim Tutor (Ur-Dragon),
     Diabolic (Y'shtola), Final Parting (Bartolomé). Both decks win as aristocrats decks
     first.
-- **Next: decks playing each other.** The player asked for a system where all the decks
-  play each other in simulations: "Kami and tiny bones/tergrid are my brothers decks". The
-  plan is the deck-UAT spec's Forge household pod; see docs/spec-deck-uat.md.
+- **Decks playing each other:** built the same day. See "The household pod" at the top.
 
 **2026-10-16 (late night): Vaevictis Asmadi, the Dire, built around Avacyn, Angel of
 Horror** (moved to the Lab 2026-10-17). The player: "I want to build a deck with Avacyn the angel horror black card either

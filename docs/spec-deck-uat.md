@@ -121,9 +121,11 @@ Every deck kept 80-83% of opening sevens and was screwed 13-16% of the time.
 5. **The phone game log.** A 20-second entry after each real game: won, engine turn, the
    MVP card, the dead card. Over a season it calibrates the gates and tells the optimizer
    which cards never get cast. Real games are the true UAT.
-6. **Forge household pod** (optional). Export to `.dck` and run `forge sim -f Commander`
-   on a runner. It reports unsupported cards, game length and win share, labelled as
-   limited by the pilots.
+6. **Forge household pod.** Shipped v1 on 2026-10-17 (`scripts/forge_pod.py`,
+   docs/spec-forge-pod.md). It runs on the player's PC, not a runner yet: it exports to
+   `.dck`, runs `forge sim -f Commander`, and reports unsupported cards, game length and
+   win share, labelled as limited by the pilots. The app's Matchups page shows the newest
+   run.
 
 ## What this never claims
 
